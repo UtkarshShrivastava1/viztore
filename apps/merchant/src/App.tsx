@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuthStore } from './stores/authStore.js';
 import { useOnboardingStore } from './stores/onboardingStore.js';
+import { SellerLandingPage } from './pages/SellerLandingPage.js';
+import { SellerLoginPage } from './pages/SellerLoginPage.js';
 import { OnboardingPage } from './pages/OnboardingPage.js';
-import { LoginPage } from './pages/LoginPage.js';
 import { DashboardOverviewPage } from './pages/DashboardOverviewPage.js';
 import { OrdersPage } from './pages/OrdersPage.js';
 import { CreateOrderPage } from './pages/CreateOrderPage.js';
@@ -13,11 +14,28 @@ import { Header } from './components/dashboard/Header.js';
 import { AddProductModal } from './components/catalog/AddProductModal.js';
 import { BulkUploadModal } from './components/catalog/BulkUploadModal.js';
 
+export type AppView = 'landing' | 'login' | 'onboarding' | 'dashboard';
+
 export const App: React.FC = () => {
   const { isAuthenticated, initialize } = useAuthStore();
   const { isUnderReview } = useOnboardingStore();
 
-  const [currentView, setCurrentView] = useState<'onboarding' | 'login' | 'dashboard'>('onboarding');
+  // Determine initial view from URL path if applicable
+  const getInitialView = (): AppView => {
+    if (typeof window !== 'undefined') {
+      const path = window.location.pathname.toLowerCase();
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('view') === 'login' || path.endsWith('/login')) return 'login';
+      if (params.get('view') === 'signup' || params.get('view') === 'onboarding' || path.endsWith('/signup') || path.endsWith('/onboarding')) {
+        return 'onboarding';
+      }
+      if (params.get('view') === 'dashboard' || path.endsWith('/dashboard')) return 'dashboard';
+      if (params.get('view') === 'landing' || path.endsWith('/seller') || path === '/') return 'landing';
+    }
+    return 'landing';
+  };
+
+  const [currentView, setCurrentView] = useState<AppView>(getInitialView);
   const [currentTab, setCurrentTab] = useState<DashboardTab>('overview');
   const [isCreateOrderView, setIsCreateOrderView] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -31,31 +49,46 @@ export const App: React.FC = () => {
     initialize();
   }, [initialize]);
 
-  // If already authenticated or under review preview
+  // If already authenticated and on login, transition to dashboard
   useEffect(() => {
     if (isAuthenticated && currentView === 'login') {
       setCurrentView('dashboard');
     }
   }, [isAuthenticated, currentView]);
 
-  if (currentView === 'login') {
+  // Screen 1.png: Public Landing Page
+  if (currentView === 'landing') {
     return (
-      <LoginPage
-        onLoginSuccess={() => setCurrentView('dashboard')}
-        onGoToRegister={() => setCurrentView('onboarding')}
+      <SellerLandingPage
+        onStartSelling={() => setCurrentView('onboarding')}
+        onLogin={() => setCurrentView('login')}
       />
     );
   }
 
-  if (currentView === 'onboarding' && !isAuthenticated) {
+  // Screen 4.png: Floating Seller Login Card
+  if (currentView === 'login') {
+    return (
+      <SellerLoginPage
+        onLoginSuccess={() => setCurrentView('dashboard')}
+        onGoToRegister={() => setCurrentView('onboarding')}
+        onGoToHome={() => setCurrentView('landing')}
+      />
+    );
+  }
+
+  // Screens 3.png, 5.1.png, 2.png, 5.png, 6.png, 8.png, 7.png: Onboarding Wizard
+  if (currentView === 'onboarding') {
     return (
       <OnboardingPage
         onEnterDashboard={() => setCurrentView('dashboard')}
         onGoToLogin={() => setCurrentView('login')}
+        onGoToHome={() => setCurrentView('landing')}
       />
     );
   }
 
+  // Main Merchant Dashboard & Functional Modules
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-800 flex flex-col">
       {/* Desktop & Mobile Sidebar */}
@@ -95,19 +128,18 @@ export const App: React.FC = () => {
             />
           )}
 
-          {currentTab === 'orders' && (
-            isCreateOrderView ? (
+          {currentTab === 'orders' &&
+            (isCreateOrderView ? (
               <CreateOrderPage onBack={() => setIsCreateOrderView(false)} />
             ) : (
               <OrdersPage onOpenCreateOrder={() => setIsCreateOrderView(true)} />
-            )
-          )}
+            ))}
 
           {currentTab === 'catalog' && <CatalogPage />}
 
           {currentTab === 'store' && <StoreSettingsPage />}
 
-          {/* Fallback placeholder for other 9 modules in development */}
+          {/* Fallback placeholder for other modules */}
           {!['overview', 'orders', 'catalog', 'store'].includes(currentTab) && (
             <div className="p-8 text-center bg-white rounded-2xl border border-slate-200/80 shadow-2xs max-w-xl mx-auto mt-8">
               <h3 className="text-base font-bold text-slate-800 capitalize">

@@ -25,6 +25,7 @@ export const Step1MobileEmail: React.FC<Step1MobileEmailProps> = ({
   const [emailOtpSent, setEmailOtpSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // OTP Bypass: Immediate simulated verification for testing
   const handleSendPhoneOtp = () => {
     if (!phone || phone.length < 10) {
       setError('Please enter a valid 10-digit mobile number');
@@ -45,17 +46,26 @@ export const Step1MobileEmail: React.FC<Step1MobileEmailProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!phone || phone.length < 10) {
+      setError('Please enter a valid 10-digit mobile number');
+      return;
+    }
+    if (!email || !email.includes('@')) {
+      setError('Please enter a valid email address');
+      return;
+    }
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       return;
     }
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters');
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters');
       return;
     }
 
     updateStep(1, {
-      fullName: 'Thoufiq Ahmed',
+      fullName: 'Merchant Partner',
       mobileNumber: phone,
       email,
       password,
@@ -66,67 +76,67 @@ export const Step1MobileEmail: React.FC<Step1MobileEmailProps> = ({
   };
 
   return (
-    <div className="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-10 shadow-xs">
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-sm flex items-center justify-center shadow-xs">
+    <div className="bg-white border border-slate-200/80 rounded-2xl p-6 sm:p-8 lg:p-9 shadow-xs">
+      {/* Header with Step 1 Badge matching Screen 3.png */}
+      <div className="flex items-center gap-2.5 mb-6">
+        <div className="w-7 h-7 rounded-full bg-[#0038ed] text-white font-bold text-xs flex items-center justify-center shadow-2xs shrink-0">
           1
         </div>
-        <h2 className="text-sm font-bold tracking-wider text-blue-600 uppercase">
-          MOBILE & E-MAIL VERIFICATION
+        <h2 className="text-xs sm:text-[13px] font-bold tracking-wider text-[#0038ed] uppercase">
+          MOBILE &amp; E-MAIL VERIFICATION
         </h2>
       </div>
 
       {error && (
-        <div className="mb-5 p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-600 text-xs font-medium">
+        <div className="mb-5 p-3 bg-rose-50 border border-rose-200 rounded-lg text-rose-600 text-xs font-medium">
           {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Mobile Number */}
-        <div className="relative">
-          <div className="flex items-center justify-between border border-slate-200 rounded-xl px-4 py-3 bg-white focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/10 transition-all">
-            <div className="flex items-center gap-3 flex-1">
-              <Phone className="w-4 h-4 text-slate-400" />
+      <form onSubmit={handleSubmit} className="space-y-3.5">
+        {/* Mobile Number Input */}
+        <div>
+          <div className="flex items-center justify-between border border-slate-200 rounded-lg px-3.5 py-2.5 bg-white focus-within:border-[#0038ed] focus-within:ring-1 focus-within:ring-[#0038ed] transition-all">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <Phone className="w-4 h-4 text-slate-500 shrink-0" />
               <input
                 type="tel"
                 maxLength={10}
                 placeholder="Enter Mobile Number *"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="w-full text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none"
+                onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+                className="w-full text-xs sm:text-sm text-slate-900 placeholder:text-slate-500 focus:outline-none"
                 required
               />
             </div>
             <button
               type="button"
               onClick={handleSendPhoneOtp}
-              className="text-xs font-semibold text-blue-600 hover:text-blue-700 ml-2 whitespace-nowrap"
+              className="text-xs sm:text-sm font-semibold text-[#0038ed] hover:text-[#002fcf] ml-2 whitespace-nowrap cursor-pointer"
             >
               {phoneOtpSent ? 'OTP Sent ✓' : 'Send OTP'}
             </button>
           </div>
         </div>
 
-        {/* E-mail ID */}
-        <div className="relative">
-          <div className="flex items-center justify-between border border-slate-200 rounded-xl px-4 py-3 bg-white focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/10 transition-all">
-            <div className="flex items-center gap-3 flex-1">
-              <Mail className="w-4 h-4 text-slate-400" />
+        {/* E-mail ID Input */}
+        <div>
+          <div className="flex items-center justify-between border border-slate-200 rounded-lg px-3.5 py-2.5 bg-white focus-within:border-[#0038ed] focus-within:ring-1 focus-within:ring-[#0038ed] transition-all">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <Mail className="w-4 h-4 text-slate-500 shrink-0" />
               <input
                 type="email"
                 placeholder="E-mail ID *"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none"
+                className="w-full text-xs sm:text-sm text-slate-900 placeholder:text-slate-500 focus:outline-none"
                 required
               />
             </div>
             <button
               type="button"
               onClick={handleSendEmailOtp}
-              className="text-xs font-semibold text-blue-600 hover:text-blue-700 ml-2 whitespace-nowrap"
+              className="text-xs sm:text-sm font-semibold text-[#0038ed] hover:text-[#002fcf] ml-2 whitespace-nowrap cursor-pointer"
             >
               {emailOtpSent ? 'OTP Sent ✓' : 'Send OTP'}
             </button>
@@ -134,23 +144,24 @@ export const Step1MobileEmail: React.FC<Step1MobileEmailProps> = ({
         </div>
 
         {/* Create Password */}
-        <div className="relative">
-          <div className="flex items-center justify-between border border-slate-200 rounded-xl px-4 py-3 bg-white focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/10 transition-all">
-            <div className="flex items-center gap-3 flex-1">
-              <Lock className="w-4 h-4 text-slate-400" />
+        <div>
+          <div className="flex items-center justify-between border border-slate-200 rounded-lg px-3.5 py-2.5 bg-white focus-within:border-[#0038ed] focus-within:ring-1 focus-within:ring-[#0038ed] transition-all">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <Lock className="w-4 h-4 text-slate-500 shrink-0" />
               <input
                 type={showPassword ? 'text' : 'password'}
                 placeholder="Create Password *"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none"
+                className="w-full text-xs sm:text-sm text-slate-900 placeholder:text-slate-500 focus:outline-none"
                 required
               />
             </div>
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="text-slate-400 hover:text-slate-600 ml-2"
+              className="text-slate-400 hover:text-slate-600 ml-2 shrink-0 cursor-pointer"
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
             >
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
@@ -158,51 +169,58 @@ export const Step1MobileEmail: React.FC<Step1MobileEmailProps> = ({
         </div>
 
         {/* Confirm Password */}
-        <div className="relative">
-          <div className="flex items-center justify-between border border-slate-200 rounded-xl px-4 py-3 bg-white focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/10 transition-all">
-            <div className="flex items-center gap-3 flex-1">
-              <Lock className="w-4 h-4 text-slate-400" />
+        <div>
+          <div className="flex items-center justify-between border border-slate-200 rounded-lg px-3.5 py-2.5 bg-white focus-within:border-[#0038ed] focus-within:ring-1 focus-within:ring-[#0038ed] transition-all">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <Lock className="w-4 h-4 text-slate-500 shrink-0" />
               <input
                 type={showConfirmPassword ? 'text' : 'password'}
                 placeholder="Confirm Password *"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none"
+                className="w-full text-xs sm:text-sm text-slate-900 placeholder:text-slate-500 focus:outline-none"
                 required
               />
             </div>
             <button
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="text-slate-400 hover:text-slate-600 ml-2"
+              className="text-slate-400 hover:text-slate-600 ml-2 shrink-0 cursor-pointer"
+              aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
             >
               {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           </div>
         </div>
 
-        <p className="text-[11px] text-slate-500 pt-2">
+        {/* Dynamic Legal Terms */}
+        <p className="text-[11px] text-slate-500 pt-1 leading-relaxed">
           By continuing, I agree to {branding.appName}'s{' '}
-          <span className="font-semibold text-slate-800">Terms of Use</span> &{' '}
-          <span className="font-semibold text-slate-800">Privacy Policy</span>
+          <span className="font-semibold text-slate-800 hover:underline cursor-pointer">
+            Terms of Use
+          </span>{' '}
+          &amp;{' '}
+          <span className="font-semibold text-slate-800 hover:underline cursor-pointer">
+            Privacy Policy
+          </span>
         </p>
 
-        {/* Submit Button */}
+        {/* Primary Action Button */}
         <button
           type="submit"
-          className="w-full py-3.5 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-md shadow-blue-600/20 transition-all cursor-pointer"
+          className="w-full py-3.5 px-6 rounded-lg bg-[#0038ed] hover:bg-[#002fcf] text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-xs transition-all cursor-pointer mt-2"
         >
-          <span>Register & Continue</span>
+          <span>Register &amp; Continue</span>
           <ArrowRight className="w-4 h-4" />
         </button>
 
-        {/* Already a user */}
+        {/* Already a user Section */}
         <div className="pt-4 text-center">
           <span className="text-xs text-slate-500 block mb-2">Already a user?</span>
           <button
             type="button"
             onClick={onGoToLogin}
-            className="w-full py-3 px-6 rounded-xl border border-blue-600 text-blue-600 font-semibold text-sm hover:bg-blue-50 transition-all cursor-pointer"
+            className="w-full py-2.5 px-6 rounded-lg border border-[#0038ed] text-[#0038ed] font-semibold text-sm hover:bg-blue-50/50 transition-all cursor-pointer"
           >
             Login
           </button>
