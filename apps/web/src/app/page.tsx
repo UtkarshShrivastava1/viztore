@@ -32,13 +32,13 @@ export default function HomePage() {
         </div>
 
         {/* ── HERO SECTION (Carousel + TrustBar) ─────────────────────── */}
-        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 mt-6 md:mt-8 space-y-4 md:space-y-6">
+        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-24 mt-6 md:mt-8 space-y-4 md:space-y-6">
           <PromoCarousel />
           <TrustBar />
         </div>
 
         {/* ── Stores Near You ────────────────────────────────────────── */}
-        <section className="space-y-4 max-w-[1920px] mx-auto px-4 sm:px-6">
+        <section className="space-y-4 max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-24">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-brand-400" />
@@ -68,7 +68,7 @@ export default function HomePage() {
         </section>
 
         {/* ── Best Deals For You ─────────────────────────────────────── */}
-        <section className="space-y-4 max-w-[1920px] mx-auto px-4 sm:px-6">
+        <section className="space-y-4 max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-24">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-emerald-400" />

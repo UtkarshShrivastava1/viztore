@@ -10,6 +10,8 @@ import { useProducts } from '@/hooks/useProducts';
 import { useLocationStore } from '@/stores/location.store';
 import { ProductCategory, ProductSortOption, type ProductQueryDto } from '@repo/shared-types';
 import { SlidersHorizontal, X, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List } from 'lucide-react';
+import { SubcategoryBubbleFilter } from '@/features/catalog/SubcategoryBubbleFilter';
+import { FilterSortBar } from '@/features/catalog/FilterSortBar';
 
 const sortOptions = [
   { label: 'Relevance', value: ProductSortOption.RELEVANCE },
@@ -73,7 +75,7 @@ function ProductsContent() {
 
   return (
     <div className="min-h-screen bg-transparent">
-      <Header address={address} className="hidden md:block" />
+      {/* <Header address={address} className="hidden md:block" /> */}
 
       <main className="max-w-[1920px] mx-auto px-4 sm:px-6 py-6 space-y-6">
         {/* Page Header */}
@@ -88,33 +90,7 @@ function ProductsContent() {
           </div>
         </div>
 
-        {/* Sort + Filter Controls */}
-        <div className="flex items-center justify-between gap-3">
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-surface-900 text-surface-300 hover:bg-surface-800 transition-colors border border-surface-800"
-          >
-            <SlidersHorizontal className="w-4 h-4" />
-            <span className="text-sm font-medium">Filters</span>
-            {activeFilterCount > 0 && (
-              <span className="w-5 h-5 rounded-full bg-brand-500 text-white text-xs flex items-center justify-center">
-                {activeFilterCount}
-              </span>
-            )}
-          </button>
 
-          <div className="flex items-center gap-2">
-            <select
-              value={query.sort || ProductSortOption.RELEVANCE}
-              onChange={(e) => updateFilter('sort', e.target.value)}
-              className="px-4 py-2.5 rounded-xl bg-surface-900 text-surface-300 text-sm border border-surface-800 focus:outline-none focus:ring-2 focus:ring-brand-500/40 appearance-none cursor-pointer"
-            >
-              {sortOptions.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-          </div>
-        </div>
 
         {/* Active Filter Tags */}
         {activeFilterCount > 0 && (
@@ -144,114 +120,71 @@ function ProductsContent() {
           </div>
         )}
 
-        <div className="flex gap-6">
-          {/* Sidebar Filters */}
-          {showFilters && (
-            <aside className="hidden md:block w-56 flex-shrink-0 space-y-6">
-              {/* Category */}
-              <div className="space-y-2">
-                <h4 className="text-xs font-semibold text-surface-300 uppercase tracking-wider">Category</h4>
-                <div className="space-y-1">
-                  {categoryOptions.map((cat) => (
-                    <button
-                      key={cat.value}
-                      onClick={() => updateFilter('category', cat.value || undefined)}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${(query.category || '') === cat.value
-                        ? 'bg-brand-500/15 text-brand-400 font-medium'
-                        : 'text-surface-400 hover:bg-surface-900 hover:text-surface-200'
-                        }`}
-                    >
-                      {cat.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Price Range */}
-              <div className="space-y-2">
-                <h4 className="text-xs font-semibold text-surface-300 uppercase tracking-wider">Price Range</h4>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    placeholder="Min"
-                    value={query.minPrice || ''}
-                    onChange={(e) => updateFilter('minPrice', e.target.value || undefined)}
-                    className="w-full px-3 py-2 rounded-lg bg-surface-900 border border-surface-800 text-sm text-surface-200 focus:outline-none focus:ring-1 focus:ring-brand-500/40"
-                  />
-                  <span className="text-surface-600">—</span>
-                  <input
-                    type="number"
-                    placeholder="Max"
-                    value={query.maxPrice || ''}
-                    onChange={(e) => updateFilter('maxPrice', e.target.value || undefined)}
-                    className="w-full px-3 py-2 rounded-lg bg-surface-900 border border-surface-800 text-sm text-surface-200 focus:outline-none focus:ring-1 focus:ring-brand-500/40"
-                  />
-                </div>
-              </div>
-            </aside>
-          )}
-
-          {/* Product Grid */}
-          <div className="flex-1">
-            {isLoading ? (
-              <ProductGridSkeleton count={8} />
-            ) : products.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                {products.map((product) => (
-                  <ProductCard key={product._id} product={product} />
-                ))}
-              </div>
-            ) : (
-              <div className="py-20 text-center glass-card rounded-2xl">
-                <SlidersHorizontal className="w-10 h-10 mx-auto text-surface-600 mb-3" />
-                <p className="text-surface-400 text-sm">No products match your filters.</p>
-                <button
-                  onClick={() => router.push('/products')}
-                  className="mt-4 px-5 py-2 rounded-xl bg-brand-500 text-white text-sm font-semibold hover:bg-brand-600 transition-colors"
-                >
-                  Reset Filters
-                </button>
-              </div>
-            )}
-
-            {/* Pagination */}
-            {meta.totalPages > 1 && (
-              <div className="flex items-center justify-center gap-2 mt-8">
-                <button
-                  onClick={() => updateFilter('page', String(meta.page - 1))}
-                  disabled={!meta.hasPrevPage}
-                  className="p-2 rounded-lg bg-surface-900 text-surface-400 hover:bg-surface-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-
-                {Array.from({ length: Math.min(meta.totalPages, 5) }).map((_, i) => {
-                  const pageNum = i + 1;
-                  return (
-                    <button
-                      key={pageNum}
-                      onClick={() => updateFilter('page', String(pageNum))}
-                      className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${meta.page === pageNum
-                        ? 'bg-brand-500 text-white'
-                        : 'bg-surface-900 text-surface-400 hover:bg-surface-800'
-                        }`}
-                    >
-                      {pageNum}
-                    </button>
-                  );
-                })}
-
-                <button
-                  onClick={() => updateFilter('page', String(meta.page + 1))}
-                  disabled={!meta.hasNextPage}
-                  className="p-2 rounded-lg bg-surface-900 text-surface-400 hover:bg-surface-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            )}
-          </div>
+        {/* Mobile-first Filters */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <FilterSortBar totalProducts={meta.total} />
         </div>
+
+        {/* Product Grid */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+          {isLoading ? (
+            <ProductGridSkeleton count={8} />
+          ) : products.length > 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6">
+              {products.map((product) => (
+                <ProductCard key={product._id} product={product} />
+              ))}
+            </div>
+          ) : (
+            <div className="py-20 text-center glass-card rounded-2xl">
+              <SlidersHorizontal className="w-10 h-10 mx-auto text-surface-600 mb-3" />
+              <p className="text-surface-400 text-sm">No products match your filters.</p>
+              <button
+                onClick={() => router.push('/products')}
+                className="mt-4 px-5 py-2 rounded-xl bg-brand-500 text-white text-sm font-semibold hover:bg-brand-600 transition-colors"
+              >
+                Reset Filters
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Pagination */}
+        {meta.totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 mt-8">
+            <button
+              onClick={() => updateFilter('page', String(meta.page - 1))}
+              disabled={!meta.hasPrevPage}
+              className="p-2 rounded-lg bg-surface-900 text-surface-400 hover:bg-surface-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+
+            {Array.from({ length: Math.min(meta.totalPages, 5) }).map((_, i) => {
+              const pageNum = i + 1;
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => updateFilter('page', String(pageNum))}
+                  className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${meta.page === pageNum
+                    ? 'bg-brand-500 text-white'
+                    : 'bg-surface-900 text-surface-400 hover:bg-surface-800'
+                    }`}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+
+            <button
+              onClick={() => updateFilter('page', String(meta.page + 1))}
+              disabled={!meta.hasNextPage}
+              className="p-2 rounded-lg bg-surface-900 text-surface-400 hover:bg-surface-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        )}
       </main>
 
       <Footer />

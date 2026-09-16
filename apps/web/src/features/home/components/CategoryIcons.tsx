@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 interface CategoryItem {
   id: string;
@@ -74,9 +75,14 @@ export default function CategoryIcons({
 }: CategoryIconsProps) {
   const [selected, setSelected] = useState(activeId);
 
+  const router = useRouter();
+
   const handleSelect = (id: string) => {
     setSelected(id);
     onSelect?.(id);
+    if (id === 'fashion') {
+      router.push('/category/fashion');
+    }
   };
 
   return (

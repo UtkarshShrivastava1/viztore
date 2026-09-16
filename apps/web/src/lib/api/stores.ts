@@ -83,7 +83,7 @@ export async function fetchNearbyStores(
   category?: StoreCategory,
 ): Promise<IStore[]> {
   try {
-    const response = await fetch(`${DUMMY_JSON_URL}/products?limit=20`);
+    const response = await fetch(`${DUMMY_JSON_URL}/products/category/mens-shirts?limit=20`);
 
     if (!response.ok) {
       return filterStores(DEFAULT_FEATURED_STORES, category);
