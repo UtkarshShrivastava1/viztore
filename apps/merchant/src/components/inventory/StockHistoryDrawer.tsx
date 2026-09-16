@@ -1,199 +1,159 @@
 import React, { useState } from 'react';
-import { X, ArrowUpRight, ArrowDownRight, Clock, User, FileText } from 'lucide-react';
+import { X, ArrowUp, ArrowDown, ChevronDown } from 'lucide-react';
 import { useInventoryStore } from '../../stores/inventoryStore.js';
 
 export const StockHistoryDrawer: React.FC = () => {
   const {
-    selectedItem,
-    isStockHistoryDrawerOpen,
+    historyDrawerItem,
     closeHistoryDrawer,
     transactions,
+    setViewMode,
   } = useInventoryStore();
 
-  const [activeTab, setActiveTab] = useState<'all' | 'in' | 'out'>('all');
+  const [filterType, setFilterType] = useState<'all' | 'stock_in' | 'stock_out'>('all');
 
-  if (!isStockHistoryDrawerOpen || !selectedItem) return null;
+  if (!historyDrawerItem) return null;
 
-  const productTransactions = transactions.filter(
-    (t) => t.productId === selectedItem.id
-  );
-
-  const filteredTransactions = productTransactions.filter((t) => {
-    if (activeTab === 'in') return t.quantityDelta > 0;
-    if (activeTab === 'out') return t.quantityDelta < 0;
+  // Filter transactions for this specific product or general matching mock
+  const productTransactions = transactions.filter((t) => {
+    if (filterType === 'stock_in' && t.type !== 'stock_in') return false;
+    if (filterType === 'stock_out' && t.type !== 'stock_out') return false;
     return true;
   });
 
+  const handleViewAllHistory = () => {
+    closeHistoryDrawer();
+    setViewMode('stock_history');
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex justify-end">
+    <div className="fixed inset-0 z-50 overflow-hidden animate-in fade-in duration-200">
       {/* Backdrop */}
       <div
+        className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity"
         onClick={closeHistoryDrawer}
-        className="fixed inset-0 bg-slate-900/40 backdrop-blur-2xs transition-opacity animate-in fade-in duration-200"
       />
 
-      {/* Drawer Panel */}
-      <div className="relative w-full max-w-lg bg-white h-full shadow-2xl z-10 flex flex-col animate-in slide-in-from-right duration-300">
+      <div className="fixed inset-y-0 right-0 max-w-md w-full bg-white shadow-2xl flex flex-col z-10">
         {/* Header */}
-        <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
-          <div>
-            <h2 className="text-sm font-bold text-slate-900">Stock Movement History</h2>
-            <p className="text-2xs text-slate-500 truncate max-w-[320px]">
-              {selectedItem.name}
-            </p>
-          </div>
+        <div className="px-6 py-4 border-b border-slate-200/80 flex items-center justify-between shrink-0">
+          <h2 className="text-base font-bold text-slate-900">Stock History</h2>
           <button
+            type="button"
             onClick={closeHistoryDrawer}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
           >
-            <X className="w-4 h-4" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Product Snapshot */}
-        <div className="p-4 border-b border-slate-100 bg-white">
-          <div className="flex items-center gap-3.5 p-3 rounded-xl bg-slate-50 border border-slate-200/70">
+        {/* Product Scope Card */}
+        <div className="p-6 border-b border-slate-200/80 bg-slate-50/70 shrink-0">
+          <div className="flex items-center gap-3.5">
             <img
-              src={selectedItem.imageUrl}
-              alt={selectedItem.name}
-              className="w-12 h-12 rounded-lg object-cover border border-slate-200"
+              src={historyDrawerItem.imageUrl}
+              alt={historyDrawerItem.name}
+              className="w-14 h-14 rounded-xl object-cover bg-white border border-slate-200 shrink-0"
             />
             <div className="flex-1 min-w-0">
-              <span className="text-2xs font-mono font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
-                {selectedItem.sku}
-              </span>
-              <h4 className="text-xs font-semibold text-slate-800 truncate mt-0.5">
-                {selectedItem.name}
-              </h4>
-              <div className="flex items-center gap-3 mt-1 text-2xs text-slate-500">
-                <span>In Stock: <strong className="text-slate-900">{selectedItem.currentStock}</strong></span>
-                <span>•</span>
-                <span>Barcode: <span className="font-mono">{selectedItem.barcode}</span></span>
-              </div>
+              <h3 className="font-bold text-slate-900 text-xs truncate">
+                {historyDrawerItem.name}
+              </h3>
+              <p className="text-[11px] text-slate-500 font-mono mt-0.5">
+                SKU: {historyDrawerItem.sku}
+              </p>
+              <p className="text-[11px] text-slate-500 font-mono">
+                Barcode: {historyDrawerItem.barcode}
+              </p>
+              <p className="text-xs font-bold text-slate-800 mt-1">
+                Current Stock: <span className="text-blue-600">{historyDrawerItem.stock} Units</span>
+              </p>
             </div>
           </div>
 
-          {/* Filter Tabs */}
-          <div className="flex items-center gap-1.5 mt-3">
-            <button
-              onClick={() => setActiveTab('all')}
-              className={`px-3 py-1.5 rounded-lg text-2xs font-semibold transition-colors ${
-                activeTab === 'all'
-                  ? 'bg-slate-900 text-white shadow-2xs'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
+          {/* Filter dropdown */}
+          <div className="relative mt-4">
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value as any)}
+              className="w-full appearance-none bg-white border border-slate-200 rounded-xl px-3.5 py-2 pr-8 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
             >
-              All ({productTransactions.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('in')}
-              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-2xs font-semibold transition-colors ${
-                activeTab === 'in'
-                  ? 'bg-emerald-600 text-white shadow-2xs'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              <ArrowUpRight className="w-3 h-3" />
-              <span>Stock In (+)</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('out')}
-              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-2xs font-semibold transition-colors ${
-                activeTab === 'out'
-                  ? 'bg-rose-600 text-white shadow-2xs'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              <ArrowDownRight className="w-3 h-3" />
-              <span>Stock Out (−)</span>
-            </button>
+              <option value="all">All Transactions</option>
+              <option value="stock_in">Stock In (Added)</option>
+              <option value="stock_out">Stock Out (Deducted)</option>
+            </select>
+            <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
         </div>
 
-        {/* Chronological Timeline */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3">
-          {filteredTransactions.length === 0 ? (
-            <div className="p-8 text-center text-slate-400">
-              <Clock className="w-8 h-8 mx-auto mb-2 opacity-40" />
-              <p className="text-xs font-medium">No stock movements found for this filter.</p>
-            </div>
-          ) : (
-            filteredTransactions.map((tx) => {
-              const isPositive = tx.quantityDelta > 0;
+        {/* Timeline Body */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+          <div className="relative pl-6 space-y-6 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200">
+            {productTransactions.map((tx) => {
+              const isIncrease = tx.type === 'stock_in';
               return (
-                <div
-                  key={tx.id}
-                  className="p-3.5 rounded-xl border border-slate-200/80 bg-white hover:border-slate-300 transition-all shadow-2xs"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-2">
-                      <div
-                        className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
-                          isPositive
-                            ? 'bg-emerald-50 text-emerald-600'
-                            : 'bg-rose-50 text-rose-600'
+                <div key={tx.id} className="relative group">
+                  {/* Timeline icon dot */}
+                  <div
+                    className={`absolute -left-6 top-0 w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow-xs ${
+                      isIncrease
+                        ? 'bg-emerald-500 text-white'
+                        : 'bg-rose-500 text-white'
+                    }`}
+                  >
+                    {isIncrease ? (
+                      <ArrowUp className="w-3 h-3" />
+                    ) : (
+                      <ArrowDown className="w-3 h-3" />
+                    )}
+                  </div>
+
+                  {/* Card Content */}
+                  <div className="bg-slate-50/80 border border-slate-200/80 rounded-2xl p-3.5 space-y-1 hover:border-slate-300 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-slate-900 text-xs">
+                        {isIncrease ? 'Stock Updated (Increase)' : 'Stock Updated (Decrease)'}
+                      </span>
+                      <span
+                        className={`font-black text-xs ${
+                          isIncrease ? 'text-emerald-600' : 'text-rose-600'
                         }`}
                       >
-                        {isPositive ? (
-                          <ArrowUpRight className="w-4 h-4" />
-                        ) : (
-                          <ArrowDownRight className="w-4 h-4" />
-                        )}
-                      </div>
-                      <div>
-                        <h4 className="text-xs font-bold text-slate-800">{tx.reason}</h4>
-                        <p className="text-2xs text-slate-400 flex items-center gap-1 mt-0.5">
-                          <Clock className="w-3 h-3" />
-                          <span>{new Date(tx.timestamp).toLocaleString()}</span>
-                        </p>
-                      </div>
+                        {isIncrease ? `+${tx.quantity}` : `${tx.quantity}`} Units
+                      </span>
                     </div>
 
-                    <div className="text-right">
-                      <span
-                        className={`text-xs font-bold font-mono px-2 py-0.5 rounded-md ${
-                          isPositive
-                            ? 'bg-emerald-50 text-emerald-700'
-                            : 'bg-rose-50 text-rose-700'
-                        }`}
-                      >
-                        {isPositive ? `+${tx.quantityDelta}` : tx.quantityDelta} units
-                      </span>
-                      <p className="text-2xs text-slate-500 mt-1 font-medium">
-                        Balance: <strong>{tx.balanceAfter}</strong>
+                    <div className="text-[11px] text-slate-600 space-y-0.5 pt-0.5">
+                      <p>
+                        New stock: <span className="font-bold text-slate-800">{tx.stockAfter}</span>
+                      </p>
+                      <p>
+                        Reason: <span className="text-slate-700">{tx.notes || tx.referenceType}</span>
+                      </p>
+                      <p>
+                        Reference: <span className="font-mono text-slate-700">{tx.referenceNo}</span>
                       </p>
                     </div>
-                  </div>
 
-                  <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-2xs text-slate-500">
-                    <span className="flex items-center gap-1">
-                      <FileText className="w-3 h-3 text-slate-400" />
-                      <span>Ref: <strong className="text-slate-700">{tx.referenceNo}</strong></span>
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <User className="w-3 h-3 text-slate-400" />
-                      <span>{tx.user}</span>
-                    </span>
-                  </div>
-
-                  {tx.notes && (
-                    <div className="mt-2 p-2 rounded-lg bg-slate-50 text-2xs text-slate-600 italic">
-                      "{tx.notes}"
+                    <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between text-[10px] text-slate-400 font-medium">
+                      <span>{tx.date}</span>
+                      <span>By: <strong className="text-slate-600">{tx.performedBy}</strong></span>
                     </div>
-                  )}
+                  </div>
                 </div>
               );
-            })
-          )}
+            })}
+          </div>
         </div>
 
-        {/* Footer */}
-        <div className="p-4 border-t border-slate-100 bg-slate-50/50 flex justify-end">
+        {/* Drawer Footer */}
+        <div className="p-4 border-t border-slate-200/80 bg-white shrink-0">
           <button
-            onClick={closeHistoryDrawer}
-            className="px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 transition-colors shadow-2xs"
+            type="button"
+            onClick={handleViewAllHistory}
+            className="w-full py-2.5 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-800 font-bold text-xs transition-colors shadow-2xs cursor-pointer text-center"
           >
-            Close
+            View All Stock History
           </button>
         </div>
       </div>

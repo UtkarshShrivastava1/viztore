@@ -1,299 +1,339 @@
 import React, { useState } from 'react';
 import {
-  ArrowLeft,
-  Plus,
-  Minus,
-  Save,
-  RotateCcw,
-  CheckCircle2,
-  AlertCircle,
+  ChevronRight,
+  History,
+  Info,
+  ChevronDown,
+  Boxes,
 } from 'lucide-react';
-import {
-  useInventoryStore,
-  BulkAdjustmentItem,
-} from '../../stores/inventoryStore.js';
+import { useInventoryStore } from '../../stores/inventoryStore.js';
+import { InventoryFilterBar } from './InventoryFilterBar.js';
+
+interface RowAdjustment {
+  productId: string;
+  adjustmentType: 'increase' | 'decrease';
+  quantity: number;
+  reason: string;
+  reference: string;
+  notes: string;
+}
 
 export const BulkAdjustStockView: React.FC = () => {
-  const { items, bulkAdjustStock, toggleBulkAdjustMode } = useInventoryStore();
+  const {
+    items,
+    setViewMode,
+    bulkAdjustStock,
+    totalProductCount,
+  } = useInventoryStore();
 
-  const [adjustments, setAdjustments] = useState<BulkAdjustmentItem[]>(
-    items.map((item) => ({
-      id: item.id,
-      adjustmentType: 'add',
-      quantityDelta: 0,
-      reason: 'Physical Stock Count Audit',
-      referenceNo: `BLK-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
-      notes: '',
-    }))
-  );
+  // Initialize row adjustments with mockup defaults or zeroes
+  const [adjustments, setAdjustments] = useState<Record<string, RowAdjustment>>(() => {
+    const initial: Record<string, RowAdjustment> = {};
+    const defaultDeltas: Record<string, { type: 'increase' | 'decrease'; qty: number }> = {
+      'inv-1': { type: 'increase', qty: 50 },
+      'inv-2': { type: 'increase', qty: 25 },
+      'inv-3': { type: 'decrease', qty: 15 },
+      'inv-4': { type: 'increase', qty: 10 },
+      'inv-5': { type: 'decrease', qty: 5 },
+      'inv-6': { type: 'increase', qty: 20 },
+      'inv-7': { type: 'decrease', qty: 10 },
+      'inv-8': { type: 'increase', qty: 30 },
+    };
 
-  const [globalReason, setGlobalReason] = useState('Physical Stock Count Audit');
+    items.forEach((item) => {
+      const def = defaultDeltas[item.id] || { type: 'increase', qty: 0 };
+      initial[item.id] = {
+        productId: item.id,
+        adjustmentType: def.type,
+        quantity: def.qty,
+        reason: '',
+        reference: '',
+        notes: '',
+      };
+    });
+    return initial;
+  });
 
-  const handleUpdateDelta = (id: string, delta: number) => {
-    setAdjustments((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, quantityDelta: Math.max(0, delta) } : a))
-    );
+  const handleTypeChange = (productId: string, type: 'increase' | 'decrease') => {
+    setAdjustments((prev) => ({
+      ...prev,
+      [productId]: {
+        ...(prev[productId] || {
+          productId,
+          adjustmentType: type,
+          quantity: 0,
+          reason: '',
+          reference: '',
+          notes: '',
+        }),
+        adjustmentType: type,
+      },
+    }));
   };
 
-  const handleUpdateType = (id: string, type: 'add' | 'reduce') => {
-    setAdjustments((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, adjustmentType: type } : a))
-    );
+  const handleQuantityChange = (productId: string, val: number) => {
+    const safeQty = Math.max(0, val || 0);
+    setAdjustments((prev) => ({
+      ...prev,
+      [productId]: {
+        ...(prev[productId] || {
+          productId,
+          adjustmentType: 'increase',
+          quantity: 0,
+          reason: '',
+          reference: '',
+          notes: '',
+        }),
+        quantity: safeQty,
+      },
+    }));
   };
 
-  const handleApplyGlobalReason = () => {
-    setAdjustments((prev) =>
-      prev.map((a) => ({ ...a, reason: globalReason }))
-    );
+  const handleFieldChange = (
+    productId: string,
+    field: 'reason' | 'reference' | 'notes',
+    value: string
+  ) => {
+    setAdjustments((prev) => ({
+      ...prev,
+      [productId]: {
+        ...(prev[productId] || {
+          productId,
+          adjustmentType: 'increase',
+          quantity: 0,
+          reason: '',
+          reference: '',
+          notes: '',
+        }),
+        [field]: value,
+      },
+    }));
   };
 
-  const handleSave = () => {
-    const activeAdjustments = adjustments.filter((a) => a.quantityDelta > 0);
-    if (activeAdjustments.length === 0) {
-      alert('No quantity changes detected to apply.');
+  const handleApply = () => {
+    const updates = Object.values(adjustments).filter((a) => a.quantity > 0);
+    if (updates.length === 0) {
+      alert('No adjustments specified. Setting quantities first.');
       return;
     }
-    bulkAdjustStock(activeAdjustments);
+    bulkAdjustStock(updates);
   };
 
-  const totalModifiedCount = adjustments.filter((a) => a.quantityDelta > 0).length;
-
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden pb-20 relative">
-      {/* Top Header */}
-      <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-white">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => toggleBulkAdjustMode(false)}
-            className="p-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </button>
-          <div>
-            <h2 className="text-base font-bold text-slate-900 tracking-tight">
-              Bulk Adjust Stock (Batch Mode)
-            </h2>
-            <p className="text-xs text-slate-500">
-              Update inventory levels across multiple catalog items in a single operation.
-            </p>
-          </div>
+    <div className="space-y-4 pb-20">
+      {/* Breadcrumb & Header */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <nav className="flex items-center gap-1.5 text-xs text-slate-500 mb-1.5 font-medium">
+            <button
+              type="button"
+              onClick={() => setViewMode('overview')}
+              className="hover:text-blue-600 cursor-pointer"
+            >
+              Inventory
+            </button>
+            <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+            <span className="text-slate-900 font-semibold">Adjust Stock</span>
+          </nav>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Adjust Stock</h1>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Update stock quantity for one or more products.
+          </p>
         </div>
 
-        {/* Global Reason Apply */}
-        <div className="hidden lg:flex items-center gap-2">
-          <span className="text-2xs font-semibold text-slate-500">Batch Reason:</span>
-          <select
-            value={globalReason}
-            onChange={(e) => setGlobalReason(e.target.value)}
-            className="h-8 rounded-lg border border-slate-200 px-2.5 text-xs text-slate-700 bg-white"
-          >
-            <option value="Physical Stock Count Audit">Physical Stock Count Audit</option>
-            <option value="Supplier Bulk Inward Shipment">Supplier Bulk Inward Shipment</option>
-            <option value="Store Reorganization">Store Reorganization</option>
-            <option value="Damaged Goods Write-off">Damaged Goods Write-off</option>
-          </select>
-          <button
-            type="button"
-            onClick={handleApplyGlobalReason}
-            className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-2xs font-semibold text-slate-700 transition-colors"
-          >
-            Apply to All
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => setViewMode('stock_history')}
+          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-800 shadow-2xs transition-colors cursor-pointer"
+        >
+          <History className="w-4 h-4 text-blue-600" />
+          <span>Stock History</span>
+        </button>
       </div>
 
-      {/* Batch Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse text-xs">
-          <thead>
-            <tr className="border-b border-slate-200 bg-slate-50/80 text-2xs uppercase tracking-wider font-bold text-slate-500">
-              <th className="py-3.5 px-4 min-w-[240px]">Product & SKU</th>
-              <th className="py-3.5 px-3 text-right">Current Stock</th>
-              <th className="py-3.5 px-3 text-center min-w-[120px]">Type</th>
-              <th className="py-3.5 px-3 text-center min-w-[160px]">Adjust Qty</th>
-              <th className="py-3.5 px-3 text-right">New Stock</th>
-              <th className="py-3.5 px-3 min-w-[180px]">Reason</th>
-              <th className="py-3.5 px-4 min-w-[140px]">Reference #</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {items.map((item) => {
-              const adj = adjustments.find((a) => a.id === item.id) || {
-                adjustmentType: 'add',
-                quantityDelta: 0,
-                reason: 'Physical Stock Count Audit',
-                referenceNo: '',
-              };
+      {/* Filter Toolbar */}
+      <InventoryFilterBar showProductType={false} />
 
-              const delta = adj.adjustmentType === 'add' ? adj.quantityDelta : -adj.quantityDelta;
-              const newStock = Math.max(0, item.currentStock + delta);
-              const isChanged = adj.quantityDelta > 0;
+      {/* Batch Adjust Table */}
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse min-w-[1100px] text-xs">
+            <thead>
+              <tr className="border-b border-slate-200/80 bg-slate-50/70 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                <th className="px-4 py-3.5">Product</th>
+                <th className="px-4 py-3.5">SKU &amp; Barcode</th>
+                <th className="px-4 py-3.5 text-center">Current Stock (Units)</th>
+                <th className="px-4 py-3.5">
+                  <div className="inline-flex items-center gap-1">
+                    <span>Adjustment (Units)</span>
+                    <Info className="w-3.5 h-3.5 text-slate-400" />
+                  </div>
+                </th>
+                <th className="px-4 py-3.5 text-center">New Stock (Units)</th>
+                <th className="px-4 py-3.5">Reason (Optional)</th>
+                <th className="px-4 py-3.5">Reference (Optional)</th>
+                <th className="px-4 py-3.5">Notes (Optional)</th>
+              </tr>
+            </thead>
 
-              return (
-                <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
-                  <td className="py-3 px-4">
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={item.imageUrl}
-                        alt={item.name}
-                        className="w-10 h-10 rounded-lg object-cover border border-slate-200 shrink-0"
-                      />
-                      <div className="min-w-0">
-                        <p className="font-semibold text-slate-900 truncate max-w-[220px]">
-                          {item.name}
-                        </p>
-                        <p className="text-2xs font-mono text-blue-600 font-semibold mt-0.5">
-                          {item.sku}
-                        </p>
+            <tbody className="divide-y divide-slate-150 bg-white text-slate-700">
+              {items.map((item) => {
+                const adj = adjustments[item.id] || {
+                  productId: item.id,
+                  adjustmentType: 'increase',
+                  quantity: 0,
+                  reason: '',
+                  reference: '',
+                  notes: '',
+                };
+
+                const isInc = adj.adjustmentType === 'increase';
+                const signedDelta = isInc ? adj.quantity : -adj.quantity;
+                const newStock = Math.max(0, item.stock + signedDelta);
+
+                return (
+                  <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
+                    {/* Product */}
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={item.imageUrl}
+                          alt={item.name}
+                          className="w-10 h-10 rounded-xl object-cover bg-slate-100 border border-slate-200 shrink-0"
+                        />
+                        <div>
+                          <span className="font-bold text-slate-900 block text-xs">
+                            {item.name}
+                          </span>
+                          <span className="text-[11px] text-slate-400 block mt-0.5">
+                            Size: {item.size} • Color: {item.color}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  </td>
+                    </td>
 
-                  <td className="py-3 px-3 text-right font-bold text-slate-800">
-                    {item.currentStock}
-                  </td>
+                    {/* SKU & Barcode */}
+                    <td className="px-4 py-3 font-mono text-[11px] text-slate-500">
+                      <span className="block font-semibold text-slate-700">{item.sku}</span>
+                      <span className="text-slate-400">{item.barcode}</span>
+                    </td>
 
-                  <td className="py-3 px-3 text-center">
-                    <div className="inline-flex rounded-lg border border-slate-200 p-0.5 bg-slate-50">
-                      <button
-                        type="button"
-                        onClick={() => handleUpdateType(item.id, 'add')}
-                        className={`px-2 py-0.5 rounded text-2xs font-bold transition-colors ${
-                          adj.adjustmentType === 'add'
-                            ? 'bg-blue-600 text-white shadow-2xs'
-                            : 'text-slate-600 hover:text-slate-900'
-                        }`}
-                      >
-                        + Add
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleUpdateType(item.id, 'reduce')}
-                        className={`px-2 py-0.5 rounded text-2xs font-bold transition-colors ${
-                          adj.adjustmentType === 'reduce'
-                            ? 'bg-rose-600 text-white shadow-2xs'
-                            : 'text-slate-600 hover:text-slate-900'
-                        }`}
-                      >
-                        − Reduce
-                      </button>
-                    </div>
-                  </td>
+                    {/* Current Stock */}
+                    <td className="px-4 py-3 text-center font-bold text-slate-900 text-sm">
+                      {item.stock}
+                    </td>
 
-                  <td className="py-3 px-3 text-center">
-                    <div className="inline-flex items-center gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() => handleUpdateDelta(item.id, adj.quantityDelta - 1)}
-                        className="w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-100"
-                      >
-                        <Minus className="w-3 h-3" />
-                      </button>
+                    {/* Adjustment Units input with Increase/Decrease selector */}
+                    <td className="px-4 py-3">
+                      <div className="inline-flex items-center rounded-xl border border-slate-200 bg-white overflow-hidden shadow-2xs">
+                        <input
+                          type="number"
+                          min={0}
+                          value={adj.quantity === 0 ? '' : adj.quantity}
+                          placeholder="0"
+                          onChange={(e) => handleQuantityChange(item.id, Number(e.target.value))}
+                          className="w-16 px-2.5 py-1.5 text-center text-xs font-bold text-slate-900 focus:outline-none"
+                        />
+                        <div className="border-l border-slate-200">
+                          <select
+                            value={adj.adjustmentType}
+                            onChange={(e) => handleTypeChange(item.id, e.target.value as any)}
+                            className={`appearance-none bg-transparent pl-2.5 pr-6 py-1.5 text-xs font-bold focus:outline-none cursor-pointer ${
+                              isInc ? 'text-emerald-600' : 'text-rose-600'
+                            }`}
+                          >
+                            <option value="increase">Increase</option>
+                            <option value="decrease">Decrease</option>
+                          </select>
+                        </div>
+                      </div>
+                    </td>
 
-                      <input
-                        type="number"
-                        min="0"
-                        value={adj.quantityDelta}
-                        onChange={(e) =>
-                          handleUpdateDelta(item.id, parseInt(e.target.value) || 0)
-                        }
-                        className="w-16 h-7 rounded-lg border border-slate-200 text-center font-bold text-xs focus:border-blue-600 focus:outline-none"
-                      />
-
-                      <button
-                        type="button"
-                        onClick={() => handleUpdateDelta(item.id, adj.quantityDelta + 1)}
-                        className="w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-100"
-                      >
-                        <Plus className="w-3 h-3" />
-                      </button>
-                    </div>
-                  </td>
-
-                  <td className="py-3 px-3 text-right">
-                    {isChanged ? (
+                    {/* Live Recomputed New Stock */}
+                    <td className="px-4 py-3 text-center">
                       <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-2xs font-bold font-mono ${
-                          adj.adjustmentType === 'add'
-                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                            : 'bg-rose-50 text-rose-700 border border-rose-200'
+                        className={`text-sm font-black tabular-nums ${
+                          adj.quantity === 0
+                            ? 'text-slate-700'
+                            : isInc
+                            ? 'text-emerald-600'
+                            : 'text-rose-600'
                         }`}
                       >
-                        {newStock} ({adj.adjustmentType === 'add' ? `+${adj.quantityDelta}` : `-${adj.quantityDelta}`})
+                        {newStock}
                       </span>
-                    ) : (
-                      <span className="text-slate-500 font-semibold">{newStock}</span>
-                    )}
-                  </td>
+                    </td>
 
-                  <td className="py-3 px-3">
-                    <input
-                      type="text"
-                      value={adj.reason}
-                      onChange={(e) =>
-                        setAdjustments((prev) =>
-                          prev.map((a) =>
-                            a.id === item.id ? { ...a, reason: e.target.value } : a
-                          )
-                        )
-                      }
-                      className="w-full h-8 rounded-lg border border-slate-200 px-2 text-xs focus:border-blue-600 focus:outline-none"
-                    />
-                  </td>
+                    {/* Reason */}
+                    <td className="px-4 py-3">
+                      <div className="relative min-w-[140px]">
+                        <select
+                          value={adj.reason}
+                          onChange={(e) => handleFieldChange(item.id, 'reason', e.target.value)}
+                          className="w-full appearance-none bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 pr-6 text-xs text-slate-700 font-medium focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+                        >
+                          <option value="">Select reason</option>
+                          <option value="Purchase Received">Purchase Received</option>
+                          <option value="Damaged Stock">Damaged Stock</option>
+                          <option value="Stock Audit">Stock Audit</option>
+                          <option value="Returned to Supplier">Returned to Supplier</option>
+                          <option value="Sold via POS">Sold via POS</option>
+                          <option value="Other">Other</option>
+                        </select>
+                        <ChevronDown className="w-3 h-3 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      </div>
+                    </td>
 
-                  <td className="py-3 px-4">
-                    <input
-                      type="text"
-                      value={adj.referenceNo}
-                      onChange={(e) =>
-                        setAdjustments((prev) =>
-                          prev.map((a) =>
-                            a.id === item.id ? { ...a, referenceNo: e.target.value } : a
-                          )
-                        )
-                      }
-                      placeholder="PO / Ref #"
-                      className="w-full h-8 rounded-lg border border-slate-200 px-2 text-xs focus:border-blue-600 focus:outline-none"
-                    />
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                    {/* Reference */}
+                    <td className="px-4 py-3">
+                      <input
+                        type="text"
+                        value={adj.reference}
+                        onChange={(e) => handleFieldChange(item.id, 'reference', e.target.value)}
+                        placeholder="e.g. PO#1234"
+                        className="w-28 px-2.5 py-1.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      />
+                    </td>
+
+                    {/* Notes */}
+                    <td className="px-4 py-3">
+                      <input
+                        type="text"
+                        value={adj.notes}
+                        onChange={(e) => handleFieldChange(item.id, 'notes', e.target.value)}
+                        placeholder="Add note..."
+                        className="w-32 px-2.5 py-1.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      />
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Sticky Bottom Action Bar */}
-      <div className="fixed bottom-0 left-0 right-0 sm:left-64 bg-white/95 backdrop-blur-md border-t border-slate-200 p-3.5 px-6 flex items-center justify-between z-20 shadow-lg">
-        <div className="flex items-center gap-2">
-          {totalModifiedCount > 0 ? (
-            <span className="flex items-center gap-1.5 text-xs font-semibold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200">
-              <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />
-              <span>{totalModifiedCount} products ready to update</span>
-            </span>
-          ) : (
-            <span className="text-xs text-slate-500">No adjustments modified yet.</span>
-          )}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200/80 p-4 shadow-xl z-20 flex items-center justify-between sm:ml-64 transition-all">
+        <div className="flex items-center gap-2 font-bold text-slate-900 text-xs sm:text-sm">
+          <Boxes className="w-5 h-5 text-blue-600" />
+          <span>Total Products: {totalProductCount.toLocaleString()}</span>
         </div>
 
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() => toggleBulkAdjustMode(false)}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+            onClick={() => setViewMode('overview')}
+            className="px-5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs transition-colors cursor-pointer"
           >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span>Discard Changes</span>
+            Cancel
           </button>
-
           <button
             type="button"
-            onClick={handleSave}
-            disabled={totalModifiedCount === 0}
-            className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-semibold shadow-xs transition-colors"
+            onClick={handleApply}
+            className="px-6 py-2 rounded-xl bg-[#1a56db] hover:bg-blue-700 text-white font-bold text-xs shadow-sm transition-colors cursor-pointer"
           >
-            <Save className="w-3.5 h-3.5" />
-            <span>Save All Adjustments</span>
+            Apply Stock Adjustment
           </button>
         </div>
       </div>

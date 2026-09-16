@@ -1,292 +1,274 @@
 import React, { useState, useEffect } from 'react';
-import { X, Plus, Minus, AlertCircle, CheckCircle2, ArrowRight } from 'lucide-react';
+import { X, Plus, Minus, Info } from 'lucide-react';
 import { useInventoryStore } from '../../stores/inventoryStore.js';
 
 export const AdjustStockDrawer: React.FC = () => {
-  const {
-    selectedItem,
-    isAdjustStockDrawerOpen,
-    closeAdjustDrawer,
-    adjustStock,
-  } = useInventoryStore();
+  const { adjustDrawerItem, closeAdjustDrawer, adjustStock } = useInventoryStore();
 
-  const [adjustmentType, setAdjustmentType] = useState<'add' | 'reduce'>('add');
-  const [quantity, setQuantity] = useState<number>(10);
-  const [reason, setReason] = useState<string>('New Stock Received');
-  const [referenceNo, setReferenceNo] = useState<string>('');
+  const [adjustmentType, setAdjustmentType] = useState<'increase' | 'decrease' | 'set'>('increase');
+  const [quantity, setQuantity] = useState<number>(50);
+  const [reason, setReason] = useState<string>('Purchase Received');
+  const [reference, setReference] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
 
   useEffect(() => {
-    if (selectedItem) {
-      setAdjustmentType('add');
-      setQuantity(10);
-      setReason('New Stock Received');
-      setReferenceNo(`PO-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`);
+    if (adjustDrawerItem) {
+      setAdjustmentType('increase');
+      setQuantity(50);
+      setReason('Purchase Received');
+      setReference('');
       setNotes('');
     }
-  }, [selectedItem]);
+  }, [adjustDrawerItem]);
 
-  if (!isAdjustStockDrawerOpen || !selectedItem) return null;
+  if (!adjustDrawerItem) return null;
 
-  const currentStock = selectedItem.currentStock;
-  const delta = adjustmentType === 'add' ? quantity : -quantity;
-  const newStock = Math.max(0, currentStock + delta);
-  const newAvailable = Math.max(0, newStock - selectedItem.reservedStock);
+  const currentStock = adjustDrawerItem.stock;
+  const currentReserved = adjustDrawerItem.reserved;
+  const currentAvailable = adjustDrawerItem.available;
 
-  const addReasons = [
-    'New Stock Received',
-    'Supplier Inward Shipment',
-    'Customer Return Restock',
-    'Inventory Reconciliation (+)',
-    'Internal Store Transfer',
-  ];
+  let computedNewStock = currentStock;
+  let summaryText = '';
 
-  const reduceReasons = [
-    'Damaged / Broken in Transit',
-    'Expired Product Write-off',
-    'Inventory Reconciliation (-)',
-    'Theft / Stock Shrinkage',
-    'Sample / Store Display',
-  ];
-
-  const currentReasons = adjustmentType === 'add' ? addReasons : reduceReasons;
+  if (adjustmentType === 'increase') {
+    computedNewStock = currentStock + quantity;
+    summaryText = `Stock will be increased by ${quantity} units. New stock will be ${computedNewStock} units.`;
+  } else if (adjustmentType === 'decrease') {
+    computedNewStock = Math.max(0, currentStock - quantity);
+    summaryText = `Stock will be decreased by ${quantity} units. New stock will be ${computedNewStock} units.`;
+  } else {
+    computedNewStock = Math.max(0, quantity);
+    const delta = quantity - currentStock;
+    summaryText = `Stock will be set to ${quantity} units (${delta >= 0 ? '+' : ''}${delta} units change). New stock will be ${computedNewStock} units.`;
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (quantity <= 0) return;
-    adjustStock(selectedItem.id, adjustmentType, quantity, reason, referenceNo, notes);
+    if (!reason) {
+      alert('Please select a reason for stock adjustment');
+      return;
+    }
+    adjustStock(
+      adjustDrawerItem.id,
+      adjustmentType,
+      quantity,
+      reason,
+      reference.trim() || undefined,
+      notes.trim() || undefined
+    );
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end">
+    <div className="fixed inset-0 z-50 overflow-hidden animate-in fade-in duration-200">
       {/* Backdrop */}
       <div
+        className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity"
         onClick={closeAdjustDrawer}
-        className="fixed inset-0 bg-slate-900/40 backdrop-blur-2xs transition-opacity animate-in fade-in duration-200"
       />
 
-      {/* Drawer Panel */}
-      <div className="relative w-full max-w-md bg-white h-full shadow-2xl z-10 flex flex-col animate-in slide-in-from-right duration-300">
+      <div className="fixed inset-y-0 right-0 max-w-md w-full bg-white shadow-2xl flex flex-col z-10">
         {/* Header */}
-        <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
-          <div>
-            <h2 className="text-sm font-bold text-slate-900">Adjust Stock Level</h2>
-            <p className="text-2xs text-slate-500 truncate max-w-[280px]">
-              {selectedItem.name}
-            </p>
-          </div>
+        <div className="px-6 py-4 border-b border-slate-200/80 flex items-center justify-between shrink-0">
+          <h2 className="text-base font-bold text-slate-900">Adjust Stock</h2>
           <button
+            type="button"
             onClick={closeAdjustDrawer}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
           >
-            <X className="w-4 h-4" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Content Form */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 space-y-5">
-          {/* Product Pill Card */}
-          <div className="flex items-center gap-3.5 p-3 rounded-xl bg-slate-50 border border-slate-200/70">
+        {/* Drawer Scrollable Body */}
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-5 text-xs">
+          {/* Product Header Card */}
+          <div className="flex items-start gap-3.5 p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl">
             <img
-              src={selectedItem.imageUrl}
-              alt={selectedItem.name}
-              className="w-12 h-12 rounded-lg object-cover border border-slate-200"
+              src={adjustDrawerItem.imageUrl}
+              alt={adjustDrawerItem.name}
+              className="w-14 h-14 rounded-xl object-cover bg-white border border-slate-200 shrink-0"
             />
             <div className="flex-1 min-w-0">
-              <span className="text-2xs font-mono font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
-                {selectedItem.sku}
-              </span>
-              <h4 className="text-xs font-semibold text-slate-800 truncate mt-0.5">
-                {selectedItem.name}
-              </h4>
-              <div className="flex items-center gap-2 mt-1 text-2xs text-slate-500">
-                <span>Current: <strong className="text-slate-700">{selectedItem.currentStock}</strong></span>
-                <span>•</span>
-                <span>Reserved: <strong className="text-amber-600">{selectedItem.reservedStock}</strong></span>
-                <span>•</span>
-                <span>Available: <strong className="text-emerald-600">{selectedItem.availableStock}</strong></span>
+              <h3 className="font-bold text-slate-900 text-xs truncate">
+                {adjustDrawerItem.name}
+              </h3>
+              <div className="mt-1 space-y-0.5 text-[11px] text-slate-500">
+                <p>SKU: <span className="font-mono text-slate-600 font-semibold">{adjustDrawerItem.sku}</span></p>
+                <p>Barcode: <span className="text-slate-600">{adjustDrawerItem.barcode}</span></p>
+                <p>Size: <span className="font-semibold text-slate-700">{adjustDrawerItem.size}</span> • Color: <span className="font-semibold text-slate-700">{adjustDrawerItem.color}</span></p>
+                <p>Brand: <span className="font-semibold text-slate-700">{adjustDrawerItem.brand}</span></p>
               </div>
             </div>
           </div>
 
-          {/* Adjustment Type Selector */}
-          <div>
-            <label className="block text-2xs font-bold uppercase tracking-wider text-slate-500 mb-2">
-              Adjustment Type
-            </label>
-            <div className="grid grid-cols-2 gap-2.5">
-              <button
-                type="button"
-                onClick={() => {
-                  setAdjustmentType('add');
-                  setReason('New Stock Received');
-                }}
-                className={`flex items-center justify-center gap-2 p-2.5 rounded-xl border text-xs font-semibold transition-all ${
-                  adjustmentType === 'add'
-                    ? 'border-blue-600 bg-blue-50/60 text-blue-700 shadow-2xs'
-                    : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-                }`}
-              >
-                <Plus className="w-3.5 h-3.5 text-blue-600" />
-                <span>Add Stock (+)</span>
-              </button>
+          {/* Current Stat Bar */}
+          <div className="grid grid-cols-3 gap-2 bg-slate-50 border border-slate-200/80 rounded-2xl p-3 text-center">
+            <div>
+              <span className="text-[10px] font-semibold text-slate-400 block uppercase tracking-wider">
+                Current Stock (Units)
+              </span>
+              <span className="text-base font-bold text-slate-900 mt-0.5 block">
+                {currentStock}
+              </span>
+            </div>
+            <div className="border-x border-slate-200">
+              <span className="text-[10px] font-semibold text-slate-400 block uppercase tracking-wider">
+                Reserved
+              </span>
+              <span className="text-base font-bold text-slate-900 mt-0.5 block">
+                {currentReserved}
+              </span>
+            </div>
+            <div>
+              <span className="text-[10px] font-semibold text-slate-400 block uppercase tracking-wider">
+                Available
+              </span>
+              <span className="text-base font-bold text-slate-900 mt-0.5 block">
+                {currentAvailable}
+              </span>
+            </div>
+          </div>
 
-              <button
-                type="button"
-                onClick={() => {
-                  setAdjustmentType('reduce');
-                  setReason('Damaged / Broken in Transit');
-                }}
-                className={`flex items-center justify-center gap-2 p-2.5 rounded-xl border text-xs font-semibold transition-all ${
-                  adjustmentType === 'reduce'
-                    ? 'border-rose-600 bg-rose-50/60 text-rose-700 shadow-2xs'
-                    : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-                }`}
-              >
-                <Minus className="w-3.5 h-3.5 text-rose-600" />
-                <span>Reduce Stock (−)</span>
-              </button>
+          {/* Adjustment Type Radio Group */}
+          <div>
+            <label className="font-bold text-slate-900 block mb-2">
+              Adjustment Type <span className="text-rose-500">*</span>
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { id: 'increase', label: 'Increase Stock' },
+                { id: 'decrease', label: 'Decrease Stock' },
+                { id: 'set', label: 'Set New Stock' },
+              ].map((type) => (
+                <label
+                  key={type.id}
+                  className={`flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer transition-all ${
+                    adjustmentType === type.id
+                      ? 'border-blue-600 bg-blue-50/40 text-blue-700 font-bold shadow-2xs'
+                      : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="adjustmentType"
+                    checked={adjustmentType === type.id}
+                    onChange={() => setAdjustmentType(type.id as any)}
+                    className="w-3.5 h-3.5 text-blue-600 focus:ring-blue-500 border-slate-300"
+                  />
+                  <span className="text-xs leading-tight">{type.label}</span>
+                </label>
+              ))}
             </div>
           </div>
 
           {/* Quantity Stepper */}
           <div>
-            <label className="block text-2xs font-bold uppercase tracking-wider text-slate-500 mb-2">
-              Quantity to {adjustmentType === 'add' ? 'Add' : 'Reduce'}
+            <label className="font-bold text-slate-900 block mb-2">
+              Quantity <span className="text-rose-500">*</span>
             </label>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center rounded-xl border border-slate-200 bg-slate-50 p-1">
               <button
                 type="button"
-                onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                className="w-10 h-10 rounded-xl border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-100 transition-colors"
+                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                className="w-10 h-10 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 flex items-center justify-center font-bold text-sm shadow-2xs transition-colors cursor-pointer"
               >
                 <Minus className="w-4 h-4" />
               </button>
-
               <input
                 type="number"
-                min="1"
+                min={1}
                 value={quantity}
-                onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 0))}
-                className="flex-1 h-10 rounded-xl border border-slate-200 text-center font-bold text-slate-800 text-base focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
+                onChange={(e) => setQuantity(Math.max(1, Number(e.target.value) || 0))}
+                className="flex-1 bg-transparent text-center font-bold text-sm text-slate-900 focus:outline-none"
               />
-
               <button
                 type="button"
-                onClick={() => setQuantity((q) => q + 1)}
-                className="w-10 h-10 rounded-xl border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-100 transition-colors"
+                onClick={() => setQuantity(quantity + 1)}
+                className="w-10 h-10 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 flex items-center justify-center font-bold text-sm shadow-2xs transition-colors cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
               </button>
             </div>
-
-            {/* Quick preset chips */}
-            <div className="flex items-center gap-1.5 mt-2">
-              {[5, 10, 25, 50, 100].map((preset) => (
-                <button
-                  key={preset}
-                  type="button"
-                  onClick={() => setQuantity(preset)}
-                  className="px-2.5 py-1 text-2xs font-medium rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors"
-                >
-                  +{preset}
-                </button>
-              ))}
-            </div>
           </div>
 
-          {/* Reason Selector */}
+          {/* Reason Dropdown (Required) */}
           <div>
-            <label className="block text-2xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
-              Reason for Adjustment
+            <label className="font-bold text-slate-900 block mb-1.5">
+              Reason <span className="text-rose-500">*</span>
             </label>
             <select
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              className="w-full h-9 rounded-xl border border-slate-200 px-3 text-xs text-slate-700 bg-white focus:border-blue-600 focus:outline-none"
+              className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-slate-800 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
             >
-              {currentReasons.map((r) => (
-                <option key={r} value={r}>
-                  {r}
-                </option>
-              ))}
+              <option value="Purchase Received">Purchase Received</option>
+              <option value="Damaged Stock">Damaged Stock</option>
+              <option value="Stock Audit / Discrepancy">Stock Audit / Discrepancy</option>
+              <option value="Returned to Supplier">Returned to Supplier</option>
+              <option value="Sold via Offline / POS">Sold via Offline / POS</option>
+              <option value="Other">Other</option>
             </select>
           </div>
 
-          {/* Reference # */}
+          {/* Reference (Optional) */}
           <div>
-            <label className="block text-2xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
-              Reference / PO / Invoice Number
+            <label className="font-bold text-slate-900 block mb-1.5">
+              Reference (Optional)
             </label>
             <input
               type="text"
-              value={referenceNo}
-              onChange={(e) => setReferenceNo(e.target.value)}
-              placeholder="e.g. PO-2026-0915 or INV-8921"
-              className="w-full h-9 rounded-xl border border-slate-200 px-3 text-xs text-slate-800 placeholder-slate-400 focus:border-blue-600 focus:outline-none"
+              value={reference}
+              onChange={(e) => setReference(e.target.value)}
+              placeholder="e.g. PO#1234, GRN#5678, Note"
+              className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-slate-800 text-xs placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
-          {/* Notes */}
+          {/* Notes (Optional) */}
           <div>
-            <label className="block text-2xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
-              Additional Audit Notes (Optional)
-            </label>
+            <div className="flex justify-between items-center mb-1.5">
+              <label className="font-bold text-slate-900 block">
+                Notes (Optional)
+              </label>
+              <span className="text-[10px] text-slate-400">
+                {notes.length} / 200
+              </span>
+            </div>
             <textarea
+              rows={3}
+              maxLength={200}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              rows={2}
-              placeholder="Add details for team record..."
-              className="w-full rounded-xl border border-slate-200 p-2.5 text-xs text-slate-800 placeholder-slate-400 focus:border-blue-600 focus:outline-none resize-none"
+              placeholder="Add a note..."
+              className="w-full bg-white border border-slate-200 rounded-xl p-3 text-slate-800 text-xs placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
             />
           </div>
 
-          {/* Live Dynamic Recomputed Stock Alert */}
-          <div
-            className={`p-3.5 rounded-xl border flex items-start gap-2.5 ${
-              adjustmentType === 'add'
-                ? 'bg-emerald-50/70 border-emerald-200/80 text-emerald-900'
-                : 'bg-amber-50/70 border-amber-200/80 text-amber-900'
-            }`}
-          >
-            {adjustmentType === 'add' ? (
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 mt-0.5 shrink-0" />
-            ) : (
-              <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
-            )}
-            <div className="text-2xs leading-relaxed">
-              <p className="font-semibold">
-                Calculation Preview:
-              </p>
-              <p className="mt-0.5">
-                Current Stock ({currentStock}) {adjustmentType === 'add' ? '+' : '−'} Delta ({quantity}) ={' '}
-                <strong className="underline text-xs">{newStock} units</strong>.
-              </p>
-              <p className="text-slate-500 mt-0.5">
-                Available for online sale will update to <strong>{newAvailable} units</strong>.
-              </p>
-            </div>
+          {/* Dynamic Alert */}
+          <div className="p-3.5 bg-blue-50/70 border border-blue-200 rounded-2xl flex items-start gap-2.5 text-blue-900">
+            <Info className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+            <p className="text-xs leading-relaxed font-medium">
+              {summaryText}
+            </p>
+          </div>
+
+          {/* Footer inside form */}
+          <div className="pt-2 flex items-center gap-3">
+            <button
+              type="button"
+              onClick={closeAdjustDrawer}
+              className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold transition-colors cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="flex-1 px-5 py-2.5 rounded-xl bg-[#1a56db] hover:bg-blue-700 text-white font-bold transition-colors shadow-sm cursor-pointer text-center"
+            >
+              Adjust Stock
+            </button>
           </div>
         </form>
-
-        {/* Footer Actions */}
-        <div className="p-4 border-t border-slate-100 bg-white flex items-center justify-end gap-2.5">
-          <button
-            type="button"
-            onClick={closeAdjustDrawer}
-            className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={handleSubmit}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition-colors shadow-xs"
-          >
-            <span>Apply Adjustment</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
       </div>
     </div>
   );

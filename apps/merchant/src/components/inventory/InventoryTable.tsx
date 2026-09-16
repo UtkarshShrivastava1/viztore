@@ -1,422 +1,497 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import {
-  Search,
-  Filter,
-  RotateCcw,
-  MoreVertical,
-  HelpCircle,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
-  AlertCircle,
-  Sliders,
-  Upload,
-  History,
+  ChevronsLeft,
+  ChevronsRight,
+  Info,
+  RefreshCw,
 } from 'lucide-react';
-import {
-  InventoryItem,
-  useInventoryStore,
-} from '../../stores/inventoryStore.js';
-import { RowActionMenu } from './RowActionMenu.js';
+import { useInventoryStore, InventoryItem } from '../../stores/inventoryStore.js';
+import { InventoryActionMenu } from './InventoryActionMenu.js';
+import { ReservedStockPopover } from './ReservedStockPopover.js';
 
 export const InventoryTable: React.FC = () => {
   const {
     items,
-    filters,
-    setSearchQuery,
-    setFilter,
-    clearFilters,
-    openAdjustDrawer,
-    toggleBulkAdjustMode,
-    toggleFullHistoryPage,
+    selectedIds,
+    toggleSelectId,
+    toggleSelectAll,
+    searchQuery,
+    categoryFilter,
+    subcategoryFilter,
+    productTypeFilter,
+    brandFilter,
+    statusFilter,
+    currentPage,
+    pageSize,
+    totalProductCount,
+    setCurrentPage,
+    setPageSize,
+    openDetailModal,
   } = useInventoryStore();
 
-  // Menu and Popover state
-  const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
-  const [menuAnchorRect, setMenuAnchorRect] = useState<DOMRect | null>(null);
-  const [reservedPopoverId, setReservedPopoverId] = useState<string | null>(null);
-  const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
+  const [sortField, setSortField] = useState<'stock' | 'stockValue' | null>(null);
+  const [sortAsc, setSortAsc] = useState<boolean>(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const rowsPerPage = 6;
-
-  // Filtered dataset
-  const filteredItems = useMemo(() => {
-    return items.filter((item) => {
-      // Search Query
-      if (filters.searchQuery) {
-        const q = filters.searchQuery.toLowerCase();
-        const matches =
-          item.name.toLowerCase().includes(q) ||
-          item.sku.toLowerCase().includes(q) ||
-          item.barcode.toLowerCase().includes(q) ||
-          item.category.toLowerCase().includes(q);
-        if (!matches) return false;
-      }
-
-      // Category filter
-      if (filters.category !== 'all' && item.category !== filters.category) {
-        return false;
-      }
-
-      // Sub-category filter
-      if (filters.subCategory !== 'all' && item.subCategory !== filters.subCategory) {
-        return false;
-      }
-
-      // Stock status filter
-      if (filters.stockStatus !== 'all' && item.status !== filters.stockStatus) {
-        return false;
-      }
-
-      return true;
-    });
-  }, [items, filters]);
-
-  const totalPages = Math.max(1, Math.ceil(filteredItems.length / rowsPerPage));
-  const paginatedItems = filteredItems.slice(
-    (currentPage - 1) * rowsPerPage,
-    currentPage * rowsPerPage
-  );
-
-  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.checked) {
-      setSelectedRowIds(filteredItems.map((i) => i.id));
-    } else {
-      setSelectedRowIds([]);
+  // Filter items
+  const filteredItems = items.filter((item) => {
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const matchName = item.name.toLowerCase().includes(q);
+      const matchSku = item.sku.toLowerCase().includes(q);
+      const matchBarcode = item.barcode.toLowerCase().includes(q);
+      const matchBrand = item.brand.toLowerCase().includes(q);
+      if (!matchName && !matchSku && !matchBarcode && !matchBrand) return false;
     }
+
+    if (categoryFilter !== 'All Categories' && item.category !== categoryFilter) {
+      return false;
+    }
+    if (subcategoryFilter !== 'All Sub-categories' && item.subcategory !== subcategoryFilter) {
+      return false;
+    }
+    if (productTypeFilter !== 'All Product Types' && item.productType !== productTypeFilter) {
+      return false;
+    }
+    if (brandFilter !== 'All Brands' && item.brand !== brandFilter) {
+      return false;
+    }
+    if (statusFilter !== 'All Statuses') {
+      if (item.status !== statusFilter) return false;
+    }
+
+    return true;
+  });
+
+  // Sort if needed
+  const sortedItems = [...filteredItems].sort((a, b) => {
+    if (!sortField) return 0;
+    if (sortField === 'stock') {
+      return sortAsc ? a.stock - b.stock : b.stock - a.stock;
+    }
+    if (sortField === 'stockValue') {
+      return sortAsc ? a.stockValue - b.stockValue : b.stockValue - a.stockValue;
+    }
+    return 0;
+  });
+
+  const totalPages = 125;
+  const startIndex = (currentPage - 1) * pageSize + 1;
+  const endIndex = Math.min(currentPage * pageSize, totalProductCount);
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    setTimeout(() => setIsRefreshing(false), 600);
   };
 
-  const handleSelectRow = (id: string) => {
-    setSelectedRowIds((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+  const getStatusBadge = (status: InventoryItem['status']) => {
+    if (status === 'out_of_stock') {
+      return (
+        <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#fdeeed] text-[#e53e3e]">
+          Out of Stock
+        </span>
+      );
+    }
+    if (status === 'low_stock') {
+      return (
+        <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#fef3e7] text-[#f59e0b]">
+          Low Stock
+        </span>
+      );
+    }
+    return (
+      <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#e6f8f0] text-[#00a86b]">
+        In Stock
+      </span>
     );
   };
 
-  const openMenu = (e: React.MouseEvent, id: string) => {
-    e.stopPropagation();
-    const rect = e.currentTarget.getBoundingClientRect();
-    setMenuAnchorRect(rect);
-    setActiveMenuId(id);
-  };
-
-  const activeItem = items.find((i) => i.id === activeMenuId);
-
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">
-      {/* Header with Title & Action Bar */}
-      <div className="p-4 sm:p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white">
-        <div>
-          <h2 className="text-base font-bold text-slate-900 tracking-tight">
-            Inventory Management
-          </h2>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Track and manage your stock across all products in real-time.
-          </p>
-        </div>
+    <div className="space-y-2">
+      <div className="bg-white rounded-xl border border-slate-200/90 shadow-2xs overflow-hidden flex flex-col">
+        {/* Table Content */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse min-w-[1100px]">
+            <thead className="bg-white border-b border-slate-200">
+              <tr className="text-xs font-semibold text-slate-700">
+                {/* Checkbox */}
+                <th className="w-10 px-3 py-3 text-center">
+                  <input
+                    type="checkbox"
+                    checked={items.length > 0 && selectedIds.length === items.length}
+                    onChange={toggleSelectAll}
+                    className="w-4 h-4 rounded text-blue-600 border-slate-300 focus:ring-blue-500 cursor-pointer"
+                  />
+                </th>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => toggleBulkAdjustMode(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-xs font-semibold text-slate-700 transition-colors"
-          >
-            <Sliders className="w-3.5 h-3.5 text-blue-600" />
-            <span>Adjust Stock</span>
-          </button>
+                {/* Index */}
+                <th className="w-8 px-2 py-3 text-center text-slate-400 font-semibold">#</th>
 
-          <button
-            onClick={() => alert('Bulk stock import: Excel/CSV ingestion template ready')}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-xs font-semibold text-slate-700 transition-colors"
-          >
-            <Upload className="w-3.5 h-3.5 text-slate-500" />
-            <span>Import Stock</span>
-          </button>
+                {/* Product */}
+                <th className="px-3 py-3 text-left">Product</th>
 
-          <button
-            onClick={() => toggleFullHistoryPage(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 text-white hover:bg-slate-800 text-xs font-semibold transition-colors shadow-2xs"
-          >
-            <History className="w-3.5 h-3.5" />
-            <span>Stock History</span>
-          </button>
-        </div>
-      </div>
+                {/* SKU */}
+                <th className="px-3 py-3 text-left">SKU</th>
 
-      {/* Search & Filter Toolbar */}
-      <div className="p-4 bg-slate-50/50 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-3">
-        {/* Search Bar */}
-        <div className="relative flex-1 max-w-md">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            value={filters.searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by product name, SKU, barcode..."
-            className="w-full h-9 pl-9 pr-3 rounded-xl border border-slate-200 bg-white text-xs text-slate-800 placeholder-slate-400 focus:border-blue-600 focus:outline-none"
-          />
-        </div>
+                {/* Barcode */}
+                <th className="px-3 py-3 text-left">Barcode</th>
 
-        {/* Dropdown Filters */}
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Category Filter */}
-          <select
-            value={filters.category}
-            onChange={(e) => setFilter('category', e.target.value)}
-            className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-700 focus:border-blue-600 focus:outline-none"
-          >
-            <option value="all">All Categories</option>
-            <option value="Men">Men</option>
-            <option value="Women">Women</option>
-            <option value="Electronics">Electronics</option>
-            <option value="Accessories">Accessories</option>
-            <option value="Home & Kitchen">Home & Kitchen</option>
-            <option value="Grocery">Grocery</option>
-          </select>
+                {/* Category */}
+                <th className="px-3 py-3 text-left">Category / Sub-category / Type</th>
 
-          {/* Status Filter */}
-          <select
-            value={filters.stockStatus}
-            onChange={(e) => setFilter('stockStatus', e.target.value)}
-            className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-700 focus:border-blue-600 focus:outline-none"
-          >
-            <option value="all">All Statuses</option>
-            <option value="IN_STOCK">In Stock</option>
-            <option value="LOW_STOCK">Low Stock</option>
-            <option value="OUT_OF_STOCK">Out of Stock</option>
-          </select>
+                {/* Brand */}
+                <th className="px-3 py-3 text-left">Brand</th>
 
-          {/* Clear Filters Button */}
-          <button
-            onClick={clearFilters}
-            className="flex items-center gap-1 h-9 px-2.5 rounded-xl text-xs font-semibold text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span>Clear</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Main Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse text-xs">
-          <thead>
-            <tr className="border-b border-slate-200 bg-slate-50/80 text-2xs uppercase tracking-wider font-bold text-slate-500">
-              <th className="p-3.5 pl-4 w-10">
-                <input
-                  type="checkbox"
-                  checked={
-                    paginatedItems.length > 0 &&
-                    paginatedItems.every((i) => selectedRowIds.includes(i.id))
-                  }
-                  onChange={handleSelectAll}
-                  className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                />
-              </th>
-              <th className="py-3.5 px-2 w-8">#</th>
-              <th className="py-3.5 px-3 min-w-[240px]">Product</th>
-              <th className="py-3.5 px-3 min-w-[140px]">SKU</th>
-              <th className="py-3.5 px-3 min-w-[120px]">Barcode</th>
-              <th className="py-3.5 px-3 min-w-[140px]">Category</th>
-              <th className="py-3.5 px-3 min-w-[100px]">Status</th>
-              <th className="py-3.5 px-3 text-right">Current Stock</th>
-              <th className="py-3.5 px-3 text-right">Reserved</th>
-              <th className="py-3.5 px-3 text-right">Available</th>
-              <th className="py-3.5 px-3 pr-4 text-center w-12">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {paginatedItems.length === 0 ? (
-              <tr>
-                <td colSpan={11} className="py-12 text-center text-slate-400">
-                  <AlertCircle className="w-8 h-8 mx-auto mb-2 opacity-40" />
-                  <p className="font-semibold text-xs text-slate-600">No inventory products found.</p>
-                  <p className="text-2xs text-slate-400 mt-1">
-                    Try adjusting your search criteria or clear active filters.
-                  </p>
-                </td>
-              </tr>
-            ) : (
-              paginatedItems.map((item, idx) => {
-                const isSelected = selectedRowIds.includes(item.id);
-                return (
-                  <tr
-                    key={item.id}
-                    className={`hover:bg-blue-50/20 transition-colors ${
-                      isSelected ? 'bg-blue-50/40' : ''
-                    }`}
+                {/* Stock Units */}
+                <th className="px-3 py-3 text-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (sortField === 'stock') {
+                        setSortAsc(!sortAsc);
+                      } else {
+                        setSortField('stock');
+                        setSortAsc(false);
+                      }
+                    }}
+                    className="inline-flex items-center justify-center gap-1 hover:text-blue-600 cursor-pointer font-semibold text-xs text-slate-700"
                   >
-                    <td className="p-3.5 pl-4">
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => handleSelectRow(item.id)}
-                        className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                      />
-                    </td>
-                    <td className="py-3 px-2 text-slate-400 text-2xs font-mono">
-                      {(currentPage - 1) * rowsPerPage + idx + 1}
-                    </td>
-                    <td className="py-3 px-3">
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={item.imageUrl}
-                          alt={item.name}
-                          className="w-10 h-10 rounded-lg object-cover border border-slate-200 shrink-0"
-                        />
-                        <div className="min-w-0">
-                          <p className="font-semibold text-slate-900 truncate max-w-[200px]">
-                            {item.name}
-                          </p>
-                          <p className="text-2xs text-slate-400 mt-0.5 truncate">
-                            {item.variantDetails}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-3 px-3 font-mono font-semibold text-slate-700 text-2xs">
-                      {item.sku}
-                    </td>
-                    <td className="py-3 px-3 font-mono text-slate-500 text-2xs">
-                      {item.barcode}
-                    </td>
-                    <td className="py-3 px-3 text-slate-600 text-2xs">
-                      <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md font-medium">
-                        {item.category} &gt; {item.subCategory}
-                      </span>
-                    </td>
-                    <td className="py-3 px-3">
-                      {item.status === 'IN_STOCK' && (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-2xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                          In Stock
-                        </span>
-                      )}
-                      {item.status === 'LOW_STOCK' && (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-2xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                          Low Stock
-                        </span>
-                      )}
-                      {item.status === 'OUT_OF_STOCK' && (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-2xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
-                          Out of Stock
-                        </span>
-                      )}
-                    </td>
-                    <td className="py-3 px-3 text-right font-bold text-slate-900">
-                      {item.currentStock}
-                    </td>
-                    <td className="py-3 px-3 text-right relative">
-                      <div className="inline-flex items-center gap-1 font-semibold text-amber-600">
-                        <span>{item.reservedStock}</span>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setReservedPopoverId(
-                              reservedPopoverId === item.id ? null : item.id
-                            )
-                          }
-                          className="text-slate-400 hover:text-slate-600 transition-colors"
-                        >
-                          <HelpCircle className="w-3 h-3" />
-                        </button>
-                      </div>
+                    <span>Stock (Units)</span>
+                    <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                  </button>
+                </th>
 
-                      {/* Reserved Stock Popover */}
-                      {reservedPopoverId === item.id && (
-                        <div className="absolute right-0 top-10 z-30 w-52 p-3 bg-slate-900 text-white rounded-xl shadow-xl text-left text-2xs leading-relaxed animate-in fade-in duration-150">
-                          <p className="font-bold text-amber-400 mb-1">
-                            Reserved Stock Info
-                          </p>
-                          <p className="text-slate-300">
-                            <strong>{item.reservedStock} units</strong> are currently held for incoming customer orders in packing & verification.
-                          </p>
-                          <div className="mt-2 pt-1.5 border-t border-slate-800 text-right">
-                            <button
-                              onClick={() => setReservedPopoverId(null)}
-                              className="text-2xs text-blue-400 hover:underline"
+                {/* Reserved */}
+                <th className="px-3 py-3 text-center">
+                  <div className="inline-flex items-center justify-center gap-1">
+                    <span>Reserved</span>
+                    <ReservedStockPopover showIconOnly />
+                  </div>
+                </th>
+
+                {/* Available */}
+                <th className="px-3 py-3 text-center">
+                  <div className="inline-flex items-center justify-center gap-1">
+                    <span>Available</span>
+                    <Info className="w-3 h-3 text-slate-400" />
+                  </div>
+                </th>
+
+                {/* Status */}
+                <th className="px-3 py-3 text-center">Status</th>
+
+                {/* Stock Value */}
+                <th className="px-3 py-3 text-right">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (sortField === 'stockValue') {
+                        setSortAsc(!sortAsc);
+                      } else {
+                        setSortField('stockValue');
+                        setSortAsc(false);
+                      }
+                    }}
+                    className="inline-flex items-center justify-end gap-1 hover:text-blue-600 cursor-pointer font-semibold text-xs text-slate-700 ml-auto"
+                  >
+                    <span>Stock Value</span>
+                    <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                  </button>
+                </th>
+
+                {/* Last Updated */}
+                <th className="px-3 py-3 text-left">
+                  <div className="inline-flex items-center gap-1">
+                    <span>Last Updated</span>
+                    <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                  </div>
+                </th>
+
+                {/* Actions */}
+                <th className="w-12 px-3 py-3 text-center">Actions</th>
+              </tr>
+            </thead>
+
+            <tbody className="divide-y divide-slate-100 text-xs text-slate-700 bg-white">
+              {sortedItems.length === 0 ? (
+                <tr>
+                  <td colSpan={14} className="py-12 text-center text-slate-400">
+                    No inventory items match the current search or filters.
+                  </td>
+                </tr>
+              ) : (
+                sortedItems.map((item, index) => {
+                  const isSelected = selectedIds.includes(item.id);
+                  return (
+                    <tr
+                      key={item.id}
+                      className={`hover:bg-slate-50/70 transition-colors ${
+                        isSelected ? 'bg-blue-50/20' : ''
+                      }`}
+                    >
+                      {/* Checkbox */}
+                      <td className="w-10 px-3 py-3 text-center">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleSelectId(item.id)}
+                          className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300 cursor-pointer"
+                        />
+                      </td>
+
+                      {/* Row Index */}
+                      <td className="w-8 px-2 py-3 text-center font-medium text-slate-400 tabular-nums">
+                        {index + 1}
+                      </td>
+
+                      {/* Product */}
+                      <td className="px-3 py-3">
+                        <div className="flex items-center gap-2.5">
+                          <img
+                            src={item.imageUrl}
+                            alt={item.name}
+                            className="w-9 h-9 rounded-md object-cover bg-slate-100 border border-slate-200 shrink-0"
+                          />
+                          <div>
+                            <span
+                              onClick={() => openDetailModal(item)}
+                              className="font-semibold text-slate-900 block hover:text-blue-600 cursor-pointer leading-tight"
                             >
-                              Got it
-                            </button>
+                              {item.name}
+                            </span>
+                            <span className="text-[11px] text-slate-400 mt-0.5 block">
+                              Size: {item.size} • Color: {item.color}
+                            </span>
                           </div>
                         </div>
-                      )}
-                    </td>
-                    <td className="py-3 px-3 text-right font-bold text-emerald-600">
-                      {item.availableStock}
-                    </td>
-                    <td className="py-3 px-3 pr-4 text-center">
-                      <button
-                        onClick={(e) => openMenu(e, item.id)}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
-                      >
-                        <MoreVertical className="w-4 h-4" />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
+                      </td>
 
-      {/* Pagination Footer */}
-      <div className="p-4 border-t border-slate-100 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-500">
-        <div>
-          Showing{' '}
-          <strong className="text-slate-800">
-            {filteredItems.length === 0
-              ? 0
-              : (currentPage - 1) * rowsPerPage + 1}
-          </strong>{' '}
-          to{' '}
-          <strong className="text-slate-800">
-            {Math.min(currentPage * rowsPerPage, filteredItems.length)}
-          </strong>{' '}
-          of <strong className="text-slate-800">{filteredItems.length}</strong> items
+                      {/* SKU */}
+                      <td className="px-3 py-3 text-slate-600 font-normal">
+                        {item.sku}
+                      </td>
+
+                      {/* Barcode */}
+                      <td className="px-3 py-3 text-slate-600 font-normal">
+                        {item.barcode}
+                      </td>
+
+                      {/* Category hierarchy */}
+                      <td className="px-3 py-3">
+                        <span className="text-blue-600 font-medium text-xs">
+                          {item.category} &gt; {item.subcategory} &gt; {item.productType}
+                        </span>
+                      </td>
+
+                      {/* Brand */}
+                      <td className="px-3 py-3 font-normal text-slate-700">
+                        {item.brand}
+                      </td>
+
+                      {/* Stock Units */}
+                      <td className="px-3 py-3 text-center font-medium text-slate-800 tabular-nums">
+                        {item.stock}
+                      </td>
+
+                      {/* Reserved */}
+                      <td className="px-3 py-3 text-center tabular-nums">
+                        <ReservedStockPopover count={item.reserved} />
+                      </td>
+
+                      {/* Available */}
+                      <td className="px-3 py-3 text-center font-medium text-slate-800 tabular-nums">
+                        {item.available}
+                      </td>
+
+                      {/* Status Pill */}
+                      <td className="px-3 py-3 text-center">
+                        {getStatusBadge(item.status)}
+                      </td>
+
+                      {/* Stock Value */}
+                      <td className="px-3 py-3 text-right font-medium text-slate-800 tabular-nums">
+                        {'\u20B9'}{item.stockValue.toLocaleString()}
+                      </td>
+
+                      {/* Last Updated */}
+                      <td className="px-3 py-3 text-slate-700 text-xs">
+                        <div className="font-medium text-slate-800">
+                          {item.lastUpdated.split(' ').slice(0, 3).join(' ')}
+                        </div>
+                        <div className="text-[11px] text-slate-400">
+                          {item.lastUpdated.split(' ').slice(3).join(' ')}
+                        </div>
+                      </td>
+
+                      {/* Actions */}
+                      <td className="w-12 px-3 py-3 text-center">
+                        <InventoryActionMenu item={item} />
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
         </div>
 
-        <div className="flex items-center gap-1.5">
-          <button
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
-            className="p-1.5 rounded-lg border border-slate-200 text-slate-600 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
+        {/* Pagination Bar */}
+        <div className="border-t border-slate-200 px-4 py-3 flex flex-wrap items-center justify-between gap-3 bg-white text-xs">
+          {/* Left count */}
+          <div className="font-bold text-slate-900">
+            Total {totalProductCount.toLocaleString()} products
+          </div>
 
-          {Array.from({ length: totalPages }).map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setCurrentPage(i + 1)}
-              className={`w-7 h-7 rounded-lg text-xs font-semibold transition-colors ${
-                currentPage === i + 1
-                  ? 'bg-blue-600 text-white shadow-2xs'
-                  : 'text-slate-600 hover:bg-slate-100'
-              }`}
-            >
-              {i + 1}
-            </button>
-          ))}
+          {/* Center / Right controls */}
+          <div className="flex items-center gap-4 ml-auto">
+            <div className="flex items-center gap-2 text-slate-500">
+              <span>Rows per page</span>
+              <div className="relative">
+                <select
+                  value={pageSize}
+                  onChange={(e) => setPageSize(Number(e.target.value))}
+                  className="appearance-none bg-white border border-slate-200 rounded-lg px-2.5 py-1 pr-6 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+                >
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+                <ChevronDown className="w-3 h-3 text-slate-400 absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
+            </div>
 
-          <button
-            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-            disabled={currentPage === totalPages}
-            className="p-1.5 rounded-lg border border-slate-200 text-slate-600 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
+            <span className="text-slate-500 tabular-nums">
+              {startIndex}-{endIndex} of {totalProductCount.toLocaleString()}
+            </span>
+
+            {/* Stepper Buttons */}
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(1)}
+                className="p-1 rounded-md border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                title="First Page"
+              >
+                <ChevronsLeft className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                className="p-1 rounded-md border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                title="Previous Page"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </button>
+
+              {/* Numbers */}
+              <button
+                type="button"
+                onClick={() => setCurrentPage(1)}
+                className={`w-6 h-6 rounded-md text-xs font-bold cursor-pointer transition-colors ${
+                  currentPage === 1
+                    ? 'bg-[#1a56db] text-white shadow-2xs'
+                    : 'border border-slate-200 text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                1
+              </button>
+              <button
+                type="button"
+                onClick={() => setCurrentPage(2)}
+                className={`w-6 h-6 rounded-md text-xs font-bold cursor-pointer transition-colors ${
+                  currentPage === 2
+                    ? 'bg-[#1a56db] text-white shadow-2xs'
+                    : 'border border-slate-200 text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                2
+              </button>
+              <button
+                type="button"
+                onClick={() => setCurrentPage(3)}
+                className={`w-6 h-6 rounded-md text-xs font-bold cursor-pointer transition-colors ${
+                  currentPage === 3
+                    ? 'bg-[#1a56db] text-white shadow-2xs'
+                    : 'border border-slate-200 text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                3
+              </button>
+              <button
+                type="button"
+                onClick={() => setCurrentPage(4)}
+                className={`w-6 h-6 rounded-md text-xs font-bold cursor-pointer transition-colors ${
+                  currentPage === 4
+                    ? 'bg-[#1a56db] text-white shadow-2xs'
+                    : 'border border-slate-200 text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                4
+              </button>
+              <button
+                type="button"
+                onClick={() => setCurrentPage(5)}
+                className={`w-6 h-6 rounded-md text-xs font-bold cursor-pointer transition-colors ${
+                  currentPage === 5
+                    ? 'bg-[#1a56db] text-white shadow-2xs'
+                    : 'border border-slate-200 text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                5
+              </button>
+              <span className="px-1 text-slate-400">...</span>
+              <button
+                type="button"
+                onClick={() => setCurrentPage(125)}
+                className={`w-6 h-6 rounded-md text-xs font-bold cursor-pointer transition-colors ${
+                  currentPage === 125
+                    ? 'bg-[#1a56db] text-white shadow-2xs'
+                    : 'border border-slate-200 text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                125
+              </button>
+
+              <button
+                type="button"
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                className="p-1 rounded-md border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                title="Next Page"
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage(totalPages)}
+                className="p-1 rounded-md border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                title="Last Page"
+              >
+                <ChevronsRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Contextual Row Action Menu (Screen 4.2) */}
-      {activeItem && (
-        <RowActionMenu
-          item={activeItem}
-          isOpen={!!activeMenuId}
-          onClose={() => setActiveMenuId(null)}
-          anchorRect={menuAnchorRect}
-        />
-      )}
+      {/* Timestamp indicator */}
+      <div className="flex justify-end items-center gap-1.5 text-[11px] text-slate-400 pr-1">
+        <span>Last updated a few seconds ago</span>
+        <button
+          type="button"
+          onClick={handleRefresh}
+          className="p-0.5 hover:text-blue-600 transition-colors cursor-pointer"
+          title="Refresh Data"
+        >
+          <RefreshCw className={`w-3 h-3 ${isRefreshing ? 'animate-spin text-blue-600' : ''}`} />
+        </button>
+      </div>
     </div>
   );
 };
