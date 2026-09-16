@@ -1,88 +1,66 @@
-'use client';
-
 import React from 'react';
 import Link from 'next/link';
-import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
-import { ProductCard } from '@/features/products/components/ProductCard';
-import { ProductGridSkeleton } from '@/components/ui/Skeleton';
-import { useProducts } from '@/hooks/useProducts';
-import { useLocationStore } from '@/stores/location.store';
-import { ProductCategory } from '@repo/shared-types';
-import { ChevronRight, Package } from 'lucide-react';
+import { ShieldCheck, RotateCcw, Award } from 'lucide-react';
+import { CategoryHeroBanner } from '@/features/catalog/CategoryHeroBanner';
+import { ShopByCategoryGrid } from '@/features/catalog/ShopByCategoryGrid';
+import { ShopForLovedOnes } from '@/features/catalog/ShopForLovedOnes';
+import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
+import { branding } from '@repo/shared-types';
 
-const categoryMeta: Record<string, { title: string; description: string; emoji: string }> = {
-  men: { title: "Men's Fashion", description: "Explore the latest in men's clothing, accessories and footwear", emoji: '👔' },
-  women: { title: "Women's Fashion", description: "Discover trending women's apparel, beauty and accessories", emoji: '👗' },
-  kids: { title: 'Kids', description: "Adorable clothing and toys for children", emoji: '🧸' },
-  fashion: { title: 'Fashion', description: 'Trendy clothing and accessories for everyone', emoji: '✨' },
-  beauty: { title: 'Beauty & Care', description: 'Skincare, makeup and personal care products', emoji: '💄' },
-  home_living: { title: 'Home & Living', description: 'Décor, furnishings and kitchen essentials', emoji: '🏠' },
-  footwear: { title: 'Footwear', description: 'Shoes, sandals and sneakers for every occasion', emoji: '👟' },
-  electronics: { title: 'Electronics', description: 'Gadgets, phones and smart devices', emoji: '📱' },
-  accessories: { title: 'Accessories', description: 'Watches, bags, jewellery and more', emoji: '⌚' },
-  sports_fitness: { title: 'Sports & Fitness', description: 'Activewear, equipment and supplements', emoji: '🏃' },
-  grocery_staples: { title: 'Grocery & Staples', description: 'Fresh vegetables, grains and daily essentials', emoji: '🥬' },
-  value_store: { title: 'Value Store', description: 'Great deals under ₹299', emoji: '🏷️' },
-};
-
-export default function CategoryPage({ params }: { params: { slug: string } }) {
-  const { address } = useLocationStore();
-  const slug = params.slug;
-  const meta = categoryMeta[slug] || { title: slug.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()), description: '', emoji: '🛍️' };
-  const categoryEnum = Object.values(ProductCategory).find((c) => c === slug);
-
-  const { data, isLoading } = useProducts({
-    category: categoryEnum,
-    limit: 20,
-    page: 1,
-  });
-
-  const products = data?.products || [];
-  const total = data?.meta?.total || 0;
-
+export default function FashionLandingPage() {
   return (
-    <div className="min-h-screen bg-transparent">
-      <main className="max-w-[1920px] mx-auto px-4 sm:px-6 py-6 space-y-6">
-        {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-xs text-surface-500 font-medium">
-          <Link href="/" className="hover:text-surface-900 transition-colors">Home</Link>
-          <ChevronRight className="w-3 h-3" />
-          <span className="text-surface-900 font-bold">{meta.title}</span>
-        </nav>
+    <div className="min-h-screen bg-transparent pb-16 lg:pb-0">
+      <main className="max-w-[1920px] mx-auto lg:px-6 lg:py-4">
 
-        {/* Category Header */}
-        <div className="p-6 rounded-2xl bg-gradient-to-br from-[#192168] to-[#1668F6] shadow-sm relative overflow-hidden">
-          <div className="relative z-10">
-            <span className="text-4xl">{meta.emoji}</span>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white mt-2">{meta.title}</h1>
-            <p className="text-white/70 text-sm mt-1">{meta.description}</p>
-            <p className="text-white/50 text-xs mt-2">{total} products</p>
+        {/* Breadcrumbs */}
+        <Breadcrumbs items={[{ label: 'Home', href: '/' }, { label: 'Fashion' }]} />
+
+        {/* Title and Top Badges Header */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6">
+          <div>
+            <h1 className="text-3xl font-extrabold text-[#061842] mb-1">Fashion</h1>
+            <p className="text-[14px] font-bold text-[#061842]">Style for Every You</p>
+            <p className="text-[13px] font-medium text-gray-500">
+              Trendy styles, top brands and great deals – only on {branding.appName}
+            </p>
           </div>
-          <div className="absolute -right-8 -bottom-8 w-40 h-40 rounded-full bg-white/10" />
+
+          <div className="hidden lg:flex gap-4 mt-4 lg:mt-0">
+            {/* 100% Authentic */}
+            <div className="flex items-center gap-3 bg-white px-4 py-2.5 rounded-xl border border-gray-100 shadow-sm">
+              <ShieldCheck className="w-6 h-6 text-[#1668F6]" strokeWidth={1.5} />
+              <div className="flex flex-col">
+                <span className="text-[11px] font-extrabold text-[#061842] leading-tight">100% Authentic</span>
+                <span className="text-[11px] font-medium text-gray-500 leading-tight">Products</span>
+              </div>
+            </div>
+
+            {/* Easy Returns */}
+            <div className="flex items-center gap-3 bg-white px-4 py-2.5 rounded-xl border border-gray-100 shadow-sm">
+              <RotateCcw className="w-6 h-6 text-[#1668F6]" strokeWidth={1.5} />
+              <div className="flex flex-col">
+                <span className="text-[11px] font-extrabold text-[#061842] leading-tight">Easy Returns</span>
+                <span className="text-[11px] font-medium text-gray-500 leading-tight">7 Days</span>
+              </div>
+            </div>
+
+            {/* Top Brands */}
+            <div className="flex items-center gap-3 bg-white px-4 py-2.5 rounded-xl border border-gray-100 shadow-sm">
+              <Award className="w-6 h-6 text-[#1668F6]" strokeWidth={1.5} />
+              <div className="flex flex-col">
+                <span className="text-[11px] font-extrabold text-[#061842] leading-tight">Top Brands</span>
+                <span className="text-[11px] font-medium text-gray-500 leading-tight">Great Prices</span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Products Grid */}
-        {isLoading ? (
-          <ProductGridSkeleton count={8} />
-        ) : products.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {products.map((product) => (
-              <ProductCard key={product._id} product={product} />
-            ))}
-          </div>
-        ) : (
-          <div className="py-20 text-center bg-white border border-surface-200 shadow-sm rounded-2xl">
-            <Package className="w-10 h-10 mx-auto text-surface-300 mb-3" />
-            <p className="text-surface-600 text-sm font-medium">No products in this category yet.</p>
-            <Link href="/products" className="inline-block mt-4 px-5 py-2 rounded-xl bg-[#1668F6] text-white text-sm font-bold hover:bg-[#1155cc] transition-colors shadow-sm">
-              Browse All Products
-            </Link>
-          </div>
-        )}
+        <div className="bg-white rounded-3xl p-6 lg:p-8 border border-gray-100 shadow-sm mb-6">
+          <CategoryHeroBanner />
+          <ShopByCategoryGrid />
+          <ShopForLovedOnes />
+        </div>
       </main>
-
-      <Footer />
     </div>
   );
 }

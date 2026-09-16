@@ -5,7 +5,7 @@ const DUMMY_JSON_URL = "https://dummyjson.com";
 
 async function getDummyProducts(limit = 20): Promise<IProduct[]> {
   try {
-    const res = await fetch(`${DUMMY_JSON_URL}/products?limit=${limit}`);
+    const res = await fetch(`${DUMMY_JSON_URL}/products/category/mens-shirts?limit=${limit}`);
     const data = await res.json();
     return (data.products || []).map((p: any) => ({
       _id: `dummy-prod-${p.id}`,

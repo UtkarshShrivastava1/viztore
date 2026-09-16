@@ -3,6 +3,7 @@
 import React from 'react';
 import { ProductCategory } from '@repo/shared-types';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 const categories = [
   { label: 'Top Offers', value: 'offers', imageUrl: 'https://picsum.photos/seed/offers/120/120' },
@@ -23,15 +24,23 @@ interface CategoryStripProps {
 }
 
 export function CategoryStrip({ activeCategory = 'all', onCategoryChange }: CategoryStripProps) {
+  const router = useRouter();
+
   return (
     <div className="w-full overflow-x-auto scrollbar-hide py-3 bg-white shadow-sm border-b border-surface-100">
-      <div className="flex items-center justify-between gap-4 md:gap-8 px-4 sm:px-6 min-w-max max-w-[1920px] mx-auto">
+      <div className="flex items-center justify-between gap-4 md:gap-8 px-4 sm:px-6 md:px-8 lg:px-12 xl:px-24 2xl:px-32 min-w-max max-w-[1920px] mx-auto">
         {categories.map((cat) => {
           const isActive = activeCategory === cat.value;
           return (
             <button
               key={cat.value}
-              onClick={() => onCategoryChange?.(cat.value)}
+              onClick={() => {
+                if (cat.value === ProductCategory.FASHION || cat.value === 'fashion') {
+                  router.push('/category/fashion');
+                } else {
+                  onCategoryChange?.(cat.value);
+                }
+              }}
               className="flex flex-col items-center gap-2 group transition-all"
             >
               <div className={`relative w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden transition-transform group-hover:scale-105 ${isActive ? 'ring-2 ring-brand-500 scale-105' : ''}`}>
