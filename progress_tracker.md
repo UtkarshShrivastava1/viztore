@@ -9,16 +9,16 @@
 ## 2. Global Project Completion Status
 
 ### 🚀 Production Launch Scope (Phases 1–6: Backend + Merchant + Web + Ops)
-`[█████████████████████████████████░░░░░░░░░] 82% Complete`
+`[███████████████████████████████████░░░░░] 86% Complete`
 
 | Scope Dimension | Weight | Progress Bar | % Complete | Status | Target Milestone |
 |---|:---:|---|:---:|:---:|---|
-| **Overall Production Launch** (Phases 1–6) | **100%** | `[████████████████░░░░]` | **82%** | 🟡 Active Engineering | Staging & Production Go-Live |
+| **Overall Production Launch** (Phases 1–6) | **100%** | `[█████████████████░░░]` | **86%** | 🟢 Hardened / Staging Gate | Staging & Production Go-Live |
 | ↳ **Backend Architecture & APIs** | 30% | `[██████████████████░░]` | **92%** | 🟢 Complete / Hardened | 62/62 Tests Passing, Facades Live |
-| ↳ **Merchant & Admin Panel** | 25% | `[██████████████████░░]` | **90%** | 🟢 Suite Complete | Subdomain Routing & Onboarding Live |
-| ↳ **Customer Web Storefront** | 25% | `[████████████████░░░░]` | **80%** | 🟢 Auth & Discovery Live | Customer Auth Pipeline, Modal & Orders Live |
+| ↳ **Merchant & Admin Panel** | 25% | `[███████████████████░]` | **95%** | 🟢 Complete Suite | Full Inventory & Registration Merged |
+| ↳ **Customer Web Storefront** | 25% | `[██████████████████░░]` | **92%** | 🟢 Discovery & PDP Live | 24/24 Routes, Auth & Catalog Live |
 | ↳ **Production Readiness & DevOps** | 20% | `[████████████░░░░░░░░]` | **60%** | 🟡 Infrastructure Ready | Verified Atlas & Cloudinary Live |
-| **Total Full-Platform Scope** (Phases 1–7) | — | `[██████████████░░░░░░]` | **70%** | ⚪ Roadmap Reserved | Customer Mobile App (Phase 7) |
+| **Total Full-Platform Scope** (Phases 1–7) | — | `[███████████████░░░░░]` | **74%** | ⚪ Roadmap Reserved | Customer Mobile App (Phase 7) |
 
 > **Auto-Update Invariant**: This progress bar is recalculated and updated dynamically on every task assignment, milestone delivery, and PR merge per `.agents/rules/progress-tracking.md`.
 
@@ -245,7 +245,7 @@ graph TB
   - [x] **Task 5 (Inventory Management Suite)**: COMPLETED (`eda0cca`). Full 7-screen system: 5 KPI summary cards, filter toolbar, clean table layout, reserved stock popover, 7-action row menu, single-product adjust stock drawer, single-product stock history timeline drawer, bulk adjust batch grid, and dedicated transaction audit ledger.
 - **Vinay (Customer Web Storefront `apps/web`)**:
   - [x] **Task 1 (Mobile App Mockup ➔ Responsive Customer Web & Account Hub)**: MERGED to `main` (`e52bc45`). Full responsive storefront: Cart (`/cart`), Checkout (`/checkout`), Category browse (`/category`, `/category/[slug]`), and 11 Account Hub screens (`/account`, `/orders`, `/orders/[id]`, `/wishlist`, `/addresses`, `/coupons`, `/edit-profile`, `/feedback`, `/sell`, `/support`, `/privacy`, `/terms`). Zero brand violations, 100% white-label compliant.
-  - [ ] **Task 2 (Hyperlocal Discovery, Catalog PLP, Product PDP & Storefronts)**: Assigned with 6-screen specification mapped to mockups `2.0`–`3.1` (`vinay_catalog_pdp_task.md`). Category Hub (`/category`), Faceted PLP (`/products`), Comprehensive PDP (`/products/[slug]`), Stores Near Me (`/stores`), and Storefront (`/stores/[slug]`).
+  - [x] **Task 2 (Hyperlocal Discovery, Catalog PLP, Product PDP & Storefronts)**: MERGED to `main` (`9ff764b`). Full 6-screen system: Split Category Hub (`/category`), Faceted PLP (`/products`, `/category/[slug]`), Comprehensive PDP (`/products/[slug]`), Stores Near Me (`/stores`), Storefront (`/stores/[slug]`), and modular Desktop/Mobile header navigation.
 
 - [x] Customer Web Storefront Cart & Checkout UI (`apps/web`) — Merged via PR #4
 - [ ] Merchant Panel Live Orders Pipeline Kanban Board (`apps/merchant`)

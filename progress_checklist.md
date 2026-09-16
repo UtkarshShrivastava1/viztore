@@ -106,10 +106,10 @@
   - [x] Reusable card components: `ProductCard`, `StoreCard`, `ProductCardSkeleton`, `StoreCardSkeleton`
   - [x] Home Page (`/`): "Stores Near You" horizontal rail, "Best Deals For You" product grid
   - [x] Explore Stores directory (`/stores`): category filtering, open/closed badges, delivery distance
-  - [x] Individual Store storefront (`/stores/[slug]`): hero banner, store ratings, fast delivery badge, scoped product catalog
-  - [x] Product Listing Page (`/products`): faceted sidebar filter, sort dropdown, active filter chips, `<Suspense>` boundary
-  - [x] Product Detail Page (`/products/[slug]`): image thumbnail gallery, variant selector, quantity stepper, stock validator, specifications table
-  - [x] Category landing pages (`/category/[slug]`)
+  - [x] Product Listing Page (`/products`, `/category/[slug]`, `/category/fashion`): faceted sidebar filter, circular bubble filters, sort dropdown, active filter chips, `<Suspense>` boundary
+  - [x] Product Detail Page (`/products/[slug]`): image thumbnail gallery, variant selector, quantity stepper, stock validator, specifications table, delivery countdown ETA, and verified reviews
+  - [x] Category landing pages (`/category`, `/category/[slug]`) with 14-category vertical split rail and subcategory grid
+  - [x] Explore Stores directory (`/stores`, `/stores/fashion`) & dedicated store storefronts (`/stores/[slug]`) with hero cards and curated shelves
 
 ---
 
