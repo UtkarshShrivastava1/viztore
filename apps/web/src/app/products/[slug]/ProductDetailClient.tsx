@@ -192,8 +192,8 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
                     </button>
                   ))}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Select Size */}
             <div className="pt-2">
