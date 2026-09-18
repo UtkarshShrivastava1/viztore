@@ -46,14 +46,14 @@ export function isValidObjectId(id: string): boolean {
   return /^[a-f\d]{24}$/i.test(id);
 }
 
-export function normalizeAddress(address: ShippingAddressDTO): ShippingAddressDTO {
+export function normalizeAddress(address?: Partial<ShippingAddressDTO> | null): ShippingAddressDTO {
   return {
-    fullName: address.fullName.trim(),
-    street: address.street.trim(),
-    city: address.city.trim(),
-    state: address.state.trim(),
-    postalCode: address.postalCode.trim(),
-    country: (address.country || 'IN').trim().toUpperCase(),
-    phone: address.phone.trim(),
+    fullName: (address?.fullName ?? '').trim(),
+    street: (address?.street ?? '').trim(),
+    city: (address?.city ?? '').trim(),
+    state: (address?.state ?? '').trim(),
+    postalCode: (address?.postalCode ?? '').trim(),
+    country: (address?.country || 'IN').trim().toUpperCase(),
+    phone: (address?.phone ?? '').trim(),
   };
 }

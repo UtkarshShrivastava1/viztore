@@ -443,3 +443,54 @@ export async function checkVariantStock(
     currentStock,
   };
 }
+
+/**
+ * Atomic stock deduction using conditional $gte to prevent overselling
+ */
+export async function deductStockAtomic(
+  items: Array<{ productId: string; sku?: string; quantity: number }>,
+): Promise<void> {
+  for (const item of items) {
+    if (item.sku) {
+      const updated = await ProductModel.findOneAndUpdate(
+        {
+          _id: item.productId,
+          'variants.sku': item.sku,
+          'variants.stock': { $gte: item.quantity },
+          isActive: true,
+        },
+        {
+          $inc: {
+            'variants.$.stock': -item.quantity,
+            totalStock: -item.quantity,
+          },
+        },
+        { new: true },
+      );
+      if (!updated) {
+        throw AppError.badRequest(
+          `Insufficient inventory for SKU ${item.sku}. Item may have sold out.`,
+          'INSUFFICIENT_STOCK',
+        );
+      }
+    } else {
+      const updated = await ProductModel.findOneAndUpdate(
+        {
+          _id: item.productId,
+          totalStock: { $gte: item.quantity },
+          isActive: true,
+        },
+        {
+          $inc: { totalStock: -item.quantity },
+        },
+        { new: true },
+      );
+      if (!updated) {
+        throw AppError.badRequest(
+          `Insufficient inventory for product ${item.productId}. Item may have sold out.`,
+          'INSUFFICIENT_STOCK',
+        );
+      }
+    }
+  }
+}

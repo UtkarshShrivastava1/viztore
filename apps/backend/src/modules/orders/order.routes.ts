@@ -22,6 +22,7 @@ export function createOrderRouter(
   router.get('/store/:storeId', controller.getStoreOrders);
   router.get('/all', roleGuard(UserRole.ADMIN, UserRole.MERCHANT), controller.getAllOrders);
   router.get('/:id', controller.getOrder);
+  router.get('/:id/invoice', controller.getInvoice);
   router.patch('/:id/status', controller.updateStatus);
   router.post('/:id/verify-otp', controller.verifyOtp);
   router.post('/:id/cancel', controller.cancel);

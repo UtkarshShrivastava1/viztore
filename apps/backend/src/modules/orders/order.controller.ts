@@ -117,9 +117,19 @@ export function createOrderController(service: IOrderService) {
     return ApiResponse.success(res, order, 'Order cancelled successfully');
   });
 
+  const getInvoice: RequestHandler = catchAsync(async (req: Request, res: Response) => {
+    const userId = getUserId(req) || '';
+    const isAdminOrMerchant = req.user?.role === 'admin' || req.user?.role === 'merchant';
+    const orderId = req.params.id as string;
+
+    const invoice = await service.getOrderInvoice(orderId, userId, isAdminOrMerchant);
+    return ApiResponse.success(res, invoice, 'Order invoice retrieved successfully');
+  });
+
   return {
     createOrder,
     getOrder,
+    getInvoice,
     getMyOrders,
     getStoreOrders,
     getAllOrders,

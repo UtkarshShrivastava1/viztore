@@ -28,4 +28,12 @@ export const ordersApi = {
     const res = await api.post<IOrder>('/orders', dto);
     return res.data;
   },
+
+  /**
+   * Fetch full tax invoice details for an order
+   */
+  getOrderInvoice: async (orderId: string): Promise<any> => {
+    const res = await api.get<any>(`/orders/${orderId}/invoice`);
+    return res.data;
+  },
 };

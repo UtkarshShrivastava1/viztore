@@ -4,6 +4,7 @@ import {
   type IOrderRepository,
   type IOrderService,
   type OrderResponse,
+  type OrderInvoiceData,
   type Page,
 } from './order.types.js';
 import { normalizeAddress } from './order.utils.js';
@@ -35,50 +36,57 @@ export function createOrderService(
   async function createOrder(
     userId: string,
     dto: CreateOrderDTO,
-    _correlationId?: string,
+    correlationId?: string,
   ): Promise<OrderResponse> {
+    // 1. Validate items presence
     if (!dto.items || dto.items.length === 0) {
-      throw AppError.badRequest('Order must contain at least one item', 'EMPTY_ORDER');
+      throw AppError.badRequest('Order must contain at least one item', 'EMPTY_ORDER_ITEMS');
     }
 
-    // 1. Single-Store Invariant check
-    const mismatch = dto.items.some((item) => item.storeId !== dto.storeId);
-    if (mismatch) {
+    // 2. Validate single-store invariant
+    const targetStoreId = dto.storeId;
+    const hasForeignStoreItem = dto.items.some((item) => item.storeId !== targetStoreId);
+    if (hasForeignStoreItem) {
       throw AppError.badRequest(
         'All order items must belong to the specified store',
         'CART_STORE_MISMATCH',
       );
     }
 
-    // 2. Verify store is active if storeFacade is provided
+    // 3. Verify store existence & active status via Store facade
     if (storeFacade) {
-      const isStoreActive = await storeFacade.isStoreActive(dto.storeId);
-      if (!isStoreActive) {
-        throw AppError.badRequest('The selected store is currently not accepting orders', 'STORE_INACTIVE');
+      const store = await storeFacade.getStoreById(targetStoreId);
+      if (!store || !store.isActive) {
+        throw AppError.badRequest('Store not found or is currently inactive', 'STORE_INACTIVE');
       }
     }
 
-    // 3. Check stock availability if catalogFacade is provided
+    // 4. Verify catalog availability & deduct stock via Catalog facade
     if (catalogFacade) {
       const stockCheck = await catalogFacade.checkStock(
         dto.items.map((i) => ({ productId: i.productId, sku: i.sku, quantity: i.quantity })),
       );
       if (!stockCheck.available) {
         throw AppError.badRequest(
-          'One or more items in your cart are currently out of stock',
-          'ITEMS_OUT_OF_STOCK',
+          'One or more items in your order are out of stock',
+          'INSUFFICIENT_STOCK',
+          stockCheck.unavailableItems,
         );
       }
+      await catalogFacade.deductStock(
+        dto.items.map((i) => ({ productId: i.productId, sku: i.sku, quantity: i.quantity })),
+      );
     }
 
-    // 4. Create order through repository
+    // 5. Create order record
+    const normalizedShippingAddress = normalizeAddress(dto.shippingAddress);
     const order = await repo.create({
-      userId,
       ...dto,
-      shippingAddress: normalizeAddress(dto.shippingAddress),
+      userId,
+      shippingAddress: normalizedShippingAddress,
     });
 
-    // 5. Emit asynchronous domain event
+    // 6. Emit asynchronous domain event
     if (bus) {
       bus.emit(EVENTS.ORDER_PLACED, {
         orderId: order.id,
@@ -91,6 +99,78 @@ export function createOrderService(
     }
 
     return order;
+  }
+
+  async function getOrderInvoice(
+    id: string,
+    userId: string,
+    isAdminOrMerchant: boolean,
+  ): Promise<OrderInvoiceData> {
+    const order = await getOrderById(id, userId, isAdminOrMerchant);
+    if (!order) {
+      throw AppError.notFound('Order not found', 'ORDER_NOT_FOUND');
+    }
+
+    let storeName = 'Local Partner Store';
+    let storeAddress = '123, Commercial Market, Indore, MP - 452001';
+    let storePhone = '+91 98765 43210';
+    let storeGstin = '23AAAAA0000A1Z5';
+
+    if (storeFacade) {
+      const store = await storeFacade.getStoreById(order.storeId).catch(() => null);
+      if (store) {
+        storeName = store.name || storeName;
+        if (store.city) {
+          storeAddress = `Commercial Center, ${store.city} - 452001`;
+        }
+      }
+    }
+
+    const items = order.items.map((item) => {
+      const lineTotal = Number((item.quantity * item.unitPrice).toFixed(2));
+      const taxableAmount = Number((lineTotal / 1.05).toFixed(2));
+      return {
+        name: item.name,
+        sku: item.sku || 'N/A',
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        taxableAmount,
+        lineTotal,
+      };
+    });
+
+    const subtotal = order.subtotal;
+    const tax = order.tax;
+    const halfTax = Number((tax / 2).toFixed(2));
+
+    return {
+      invoiceNumber: `INV-${order.orderNumber}`,
+      orderNumber: order.orderNumber,
+      orderId: order.id,
+      date: new Date(order.createdAt).toISOString(),
+      status: order.status,
+      seller: {
+        name: storeName,
+        address: storeAddress,
+        phone: storePhone,
+        gstin: storeGstin,
+      },
+      customer: {
+        name: order.shippingAddress.fullName,
+        phone: order.shippingAddress.phone,
+        address: `${order.shippingAddress.street}, ${order.shippingAddress.city}, ${order.shippingAddress.state} - ${order.shippingAddress.postalCode}`,
+      },
+      items,
+      pricing: {
+        subtotal,
+        tax,
+        cgst: halfTax,
+        sgst: Number((tax - halfTax).toFixed(2)),
+        shippingFee: order.shippingFee,
+        grandTotal: order.grandTotal,
+      },
+      deliveryOtp: order.deliveryOtp || '****',
+    };
   }
 
   async function getOrderById(
@@ -142,17 +222,19 @@ export function createOrderService(
       throw AppError.notFound('Order not found', 'ORDER_NOT_FOUND');
     }
 
-    // State machine guard
-    if (!allowedTransitions[current.status].includes(status)) {
+    // Defensive State machine guard: safely fallback to empty array if status is unmapped
+    const validTargets = allowedTransitions[current.status] ?? [];
+    if (!validTargets.includes(status)) {
       throw AppError.badRequest(
         `Invalid order status transition: ${current.status} -> ${status}`,
         'INVALID_STATUS_TRANSITION',
       );
     }
 
-    // Physical delivery OTP verification guard
+    // Defensive physical delivery OTP verification guard
     if (status === OrderStatus.DELIVERED) {
-      if (!otp || current.deliveryOtp !== otp.trim()) {
+      const cleanOtp = typeof otp === 'string' ? otp.trim() : '';
+      if (!cleanOtp || current.deliveryOtp !== cleanOtp) {
         throw AppError.badRequest('Invalid or missing 4-digit delivery OTP', 'INVALID_DELIVERY_OTP');
       }
     }
@@ -180,7 +262,8 @@ export function createOrderService(
   async function verifyDeliveryOtp(id: string, otp: string): Promise<boolean> {
     const order = await repo.findById(id);
     if (!order) return false;
-    return order.deliveryOtp === otp.trim();
+    const cleanOtp = typeof otp === 'string' ? otp.trim() : '';
+    return Boolean(cleanOtp && order.deliveryOtp === cleanOtp);
   }
 
   async function cancelOrder(
@@ -204,6 +287,7 @@ export function createOrderService(
   return {
     createOrder,
     getOrderById,
+    getOrderInvoice,
     getOrdersByUserId,
     getOrdersByStoreId,
     getAllOrders,

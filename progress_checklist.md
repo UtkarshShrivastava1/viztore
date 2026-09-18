@@ -10,8 +10,8 @@
 |---|---|---|---|
 | **Online Order & Checkout** | `[x]` Single-store cart, address book, checkout, `POST /orders` | `[ ]` Real-time live order tracking map & ETA | `[ ]` One-tap wallet checkout & saved cards |
 | **Merchant Order Processing**| `[x]` 8-tab pipeline, Accept (`CONFIRMED`), Pack (`PACKED`) | `[ ]` Socket.io real-time order sound alerts | `[ ]` Automated kitchen display / printer dispatch |
-| **Delivery Coordination** | `[ ]` WhatsApp dispatch text + 1-click deep link + 4-digit OTP | `[ ]` On-ground pilot rider fleet execution (5–10 stores) | `[ ]` Automated pooled rider matching algorithm |
-| **Billing & Invoicing** | `[ ]` **Online Purchase Tax Invoice** (`INV-ORD-xxxxx`), Customer "Download Bill", Merchant "Print Bill" | `[ ]` **Basic In-House Retail Billing**: Manual counter sales, basic tax invoices, estimates (`5.0`–`5.6`) | `[ ]` **Enterprise Zoho Books Accounting**: Credit/Debit notes, GSTR-1 ledgers, multi-series |
+| **Delivery Coordination** | `[x]` WhatsApp dispatch text + 1-click deep link + 4-digit OTP | `[ ]` On-ground pilot rider fleet execution (5–10 stores) | `[ ]` Automated pooled rider matching algorithm |
+| **Billing & Invoicing** | `[x]` **Online Purchase Tax Invoice** (`INV-ORD-xxxxx`), Customer "Download Bill", Merchant "Print Bill" | `[ ]` **Basic In-House Retail Billing**: Manual counter sales, basic tax invoices, estimates (`5.0`–`5.6`) | `[ ]` **Enterprise Zoho Books Accounting**: Credit/Debit notes, GSTR-1 ledgers, multi-series |
 | **Merchant Store Profile** | `[x]` Dedicated `register.<domain>` 6-step flow, Leaflet pin | `[ ]` Onboarding 5–10 pilot local shops (free beta) | `[ ]` Multi-outlet franchise management & advanced RBAC |
 | **Product & Inventory** | `[x]` Full catalog wizard, live inventory, adjust drawers | `[ ]` Live stock synchronization between store & online | `[ ]` Multi-warehouse inventory, supplier purchase orders |
 | **Client Platforms** | `[x]` Responsive Customer Web (`Next.js 14`) + Merchant Panel (`Vite`) | `[ ]` Desktop/Tablet POS counter mode | `[ ]` Customer Native Mobile App (`React Native / Expo`) |
@@ -126,11 +126,12 @@
 - [x] **Customer Storefront Cart & Checkout UI (`apps/web`)**
   - [x] Cart page with single-store check & item quantity steppers (`/cart`)
   - [x] Checkout page with address, fulfillment mode, and payment summary (`/checkout`)
-- [ ] **Merchant Panel Live Orders Pipeline (`apps/merchant`)**
-  - [ ] Kanban Pipeline Board (New, Preparing, Ready, Out for Delivery, Completed)
-  - [ ] Delivery OTP modal verification for merchant/rider handoff
-  - [ ] Secure 4-digit Delivery OTP generation & verification
-  - [ ] Real-time merchant & customer socket events
+- [x] **Merchant Panel Live Orders Pipeline (`apps/merchant`)**
+  - [x] 8-Tab Orders Pipeline Board (`OrdersPage.tsx`) (New, Accepted, Ready to Ship, Shipped, Delivered, Cancelled)
+  - [x] WhatsApp Delivery Partner Dispatch Generator (Pre-populated manifest with customer address, items, bill, and OTP)
+  - [x] Order Tax Invoice ("Print Bill" packing slip)
+  - [x] Secure 4-digit Delivery OTP generation & physical handoff verification
+  - [x] ordersApi client wired for backend order synchronization
 
 ---
 

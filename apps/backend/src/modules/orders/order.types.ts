@@ -89,9 +89,46 @@ export interface IOrderRepository {
   updateStatus(id: string, status: OrderStatus): Promise<OrderResponse | null>;
 }
 
+export interface OrderInvoiceData {
+  invoiceNumber: string;
+  orderNumber: string;
+  orderId: string;
+  date: string;
+  status: OrderStatus;
+  seller: {
+    name: string;
+    address: string;
+    phone: string;
+    gstin?: string;
+  };
+  customer: {
+    name: string;
+    phone: string;
+    address: string;
+  };
+  items: Array<{
+    name: string;
+    sku?: string;
+    quantity: number;
+    unitPrice: number;
+    taxableAmount: number;
+    lineTotal: number;
+  }>;
+  pricing: {
+    subtotal: number;
+    tax: number;
+    cgst: number;
+    sgst: number;
+    shippingFee: number;
+    grandTotal: number;
+  };
+  deliveryOtp: string;
+}
+
 export interface IOrderService {
   createOrder(userId: string, dto: CreateOrderDTO, correlationId?: string): Promise<OrderResponse>;
   getOrderById(id: string, userId: string, isAdminOrMerchant: boolean): Promise<OrderResponse | null>;
+  getOrderInvoice(id: string, userId: string, isAdminOrMerchant: boolean): Promise<OrderInvoiceData>;
   getOrdersByUserId(userId: string, page?: number, limit?: number): Promise<Page<OrderResponse>>;
   getOrdersByStoreId(storeId: string, page?: number, limit?: number): Promise<Page<OrderResponse>>;
   getAllOrders(page?: number, limit?: number): Promise<Page<OrderResponse>>;

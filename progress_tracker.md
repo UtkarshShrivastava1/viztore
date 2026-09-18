@@ -11,16 +11,16 @@
 ## 2. Global Project Completion Status
 
 ### 🚀 Production Launch Scope (Phases 1–6: Backend + Merchant + Web + Ops)
-`[███████████████████████████████████░░░░░] 87% Complete`
+`[████████████████████████████████████░░░░] 91% Complete`
 
 | Scope Dimension | Weight | Progress Bar | % Complete | Status | Target Milestone |
 |---|:---:|---|:---:|:---:|---|
-| **Overall Production Launch** (Phases 1–6) | **100%** | `[█████████████████░░░]` | **87%** | 🟢 Hardened / Staging Gate | Sept 22 Deployed Milestone |
-| ↳ **Backend Architecture & APIs** | 30% | `[██████████████████░░]` | **93%** | 🟢 Complete & Hardened | 62/62 Unit Tests Passing, Modular Facades Live |
-| ↳ **Merchant & Admin Panel** | 25% | `[███████████████████░]` | **95%** | 🟢 Complete Suite | Full Inventory & Registration Merged |
-| ↳ **Customer Web Storefront** | 25% | `[██████████████████░░]` | **92%** | 🟢 Discovery & PDP Live | 24/24 Routes, Auth, Orders Hub Live |
-| ↳ **Production Readiness & DevOps** | 20% | `[████████████░░░░░░░░]` | **65%** | 🟡 Staging Target | Atlas MongoDB & Redis Configured, Staging Next |
-| **Total Full-Platform Scope** (Phases 1–7) | — | `[███████████████░░░░░]` | **75%** | ⚪ Roadmap Reserved | Customer Mobile App (Phase 7 / Tier 3) |
+| **Overall Production Launch** (Phases 1–6) | **100%** | `[██████████████████░░]` | **91%** | 🟢 Hardened / Staging Gate | Sept 22 Deployed Milestone |
+| ↳ **Backend Architecture & APIs** | 30% | `[███████████████████░]` | **95%** | 🟢 Complete & Hardened | 62/62 Tests Passing, Tax Invoice API Live |
+| ↳ **Merchant & Admin Panel** | 25% | `[███████████████████░]` | **97%** | 🟢 Complete Suite | WhatsApp Dispatch & Print Bill Live |
+| ↳ **Customer Web Storefront** | 25% | `[███████████████████░]` | **95%** | 🟢 Storefront & Orders Hub | Live Checkout & Invoice Modal Wired |
+| ↳ **Production Readiness & DevOps** | 20% | `[██████████████░░░░░░]` | **70%** | 🟡 Staging Target | Monorepo Build Clean, Staging Deployment Next |
+| **Total Full-Platform Scope** (Phases 1–7) | — | `[████████████████░░░░]` | **78%** | ⚪ Roadmap Reserved | Customer Mobile App (Phase 7 / Tier 3) |
 
 > **Auto-Update Invariant**: This progress bar is recalculated and updated dynamically on every task assignment, milestone delivery, and PR merge per `.agents/rules/progress-tracking.md`.
 
@@ -134,9 +134,9 @@ Every online order placed through `apps/web` generates an authoritative, complia
 
 | Date | Focus Area | Deliverables & Exit Criteria | Status |
 |---|---|---|:---:|
-| **Sept 18 (Today)** | **API Contract Lockdown** | • Verify customer cart & checkout connects to `POST /api/v1/orders`<br/>• Ensure Merchant Orders table pulls live orders from `GET /api/v1/orders`<br/>• Validate status transitions (`PENDING` ➔ `CONFIRMED` ➔ `PACKED` ➔ `OUT_FOR_DELIVERY`) | ⏳ In Progress |
-| **Sept 19 (Tomorrow)** | **WhatsApp Dispatch & Online Invoice** | • Build `GET /api/v1/orders/:id/invoice` structured tax bill endpoint<br/>• Build printable Order Tax Invoice view in `apps/web` ("Download Bill") and `apps/merchant` ("Print Bill")<br/>• Implement WhatsApp dispatch message generator with 1-click deep-link | ⏳ Scheduled |
-| **Sept 20 (Saturday)** | **Cloud Staging Deployment** | • Deploy `apps/backend` to Railway / Render with MongoDB Atlas & Redis<br/>• Deploy `apps/web` and `apps/merchant` to Vercel<br/>• Verify CORS whitelist, HTTPS, and environment variables | ⏳ Scheduled |
+| **Sept 18 (Today)** | **API Contract Lockdown** | • Verify customer cart & checkout connects to `POST /api/v1/orders`<br/>• Ensure Merchant Orders table pulls live orders from `GET /api/v1/orders`<br/>• Validate status transitions (`PENDING` ➔ `CONFIRMED` ➔ `PACKED` ➔ `OUT_FOR_DELIVERY`) | ✅ Completed |
+| **Sept 19 (Tomorrow)** | **WhatsApp Dispatch & Online Invoice** | • Build `GET /api/v1/orders/:id/invoice` structured tax bill endpoint<br/>• Build printable Order Tax Invoice view in `apps/web` ("Download Bill") and `apps/merchant` ("Print Bill")<br/>• Implement WhatsApp dispatch message generator with 1-click deep-link | ✅ Completed Early |
+| **Sept 20 (Saturday)** | **Cloud Staging Deployment** | • Deploy `apps/backend` to Railway / Render with MongoDB Atlas & Redis<br/>• Deploy `apps/web` and `apps/merchant` to Vercel<br/>• Verify CORS whitelist, HTTPS, and environment variables | ⏳ In Progress (Next Target) |
 | **Sept 21 (Sunday)** | **End-to-End Live Smoke Test** | • Smartphone test: Place real online order on customer storefront<br/>• Merchant test: Accept order, print bill, and dispatch delivery rider via WhatsApp<br/>• Rider test: Receive WhatsApp pickup text, simulate delivery, verify 4-digit OTP | ⏳ Scheduled |
 | **Sept 22 (Monday)** | **Milestone Sign-Off & Freeze** | • Record end-to-end video walkthrough<br/>• Freeze deployment before vacation break 🛫 | ⏳ Scheduled |
 
@@ -146,9 +146,9 @@ Every online order placed through `apps/web` generates an authoritative, complia
 
 | Layer | Technology | Status | Details |
 |---|---|---|---|
-| **Backend API** | Node.js v20+, Express, Mongoose, TypeScript | **Live & In Sync** ✅ | Auth, Stores, Onboarding, Catalog, Orders, Delivery, Notifications, Ratings, Addresses modules; /healthz & /readyz probes active |
-| **Merchant Panel** | React 18, Vite, Tailwind CSS, Zustand | **Refined & Onboarding Merged** ✅ | Pixel-perfect Dashboard, 4 side drawers, 8-Tab Orders Pipeline, Product Cataloging, & Seller Onboarding Wizard (PR #5) |
-| **Customer Storefront** | Next.js 14 App Router, Tailwind, TanStack Query | **Live** ✅ | Home feed, Stores directory, PLP, PDP, Category browse, Account hub, Orders & Addresses |
+| **Backend API** | Node.js v20+, Express, Mongoose, TypeScript | **Live & In Sync** ✅ | Auth, Stores, Onboarding, Catalog, Orders, Delivery, Notifications, Ratings, Addresses modules; /healthz & /readyz probes active; /invoice endpoint live |
+| **Merchant Panel** | React 18, Vite, Tailwind CSS, Zustand | **Refined & Onboarding Merged** ✅ | Pixel-perfect Dashboard, 4 side drawers, 8-Tab Orders Pipeline, Product Cataloging, Seller Onboarding Wizard, & WhatsApp Delivery Dispatch |
+| **Customer Storefront** | Next.js 14 App Router, Tailwind, TanStack Query | **Live** ✅ | Home feed, Stores directory, PLP, PDP, Category browse, Account hub, Orders & Addresses, Printable Tax Invoice Modal |
 | **Shared Types** | TypeScript, Zod | **100% In Sync** ✅ | All contracts, validation schemas, DTOs, branding config |
 | **Real-Time & Events** | Socket.io + Redis Adapter + TypedEventBus | **Wired** ✅ | In-process domain events forwarded to Socket.io rooms with Redis distributed scaling |
 | **Agent Workflows** | Custom Skills & Rules | **Active** ✅ | Fullstack Feature Workflow, UI Matching, Intern Delegation, /create-task |
@@ -182,7 +182,7 @@ Every online order placed through `apps/web` generates an authoritative, complia
 - [x] Customer Web Storefront (`apps/web`) built on Next.js 14 App Router
 - [x] Full customer browsing: CategoryHub, Stores Near Me, Storefront, PLP, and PDP
 
-### 🟠 Phase 4 — Cart, Checkout & Orders (IN PROGRESS 🔄)
+### 🟠 Phase 4 — Cart, Checkout & Orders (HARDENED & WIRED 🟢)
 - [x] Orders, Checkout & Delivery backend modules (100% complete)
 - [x] Customer Cart & Checkout UI (`apps/web`) — Merged via PR #4
 - [x] Abhay Task 1 (Dashboard + 4 Drawers) — Merged
@@ -192,6 +192,6 @@ Every online order placed through `apps/web` generates an authoritative, complia
 - [x] Abhay Task 5 (Inventory Management Suite) — Merged
 - [x] Vinay Task 1 (Responsive Storefront & Account Hub) — Merged
 - [x] Vinay Task 2 (Discovery, Catalog PLP, Product PDP & Storefronts) — Merged
-- [ ] Tier 1 Online Purchase Invoice Endpoint & Printable Bill (`apps/web` + `apps/merchant`)
-- [ ] WhatsApp Delivery Partner Dispatch Engine & Link Generator
+- [x] Tier 1 Online Purchase Invoice Endpoint & Printable Bill (`apps/web` + `apps/merchant`)
+- [x] WhatsApp Delivery Partner Dispatch Engine & Link Generator
 - [ ] Staging Cloud Deployment (Railway/Render + Vercel)

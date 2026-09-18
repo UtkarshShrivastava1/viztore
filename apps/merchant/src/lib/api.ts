@@ -73,3 +73,20 @@ export const api = {
   delete: <T>(endpoint: string, options?: RequestInit) =>
     request<T>(endpoint, { method: 'DELETE', ...options }),
 };
+
+export const ordersApi = {
+  getStoreOrders: (storeId: string) => 
+    api.get<any[]>(`/orders/store/${storeId}`),
+
+  getOrderById: (orderId: string) => 
+    api.get<any>(`/orders/${orderId}`),
+
+  updateOrderStatus: (orderId: string, status: string, deliveryOtp?: string) =>
+    api.patch<any>(`/orders/${orderId}/status`, { status, deliveryOtp }),
+
+  verifyDeliveryOtp: (orderId: string, otp: string) =>
+    api.post<any>(`/orders/${orderId}/verify-otp`, { otp }),
+
+  getOrderInvoice: (orderId: string) =>
+    api.get<any>(`/orders/${orderId}/invoice`),
+};

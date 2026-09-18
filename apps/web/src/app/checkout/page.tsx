@@ -15,22 +15,32 @@ import {
   ChevronDown,
   Lock,
   RotateCcw,
-  CheckCircle
+  CheckCircle,
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
 import { useCartStore } from '@/stores/cart.store';
+import { useAuthStore } from '@/stores/auth.store';
+import { ordersApi } from '@/lib/api/orders';
 
 export default function CheckoutPage() {
   const router = useRouter();
   const [deliveryOption, setDeliveryOption] = useState('deliver');
   const [paymentMethod, setPaymentMethod] = useState('upi');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const { isAuthenticated, openAuthModal } = useAuthStore();
 
   const {
     items,
+    storeId,
     getSubtotal,
     getTax,
     getShippingFee,
     getGrandTotal,
     getItemCount,
+    clearCart,
   } = useCartStore();
 
   const totalItemCount = getItemCount();
@@ -41,6 +51,60 @@ export default function CheckoutPage() {
   // Mock MRP and discount logic based on items
   const totalMrp = items.reduce((sum, item) => sum + Math.round(item.unitPrice * 1.15) * item.quantity, 0) || 2547;
   const discountOnMrp = totalMrp - (subtotal || 2197);
+
+  const handlePlaceOrder = async () => {
+    // Idempotency & double-submit protection
+    if (isSubmitting) return;
+
+    if (!isAuthenticated) {
+      openAuthModal('login');
+      return;
+    }
+
+    if (items.length === 0) {
+      setErrorMessage('Your cart is empty. Please add items from a store before placing an order.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setErrorMessage(null);
+
+    try {
+      const orderStoreId = storeId || items[0]?.storeId || 'store-sample-1';
+      const shippingAddress = {
+        fullName: 'Harish Kumar',
+        street: '123, MG Road, Near City Mall',
+        city: 'Indore',
+        state: 'Madhya Pradesh',
+        postalCode: '452001',
+        country: 'IN',
+        phone: '9876543210',
+      };
+
+      const payload = {
+        storeId: orderStoreId,
+        items: items.map((item) => ({
+          productId: item.productId,
+          sku: item.sku || 'SKU-DEFAULT',
+          name: item.name,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          storeId: item.storeId || orderStoreId,
+        })),
+        shippingAddress,
+      };
+
+      const created = await ordersApi.createOrder(payload);
+      clearCart();
+      const orderRef = created.orderNumber || created.id;
+      router.push(`/account/orders/${orderRef}`);
+    } catch (err: any) {
+      const msg = err?.message || 'Failed to place order. Please check inventory and try again.';
+      setErrorMessage(msg);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <main className="min-h-screen bg-transparent pb-32 pt-4 flex flex-col">
@@ -53,10 +117,21 @@ export default function CheckoutPage() {
         </div>
 
         {/* Secure Banner */}
-        <div className="mb-6 flex items-center gap-2 rounded-lg border border-emerald-100 bg-emerald-50 px-4 py-2.5 text-xs font-bold text-emerald-700 shadow-sm">
+        <div className="mb-4 flex items-center gap-2 rounded-lg border border-emerald-100 bg-emerald-50 px-4 py-2.5 text-xs font-bold text-emerald-700 shadow-sm">
           <ShieldCheck className="h-4 w-4 shrink-0" />
           Shop with confidence! Your order is 100% safe and secure.
         </div>
+
+        {/* Error Alert */}
+        {errorMessage && (
+          <div className="mb-6 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-xs font-medium text-red-800 shadow-sm">
+            <AlertCircle className="h-4 w-4 shrink-0 text-red-600 mt-0.5" />
+            <div className="flex-1">
+              <span className="font-bold">Unable to place order: </span>
+              {errorMessage}
+            </div>
+          </div>
+        )}
 
         <div className="flex flex-col lg:flex-row gap-8 items-start">
           <div className="flex-1 w-full">
@@ -201,9 +276,22 @@ export default function CheckoutPage() {
             </div>
             
             {/* Desktop Place Order Button (hidden on mobile) */}
-            <button className="hidden lg:flex w-full items-center justify-center gap-2 rounded-xl bg-[#1668F6] px-8 py-3.5 text-sm font-bold text-white shadow-md hover:bg-blue-700 transition mb-8">
-              <Lock className="h-4 w-4" />
-              Place Order
+            <button 
+              onClick={handlePlaceOrder}
+              disabled={isSubmitting}
+              className="hidden lg:flex w-full items-center justify-center gap-2 rounded-xl bg-[#1668F6] px-8 py-3.5 text-sm font-bold text-white shadow-md hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed transition mb-8"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Processing Order...
+                </>
+              ) : (
+                <>
+                  <Lock className="h-4 w-4" />
+                  Place Order
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -220,9 +308,22 @@ export default function CheckoutPage() {
               View Price Details <ChevronDown className="h-3 w-3" />
             </button>
           </div>
-          <button className="flex items-center justify-center gap-2 rounded-xl bg-[#1668F6] px-8 py-3.5 text-sm font-bold text-white shadow-md hover:bg-blue-700 transition">
-            <Lock className="h-4 w-4" />
-            Place Order
+          <button 
+            onClick={handlePlaceOrder}
+            disabled={isSubmitting}
+            className="flex items-center justify-center gap-2 rounded-xl bg-[#1668F6] px-8 py-3.5 text-sm font-bold text-white shadow-md hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed transition"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              <>
+                <Lock className="h-4 w-4" />
+                Place Order
+              </>
+            )}
           </button>
         </div>
       </div>

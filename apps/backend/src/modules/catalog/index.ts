@@ -30,16 +30,39 @@ export const catalogModule: ICatalogFacade = {
   checkStock: async (items: CheckStockItem[]): Promise<StockCheckResult> => {
     try {
       const unavailable: StockCheckResult['unavailableItems'] = [];
+      const productIds = Array.from(new Set(items.map((i) => i.productId)));
+      const products = await catalogService.getProductsByIds(productIds);
+      const productMap = new Map(products.map((p) => [((p as any)._id?.toString() || (p as any).id || '').toString(), p]));
+
       for (const item of items) {
-        const p = await catalogService.getProductById(item.productId).catch(() => null);
+        const p = productMap.get(item.productId);
         if (!p || !p.isActive) {
           unavailable.push({
             productId: item.productId,
             requested: item.quantity,
             available: 0,
           });
+          continue;
+        }
+
+        if (item.sku && p.variants && p.variants.length > 0) {
+          const v = p.variants.find((v) => v.sku === item.sku);
+          if (!v || (v.stock ?? 0) < item.quantity) {
+            unavailable.push({
+              productId: item.productId,
+              requested: item.quantity,
+              available: v?.stock ?? 0,
+            });
+          }
+        } else if ((p.totalStock ?? 0) < item.quantity) {
+          unavailable.push({
+            productId: item.productId,
+            requested: item.quantity,
+            available: p.totalStock ?? 0,
+          });
         }
       }
+
       return {
         available: unavailable.length === 0,
         unavailableItems: unavailable.length > 0 ? unavailable : undefined,
@@ -48,8 +71,8 @@ export const catalogModule: ICatalogFacade = {
       return { available: false };
     }
   },
-  deductStock: async (_items: CheckStockItem[]): Promise<void> => {
-    // Inventory deduction hook
+  deductStock: async (items: CheckStockItem[]): Promise<void> => {
+    await catalogService.deductStockAtomic(items);
   },
 };
 

@@ -9,6 +9,7 @@ import {
   MapPin,
   CreditCard,
   Key,
+  MessageCircle,
 } from 'lucide-react';
 import { MerchantOrderRecord } from '../../stores/orderStore.js';
 
@@ -26,6 +27,39 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
   onPrint,
 }) => {
   if (!isOpen || !order) return null;
+
+  const handleWhatsAppDispatch = () => {
+    const itemsText = order.items
+      .map((item, idx) => `${idx + 1}. ${item.name} (x${item.quantity}) - ₹${item.price * item.quantity}`)
+      .join('\n');
+
+    const text = 
+`🚚 *DELIVERY DISPATCH MANIFEST — ${order.orderNumber}*
+━━━━━━━━━━━━━━━━━━━━━━
+🏪 *Store Pickup:* Merchant Store Partner
+📍 *Drop Address:* ${order.deliveryAddress.fullText || `${order.deliveryAddress.street}, ${order.deliveryAddress.city}`}
+👤 *Customer:* ${order.customer.name}
+📞 *Customer Phone:* ${order.customer.phone}
+
+📦 *Items to Deliver:*
+${itemsText}
+
+💰 *Bill Amount:* ₹${order.pricing.totalAmount.toLocaleString('en-IN')} (${order.payment.paymentMethod})
+🔑 *Handshake OTP (Collect from Customer):* *${order.otp}*
+━━━━━━━━━━━━━━━━━━━━━━
+_Please collect package from store and verify 4-digit OTP upon customer handover._`;
+
+    const waUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(waUrl, '_blank');
+  };
+
+  const handlePrint = () => {
+    if (onPrint) {
+      onPrint(order);
+    } else {
+      window.print();
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -51,11 +85,21 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => onPrint?.(order)}
+              onClick={handleWhatsAppDispatch}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#25D366] hover:bg-[#1EBE5D] text-white text-xs font-bold transition-all shadow-sm"
+              title="Send Delivery Manifest to Rider on WhatsApp"
+            >
+              <MessageCircle className="w-3.5 h-3.5 fill-current" />
+              <span>WhatsApp Rider</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handlePrint}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-blue-600 text-xs font-semibold transition-colors"
             >
               <Printer className="w-3.5 h-3.5" />
-              <span>Print Invoice</span>
+              <span>Print Bill</span>
             </button>
 
             <button
