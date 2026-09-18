@@ -6,176 +6,161 @@
 
 > *"Built for Local Businesses. Made for India."*
 
+---
+
 ## 2. Global Project Completion Status
 
 ### 🚀 Production Launch Scope (Phases 1–6: Backend + Merchant + Web + Ops)
-`[███████████████████████████████████░░░░░] 86% Complete`
+`[███████████████████████████████████░░░░░] 87% Complete`
 
 | Scope Dimension | Weight | Progress Bar | % Complete | Status | Target Milestone |
 |---|:---:|---|:---:|:---:|---|
-| **Overall Production Launch** (Phases 1–6) | **100%** | `[█████████████████░░░]` | **86%** | 🟢 Hardened / Staging Gate | Staging & Production Go-Live |
-| ↳ **Backend Architecture & APIs** | 30% | `[██████████████████░░]` | **92%** | 🟢 Complete / Hardened | 62/62 Tests Passing, Facades Live |
+| **Overall Production Launch** (Phases 1–6) | **100%** | `[█████████████████░░░]` | **87%** | 🟢 Hardened / Staging Gate | Sept 22 Deployed Milestone |
+| ↳ **Backend Architecture & APIs** | 30% | `[██████████████████░░]` | **93%** | 🟢 Complete & Hardened | 62/62 Unit Tests Passing, Modular Facades Live |
 | ↳ **Merchant & Admin Panel** | 25% | `[███████████████████░]` | **95%** | 🟢 Complete Suite | Full Inventory & Registration Merged |
-| ↳ **Customer Web Storefront** | 25% | `[██████████████████░░]` | **92%** | 🟢 Discovery & PDP Live | 24/24 Routes, Auth & Catalog Live |
-| ↳ **Production Readiness & DevOps** | 20% | `[████████████░░░░░░░░]` | **60%** | 🟡 Infrastructure Ready | Verified Atlas & Cloudinary Live |
-| **Total Full-Platform Scope** (Phases 1–7) | — | `[███████████████░░░░░]` | **74%** | ⚪ Roadmap Reserved | Customer Mobile App (Phase 7) |
+| ↳ **Customer Web Storefront** | 25% | `[██████████████████░░]` | **92%** | 🟢 Discovery & PDP Live | 24/24 Routes, Auth, Orders Hub Live |
+| ↳ **Production Readiness & DevOps** | 20% | `[████████████░░░░░░░░]` | **65%** | 🟡 Staging Target | Atlas MongoDB & Redis Configured, Staging Next |
+| **Total Full-Platform Scope** (Phases 1–7) | — | `[███████████████░░░░░]` | **75%** | ⚪ Roadmap Reserved | Customer Mobile App (Phase 7 / Tier 3) |
 
 > **Auto-Update Invariant**: This progress bar is recalculated and updated dynamically on every task assignment, milestone delivery, and PR merge per `.agents/rules/progress-tracking.md`.
 
 ---
 
-## 3. Precision Layering: Tier 1 (Core Launch) vs. Tier 2 (Enterprise Ops)
+## 3. Precision Layering: Tier 1 (Sept 22) vs. Tier 2 (October) vs. Tier 3 (November)
 
-To ensure razor-sharp clarity across engineering and business deliverables, all platform features are categorized into two operational tiers:
-
-### 🌟 Tier 1 — Core Hyperlocal Production Flow (Target: September 22, 2026 Release Gate)
-> **Goal:** Full end-to-end customer discovery, single-store checkout, WhatsApp dispatch, 4-digit Delivery OTP handshake, and merchant order fulfillment.
-
-#### Merchant Portal (`apps/merchant`) — Tier 1 Status: 95% Complete
-1. **Merchant Registration & Subdomain Isolation**:
-   - Dedicated portal routing on `register.<domain>` and `/register`.
-   - 6-step registration flow: Account credentials, GSTIN/PAN verification, dual-mode HTML5 Canvas e-signature, store operational profile with interactive Leaflet map pin-drop, business hours, and banking details.
-   - Seller review waiting room & super-admin approval state machine.
-   - Seamless transition to merchant login upon approval.
-2. **Initial Store Setup & Profile**:
-   - Store hours, delivery radius (3–4 km), contact info, pickup address coordinates, and category tagging.
-3. **Full-Scale Product Cataloging**:
-   - 3-step creation wizard (Category selection, Image upload with previews, Pricing/Inventory/Storage specs).
-   - Dynamic variant management (sizes, colors, custom attributes).
-   - Actual-size printable barcode label preview & bulk CSV upload capability.
-4. **Operational Inventory Management**:
-   - 5 KPI summary cards, filter toolbar, stock level badges, reserved stock popover.
-   - Single-product stock adjustment slide-out drawer (`− 50 +` stepper with reason selector).
-   - Bulk adjust batch grid with live recomputed stock counters and sticky action footer.
-   - Transaction audit history drawer and dedicated ledger table.
-5. **Order Processing Pipeline**:
-   - 8-tab status bar (All, Pending, Confirmed, Preparing, Ready, Out for Delivery, Delivered, Cancelled).
-   - Comprehensive order details modal with printable tax invoice preview and visual status stepper.
-   - Manual order creation flow (`CreateOrderPage.tsx`) for counter-assisted bookings.
-   - Physical 4-digit Delivery OTP verification dialog for merchant-to-rider handoff.
-
-#### Customer Storefront (`apps/web`) — Tier 1 Status: 85% Complete
-1. **Customer Registration & Profiling**:
-   - Floating authentication modal with Sign In / Create Account tabs.
-   - One-tap Google OAuth mock session connection.
-   - Dynamic user profile state in account hub (`/account`, `/account/edit-profile`).
-2. **Customer Login & Session Persistence**:
-   - Persistent Zustand auth store (`localStorage` backed).
-   - Global auto-bearer JWT injection on all outbound API calls (`client.ts`).
-   - Graceful offline/demo session handling and clean logout flow.
-3. **Hyperlocal Store Discovery**:
-   - Interactive location selector with pincode and coordinate capture.
-   - "Stores Near You" horizontal rail and explore stores directory (`/stores`) with open/closed indicators and delivery distance.
-4. **Catalog Browsing & PDP**:
-   - Faceted aggregation search by category, brand, color, size, and price range.
-   - Comprehensive Product Detail Page (`/products/[slug]`) with image gallery, variant swatches, quantity stepper, and live stock indicator.
-5. **Single-Store Cart Rule & Streamlined Checkout**:
-   - Single-store cart invariant strictly enforced on frontend and backend.
-   - Multi-address selector (`/account/addresses`), delivery slot choice, order note, and bill breakdown.
-6. **Order Placement, Real-Time Tracking & Delivery OTP**:
-   - Order history listing (`/account/orders`) and granular order detail timeline (`/account/orders/[id]`).
-   - Real-time Socket.io status synchronization with backend events.
-   - Automated WhatsApp dispatch message generator with Google Maps route constructor.
-   - Secure 4-digit physical Delivery OTP handshake to complete customer handoff.
-
----
-
-### 🏢 Tier 2 — Enterprise Retail Operations & Advanced Tooling (Target: Post-Vacation / Phase 7, Sept 23+)
-> **Goal:** Enterprise brick-and-mortar retail operational depth, POS billing terminals, automated financial payouts, and native mobile applications.
-
-#### Merchant Portal (`apps/merchant`) — Tier 2 Roadmap:
-1. **Point-of-Sale (POS) Counter Billing**:
-   - High-speed barcode scanner input mode for instant counter checkout.
-   - Offline terminal mode with local storage synchronization.
-   - Sequential GST tax invoice series configuration and thermal printer support.
-2. **Merchant Wallet & Financial Ledger**:
-   - Live merchant wallet balance, payout request triggers, and automated bank settlements.
-   - Platform commission deduction ledger and transaction breakdown.
-3. **Returns, Exchanges & RMA Management**:
-   - Customer return request approval workflow and reverse pickup dispatch.
-   - Returned item quality inspection checklist and credit note generation.
-4. **Staff Management & Granular RBAC**:
-   - Multi-user merchant staff invitations (Manager, Cashier, Inventory Clerk).
-   - Permission guards restricting access to billing, wallet, or inventory.
-5. **Marketing Campaign & Promo Banner Manager**:
-   - Self-serve coupon code builder with minimum cart values and usage limits.
-   - In-app store banner campaign scheduler.
-
-#### Customer Ecosystem — Tier 2 Roadmap:
-1. **Customer React Native Mobile App (`apps/mobile`)**:
-   - Native iOS and Android application with Expo Router.
-   - Background GPS location updates and native device push notifications.
-2. **Customer Return & Exchange Request Hub**:
-   - In-app return initiation with photo upload of damaged items.
-   - Real-time return tracking and instant refund credit.
-3. **Customer Loyalty Points & Digital Wallet**:
-   - Cashback accumulation and one-tap checkout wallet balance.
-
----
-
-## 4. Active Release Milestone: Staging Deployment & QA Release Gate
-> **Target Release Date:** September 22, 2026  
-> **Objective:** Deliver fully integrated, data-seeded staging environments to the QA team for end-to-end regression and exploratory testing.
-
-| Sprint Window | Track & Focus Area | Macro Phase Link | Deliverables & Exit Criteria | Status |
-|---|---|:---:|---|:---:|
-| **Sept 15 – 16** | **Core Backend Completion** | Phase 6 | • Customer Address CRUD (`/api/v1/users/addresses`)<br/>• Order History API (`/api/v1/orders/my-orders`)<br/>• Store Rating & Aggregate Score (`/api/v1/stores/:id/rating`) | ✅ Completed |
-| **Sept 17 – 18** | **Frontend Integration & Inventory Suite** | Phase 4 & 5 | • Inventory Management Suite (Mockups 4.0–4.6)<br/>• Wire Live Address Book & Orders APIs in Storefront<br/>• Full monorepo clean build & 62/62 unit tests passing | ✅ Completed Ahead of Schedule |
-| **Sept 19 – 20** | **Cloud Staging Deployment** | DevOps | • Deploy `apps/backend` + Redis to Railway/Render<br/>• Deploy `apps/web` & `apps/merchant` to Vercel<br/>• Execute `pnpm seed:staging` (4 stores, 60+ products, test personas) | ⏳ Scheduled Next |
-| **Sept 21 – 22** | **Smoke Testing & QA Handoff** | Quality Gate | • Execute full end-to-end purchase & OTP delivery handshake<br/>• Publish `QA_TESTING_GUIDE.md` with credentials & test scenarios<br/>• Formal release gate handover to the QA testing team | ⏳ Scheduled |
-
----
-
-## 5. System Topology
+To maintain absolute clarity and prevent scope creep, engineering deliverables are structured across three distinct horizons:
 
 ```mermaid
-graph TB
-    subgraph "Client Applications"
-        A["📱 Customer Mobile App<br/>React Native + Expo (Phase 7)"]
-        B["🌐 Customer Web Storefront<br/>Next.js 14+ App Router (Phase 3 ✅)"]
-        C["🏪 Merchant & Admin Panels<br/>React 18 + Vite SPA (Phase 2 & UI Refined ✅)"]
-    end
-
-    subgraph "Backend"
-        D["⚙️ Modular Monolith<br/>Node.js + TypeScript + Express (Phase 1-3 ✅)"]
-    end
-
-    subgraph "Data Layer"
-        E["🗄️ MongoDB Atlas<br/>2dsphere Geo + Text Indexing"]
-        F["⚡ Redis Cloud<br/>Socket.io Adapter + Cart Cache"]
-    end
-
-    A & B & C -->|HTTPS / WSS| D
-    D --> E
-    D --> F
+timeline
+    title Three-Horizon Platform Evolution
+    section Tier 1: Sept 22 Deployment
+        Customer Web ➔ Backend ➔ Merchant Core Triangle
+        WhatsApp Delivery Partner Dispatch Engine
+        Online Purchase Billing & Invoicing (INV-ORD-xxxxx)
+        Cloud Staging Deployment (Railway/Render + Vercel)
+    section Vacation Break
+        Team Vacation & Deployment Freeze
+    section Tier 2: Mid-Late Oct Soft Launch
+        Basic In-House Retail Billing (Folder 5: 7 screens)
+        Socket.io Real-Time Audio & Push Order Alerts
+        Onboard 5-10 Pilot Retailers (Free Beta Testing)
+        Real On-Ground Live Hyperlocal Operations
+    section Tier 3: November Enterprise
+        Enterprise Accounting (Zoho Books / Tally Clone)
+        Credit & Debit Notes, GSTR-1 & GSTR-3B Tax Ledgers
+        Merchant Automated Wallet Bank Settlements
+        Customer Native Mobile App (React Native / Expo)
 ```
 
 ---
 
-## 6. Current Monorepo Status
+### 🌟 Tier 1 — Core Working Production Flow (Release Gate: September 22, 2026)
+> **Mandate:** An end-to-end working system deployed to cloud staging before the team vacation. Covers customer discovery, single-store purchase, merchant order processing, WhatsApp delivery coordination, and full online purchase invoicing.
+
+#### 1. The Core Triangle Purchase & Fulfillment Engine
+1. **Customer Web Storefront (`apps/web`)**:
+   - Hyperlocal 3–4km store discovery (`/stores`, `/stores/[slug]`).
+   - Catalog browsing, faceted search, and Product Detail Pages (`/products/[slug]`).
+   - Strict single-store cart rule enforcement (`/cart`).
+   - Multi-address selector and order checkout (`/checkout`).
+   - Order submission via `POST /api/v1/orders`.
+2. **Merchant Management Panel (`apps/merchant`)**:
+   - Real-time orders pipeline (`OrdersPage.tsx`): All, Pending, Confirmed, Preparing, Ready, Out for Delivery, Delivered, Cancelled.
+   - Order status progression: "Accept Order" (`CONFIRMED`) ➔ "Pack & Ready" (`PACKED`).
+   - Slide-out order details drawer with customer delivery address, contact info, and line items.
+3. **WhatsApp Delivery Partner Coordination**:
+   - Merchant clicks **"Dispatch Delivery Rider"** in order details drawer.
+   - Automated WhatsApp dispatch message generated via `https://wa.me/<rider_phone>?text=...`:
+     - Store pickup address, contact name, and Google Maps pin.
+     - Customer delivery destination address and phone number.
+     - Order summary: Item list, quantities, and bill total.
+     - Payment status: Pre-paid via UPI or Cash on Delivery (COD) collection amount.
+     - 4-digit Delivery Handshake OTP notice.
+   - Delivery partner confirms pickup (`OUT_FOR_DELIVERY`) and verifies customer OTP upon delivery (`DELIVERED`).
+
+#### 2. Online Purchase Billing & Invoicing (Tier 1 Mandatory Scope)
+Every online order placed through `apps/web` generates an authoritative, compliant **Order Tax Invoice**:
+- **Customer Web Receipt**: On `/account/orders/[id]`, the **"Download Bill"** button opens a clean, print-ready, professional **Order Tax Invoice** (`INV-ORD-xxxxx`):
+  - Invoice number, order reference, and timestamp.
+  - Seller / Store details (Store name, pickup address, phone).
+  - Customer shipping address and phone number.
+  - Itemized table: Description, SKU, Quantity, Unit Price, Taxable Amount, GST breakdown, Line Total.
+  - Delivery fee, discounts, grand total, and payment method (UPI / COD).
+- **Merchant Physical Packing Slip**: In the Merchant Panel order details drawer, a **"Print Invoice / Bill"** button enables the merchant to print a receipt to tape onto the customer's package before rider pickup.
+- **Rider Bill Summary**: WhatsApp dispatch text embeds the exact invoice bill total so the rider knows the financial collection responsibility.
+
+#### 3. Cloud Staging Deployment
+- **Backend (`apps/backend`)**: Deployed to Railway / Render with MongoDB Atlas & Redis Cloud instances.
+- **Frontends (`apps/web` & `apps/merchant`)**: Deployed to Vercel with production environment variables (`NEXT_PUBLIC_APP_NAME`, `NEXT_PUBLIC_API_URL`).
+- **Data Seeding**: Staging dataset seeded with 4 local stores, 60+ products, and active merchant/customer credentials.
+
+---
+
+### 🏬 Tier 2 — Basic In-House Retail Billing & Pilot Operations (Mid-to-Late October 2026)
+> **Mandate:** In the 10–15 day runway following vacation, implement working basic in-house counter billing and onboard pilot merchant clients for real-world on-ground operations.
+
+1. **Basic In-House Retail Billing (`apps/merchant` - Folder 5 Revised Scope)**:
+   - **Manual Counter Sale Mode (`5.1`, `5.2`)**: Merchant creates counter bills for walk-in retail shoppers.
+   - **Tax Invoices (`5.0`)**: In-house invoice management table with status filtering, date range, and customer search.
+   - **Estimates / Quotations (`5.5`, `5.6`)**: Quick quote creation with validity timer and 1-click **Convert to Invoice** (`+ Convert`).
+   - **Billing Settings & Print Preferences (`5.3`)**: Configure invoice prefixes, terms & conditions, store bank account QR code, and thermal vs. A4 layout.
+2. **Real-Time Sound & Push Order Alerts**:
+   - Connect `@socket.io/redis-adapter` to trigger an instant Zomato/Swiggy-style audio chime on the merchant's screen when an order arrives.
+3. **Pilot Merchant Onboarding (Soft Launch)**:
+   - Target 5–10 physical brick-and-mortar shops within a compact 3–4km delivery cluster.
+   - Free onboarding for beta testing.
+   - Live on-ground execution with local delivery partners to stress-test real inventory synchronization and delivery SLAs.
+
+---
+
+### 💼 Tier 3 — Full Enterprise Accounting & Mobile App (November 2026)
+> **Mandate:** Expand in-house billing into an enterprise Zoho Books / Tally-grade accounting suite and release the native mobile app.
+
+1. **Enterprise Accounting Suite**:
+   - Credit & Debit Notes (`CN-`, `DN-`) against product returns, damaged goods, or vendor price revisions (Mockups `5.6`–`5.9`).
+   - GSTR-1, GSTR-3B compliant monthly tax export ledgers (B2B, B2C, HSN/SAC summary).
+   - Multi-series sequential numbering and custom fiscal year series.
+   - Vendor expense tracking, purchase orders, and ledger reconciliation.
+2. **Merchant Wallet & Automated Bank Settlements**:
+   - Automated T+1 / T+2 merchant bank account payouts.
+   - Platform commission deduction ledger, TDS 194-O reporting, and dispute reserves.
+3. **Customer Native Mobile App (`apps/mobile`)**:
+   - React Native + Expo managed workflow for iOS and Android.
+   - Background GPS tracking, device push notifications, and biometric authentication.
+
+---
+
+## 4. 4-Day Release Schedule to September 22 Deployment
+
+| Date | Focus Area | Deliverables & Exit Criteria | Status |
+|---|---|---|:---:|
+| **Sept 18 (Today)** | **API Contract Lockdown** | • Verify customer cart & checkout connects to `POST /api/v1/orders`<br/>• Ensure Merchant Orders table pulls live orders from `GET /api/v1/orders`<br/>• Validate status transitions (`PENDING` ➔ `CONFIRMED` ➔ `PACKED` ➔ `OUT_FOR_DELIVERY`) | ⏳ In Progress |
+| **Sept 19 (Tomorrow)** | **WhatsApp Dispatch & Online Invoice** | • Build `GET /api/v1/orders/:id/invoice` structured tax bill endpoint<br/>• Build printable Order Tax Invoice view in `apps/web` ("Download Bill") and `apps/merchant` ("Print Bill")<br/>• Implement WhatsApp dispatch message generator with 1-click deep-link | ⏳ Scheduled |
+| **Sept 20 (Saturday)** | **Cloud Staging Deployment** | • Deploy `apps/backend` to Railway / Render with MongoDB Atlas & Redis<br/>• Deploy `apps/web` and `apps/merchant` to Vercel<br/>• Verify CORS whitelist, HTTPS, and environment variables | ⏳ Scheduled |
+| **Sept 21 (Sunday)** | **End-to-End Live Smoke Test** | • Smartphone test: Place real online order on customer storefront<br/>• Merchant test: Accept order, print bill, and dispatch delivery rider via WhatsApp<br/>• Rider test: Receive WhatsApp pickup text, simulate delivery, verify 4-digit OTP | ⏳ Scheduled |
+| **Sept 22 (Monday)** | **Milestone Sign-Off & Freeze** | • Record end-to-end video walkthrough<br/>• Freeze deployment before vacation break 🛫 | ⏳ Scheduled |
+
+---
+
+## 5. Current Monorepo Status
 
 | Layer | Technology | Status | Details |
 |---|---|---|---|
 | **Backend API** | Node.js v20+, Express, Mongoose, TypeScript | **Live & In Sync** ✅ | Auth, Stores, Onboarding, Catalog, Orders, Delivery, Notifications, Ratings, Addresses modules; /healthz & /readyz probes active |
 | **Merchant Panel** | React 18, Vite, Tailwind CSS, Zustand | **Refined & Onboarding Merged** ✅ | Pixel-perfect Dashboard, 4 side drawers, 8-Tab Orders Pipeline, Product Cataloging, & Seller Onboarding Wizard (PR #5) |
-| **Customer Storefront** | Next.js 14 App Router, Tailwind, TanStack Query | **Live** ✅ | Home feed, Stores directory, PLP, PDP, Category browse |
-| **Shared Types** | TypeScript, Zod | **100% In Sync** ✅ | All contracts, validation schemas, DTOs (`structure.md`), branding config |
+| **Customer Storefront** | Next.js 14 App Router, Tailwind, TanStack Query | **Live** ✅ | Home feed, Stores directory, PLP, PDP, Category browse, Account hub, Orders & Addresses |
+| **Shared Types** | TypeScript, Zod | **100% In Sync** ✅ | All contracts, validation schemas, DTOs, branding config |
 | **Real-Time & Events** | Socket.io + Redis Adapter + TypedEventBus | **Wired** ✅ | In-process domain events forwarded to Socket.io rooms with Redis distributed scaling |
 | **Agent Workflows** | Custom Skills & Rules | **Active** ✅ | Fullstack Feature Workflow, UI Matching, Intern Delegation, /create-task |
 | **Test Suite** | Vitest | **62/62 Passing** ✅ | 12 test suites (AppError, Auth/Addresses, Stores/Ratings, Onboarding, Catalog, Orders, Delivery, Notifications, WorkerPool, Cache-Aside) |
-| **Build Status** | Turborepo | **Clean** ✅ | Full monorepo builds with zero errors across all 5 packages |
+| **Build Status** | Turborepo | **Clean** ✅ | Full monorepo builds with zero errors across all packages |
 | **Engineering Standards** | 8/8 Pillars (`structure.md`) | **100% Implemented** ✅ | Facades, Composition roots, 3-tier testing, EventBus, WorkerPool, Cache-Aside + Replica split, ESR indexing, Decoupled repos |
-
-
-
 
 ---
 
-## 7. Phase-by-Phase Roadmap & Progress
+## 6. Phase-by-Phase Execution Progress
 
 ### 🔵 Phase 1 — Foundation & Core Backend (COMPLETED ✅)
-> *Modular monolith architecture with authentication and spatial store queries*
-
 - [x] Monorepo scaffolding with pnpm workspaces and Turborepo
 - [x] `shared/` infrastructure (MongoDB connection, JWT, error handling, Zod validation middleware)
 - [x] `auth/` module (Customer, Merchant & Admin registration, login, JWT access/refresh token pair, role guards)
@@ -183,129 +168,30 @@ graph TB
 - [x] API versioning under `/api/v1`
 - [x] White-label branding architecture via `branding.config.ts`
 
----
-
 ### 🟢 Phase 2 — Merchant Onboarding & Dashboard (COMPLETED & UI MATCHED ✅)
-> *End-to-end merchant onboarding flow and pixel-perfect management dashboard*
-
 - [x] 6-Step Merchant Onboarding API (Account, GSTIN/PAN verification, E-signature, Store setup, Business ops, Banking)
 - [x] Super Admin store approval/rejection queue API
 - [x] Merchant Panel frontend (React 18 + Vite SPA)
 - [x] 6-Step interactive onboarding wizard UI with canvas signature and document uploads
-- [x] **Merchant Operational Dashboard (Pixel-Matched to Client UI References)**:
-  - Deep Navy Sidebar (`#081028`) with live counters (`Orders 25`, `Billing New`, `Wallet ₹32,450`, `Returns 7`) & "Grow your business" CTA
-  - Top header with `Ctrl + K` search bar, Wallet button, Notifications count `8`, Help icon, and Seller Profile pill
-  - Top 3 KPI Summary Cards: Total Sales (`₹48,750`), Orders (`128`), Visitors (`2,354`) with trending badges
-  - Middle 3-Col Grid: `🔥 New Orders` card (orange button), `Sales Overview` dual-curve chart (This Week vs Last Week), `Create New Bill` card + `Order Summary` breakdown
-  - Bottom 3-Col Grid: `Top Selling Products`, `Low Stock Alert` with restock triggers, `Quick Actions` 8-tile matrix
-  - Footer Announcements row (3 cards with live dates and icons)
-  - **4 Interactive Slide-Out Side Drawers**:
-    - 🔔 `NotificationsDrawer`: Category tabs (`All`, `Orders`, `Inventory`, `System`), unread indicators, "Mark all as read"
-    - ❓ `HelpSupportDrawer`: Searchable FAQ accordion (9 topics) + 24/7 Support contact card
-    - 👤 `SellerProfileDrawer`: Verified seller status, business metadata, store performance metrics (`4.7 ★`, `98%`, `1,245 orders`, `₹3.2L+`), account settings
-    - 📝 `ProfileInformationDrawer`: Basic info, bank details, store description, category tags, store logo editor
-
----
+- [x] Merchant Operational Dashboard pixel-matched to mockups with 4 interactive slide-out drawers
 
 ### 🟡 Phase 3 — Catalog & Customer Discovery (COMPLETED ✅)
-> *Product catalog engine and customer web storefront*
-
 - [x] `catalog/` backend module with polymorphic product schema, variants, and dynamic attributes
-- [x] High-performance MongoDB aggregation faceted search engine (size, color, brand, price range, category facets)
-- [x] Product CRUD with merchant store ownership checks & pre-save derived metric computation
-- [x] Customer Web Storefront (`apps/web`) built on **Next.js 14 App Router**
-- [x] Customer UI: Header (location pin/address selector), Footer, CategoryStrip, PromoCarousel, TrustBar, ProductCard, StoreCard, Skeletons
-- [x] Home feed (`/`): "Stores Near You" horizontal rail, "Best Deals For You" product grid, explore banner
-- [x] Explore Stores directory (`/stores`) with category filters and open/closed indicators
-- [x] Individual Store Storefront (`/stores/[slug]`) with banner, ratings, fast delivery badge, and scoped product listing
-- [x] Product Listing Page (`/products`) with URL-driven filters, faceted sidebar, sorting, pagination, and `<Suspense>` boundary
-- [x] Product Detail Page (`/products/[slug]`) with image gallery, variant swatches, quantity stepper, stock validation, and specs table
-- [x] Category landing pages (`/category/[slug]`)
-- [x] 14 unit tests for catalog service (26 total unit tests passing)
-
----
+- [x] High-performance MongoDB aggregation faceted search engine
+- [x] Product CRUD with merchant store ownership checks
+- [x] Customer Web Storefront (`apps/web`) built on Next.js 14 App Router
+- [x] Full customer browsing: CategoryHub, Stores Near Me, Storefront, PLP, and PDP
 
 ### 🟠 Phase 4 — Cart, Checkout & Orders (IN PROGRESS 🔄)
-> *End-to-end purchase flow, single-store cart enforcement, and enterprise order state machine*
-
-- **Phase 4: Orders, Checkout & Delivery Module** — `100% COMPLETE`
-- **Architecture Standardization: Enterprise Modular Monolith** — `100% COMPLETE`
-  - Uniform 10-file Clean Architecture structure across ALL modules (`auth`, `stores`, `catalog`, `orders`).
-  - Implemented `*.module.ts` (Composition Root / DI), `*.types.ts` (Domain Contracts), `*.repository.ts` (DB Decoupling), `*.validator.ts` (Zod), and `index.ts` (Public Facades).
-  - Built typed `eventBus` asynchronous messaging engine (`shared/events/`).
-  - 3-Tier Testing Pyramid verified: 39/39 passing unit & integration tests across 8 test suites.
-  - Full monorepo build clean (`pnpm build`).
-
-### 👥 Intern Frontend Execution Tracks
-- **Abhay (Merchant Panel `apps/merchant`)**:
-  - [x] **Task 1 (Dashboard + 4 Drawers)**: MERGED to `main` (`4166ed6`, `decaefc`). Pixel-matched to Harish's Home mockups with 0 brand violations.
-  - [x] **Task 2 (8-Tab Orders Pipeline & Manual Create Order)**: MERGED to `main` (`297aad4`, `3f3dad4`). 8-tab status bar, order table, detail modal with printable invoice, order stepper, and manual create order flow.
-  - [x] **Task 3 (Product Catalog & Add Product Wizard)**: MERGED to `main` (`cbed558`). Full 6-screen system: 5 KPI summary cards, filter toolbar, products table, 7-action popup menu, 3-step creation wizard (Category, Images, Pricing/Inventory/Storage), Preview & Submit with actual-size barcode label preview.
-  - [x] **Task 4 (Seller Registration & Onboarding Pipeline)**: MERGED to `main` (`460c44a`). Public Seller Landing Page (`SellerLandingPage.tsx`) with 3D artwork hero & trust cards, floating login modal with OTP, interactive Leaflet map pin-drop (`MapPicker.tsx`), dual-mode HTML5 Canvas e-signature (`Step2Signature.tsx`), 4-step registration wizard, review waiting room, and dynamic white-label branding.
-  - [x] **Task 5 (Inventory Management Suite)**: COMPLETED (`eda0cca`). Full 7-screen system: 5 KPI summary cards, filter toolbar, clean table layout, reserved stock popover, 7-action row menu, single-product adjust stock drawer, single-product stock history timeline drawer, bulk adjust batch grid, and dedicated transaction audit ledger.
-- **Vinay (Customer Web Storefront `apps/web`)**:
-  - [x] **Task 1 (Mobile App Mockup ➔ Responsive Customer Web & Account Hub)**: MERGED to `main` (`e52bc45`). Full responsive storefront: Cart (`/cart`), Checkout (`/checkout`), Category browse (`/category`, `/category/[slug]`), and 11 Account Hub screens (`/account`, `/orders`, `/orders/[id]`, `/wishlist`, `/addresses`, `/coupons`, `/edit-profile`, `/feedback`, `/sell`, `/support`, `/privacy`, `/terms`). Zero brand violations, 100% white-label compliant.
-  - [x] **Task 2 (Hyperlocal Discovery, Catalog PLP, Product PDP & Storefronts)**: MERGED to `main` (`9ff764b`). Full 6-screen system: Split Category Hub (`/category`), Faceted PLP (`/products`, `/category/[slug]`), Comprehensive PDP (`/products/[slug]`), Stores Near Me (`/stores`), Storefront (`/stores/[slug]`), and modular Desktop/Mobile header navigation.
-
-- [x] Customer Web Storefront Cart & Checkout UI (`apps/web`) — Merged via PR #4
-- [ ] Merchant Panel Live Orders Pipeline Kanban Board (`apps/merchant`)
-(Pending → Confirmed → Packed → Out for Delivery → Delivered / Cancelled)
-- [ ] Secure 4-digit Delivery OTP verification for order handoff
-- [ ] Real-time merchant & customer order status notifications via Socket.io
-
----
-
-### 🟢 Phase 5 — Delivery, Real-Time & Notifications (BACKEND COMPLETE ✅, UI PENDING INTERN MERGE)
-> *Hyperlocal operations, dispatch engine, and real-time synchronization*
-
-- [x] **Hyperlocal `delivery/` Backend Module** (`100% COMPLETE`):
-  - Standardized 10-file Clean Architecture: `delivery.types.ts`, `delivery.validator.ts`, `delivery.model.ts`, `delivery.repository.ts`, `delivery.service.ts`, `delivery.controller.ts`, `delivery.routes.ts`, `delivery.module.ts`, `delivery.service.test.ts`, and `index.ts`.
-  - GeoJSON spatial routing with Haversine distance formula & estimated delivery time calculations.
-  - Automated dispatch assignment, state transitions (`ASSIGNED` → `PICKED_UP` → `OUT_FOR_DELIVERY` → `DELIVERED`).
-  - WhatsApp notification dispatch link generator (`https://wa.me/...`) & Google Maps turn-by-turn navigation URL constructor.
-  - 4-digit physical delivery OTP handshake with verification, order status synchronization, and handoff completion.
-  - EventBus integration: listens to `ORDER_CONFIRMED` to auto-initialize deliveries; emits `DELIVERY_ASSIGNED` and `DELIVERY_COMPLETED` domain events forwarded to Socket.io rooms.
-  - 5/5 unit tests passing in `delivery.service.test.ts` (50/50 total tests passing).
-- [x] **Centralized `notifications/` Backend Engine** (`100% COMPLETE`):
-  - Standardized 10-file Clean Architecture: `notification.types.ts`, `notification.validator.ts`, `notification.model.ts`, `notification.repository.ts`, `notification.service.ts`, `notification.controller.ts`, `notification.routes.ts`, `notification.module.ts`, `notification.service.test.ts`, and `index.ts`.
-  - Multi-recipient routing (`merchant`, `customer`, `admin`) and category segregation (`order`, `inventory`, `system`, `promo`) powering Abhay's 4-tab `NotificationsDrawer`.
-  - Compound ESR indexing: `{ recipientId: 1, recipientRole: 1, category: 1, isRead: 1, createdAt: -1 }`.
-  - EventBus automatic listeners: generates real-time notifications on `ORDER_PLACED`, `ORDER_CONFIRMED`, `ORDER_CANCELLED`, `DELIVERY_ASSIGNED`, `DELIVERY_COMPLETED`, `PRODUCT_OUT_OF_STOCK`.
-  - Real-time Socket.io push broadcasts (`NOTIFICATION_CREATED`) to target rooms (`store:<id>`, `user:<id>`).
-  - Read management: single mark-as-read, category-filtered bulk mark-all-read, and aggregate unread summary endpoint.
-  - 6/6 unit tests passing in `notification.service.test.ts` (56/56 total tests passing).
-- [x] Socket.io Redis adapter configuration & in-process EventBus forwarding to rooms (`store:<id>`, `order:<id>`, `user:<id>`)
-- [ ] Merchant audio chime alerts for incoming orders (Frontend UI hook pending intern PR merge)
-- [ ] Live customer delivery tracking map with driver location & ETA (Frontend UI pending intern PR merge)
-
----
-
-### 🟣 Phase 6 — Account, Store Ratings & Polish
-> *Customer profile management, order history, simple store rating, and lean merchant operations*
-
-- [x] Customer account hub backend (saved addresses CRUD with default toggle `/api/v1/users/addresses`, order history alias `/api/v1/orders/my-orders`, profile `/api/v1/users/me`)
-- [x] **Lightweight Store Rating & Feedback Engine Backend**:
-  - Simple 1–5 star customer rating for the fulfilling store/merchant upon order completion (`POST /api/v1/stores/:id/rating`).
-  - Rolling aggregate store rating score & count computed by the backend (`averageRating`, `totalRatings`, `GET /api/v1/stores/:id/rating`).
-  - Scoped strictly to the store/merchant level with compound `{ storeId: 1, orderId: 1 }` uniqueness preventing duplicate reviews.
-- [ ] Customer platform NPS & experience feedback submission (`/api/v1/feedback`)
-- [ ] Merchant conversion flow ("Sell on {branding.appName}" informational screen)
-- [ ] Merchant marketing module (standard in-app banner and promo campaign manager)
-- [ ] Merchant revenue analytics and sales aggregation reports
-- [x] **Lean Scope & Non-AI Search Mandate**:
-  - Zero paid external AI APIs (strictly NO image-scan visual search, NO voice command AI processing).
-  - High-performance, cost-effective search powered purely by MongoDB compound text indexes and faceted aggregation.
-
----
-
-### ⚫ Phase 7 — Tier 2 Enterprise Retail Operations & Mobile App (POST-VACATION / ROADMAP RESERVED)
-> *Enterprise brick-and-mortar retail operational depth, POS billing, automated wallet settlements, and native mobile apps (Target: Sept 23+)*
-
-- [ ] Merchant Point-of-Sale (POS) counter billing terminal mode, barcode scanner integration & offline synchronization
-- [ ] Merchant wallet financial ledger, payout triggers & automated bank settlements
-- [ ] Automated returns, exchange, RMA reverse logistics, and refund settlement pipeline
-- [ ] Merchant staff management & role-based access control (Manager, Cashier, Inventory Clerk)
-- [ ] Merchant promotional banner campaigns & self-serve coupon builder
-- [ ] Customer Mobile App with React Native & Expo (iOS + Android)
-- [ ] Native GPS geolocation, background order tracking & mobile push notifications
-- [ ] Customer in-app return/refund request hub & loyalty wallet balance
+- [x] Orders, Checkout & Delivery backend modules (100% complete)
+- [x] Customer Cart & Checkout UI (`apps/web`) — Merged via PR #4
+- [x] Abhay Task 1 (Dashboard + 4 Drawers) — Merged
+- [x] Abhay Task 2 (8-Tab Orders Pipeline & Manual Create Order) — Merged
+- [x] Abhay Task 3 (Product Catalog & Add Product Wizard) — Merged
+- [x] Abhay Task 4 (Seller Registration & Onboarding Pipeline) — Merged
+- [x] Abhay Task 5 (Inventory Management Suite) — Merged
+- [x] Vinay Task 1 (Responsive Storefront & Account Hub) — Merged
+- [x] Vinay Task 2 (Discovery, Catalog PLP, Product PDP & Storefronts) — Merged
+- [ ] Tier 1 Online Purchase Invoice Endpoint & Printable Bill (`apps/web` + `apps/merchant`)
+- [ ] WhatsApp Delivery Partner Dispatch Engine & Link Generator
+- [ ] Staging Cloud Deployment (Railway/Render + Vercel)

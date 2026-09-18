@@ -4,19 +4,18 @@
 
 ---
 
-## 🎯 Tier 1 vs. Tier 2 Delivery Precision Matrix
+## 🎯 Tier 1 vs. Tier 2 vs. Tier 3 Precision Matrix
 
-| Functional Flow | Tier 1 (Core Launch — Target: Sept 22) | Tier 2 (Enterprise Ops — Post-Vacation / Sept 23+) |
-|---|---|---|
-| **Merchant Registration** | `[x]` Dedicated `register.<domain>` subdomain & 6-step flow | `[ ]` Multi-outlet franchise registration |
-| **Merchant Store Setup** | `[x]` Basic store details, map pin, hours, categories | `[ ]` Multiple staff RBAC roles & shift scheduling |
-| **Product Cataloging** | `[x]` 3-step creation wizard, CSV upload, barcodes | `[ ]` AI automated catalog scrapers & sync |
-| **Inventory Management** | `[x]` Real-time stock counts, adjust drawers, bulk batch | `[ ]` Warehouse multi-bin inventory & supplier POs |
-| **Order Management** | `[x]` 8-tab pipeline, invoice print, manual order, OTP handoff | `[ ]` Offline POS billing terminal & barcode scanner |
-| **Financial Ledger** | `[x]` Basic order bill breakdown & delivery fee split | `[ ]` Automated wallet payout cycles & commission ledger |
-| **Customer Auth & Profile**| `[x]` Modal signup/login, Google OAuth, address book | `[ ]` Customer in-app wallet & loyalty cashbacks |
-| **Customer Discovery** | `[x]` Hyperlocal stores near me, faceted PLP, rich PDP | `[ ]` Native React Native / Expo Mobile App (iOS/Android) |
-| **Checkout & Delivery** | `[x]` Single-store cart rule, checkout, WhatsApp dispatch | `[ ]` Automated returns & RMA credit note settlements |
+| Functional Flow | Tier 1 (Core Launch — Target: Sept 22) | Tier 2 (Pilot Operations — Mid-to-Late Oct) | Tier 3 (Enterprise Accounting & Native App — Nov) |
+|---|---|---|---|
+| **Online Order & Checkout** | `[x]` Single-store cart, address book, checkout, `POST /orders` | `[ ]` Real-time live order tracking map & ETA | `[ ]` One-tap wallet checkout & saved cards |
+| **Merchant Order Processing**| `[x]` 8-tab pipeline, Accept (`CONFIRMED`), Pack (`PACKED`) | `[ ]` Socket.io real-time order sound alerts | `[ ]` Automated kitchen display / printer dispatch |
+| **Delivery Coordination** | `[ ]` WhatsApp dispatch text + 1-click deep link + 4-digit OTP | `[ ]` On-ground pilot rider fleet execution (5–10 stores) | `[ ]` Automated pooled rider matching algorithm |
+| **Billing & Invoicing** | `[ ]` **Online Purchase Tax Invoice** (`INV-ORD-xxxxx`), Customer "Download Bill", Merchant "Print Bill" | `[ ]` **Basic In-House Retail Billing**: Manual counter sales, basic tax invoices, estimates (`5.0`–`5.6`) | `[ ]` **Enterprise Zoho Books Accounting**: Credit/Debit notes, GSTR-1 ledgers, multi-series |
+| **Merchant Store Profile** | `[x]` Dedicated `register.<domain>` 6-step flow, Leaflet pin | `[ ]` Onboarding 5–10 pilot local shops (free beta) | `[ ]` Multi-outlet franchise management & advanced RBAC |
+| **Product & Inventory** | `[x]` Full catalog wizard, live inventory, adjust drawers | `[ ]` Live stock synchronization between store & online | `[ ]` Multi-warehouse inventory, supplier purchase orders |
+| **Client Platforms** | `[x]` Responsive Customer Web (`Next.js 14`) + Merchant Panel (`Vite`) | `[ ]` Desktop/Tablet POS counter mode | `[ ]` Customer Native Mobile App (`React Native / Expo`) |
+| **Financial Settlements** | `[x]` Order breakdown, delivery fee, payment mode (UPI/COD) | `[ ]` Basic store cash drawer reconciliation | `[ ]` Automated T+1 bank payouts & TDS 194-O ledger |
 
 ---
 
