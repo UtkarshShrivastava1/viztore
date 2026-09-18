@@ -81,7 +81,7 @@ export function ExploreStoresGrid() {
     <div className="w-full">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-[#192168]">Explore Stores</h2>
+          <h2 className="text-3xl font-bold text-[#192168]">Explore Stores</h2>
           <p className="text-gray-500 mt-1">Shop from top local stores near you</p>
         </div>
         <Link
@@ -138,11 +138,11 @@ export function ExploreStoresGrid() {
           {trustItems.map((item, index) => (
             <div key={item.label} className={`flex items-center gap-5 ${index !== 0 ? 'pt-6 sm:pt-0 sm:pl-6 lg:pl-10' : 'sm:pl-4'}`}>
               <div className="shrink-0 text-[#1668F6] p-3.5 bg-white rounded-2xl shadow-sm">
-                <item.icon strokeWidth={1.5} className="w-10 h-10" />
+                <item.icon strokeWidth={1.5} className="w-6 h-6" />
               </div>
               <div className="flex flex-col">
                 <h4 className="text-base font-bold text-gray-900 leading-[1.5] mb-1">{item.label}</h4>
-                <p className="text-sm text-gray-600 leading-[1.5]">{item.description}</p>
+                <p className="text-base text-gray-600 leading-[1.5]">{item.description}</p>
               </div>
             </div>
           ))}
