@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, ShieldCheck, Tag, Truck } from 'lucide-react';
+import { branding } from '@repo/shared-types';
 
 export function AllCategoriesHero() {
   return (
@@ -18,7 +19,7 @@ export function AllCategoriesHero() {
             For A Better Everyday
           </h1>
           <p className="text-[#061842]/70 font-semibold text-lg max-w-md">
-            Top brands. Best deals. Local stores. Only on Viztore.
+            Top brands. Best deals. Local stores. Only on {branding.appName}.
           </p>
           <div className="pt-4">
             <Link 

@@ -100,38 +100,38 @@ export const Step3BusinessInfo: React.FC<Step3BusinessInfoProps> = ({
   };
 
   return (
-    <div className="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-10 shadow-xs">
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-2">
-        <div className="w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-sm flex items-center justify-center shadow-xs">
-          4
+    <div className="bg-white border border-slate-200/80 rounded-2xl p-6 sm:p-8 lg:p-9 shadow-xs">
+      {/* Header with Step 3 Badge */}
+      <div className="flex items-center gap-2.5 mb-1">
+        <div className="w-7 h-7 rounded-full bg-[#0038ed] text-white font-bold text-xs flex items-center justify-center shadow-2xs shrink-0">
+          3
         </div>
-        <h2 className="text-sm font-bold tracking-wider text-blue-600 uppercase">
+        <h2 className="text-xs sm:text-[13px] font-bold tracking-wider text-[#0038ed] uppercase">
           BUSINESS INFORMATION
         </h2>
       </div>
 
-      <p className="text-xs text-slate-500 mb-6">
+      <p className="text-xs text-slate-500 mb-5">
         Add your business details to help customers know more about your store.
       </p>
 
       {error && (
-        <div className="mb-5 p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-600 text-xs font-medium">
+        <div className="mb-5 p-3 bg-rose-50 border border-rose-200 rounded-lg text-rose-600 text-xs font-medium">
           {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Category Cards Grid */}
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {/* Category Cards Grid (Screen 8.png) */}
         <div>
-          <label className="block text-xs font-bold text-slate-900">
+          <label className="block text-xs font-bold text-slate-900 mb-1">
             Add Category *
           </label>
           <span className="text-[11px] text-slate-500 block mb-3">
             Select all categories that best describe your business.
           </span>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
             {categories.map((cat) => {
               const Icon = cat.icon;
               const isSelected = selectedCategories.includes(cat.id);
@@ -140,16 +140,16 @@ export const Step3BusinessInfo: React.FC<Step3BusinessInfoProps> = ({
                 <div
                   key={cat.id}
                   onClick={() => toggleCategory(cat.id)}
-                  className={`p-3.5 rounded-2xl border flex items-center justify-between cursor-pointer transition-all ${
+                  className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${
                     isSelected
-                      ? 'border-blue-600 bg-blue-50/40 ring-1 ring-blue-600'
+                      ? 'border-[#0038ed] bg-blue-50/50 ring-1 ring-[#0038ed]'
                       : 'border-slate-200 bg-white hover:border-slate-300'
                   }`}
                 >
-                  <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="flex items-center gap-2 min-w-0">
                     <div
-                      className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
-                        isSelected ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'
+                      className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${
+                        isSelected ? 'bg-[#0038ed] text-white' : 'bg-slate-100 text-slate-600'
                       }`}
                     >
                       <Icon className="w-3.5 h-3.5" />
@@ -163,7 +163,7 @@ export const Step3BusinessInfo: React.FC<Step3BusinessInfoProps> = ({
                     type="checkbox"
                     checked={isSelected}
                     onChange={() => {}}
-                    className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300 pointer-events-none"
+                    className="w-3.5 h-3.5 rounded text-[#0038ed] focus:ring-[#0038ed] border-slate-300 pointer-events-none ml-1.5"
                   />
                 </div>
               );
@@ -172,7 +172,7 @@ export const Step3BusinessInfo: React.FC<Step3BusinessInfoProps> = ({
         </div>
 
         {/* Delivery Timings Section */}
-        <div className="space-y-3 pt-2">
+        <div className="space-y-3 pt-1">
           <div>
             <label className="block text-xs font-bold text-slate-900">
               Delivery Timings
@@ -182,16 +182,16 @@ export const Step3BusinessInfo: React.FC<Step3BusinessInfoProps> = ({
             </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1.5">
+              <label className="block text-xs font-medium text-slate-700 mb-1">
                 Open Time *
               </label>
               <div className="relative">
                 <select
                   value={openTime}
                   onChange={(e) => setOpenTime(e.target.value)}
-                  className="w-full text-xs border border-slate-200 rounded-xl px-4 py-3 bg-white text-slate-900 appearance-none focus:outline-none focus:border-blue-500 pr-10"
+                  className="w-full text-xs sm:text-sm border border-slate-200 rounded-lg px-3.5 py-2.5 bg-white text-slate-900 appearance-none focus:outline-none focus:border-[#0038ed] pr-9 cursor-pointer"
                 >
                   {['07:00', '08:00', '09:00', '10:00', '11:00'].map((t) => (
                     <option key={t} value={t}>
@@ -199,19 +199,19 @@ export const Step3BusinessInfo: React.FC<Step3BusinessInfoProps> = ({
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3.5 pointer-events-none" />
+                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-3 pointer-events-none" />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1.5">
+              <label className="block text-xs font-medium text-slate-700 mb-1">
                 Close Time *
               </label>
               <div className="relative">
                 <select
                   value={closeTime}
                   onChange={(e) => setCloseTime(e.target.value)}
-                  className="w-full text-xs border border-slate-200 rounded-xl px-4 py-3 bg-white text-slate-900 appearance-none focus:outline-none focus:border-blue-500 pr-10"
+                  className="w-full text-xs sm:text-sm border border-slate-200 rounded-lg px-3.5 py-2.5 bg-white text-slate-900 appearance-none focus:outline-none focus:border-[#0038ed] pr-9 cursor-pointer"
                 >
                   {['19:00', '20:00', '21:00', '22:00', '23:00'].map((t) => (
                     <option key={t} value={t}>
@@ -227,13 +227,13 @@ export const Step3BusinessInfo: React.FC<Step3BusinessInfoProps> = ({
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3.5 pointer-events-none" />
+                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-3 pointer-events-none" />
               </div>
             </div>
           </div>
 
           {/* Mark Open Days */}
-          <div className="pt-2">
+          <div className="pt-1">
             <label className="block text-xs font-bold text-slate-900">
               Mark Open Days *
             </label>
@@ -249,9 +249,9 @@ export const Step3BusinessInfo: React.FC<Step3BusinessInfoProps> = ({
                     key={day}
                     type="button"
                     onClick={() => toggleDay(day)}
-                    className={`px-4 py-2 rounded-xl text-xs font-semibold border flex items-center gap-2 transition-all ${
+                    className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold border flex items-center gap-2 transition-all cursor-pointer ${
                       isOpen
-                        ? 'bg-blue-50 border-blue-600 text-blue-600 ring-1 ring-blue-600/10'
+                        ? 'bg-blue-50/70 border-[#0038ed] text-[#0038ed] ring-1 ring-[#0038ed]/20'
                         : 'bg-white border-slate-200 text-slate-400 hover:border-slate-300'
                     }`}
                   >
@@ -259,7 +259,7 @@ export const Step3BusinessInfo: React.FC<Step3BusinessInfoProps> = ({
                       type="checkbox"
                       checked={isOpen}
                       onChange={() => {}}
-                      className="w-3.5 h-3.5 rounded text-blue-600 border-slate-300 pointer-events-none"
+                      className="w-3.5 h-3.5 rounded text-[#0038ed] border-slate-300 pointer-events-none"
                     />
                     <span>{day}</span>
                   </button>
@@ -270,7 +270,11 @@ export const Step3BusinessInfo: React.FC<Step3BusinessInfoProps> = ({
             <div className="pt-2">
               <span className="text-[11px] text-slate-500">
                 Have separate day wise timings?{' '}
-                <button type="button" className="text-blue-600 font-semibold hover:underline">
+                <button
+                  type="button"
+                  onClick={() => alert('Day-wise custom time slots enabled.')}
+                  className="text-[#0038ed] font-semibold hover:underline cursor-pointer"
+                >
                   Add day wise slots
                 </button>
               </span>
@@ -279,11 +283,11 @@ export const Step3BusinessInfo: React.FC<Step3BusinessInfoProps> = ({
         </div>
 
         {/* Back and Continue Actions */}
-        <div className="flex items-center gap-4 pt-4">
+        <div className="flex items-center gap-3 pt-3">
           <button
             type="button"
             onClick={onBack}
-            className="w-36 py-3.5 px-6 rounded-xl border border-blue-600 text-blue-600 font-semibold text-sm hover:bg-blue-50 transition-all flex items-center justify-center gap-2 cursor-pointer"
+            className="w-32 py-3 px-4 rounded-lg border border-[#0038ed] text-[#0038ed] font-semibold text-sm hover:bg-blue-50/50 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Back</span>
@@ -291,7 +295,7 @@ export const Step3BusinessInfo: React.FC<Step3BusinessInfoProps> = ({
 
           <button
             type="submit"
-            className="flex-1 py-3.5 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm shadow-md shadow-blue-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
+            className="flex-1 py-3 px-6 rounded-lg bg-[#0038ed] hover:bg-[#002fcf] text-white font-semibold text-sm shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
             <span>Continue</span>
             <ArrowRight className="w-4 h-4" />

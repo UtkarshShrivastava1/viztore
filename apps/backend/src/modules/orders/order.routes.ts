@@ -18,6 +18,7 @@ export function createOrderRouter(
   // Customer & Merchant order routes
   router.post('/', controller.createOrder);
   router.get('/', controller.getMyOrders);
+  router.get('/my-orders', controller.getMyOrders);
   router.get('/store/:storeId', controller.getStoreOrders);
   router.get('/all', roleGuard(UserRole.ADMIN, UserRole.MERCHANT), controller.getAllOrders);
   router.get('/:id', controller.getOrder);

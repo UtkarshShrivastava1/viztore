@@ -5,8 +5,11 @@ import { useRouter } from 'next/navigation';
 import { CheckCircle2, Store, Tag, Grid, Heart, ShieldCheck } from 'lucide-react';
 import { branding } from '@repo/shared-types';
 
+import { useAuthStore } from '@/stores/auth.store';
+
 export default function LoggedOutPage() {
   const router = useRouter();
+  const openAuthModal = useAuthStore((state) => state.openAuthModal);
 
   return (
     <main className="min-h-screen bg-white pb-24 pt-10 flex flex-col items-center">
@@ -32,8 +35,8 @@ export default function LoggedOutPage() {
 
         {/* Login Button */}
         <button 
-          onClick={() => router.push('/')}
-          className="w-full rounded-xl bg-[#1668F6] py-3.5 text-base font-bold text-white shadow-md hover:bg-blue-700 transition mb-8"
+          onClick={() => openAuthModal('login')}
+          className="w-full rounded-xl bg-[#1668F6] py-3.5 text-base font-bold text-white shadow-md hover:bg-blue-700 transition mb-8 cursor-pointer"
         >
           Login / Sign Up
         </button>

@@ -138,6 +138,7 @@ export function createApp(): Express {
   // API Domain Routes (Versioned under /api/v1)
   const apiV1 = express.Router();
   apiV1.use('/auth', authRouter);
+  apiV1.use('/users', authRouter);
   apiV1.use('/stores', storeRouter);
   apiV1.use('/catalog', catalogRouter);
   apiV1.use('/orders', orderRouter);

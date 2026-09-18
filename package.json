@@ -12,6 +12,7 @@
     "lint": "turbo run lint",
     "test": "turbo run test",
     "seed:merchants": "pnpm --filter=@repo/backend seed",
+    "seed:staging": "pnpm --filter=@repo/backend seed",
     "clean": "turbo run clean && rimraf node_modules"
   },
   "devDependencies": {

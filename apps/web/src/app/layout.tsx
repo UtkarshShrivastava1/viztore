@@ -5,6 +5,7 @@ import { Providers } from './providers';
 import { CartDrawer } from '../components/cart/CartDrawer';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { Header } from '@/components/layout/Header';
+import { AuthModal } from '@/components/auth/AuthModal';
 import './globals.css';
 
 const inter = Inter({
@@ -53,6 +54,7 @@ export default function RootLayout({
             {children}
             <CartDrawer />
             <BottomNav />
+            <AuthModal />
           </Providers>
         </div>
       </body>

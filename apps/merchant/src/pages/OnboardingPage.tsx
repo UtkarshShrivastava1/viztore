@@ -14,6 +14,7 @@ import { branding } from '../lib/branding.js';
 interface OnboardingPageProps {
   onEnterDashboard: () => void;
   onGoToLogin: () => void;
+  onGoToHome?: () => void;
 }
 
 export type SubStepKey = '1_account' | '2_id' | '2_signature' | '3_store' | '3_business' | '4_bank';
@@ -21,8 +22,9 @@ export type SubStepKey = '1_account' | '2_id' | '2_signature' | '3_store' | '3_b
 export const OnboardingPage: React.FC<OnboardingPageProps> = ({
   onEnterDashboard,
   onGoToLogin,
+  onGoToHome,
 }) => {
-  const { isUnderReview } = useOnboardingStore();
+  const { isUnderReview, setIsUnderReview } = useOnboardingStore();
   const [subStep, setSubStep] = useState<SubStepKey>('1_account');
 
   // Derive active main step (1, 2, 3, 4) for the sidebar indicator
@@ -37,12 +39,25 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
 
   if (isUnderReview) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col justify-between">
-        <SellerNavbar onGoToLogin={onGoToLogin} onGoToSignup={() => setSubStep('1_account')} />
-        <div className="flex-1 py-12 px-4 sm:px-6 flex items-center justify-center">
-          <ReviewWaitingRoom onEnterDashboard={onEnterDashboard} />
+      <div className="min-h-screen bg-[#f3f6fc] flex flex-col justify-between font-sans selection:bg-[#0038ed] selection:text-white">
+        <SellerNavbar
+          onGoToLogin={onGoToLogin}
+          onGoToSignup={() => {
+            setIsUnderReview(false);
+            setSubStep('1_account');
+          }}
+          onGoToHome={onGoToHome}
+        />
+        <div className="flex-1 py-10 px-4 sm:px-6 flex items-center justify-center">
+          <ReviewWaitingRoom
+            onEnterDashboard={onEnterDashboard}
+            onEditDraft={() => {
+              setIsUnderReview(false);
+              setSubStep('4_bank');
+            }}
+          />
         </div>
-        <footer className="py-4 border-t border-slate-200 text-center text-xs text-slate-500 bg-white">
+        <footer className="py-6 border-t border-slate-200 text-center text-xs text-slate-500 bg-white">
           &copy; {new Date().getFullYear()} {branding.appName}. Hyperlocal Retail Commerce Infrastructure.
         </footer>
       </div>
@@ -50,14 +65,18 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
   }
 
   return (
-    <div className="min-h-screen bg-slate-50/50 flex flex-col justify-between font-sans">
+    <div className="min-h-screen bg-[#f3f6fc] flex flex-col justify-between font-sans selection:bg-[#0038ed] selection:text-white">
       {/* Top Seller Navigation Bar */}
-      <SellerNavbar onGoToLogin={onGoToLogin} onGoToSignup={() => setSubStep('1_account')} />
+      <SellerNavbar
+        onGoToLogin={onGoToLogin}
+        onGoToSignup={() => setSubStep('1_account')}
+        onGoToHome={onGoToHome}
+      />
 
       {/* Main Split-Screen Onboarding Section */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-8 lg:p-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Left Column: Progress Sidebar & Trust Badges */}
+      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-8 lg:p-12">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
+          {/* Left Column: Progress Sidebar & Trust Badges (Screen 3.png left) */}
           <div className="lg:col-span-5">
             <OnboardingSidebar
               activeMainStep={activeMainStep}
@@ -115,7 +134,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
       </main>
 
       {/* Footer */}
-      <footer className="py-4 border-t border-slate-200 text-center text-xs text-slate-500 bg-white">
+      <footer className="py-6 border-t border-slate-200 text-center text-xs text-slate-500 bg-white">
         &copy; {new Date().getFullYear()} {branding.appName}. Hyperlocal Retail Commerce Infrastructure.
       </footer>
     </div>

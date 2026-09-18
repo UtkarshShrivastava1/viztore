@@ -36,12 +36,44 @@ export const updateProfile: RequestHandler = catchAsync(async (req: Request, res
   return ApiResponse.success(res, updatedUser, 'Profile updated successfully');
 });
 
+export const getAddresses: RequestHandler = catchAsync(async (req: Request, res: Response) => {
+  if (!req.user) {
+    throw AppError.unauthorized();
+  }
+  const addresses = await authService.getAddresses(req.user.sub);
+  return ApiResponse.success(res, addresses, 'Addresses retrieved successfully');
+});
+
 export const addAddress: RequestHandler = catchAsync(async (req: Request, res: Response) => {
   if (!req.user) {
     throw AppError.unauthorized();
   }
   const updatedUser = await authService.addAddress(req.user.sub, req.body);
   return ApiResponse.created(res, updatedUser, 'Address added successfully');
+});
+
+export const updateAddress: RequestHandler = catchAsync(async (req: Request, res: Response) => {
+  if (!req.user) {
+    throw AppError.unauthorized();
+  }
+  const { addressId } = req.params;
+  if (!addressId) {
+    throw AppError.badRequest('Address ID is required');
+  }
+  const updatedUser = await authService.updateAddress(req.user.sub, addressId, req.body);
+  return ApiResponse.success(res, updatedUser, 'Address updated successfully');
+});
+
+export const setDefaultAddress: RequestHandler = catchAsync(async (req: Request, res: Response) => {
+  if (!req.user) {
+    throw AppError.unauthorized();
+  }
+  const { addressId } = req.params;
+  if (!addressId) {
+    throw AppError.badRequest('Address ID is required');
+  }
+  const updatedUser = await authService.setDefaultAddress(req.user.sub, addressId);
+  return ApiResponse.success(res, updatedUser, 'Default address set successfully');
 });
 
 export const deleteAddress: RequestHandler = catchAsync(async (req: Request, res: Response) => {
