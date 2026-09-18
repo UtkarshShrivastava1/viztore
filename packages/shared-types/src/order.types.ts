@@ -80,3 +80,31 @@ export type UpdateOrderStatusDto = z.infer<typeof updateOrderStatusSchema>;
 export type VerifyOtpDto = z.infer<typeof verifyOtpSchema>;
 export type OrderPaginationDto = z.infer<typeof orderPaginationSchema>;
 
+export interface IOrderItem {
+  productId: string;
+  sku?: string;
+  name: string;
+  quantity: number;
+  unitPrice: number;
+  storeId: string;
+}
+
+export interface IOrder {
+  _id?: string;
+  id?: string;
+  orderNumber: string;
+  userId: string;
+  storeId: string;
+  items: IOrderItem[];
+  shippingAddress: ShippingAddressDto;
+  subtotal: number;
+  tax: number;
+  shippingFee: number;
+  grandTotal: number;
+  status: OrderStatus;
+  deliveryOtp?: string;
+  deliveredAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+

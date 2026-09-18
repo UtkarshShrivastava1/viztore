@@ -87,7 +87,7 @@ export function DesktopHeader({
               <MapPin className="h-4 w-4 shrink-0 text-[#4C82FB]" fill="#4C82FB" strokeWidth={0} />
               <span className="flex-1 truncate text-[12px] text-white text-left">
                 <span className="font-normal text-white/80">Deliver to </span>
-                <span className="font-medium text-white">{userName} - {address.split(',')[0]}</span>
+                <span className="font-medium text-white">{resolvedUserName} - {address.split(',')[0]}</span>
               </span>
               <ChevronDown className="h-4 w-4 shrink-0 text-white" strokeWidth={2.2} />
             </button>
@@ -138,10 +138,22 @@ export function DesktopHeader({
                 )}
               </div>
 
-              {/* Account */}
-              <button type="button" className="group relative flex flex-col items-center justify-center gap-1 text-white hover:opacity-85 transition-opacity" onClick={() => router.push('/account')}>
+              {/* Account / Auth */}
+              <button
+                type="button"
+                className="group relative flex flex-col items-center justify-center gap-1 text-white hover:opacity-85 transition-opacity"
+                onClick={() => {
+                  if (isAuthenticated) {
+                    router.push('/account');
+                  } else {
+                    openAuthModal('login');
+                  }
+                }}
+              >
                 <CircleUserRound className="h-[22px] w-[22px]" strokeWidth={1.8} />
-                <span className="text-[10px] font-medium tracking-wide">Account</span>
+                <span className="text-[10px] font-medium tracking-wide">
+                  {isAuthenticated ? "Account" : "Sign In"}
+                </span>
               </button>
               
               {/* Cart */}

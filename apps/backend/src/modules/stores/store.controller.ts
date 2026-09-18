@@ -59,3 +59,21 @@ export const listStores: RequestHandler = catchAsync(async (req: Request, res: R
   const result = await storeService.listAllStores(req.query as any);
   return ApiResponse.success(res, result.stores, undefined, undefined, result.meta);
 });
+
+export const rateStore: RequestHandler = catchAsync(async (req: Request, res: Response) => {
+  if (!req.user) throw AppError.unauthorized();
+  const { id } = req.params;
+  if (!id) throw AppError.badRequest('Store ID is required');
+
+  const result = await storeService.rateStore(id, req.user.sub, req.body);
+  return ApiResponse.success(res, result, result.message);
+});
+
+export const getStoreRatings: RequestHandler = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  if (!id) throw AppError.badRequest('Store ID is required');
+
+  const result = await storeService.getStoreRatings(id);
+  return ApiResponse.success(res, result);
+});
+

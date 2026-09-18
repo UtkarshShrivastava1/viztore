@@ -1,6 +1,22 @@
 # Viztore Platform — Implementation Checklist
 
-> **Overall Status:** Phase 1, Phase 2 (UI Refined), Phase 3 & Phase 4/5 Backend Complete | 56/56 Unit & Integration Tests Passing | Full Monorepo Clean Build
+> **Overall Status:** Phase 1, Phase 2 (UI Refined), Phase 3, Phase 4/5/6 Backend Complete | 62/62 Unit & Integration Tests Passing | Full Monorepo Clean Build
+
+---
+
+## 🎯 Tier 1 vs. Tier 2 Delivery Precision Matrix
+
+| Functional Flow | Tier 1 (Core Launch — Target: Sept 22) | Tier 2 (Enterprise Ops — Post-Vacation / Sept 23+) |
+|---|---|---|
+| **Merchant Registration** | `[x]` Dedicated `register.<domain>` subdomain & 6-step flow | `[ ]` Multi-outlet franchise registration |
+| **Merchant Store Setup** | `[x]` Basic store details, map pin, hours, categories | `[ ]` Multiple staff RBAC roles & shift scheduling |
+| **Product Cataloging** | `[x]` 3-step creation wizard, CSV upload, barcodes | `[ ]` AI automated catalog scrapers & sync |
+| **Inventory Management** | `[x]` Real-time stock counts, adjust drawers, bulk batch | `[ ]` Warehouse multi-bin inventory & supplier POs |
+| **Order Management** | `[x]` 8-tab pipeline, invoice print, manual order, OTP handoff | `[ ]` Offline POS billing terminal & barcode scanner |
+| **Financial Ledger** | `[x]` Basic order bill breakdown & delivery fee split | `[ ]` Automated wallet payout cycles & commission ledger |
+| **Customer Auth & Profile**| `[x]` Modal signup/login, Google OAuth, address book | `[ ]` Customer in-app wallet & loyalty cashbacks |
+| **Customer Discovery** | `[x]` Hyperlocal stores near me, faceted PLP, rich PDP | `[ ]` Native React Native / Expo Mobile App (iOS/Android) |
+| **Checkout & Delivery** | `[x]` Single-store cart rule, checkout, WhatsApp dispatch | `[ ]` Automated returns & RMA credit note settlements |
 
 ---
 
@@ -56,6 +72,22 @@
     - [x] ❓ `HelpSupportDrawer` with search input, 9 expandable accordion FAQ items, and contact support card
     - [x] 👤 `SellerProfileDrawer` with verified badge, seller ID, GSTIN, store performance analytics (`4.7 ★`, `98%`, `1,245 orders`, `₹3.2L+`), and logout button
     - [x] 📝 `ProfileInformationDrawer` with basic info, bank details, store description, category tags, and store logo editor
+  - [x] **9-Screen Seller Registration & Onboarding Pipeline (PR #5 Merged ✅)**:
+    - [x] Public Seller Landing Page (`SellerLandingPage.tsx`) with 3D artwork hero, value pillars, and trust cards
+    - [x] Floating Seller Login Modal (`SellerLoginPage.tsx`) with OTP tab switcher
+    - [x] Interactive Leaflet Map Pin-drop (`MapPicker.tsx`) for pickup address coordinates
+    - [x] Dual-mode E-Signature component (`Step2Signature.tsx`) with HTML5 Canvas drawing & cursive font generator
+    - [x] 4-Step Registration Wizard (`Step1MobileEmail.tsx`, `Step2IdVerification.tsx`, `Step3StoreDetails.tsx`, `Step4BankAccount.tsx`)
+    - [x] Seller Review & Verification Waiting Room (`ReviewWaitingRoom.tsx`)
+    - [x] Dynamic brand-agnostic configuration (`branding.ts`)
+  - [x] **Hyperlocal Retail Inventory Management Suite (TASK-ABH-05 Completed ✅)**:
+    - [x] Screen 4.0: Main inventory overview table, 5 KPI summary cards, filter toolbar, reserved stock info popover
+    - [x] Screen 4.1: Adjust stock slide-out drawer with quantity stepper (`− 50 +`), reason dropdown, dynamic alert
+    - [x] Screen 4.2: 7-action row floating dropdown menu
+    - [x] Screen 4.3: Clean inventory table base layout & column alignment
+    - [x] Screen 4.4: Stock history single-product audit trail drawer with transaction filters and timeline cards
+    - [x] Screen 4.5: Bulk adjust stock full-page batch grid with inline steppers, live recomputed new stock, and sticky footer
+    - [x] Screen 4.6: Dedicated stock history ledger with 5 summary cards, date range picker, and transaction ledger
 
 ---
 
@@ -74,10 +106,10 @@
   - [x] Reusable card components: `ProductCard`, `StoreCard`, `ProductCardSkeleton`, `StoreCardSkeleton`
   - [x] Home Page (`/`): "Stores Near You" horizontal rail, "Best Deals For You" product grid
   - [x] Explore Stores directory (`/stores`): category filtering, open/closed badges, delivery distance
-  - [x] Individual Store storefront (`/stores/[slug]`): hero banner, store ratings, fast delivery badge, scoped product catalog
-  - [x] Product Listing Page (`/products`): faceted sidebar filter, sort dropdown, active filter chips, `<Suspense>` boundary
-  - [x] Product Detail Page (`/products/[slug]`): image thumbnail gallery, variant selector, quantity stepper, stock validator, specifications table
-  - [x] Category landing pages (`/category/[slug]`)
+  - [x] Product Listing Page (`/products`, `/category/[slug]`, `/category/fashion`): faceted sidebar filter, circular bubble filters, sort dropdown, active filter chips, `<Suspense>` boundary
+  - [x] Product Detail Page (`/products/[slug]`): image thumbnail gallery, variant selector, quantity stepper, stock validator, specifications table, delivery countdown ETA, and verified reviews
+  - [x] Category landing pages (`/category`, `/category/[slug]`) with 14-category vertical split rail and subcategory grid
+  - [x] Explore Stores directory (`/stores`, `/stores/fashion`) & dedicated store storefronts (`/stores/[slug]`) with hero cards and curated shelves
 
 ---
 
@@ -121,8 +153,10 @@
 
 ## 🟣 Phase 6: Customer Account, Store Ratings & Polish
 - [x] Customer account frontend UI screens (Profile hub, Orders list & detail, Wishlist, Addresses, Coupons, Feedback, Sell CTA) — Merged via PR #4
-- [ ] Customer account backend APIs: saved addresses CRUD, order history query, wishlist with price-drop alerts
-- [ ] Simple Store/Merchant rating system (1–5 stars per delivered order, aggregated store rating score/count; no per-item reviews)
+- [x] Customer registration & login pipeline in storefront (`apps/web`): Zustand auth store, API client, floating modal with Email/Password & Google OAuth, layout mounting, dynamic session management
+- [x] Subdomain-based registration routing (`register.<domain>` & `/register`) in Merchant Panel (`apps/merchant`)
+- [x] Customer account backend APIs: saved addresses CRUD (`/api/v1/users/addresses`), order history query alias (`/api/v1/orders/my-orders`), profile update (`/api/v1/users/me`)
+- [x] Simple Store/Merchant rating system (1–5 stars per delivered order, aggregated store rating score/count, duplicate order rating prevention: `/api/v1/stores/:id/rating`)
 - [ ] Customer platform NPS & experience feedback submission
 - [ ] Merchant marketing suite: discount voucher & banner campaign manager (standard non-AI)
 - [ ] Merchant revenue analytics & sales reports
@@ -130,9 +164,13 @@
 
 ---
 
-## ⚫ Phase 7: Mobile App & Advanced Retail Ops
+## ⚫ Phase 7: Tier 2 Enterprise Retail Operations & Mobile App (POST-VACATION / ROADMAP RESERVED)
 
-- [ ] Customer Mobile App (React Native + Expo for iOS & Android)
-- [ ] Background GPS location services & push notifications
-- [ ] Merchant POS/Billing terminal mode & offline barcode scanner
-- [ ] Automated returns, exchange & refund settlement pipeline
+- [ ] Merchant Point-of-Sale (POS) counter billing terminal mode & barcode scanner integration
+- [ ] Merchant wallet financial ledger, payout triggers & automated bank settlements
+- [ ] Automated returns, exchange, RMA reverse logistics & refund credit note settlement
+- [ ] Merchant staff management & role-based access control (Manager, Cashier, Inventory Clerk)
+- [ ] Merchant marketing suite: promotional store banner manager & coupon builder
+- [ ] Customer Mobile App with React Native & Expo (iOS + Android)
+- [ ] Background GPS geolocation & mobile push notifications
+- [ ] Customer in-app returns/exchange request hub & digital wallet loyalty balance

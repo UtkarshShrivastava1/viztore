@@ -5,6 +5,7 @@ import {
   nearbyStoresQuerySchema,
   approveStoreSchema,
   completeOnboardingSchema,
+  rateStoreSchema,
   UserRole,
 } from '@repo/shared-types';
 import { validateRequest } from '../../shared/middlewares/validateRequest.js';
@@ -106,6 +107,19 @@ router.patch(
   roleGuard(UserRole.ADMIN),
   validateRequest({ body: approveStoreSchema }),
   storeController.approveStore,
+);
+
+// Store Ratings & Feedback
+router.post(
+  '/:id/rating',
+  authGuard,
+  validateRequest({ body: rateStoreSchema }),
+  storeController.rateStore,
+);
+
+router.get(
+  '/:id/rating',
+  storeController.getStoreRatings,
 );
 
 // Public Single Store by ID

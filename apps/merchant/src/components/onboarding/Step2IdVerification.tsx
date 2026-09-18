@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Info, CheckCircle2 } from 'lucide-react';
+import { Info, ArrowRight } from 'lucide-react';
 import { branding } from '../../lib/branding.js';
 import { useOnboardingStore } from '../../stores/onboardingStore.js';
 import { api } from '../../lib/api.js';
 
 interface Step2IdVerificationProps {
   onContinue: () => void;
+  onBack?: () => void;
 }
 
 export const Step2IdVerification: React.FC<Step2IdVerificationProps> = ({ onContinue }) => {
@@ -22,7 +23,7 @@ export const Step2IdVerification: React.FC<Step2IdVerificationProps> = ({ onCont
   const [error, setError] = useState<string | null>(null);
 
   const handleVerifyGstin = async () => {
-    if (!gstin || gstin.length !== 15) {
+    if (!gstin || gstin.trim().length < 15) {
       setError('Please enter a valid 15-character GSTIN');
       return;
     }
@@ -32,17 +33,17 @@ export const Step2IdVerification: React.FC<Step2IdVerificationProps> = ({ onCont
     try {
       const res = await api.post<{ isValid: boolean; extractedPan: string; legalName: string }>(
         '/stores/onboarding/verify-gstin',
-        { gstin },
+        { gstin: gstin.toUpperCase() },
       );
-      setPan(res.extractedPan);
-      setLegalName(res.legalName);
+      if (res?.extractedPan) setPan(res.extractedPan);
+      if (res?.legalName) setLegalName(res.legalName);
       setIsGstinVerified(true);
       setIsPanVerified(true);
-    } catch (err: any) {
+    } catch {
       // Offline fallback mock
-      const extractedPan = gstin.slice(2, 12);
+      const extractedPan = gstin.length >= 12 ? gstin.slice(2, 12).toUpperCase() : 'ABCDE1234F';
       setPan(extractedPan);
-      setLegalName('Retail Enterprise Private Limited');
+      if (!legalName) setLegalName('National Retail Merchants Ltd');
       setIsGstinVerified(true);
       setIsPanVerified(true);
     } finally {
@@ -51,7 +52,7 @@ export const Step2IdVerification: React.FC<Step2IdVerificationProps> = ({ onCont
   };
 
   const handleVerifyPan = () => {
-    if (!pan || pan.length !== 10) {
+    if (!pan || pan.trim().length < 10) {
       setError('Please enter a valid 10-digit PAN Number');
       return;
     }
@@ -60,8 +61,8 @@ export const Step2IdVerification: React.FC<Step2IdVerificationProps> = ({ onCont
     setTimeout(() => {
       setIsVerifyingPan(false);
       setIsPanVerified(true);
-      if (!legalName) setLegalName('Retail Enterprise Private Limited');
-    }, 600);
+      if (!legalName) setLegalName('National Retail Merchants Ltd');
+    }, 400);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -86,23 +87,23 @@ export const Step2IdVerification: React.FC<Step2IdVerificationProps> = ({ onCont
   };
 
   return (
-    <div className="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-10 shadow-xs">
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-2">
-        <div className="w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-sm flex items-center justify-center shadow-xs">
+    <div className="bg-white border border-slate-200/80 rounded-2xl p-6 sm:p-8 lg:p-9 shadow-xs">
+      {/* Header with Step 2 Badge */}
+      <div className="flex items-center gap-2.5 mb-1">
+        <div className="w-7 h-7 rounded-full bg-[#0038ed] text-white font-bold text-xs flex items-center justify-center shadow-2xs shrink-0">
           2
         </div>
-        <h2 className="text-sm font-bold tracking-wider text-blue-600 uppercase">
-          ID & SIGNATURE VERIFICATION
+        <h2 className="text-xs sm:text-[13px] font-bold tracking-wider text-[#0038ed] uppercase">
+          ID &amp; SIGNATURE VERIFICATION
         </h2>
       </div>
 
-      <p className="text-xs text-slate-500 mb-6">
+      <p className="text-xs text-slate-500 mb-5">
         Enter the details below to verify your identity.
       </p>
 
       {error && (
-        <div className="mb-5 p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-600 text-xs font-medium">
+        <div className="mb-5 p-3 bg-rose-50 border border-rose-200 rounded-lg text-rose-600 text-xs font-medium">
           {error}
         </div>
       )}
@@ -110,26 +111,26 @@ export const Step2IdVerification: React.FC<Step2IdVerificationProps> = ({ onCont
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* GSTIN Field */}
         <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+          <label className="block text-xs font-semibold text-slate-800 mb-1.5">
             Enter GSTIN *
           </label>
-          <div className="flex items-center justify-between border border-slate-200 rounded-xl px-4 py-2.5 bg-white focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/10 transition-all">
+          <div className="flex items-center justify-between border border-slate-200 rounded-lg px-3.5 py-2.5 bg-white focus-within:border-[#0038ed] focus-within:ring-1 focus-within:ring-[#0038ed] transition-all">
             <input
               type="text"
               maxLength={15}
               placeholder="Enter your 15-digit GSTIN"
               value={gstin}
               onChange={(e) => setGstin(e.target.value.toUpperCase())}
-              className="w-full text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none uppercase font-mono"
+              className="w-full text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none uppercase font-mono tracking-wider"
             />
             <button
               type="button"
               disabled={isVerifyingGstin || isGstinVerified}
               onClick={handleVerifyGstin}
-              className={`px-4 py-1.5 rounded-lg text-xs font-semibold border transition-all whitespace-nowrap ${
+              className={`px-3.5 py-1.5 rounded-md text-xs font-semibold border transition-all ml-2 whitespace-nowrap cursor-pointer ${
                 isGstinVerified
                   ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
-                  : 'bg-white text-blue-600 border-blue-600 hover:bg-blue-50'
+                  : 'bg-white text-[#0038ed] border-[#0038ed] hover:bg-blue-50/50'
               }`}
             >
               {isVerifyingGstin ? 'Verifying...' : isGstinVerified ? 'Verified ✓' : 'Verify GSTIN'}
@@ -138,45 +139,45 @@ export const Step2IdVerification: React.FC<Step2IdVerificationProps> = ({ onCont
         </div>
 
         {/* Info Callout Box */}
-        <div className="p-3 bg-blue-50/70 border border-blue-100 rounded-xl flex items-center gap-2.5 text-xs text-slate-600">
-          <Info className="w-4 h-4 text-blue-600 shrink-0" />
+        <div className="p-3 bg-blue-50/60 border border-blue-100 rounded-lg flex items-center gap-2 text-xs text-slate-600">
+          <Info className="w-4 h-4 text-[#0038ed] shrink-0" />
           <span>
             GSTIN is <span className="font-semibold text-slate-800">required</span> to sell products on {branding.appName}.
           </span>
         </div>
 
         {/* OR Divider */}
-        <div className="relative my-4 text-center">
+        <div className="relative my-3 text-center">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-slate-200" />
           </div>
-          <span className="relative bg-white px-4 text-xs font-semibold text-slate-400 uppercase">
+          <span className="relative bg-white px-3 text-xs font-semibold text-slate-400 uppercase tracking-widest">
             OR
           </span>
         </div>
 
         {/* PAN Field */}
         <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+          <label className="block text-xs font-semibold text-slate-800 mb-1.5">
             Enter PAN Number *
           </label>
-          <div className="flex items-center justify-between border border-slate-200 rounded-xl px-4 py-2.5 bg-white focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/10 transition-all">
+          <div className="flex items-center justify-between border border-slate-200 rounded-lg px-3.5 py-2.5 bg-white focus-within:border-[#0038ed] focus-within:ring-1 focus-within:ring-[#0038ed] transition-all">
             <input
               type="text"
               maxLength={10}
               placeholder="Enter your 10-digit PAN Number"
               value={pan}
               onChange={(e) => setPan(e.target.value.toUpperCase())}
-              className="w-full text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none uppercase font-mono"
+              className="w-full text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none uppercase font-mono tracking-wider"
             />
             <button
               type="button"
               disabled={isVerifyingPan || isPanVerified}
               onClick={handleVerifyPan}
-              className={`px-4 py-1.5 rounded-lg text-xs font-semibold border transition-all whitespace-nowrap ${
+              className={`px-3.5 py-1.5 rounded-md text-xs font-semibold border transition-all ml-2 whitespace-nowrap cursor-pointer ${
                 isPanVerified
                   ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
-                  : 'bg-white text-blue-600 border-blue-600 hover:bg-blue-50'
+                  : 'bg-white text-[#0038ed] border-[#0038ed] hover:bg-blue-50/50'
               }`}
             >
               {isVerifyingPan ? 'Verifying...' : isPanVerified ? 'Verified ✓' : 'Verify PAN'}
@@ -186,7 +187,7 @@ export const Step2IdVerification: React.FC<Step2IdVerificationProps> = ({ onCont
 
         {/* Business Legal Name */}
         <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+          <label className="block text-xs font-semibold text-slate-800 mb-1.5">
             Enter Business Legal Name *
           </label>
           <input
@@ -194,7 +195,7 @@ export const Step2IdVerification: React.FC<Step2IdVerificationProps> = ({ onCont
             placeholder="Enter your business legal name as per PAN"
             value={legalName}
             onChange={(e) => setLegalName(e.target.value)}
-            className="w-full text-xs border border-slate-200 rounded-xl px-4 py-3 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all"
+            className="w-full text-xs sm:text-sm border border-slate-200 rounded-lg px-3.5 py-2.5 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#0038ed] focus:ring-1 focus:ring-[#0038ed] transition-all"
             required
           />
           <span className="text-[11px] text-slate-500 mt-1 block">
@@ -203,12 +204,13 @@ export const Step2IdVerification: React.FC<Step2IdVerificationProps> = ({ onCont
         </div>
 
         {/* Continue Button */}
-        <div className="pt-4">
+        <div className="pt-2">
           <button
             type="submit"
-            className="w-full py-3.5 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm shadow-md shadow-blue-600/20 transition-all cursor-pointer"
+            className="w-full py-3 px-6 rounded-lg bg-[#0038ed] hover:bg-[#002fcf] text-white font-semibold text-sm shadow-xs transition-all cursor-pointer flex items-center justify-center gap-2"
           >
-            Continue
+            <span>Continue</span>
+            <ArrowRight className="w-4 h-4" />
           </button>
         </div>
       </form>

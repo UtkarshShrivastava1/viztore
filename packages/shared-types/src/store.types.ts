@@ -155,7 +155,15 @@ export const approveStoreSchema = z.object({
   remarks: z.string().max(500).optional(),
 });
 
+export const rateStoreSchema = z.object({
+  rating: z.number().int().min(1).max(5),
+  orderId: z.string().min(1, 'Order ID is required'),
+  feedback: z.string().max(500).optional(),
+});
+
 export type CreateStoreDto = z.infer<typeof createStoreSchema>;
 export type UpdateStoreDto = z.infer<typeof updateStoreSchema>;
 export type NearbyStoresQueryDto = z.infer<typeof nearbyStoresQuerySchema>;
 export type ApproveStoreDto = z.infer<typeof approveStoreSchema>;
+export type RateStoreDto = z.infer<typeof rateStoreSchema>;
+

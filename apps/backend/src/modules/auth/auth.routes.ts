@@ -4,6 +4,8 @@ import {
   loginUserSchema,
   refreshTokenSchema,
   userAddressSchema,
+  updateAddressSchema,
+  updateProfileSchema,
 } from '@repo/shared-types';
 import { validateRequest } from '../../shared/middlewares/validateRequest.js';
 import { authGuard } from '../../shared/middlewares/authGuard.js';
@@ -30,9 +32,15 @@ router.post(
   authController.refreshToken,
 );
 
-// Protected User Profile & Address Endpoints
+// Protected User Profile Endpoints (/profile & /me aliases)
 router.get(
   '/profile',
+  authGuard,
+  authController.getProfile,
+);
+
+router.get(
+  '/me',
   authGuard,
   authController.getProfile,
 );
@@ -40,7 +48,22 @@ router.get(
 router.patch(
   '/profile',
   authGuard,
+  validateRequest({ body: updateProfileSchema }),
   authController.updateProfile,
+);
+
+router.patch(
+  '/me',
+  authGuard,
+  validateRequest({ body: updateProfileSchema }),
+  authController.updateProfile,
+);
+
+// Protected Delivery Addresses Endpoints
+router.get(
+  '/addresses',
+  authGuard,
+  authController.getAddresses,
 );
 
 router.post(
@@ -48,6 +71,19 @@ router.post(
   authGuard,
   validateRequest({ body: userAddressSchema }),
   authController.addAddress,
+);
+
+router.patch(
+  '/addresses/:addressId',
+  authGuard,
+  validateRequest({ body: updateAddressSchema }),
+  authController.updateAddress,
+);
+
+router.patch(
+  '/addresses/:addressId/default',
+  authGuard,
+  authController.setDefaultAddress,
 );
 
 router.delete(
@@ -63,3 +99,4 @@ router.post(
 );
 
 export const authRouter = router;
+

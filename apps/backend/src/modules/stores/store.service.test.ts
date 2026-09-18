@@ -4,6 +4,7 @@ import * as storeService from './store.service.js';
 import { StoreModel } from './store.model.js';
 
 vi.mock('./store.model.js');
+vi.mock('./store-rating.model.js');
 
 describe('Store Service Unit Tests', () => {
   beforeEach(() => {
@@ -71,6 +72,48 @@ describe('Store Service Unit Tests', () => {
 
       const isOpen = await storeService.verifyStoreIsOpen('store_1');
       expect(isOpen).toBe(false);
+    });
+  });
+
+  describe('rateStore', () => {
+    it('should calculate rolling average and update store review count', async () => {
+      const { StoreRatingModel } = await import('./store-rating.model.js');
+
+      const mockStore = {
+        _id: 'store_1',
+        rating: 4.0,
+        reviewCount: 3,
+        save: vi.fn().mockResolvedValue(true),
+      };
+
+      vi.spyOn(StoreModel, 'findById').mockResolvedValue(mockStore as any);
+      vi.spyOn(StoreRatingModel, 'findOne').mockResolvedValue(null);
+      vi.spyOn(StoreRatingModel, 'create').mockResolvedValue({} as any);
+
+      const result = await storeService.rateStore('store_1', 'user_1', {
+        orderId: 'order_1',
+        rating: 5,
+        feedback: 'Fast delivery!',
+      });
+
+      // Old: 4.0 * 3 = 12. New: (12 + 5) / 4 = 17 / 4 = 4.25 -> 4.3 rounded
+      expect(result.rating).toBe(4.3);
+      expect(result.reviewCount).toBe(4);
+      expect(mockStore.save).toHaveBeenCalled();
+    });
+
+    it('should prevent duplicate rating for the same order', async () => {
+      const { StoreRatingModel } = await import('./store-rating.model.js');
+
+      vi.spyOn(StoreModel, 'findById').mockResolvedValue({ _id: 'store_1' } as any);
+      vi.spyOn(StoreRatingModel, 'findOne').mockResolvedValue({ _id: 'existing_rating' } as any);
+
+      await expect(
+        storeService.rateStore('store_1', 'user_1', {
+          orderId: 'order_1',
+          rating: 5,
+        }),
+      ).rejects.toThrow('This order has already been rated for this store');
     });
   });
 });

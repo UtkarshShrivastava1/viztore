@@ -24,6 +24,7 @@ import {
   Star
 } from 'lucide-react';
 import { branding } from '@repo/shared-types';
+import { useAuthStore } from '@/stores/auth.store';
 
 const mockStores = [
   {
@@ -65,6 +66,8 @@ const mockStores = [
 ];
 
 export function AccountClient() {
+  const { user, isAuthenticated, openAuthModal } = useAuthStore();
+
   return (
     <div className="min-h-screen bg-[#f4f5f9] pb-24 relative">
       {/* Background Gradient matching header */}
@@ -91,13 +94,29 @@ export function AccountClient() {
                 <User className="w-8 h-8 text-[#1668F6]" />
               </div>
               <div className="flex-1 min-w-0">
-                <h2 className="text-[16px] font-bold text-[#192168] truncate">Harish Kumar</h2>
-                <p className="text-[11px] font-semibold text-surface-600 truncate mt-0.5">+91 91234 56789</p>
-                <p className="text-[11px] text-surface-500 truncate mt-0.5">harishkumar@gmail.com</p>
+                <h2 className="text-[16px] font-bold text-[#192168] truncate">
+                  {isAuthenticated ? (user?.fullName || 'Customer') : 'Guest User'}
+                </h2>
+                <p className="text-[11px] font-semibold text-surface-600 truncate mt-0.5">
+                  {isAuthenticated ? (user?.phone || user?.email || 'Active Account') : 'Sign in to access your orders & profile'}
+                </p>
+                {isAuthenticated && user?.email && user?.phone && (
+                  <p className="text-[11px] text-surface-500 truncate mt-0.5">{user.email}</p>
+                )}
               </div>
-              <Link href="/account/edit-profile" className="flex items-center gap-1 text-[10px] font-bold text-[#1668F6] shrink-0">
-                Edit Profile <ChevronRight className="w-3.5 h-3.5" />
-              </Link>
+              {isAuthenticated ? (
+                <Link href="/account/edit-profile" className="flex items-center gap-1 text-[10px] font-bold text-[#1668F6] shrink-0">
+                  Edit Profile <ChevronRight className="w-3.5 h-3.5" />
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => openAuthModal('login')}
+                  className="px-3 py-1.5 bg-[#1668F6] text-white text-[11px] font-bold rounded-lg hover:bg-blue-700 transition shrink-0 shadow-sm"
+                >
+                  Sign In
+                </button>
+              )}
             </div>
 
           {/* Menu Options (Moved to left column on desktop) */}
@@ -127,18 +146,37 @@ export function AccountClient() {
             <MenuLink href="/account/privacy" icon={<Shield className="w-4 h-4 text-[#1668F6]" />} title="Privacy Policy" subtitle="Read our privacy policy" />
             <MenuLink href="/account/terms" icon={<FileText className="w-4 h-4 text-[#22c55e]" />} title="Terms & Conditions" subtitle="Read our terms and conditions" />
             
-            <Link href="/account/logout" className="flex items-center justify-between p-3.5 hover:bg-surface-50 transition-colors border-b border-surface-100 last:border-0">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-rose-50 flex items-center justify-center">
-                  <LogOut className="w-4 h-4 text-rose-500" />
+            {isAuthenticated ? (
+              <Link href="/account/logout" className="flex items-center justify-between p-3.5 hover:bg-surface-50 transition-colors border-b border-surface-100 last:border-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-rose-50 flex items-center justify-center">
+                    <LogOut className="w-4 h-4 text-rose-500" />
+                  </div>
+                  <div>
+                    <span className="text-[12px] font-bold text-[#192168] block">Logout</span>
+                    <span className="text-[10px] font-medium text-surface-500 leading-tight block">Logout from your account</span>
+                  </div>
                 </div>
-                <div>
-                  <span className="text-[12px] font-bold text-[#192168] block">Logout</span>
-                  <span className="text-[10px] font-medium text-surface-500 leading-tight block">Logout from your account</span>
+                <ChevronRight className="w-4 h-4 text-surface-400" />
+              </Link>
+            ) : (
+              <button
+                type="button"
+                onClick={() => openAuthModal('login')}
+                className="w-full flex items-center justify-between p-3.5 hover:bg-surface-50 transition-colors border-b border-surface-100 last:border-0 text-left"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center">
+                    <User className="w-4 h-4 text-[#1668F6]" />
+                  </div>
+                  <div>
+                    <span className="text-[12px] font-bold text-[#1668F6] block">Sign In / Register</span>
+                    <span className="text-[10px] font-medium text-surface-500 leading-tight block">Access your account or create one</span>
+                  </div>
                 </div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-surface-400" />
-            </Link>
+                <ChevronRight className="w-4 h-4 text-surface-400" />
+              </button>
+            )}
           </div>
         </div>
 
@@ -291,18 +329,37 @@ export function AccountClient() {
           <MenuLink href="/account/privacy" icon={<Shield className="w-4 h-4 text-[#1668F6]" />} title="Privacy Policy" subtitle="Read our privacy policy" />
           <MenuLink href="/account/terms" icon={<FileText className="w-4 h-4 text-[#22c55e]" />} title="Terms & Conditions" subtitle="Read our terms and conditions" />
           
-          <Link href="/account/logout" className="flex items-center justify-between p-3.5 hover:bg-surface-50 transition-colors border-b border-surface-100 last:border-0">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-rose-50 flex items-center justify-center">
-                <LogOut className="w-4 h-4 text-rose-500" />
+          {isAuthenticated ? (
+            <Link href="/account/logout" className="flex items-center justify-between p-3.5 hover:bg-surface-50 transition-colors border-b border-surface-100 last:border-0">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-rose-50 flex items-center justify-center">
+                  <LogOut className="w-4 h-4 text-rose-500" />
+                </div>
+                <div>
+                  <span className="text-[12px] font-bold text-[#192168] block">Logout</span>
+                  <span className="text-[10px] font-medium text-surface-500 leading-tight block">Logout from your account</span>
+                </div>
               </div>
-              <div>
-                <span className="text-[12px] font-bold text-[#192168] block">Logout</span>
-                <span className="text-[10px] font-medium text-surface-500 leading-tight block">Logout from your account</span>
+              <ChevronRight className="w-4 h-4 text-surface-400" />
+            </Link>
+          ) : (
+            <button
+              type="button"
+              onClick={() => openAuthModal('login')}
+              className="w-full flex items-center justify-between p-3.5 hover:bg-surface-50 transition-colors border-b border-surface-100 last:border-0 text-left"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center">
+                  <User className="w-4 h-4 text-[#1668F6]" />
+                </div>
+                <div>
+                  <span className="text-[12px] font-bold text-[#1668F6] block">Sign In / Register</span>
+                  <span className="text-[10px] font-medium text-surface-500 leading-tight block">Access your account or create one</span>
+                </div>
               </div>
-            </div>
-            <ChevronRight className="w-4 h-4 text-surface-400" />
-          </Link>
+              <ChevronRight className="w-4 h-4 text-surface-400" />
+            </button>
+          )}
         </div>
 
         </div> {/* Close right column */}

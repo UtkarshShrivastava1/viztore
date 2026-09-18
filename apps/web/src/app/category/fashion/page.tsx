@@ -6,6 +6,7 @@ import { ShopByCategoryGrid } from '@/features/catalog/ShopByCategoryGrid';
 import { ShopForLovedOnes } from '@/features/catalog/ShopForLovedOnes';
 import { FashionStores } from '@/features/catalog/FashionStores';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
+import { branding } from '@repo/shared-types';
 
 export default function FashionLandingPage() {
   return (
@@ -21,7 +22,7 @@ export default function FashionLandingPage() {
             <h1 className="text-3xl font-extrabold text-[#061842] mb-1">Fashion</h1>
             <p className="text-[14px] font-bold text-[#061842]">Style for Every You</p>
             <p className="text-[13px] font-medium text-gray-500">
-              Trendy styles, top brands and great deals – only on Viztore
+              Trendy styles, top brands and great deals – only on {branding.appName}
             </p>
           </div>
 

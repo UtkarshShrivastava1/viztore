@@ -7,7 +7,10 @@ import {
   JwtTokenPayload,
   UserRole,
   IUser,
+  IUserAddress,
   UserAddressDto,
+  UpdateAddressDto,
+  UpdateProfileDto,
 } from '@repo/shared-types';
 import { UserModel, IUserDocument } from './auth.model.js';
 import { env } from '../../shared/config/env.config.js';
@@ -183,6 +186,17 @@ export async function updateUserProfile(
 }
 
 /**
+ * Get all Saved Addresses for a User
+ */
+export async function getAddresses(userId: string): Promise<IUserAddress[]> {
+  const user = await UserModel.findById(userId).select('addresses');
+  if (!user) {
+    throw AppError.notFound('User not found', 'USER_NOT_FOUND');
+  }
+  return (user.addresses || []) as unknown as IUserAddress[];
+}
+
+/**
  * Add a Saved Address
  */
 export async function addAddress(userId: string, address: UserAddressDto): Promise<IUser> {
@@ -195,11 +209,66 @@ export async function addAddress(userId: string, address: UserAddressDto): Promi
     user.addresses.forEach((addr) => {
       addr.isDefault = false;
     });
+  } else if (user.addresses.length === 0) {
+    // First address automatically becomes default
+    address.isDefault = true;
   }
 
   user.addresses.push(address);
   await user.save();
 
+  return user.toJSON() as unknown as IUser;
+}
+
+/**
+ * Update an existing Saved Address
+ */
+export async function updateAddress(
+  userId: string,
+  addressId: string,
+  updates: UpdateAddressDto,
+): Promise<IUser> {
+  const user = await UserModel.findById(userId);
+  if (!user) {
+    throw AppError.notFound('User not found', 'USER_NOT_FOUND');
+  }
+
+  const address = user.addresses.find((addr) => addr._id?.toString() === addressId);
+  if (!address) {
+    throw AppError.notFound('Address not found', 'ADDRESS_NOT_FOUND');
+  }
+
+  if (updates.isDefault) {
+    user.addresses.forEach((addr) => {
+      addr.isDefault = false;
+    });
+  }
+
+  Object.assign(address, updates);
+  await user.save();
+
+  return user.toJSON() as unknown as IUser;
+}
+
+/**
+ * Set an Address as Default
+ */
+export async function setDefaultAddress(userId: string, addressId: string): Promise<IUser> {
+  const user = await UserModel.findById(userId);
+  if (!user) {
+    throw AppError.notFound('User not found', 'USER_NOT_FOUND');
+  }
+
+  const targetAddress = user.addresses.find((addr) => addr._id?.toString() === addressId);
+  if (!targetAddress) {
+    throw AppError.notFound('Address not found', 'ADDRESS_NOT_FOUND');
+  }
+
+  user.addresses.forEach((addr) => {
+    addr.isDefault = addr._id?.toString() === addressId;
+  });
+
+  await user.save();
   return user.toJSON() as unknown as IUser;
 }
 
@@ -212,7 +281,15 @@ export async function deleteAddress(userId: string, addressId: string): Promise<
     throw AppError.notFound('User not found', 'USER_NOT_FOUND');
   }
 
+  const wasDefault = user.addresses.find((addr) => addr._id?.toString() === addressId)?.isDefault;
   user.addresses = user.addresses.filter((addr) => addr._id?.toString() !== addressId);
+
+  // If deleted address was default, promote first remaining address to default
+  const firstRemaining = user.addresses[0];
+  if (wasDefault && firstRemaining) {
+    firstRemaining.isDefault = true;
+  }
+
   await user.save();
 
   return user.toJSON() as unknown as IUser;

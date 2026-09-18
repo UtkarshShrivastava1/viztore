@@ -1,8 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { CheckCircle2, Truck, XCircle, Calendar, ShoppingBag, ChevronRight } from 'lucide-react';
+import { CheckCircle2, Truck, XCircle, Calendar, ShoppingBag, ChevronRight, Loader2 } from 'lucide-react';
+import { ordersApi } from '@/lib/api/orders';
+import type { IOrder } from '@repo/shared-types';
 
 const tabs = [
   'All Orders',
@@ -14,7 +16,20 @@ const tabs = [
   'Pickup'
 ];
 
-const mockOrders = [
+interface DisplayOrder {
+  id: string;
+  type: 'regular' | 'reserve' | 'pickup';
+  status: string;
+  date: string;
+  productName: string;
+  variants: string;
+  price: number;
+  total: number;
+  image: string;
+  reserveTill?: string;
+}
+
+const mockOrders: DisplayOrder[] = [
   {
     id: '#ORD-123456789',
     type: 'regular',
@@ -60,29 +75,6 @@ const mockOrders = [
     image: 'https://images.unsplash.com/photo-1529374255404-311a2a4f1fd9?auto=format&fit=crop&q=80&w=200&h=200'
   },
   {
-    id: '#ORD-123456785',
-    type: 'regular',
-    status: 'Delivered',
-    date: '25 Apr 2024, 08:10 PM',
-    productName: 'Men Polo T-shirt',
-    variants: 'Navy Blue • Size: L • Qty: 1',
-    price: 349,
-    total: 349,
-    image: 'https://images.unsplash.com/photo-1586363104862-3a5e2ab60d99?auto=format&fit=crop&q=80&w=200&h=200'
-  },
-  {
-    id: '#RSV-123456782',
-    type: 'reserve',
-    status: 'Reserved',
-    date: '26 Apr 2024, 04:30 PM',
-    productName: 'Men White Sneakers',
-    variants: 'White • Size: 9 • Qty: 1',
-    reserveTill: '30 Apr 2024, 08:00 PM',
-    price: 1299,
-    total: 1299,
-    image: 'https://images.unsplash.com/photo-1600185365926-3a2ce3cdb9eb?auto=format&fit=crop&q=80&w=200&h=200'
-  },
-  {
     id: '#PKP-123456781',
     type: 'pickup',
     status: 'Ready for Pickup',
@@ -97,8 +89,52 @@ const mockOrders = [
 
 export function OrdersClient() {
   const [activeTab, setActiveTab] = useState('All Orders');
+  const [orders, setOrders] = useState<DisplayOrder[]>(mockOrders);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const filteredOrders = mockOrders.filter(order => {
+  useEffect(() => {
+    let isMounted = true;
+    const fetchOrders = async () => {
+      try {
+        setIsLoading(true);
+        const liveOrders = await ordersApi.getMyOrders();
+        if (isMounted && Array.isArray(liveOrders) && liveOrders.length > 0) {
+          const mapped: DisplayOrder[] = liveOrders.map((o: IOrder) => {
+            const firstItem = o.items[0];
+            return {
+              id: `#${o.orderNumber || o.id || o._id}`,
+              type: 'regular',
+              status: o.status === 'DELIVERED' ? 'Delivered' : o.status === 'CANCELLED' ? 'Cancelled' : 'To Be Delivered',
+              date: new Date(o.createdAt).toLocaleDateString('en-IN', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+              }),
+              productName: firstItem?.name || 'Local Store Product',
+              variants: `Qty: ${firstItem?.quantity || 1} • SKU: ${firstItem?.sku || 'N/A'}`,
+              price: firstItem?.unitPrice || o.grandTotal,
+              total: o.grandTotal,
+              image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&q=80&w=200&h=200',
+            };
+          });
+          setOrders(mapped);
+        }
+      } catch {
+        // Fallback gracefully to mock orders
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    };
+
+    fetchOrders();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const filteredOrders = orders.filter(order => {
     if (activeTab === 'All Orders') return true;
     if (activeTab === 'Reserve') return order.type === 'reserve';
     if (activeTab === 'Pickup') return order.type === 'pickup';
@@ -141,91 +177,98 @@ export function OrdersClient() {
         </div>
 
         {/* Orders List */}
-        <div className="px-4 py-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-          {filteredOrders.map((order) => {
-             const isReserve = order.type === 'reserve';
-             const isPickup = order.type === 'pickup';
-             
-             let statusColor = 'text-[#06B95F]';
-             let StatusIcon = CheckCircle2;
-             
-             if (order.status === 'To Be Delivered') {
-               statusColor = 'text-[#F59E0B]';
-               StatusIcon = Truck;
-             } else if (order.status === 'Cancelled') {
-               statusColor = 'text-[#EF4444]';
-               StatusIcon = XCircle;
-             } else if (isReserve) {
-               statusColor = 'text-[#8b5cf6]';
-               StatusIcon = Calendar;
-             } else if (isPickup) {
-               statusColor = 'text-[#22c55e]';
-               StatusIcon = ShoppingBag;
-             }
+        {isLoading ? (
+          <div className="py-16 flex items-center justify-center text-slate-400 gap-2">
+            <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+            <span className="text-sm">Loading order history...</span>
+          </div>
+        ) : (
+          <div className="px-4 py-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+            {filteredOrders.map((order) => {
+               const isReserve = order.type === 'reserve';
+               const isPickup = order.type === 'pickup';
+               
+               let statusColor = 'text-[#06B95F]';
+               let StatusIcon = CheckCircle2;
+               
+               if (order.status === 'To Be Delivered') {
+                 statusColor = 'text-[#F59E0B]';
+                 StatusIcon = Truck;
+               } else if (order.status === 'Cancelled') {
+                 statusColor = 'text-[#EF4444]';
+                 StatusIcon = XCircle;
+               } else if (isReserve) {
+                 statusColor = 'text-[#8b5cf6]';
+                 StatusIcon = Calendar;
+               } else if (isPickup) {
+                 statusColor = 'text-[#22c55e]';
+                 StatusIcon = ShoppingBag;
+               }
 
-             let borderColor = 'border-surface-200';
-             let bgClass = 'bg-white';
-             if (isReserve) {
-                borderColor = 'border-purple-200';
-                bgClass = 'bg-purple-50/30';
-             }
-             if (isPickup) {
-                borderColor = 'border-green-200';
-                bgClass = 'bg-green-50/30';
-             }
+               let borderColor = 'border-surface-200';
+               let bgClass = 'bg-white';
+               if (isReserve) {
+                  borderColor = 'border-purple-200';
+                  bgClass = 'bg-purple-50/30';
+               }
+               if (isPickup) {
+                  borderColor = 'border-green-200';
+                  bgClass = 'bg-green-50/30';
+               }
 
-             return (
-              <div key={order.id} className={`rounded-2xl border ${borderColor} ${bgClass} p-4 shadow-sm`}>
-                {/* Header */}
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h4 className={`text-[12px] font-extrabold ${isReserve ? 'text-purple-700' : isPickup ? 'text-green-700' : 'text-[#192168]'}`}>
-                      {isReserve ? 'Reserve ' : isPickup ? 'Pickup ' : ''}Order ID: {order.id}
-                    </h4>
-                    <p className="text-[10px] font-medium text-surface-500 mt-1">{order.date}</p>
+               return (
+                <div key={order.id} className={`rounded-2xl border ${borderColor} ${bgClass} p-4 shadow-sm`}>
+                  {/* Header */}
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h4 className={`text-[12px] font-extrabold ${isReserve ? 'text-purple-700' : isPickup ? 'text-green-700' : 'text-[#192168]'}`}>
+                        {isReserve ? 'Reserve ' : isPickup ? 'Pickup ' : ''}Order ID: {order.id}
+                      </h4>
+                      <p className="text-[10px] font-medium text-surface-500 mt-1">{order.date}</p>
+                    </div>
+                    <div className={`flex items-center gap-1 text-[11px] font-bold ${statusColor}`}>
+                      {order.status} <StatusIcon className="w-3.5 h-3.5" /> <ChevronRight className="w-3.5 h-3.5 text-surface-400" />
+                    </div>
                   </div>
-                  <div className={`flex items-center gap-1 text-[11px] font-bold ${statusColor}`}>
-                    {order.status} <StatusIcon className="w-3.5 h-3.5" /> <ChevronRight className="w-3.5 h-3.5 text-surface-400" />
+
+                  {/* Content */}
+                  <div className="flex gap-3 mt-4">
+                    <div className="w-[60px] h-[70px] rounded-lg overflow-hidden bg-surface-100 flex-shrink-0 border border-surface-200">
+                      <img src={order.image} alt={order.productName} className="w-full h-full object-cover" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-[13px] font-extrabold text-[#192168] line-clamp-2">{order.productName}</h3>
+                      <p className="text-[10px] font-medium text-surface-500 mt-1">{order.variants}</p>
+                      {isReserve && order.reserveTill && (
+                        <p className="text-[10px] font-extrabold text-purple-600 mt-0.5">Reserve Till: {order.reserveTill}</p>
+                      )}
+                      {isPickup && (
+                        <p className="text-[10px] font-extrabold text-green-600 mt-0.5">Ready for Pickup</p>
+                      )}
+                      <p className="text-[13px] font-extrabold text-[#192168] mt-1.5">₹{order.price.toLocaleString('en-IN')}</p>
+                    </div>
+                  </div>
+
+                  <div className="h-px bg-surface-200 my-3" />
+
+                  {/* Footer */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-[12px] text-[#192168]">
+                      Total Amount: <span className="font-extrabold">₹{order.total.toLocaleString('en-IN')}</span>
+                    </span>
+                    <Link href={`/account/orders/${order.id.replace('#', '')}`} className={`px-4 py-1.5 rounded-lg border text-[11px] font-bold ${
+                      isReserve ? 'border-purple-300 text-purple-600 hover:bg-purple-50 transition-colors' : 
+                      isPickup ? 'border-green-300 text-green-600 hover:bg-green-50 transition-colors' : 
+                      'border-[#1668F6] text-[#1668F6] hover:bg-blue-50 transition-colors'
+                    }`}>
+                      {isReserve || isPickup ? 'View Details' : 'Order Details'}
+                    </Link>
                   </div>
                 </div>
-
-                {/* Content */}
-                <div className="flex gap-3 mt-4">
-                  <div className="w-[60px] h-[70px] rounded-lg overflow-hidden bg-surface-100 flex-shrink-0 border border-surface-200">
-                    <img src={order.image} alt={order.productName} className="w-full h-full object-cover" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-[13px] font-extrabold text-[#192168] line-clamp-2">{order.productName}</h3>
-                    <p className="text-[10px] font-medium text-surface-500 mt-1">{order.variants}</p>
-                    {isReserve && order.reserveTill && (
-                      <p className="text-[10px] font-extrabold text-purple-600 mt-0.5">Reserve Till: {order.reserveTill}</p>
-                    )}
-                    {isPickup && (
-                      <p className="text-[10px] font-extrabold text-green-600 mt-0.5">Ready for Pickup</p>
-                    )}
-                    <p className="text-[13px] font-extrabold text-[#192168] mt-1.5">₹{order.price.toLocaleString('en-IN')}</p>
-                  </div>
-                </div>
-
-                <div className="h-px bg-surface-200 my-3" />
-
-                {/* Footer */}
-                <div className="flex items-center justify-between">
-                  <span className="text-[12px] text-[#192168]">
-                    Total Amount: <span className="font-extrabold">₹{order.total.toLocaleString('en-IN')}</span>
-                  </span>
-                  <Link href={`/account/orders/${order.id.replace('#', '')}`} className={`px-4 py-1.5 rounded-lg border text-[11px] font-bold ${
-                    isReserve ? 'border-purple-300 text-purple-600 hover:bg-purple-50 transition-colors' : 
-                    isPickup ? 'border-green-300 text-green-600 hover:bg-green-50 transition-colors' : 
-                    'border-[#1668F6] text-[#1668F6] hover:bg-blue-50 transition-colors'
-                  }`}>
-                    {isReserve || isPickup ? 'View Details' : 'Order Details'}
-                  </Link>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
 
       </main>
     </div>

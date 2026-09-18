@@ -55,4 +55,95 @@ describe('Auth Service Unit Tests', () => {
       expect(result).toBeNull();
     });
   });
+
+  describe('Address Management CRUD', () => {
+    it('should retrieve addresses for a user', async () => {
+      const mockAddresses = [
+        {
+          _id: 'addr-1',
+          label: 'Home',
+          recipientName: 'Test User',
+          phone: '9876543210',
+          street: '123 Main St',
+          city: 'Bangalore',
+          state: 'Karnataka',
+          pincode: '560001',
+          isDefault: true,
+        },
+      ];
+
+      vi.spyOn(UserModel, 'findById').mockReturnValue({
+        select: vi.fn().mockResolvedValue({ addresses: mockAddresses }),
+      } as any);
+
+      const result = await authService.getAddresses('user-1');
+      expect(result).toHaveLength(1);
+      expect(result[0].label).toBe('Home');
+    });
+
+    it('should add an address and set it as default if it is the first address', async () => {
+      const mockUserDoc = {
+        _id: 'user-1',
+        addresses: [] as any[],
+        save: vi.fn().mockResolvedValue(true),
+        toJSON: vi.fn().mockReturnValue({ _id: 'user-1', addresses: [] }),
+      };
+
+      vi.spyOn(UserModel, 'findById').mockResolvedValue(mockUserDoc as any);
+
+      const newAddr = {
+        label: 'Work',
+        recipientName: 'Test User',
+        phone: '9876543210',
+        street: '456 Tech Park',
+        city: 'Bangalore',
+        state: 'Karnataka',
+        pincode: '560001',
+      };
+
+      await authService.addAddress('user-1', newAddr as any);
+      expect(mockUserDoc.addresses).toHaveLength(1);
+      expect(mockUserDoc.addresses[0].isDefault).toBe(true);
+      expect(mockUserDoc.save).toHaveBeenCalled();
+    });
+
+    it('should toggle default address when setDefaultAddress is called', async () => {
+      const mockUserDoc = {
+        _id: 'user-1',
+        addresses: [
+          { _id: 'addr-1', label: 'Home', isDefault: true },
+          { _id: 'addr-2', label: 'Work', isDefault: false },
+        ],
+        save: vi.fn().mockResolvedValue(true),
+        toJSON: vi.fn().mockReturnValue({ _id: 'user-1' }),
+      };
+
+      vi.spyOn(UserModel, 'findById').mockResolvedValue(mockUserDoc as any);
+
+      await authService.setDefaultAddress('user-1', 'addr-2');
+      expect(mockUserDoc.addresses[0].isDefault).toBe(false);
+      expect(mockUserDoc.addresses[1].isDefault).toBe(true);
+      expect(mockUserDoc.save).toHaveBeenCalled();
+    });
+
+    it('should promote the first remaining address to default when default address is deleted', async () => {
+      const mockUserDoc = {
+        _id: 'user-1',
+        addresses: [
+          { _id: 'addr-1', label: 'Home', isDefault: true },
+          { _id: 'addr-2', label: 'Work', isDefault: false },
+        ],
+        save: vi.fn().mockResolvedValue(true),
+        toJSON: vi.fn().mockReturnValue({ _id: 'user-1' }),
+      };
+
+      vi.spyOn(UserModel, 'findById').mockResolvedValue(mockUserDoc as any);
+
+      await authService.deleteAddress('user-1', 'addr-1');
+      expect(mockUserDoc.addresses).toHaveLength(1);
+      expect(mockUserDoc.addresses[0]._id).toBe('addr-2');
+      expect(mockUserDoc.addresses[0].isDefault).toBe(true);
+      expect(mockUserDoc.save).toHaveBeenCalled();
+    });
+  });
 });

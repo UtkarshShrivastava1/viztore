@@ -5,8 +5,10 @@ import {
   StoreApprovalStatus,
   IStore,
   StoreCategory,
+  RateStoreDto,
 } from '@repo/shared-types';
 import { StoreModel } from './store.model.js';
+import { StoreRatingModel } from './store-rating.model.js';
 import { AppError } from '../../shared/utils/AppError.js';
 
 function generateSlug(name: string): string {
@@ -205,3 +207,86 @@ export async function verifyStoreIsOpen(storeId: string): Promise<boolean> {
   }
   return true;
 }
+
+/**
+ * Submit Store Rating & Feedback (1 to 5 stars)
+ */
+export async function rateStore(
+  storeId: string,
+  userId: string,
+  dto: RateStoreDto,
+): Promise<{ storeId: string; rating: number; reviewCount: number; message: string }> {
+  const store = await StoreModel.findById(storeId);
+  if (!store) {
+    throw AppError.notFound('Store not found', 'STORE_NOT_FOUND');
+  }
+
+  // Prevent duplicate rating for the same order
+  const existingRating = await StoreRatingModel.findOne({
+    storeId,
+    orderId: dto.orderId,
+  });
+
+  if (existingRating) {
+    throw AppError.badRequest('This order has already been rated for this store', 'DUPLICATE_RATING');
+  }
+
+  // Record rating entry
+  await StoreRatingModel.create({
+    storeId,
+    userId,
+    orderId: dto.orderId,
+    rating: dto.rating,
+    feedback: dto.feedback,
+  });
+
+  // Rolling rating computation
+  const currentReviews = store.reviewCount || 0;
+  const currentRating = store.rating || 5.0;
+
+  const newTotalReviews = currentReviews + 1;
+  const newAverage =
+    currentReviews === 0
+      ? dto.rating
+      : Math.round(((currentRating * currentReviews + dto.rating) / newTotalReviews) * 10) / 10;
+
+  store.rating = newAverage;
+  store.reviewCount = newTotalReviews;
+  await store.save();
+
+  return {
+    storeId,
+    rating: newAverage,
+    reviewCount: newTotalReviews,
+    message: 'Store rating submitted successfully',
+  };
+}
+
+/**
+ * Retrieve Store Rating Summary and Recent Reviews
+ */
+export async function getStoreRatings(storeId: string): Promise<{
+  storeId: string;
+  rating: number;
+  reviewCount: number;
+  recentRatings: Array<{ rating: number; feedback?: string; createdAt: Date }>;
+}> {
+  const store = await StoreModel.findById(storeId);
+  if (!store) {
+    throw AppError.notFound('Store not found', 'STORE_NOT_FOUND');
+  }
+
+  const recentRatings = await StoreRatingModel.find({ storeId })
+    .sort({ createdAt: -1 })
+    .limit(10)
+    .select('rating feedback createdAt')
+    .lean();
+
+  return {
+    storeId,
+    rating: store.rating,
+    reviewCount: store.reviewCount,
+    recentRatings: recentRatings as unknown as Array<{ rating: number; feedback?: string; createdAt: Date }>,
+  };
+}
+

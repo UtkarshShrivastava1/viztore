@@ -3,9 +3,11 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Lock, Smartphone, Bell, ShieldCheck } from 'lucide-react';
+import { useAuthStore } from '@/stores/auth.store';
 
 export default function LogoutPage() {
   const router = useRouter();
+  const logout = useAuthStore((state) => state.logout);
 
   return (
     <main className="min-h-screen bg-[#f4f5f9] pb-24 pt-4 flex flex-col">
@@ -73,7 +75,10 @@ export default function LogoutPage() {
         {/* Actions */}
         <div className="mt-auto space-y-3">
           <button 
-            onClick={() => router.push('/account/logged-out')}
+            onClick={() => {
+              logout();
+              router.push('/account/logged-out');
+            }}
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#FF3B30] py-3.5 text-sm font-bold text-white shadow-sm hover:bg-red-600 transition"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>

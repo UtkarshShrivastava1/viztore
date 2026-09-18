@@ -38,9 +38,12 @@ export async function apiClient<T>(
 
   const url = buildUrl(path, params);
 
-  const headers: HeadersInit = {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...customHeaders,
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(customHeaders as Record<string, string>),
   };
 
   const config: RequestInit = {
