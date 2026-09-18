@@ -17,6 +17,8 @@ export interface DesktopHeaderProps {
   searchPlaceholder?: string;
   isSimpleHeader?: boolean;
   isAccountPage?: boolean;
+  isAuthenticated?: boolean;
+  openAuthModal?: (mode: "login" | "signup") => void;
 }
 
 export function DesktopHeader({
@@ -26,6 +28,8 @@ export function DesktopHeader({
   searchPlaceholder = "Search for products, stores and more...",
   isSimpleHeader,
   isAccountPage,
+  isAuthenticated = false,
+  openAuthModal = () => {},
 }: DesktopHeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -87,7 +91,7 @@ export function DesktopHeader({
               <MapPin className="h-4 w-4 shrink-0 text-[#4C82FB]" fill="#4C82FB" strokeWidth={0} />
               <span className="flex-1 truncate text-[12px] text-white text-left">
                 <span className="font-normal text-white/80">Deliver to </span>
-                <span className="font-medium text-white">{resolvedUserName} - {address.split(',')[0]}</span>
+                <span className="font-medium text-white">{userName} - {address.split(',')[0]}</span>
               </span>
               <ChevronDown className="h-4 w-4 shrink-0 text-white" strokeWidth={2.2} />
             </button>
