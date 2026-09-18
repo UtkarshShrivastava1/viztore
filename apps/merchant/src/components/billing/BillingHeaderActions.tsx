@@ -6,11 +6,10 @@ import {
   Download,
   FileSpreadsheet,
   FileText,
-  CreditCard,
-  Receipt,
   ChevronRight,
+  Settings,
 } from 'lucide-react';
-import { useBillingStore, BillingSubTab, BillingViewMode } from '../../stores/billingStore.js';
+import { useBillingStore } from '../../stores/billingStore.js';
 
 interface BillingHeaderActionsProps {
   onOpenCreateInvoice?: () => void;
@@ -52,25 +51,14 @@ export const BillingHeaderActions: React.FC<BillingHeaderActionsProps> = ({
       }
     } else if (activeSubTab === 'quotes') {
       setActiveView('create_quote');
-    } else if (activeSubTab === 'credit_notes') {
-      setActiveView('create_credit_note');
-    } else if (activeSubTab === 'debit_notes') {
-      setActiveView('create_debit_note');
     }
   };
 
   const getPrimaryButtonLabel = () => {
-    switch (activeSubTab) {
-      case 'quotes':
-        return 'Create Estimate / Quote';
-      case 'credit_notes':
-        return 'Create Credit Note';
-      case 'debit_notes':
-        return 'Create Debit Note';
-      case 'invoices':
-      default:
-        return 'Create Invoice';
+    if (activeSubTab === 'quotes') {
+      return 'Create Estimate / Quote';
     }
+    return 'Create Invoice';
   };
 
   return (
@@ -85,7 +73,17 @@ export const BillingHeaderActions: React.FC<BillingHeaderActionsProps> = ({
         {getPrimaryButtonLabel()}
       </button>
 
-      {/* More Actions Dropdown Button (5.0, 5.3) */}
+      {/* Billing & Invoicing Settings Button (5.0, 5.3, 5.4) */}
+      <button
+        type="button"
+        onClick={() => setActiveView('settings')}
+        className="px-3.5 py-2 bg-white hover:bg-blue-50/50 border border-blue-200 text-blue-600 text-xs font-semibold rounded-xl shadow-2xs flex items-center gap-1.5 transition-colors"
+      >
+        <Settings className="w-4 h-4 text-blue-600" />
+        Billing & Invoicing Settings
+      </button>
+
+      {/* More Actions Dropdown Button (5.0, 5.4) */}
       <div className="relative" ref={moreRef}>
         <button
           type="button"
@@ -173,36 +171,6 @@ export const BillingHeaderActions: React.FC<BillingHeaderActionsProps> = ({
               <div className="flex items-center gap-2.5">
                 <FileText className="w-4 h-4 text-slate-400" />
                 <span>Estimates / Quotes</span>
-              </div>
-              <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-            </button>
-
-            <button
-              onClick={() => {
-                setIsMoreOpen(false);
-                setActiveSubTab('credit_notes');
-                setActiveView('create_credit_note');
-              }}
-              className="w-full flex items-center justify-between px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors"
-            >
-              <div className="flex items-center gap-2.5">
-                <Receipt className="w-4 h-4 text-slate-400" />
-                <span>Credit Notes</span>
-              </div>
-              <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-            </button>
-
-            <button
-              onClick={() => {
-                setIsMoreOpen(false);
-                setActiveSubTab('debit_notes');
-                setActiveView('create_debit_note');
-              }}
-              className="w-full flex items-center justify-between px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors"
-            >
-              <div className="flex items-center gap-2.5">
-                <CreditCard className="w-4 h-4 text-slate-400" />
-                <span>Debit Notes</span>
               </div>
               <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
             </button>

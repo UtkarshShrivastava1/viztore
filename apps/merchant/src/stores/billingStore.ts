@@ -5,8 +5,26 @@ export type InvoiceStatus = 'draft' | 'issued' | 'paid' | 'partially_paid' | 'ov
 export type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'declined' | 'expired' | 'converted' | 'cancelled';
 export type NoteStatus = 'draft' | 'issued' | 'used' | 'partially_used' | 'expired' | 'cancelled';
 
-export type BillingSubTab = 'invoices' | 'quotes' | 'credit_notes' | 'debit_notes';
-export type BillingViewMode = 'list' | 'create_quote' | 'create_credit_note' | 'create_debit_note';
+export type BillingSubTab = 'invoices' | 'quotes';
+export type BillingViewMode = 'list' | 'create_quote' | 'settings';
+
+export interface BillingSettings {
+  defaultCurrency: string;
+  billingAddress: string;
+  useCustomerBillingAddress: boolean;
+  autoInvoiceGeneration: boolean;
+  invoiceTemplate: string;
+  invoicePrefix: string;
+  startingSequenceNumber: number;
+  gstEnabled: boolean;
+  gstin: string;
+  state: string;
+  taxCalculationType: 'inclusive' | 'exclusive';
+  categoryTaxEnabled: boolean;
+  allowDiscounts: boolean;
+  discountType: 'percentage' | 'fixed';
+  maxDiscountLimit: number;
+}
 
 export interface IInvoiceItem {
   id: string;
@@ -220,7 +238,29 @@ interface BillingStoreState {
   clearDebitNoteFilters: () => void;
   createDebitNote: (note: Omit<IDebitNote, 'id'>) => IDebitNote;
   updateDebitNoteStatus: (id: string, status: NoteStatus) => void;
+
+  // Settings State & Actions
+  settings: BillingSettings;
+  updateBillingSettings: (settings: Partial<BillingSettings>) => void;
 }
+
+export const initialBillingSettings: BillingSettings = {
+  defaultCurrency: 'INR - Indian Rupee (₹)',
+  billingAddress: '12, MG Road, Commercial Area, Indore, Madhya Pradesh - 452001, India',
+  useCustomerBillingAddress: true,
+  autoInvoiceGeneration: true,
+  invoiceTemplate: 'Classic Tax Invoice',
+  invoicePrefix: 'INV-',
+  startingSequenceNumber: 1249,
+  gstEnabled: true,
+  gstin: '27ABCDE1234F1Z5',
+  state: 'Maharashtra (27)',
+  taxCalculationType: 'exclusive',
+  categoryTaxEnabled: false,
+  allowDiscounts: true,
+  discountType: 'percentage',
+  maxDiscountLimit: 20,
+};
 
 // Initial Mock Invoices from 5.0.png / 5.1.png
 const initialInvoices: IInvoice[] = [
@@ -1191,6 +1231,13 @@ export const useBillingStore = create<BillingStoreState>((set, get) => ({
   activeView: 'list',
   setActiveSubTab: (tab) => set({ activeSubTab: tab, activeView: 'list' }),
   setActiveView: (view) => set({ activeView: view }),
+
+  // Settings State
+  settings: initialBillingSettings,
+  updateBillingSettings: (newSettings) =>
+    set((state) => ({
+      settings: { ...state.settings, ...newSettings },
+    })),
 
   // Invoices State
   invoices: initialInvoices,

@@ -82,8 +82,6 @@ const menuItems: MenuItem[] = [
 const billingSubItems = [
   { id: 'invoices', label: 'Invoices', icon: ReceiptText },
   { id: 'quotes', label: 'Estimates / Quotes', icon: FileText },
-  { id: 'credit_notes', label: 'Credit Notes', icon: Receipt },
-  { id: 'debit_notes', label: 'Debit Notes', icon: CreditCard },
 ] as const;
 
 export const Sidebar: React.FC<SidebarProps> = ({
