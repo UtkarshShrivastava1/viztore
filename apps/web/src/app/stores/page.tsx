@@ -24,9 +24,12 @@ export interface StoresNearYouHeroProps {
 }
 
 export default function StoresPage({
-    city = "Bhilai",
-  state = "Chhattisgarh",
+  searchParams,
+}: {
+  searchParams?: { [key: string]: string | string[] | undefined };
 }) {
+  const city = searchParams?.city as string || "Bhilai";
+  const state = searchParams?.state as string || "Chhattisgarh";
   const { lng, lat, address } = useLocationStore();
   const [activeCategory, setActiveCategory] = useState<StoreCategory | undefined>(undefined);
   const { data: stores, isLoading } = useNearbyStores(lng, lat, 10, activeCategory);
