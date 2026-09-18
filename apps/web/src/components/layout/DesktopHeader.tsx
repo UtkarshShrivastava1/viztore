@@ -4,13 +4,16 @@ import { Heart, ShoppingCart, Search, Mic, Bell, CircleUserRound, MapPin, Chevro
 import Logo from '@/components/layout/Logo';
 import { useRouter, usePathname } from 'next/navigation';
 import DesktopCategoryStrip from '@/components/layout/DesktopCategoryStrip';
+import { NotificationsDropdown } from './NotificationsDropdown';
+import { WishlistFlyout } from './WishlistFlyout';
+import { useState, useRef, useEffect } from 'react';
+import { useNotificationStore } from '@/stores/notificationStore';
+import { useWishlistFlyoutStore } from '@/stores/wishlistFlyoutStore';
 
 export interface DesktopHeaderProps {
   userName?: string;
   address?: string;
-  wishlistCount?: number;
   cartCount?: number;
-  notificationCount?: number;
   searchPlaceholder?: string;
   isSimpleHeader?: boolean;
   isAccountPage?: boolean;
@@ -19,15 +22,28 @@ export interface DesktopHeaderProps {
 export function DesktopHeader({
   userName = "Harish Kumar",
   address = "Q No- 6/B, Street -13, Sector -2, Bhilai",
-  wishlistCount = 0,
   cartCount = 3,
-  notificationCount = 1,
   searchPlaceholder = "Search for products, stores and more...",
   isSimpleHeader,
   isAccountPage,
 }: DesktopHeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const [activeOverlay, setActiveOverlay] = useState<'notifications' | 'wishlist' | null>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  
+  const notificationCount = useNotificationStore((state) => state.unreadCount);
+  const wishlistCount = useWishlistFlyoutStore((state) => state.items.length);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (headerRef.current && !headerRef.current.contains(event.target as Node)) {
+        setActiveOverlay(null);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
   
   // Determine active category based on pathname
   let activeCategoryId = "all";
@@ -35,8 +51,12 @@ export function DesktopHeader({
     activeCategoryId = "fashion";
   }
 
+  const toggleOverlay = (overlay: 'notifications' | 'wishlist') => {
+    setActiveOverlay(prev => prev === overlay ? null : overlay);
+  };
+
   return (
-    <div className="hidden md:block w-full">
+    <div className="hidden md:block w-full" ref={headerRef}>
       {/* Top Bar (Blue Background) */}
       <div 
         className="w-full"
@@ -73,32 +93,50 @@ export function DesktopHeader({
             </button>
 
             {/* Action Icons */}
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-6 relative">
               {/* Notifications */}
-              <button type="button" className="group relative flex flex-col items-center justify-center gap-1 text-white hover:opacity-85 transition-opacity">
-                <div className="relative">
-                  <Bell className="h-[22px] w-[22px]" strokeWidth={1.8} />
-                  {notificationCount > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 flex h-[16px] min-w-[16px] px-1 items-center justify-center rounded-full bg-[#FF3B30] text-[9px] font-bold text-white shadow-sm border border-[#011A5D]">
-                      {notificationCount}
-                    </span>
-                  )}
-                </div>
-                <span className="text-[10px] font-medium tracking-wide">Notifications</span>
-              </button>
+              <div className="relative">
+                <button 
+                  type="button" 
+                  onClick={() => toggleOverlay('notifications')}
+                  className="group relative flex flex-col items-center justify-center gap-1 text-white hover:opacity-85 transition-opacity"
+                >
+                  <div className="relative">
+                    <Bell className="h-[22px] w-[22px]" strokeWidth={1.8} />
+                    {notificationCount > 0 && (
+                      <span className="absolute -top-1.5 -right-1.5 flex h-[16px] min-w-[16px] px-1 items-center justify-center rounded-full bg-[#FF3B30] text-[9px] font-bold text-white shadow-sm border border-[#011A5D]">
+                        {notificationCount}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[10px] font-medium tracking-wide">Notifications</span>
+                </button>
+                {activeOverlay === 'notifications' && (
+                  <NotificationsDropdown onClose={() => setActiveOverlay(null)} />
+                )}
+              </div>
 
               {/* Wishlist */}
-              <button type="button" className="group relative flex flex-col items-center justify-center gap-1 text-white hover:opacity-85 transition-opacity" onClick={() => router.push('/account/wishlist')}>
-                <div className="relative">
-                  <Heart className="h-[22px] w-[22px]" strokeWidth={1.8} />
-                  {wishlistCount > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 flex h-[16px] min-w-[16px] px-1 items-center justify-center rounded-full bg-[#FF3B30] text-[9px] font-bold text-white shadow-sm border border-[#011A5D]">
-                      {wishlistCount}
-                    </span>
-                  )}
-                </div>
-                <span className="text-[10px] font-medium tracking-wide">Wishlist</span>
-              </button>
+              <div className="relative">
+                <button 
+                  type="button" 
+                  onClick={() => toggleOverlay('wishlist')}
+                  className="group relative flex flex-col items-center justify-center gap-1 text-white hover:opacity-85 transition-opacity"
+                >
+                  <div className="relative">
+                    <Heart className="h-[22px] w-[22px]" strokeWidth={1.8} />
+                    {wishlistCount > 0 && (
+                      <span className="absolute -top-1.5 -right-1.5 flex h-[16px] min-w-[16px] px-1 items-center justify-center rounded-full bg-[#FF3B30] text-[9px] font-bold text-white shadow-sm border border-[#011A5D]">
+                        {wishlistCount}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[10px] font-medium tracking-wide">Wishlist</span>
+                </button>
+                {activeOverlay === 'wishlist' && (
+                  <WishlistFlyout onClose={() => setActiveOverlay(null)} />
+                )}
+              </div>
 
               {/* Account */}
               <button type="button" className="group relative flex flex-col items-center justify-center gap-1 text-white hover:opacity-85 transition-opacity" onClick={() => router.push('/account')}>
@@ -125,7 +163,7 @@ export function DesktopHeader({
 
       {/* Category Strip (White Background) */}
       {!isSimpleHeader && !isAccountPage && (
-        <DesktopCategoryStrip activeId={activeCategoryId} />
+      <DesktopCategoryStrip activeId={activeCategoryId} />
       )}
     </div>
   );
