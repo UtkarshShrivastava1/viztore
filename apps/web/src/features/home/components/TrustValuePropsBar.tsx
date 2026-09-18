@@ -8,7 +8,7 @@ const trustItems = [
   { icon: Headphones, label: '24×7 Support', description: 'Always here to help' },
 ];
 
-export function TrustBar() {
+export function TrustValuePropsBar() {
   return (
     <div className="w-full bg-[#F5F9FE] md:bg-[#F5F9FE] rounded-2xl p-4 md:p-6 border-none">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

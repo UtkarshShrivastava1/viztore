@@ -39,7 +39,7 @@ const mockWishlist = [
     color: 'Navy Blue',
     price: 699,
     inStock: true,
-    image: 'https://images.unsplash.com/photo-1596755094514-f87e32f85e23?auto=format&fit=crop&q=80&w=200',
+    image: 'https://images.unsplash.com/photo-1596755094514-f87e32f85e2c?auto=format&fit=crop&q=80&w=200',
   },
   {
     id: 4,
@@ -66,7 +66,7 @@ const mockWishlist = [
     size: '100 ml',
     price: 499,
     inStock: true,
-    image: 'https://images.unsplash.com/photo-1594035910387-fea477274976?auto=format&fit=crop&q=80&w=200',
+    image: 'https://images.unsplash.com/photo-1588265008544-716d80ff525e?auto=format&fit=crop&q=80&w=200',
   }
 ];
 
