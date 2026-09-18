@@ -3,9 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { ChevronRight, Sparkles, TrendingUp } from 'lucide-react';
-import Header from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
-import { HeroBannerCarousel } from '@/features/home/components/HeroBannerCarousel';
 import { TrustValuePropsBar } from '@/features/home/components/TrustValuePropsBar';
 import { ExploreStoresGrid } from '@/features/home/components/ExploreStoresGrid';
 import { StoresNearYouRail } from '@/features/home/components/StoresNearYouRail';
@@ -26,7 +24,7 @@ export default function HomePage() {
 
         {/* ── HERO SECTION (Carousel + TrustBar) ─────────────────────── */}
         <div className="max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-24 mt-4 md:mt-6 space-y-4 md:space-y-6">
-          <HeroBannerCarousel />
+        
           <HomeHeroBanner/>
           <div className="lg:hidden">
             <TrustValuePropsBar />
