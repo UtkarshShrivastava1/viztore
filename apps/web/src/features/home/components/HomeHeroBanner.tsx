@@ -153,7 +153,6 @@ export default function HomeHeroBanner({
 
           <div className="relative z-10 mb-1.5 h-[130px] w-[280px]">
             {productImageSrc ? (
-              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={productImageSrc}
                 alt={productImageAlt}
