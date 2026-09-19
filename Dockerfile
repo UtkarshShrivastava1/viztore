@@ -1,8 +1,8 @@
 # Multi-stage Production Dockerfile for Backend Service
 # Syntax & Best Practices: Minimal attack surface, non-root user, frozen lockfile, layer caching
 
-# Stage 1: Base Alpine image with Node.js 20 and pnpm
-FROM node:20-alpine AS base
+# Stage 1: Base Alpine image with Node.js 22 and pnpm
+FROM node:22-alpine AS base
 RUN apk add --no-cache libc6-compat
 RUN corepack enable && corepack prepare pnpm@11.24.0 --activate
 WORKDIR /app
@@ -40,7 +40,7 @@ RUN pnpm --filter=@repo/backend build
 RUN pnpm --filter=@repo/backend --prod deploy --legacy /prod/backend
 
 # Stage 4: Production Runtime Runner
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 WORKDIR /app
 
 # Install curl for container healthcheck probe
