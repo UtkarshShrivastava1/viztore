@@ -14,7 +14,7 @@ export const Step2Signature: React.FC<Step2SignatureProps> = ({ onContinue, onBa
   const [typedName, setTypedName] = useState(
     draft.step3?.signatureType === 'generate'
       ? draft.step3.signatureData
-      : draft.step1?.fullName || 'Thoufiq Ahmed',
+      : draft.step1?.fullName || '',
   );
   const [hasDrawn, setHasDrawn] = useState(false);
   const [signatureAdded, setSignatureAdded] = useState(Boolean(draft.step3?.signatureData));
@@ -102,7 +102,7 @@ export const Step2Signature: React.FC<Step2SignatureProps> = ({ onContinue, onBa
         consentDate: new Date().toISOString(),
       });
     } else {
-      const nameToUse = typedName?.trim() || 'Thoufiq Ahmed';
+      const nameToUse = typedName?.trim();
       if (!nameToUse) {
         setError('Please enter your name to create a signature');
         return;
@@ -243,7 +243,7 @@ export const Step2Signature: React.FC<Step2SignatureProps> = ({ onContinue, onBa
                     setTypedName(e.target.value);
                     setSignatureAdded(false);
                   }}
-                  placeholder="e.g. Thoufiq Ahmed"
+                  placeholder="e.g. Rajesh Kumar"
                   className="w-full text-xs sm:text-sm border border-slate-200 rounded-lg px-3.5 py-2.5 bg-white text-slate-900 focus:outline-none focus:border-[#0038ed]"
                 />
               </div>

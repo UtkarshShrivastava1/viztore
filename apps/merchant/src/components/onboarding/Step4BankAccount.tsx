@@ -38,7 +38,7 @@ export const Step4BankAccount: React.FC<Step4BankAccountProps> = ({ onBack, onCo
     setIsSubmitting(true);
 
     const step6Data = {
-      accountHolderName: draft.step2?.legalBusinessName || 'Thoufiq Ahmed',
+      accountHolderName: draft.step2?.legalBusinessName || draft.step1?.fullName || 'Business Owner',
       accountNumber,
       confirmAccountNumber,
       ifscCode: ifscCode.toUpperCase(),

@@ -15,7 +15,7 @@ export const Step3StoreDetails: React.FC<Step3StoreDetailsProps> = ({
   const { draft, updateStep } = useOnboardingStore();
 
   const [fullName, setFullName] = useState(
-    draft.step4?.merchantFullName || draft.step1?.fullName || 'Thoufiq Ahmed',
+    draft.step4?.merchantFullName || draft.step1?.fullName || '',
   );
   const [storeName, setStoreName] = useState(draft.step4?.storeDisplayName || '');
   const [storeDetails, setStoreDetails] = useState(draft.step4?.description || '');

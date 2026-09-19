@@ -36,28 +36,8 @@ export const SellerLoginPage: React.FC<SellerLoginPageProps> = ({
 
       setAuth(res.user, res.tokens.accessToken, res.tokens.refreshToken);
       onLoginSuccess();
-    } catch {
-      // Mock login fallback
-      if (identifier && password) {
-        setAuth(
-          {
-            _id: 'merchant_demo',
-            fullName: 'Thoufiq Ahmed',
-            email: identifier.includes('@') ? identifier : 'thoufiq@retail.com',
-            phone: identifier.includes('@') ? '9876543210' : identifier,
-            role: 'merchant' as any,
-            isVerified: true,
-            isActive: true,
-            addresses: [],
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          },
-          'mock_merchant_token_jwt',
-        );
-        onLoginSuccess();
-      } else {
-        setError('Invalid credentials');
-      }
+    } catch (err: any) {
+      setError(err.message || 'Invalid credentials or connection error');
     } finally {
       setIsLoading(false);
     }
