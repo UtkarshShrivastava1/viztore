@@ -109,12 +109,12 @@
 - [x] **Customer Web Storefront (`apps/web` Next.js 14+)**
   - [x] Next.js 14 App Router architecture with Tailwind CSS & TanStack Query
   - [x] White-label branding integration via `branding.config.ts`
-  - [x] Core layout components: `Header` (with location pin modal), `Footer`, `CategoryStrip`, `PromoCarousel`, `TrustBar`
-  - [x] Reusable card components: `ProductCard`, `StoreCard`, `ProductCardSkeleton`, `StoreCardSkeleton`
-  - [x] Home Page (`/`): "Stores Near You" horizontal rail, "Best Deals For You" product grid
+  - [x] Reusable card components: `ProductCard`, `StoreCard`, `ProductCardSkeleton`, `StoreCardSkeleton` with quick Add to Cart & feedback
+  - [x] Core layout components: Responsive `DesktopHeader`, `TopBar`, and `LocationBar` with dynamic brand name (`process.env.NEXT_PUBLIC_APP_NAME`), auth modal trigger, and interactive `LocationModal`
+  - [x] Product Detail Page (`/products/[slug]`): image thumbnail gallery, variant selector, quantity stepper, stock validator, specifications table, delivery countdown ETA, desktop & mobile sticky bar "Add to Cart" and "Buy Now"
+  - [x] Home Page (`/`): "Stores Near You" horizontal rail, "Best Deals For You" product grid with instant cart triggers
   - [x] Explore Stores directory (`/stores`): category filtering, open/closed badges, delivery distance
   - [x] Product Listing Page (`/products`, `/category/[slug]`, `/category/fashion`): faceted sidebar filter, circular bubble filters, sort dropdown, active filter chips, `<Suspense>` boundary
-  - [x] Product Detail Page (`/products/[slug]`): image thumbnail gallery, variant selector, quantity stepper, stock validator, specifications table, delivery countdown ETA, and verified reviews
   - [x] Category landing pages (`/category`, `/category/[slug]`) with 14-category vertical split rail and subcategory grid
   - [x] Explore Stores directory (`/stores`, `/stores/fashion`) & dedicated store storefronts (`/stores/[slug]`) with hero cards and curated shelves
   - [x] Live storefront API integration: wired `ExploreStoresGrid`, `StoresNearYouRail`, and `/stores` directory to live backend API with resilient fallbacks

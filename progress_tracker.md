@@ -11,16 +11,16 @@
 ## 2. Global Project Completion Status
 
 ### 🚀 Production Launch Scope (Phases 1–6: Backend + Merchant + Web + Ops)
-`[███████████████████████████████████████░] 97% Complete`
+`[███████████████████████████████████████░] 98% Complete`
 
 | Scope Dimension | Weight | Progress Bar | % Complete | Status | Target Milestone |
 |---|:---:|---|:---:|:---:|---|
-| **Overall Production Launch** (Phases 1–6) | **100%** | `[███████████████████░]` | **97%** | 🟢 Cloud Staging Live | Sept 22 Deployed Milestone |
+| **Overall Production Launch** (Phases 1–6) | **100%** | `[████████████████████]` | **98%** | 🟢 Cloud Staging Live | Sept 22 Deployed Milestone |
 | ↳ **Backend Architecture & APIs** | 30% | `[████████████████████]` | **100%** | 🟢 Live on Render | `https://viztore.onrender.com` Healthy |
 | ↳ **Merchant & Admin Panel** | 25% | `[███████████████████░]` | **97%** | 🟢 Complete Suite | WhatsApp Dispatch & Print Bill Live |
-| ↳ **Customer Web Storefront** | 25% | `[███████████████████░]` | **98%** | 🟢 Storefront & Orders Hub | Live Store Grids & API Client Wired |
-| ↳ **Production Readiness & DevOps** | 20% | `[██████████████████░░]` | **92%** | 🟢 Staging Live | Backend Live on Render, Vercel Frontends Next |
-| **Total Full-Platform Scope** (Phases 1–7) | — | `[█████████████████░░░]` | **84%** | ⚪ Roadmap Reserved | Customer Mobile App (Phase 7 / Tier 3) |
+| ↳ **Customer Web Storefront** | 25% | `[████████████████████]` | **100%** | 🟢 Storefront & Cart Engine | Auth Modal, Location Modal & Cart Flow Wired |
+| ↳ **Production Readiness & DevOps** | 20% | `[██████████████████░░]` | **95%** | 🟢 Staging Live | Backend Live on Render, Vercel Frontends Next |
+| **Total Full-Platform Scope** (Phases 1–7) | — | `[█████████████████░░░]` | **85%** | ⚪ Roadmap Reserved | Customer Mobile App (Phase 7 / Tier 3) |
 
 > **Auto-Update Invariant**: This progress bar is recalculated and updated dynamically on every task assignment, milestone delivery, and PR merge per `.agents/rules/progress-tracking.md`.
 

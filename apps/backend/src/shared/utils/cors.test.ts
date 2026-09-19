@@ -8,11 +8,14 @@ describe('CORS Origin Validation', () => {
     expect(isOriginAllowed('')).toBe(true);
   });
 
-  it('allows standard localhost development origins', () => {
+  it('allows standard and custom localhost development origins across all ports', () => {
     expect(isOriginAllowed('http://localhost:3000')).toBe(true);
     expect(isOriginAllowed('http://localhost:3001')).toBe(true);
+    expect(isOriginAllowed('http://localhost:3002')).toBe(true);
+    expect(isOriginAllowed('http://localhost:5173')).toBe(true);
+    expect(isOriginAllowed('http://localhost:4173')).toBe(true);
     expect(isOriginAllowed('http://127.0.0.1:3000')).toBe(true);
-    expect(isOriginAllowed('http://127.0.0.1:3001')).toBe(true);
+    expect(isOriginAllowed('http://127.0.0.1:5173')).toBe(true);
   });
 
   it('allows configured CLIENT_WEB_URL and CLIENT_MERCHANT_URL', () => {
