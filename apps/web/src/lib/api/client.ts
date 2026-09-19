@@ -11,7 +11,9 @@ interface FetchOptions extends Omit<RequestInit, 'body'> {
  * Build URL with query parameters, handling arrays
  */
 function buildUrl(path: string, params?: FetchOptions['params']): string {
-  const url = new URL(path, API_BASE_URL.endsWith('/') ? API_BASE_URL : `${API_BASE_URL}/`);
+  const cleanPath = path.startsWith('/') ? path.slice(1) : path;
+  const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL : `${API_BASE_URL}/`;
+  const url = new URL(cleanPath, baseUrl);
 
   if (params) {
     Object.entries(params).forEach(([key, value]) => {

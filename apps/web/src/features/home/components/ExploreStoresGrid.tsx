@@ -1,6 +1,10 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
-import { Star, ChevronRight, Zap, Truck, RotateCcw, ShieldCheck, Headphones } from 'lucide-react';
+import { Star, ChevronRight, Zap, Truck, RotateCcw, ShieldCheck, Headphones, Store as StoreIcon } from 'lucide-react';
+import { useAllStores } from '@/hooks/useAllStores';
+import { StoreCardSkeleton } from '@/components/ui/Skeleton';
 
 const trustItems = [
   { icon: Truck, label: 'Fast Delivery', description: 'On orders above ₹199' },
@@ -9,74 +13,40 @@ const trustItems = [
   { icon: Headphones, label: 'Support', description: '24x7 assistance' },
 ];
 
-interface ExploreStore {
-  id: string;
-  name: string;
-  rating: number;
-  reviewCount: string;
-  categories: string;
-  imageUrl: string;
-  hasFastDelivery: boolean;
-}
-
-const mockStores: ExploreStore[] = [
+const fallbackStores = [
   {
-    id: '1',
-    name: 'Fashion Hub',
-    rating: 4.5,
-    reviewCount: '1.2K',
-    categories: 'Clothing, Accessories, Footwear & more',
-    imageUrl: 'https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?auto=format&fit=crop&q=80&w=800',
+    id: 'urban-vogue-studio',
+    name: 'Urban Vogue Studio',
+    rating: 4.8,
+    reviewCount: '42',
+    categories: 'Fashion & Ethnic Wear',
+    imageUrl: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=800',
     hasFastDelivery: true,
   },
   {
-    id: '2',
-    name: 'Sharma Electronics',
-    rating: 4.3,
-    reviewCount: '890',
-    categories: 'Mobiles, Accessories, Gadgets & more',
-    imageUrl: 'https://images.unsplash.com/photo-1550009158-9effb6197316?auto=format&fit=crop&q=80&w=800',
+    id: 'nexgen-gadget-hub',
+    name: 'NexGen Gadget Hub',
+    rating: 4.9,
+    reviewCount: '88',
+    categories: 'Electronics, Audio & Accessories',
+    imageUrl: 'https://images.unsplash.com/photo-1550009158-9ebf69173e03?auto=format&fit=crop&q=80&w=800',
     hasFastDelivery: true,
   },
   {
-    id: '3',
-    name: 'Beauty Corner',
-    rating: 4.6,
-    reviewCount: '1.5K',
-    categories: 'Skincare, Haircare, Makeup & more',
-    imageUrl: 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&q=80&w=800',
-    hasFastDelivery: true,
-  },
-  {
-    id: '4',
-    name: 'Home Needs',
-    rating: 4.2,
-    reviewCount: '760',
-    categories: 'Home Decor, Kitchen, Furniture & more',
-    imageUrl: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&q=80&w=800',
-    hasFastDelivery: true,
-  },
-  {
-    id: '5',
-    name: 'Gadget Store',
-    rating: 4.4,
-    reviewCount: '540',
-    categories: 'Smartwatches, Accessories, Audio & more',
-    imageUrl: 'https://images.unsplash.com/photo-1512756290469-ec264b7fbf87?auto=format&fit=crop&q=80&w=800',
-    hasFastDelivery: true,
-  },
-  {
-    id: '6',
-    name: 'Shoe World',
-    rating: 4.3,
-    reviewCount: '980',
-    categories: 'Men, Women & Kids Footwear',
-    imageUrl: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&q=80&w=800',
+    id: 'greenvalley-organics',
+    name: 'GreenValley Organics',
+    rating: 4.7,
+    reviewCount: '65',
+    categories: 'Grocery & Organic Staples',
+    imageUrl: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&q=80&w=800',
     hasFastDelivery: true,
   },
 ];
 
 export function ExploreStoresGrid() {
+  const { data: storesResponse, isLoading } = useAllStores({ limit: 6 });
+  const liveStores = storesResponse?.stores;
+
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-6">
@@ -93,43 +63,98 @@ export function ExploreStoresGrid() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {mockStores.map((store) => (
-          <Link href={`/stores/${store.id}`} key={store.id} className="group flex flex-col bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-lg hover:border-brand-300 transition-all duration-300">
-            {/* 16:9 Banner Thumbnail */}
-            <div className="relative aspect-video w-full overflow-hidden bg-gray-100 border-b border-gray-100">
-              <img 
-                src={store.imageUrl} 
-                alt={store.name} 
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-            </div>
-            
-            {/* Details */}
-            <div className="p-4 sm:p-5 flex flex-col flex-1">
-              <div className="flex items-start justify-between gap-4 mb-2">
-                <h3 className="text-xl font-bold text-gray-900 group-hover:text-brand-600 transition-colors line-clamp-1">{store.name}</h3>
-                <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-brand-600 transition-colors shrink-0" />
-              </div>
-              
-              <div className="flex items-center gap-2 mb-2">
-                <div className="flex items-center gap-1 text-base font-bold text-gray-900">
-                  {store.rating} <Star className="w-4 h-4 fill-[#00B56A] text-[#00B56A]" />
-                </div>
-                <span className="text-base text-gray-500">({store.reviewCount})</span>
-              </div>
-              
-              <p className="text-base text-gray-600 line-clamp-1 mb-4">{store.categories}</p>
-              
-              <div className="mt-auto pt-2">
-                {store.hasFastDelivery && (
-                  <div className="inline-flex items-center gap-1.5 bg-[#F5F8FF] text-brand-600 text-xs font-semibold px-2.5 py-1 rounded-md">
-                    <Zap className="w-3.5 h-3.5 fill-current" /> Fast Delivery
+        {isLoading ? (
+          Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="h-64 rounded-2xl bg-surface-100 animate-pulse" />
+          ))
+        ) : liveStores && liveStores.length > 0 ? (
+          liveStores.map((store) => (
+            <Link
+              href={`/stores/${store.slug || store._id}`}
+              key={store._id}
+              className="group flex flex-col bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-lg hover:border-brand-300 transition-all duration-300"
+            >
+              {/* 16:9 Banner Thumbnail */}
+              <div className="relative aspect-video w-full overflow-hidden bg-gray-100 border-b border-gray-100">
+                {store.bannerUrl || store.logoUrl ? (
+                  <img
+                    src={store.bannerUrl || store.logoUrl}
+                    alt={store.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400">
+                    <StoreIcon className="w-12 h-12" />
                   </div>
                 )}
               </div>
-            </div>
-          </Link>
-        ))}
+
+              {/* Details */}
+              <div className="p-4 sm:p-5 flex flex-col flex-1">
+                <div className="flex items-start justify-between gap-4 mb-2">
+                  <h3 className="text-xl font-bold text-gray-900 group-hover:text-brand-600 transition-colors line-clamp-1">
+                    {store.name}
+                  </h3>
+                  <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-brand-600 transition-colors shrink-0" />
+                </div>
+
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="flex items-center gap-1 text-base font-bold text-gray-900">
+                    {(store.rating || 4.5).toFixed(1)} <Star className="w-4 h-4 fill-[#00B56A] text-[#00B56A]" />
+                  </div>
+                  <span className="text-base text-gray-500">({store.reviewCount || 0})</span>
+                </div>
+
+                <p className="text-base text-gray-600 line-clamp-1 mb-4">
+                  {store.category ? `${store.category.charAt(0).toUpperCase() + store.category.slice(1).replace('_', ' ')}` : store.description}
+                  {store.address?.city ? ` · ${store.address.city}` : ''}
+                </p>
+
+                <div className="mt-auto pt-2">
+                  <div className="inline-flex items-center gap-1.5 bg-[#F5F8FF] text-brand-600 text-xs font-semibold px-2.5 py-1 rounded-md">
+                    <Zap className="w-3.5 h-3.5 fill-current" /> Fast Delivery
+                  </div>
+                </div>
+              </div>
+            </Link>
+          ))
+        ) : (
+          fallbackStores.map((store) => (
+            <Link
+              href={`/stores/${store.id}`}
+              key={store.id}
+              className="group flex flex-col bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-lg hover:border-brand-300 transition-all duration-300"
+            >
+              <div className="relative aspect-video w-full overflow-hidden bg-gray-100 border-b border-gray-100">
+                <img
+                  src={store.imageUrl}
+                  alt={store.name}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+              </div>
+              <div className="p-4 sm:p-5 flex flex-col flex-1">
+                <div className="flex items-start justify-between gap-4 mb-2">
+                  <h3 className="text-xl font-bold text-gray-900 group-hover:text-brand-600 transition-colors line-clamp-1">
+                    {store.name}
+                  </h3>
+                  <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-brand-600 transition-colors shrink-0" />
+                </div>
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="flex items-center gap-1 text-base font-bold text-gray-900">
+                    {store.rating} <Star className="w-4 h-4 fill-[#00B56A] text-[#00B56A]" />
+                  </div>
+                  <span className="text-base text-gray-500">({store.reviewCount})</span>
+                </div>
+                <p className="text-base text-gray-600 line-clamp-1 mb-4">{store.categories}</p>
+                <div className="mt-auto pt-2">
+                  <div className="inline-flex items-center gap-1.5 bg-[#F5F8FF] text-brand-600 text-xs font-semibold px-2.5 py-1 rounded-md">
+                    <Zap className="w-3.5 h-3.5 fill-current" /> Fast Delivery
+                  </div>
+                </div>
+              </div>
+            </Link>
+          ))
+        )}
       </div>
 
       {/* Trust Bar */}

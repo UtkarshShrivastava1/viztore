@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Footer } from '@/components/layout/Footer';
 import { StoreCardSkeleton } from '@/components/ui/Skeleton';
 import { useNearbyStores } from '@/hooks/useNearbyStores';
+import { useAllStores } from '@/hooks/useAllStores';
 import { useLocationStore } from '@/stores/location.store';
 import { MapPin, Search, Grid, List, CheckCircle2, Navigation, TrendingUp, Star, Clock, Tag, LayoutGrid, Truck, ShieldCheck, BadgePercent } from 'lucide-react';
 import { StoreCategory } from '@repo/shared-types';
@@ -32,7 +33,12 @@ export default function StoresPage({
   const state = searchParams?.state as string || "Chhattisgarh";
   const { lng, lat, address } = useLocationStore();
   const [activeCategory, setActiveCategory] = useState<StoreCategory | undefined>(undefined);
-  const { data: stores, isLoading } = useNearbyStores(lng, lat, 10, activeCategory);
+  const { data: nearbyStores, isLoading: nearbyLoading } = useNearbyStores(lng, lat, 10, activeCategory);
+  const { data: allStoresResponse, isLoading: allLoading } = useAllStores({ category: activeCategory });
+
+  const hasNearby = !!(nearbyStores && nearbyStores.length > 0);
+  const stores = hasNearby ? nearbyStores : (allStoresResponse?.stores || []);
+  const isLoading = nearbyLoading || (allLoading && stores.length === 0);
   const [viewMode, setViewMode] = useState<'grid'|'list'>('grid');
 
   return (
@@ -155,7 +161,7 @@ export default function StoresPage({
         {/* Results Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-4 mb-2">
            <h2 className="text-[16px] font-medium text-[#061842]">
-             <span className="font-extrabold">{isLoading ? 'Loading...' : `${stores?.length || 124} Stores`}</span> found near you
+             <span className="font-extrabold">{isLoading ? 'Loading...' : `${stores.length} Store${stores.length === 1 ? '' : 's'}`}</span> {hasNearby ? 'found near you' : 'available on platform'}
            </h2>
            
            {/* View Toggle */}
