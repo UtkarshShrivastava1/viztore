@@ -238,9 +238,8 @@ export const BulkAdjustStockView: React.FC = () => {
                           <select
                             value={adj.adjustmentType}
                             onChange={(e) => handleTypeChange(item.id, e.target.value as any)}
-                            className={`appearance-none bg-transparent pl-2.5 pr-6 py-1.5 text-xs font-bold focus:outline-none cursor-pointer ${
-                              isInc ? 'text-emerald-600' : 'text-rose-600'
-                            }`}
+                            className={`appearance-none bg-transparent pl-2.5 pr-6 py-1.5 text-xs font-bold focus:outline-none cursor-pointer ${isInc ? 'text-emerald-600' : 'text-rose-600'
+                              }`}
                           >
                             <option value="increase">Increase</option>
                             <option value="decrease">Decrease</option>
@@ -252,13 +251,12 @@ export const BulkAdjustStockView: React.FC = () => {
                     {/* Live Recomputed New Stock */}
                     <td className="px-4 py-3 text-center">
                       <span
-                        className={`text-sm font-black tabular-nums ${
-                          adj.quantity === 0
-                            ? 'text-slate-700'
-                            : isInc
+                        className={`text-sm font-black tabular-nums ${adj.quantity === 0
+                          ? 'text-slate-700'
+                          : isInc
                             ? 'text-emerald-600'
                             : 'text-rose-600'
-                        }`}
+                          }`}
                       >
                         {newStock}
                       </span>

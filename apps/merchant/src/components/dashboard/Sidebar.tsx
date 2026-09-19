@@ -8,6 +8,8 @@ import {
   Users,
   Wallet,
   ReceiptText,
+  CreditCard,
+  FileText,
   HardDrive,
   RotateCcw,
   Landmark,
@@ -23,6 +25,7 @@ import {
 } from 'lucide-react';
 import { branding } from '../../lib/branding.js';
 import { useAuthStore } from '../../stores/authStore.js';
+import { useBillingStore, BillingSubTab } from '../../stores/billingStore.js';
 
 export type DashboardTab =
   | 'overview'
@@ -76,6 +79,11 @@ const menuItems: MenuItem[] = [
   { id: 'support', label: 'Support', icon: Headphones },
 ];
 
+const billingSubItems = [
+  { id: 'invoices', label: 'Invoices', icon: ReceiptText },
+  { id: 'quotes', label: 'Estimates / Quotes', icon: FileText },
+] as const;
+
 export const Sidebar: React.FC<SidebarProps> = ({
   currentTab,
   onSelectTab,
@@ -83,6 +91,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onToggleCollapse,
 }) => {
   const { logout } = useAuthStore();
+  const { activeSubTab, setActiveSubTab, setActiveView } = useBillingStore();
 
   return (
     <aside
@@ -128,50 +137,91 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <div className="flex-1 overflow-y-auto py-3 px-3 space-y-0.5 scrollbar-thin scrollbar-thumb-slate-700">
         {menuItems.map((item) => {
           const Icon = item.icon;
+          const isBilling = item.id === 'billing';
           const isActive = currentTab === item.id;
+          const isSubActiveItem = isBilling && isActive && activeSubTab !== 'invoices';
 
           return (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => onSelectTab(item.id)}
-              title={isCollapsed ? item.label : undefined}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] font-medium transition-all duration-150 group ${
-                isActive
-                  ? 'bg-[#1a56db] text-white font-semibold shadow-md shadow-blue-600/20'
-                  : 'text-slate-300 hover:text-white hover:bg-[#101d42]'
-              } ${isCollapsed ? 'justify-center px-2' : ''}`}
-            >
-              <Icon
-                className={`w-4 h-4 shrink-0 ${
-                  isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'
-                }`}
-              />
-              {!isCollapsed && (
-                <>
-                  <span className="truncate flex-1 text-left">{item.label}</span>
+            <div key={item.id} className="space-y-0.5">
+              <button
+                type="button"
+                onClick={() => {
+                  onSelectTab(item.id);
+                  if (isBilling && currentTab !== 'billing') {
+                    setActiveSubTab('invoices');
+                    setActiveView('list');
+                  }
+                }}
+                title={isCollapsed ? item.label : undefined}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] font-medium transition-all duration-150 group ${
+                  isSubActiveItem
+                    ? 'bg-[#101d42] text-white font-semibold border border-[#1d2d5a]'
+                    : isActive
+                    ? 'bg-[#1a56db] text-white font-semibold shadow-md shadow-blue-600/20'
+                    : 'text-slate-300 hover:text-white hover:bg-[#101d42]'
+                } ${isCollapsed ? 'justify-center px-2' : ''}`}
+              >
+                <Icon
+                  className={`w-4 h-4 shrink-0 ${
+                    isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'
+                  }`}
+                />
+                {!isCollapsed && (
+                  <>
+                    <span className="truncate flex-1 text-left">{item.label}</span>
 
-                  {/* Badge Rendering */}
-                  {item.badge && (
-                    <span
-                      className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md leading-none ${
-                        item.badgeColor === 'green'
-                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                          : item.badgeColor === 'dark'
-                          ? 'bg-[#0f172a] text-slate-300 border border-slate-700 font-mono text-[10px]'
-                          : 'bg-[#152348] text-slate-300 text-[11px]'
-                      }`}
-                    >
-                      {item.badge}
-                    </span>
-                  )}
+                    {/* Badge Rendering */}
+                    {item.badge && (
+                      <span
+                        className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md leading-none ${
+                          item.badgeColor === 'green'
+                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                            : item.badgeColor === 'dark'
+                            ? 'bg-[#0f172a] text-slate-300 border border-slate-700 font-mono text-[10px]'
+                            : 'bg-[#152348] text-slate-300 text-[11px]'
+                        }`}
+                      >
+                        {item.badge}
+                      </span>
+                    )}
 
-                  {item.hasChevron && (
-                    <ChevronRight className="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300" />
-                  )}
-                </>
+                    {item.hasChevron && (
+                      <ChevronRight className="w-3.5 h-3.5 text-slate-500 group-hover:text-slate-300" />
+                    )}
+                  </>
+                )}
+              </button>
+
+              {/* Sub-navigation tabs for Billing & Invoicing (5.5.png, 5.6.png, 5.8.png) */}
+              {isBilling && isActive && !isCollapsed && (
+                <div className="pl-4 pr-1 py-1 space-y-0.5 animate-in fade-in duration-150">
+                  {billingSubItems.map((sub) => {
+                    const SubIcon = sub.icon;
+                    const isSubActive = activeSubTab === sub.id;
+                    return (
+                      <button
+                        key={sub.id}
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSelectTab('billing');
+                          setActiveSubTab(sub.id);
+                          setActiveView('list');
+                        }}
+                        className={`w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all duration-150 ${
+                          isSubActive
+                            ? 'bg-[#1a56db] text-white font-semibold shadow-xs'
+                            : 'text-slate-400 hover:text-white hover:bg-[#101d42]'
+                        }`}
+                      >
+                        <SubIcon className="w-3.5 h-3.5 shrink-0" />
+                        <span className="truncate">{sub.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               )}
-            </button>
+            </div>
           );
         })}
       </div>
