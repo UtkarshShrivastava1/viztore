@@ -34,6 +34,7 @@ const envSchema = z.object({
   // Client URLs for CORS
   CLIENT_WEB_URL: z.string().default('http://localhost:3000'),
   CLIENT_MERCHANT_URL: z.string().default('http://localhost:3001'),
+  ADDITIONAL_ALLOWED_ORIGINS: z.string().optional().default(''),
 
   // Storage
   CLOUDINARY_CLOUD_NAME: z.string().optional(),
@@ -56,6 +57,7 @@ const testDefaults = {
   JWT_REFRESH_EXPIRY: '7d',
   CLIENT_WEB_URL: 'http://localhost:3000',
   CLIENT_MERCHANT_URL: 'http://localhost:3001',
+  ADDITIONAL_ALLOWED_ORIGINS: '',
 };
 
 const rawEnv = isTestEnv ? { ...testDefaults, ...process.env } : process.env;
@@ -81,4 +83,5 @@ export const env = (parsedEnv.success ? parsedEnv.data : {
   JWT_REFRESH_EXPIRY: '7d',
   CLIENT_WEB_URL: 'http://localhost:3000',
   CLIENT_MERCHANT_URL: 'http://localhost:3001',
+  ADDITIONAL_ALLOWED_ORIGINS: '',
 }) as z.infer<typeof envSchema>;

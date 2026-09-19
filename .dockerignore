@@ -1,0 +1,34 @@
+# Dependency and package manager caches
+**/node_modules
+**/.pnpm-store
+.pnpm-debug.log*
+
+# Git and OS metadata
+.git
+.github
+.gitignore
+.DS_Store
+Thumbs.db
+
+# Build outputs and temporary caches
+**/dist
+**/.turbo
+**/.next
+**/.cache
+**/logs
+*.log
+
+# Environment variables (NEVER leak secrets into Docker images)
+.env
+.env.*
+!.env.example
+
+# Documentation, specifications, and mockups
+mockups/
+notes-handbook/
+*.md
+!packages/**/*.md
+
+# Test reports and coverage
+coverage/
+*.lcov

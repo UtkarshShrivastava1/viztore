@@ -11,16 +11,16 @@
 ## 2. Global Project Completion Status
 
 ### 🚀 Production Launch Scope (Phases 1–6: Backend + Merchant + Web + Ops)
-`[████████████████████████████████████░░░░] 91% Complete`
+`[█████████████████████████████████████░░░] 94% Complete`
 
 | Scope Dimension | Weight | Progress Bar | % Complete | Status | Target Milestone |
 |---|:---:|---|:---:|:---:|---|
-| **Overall Production Launch** (Phases 1–6) | **100%** | `[██████████████████░░]` | **91%** | 🟢 Hardened / Staging Gate | Sept 22 Deployed Milestone |
-| ↳ **Backend Architecture & APIs** | 30% | `[███████████████████░]` | **95%** | 🟢 Complete & Hardened | 62/62 Tests Passing, Tax Invoice API Live |
+| **Overall Production Launch** (Phases 1–6) | **100%** | `[███████████████████░]` | **94%** | 🟢 Hardened / Staging Ready | Sept 22 Deployed Milestone |
+| ↳ **Backend Architecture & APIs** | 30% | `[████████████████████]` | **98%** | 🟢 Complete & Hardened | 67/67 Tests Passing, CORS & Dist Resolution Hardened |
 | ↳ **Merchant & Admin Panel** | 25% | `[███████████████████░]` | **97%** | 🟢 Complete Suite | WhatsApp Dispatch & Print Bill Live |
 | ↳ **Customer Web Storefront** | 25% | `[███████████████████░]` | **95%** | 🟢 Storefront & Orders Hub | Live Checkout & Invoice Modal Wired |
-| ↳ **Production Readiness & DevOps** | 20% | `[██████████████░░░░░░]` | **70%** | 🟡 Staging Target | Monorepo Build Clean, Staging Deployment Next |
-| **Total Full-Platform Scope** (Phases 1–7) | — | `[████████████████░░░░]` | **78%** | ⚪ Roadmap Reserved | Customer Mobile App (Phase 7 / Tier 3) |
+| ↳ **Production Readiness & DevOps** | 20% | `[█████████████████░░░]` | **85%** | 🟢 Staging Configured | Docker Multi-Stage, Railway/Render/Vercel Blueprints Ready |
+| **Total Full-Platform Scope** (Phases 1–7) | — | `[████████████████░░░░]` | **81%** | ⚪ Roadmap Reserved | Customer Mobile App (Phase 7 / Tier 3) |
 
 > **Auto-Update Invariant**: This progress bar is recalculated and updated dynamically on every task assignment, milestone delivery, and PR merge per `.agents/rules/progress-tracking.md`.
 
@@ -152,7 +152,7 @@ Every online order placed through `apps/web` generates an authoritative, complia
 | **Shared Types** | TypeScript, Zod | **100% In Sync** ✅ | All contracts, validation schemas, DTOs, branding config |
 | **Real-Time & Events** | Socket.io + Redis Adapter + TypedEventBus | **Wired** ✅ | In-process domain events forwarded to Socket.io rooms with Redis distributed scaling |
 | **Agent Workflows** | Custom Skills & Rules | **Active** ✅ | Fullstack Feature Workflow, UI Matching, Intern Delegation, /create-task |
-| **Test Suite** | Vitest | **62/62 Passing** ✅ | 12 test suites (AppError, Auth/Addresses, Stores/Ratings, Onboarding, Catalog, Orders, Delivery, Notifications, WorkerPool, Cache-Aside) |
+| **Test Suite** | Vitest | **67/67 Passing** ✅ | 13 test suites (AppError, Auth/Addresses, Stores/Ratings, Onboarding, Catalog, Orders, Delivery, Notifications, WorkerPool, Cache-Aside, CORS Validation) |
 | **Build Status** | Turborepo | **Clean** ✅ | Full monorepo builds with zero errors across all packages |
 | **Engineering Standards** | 8/8 Pillars (`structure.md`) | **100% Implemented** ✅ | Facades, Composition roots, 3-tier testing, EventBus, WorkerPool, Cache-Aside + Replica split, ESR indexing, Decoupled repos |
 
@@ -198,4 +198,6 @@ Every online order placed through `apps/web` generates an authoritative, complia
 - [ ] Vinay Task 4 (Cart & 4-Step Checkout Experience - 10 Screens) — In Progress (`TASK-VIN-04`)
 - [x] Tier 1 Online Purchase Invoice Endpoint & Printable Bill (`apps/web` + `apps/merchant`)
 - [x] WhatsApp Delivery Partner Dispatch Engine & Link Generator
-- [ ] Staging Cloud Deployment (Railway/Render + Vercel)
+- [x] Backend Dockerization & Production Containerization (Root & Backend Dockerfile, .dockerignore, .npmrc, 67/67 tests passing)
+- [x] Staging Blueprints & Cloud Configs (Railway.json, Render.yaml, apps/merchant/vercel.json SPA rewrites, CORS *.vercel.app matching)
+- [ ] Staging Cloud Deployment Active (Railway/Render + Vercel)

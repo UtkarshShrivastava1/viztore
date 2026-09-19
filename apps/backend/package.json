@@ -11,6 +11,7 @@
     "test:watch": "vitest",
     "lint": "eslint src --ext .ts",
     "seed": "tsx src/scripts/seed-merchants.ts",
+    "seed:prod": "node dist/scripts/seed-merchants.js",
     "clean": "rimraf dist"
   },
   "dependencies": {

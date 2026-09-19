@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: platform-backend
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: starter
+    region: oregon
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: API_VERSION
+        value: v1
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: ENABLE_REDIS
+        value: "false"
+      - key: REDIS_URL
+        sync: false
+      - key: CLIENT_WEB_URL
+        sync: false
+      - key: CLIENT_MERCHANT_URL
+        sync: false
+      - key: ADDITIONAL_ALLOWED_ORIGINS
+        sync: false

@@ -9,6 +9,7 @@ import { errorHandler } from './shared/middlewares/errorHandler.js';
 import { AppError } from './shared/utils/AppError.js';
 import { ApiResponse } from './shared/utils/ApiResponse.js';
 import { logger } from './shared/utils/logger.js';
+import { isOriginAllowed } from './shared/utils/cors.js';
 
 import mongoose from 'mongoose';
 import { checkRedisHealth } from './shared/redis/client.js';
@@ -30,20 +31,10 @@ export function createApp(): Express {
   app.use(helmet());
 
   // CORS Configuration
-  const allowedOrigins = [
-    env.CLIENT_WEB_URL,
-    env.CLIENT_MERCHANT_URL,
-    'http://localhost:3000',
-    'http://localhost:3001',
-    'http://127.0.0.1:3000',
-    'http://127.0.0.1:3001',
-  ];
-
   app.use(
     cors({
       origin: (origin, callback) => {
-        // Allow requests with no origin (e.g. mobile apps, curl, Postman)
-        if (!origin || allowedOrigins.includes(origin)) {
+        if (isOriginAllowed(origin)) {
           return callback(null, true);
         }
         return callback(new AppError(StatusCodes.FORBIDDEN, 'CORS_ERROR', `Origin ${origin} not permitted by CORS`));

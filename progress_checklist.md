@@ -1,6 +1,6 @@
 # Viztore Platform — Implementation Checklist
 
-> **Overall Status:** Phase 1, Phase 2 (UI Refined), Phase 3, Phase 4/5/6 Backend Complete | 62/62 Unit & Integration Tests Passing | Full Monorepo Clean Build
+> **Overall Status:** Phase 1, Phase 2 (UI Refined), Phase 3, Phase 4/5/6 Backend Complete | 67/67 Unit & Integration Tests Passing | Full Monorepo Clean Build | Docker & Staging Blueprints Ready
 
 ---
 
@@ -30,6 +30,14 @@
   - [x] Centralized `AppError` operational error handler & async wrapper
   - [x] Generic Zod validation middleware for body/query/params
   - [x] White-label `branding.config.ts` system with `NEXT_PUBLIC_*` fallback
+  - [x] Dynamic CORS origin validator supporting `*.vercel.app` preview URLs and `ADDITIONAL_ALLOWED_ORIGINS`
+- [x] **Containerization & Staging Cloud Blueprints**
+  - [x] Multi-stage root `Dockerfile` and `apps/backend/Dockerfile` (`node:20-alpine`, non-root user, curl healthcheck)
+  - [x] Root `.dockerignore` ignoring node_modules, .git, .env, and large assets
+  - [x] Root `.npmrc` configuring non-interactive options for CI/CD and Docker builds
+  - [x] Railway container deploy configuration (`railway.json`) with `/healthz` probe
+  - [x] Render Blueprint configuration (`render.yaml`) for Dockerized backend service
+  - [x] Vercel SPA client rewrite & security headers for merchant panel (`apps/merchant/vercel.json`)
 - [x] **Authentication Module (`apps/backend/src/modules/auth`)**
   - [x] User model with roles: `customer`, `merchant`, `admin`
   - [x] Password hashing with bcrypt (salt rounds = 12)

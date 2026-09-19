@@ -8,6 +8,7 @@ import { connectRedis, disconnectRedis, getRedisClient, checkRedisHealth } from 
 import { eventBus } from './shared/events/eventBus.js';
 import { EVENTS } from './shared/events/eventTypes.js';
 import { logger } from './shared/utils/logger.js';
+import { isOriginAllowed } from './shared/utils/cors.js';
 
 
 async function bootstrap() {
@@ -27,12 +28,12 @@ async function bootstrap() {
     // 4. Attach Socket.io
     const io = new SocketIOServer(server, {
       cors: {
-        origin: [
-          env.CLIENT_WEB_URL,
-          env.CLIENT_MERCHANT_URL,
-          'http://localhost:3000',
-          'http://localhost:3001',
-        ],
+        origin: (origin, callback) => {
+          if (isOriginAllowed(origin)) {
+            return callback(null, true);
+          }
+          return callback(new Error(`Origin ${origin} not permitted by Socket.io CORS`));
+        },
         methods: ['GET', 'POST'],
         credentials: true,
       },
