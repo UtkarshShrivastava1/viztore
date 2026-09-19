@@ -6,6 +6,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import DesktopCategoryStrip from '@/components/layout/DesktopCategoryStrip';
 import { NotificationsDropdown } from './NotificationsDropdown';
 import { WishlistFlyout } from './WishlistFlyout';
+import { LocationModal } from './LocationModal';
 import { useState, useRef, useEffect } from 'react';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useWishlistFlyoutStore } from '@/stores/wishlistFlyoutStore';
@@ -32,12 +33,14 @@ export function DesktopHeader({
   isSimpleHeader,
   isAccountPage,
   isAuthenticated: propIsAuthenticated,
-  openAuthModal = () => {},
+  openAuthModal: propOpenAuthModal,
 }: DesktopHeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
   const [activeOverlay, setActiveOverlay] = useState<'notifications' | 'wishlist' | null>(null);
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const headerRef = useRef<HTMLDivElement>(null);
 
   const authUser = useAuthStore((state) => state.user);
@@ -58,7 +61,25 @@ export function DesktopHeader({
   const isAuthenticated = mounted ? (propIsAuthenticated !== undefined ? propIsAuthenticated : authIsAuthenticated) : false;
   const userName = mounted ? (propUserName || authUser?.fullName || "Customer") : "Customer";
   const address = mounted ? (propAddress || (locationIsSet ? locationAddress : "Select Location")) : "Select Location";
-  const triggerAuthModal = openAuthModal || authOpenModal;
+
+  const handleAuthClick = () => {
+    if (isAuthenticated) {
+      router.push('/account');
+    } else {
+      if (typeof propOpenAuthModal === 'function') {
+        propOpenAuthModal('login');
+      } else {
+        authOpenModal('login');
+      }
+    }
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/products?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -92,22 +113,25 @@ export function DesktopHeader({
             <Logo />
 
             {/* Search Bar - Center and Large */}
-            <div className="flex flex-1 items-center gap-2.5 rounded-full bg-white px-4 py-2.5 shadow-sm mx-4">
+            <form onSubmit={handleSearchSubmit} className="flex flex-1 items-center gap-2.5 rounded-full bg-white px-4 py-2.5 shadow-sm mx-4">
               <Search className="h-5 w-5 shrink-0 text-[#1E293B]" strokeWidth={2} />
               <input
                 type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={searchPlaceholder}
                 className="w-full truncate bg-transparent text-[14px] text-slate-900 placeholder:text-slate-500/90 font-normal focus:outline-none"
               />
-              <button type="button" aria-label="Voice search" className="shrink-0 text-[#1E293B] hover:opacity-80">
+              <button type="submit" aria-label="Search" className="shrink-0 text-[#1E293B] hover:opacity-80">
                 <Mic className="h-5 w-5" strokeWidth={1.8} />
               </button>
-            </div>
+            </form>
 
             {/* Location Selector */}
             <button
               type="button"
-              className="flex items-center gap-2.5 rounded-full bg-[#022b82]/80 hover:bg-[#022b82] transition-colors border border-white/10 px-4 py-2.5 backdrop-blur-md shadow-sm max-w-[280px]"
+              onClick={() => setIsLocationModalOpen(true)}
+              className="flex items-center gap-2.5 rounded-full bg-[#022b82]/80 hover:bg-[#022b82] transition-colors border border-white/10 px-4 py-2.5 backdrop-blur-md shadow-sm max-w-[280px] cursor-pointer"
             >
               <MapPin className="h-4 w-4 shrink-0 text-[#4C82FB]" fill="#4C82FB" strokeWidth={0} />
               <span className="flex-1 truncate text-[12px] text-white text-left">
@@ -124,7 +148,7 @@ export function DesktopHeader({
                 <button 
                   type="button" 
                   onClick={() => toggleOverlay('notifications')}
-                  className="group relative flex flex-col items-center justify-center gap-1 text-white hover:opacity-85 transition-opacity"
+                  className="group relative flex flex-col items-center justify-center gap-1 text-white hover:opacity-85 transition-opacity cursor-pointer"
                 >
                   <div className="relative">
                     <Bell className="h-[22px] w-[22px]" strokeWidth={1.8} />
@@ -146,7 +170,7 @@ export function DesktopHeader({
                 <button 
                   type="button" 
                   onClick={() => toggleOverlay('wishlist')}
-                  className="group relative flex flex-col items-center justify-center gap-1 text-white hover:opacity-85 transition-opacity"
+                  className="group relative flex flex-col items-center justify-center gap-1 text-white hover:opacity-85 transition-opacity cursor-pointer"
                 >
                   <div className="relative">
                     <Heart className="h-[22px] w-[22px]" strokeWidth={1.8} />
@@ -166,14 +190,8 @@ export function DesktopHeader({
               {/* Account / Auth */}
               <button
                 type="button"
-                className="group relative flex flex-col items-center justify-center gap-1 text-white hover:opacity-85 transition-opacity"
-                onClick={() => {
-                  if (isAuthenticated) {
-                    router.push('/account');
-                  } else {
-                    triggerAuthModal('login');
-                  }
-                }}
+                className="group relative flex flex-col items-center justify-center gap-1 text-white hover:opacity-85 transition-opacity cursor-pointer"
+                onClick={handleAuthClick}
               >
                 <CircleUserRound className="h-[22px] w-[22px]" strokeWidth={1.8} />
                 <span className="text-[10px] font-medium tracking-wide">
@@ -182,7 +200,7 @@ export function DesktopHeader({
               </button>
               
               {/* Cart */}
-              <button type="button" className="group relative flex flex-col items-center justify-center gap-1 text-white hover:opacity-85 transition-opacity" onClick={() => router.push('/cart')}>
+              <button type="button" className="group relative flex flex-col items-center justify-center gap-1 text-white hover:opacity-85 transition-opacity cursor-pointer" onClick={() => router.push('/cart')}>
                 <div className="relative">
                   <ShoppingCart className="h-[22px] w-[22px]" strokeWidth={1.8} />
                   {cartCount > 0 && (
@@ -202,6 +220,12 @@ export function DesktopHeader({
       {!isSimpleHeader && !isAccountPage && (
       <DesktopCategoryStrip activeId={activeCategoryId} />
       )}
+
+      {/* Location Modal */}
+      <LocationModal 
+        isOpen={isLocationModalOpen} 
+        onClose={() => setIsLocationModalOpen(false)} 
+      />
     </div>
   );
 }

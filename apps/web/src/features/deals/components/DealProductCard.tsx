@@ -11,7 +11,9 @@ interface DealProductCardProps {
 }
 
 export function DealProductCard({ product }: DealProductCardProps) {
-  const { addItem } = useCartStore();
+  const { addItem, openCart } = useCartStore();
+  const [isAdded, setIsAdded] = React.useState(false);
+
   const discount = product.baseMrp > 0
     ? Math.round(((product.baseMrp - product.basePrice) / product.baseMrp) * 100)
     : 0;
@@ -21,14 +23,26 @@ export function DealProductCard({ product }: DealProductCardProps) {
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    addItem({
+    const rawStoreId = product.storeId;
+    const storeId = typeof rawStoreId === 'object' && rawStoreId !== null
+      ? (rawStoreId as any)._id || String(rawStoreId)
+      : String(rawStoreId || 'store-main');
+    const storeName = product.storeName || (typeof rawStoreId === 'object' && (rawStoreId as any)?.name) || 'Official Store';
+
+    const success = addItem({
       productId: product._id,
       name: product.name,
       unitPrice: product.basePrice,
       imageUrl: firstImage || '',
-      storeId: product.storeId,
-      storeName: product.storeName,
+      storeId,
+      storeName,
     });
+
+    if (success) {
+      setIsAdded(true);
+      setTimeout(() => setIsAdded(false), 1500);
+      openCart();
+    }
   };
 
   return (
@@ -109,10 +123,15 @@ export function DealProductCard({ product }: DealProductCardProps) {
 
         {/* Add to Cart CTA */}
         <button
+          type="button"
           onClick={handleAddToCart}
-          className="w-full flex items-center justify-center gap-2 py-2 rounded-xl border border-[#1668F6] text-[#1668F6] font-semibold text-sm hover:bg-[#1668F6] hover:text-white transition-colors"
+          className={`w-full flex items-center justify-center gap-2 py-2 rounded-xl border text-sm font-semibold transition-all duration-200 active:scale-98 ${
+            isAdded
+              ? 'bg-emerald-600 border-emerald-600 text-white'
+              : 'border-[#1668F6] text-[#1668F6] hover:bg-[#1668F6] hover:text-white'
+          }`}
         >
-          <ShoppingCart className="w-4 h-4" /> Add to Cart
+          <ShoppingCart className="w-4 h-4" /> {isAdded ? 'Added to Cart ✓' : 'Add to Cart'}
         </button>
       </div>
     </Link>

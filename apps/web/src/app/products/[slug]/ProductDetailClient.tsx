@@ -2,14 +2,15 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { Footer } from '@/components/layout/Footer';
 import { fetchProductBySlug } from '@/lib/api/catalog';
-import { ProductCard } from '@/features/products/components/ProductCard';
+import { useCartStore } from '@/stores/cart.store';
 import { 
-  Star, Heart, ShoppingBag, Share2, Store, ChevronRight, ChevronLeft, 
-  Check, Truck, RotateCcw, ShieldCheck, Minus, Plus, Package, 
-  MapPin, Search, ChevronDown, ChevronUp, Zap, Box, TrendingUp
+  Star, ShoppingBag, Share2, ChevronRight, 
+  Check, Minus, Plus, Package, 
+  ChevronDown, ChevronUp, Zap
 } from 'lucide-react';
 import { ProductImageCarousel } from '@/features/pdp/ProductImageCarousel';
 import { SizeSelector } from '@/features/pdp/SizeSelector';
@@ -23,6 +24,9 @@ interface ProductDetailClientProps {
 }
 
 export function ProductDetailClient({ slug }: ProductDetailClientProps) {
+  const router = useRouter();
+  const { addItem, openCart } = useCartStore();
+
   const { data: product, isLoading } = useQuery({
     queryKey: ['product', slug],
     queryFn: () => fetchProductBySlug(slug),
@@ -32,6 +36,7 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
   const [selectedVariantIdx, setSelectedVariantIdx] = useState(0);
   const [selectedImageIdx, setSelectedImageIdx] = useState(0);
   const [qty, setQty] = useState(1);
+  const [isAdded, setIsAdded] = useState(false);
   const [showDetails, setShowDetails] = useState(true); // Open by default as per screenshot
 
   if (isLoading) {
@@ -80,6 +85,46 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
 
   const sizes = Array.from(new Set(product.variants.filter((v) => v.size && v.isActive).map((v) => v.size!)));
   const colors = Array.from(new Set(product.variants.filter((v) => v.color && v.isActive).map((v) => v.color!)));
+
+  const rawStoreId = product.storeId;
+  const storeId = typeof rawStoreId === 'object' && rawStoreId !== null
+    ? (rawStoreId as any)._id || String(rawStoreId)
+    : String(rawStoreId || 'store-main');
+  const storeName = product.storeName || (typeof rawStoreId === 'object' && (rawStoreId as any)?.name) || 'Official Store';
+
+  const handleAddToCart = () => {
+    if (!product || !selectedVariant) return;
+    const success = addItem({
+      productId: product._id,
+      sku: selectedVariant.sku || product.variants[selectedVariantIdx]?.sku || `${product._id}-${selectedVariantIdx}`,
+      name: product.name,
+      imageUrl: allImages[0] || '',
+      unitPrice: selectedVariant.price,
+      storeId,
+      storeName,
+    }, qty);
+
+    if (success) {
+      setIsAdded(true);
+      setTimeout(() => setIsAdded(false), 2000);
+      openCart();
+    }
+  };
+
+  const handleBuyNow = () => {
+    if (!product || !selectedVariant) return;
+    addItem({
+      productId: product._id,
+      sku: selectedVariant.sku || product.variants[selectedVariantIdx]?.sku || `${product._id}-${selectedVariantIdx}`,
+      name: product.name,
+      imageUrl: allImages[0] || '',
+      unitPrice: selectedVariant.price,
+      storeId,
+      storeName,
+    }, qty);
+
+    router.push('/checkout');
+  };
 
   return (
     <div className="min-h-screen bg-transparent pt-14 pb-28 md:pb-0">
@@ -202,21 +247,49 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
             <div className="hidden md:flex items-center gap-4 pt-6">
               
               <div className="flex items-center justify-between w-[120px] h-12 border-2 border-surface-200 rounded-xl px-1">
-                <button className="w-10 h-10 flex items-center justify-center text-surface-400 hover:text-[#192168]">
+                <button 
+                  type="button"
+                  onClick={() => setQty(prev => Math.max(1, prev - 1))}
+                  className="w-10 h-10 flex items-center justify-center text-surface-400 hover:text-[#192168] transition-colors disabled:opacity-40"
+                  disabled={qty <= 1}
+                  aria-label="Decrease quantity"
+                >
                   <Minus className="w-4 h-4" />
                 </button>
-                <span className="font-extrabold text-[#192168] text-sm">1</span>
-                <button className="w-10 h-10 flex items-center justify-center text-surface-400 hover:text-[#192168]">
+                <span className="font-extrabold text-[#192168] text-sm select-none">{qty}</span>
+                <button 
+                  type="button"
+                  onClick={() => setQty(prev => Math.min(99, prev + 1))}
+                  className="w-10 h-10 flex items-center justify-center text-surface-400 hover:text-[#192168] transition-colors"
+                  aria-label="Increase quantity"
+                >
                   <Plus className="w-4 h-4" />
                 </button>
               </div>
 
-              <button className="flex-1 flex items-center justify-center gap-2 h-12 rounded-xl border-2 border-[#1668F6] text-[#1668F6] font-extrabold text-sm hover:bg-blue-50 transition-colors">
-                <ShoppingBag className="w-5 h-5" strokeWidth={2.5} />
-                Add to Cart
+              <button 
+                type="button"
+                onClick={handleAddToCart}
+                className="flex-1 flex items-center justify-center gap-2 h-12 rounded-xl border-2 border-[#1668F6] text-[#1668F6] font-extrabold text-sm hover:bg-blue-50 active:scale-[0.98] transition-all"
+              >
+                {isAdded ? (
+                  <>
+                    <Check className="w-5 h-5 text-emerald-600" />
+                    <span className="text-emerald-600">Added to Cart</span>
+                  </>
+                ) : (
+                  <>
+                    <ShoppingBag className="w-5 h-5" strokeWidth={2.5} />
+                    <span>Add to Cart</span>
+                  </>
+                )}
               </button>
 
-              <button className="flex-1 flex items-center justify-center gap-2 h-12 rounded-xl bg-[#1668F6] text-white font-extrabold text-sm hover:bg-blue-700 transition-colors shadow-lg shadow-blue-500/20">
+              <button 
+                type="button"
+                onClick={handleBuyNow}
+                className="flex-1 flex items-center justify-center gap-2 h-12 rounded-xl bg-[#1668F6] text-white font-extrabold text-sm hover:bg-blue-700 active:scale-[0.98] transition-all shadow-lg shadow-blue-500/20"
+              >
                 <Zap className="w-5 h-5 fill-white" />
                 Buy Now
               </button>
@@ -384,7 +457,10 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
       </main>
 
       {/* ── MOBILE FIXED BOTTOM BAR ── */}
-      <StickyBottomBar />
+      <StickyBottomBar 
+        onAddToCart={handleAddToCart}
+        isAdded={isAdded}
+      />
       
       <div className="hidden md:block">
         <Footer />

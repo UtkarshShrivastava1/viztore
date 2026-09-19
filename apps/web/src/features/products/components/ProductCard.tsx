@@ -1,9 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { Heart, Star, Store } from 'lucide-react';
+import { Heart, Star, Store, Plus, Check } from 'lucide-react';
 import type { IProduct } from '@repo/shared-types';
+import { useCartStore } from '@/stores/cart.store';
 
 interface ProductCardProps {
   product: IProduct;
@@ -11,11 +12,41 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, badge }: ProductCardProps) {
+  const { addItem, openCart } = useCartStore();
+  const [isAdded, setIsAdded] = useState(false);
+
   const discount = product.baseMrp > 0
     ? Math.round(((product.baseMrp - product.basePrice) / product.baseMrp) * 100)
     : 0;
 
   const firstImage = product.variants?.[0]?.images?.[0];
+
+  const handleQuickAdd = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const firstVariant = product.variants?.[0];
+    const rawStoreId = product.storeId;
+    const storeId = typeof rawStoreId === 'object' && rawStoreId !== null
+      ? (rawStoreId as any)._id || String(rawStoreId)
+      : String(rawStoreId || 'store-main');
+    const storeName = product.storeName || (typeof rawStoreId === 'object' && (rawStoreId as any)?.name) || 'Official Store';
+
+    const success = addItem({
+      productId: product._id,
+      sku: firstVariant?.sku || `${product._id}-0`,
+      name: product.name,
+      imageUrl: firstImage || '',
+      unitPrice: firstVariant?.price || product.basePrice,
+      storeId,
+      storeName,
+    }, 1);
+
+    if (success) {
+      setIsAdded(true);
+      setTimeout(() => setIsAdded(false), 1500);
+      openCart();
+    }
+  };
 
   return (
     <Link
@@ -88,20 +119,41 @@ export function ProductCard({ product, badge }: ProductCardProps) {
           )}
         </div>
 
-        {/* Rating + Store */}
-        <div className="flex items-center justify-between mt-auto pt-1.5">
-          {product.rating > 0 && (
-            <div className="flex items-center gap-0.5">
-              <Star className="w-3 h-3 text-[#06B95F] fill-[#06B95F]" />
-              <span className="text-[10px] font-extrabold text-[#192168]">{product.rating.toFixed(1)}</span>
-              {product.reviewCount > 0 && (
-                <span className="text-[10px] font-medium text-surface-500">({product.reviewCount})</span>
-              )}
-            </div>
-          )}
-          <span className="text-[10px] font-bold text-surface-500 truncate max-w-[80px]">
-            {product.storeName}
-          </span>
+        {/* Rating + Store + Quick Add Button */}
+        <div className="flex items-center justify-between mt-auto pt-2">
+          <div className="flex items-center gap-1.5 min-w-0">
+            {product.rating > 0 && (
+              <div className="flex items-center gap-0.5 shrink-0">
+                <Star className="w-3 h-3 text-[#06B95F] fill-[#06B95F]" />
+                <span className="text-[10px] font-extrabold text-[#192168]">{product.rating.toFixed(1)}</span>
+              </div>
+            )}
+            <span className="text-[10px] font-medium text-surface-400 truncate max-w-[70px]">
+              {product.storeName}
+            </span>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleQuickAdd}
+            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-extrabold transition-all duration-200 active:scale-95 shadow-sm ${
+              isAdded
+                ? 'bg-emerald-600 text-white'
+                : 'bg-[#1668F6] text-white hover:bg-blue-700'
+            }`}
+          >
+            {isAdded ? (
+              <>
+                <Check className="w-3 h-3" />
+                <span>Added</span>
+              </>
+            ) : (
+              <>
+                <Plus className="w-3 h-3 stroke-[3]" />
+                <span>Add</span>
+              </>
+            )}
+          </button>
         </div>
       </div>
     </Link>

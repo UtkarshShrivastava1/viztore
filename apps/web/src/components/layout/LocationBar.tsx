@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { MapPin, ChevronDown } from "lucide-react";
 import { useAuthStore } from "@/stores/auth.store";
 import { useLocationStore } from "@/stores/location.store";
+import { LocationModal } from "./LocationModal";
 
 interface LocationBarProps {
   name?: string;
@@ -15,6 +16,7 @@ export default function LocationBar({
   address: propAddress,
 }: LocationBarProps) {
   const [mounted, setMounted] = useState(false);
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const authUser = useAuthStore((state) => state.user);
   const locationAddress = useLocationStore((state) => state.address);
   const locationIsSet = useLocationStore((state) => state.isSet);
@@ -30,7 +32,8 @@ export default function LocationBar({
     <div className="px-4 mb-3.5">
       <button
         type="button"
-        className="w-full flex items-center gap-2.5 rounded-full bg-[#021d5c]/60 hover:bg-[#021d5c]/80 transition-colors border border-white/10 px-4 py-2.5 text-left backdrop-blur-md shadow-sm"
+        onClick={() => setIsLocationModalOpen(true)}
+        className="w-full flex items-center gap-2.5 rounded-full bg-[#021d5c]/60 hover:bg-[#021d5c]/80 transition-colors border border-white/10 px-4 py-2.5 text-left backdrop-blur-md shadow-sm cursor-pointer"
       >
         <MapPin
           className="h-4 w-4 shrink-0 text-[#4C82FB]"
@@ -44,6 +47,11 @@ export default function LocationBar({
         </span>
         <ChevronDown className="h-4 w-4 shrink-0 text-white" strokeWidth={2.2} />
       </button>
+
+      <LocationModal
+        isOpen={isLocationModalOpen}
+        onClose={() => setIsLocationModalOpen(false)}
+      />
     </div>
   );
 }
