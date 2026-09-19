@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, Eye, EyeOff, Lock, Mail, User, Phone, CheckCircle2, AlertCircle } from 'lucide-react';
+import { X, Eye, EyeOff, Lock, Mail, User, Phone, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
 import { branding, UserRole } from '@repo/shared-types';
 import { useAuthStore } from '@/stores/auth.store';
 import { authApi } from '@/lib/api/auth';
@@ -54,32 +54,9 @@ export const AuthModal: React.FC = () => {
       setTimeout(() => {
         setAuth(res.user, res.tokens.accessToken);
         resetForm();
-      }, 600);
+      }, 500);
     } catch (err: any) {
-      // Graceful fallback for offline demo / staging testing
-      if (email.includes('@') && password.length >= 6) {
-        setSuccessMsg('Signed in successfully (Demo Session)');
-        setTimeout(() => {
-          setAuth(
-            {
-              _id: 'usr_demo_customer',
-              fullName: fullName || email.split('@')[0] || 'Customer',
-              email: email.trim(),
-              phone: phone || '+91 98765 43210',
-              role: UserRole.CUSTOMER,
-              isVerified: true,
-              isActive: true,
-              addresses: [],
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            },
-            'mock_customer_jwt_token'
-          );
-          resetForm();
-        }, 600);
-      } else {
-        setError(err?.message || 'Invalid email or password. Please try again.');
-      }
+      setError(err?.message || 'Invalid email or password. Please check your credentials and try again.');
     } finally {
       setIsLoading(false);
     }
@@ -308,6 +285,22 @@ export const AuthModal: React.FC = () => {
                   <span>Sign In</span>
                 )}
               </button>
+
+              {/* Quick Fill Test Customer Credentials */}
+              <div className="pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmail('arjun.customer@example.com');
+                    setPassword('Password@123');
+                    setError(null);
+                  }}
+                  className="w-full text-xs font-semibold text-blue-600 bg-blue-50/80 hover:bg-blue-100/90 py-2.5 px-3 rounded-xl border border-blue-200/80 transition-all flex items-center justify-center gap-1.5 active:scale-[0.99]"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-blue-500" />
+                  <span>Use Demo Customer (arjun.customer@example.com)</span>
+                </button>
+              </div>
             </form>
           ) : (
             /* REGISTER VIEW */
