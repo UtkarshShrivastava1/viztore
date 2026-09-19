@@ -9,6 +9,9 @@ import { WishlistFlyout } from './WishlistFlyout';
 import { useState, useRef, useEffect } from 'react';
 import { useNotificationStore } from '@/stores/notificationStore';
 import { useWishlistFlyoutStore } from '@/stores/wishlistFlyoutStore';
+import { useAuthStore } from '@/stores/auth.store';
+import { useLocationStore } from '@/stores/location.store';
+import { useCartStore } from '@/stores/cart.store';
 
 export interface DesktopHeaderProps {
   userName?: string;
@@ -22,22 +25,40 @@ export interface DesktopHeaderProps {
 }
 
 export function DesktopHeader({
-  userName = "Harish Kumar",
-  address = "Q No- 6/B, Street -13, Sector -2, Bhilai",
-  cartCount = 3,
+  userName: propUserName,
+  address: propAddress,
+  cartCount: propCartCount,
   searchPlaceholder = "Search for products, stores and more...",
   isSimpleHeader,
   isAccountPage,
-  isAuthenticated = false,
+  isAuthenticated: propIsAuthenticated,
   openAuthModal = () => {},
 }: DesktopHeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
   const [activeOverlay, setActiveOverlay] = useState<'notifications' | 'wishlist' | null>(null);
   const headerRef = useRef<HTMLDivElement>(null);
+
+  const authUser = useAuthStore((state) => state.user);
+  const authIsAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const authOpenModal = useAuthStore((state) => state.openAuthModal);
+  const locationAddress = useLocationStore((state) => state.address);
+  const locationIsSet = useLocationStore((state) => state.isSet);
+  const rawCartCount = useCartStore((state) => state.items.reduce((sum, item) => sum + item.quantity, 0));
   
   const notificationCount = useNotificationStore((state) => state.unreadCount);
   const wishlistCount = useWishlistFlyoutStore((state) => state.items.length);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const cartCount = mounted ? (propCartCount !== undefined ? propCartCount : rawCartCount) : 0;
+  const isAuthenticated = mounted ? (propIsAuthenticated !== undefined ? propIsAuthenticated : authIsAuthenticated) : false;
+  const userName = mounted ? (propUserName || authUser?.fullName || "Customer") : "Customer";
+  const address = mounted ? (propAddress || (locationIsSet ? locationAddress : "Select Location")) : "Select Location";
+  const triggerAuthModal = openAuthModal || authOpenModal;
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -150,7 +171,7 @@ export function DesktopHeader({
                   if (isAuthenticated) {
                     router.push('/account');
                   } else {
-                    openAuthModal('login');
+                    triggerAuthModal('login');
                   }
                 }}
               >

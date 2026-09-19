@@ -1,17 +1,31 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, Phone, Mail, Calendar, MapPin, ChevronDown, Camera, ShieldCheck } from 'lucide-react';
+import { useAuthStore } from '@/stores/auth.store';
 
 export default function EditProfilePage() {
+  const user = useAuthStore((state) => state.user);
+
   const [formData, setFormData] = useState({
-    fullName: 'Harish Kumar',
-    mobileNumber: '+91 91234 56789',
-    email: 'harishkumar@gmail.com',
+    fullName: user?.fullName || 'Customer Account',
+    mobileNumber: user?.phone ? `+91 ${user.phone}` : '+91 98765 43210',
+    email: user?.email || 'customer@example.com',
     dob: '12 Apr 1998',
     gender: 'Male',
-    location: 'Patna, Bihar',
+    location: 'Mumbai, Maharashtra',
   });
+
+  useEffect(() => {
+    if (user) {
+      setFormData((prev) => ({
+        ...prev,
+        fullName: user.fullName || prev.fullName,
+        email: user.email || prev.email,
+        mobileNumber: user.phone ? `+91 ${user.phone}` : prev.mobileNumber,
+      }));
+    }
+  }, [user]);
 
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));

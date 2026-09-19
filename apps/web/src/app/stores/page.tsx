@@ -29,9 +29,12 @@ export default function StoresPage({
 }: {
   searchParams?: { [key: string]: string | string[] | undefined };
 }) {
-  const city = searchParams?.city as string || "Bhilai";
-  const state = searchParams?.state as string || "Chhattisgarh";
   const { lng, lat, address } = useLocationStore();
+  const addressParts = address ? address.split(',') : [];
+  const detectedCity = addressParts[0]?.trim() || "Your City";
+  const detectedState = addressParts[1]?.trim() || "India";
+  const city = (searchParams?.city as string) || detectedCity;
+  const state = (searchParams?.state as string) || detectedState;
   const [activeCategory, setActiveCategory] = useState<StoreCategory | undefined>(undefined);
   const { data: nearbyStores, isLoading: nearbyLoading } = useNearbyStores(lng, lat, 10, activeCategory);
   const { data: allStoresResponse, isLoading: allLoading } = useAllStores({ category: activeCategory });

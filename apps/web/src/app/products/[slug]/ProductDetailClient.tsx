@@ -101,11 +101,9 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
             <div className="hidden md:flex items-center gap-1.5 text-[11px] font-bold text-surface-500 mb-2">
               <Link href="/" className="hover:text-[#192168]">Home</Link>
               <ChevronRight className="w-3 h-3" />
-              <Link href="/category/fashion" className="hover:text-[#192168]">Fashion</Link>
-              <ChevronRight className="w-3 h-3" />
-              <Link href="/category/mens-fashion" className="hover:text-[#192168]">Men's Fashion</Link>
-              <ChevronRight className="w-3 h-3" />
-              <Link href="/category/mens-fashion/t-shirts" className="hover:text-[#192168]">T-shirts</Link>
+              <Link href={`/category/${product.category?.toLowerCase() || 'all'}`} className="hover:text-[#192168] capitalize">
+                {product.category || 'Catalog'}
+              </Link>
               <ChevronRight className="w-3 h-3" />
               <span className="text-[#192168] line-clamp-1 truncate">{product.name}</span>
             </div>
@@ -113,7 +111,7 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
             {/* Brand & Share */}
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-extrabold text-surface-500 uppercase tracking-wider">
-                U.S. Polo Assn.
+                {product.brand || product.storeName || 'Official Store'}
               </h2>
               <button className="hidden md:flex text-surface-400 hover:text-[#192168] transition-colors">
                 <Share2 className="w-4 h-4" strokeWidth={2.5} />

@@ -36,7 +36,7 @@ const dummyNotifications: INotificationItem[] = [
     id: '4',
     type: 'new_store',
     title: 'New Store Nearby',
-    description: 'Sharma Electronics is now available near you in Bhilai.',
+    description: 'A new electronics store is now available near you in your neighborhood.',
     timestamp: '5 hours ago',
     isRead: true,
   },

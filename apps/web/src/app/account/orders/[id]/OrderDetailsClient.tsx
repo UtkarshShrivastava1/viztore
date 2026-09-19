@@ -63,12 +63,12 @@ export function OrderDetailsClient({ id }: { id: string }) {
     : 'Today, Just now';
 
   const address = order?.shippingAddress || {
-    fullName: 'Harish Kumar',
+    fullName: 'Customer Account',
     phone: '9876543210',
-    street: '123, MG Road, Near City Mall',
-    city: 'Indore',
-    state: 'Madhya Pradesh',
-    postalCode: '452001',
+    street: '12-B, Sea Breeze Apts, Bandra West',
+    city: 'Mumbai',
+    state: 'Maharashtra',
+    postalCode: '400050',
     country: 'IN',
   };
 

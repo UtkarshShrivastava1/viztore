@@ -39,7 +39,8 @@ export const App: React.FC = () => {
         return 'onboarding';
       }
       if (params.get('view') === 'dashboard' || path.endsWith('/dashboard')) return 'dashboard';
-      if (params.get('view') === 'landing' || path.endsWith('/seller') || path === '/') return 'landing';
+      if (params.get('view') === 'landing' || path.endsWith('/seller')) return 'landing';
+      if (path === '/' && localStorage.getItem('access_token')) return 'dashboard';
     }
     return 'landing';
   };
@@ -58,9 +59,16 @@ export const App: React.FC = () => {
     initialize();
   }, [initialize]);
 
-  // If already authenticated and on login, transition to dashboard
+  // If already authenticated and on login or default root, transition to dashboard
   useEffect(() => {
-    if (isAuthenticated && currentView === 'login') {
+    if (isAuthenticated && (currentView === 'login' || currentView === 'landing')) {
+      if (typeof window !== 'undefined') {
+        const path = window.location.pathname.toLowerCase();
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('view') === 'landing' || path.endsWith('/seller')) {
+          return;
+        }
+      }
       setCurrentView('dashboard');
     }
   }, [isAuthenticated, currentView]);

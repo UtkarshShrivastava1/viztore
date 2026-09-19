@@ -30,7 +30,7 @@ export default function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const { isAuthenticated, openAuthModal } = useAuthStore();
+  const { user, isAuthenticated, openAuthModal } = useAuthStore();
 
   const {
     items,
@@ -45,6 +45,7 @@ export default function CheckoutPage() {
 
   const totalItemCount = getItemCount();
   const subtotal = getSubtotal();
+  const tax = getTax();
   const shippingFee = getShippingFee();
   const grandTotal = getGrandTotal();
 
@@ -72,13 +73,13 @@ export default function CheckoutPage() {
     try {
       const orderStoreId = storeId || items[0]?.storeId || 'store-sample-1';
       const shippingAddress = {
-        fullName: 'Harish Kumar',
-        street: '123, MG Road, Near City Mall',
-        city: 'Indore',
-        state: 'Madhya Pradesh',
-        postalCode: '452001',
+        fullName: user?.fullName || 'Customer Account',
+        street: '12-B, Sea Breeze Apts, Bandra West',
+        city: 'Mumbai',
+        state: 'Maharashtra',
+        postalCode: '400050',
         country: 'IN',
-        phone: '9876543210',
+        phone: user?.phone || '9876543210',
       };
 
       const payload = {
@@ -147,9 +148,9 @@ export default function CheckoutPage() {
               <MapPin className="h-4 w-4" />
             </div>
             <div className="flex-1">
-              <h3 className="text-sm font-bold text-gray-900 mb-0.5">Harish Kumar</h3>
-              <p className="text-xs font-medium text-gray-700 mb-1">+91 98765 43210</p>
-              <p className="text-[11px] text-gray-500 leading-snug pr-4 mb-2">123, MG Road, Near City Mall<br/>Indore, Madhya Pradesh - 452001</p>
+              <h3 className="text-sm font-bold text-gray-900 mb-0.5">{user?.fullName || 'Customer Account'}</h3>
+              <p className="text-xs font-medium text-gray-700 mb-1">{user?.phone ? `+91 ${user.phone}` : '+91 98765 43210'}</p>
+              <p className="text-[11px] text-gray-500 leading-snug pr-4 mb-2">12-B, Sea Breeze Apts, Bandra West<br/>Mumbai, Maharashtra - 400050</p>
               <span className="inline-block rounded border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[9px] font-bold text-emerald-700">
                 Home
               </span>

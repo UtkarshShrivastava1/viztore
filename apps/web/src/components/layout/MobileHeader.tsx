@@ -8,6 +8,10 @@ import CategoryTabs from '@/components/layout/CategoryTabs';
 import CategoryIcons from '@/features/home/components/CategoryIcons';
 import Logo from '@/components/layout/Logo';
 import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useCartStore } from '@/stores/cart.store';
+import { useWishlistFlyoutStore } from '@/stores/wishlistFlyoutStore';
+import { useNotificationStore } from '@/stores/notificationStore';
 
 export interface MobileHeaderProps {
   userName?: string;
@@ -24,15 +28,27 @@ export interface MobileHeaderProps {
 export function MobileHeader({
   userName,
   address,
-  wishlistCount = 0,
-  cartCount = 0,
-  notificationCount = 0,
+  wishlistCount: propWishlistCount,
+  cartCount: propCartCount,
+  notificationCount: propNotificationCount,
   searchPlaceholder,
   isSimpleHeader,
   isAccountPage,
   displayTitle,
 }: MobileHeaderProps) {
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+  const rawCartCount = useCartStore((state) => state.items.reduce((sum, item) => sum + item.quantity, 0));
+  const rawWishlistCount = useWishlistFlyoutStore((state) => state.items.length);
+  const rawNotificationCount = useNotificationStore((state) => state.unreadCount);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const cartCount = mounted ? (propCartCount !== undefined ? propCartCount : rawCartCount) : 0;
+  const wishlistCount = mounted ? (propWishlistCount !== undefined ? propWishlistCount : rawWishlistCount) : 0;
+  const notificationCount = mounted ? (propNotificationCount !== undefined ? propNotificationCount : rawNotificationCount) : 0;
 
   return (
     <div className="md:hidden max-w-2xl mx-auto w-full relative pt-1.5 pb-2">

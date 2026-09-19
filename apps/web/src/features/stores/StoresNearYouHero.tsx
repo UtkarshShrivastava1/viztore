@@ -64,8 +64,8 @@ export interface StoresNearYouHeroProps {
 }
 
 export default function StoresNearYouHero({
-  city = "Bhilai",
-  state = "Chhattisgarh",
+  city = "Your City",
+  state = "India",
 }: StoresNearYouHeroProps) {
   return (
     <section className="w-full bg-white font-sans">

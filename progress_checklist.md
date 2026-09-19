@@ -117,6 +117,7 @@
   - [x] Product Detail Page (`/products/[slug]`): image thumbnail gallery, variant selector, quantity stepper, stock validator, specifications table, delivery countdown ETA, and verified reviews
   - [x] Category landing pages (`/category`, `/category/[slug]`) with 14-category vertical split rail and subcategory grid
   - [x] Explore Stores directory (`/stores`, `/stores/fashion`) & dedicated store storefronts (`/stores/[slug]`) with hero cards and curated shelves
+  - [x] Live storefront API integration: wired `ExploreStoresGrid`, `StoresNearYouRail`, and `/stores` directory to live backend API with resilient fallbacks
 
 ---
 
@@ -165,6 +166,7 @@
 - [x] Subdomain-based registration routing (`register.<domain>` & `/register`) in Merchant Panel (`apps/merchant`)
 - [x] Customer account backend APIs: saved addresses CRUD (`/api/v1/users/addresses`), order history query alias (`/api/v1/orders/my-orders`), profile update (`/api/v1/users/me`)
 - [x] Simple Store/Merchant rating system (1–5 stars per delivered order, aggregated store rating score/count, duplicate order rating prevention: `/api/v1/stores/:id/rating`)
+- [x] E2E staging browser audit & defect remediation: Dynamic cart badge sync, hardcoded name/location purge, dynamic PDP brand/categories, merchant auth route guard
 - [ ] Customer platform NPS & experience feedback submission
 - [ ] Merchant marketing suite: discount voucher & banner campaign manager (standard non-AI)
 - [ ] Merchant revenue analytics & sales reports

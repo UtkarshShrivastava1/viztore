@@ -1,4 +1,9 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import { MapPin, ChevronDown } from "lucide-react";
+import { useAuthStore } from "@/stores/auth.store";
+import { useLocationStore } from "@/stores/location.store";
 
 interface LocationBarProps {
   name?: string;
@@ -6,9 +11,21 @@ interface LocationBarProps {
 }
 
 export default function LocationBar({
-  name = "Harish Kumar",
-  address = "Q No- 6/B, Street -13, Sector -2, Bhilai",
+  name: propName,
+  address: propAddress,
 }: LocationBarProps) {
+  const [mounted, setMounted] = useState(false);
+  const authUser = useAuthStore((state) => state.user);
+  const locationAddress = useLocationStore((state) => state.address);
+  const locationIsSet = useLocationStore((state) => state.isSet);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const name = mounted ? (propName || authUser?.fullName || "Customer") : "Customer";
+  const address = mounted ? (propAddress || (locationIsSet ? locationAddress : "Select Location")) : "Select Location";
+
   return (
     <div className="px-4 mb-3.5">
       <button
