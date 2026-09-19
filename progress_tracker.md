@@ -195,6 +195,7 @@ Every online order placed through `apps/web` generates an authoritative, complia
 - [x] Vinay Task 1 (Responsive Storefront & Account Hub) — Merged via PR #4
 - [x] Vinay Task 2 (Discovery, Catalog PLP, Product PDP & Storefronts) — Merged via PR #6
 - [x] Vinay Task 3 (Home Discovery, Notifications Dropdown, Wishlist Flyout & Deals Ecosystem) — Merged via PR #9
+- [ ] Vinay Task 4 (Cart & 4-Step Checkout Experience - 10 Screens) — In Progress (`TASK-VIN-04`)
 - [x] Tier 1 Online Purchase Invoice Endpoint & Printable Bill (`apps/web` + `apps/merchant`)
 - [x] WhatsApp Delivery Partner Dispatch Engine & Link Generator
 - [ ] Staging Cloud Deployment (Railway/Render + Vercel)
