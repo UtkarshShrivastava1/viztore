@@ -111,7 +111,14 @@ export default function SupportPage() {
   );
 }
 
-function QuickHelpIcon({ icon, label, bg, border }: any) {
+type QuickHelpIconProps = {
+  icon: React.ReactNode;
+  label: string;
+  bg: string;
+  border: string;
+};
+
+function QuickHelpIcon({ icon, label, bg, border }: QuickHelpIconProps) {
   return (
     <div className="flex flex-col items-center w-[72px] shrink-0 gap-2 cursor-pointer group">
       <div className={`flex h-14 w-14 items-center justify-center rounded-full border ${border} ${bg} transition-transform group-hover:scale-105`}>
@@ -133,7 +140,16 @@ function HelpTopic({ text }: { text: string }) {
   );
 }
 
-function ContactCard({ icon, bg, title, desc, action, actionColor }: any) {
+type ContactCardProps = {
+  icon: React.ReactNode;
+  bg: string;
+  title: string;
+  desc: string;
+  action: string;
+  actionColor: string;
+};
+
+function ContactCard({ icon, bg, title, desc, action, actionColor }: ContactCardProps) {
   return (
     <div className="flex w-[160px] shrink-0 flex-col rounded-xl border border-gray-200 bg-white p-4 shadow-sm cursor-pointer hover:border-[#1668F6] transition-colors">
       <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${bg} mb-3`}>
