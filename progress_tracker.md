@@ -190,8 +190,10 @@ Every online order placed through `apps/web` generates an authoritative, complia
 - [x] Abhay Task 3 (Product Catalog & Add Product Wizard) — Merged
 - [x] Abhay Task 4 (Seller Registration & Onboarding Pipeline) — Merged
 - [x] Abhay Task 5 (Inventory Management Suite) — Merged
-- [x] Vinay Task 1 (Responsive Storefront & Account Hub) — Merged
-- [x] Vinay Task 2 (Discovery, Catalog PLP, Product PDP & Storefronts) — Merged
+- [x] Abhay Task 6 (Commercial Billing & Invoicing Suite - 7 Screens) — Merged via PR #8
+- [x] Vinay Task 1 (Responsive Storefront & Account Hub) — Merged via PR #4
+- [x] Vinay Task 2 (Discovery, Catalog PLP, Product PDP & Storefronts) — Merged via PR #6
+- [x] Vinay Task 3 (Home Discovery, Notifications Dropdown, Wishlist Flyout & Deals Ecosystem) — Merged via PR #9
 - [x] Tier 1 Online Purchase Invoice Endpoint & Printable Bill (`apps/web` + `apps/merchant`)
 - [x] WhatsApp Delivery Partner Dispatch Engine & Link Generator
 - [ ] Staging Cloud Deployment (Railway/Render + Vercel)
