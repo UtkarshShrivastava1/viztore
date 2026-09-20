@@ -133,11 +133,14 @@ interface OrderStoreState {
 
 export function mapApiOrderToMerchantRecord(apiOrder: any): MerchantOrderRecord {
   let mappedStatus: OrderStatus = 'new';
-  if (apiOrder.status === 'confirmed') mappedStatus = 'accepted';
-  else if (apiOrder.status === 'packed') mappedStatus = 'ready_to_ship';
-  else if (apiOrder.status === 'out_for_delivery') mappedStatus = 'shipped';
-  else if (apiOrder.status === 'delivered') mappedStatus = 'delivered';
-  else if (apiOrder.status === 'cancelled') mappedStatus = 'cancelled';
+  const raw = String(apiOrder.status || '').toUpperCase();
+  if (raw === 'CONFIRMED' || raw === 'ACCEPTED' || raw === 'PROCESSING') mappedStatus = 'accepted';
+  else if (raw === 'PACKED' || raw === 'READY_TO_SHIP') mappedStatus = 'ready_to_ship';
+  else if (raw === 'SHIPPED' || raw === 'OUT_FOR_DELIVERY') mappedStatus = 'shipped';
+  else if (raw === 'DELIVERED') mappedStatus = 'delivered';
+  else if (raw === 'CANCELLED') mappedStatus = 'cancelled';
+  else if (raw === 'RETURN_REQUESTED') mappedStatus = 'return_requested';
+  else if (raw === 'RETURNED') mappedStatus = 'returned';
   else mappedStatus = 'new';
 
   const items: OrderItemDetail[] = (apiOrder.items || []).map((it: any, idx: number) => ({
@@ -231,135 +234,166 @@ export function mapApiOrderToMerchantRecord(apiOrder: any): MerchantOrderRecord 
   };
 }
 
-export const useOrderStore = create<OrderStoreState>((set, get) => ({
-  orders: [],
-  isLoading: false,
-  error: null,
-  activeTab: 'new_orders',
-  searchQuery: '',
-  paymentStatusFilter: 'all',
-  orderStatusFilter: 'all',
-  fulfillmentTypeFilter: 'all',
-  dateRange: 'Recent Orders',
-  selectedOrderIds: [],
-
-  fetchOrders: async (storeId?: string) => {
-    set({ isLoading: true, error: null });
-    try {
-      const endpoint = storeId ? `/orders/store/${storeId}` : '/orders/all';
-      const rawData = await api.get<any[]>(endpoint).catch(async () => {
-        // Fallback to my-orders if /orders/all is forbidden
-        return await api.get<any[]>('/orders');
-      });
-      const orderList = Array.isArray(rawData) ? rawData : (rawData as any)?.data || [];
-      const mapped = orderList.map(mapApiOrderToMerchantRecord);
-      set({ orders: mapped, isLoading: false });
-    } catch (err: any) {
-      console.warn('Could not fetch orders from API:', err?.message || err);
-      set({ orders: [], isLoading: false, error: err?.message || 'Failed to fetch orders' });
+export const useOrderStore = create<OrderStoreState>((set, get) => {
+  const getInitialTab = (): OrderTab => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('merchant_active_order_tab') as OrderTab | null;
+      if (saved) return saved;
     }
-  },
+    return 'new_orders';
+  };
 
-  setActiveTab: (tab) => set({ activeTab: tab, selectedOrderIds: [] }),
-  setSearchQuery: (query) => set({ searchQuery: query }),
-  setPaymentStatusFilter: (status) => set({ paymentStatusFilter: status }),
-  setOrderStatusFilter: (status) => set({ orderStatusFilter: status }),
-  setFulfillmentTypeFilter: (type) => set({ fulfillmentTypeFilter: type }),
-  setDateRange: (range) => set({ dateRange: range }),
+  return {
+    orders: [],
+    isLoading: false,
+    error: null,
+    activeTab: getInitialTab(),
+    searchQuery: '',
+    paymentStatusFilter: 'all',
+    orderStatusFilter: 'all',
+    fulfillmentTypeFilter: 'all',
+    dateRange: 'Recent Orders',
+    selectedOrderIds: [],
 
-  toggleOrderSelection: (orderId) =>
-    set((state) => ({
-      selectedOrderIds: state.selectedOrderIds.includes(orderId)
-        ? state.selectedOrderIds.filter((id) => id !== orderId)
-        : [...state.selectedOrderIds, orderId],
-    })),
+    fetchOrders: async (storeId?: string) => {
+      set({ isLoading: true, error: null });
+      try {
+        const endpoint = storeId ? `/orders/store/${storeId}` : '/orders/all';
+        const rawData = await api.get<any[]>(endpoint).catch(async () => {
+          // Fallback to my-orders if /orders/all is forbidden
+          return await api.get<any[]>('/orders');
+        });
+        const orderList = Array.isArray(rawData) ? rawData : (rawData as any)?.data || [];
+        const mapped = orderList.map(mapApiOrderToMerchantRecord);
+        set({ orders: mapped, isLoading: false });
+      } catch (err: any) {
+        console.warn('Could not fetch orders from API:', err?.message || err);
+        set({ orders: [], isLoading: false, error: err?.message || 'Failed to fetch orders' });
+      }
+    },
 
-  selectAllOrders: (orderIds) => set({ selectedOrderIds: orderIds }),
-  clearSelection: () => set({ selectedOrderIds: [] }),
+    setActiveTab: (tab) => {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('merchant_active_order_tab', tab);
+      }
+      set({ activeTab: tab, selectedOrderIds: [] });
+    },
+    setSearchQuery: (query) => set({ searchQuery: query }),
+    setPaymentStatusFilter: (status) => set({ paymentStatusFilter: status }),
+    setOrderStatusFilter: (status) => set({ orderStatusFilter: status }),
+    setFulfillmentTypeFilter: (type) => set({ fulfillmentTypeFilter: type }),
+    setDateRange: (range) => set({ dateRange: range }),
 
-  acceptOrder: (orderId) => {
-    ordersApi.updateOrderStatus(orderId, 'confirmed').catch((err) => {
-      console.warn('API update order status error:', err);
-    });
-    set((state) => ({
-      orders: state.orders.map((o) =>
-        o.id === orderId
-          ? { ...o, status: 'accepted', currentStageName: 'Accepted (Just now)' }
-          : o
-      ),
-    }));
-  },
+    toggleOrderSelection: (orderId) =>
+      set((state) => ({
+        selectedOrderIds: state.selectedOrderIds.includes(orderId)
+          ? state.selectedOrderIds.filter((id) => id !== orderId)
+          : [...state.selectedOrderIds, orderId],
+      })),
 
-  acceptAllNewOrders: () =>
-    set((state) => ({
-      orders: state.orders.map((o) =>
-        o.status === 'new'
-          ? { ...o, status: 'accepted', currentStageName: 'Accepted (Just now)' }
-          : o
-      ),
-    })),
+    selectAllOrders: (orderIds) => set({ selectedOrderIds: orderIds }),
+    clearSelection: () => set({ selectedOrderIds: [] }),
 
-  rejectOrder: (orderId) => {
-    ordersApi.updateOrderStatus(orderId, 'cancelled').catch((err) => {
-      console.warn('API update order status error:', err);
-    });
-    set((state) => ({
-      orders: state.orders.map((o) =>
-        o.id === orderId
-          ? {
-              ...o,
-              status: 'cancelled',
-              cancellation: {
-                reason: 'Rejected by Merchant',
-                refundStatus: 'Refund Initiated',
-              },
-              currentStageName: 'Cancelled (Just now)',
-            }
-          : o
-      ),
-    }));
-  },
+    acceptOrder: async (orderId) => {
+      try {
+        await ordersApi.updateOrderStatus(orderId, 'CONFIRMED');
+      } catch (err) {
+        console.warn('API update order status error:', err);
+      }
+      set((state) => ({
+        orders: state.orders.map((o) =>
+          o.id === orderId
+            ? { ...o, status: 'accepted', currentStageName: 'Accepted (Just now)' }
+            : o
+        ),
+      }));
+    },
 
-  markReadyToShip: (orderId) => {
-    ordersApi.updateOrderStatus(orderId, 'packed').catch((err) => {
-      console.warn('API update order status error:', err);
-    });
-    set((state) => ({
-      orders: state.orders.map((o) =>
-        o.id === orderId
-          ? { ...o, status: 'ready_to_ship', currentStageName: 'Ready to Ship (Just now)' }
-          : o
-      ),
-    }));
-  },
+    acceptAllNewOrders: async () => {
+      const newOrders = get().orders.filter((o) => o.status === 'new');
+      for (const order of newOrders) {
+        try {
+          await ordersApi.updateOrderStatus(order.id, 'CONFIRMED');
+        } catch (err) {
+          console.warn('API update order status error:', err);
+        }
+      }
+      set((state) => ({
+        orders: state.orders.map((o) =>
+          o.status === 'new'
+            ? { ...o, status: 'accepted', currentStageName: 'Accepted (Just now)' }
+            : o
+        ),
+      }));
+    },
 
-  dispatchOrder: (orderId) => {
-    ordersApi.updateOrderStatus(orderId, 'out_for_delivery').catch((err) => {
-      console.warn('API update order status error:', err);
-    });
-    set((state) => ({
-      orders: state.orders.map((o) =>
-        o.id === orderId
-          ? {
-              ...o,
-              status: 'shipped',
-              courier: {
-                partner: 'Local Express Delivery',
-                trackingId: `TRK-${Math.floor(100000 + Math.random() * 900000)}`,
-                trackingUrl: '#track',
-              },
-              timestamps: {
-                ...o.timestamps,
-                shippedAt: 'Just now',
-              },
-              currentStageName: 'Shipped (Just now)',
-            }
-          : o
-      ),
-    }));
-  },
+    rejectOrder: async (orderId) => {
+      try {
+        await ordersApi.updateOrderStatus(orderId, 'CANCELLED');
+      } catch (err) {
+        console.warn('API update order status error:', err);
+      }
+      set((state) => ({
+        orders: state.orders.map((o) =>
+          o.id === orderId
+            ? {
+                ...o,
+                status: 'cancelled',
+                cancellation: {
+                  reason: 'Rejected by Merchant',
+                  refundStatus: 'Refund Initiated',
+                },
+                currentStageName: 'Cancelled (Just now)',
+              }
+            : o
+        ),
+      }));
+    },
 
-  addManualOrder: (newOrder) => {
+    markReadyToShip: async (orderId) => {
+      try {
+        await ordersApi.updateOrderStatus(orderId, 'PACKED');
+      } catch (err) {
+        console.warn('API update order status error:', err);
+      }
+      set((state) => ({
+        orders: state.orders.map((o) =>
+          o.id === orderId
+            ? { ...o, status: 'ready_to_ship', currentStageName: 'Ready to Ship (Just now)' }
+            : o
+        ),
+      }));
+    },
+
+    dispatchOrder: async (orderId) => {
+      try {
+        await ordersApi.updateOrderStatus(orderId, 'OUT_FOR_DELIVERY');
+      } catch (err) {
+        console.warn('API update order status error:', err);
+      }
+      set((state) => ({
+        orders: state.orders.map((o) =>
+          o.id === orderId
+            ? {
+                ...o,
+                status: 'shipped',
+                courier: {
+                  partner: 'Local Express Delivery',
+                  trackingId: `TRK-${Math.floor(100000 + Math.random() * 900000)}`,
+                  trackingUrl: '#track',
+                },
+                timestamps: {
+                  ...o.timestamps,
+                  shippedAt: 'Just now',
+                },
+                currentStageName: 'Shipped (Just now)',
+              }
+            : o
+        ),
+      }));
+    },
+
+    addManualOrder: (newOrder) => {
     const nextNum = Math.floor(10330 + Math.random() * 50);
     const fullOrder: MerchantOrderRecord = {
       id: `ord-man-${Date.now()}`,
@@ -410,4 +444,5 @@ export const useOrderStore = create<OrderStoreState>((set, get) => ({
       activeTab: 'new_orders',
     }));
   },
-}));
+  };
+});

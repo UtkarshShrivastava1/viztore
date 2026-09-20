@@ -59,7 +59,8 @@ export const App: React.FC = () => {
     initialize();
   }, [initialize]);
 
-  // If already authenticated and on login or default root, transition to dashboard
+  // If already authenticated and on login or default root, transition to dashboard.
+  // When logged out, transition back to login.
   useEffect(() => {
     if (isAuthenticated && (currentView === 'login' || currentView === 'landing')) {
       if (typeof window !== 'undefined') {
@@ -70,6 +71,8 @@ export const App: React.FC = () => {
         }
       }
       setCurrentView('dashboard');
+    } else if (!isAuthenticated && currentView === 'dashboard') {
+      setCurrentView('login');
     }
   }, [isAuthenticated, currentView]);
 

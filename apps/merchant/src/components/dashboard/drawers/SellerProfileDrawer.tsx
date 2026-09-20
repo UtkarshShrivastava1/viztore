@@ -29,13 +29,16 @@ export const SellerProfileDrawer: React.FC<SellerProfileDrawerProps> = ({
   onClose,
   onOpenProfileInfo,
 }) => {
-  const { user, logout } = useAuthStore();
+  const { user, currentStore, logout } = useAuthStore();
 
   if (!isOpen) return null;
 
-  const storeName = user?.fullName || 'Fashion Hub';
-  const email = user?.email || 'support@fashionhub.com';
-  const phone = user?.phone || '+91 98765 43210';
+  const storeName = currentStore?.name || user?.fullName || 'My Store';
+  const email = currentStore?.email || user?.email || 'merchant@example.com';
+  const phone = currentStore?.phone || user?.phone || '+91 98765 43210';
+  const sellerId = currentStore?._id ? `SLR-${String(currentStore._id).slice(-5).toUpperCase()}` : 'SLR-10245';
+  const businessType = currentStore?.category ? `${currentStore.category} Store` : 'Retail Store';
+  const gstin = currentStore?.legalDetails?.gstin || '22ABCDE1234F1Z5';
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
@@ -83,21 +86,21 @@ export const SellerProfileDrawer: React.FC<SellerProfileDrawerProps> = ({
               <span className="flex items-center gap-2 text-slate-500">
                 <User className="w-3.5 h-3.5" /> Seller ID
               </span>
-              <span className="font-semibold text-slate-800 font-mono">SLR-10245</span>
+              <span className="font-semibold text-slate-800 font-mono">{sellerId}</span>
             </div>
 
             <div className="flex items-center justify-between py-1 border-b border-slate-50">
               <span className="flex items-center gap-2 text-slate-500">
                 <Building className="w-3.5 h-3.5" /> Business Type
               </span>
-              <span className="font-semibold text-slate-800">Retail Store</span>
+              <span className="font-semibold text-slate-800">{businessType}</span>
             </div>
 
             <div className="flex items-center justify-between py-1 border-b border-slate-50">
               <span className="flex items-center gap-2 text-slate-500">
                 <FileText className="w-3.5 h-3.5" /> GSTIN
               </span>
-              <span className="font-semibold text-slate-800 font-mono">27ABCDE1234F1Z5</span>
+              <span className="font-semibold text-slate-800 font-mono">{gstin}</span>
             </div>
 
             <div className="flex items-center justify-between py-1 border-b border-slate-50">
@@ -119,9 +122,19 @@ export const SellerProfileDrawer: React.FC<SellerProfileDrawerProps> = ({
                 <MapPin className="w-3.5 h-3.5" /> Business Address
               </span>
               <span className="font-medium text-slate-800 text-right max-w-[220px] text-[11px] leading-tight">
-                Fashion Hub Store<br />
-                123, MG Road, Andheri West,<br />
-                Mumbai, Maharashtra - 400058
+                {currentStore?.address ? (
+                  <>
+                    {currentStore.name}<br />
+                    {currentStore.address.street}{currentStore.address.landmark ? `, ${currentStore.address.landmark}` : ''},<br />
+                    {currentStore.address.city}, {currentStore.address.state} - {currentStore.address.pincode}
+                  </>
+                ) : (
+                  <>
+                    Store Location<br />
+                    Station Road, Ganj Para,<br />
+                    Durg, Chhattisgarh - 491001
+                  </>
+                )}
               </span>
             </div>
 
@@ -129,7 +142,11 @@ export const SellerProfileDrawer: React.FC<SellerProfileDrawerProps> = ({
               <span className="flex items-center gap-2 text-slate-500">
                 <Calendar className="w-3.5 h-3.5" /> Member Since
               </span>
-              <span className="font-medium text-slate-800">12 Jan 2024</span>
+              <span className="font-medium text-slate-800">
+                {user?.createdAt
+                  ? new Date(user.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                  : '12 Jan 2024'}
+              </span>
             </div>
 
             <div className="flex items-center justify-between py-1">
@@ -225,7 +242,10 @@ export const SellerProfileDrawer: React.FC<SellerProfileDrawerProps> = ({
         <div className="p-4 border-t border-slate-100">
           <button
             type="button"
-            onClick={logout}
+            onClick={() => {
+              onClose();
+              logout();
+            }}
             className="w-full py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center justify-center gap-2 transition-all shadow-2xs"
           >
             <LogOut className="w-4 h-4" />

@@ -100,7 +100,7 @@ export const OrdersPage: React.FC<OrdersPageProps> = ({ onOpenCreateOrder }) => 
     }
   };
 
-  const totalCount = orders.length || 25;
+  const totalCount = orders.length;
 
   return (
     <div className="space-y-4 max-w-[1600px] mx-auto animate-in fade-in-50 duration-200">

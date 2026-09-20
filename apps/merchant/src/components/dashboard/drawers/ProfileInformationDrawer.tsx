@@ -11,19 +11,23 @@ export const ProfileInformationDrawer: React.FC<ProfileInformationDrawerProps> =
   isOpen,
   onClose,
 }) => {
-  const { user } = useAuthStore();
+  const { user, currentStore } = useAuthStore();
 
   if (!isOpen) return null;
 
-  const storeName = user?.fullName || 'Fashion Hub';
-  const email = user?.email || 'support@fashionhub.com';
-  const phone = user?.phone || '+91 98765 43210';
+  const storeName = currentStore?.name || user?.fullName || 'My Store';
+  const email = currentStore?.email || user?.email || 'merchant@example.com';
+  const phone = currentStore?.phone || user?.phone || '+91 98765 43210';
+  const description = currentStore?.description || 'Your local store delivering fresh, quality products right to your doorstep.';
+  const bankName = currentStore?.bankDetails?.bankName || 'HDFC Bank';
+  const accountHolder = currentStore?.bankDetails?.accountHolderName || storeName;
+  const accountNumber = currentStore?.bankDetails?.accountNumber || '50200012345678';
+  const ifscCode = currentStore?.bankDetails?.ifscCode || 'HDFC0001234';
 
   const categories = [
-    { name: 'Fashion', active: true },
+    { name: currentStore?.category || 'Retail', active: true },
     { name: 'Apparel', active: false },
-    { name: "Men's Wear", active: false },
-    { name: "Women's Wear", active: false },
+    { name: 'Essentials', active: false },
     { name: 'Accessories', active: false },
   ];
 
@@ -97,8 +101,19 @@ export const ProfileInformationDrawer: React.FC<ProfileInformationDrawerProps> =
               <div className="flex items-start justify-between py-0.5">
                 <span className="text-slate-500 shrink-0">Business Address</span>
                 <span className="font-medium text-slate-800 text-right max-w-[220px] text-[11px] leading-tight">
-                  123, MG Road, Andheri West,<br />
-                  Mumbai, Maharashtra - 400058
+                  {currentStore?.address ? (
+                    <>
+                      {currentStore.name}<br />
+                      {currentStore.address.street}{currentStore.address.landmark ? `, ${currentStore.address.landmark}` : ''},<br />
+                      {currentStore.address.city}, {currentStore.address.state} - {currentStore.address.pincode}
+                    </>
+                  ) : (
+                    <>
+                      Store Location<br />
+                      Station Road, Ganj Para,<br />
+                      Durg, Chhattisgarh - 491001
+                    </>
+                  )}
                 </span>
               </div>
             </div>
@@ -123,19 +138,19 @@ export const ProfileInformationDrawer: React.FC<ProfileInformationDrawerProps> =
             <div className="space-y-2 text-xs">
               <div className="flex items-center justify-between py-0.5">
                 <span className="text-slate-500">Bank Name</span>
-                <span className="font-semibold text-slate-800">HDFC Bank</span>
+                <span className="font-semibold text-slate-800">{bankName}</span>
               </div>
               <div className="flex items-center justify-between py-0.5">
                 <span className="text-slate-500">Account Holder Name</span>
-                <span className="font-semibold text-slate-800">{storeName}</span>
+                <span className="font-semibold text-slate-800">{accountHolder}</span>
               </div>
               <div className="flex items-center justify-between py-0.5">
                 <span className="text-slate-500">Account Number</span>
-                <span className="font-mono text-slate-800 font-semibold">50200012345678</span>
+                <span className="font-mono text-slate-800 font-semibold">{accountNumber}</span>
               </div>
               <div className="flex items-center justify-between py-0.5">
                 <span className="text-slate-500">IFSC Code</span>
-                <span className="font-mono text-slate-800 font-semibold">HDFC0001234</span>
+                <span className="font-mono text-slate-800 font-semibold">{ifscCode}</span>
               </div>
             </div>
           </div>
@@ -160,7 +175,7 @@ export const ProfileInformationDrawer: React.FC<ProfileInformationDrawerProps> =
               <div className="flex items-start justify-between">
                 <span className="text-slate-500 shrink-0">Store Description</span>
                 <span className="font-medium text-slate-800 text-right max-w-[220px] text-[11px] leading-tight">
-                  We bring you the latest fashion collection with best quality and affordable prices.
+                  {description}
                 </span>
               </div>
 
@@ -185,9 +200,8 @@ export const ProfileInformationDrawer: React.FC<ProfileInformationDrawerProps> =
               <div className="flex items-center justify-between pt-1">
                 <span className="text-slate-500">Store Logo</span>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-[#081028] text-white flex flex-col items-center justify-center text-[7px] font-black uppercase leading-tight tracking-tight shadow-sm shrink-0">
-                    <span>FASHION</span>
-                    <span>HUB</span>
+                  <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold shadow-sm shrink-0">
+                    {storeName.slice(0, 2).toUpperCase()}
                   </div>
                   <div>
                     <span className="text-xs font-semibold text-slate-800 block leading-tight">{storeName}</span>

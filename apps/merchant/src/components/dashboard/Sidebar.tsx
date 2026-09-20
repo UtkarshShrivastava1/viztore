@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { branding } from '../../lib/branding.js';
 import { useAuthStore } from '../../stores/authStore.js';
+import { useOrderStore } from '../../stores/orderStore.js';
 import { useBillingStore, BillingSubTab } from '../../stores/billingStore.js';
 
 export type DashboardTab =
@@ -61,24 +62,6 @@ interface MenuItem {
   hasChevron?: boolean;
 }
 
-const menuItems: MenuItem[] = [
-  { id: 'overview', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'orders', label: 'Orders', icon: ShoppingBag, badge: 25, badgeColor: 'muted' },
-  { id: 'catalog', label: 'Products / Catalog', icon: Package },
-  { id: 'inventory', label: 'Inventory', icon: Boxes },
-  { id: 'billing', label: 'Billing & Invoicing', icon: Receipt, badge: 'New', badgeColor: 'green' },
-  { id: 'customers', label: 'Customers', icon: Users },
-  { id: 'wallet', label: 'Wallet', icon: Wallet, badge: '₹32,450', badgeColor: 'dark' },
-  { id: 'expenses', label: 'Expenses', icon: ReceiptText },
-  { id: 'returns', label: 'Returns & Refunds', icon: RotateCcw, badge: 7, badgeColor: 'muted' },
-  { id: 'payouts', label: 'Payouts / Settlements', icon: Landmark },
-  { id: 'analytics', label: 'Reports & Analytics', icon: BarChart3 },
-  { id: 'marketing', label: 'Marketing', icon: Megaphone, hasChevron: true },
-  { id: 'store', label: 'Store Management', icon: Store, hasChevron: true },
-  { id: 'settings', label: 'Settings', icon: Settings },
-  { id: 'support', label: 'Support', icon: Headphones },
-];
-
 const billingSubItems = [
   { id: 'invoices', label: 'Invoices', icon: ReceiptText },
   { id: 'quotes', label: 'Estimates / Quotes', icon: FileText },
@@ -91,7 +74,41 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onToggleCollapse,
 }) => {
   const { logout } = useAuthStore();
+  const { orders } = useOrderStore();
   const { activeSubTab, setActiveSubTab, setActiveView } = useBillingStore();
+
+  const newOrdersCount = orders.filter((o) => o.status === 'new').length;
+  const returnsCount = orders.filter((o) => o.status === 'return_requested' || o.status === 'returned').length;
+
+  const menuItems: MenuItem[] = [
+    { id: 'overview', label: 'Dashboard', icon: LayoutDashboard },
+    {
+      id: 'orders',
+      label: 'Orders',
+      icon: ShoppingBag,
+      badge: newOrdersCount > 0 ? newOrdersCount : undefined,
+      badgeColor: 'blue',
+    },
+    { id: 'catalog', label: 'Products / Catalog', icon: Package },
+    { id: 'inventory', label: 'Inventory', icon: Boxes },
+    { id: 'billing', label: 'Billing & Invoicing', icon: Receipt, badge: 'New', badgeColor: 'green' },
+    { id: 'customers', label: 'Customers', icon: Users },
+    { id: 'wallet', label: 'Wallet', icon: Wallet },
+    { id: 'expenses', label: 'Expenses', icon: ReceiptText },
+    {
+      id: 'returns',
+      label: 'Returns & Refunds',
+      icon: RotateCcw,
+      badge: returnsCount > 0 ? returnsCount : undefined,
+      badgeColor: 'muted',
+    },
+    { id: 'payouts', label: 'Payouts / Settlements', icon: Landmark },
+    { id: 'analytics', label: 'Reports & Analytics', icon: BarChart3 },
+    { id: 'marketing', label: 'Marketing', icon: Megaphone, hasChevron: true },
+    { id: 'store', label: 'Store Management', icon: Store, hasChevron: true },
+    { id: 'settings', label: 'Settings', icon: Settings },
+    { id: 'support', label: 'Support', icon: Headphones },
+  ];
 
   return (
     <aside

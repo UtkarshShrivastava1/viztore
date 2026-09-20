@@ -20,14 +20,14 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ isCollapsed, onToggleMobileMenu }) => {
-  const { user } = useAuthStore();
+  const { user, currentStore } = useAuthStore();
 
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isProfileInfoOpen, setIsProfileInfoOpen] = useState(false);
 
-  const storeName = user?.fullName || 'Fashion Hub';
+  const storeName = currentStore?.name || user?.fullName || 'My Store';
   const avatarInitials = storeName.slice(0, 2).toUpperCase();
 
   return (

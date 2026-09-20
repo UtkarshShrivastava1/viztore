@@ -10,14 +10,14 @@ export const OrdersTabsBar: React.FC<OrdersTabsBarProps> = ({ activeTab, onSelec
   const { orders } = useOrderStore();
 
   const counts = {
-    new_orders: orders.filter((o) => o.status === 'new').length || 25,
-    accepted: orders.filter((o) => o.status === 'accepted').length || 18,
-    ready_to_ship: orders.filter((o) => o.status === 'ready_to_ship').length || 12,
-    shipped: orders.filter((o) => o.status === 'shipped').length || 45,
-    delivered: orders.filter((o) => o.status === 'delivered').length || 20,
-    all_orders: 128,
-    cancelled: orders.filter((o) => o.status === 'cancelled').length || 5,
-    returns: orders.filter((o) => o.status === 'return_requested' || o.status === 'returned').length || 3,
+    new_orders: orders.filter((o) => o.status === 'new').length,
+    accepted: orders.filter((o) => o.status === 'accepted').length,
+    ready_to_ship: orders.filter((o) => o.status === 'ready_to_ship').length,
+    shipped: orders.filter((o) => o.status === 'shipped').length,
+    delivered: orders.filter((o) => o.status === 'delivered').length,
+    all_orders: orders.length,
+    cancelled: orders.filter((o) => o.status === 'cancelled').length,
+    returns: orders.filter((o) => o.status === 'return_requested' || o.status === 'returned').length,
   };
 
   const tabs: {

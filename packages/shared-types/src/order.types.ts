@@ -58,7 +58,10 @@ export const createOrderSchema = z.object({
 });
 
 export const updateOrderStatusSchema = z.object({
-  status: z.nativeEnum(OrderStatus),
+  status: z.preprocess(
+    (val) => (typeof val === 'string' ? val.toUpperCase() : val),
+    z.nativeEnum(OrderStatus),
+  ),
   deliveryOtp: z.string().length(4, 'Delivery OTP must be 4 digits').optional(),
 });
 
