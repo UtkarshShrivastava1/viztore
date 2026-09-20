@@ -17,14 +17,14 @@ interface LocationState {
 export const useLocationStore = create<LocationState>()(
   persist(
     (set) => ({
-      lng: 77.2090,
-      lat: 28.6139,
-      address: 'New Delhi, India',
+      lng: 81.3800,
+      lat: 21.1938,
+      address: 'Bhilai, Chhattisgarh',
       isSet: false,
       setLocation: (lng, lat, address) =>
         set({ lng, lat, address, isSet: true }),
       clearLocation: () =>
-        set({ lng: 77.2090, lat: 28.6139, address: 'New Delhi, India', isSet: false }),
+        set({ lng: 81.3800, lat: 21.1938, address: 'Bhilai, Chhattisgarh', isSet: false }),
     }),
     {
       name: 'customer-location',

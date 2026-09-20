@@ -101,9 +101,13 @@ export default function CheckoutPage() {
   const totalMrp = items.reduce((sum, item) => sum + Math.round(item.unitPrice * 1.15) * item.quantity, 0);
   const discountOnMrp = Math.max(0, totalMrp - subtotal);
 
+  const primarySavedAddress = user?.addresses?.[0]
+    ? `${user.addresses[0].street}, ${user.addresses[0].city}, ${user.addresses[0].state || 'Chhattisgarh'} - ${user.addresses[0].pincode || '490006'}`
+    : null;
+
   const displayAddress = locationIsSet && locationAddress 
     ? locationAddress 
-    : '12-B, Sea Breeze Apts, Bandra West, Mumbai, Maharashtra - 400050';
+    : (primarySavedAddress || locationAddress || 'Civic Centre, Bhilai, Chhattisgarh - 490006');
 
   const handlePlaceOrder = async () => {
     if (isSubmitting) return;

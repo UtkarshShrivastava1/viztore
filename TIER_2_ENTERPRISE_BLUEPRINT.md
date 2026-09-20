@@ -595,9 +595,26 @@ Mount `@bull-board/express` under an admin-authenticated route (`/api/v1/admin/q
 | **Barcode Support** | Printable barcode labels generated | High-speed USB/Bluetooth hardware scanner input |
 | **Financial Settlement** | Manual / Dashboard tracking | Automated Escrow, T+1 Rolling Bank Payouts, TDS 194-O |
 | **Logistics Model** | Direct store delivery with OTP | Hybrid Fleet: Store Staff + Pooled Telematics Engine |
+| **Location & Geocoding** | Free OpenStreetMap Nominatim + Durg/Bhilai/Raipur pre-cache | Commercial Google Maps Platform / Mapbox SDK + Live Places Autocomplete |
+| **Rider Tracking** | Step-by-step order lifecycle statuses | Real-time 5s background GPS telematics + Live map rendering |
+| **Geofencing & Delivery** | Fixed 3–4 km 2dsphere spatial radius | Dynamic polygon geofencing, route polylines & traffic-based ETA |
 | **User Roles** | Single merchant owner login | Multi-user granular Staff RBAC (Cashier, Manager, Owner) |
 | **Client Surfaces** | Customer Web + Merchant Panel | Web + Merchant Panel + Native Mobile App + POS Mode |
 | **Transactions & Queues**| In-memory EventBus + Atomic Updates | Multi-Doc ACID Transactions + BullMQ Persistent Queue + DLQ |
+
+---
+
+### 5.1 Advanced Geolocation & Telematics Pipeline (Tier 2 Roadmap)
+Following the initial launch in the **Durg, Bhilai, and Raipur** retail merchant ecosystem:
+1. **Commercial Map Provider Integration**:
+   - Upgrade from lightweight Nominatim / client lookup to Google Maps Platform / Mapbox SDK.
+   - Places Autocomplete with predictive keystroke debounce and session token optimization to reduce API billing.
+2. **Real-Time Rider Telematics (WebSocket + Redis Geospatial)**:
+   - Dedicated rider tracking background service streaming continuous coordinates every 5 seconds.
+   - Redis `GEOADD` and `GEORADIUS` caching layer for low-latency rider position queries.
+3. **Dynamic Geofence Polygon Routing**:
+   - Custom merchant delivery boundary polygons (replacing strict circular radii) respecting physical barriers like railway crossings and rivers in the Durg-Bhilai-Raipur twin-city zone.
+   - Traffic-aware real-time ETA engine displaying live arrival minutes on the customer order tracking view.
 
 ---
 

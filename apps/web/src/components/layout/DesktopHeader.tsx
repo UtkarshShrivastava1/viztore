@@ -48,6 +48,7 @@ export function DesktopHeader({
   const authOpenModal = useAuthStore((state) => state.openAuthModal);
   const locationAddress = useLocationStore((state) => state.address);
   const locationIsSet = useLocationStore((state) => state.isSet);
+  const setStoreLocation = useLocationStore((state) => state.setLocation);
   const rawCartCount = useCartStore((state) => state.items.reduce((sum, item) => sum + item.quantity, 0));
   
   const notificationCount = useNotificationStore((state) => state.unreadCount);
@@ -55,12 +56,19 @@ export function DesktopHeader({
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    if (!locationIsSet && authUser?.addresses?.[0]) {
+      const primary = authUser.addresses[0];
+      const coords = primary.coordinates || [81.3800, 21.1938];
+      setStoreLocation(coords[0], coords[1], `${primary.street}, ${primary.city}`);
+    }
+  }, [authUser, locationIsSet, setStoreLocation]);
 
   const cartCount = mounted ? (propCartCount !== undefined ? propCartCount : rawCartCount) : 0;
   const isAuthenticated = mounted ? (propIsAuthenticated !== undefined ? propIsAuthenticated : authIsAuthenticated) : false;
   const userName = mounted ? (propUserName || authUser?.fullName || "Customer") : "Customer";
-  const address = mounted ? (propAddress || (locationIsSet ? locationAddress : "Select Location")) : "Select Location";
+  const address = mounted 
+    ? (propAddress || (locationIsSet ? locationAddress : (authUser?.addresses?.[0] ? `${authUser.addresses[0].street}, ${authUser.addresses[0].city}` : locationAddress))) 
+    : "Bhilai, Chhattisgarh";
 
   const handleAuthClick = () => {
     if (isAuthenticated) {

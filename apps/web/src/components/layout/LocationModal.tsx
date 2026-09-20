@@ -5,20 +5,22 @@ import { MapPin, X, Navigation, Check, Search, Home, Briefcase } from 'lucide-re
 import { useLocationStore } from '@/stores/location.store';
 import { useAuthStore } from '@/stores/auth.store';
 
+import { reverseGeocode, forwardGeocode } from '@/lib/location/geocoding';
+
 interface LocationModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
 const POPULAR_HUBS = [
-  { name: 'New Delhi', state: 'Delhi', lng: 77.2090, lat: 28.6139 },
+  { name: 'Bhilai', state: 'Chhattisgarh', lng: 81.3800, lat: 21.1938, isLaunch: true },
+  { name: 'Durg', state: 'Chhattisgarh', lng: 81.2849, lat: 21.1904, isLaunch: true },
+  { name: 'Raipur', state: 'Chhattisgarh', lng: 81.6296, lat: 21.2514, isLaunch: true },
   { name: 'Mumbai', state: 'Maharashtra', lng: 72.8777, lat: 19.0760 },
+  { name: 'New Delhi', state: 'Delhi', lng: 77.2090, lat: 28.6139 },
   { name: 'Bengaluru', state: 'Karnataka', lng: 77.5946, lat: 12.9716 },
   { name: 'Hyderabad', state: 'Telangana', lng: 78.4867, lat: 17.3850 },
-  { name: 'Pune', state: 'Maharashtra', lng: 73.8567, lat: 18.5204 },
   { name: 'Indore', state: 'Madhya Pradesh', lng: 75.8577, lat: 22.7196 },
-  { name: 'Kolkata', state: 'West Bengal', lng: 88.3639, lat: 22.5726 },
-  { name: 'Jaipur', state: 'Rajasthan', lng: 75.7873, lat: 26.9124 },
 ];
 
 export const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose }) => {
@@ -27,6 +29,7 @@ export const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose })
   
   const [customInput, setCustomInput] = useState('');
   const [isDetecting, setIsDetecting] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   if (!isOpen) return null;
@@ -46,31 +49,55 @@ export const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose })
     setErrorMsg(null);
 
     navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { longitude, latitude } = position.coords;
-        setLocation(longitude, latitude, 'Detected Location (Current Area)');
-        setIsDetecting(false);
-        onClose();
+      async (position) => {
+        try {
+          const { longitude, latitude } = position.coords;
+          const geocoded = await reverseGeocode(latitude, longitude);
+          setLocation(longitude, latitude, geocoded.address);
+          setIsDetecting(false);
+          onClose();
+        } catch {
+          const { longitude, latitude } = position.coords;
+          setLocation(longitude, latitude, `Current Location (${latitude.toFixed(3)}°N, ${longitude.toFixed(3)}°E)`);
+          setIsDetecting(false);
+          onClose();
+        }
       },
       (error) => {
         setIsDetecting(false);
         if (error.code === error.PERMISSION_DENIED) {
-          setErrorMsg('Location permission was denied. Please select a city below.');
+          setErrorMsg('Location permission was denied. Please select your city or area below.');
         } else {
-          setErrorMsg('Unable to retrieve your location. Please choose a city below.');
+          setErrorMsg('Unable to retrieve your location. Please enter your area or pincode below.');
         }
       },
       { timeout: 10000, enableHighAccuracy: true }
     );
   };
 
-  const handleCustomSubmit = (e: React.FormEvent) => {
+  const handleCustomSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!customInput.trim()) return;
+    if (!customInput.trim() || isSearching) return;
 
-    // Use default coordinates with customer custom address string
-    setLocation(currentLng || 77.2090, currentLat || 28.6139, customInput.trim());
-    onClose();
+    setIsSearching(true);
+    setErrorMsg(null);
+
+    try {
+      const geocoded = await forwardGeocode(customInput.trim());
+      if (geocoded) {
+        setLocation(geocoded.lng, geocoded.lat, geocoded.address);
+        setIsSearching(false);
+        onClose();
+      } else {
+        setLocation(currentLng || 81.3800, currentLat || 21.1938, customInput.trim());
+        setIsSearching(false);
+        onClose();
+      }
+    } catch {
+      setLocation(currentLng || 81.3800, currentLat || 21.1938, customInput.trim());
+      setIsSearching(false);
+      onClose();
+    }
   };
 
   return (
@@ -142,10 +169,10 @@ export const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose })
                 />
                 <button
                   type="submit"
-                  disabled={!customInput.trim()}
+                  disabled={!customInput.trim() || isSearching}
                   className="shrink-0 px-3.5 py-1.5 rounded-xl bg-[#1668F6] text-white text-xs font-bold disabled:opacity-40 hover:bg-blue-700 transition-colors"
                 >
-                  Apply
+                  {isSearching ? 'Locating...' : 'Apply'}
                 </button>
               </div>
             </form>
@@ -211,7 +238,16 @@ export const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose })
                         : 'border-surface-200 hover:border-surface-300 text-[#192168] bg-white hover:bg-surface-50'
                     }`}
                   >
-                    <span>{hub.name}</span>
+                    <span className="flex items-center gap-1.5">
+                      {hub.name}
+                      {(hub as any).isLaunch && (
+                        <span className={`text-[8px] px-1.5 py-0.2 rounded-full font-bold uppercase tracking-wider ${
+                          isSelected ? 'bg-white/20 text-white' : 'bg-emerald-50 text-emerald-600 border border-emerald-200'
+                        }`}>
+                          Launch
+                        </span>
+                      )}
+                    </span>
                     {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                   </button>
                 );

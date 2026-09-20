@@ -1,11 +1,23 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { User, Phone, Mail, Calendar, MapPin, ChevronDown, Camera, ShieldCheck } from 'lucide-react';
+import { User, Phone, Mail, Calendar, MapPin, ChevronDown, Camera, ShieldCheck, Navigation, Loader2, Check } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
+import { useLocationStore } from '@/stores/location.store';
+import { reverseGeocode } from '@/lib/location/geocoding';
 
 export default function EditProfilePage() {
   const user = useAuthStore((state) => state.user);
+  const locationAddress = useLocationStore((state) => state.address);
+  const setStoreLocation = useLocationStore((state) => state.setLocation);
+
+  const [isDetecting, setIsDetecting] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  const initialLocation = 
+    user?.addresses?.[0]
+      ? `${user.addresses[0].street}, ${user.addresses[0].city}`
+      : locationAddress || 'Bhilai, Chhattisgarh';
 
   const [formData, setFormData] = useState({
     fullName: user?.fullName || 'Customer Account',
@@ -13,19 +25,51 @@ export default function EditProfilePage() {
     email: user?.email || 'customer@example.com',
     dob: '12 Apr 1998',
     gender: 'Male',
-    location: 'Mumbai, Maharashtra',
+    location: initialLocation,
   });
 
   useEffect(() => {
     if (user) {
+      const userLoc = user.addresses?.[0] 
+        ? `${user.addresses[0].street}, ${user.addresses[0].city}`
+        : locationAddress;
       setFormData((prev) => ({
         ...prev,
         fullName: user.fullName || prev.fullName,
         email: user.email || prev.email,
         mobileNumber: user.phone ? `+91 ${user.phone}` : prev.mobileNumber,
+        location: userLoc || prev.location,
       }));
     }
-  }, [user]);
+  }, [user, locationAddress]);
+
+  const handleDetectGPS = () => {
+    if (!navigator.geolocation) return;
+    setIsDetecting(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const { latitude, longitude } = pos.coords;
+          const geocoded = await reverseGeocode(latitude, longitude);
+          setFormData((prev) => ({ ...prev, location: geocoded.address }));
+          setStoreLocation(longitude, latitude, geocoded.address);
+        } catch {
+          // ignore
+        } finally {
+          setIsDetecting(false);
+        }
+      },
+      () => {
+        setIsDetecting(false);
+      },
+      { timeout: 8000, enableHighAccuracy: true }
+    );
+  };
+
+  const handleSave = () => {
+    setSaveSuccess(true);
+    setTimeout(() => setSaveSuccess(false), 2500);
+  };
 
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -87,10 +131,22 @@ export default function EditProfilePage() {
             isDropdown
           />
           <FormField
-            label="Location"
+            label="Delivery Location / City"
             value={formData.location}
             onChange={(v) => handleChange('location', v)}
             icon={<MapPin className="h-5 w-5 text-gray-400" />}
+            rightAction={
+              <button
+                type="button"
+                onClick={handleDetectGPS}
+                disabled={isDetecting}
+                title="Detect Current GPS Location"
+                className="flex items-center gap-1 text-[11px] font-bold text-[#1668F6] bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-lg border border-blue-200 transition-colors"
+              >
+                <Navigation className={`w-3 h-3 ${isDetecting ? 'animate-spin' : ''}`} />
+                {isDetecting ? 'Locating...' : 'Detect'}
+              </button>
+            }
           />
         </div>
 
@@ -108,8 +164,21 @@ export default function EditProfilePage() {
         {/* Action Button */}
         <div className="fixed bottom-[72px] left-0 right-0 z-40 bg-white p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] md:bottom-0 md:relative md:shadow-none md:p-0 md:mt-8">
           <div className="mx-auto max-w-3xl">
-            <button className="flex w-full items-center justify-center rounded-xl bg-[#1668F6] py-3.5 text-base font-bold text-white shadow-md hover:bg-blue-700 transition">
-              Save Changes
+            <button 
+              type="button"
+              onClick={handleSave}
+              className={`flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-base font-bold text-white shadow-md transition ${
+                saveSuccess ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-[#1668F6] hover:bg-blue-700'
+              }`}
+            >
+              {saveSuccess ? (
+                <>
+                  <Check className="w-5 h-5 text-white stroke-[3]" />
+                  Profile Saved Successfully!
+                </>
+              ) : (
+                'Save Changes'
+              )}
             </button>
           </div>
         </div>
@@ -124,12 +193,14 @@ function FormField({
   onChange,
   icon,
   isDropdown = false,
+  rightAction,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   icon: React.ReactNode;
   isDropdown?: boolean;
+  rightAction?: React.ReactNode;
 }) {
   return (
     <div>
@@ -152,11 +223,12 @@ function FormField({
             type="text"
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            className="w-full bg-transparent py-3 pl-4 pr-10 text-sm font-medium text-gray-900 focus:outline-none placeholder:text-gray-400"
+            className="w-full bg-transparent py-3 pl-4 pr-24 text-sm font-medium text-gray-900 focus:outline-none placeholder:text-gray-400"
           />
         )}
-        <div className="absolute right-4 pointer-events-none">
-          {icon}
+        <div className="absolute right-3 flex items-center gap-2">
+          {rightAction}
+          <span className="pointer-events-none">{icon}</span>
         </div>
       </div>
     </div>
