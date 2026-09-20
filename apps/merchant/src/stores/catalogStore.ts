@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { api } from '../lib/api.js';
 
 export interface StorageLocation {
   warehouse: string;
@@ -76,6 +77,8 @@ export type WizardStep = 1 | 2 | 3;
 interface CatalogStoreState {
   products: ProductItem[];
   kpis: CatalogKPIs;
+  isLoading: boolean;
+  error: string | null;
 
   // Table filtering & search
   searchQuery: string;
@@ -104,6 +107,7 @@ interface CatalogStoreState {
   selectedProductForDelete: ProductItem | null;
 
   // Actions
+  fetchProducts: (storeId?: string) => Promise<void>;
   setSearchQuery: (q: string) => void;
   setCategoryFilter: (c: string) => void;
   setSubCategoryFilter: (sc: string) => void;
@@ -138,550 +142,171 @@ interface CatalogStoreState {
   closeDeleteModal: () => void;
 }
 
-const initialMockProducts: ProductItem[] = [
-  {
-    id: 'prd-1',
-    name: 'Men Black Round Neck T-Shirt',
-    sku: 'PRD-TSHIRT-RD-BLK-M',
-    barcode: '8901234567890',
-    category: 'Men',
-    subCategory: 'T-Shirts',
-    productType: 'Round Neck T-Shirt',
-    brand: 'Roadster',
-    stock: 120,
-    lowStockThreshold: 15,
-    status: 'active',
-    price: 599,
-    costPrice: 350,
-    mrp: 899,
-    images: [
-      'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=600&q=80',
-      'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=600&q=80',
-      'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&w=600&q=80',
-      'https://images.unsplash.com/photo-1618354691373-d851c5c3a990?auto=format&fit=crop&w=600&q=80',
-      'https://images.unsplash.com/photo-1622445268121-ac30457e24cb?auto=format&fit=crop&w=600&q=80',
-    ],
-    attributes: {
-      fit: 'Regular',
-      sleeve: 'Half Sleeve',
-      neck: 'Round Neck',
-      fabric: 'Cotton',
-      pattern: 'Solid',
-      occasion: 'Casual',
-      gender: 'Men',
-      season: 'Summer',
-      color: 'Black',
-      size: 'M',
-      sizeType: 'Standard Size',
-      hasVariants: 'true',
-    },
-    storageLocation: {
+export function calculateKPIs(products: ProductItem[]): CatalogKPIs {
+  const total = products.length;
+  const active = products.filter((p) => p.status === 'active').length;
+  const lowStock = products.filter((p) => p.stock > 0 && p.stock <= p.lowStockThreshold).length;
+  const outOfStock = products.filter((p) => p.stock <= 0 || p.status === 'out_of_stock').length;
+  const draft = products.filter((p) => p.status === 'draft').length;
+
+  return {
+    totalProducts: total,
+    activeProducts: active,
+    lowStock,
+    outOfStock,
+    draft,
+    totalChangePct: 0,
+    activeChangePct: 0,
+    lowStockChangePct: 0,
+    outOfStockChangePct: 0,
+  };
+}
+
+export function mapApiProductToProductItem(p: any): ProductItem {
+  const primaryVariant = p.variants?.[0] || {};
+  const images: string[] = [];
+  if (Array.isArray(p.variants)) {
+    p.variants.forEach((v: any) => {
+      if (Array.isArray(v.images)) images.push(...v.images);
+    });
+  }
+  if (images.length === 0 && Array.isArray(p.images)) {
+    images.push(...p.images);
+  }
+  if (images.length === 0) {
+    images.push('https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=600&q=80');
+  }
+
+  const stock = typeof p.totalStock === 'number' ? p.totalStock : primaryVariant.stock || 0;
+  const status: 'active' | 'inactive' | 'draft' | 'out_of_stock' =
+    stock <= 0 ? 'out_of_stock' : p.status || (p.isActive === false ? 'inactive' : 'active');
+
+  const attributesMap: Record<string, string> = {};
+  if (Array.isArray(p.attributes)) {
+    p.attributes.forEach((attr: any) => {
+      if (attr.key && attr.value) attributesMap[attr.key] = attr.value;
+    });
+  }
+
+  return {
+    id: p._id || p.id,
+    name: p.name || 'Product',
+    sku: primaryVariant.sku || `SKU-${(p._id || '').slice(-6)}`,
+    barcode: p.barcode || primaryVariant.barcode || '8901234567890',
+    category: p.category || 'General',
+    subCategory: p.subCategory || 'General',
+    productType: p.subType || p.subCategory || 'Standard',
+    brand: p.brand || 'Generic',
+    stock: stock,
+    lowStockThreshold: p.lowStockThreshold || 10,
+    status: status,
+    price: p.basePrice || primaryVariant.price || 0,
+    costPrice: Math.round((p.basePrice || primaryVariant.price || 0) * 0.6),
+    mrp: p.baseMrp || primaryVariant.mrp || p.basePrice || 0,
+    images: images,
+    attributes: attributesMap,
+    storageLocation: p.storageLocation || {
       warehouse: 'Main Warehouse',
       room: 'Room 101',
       rack: 'R-05',
       shelf: 'S-02',
       bin: 'B-03',
-      description: 'Near window side, second rack',
+      description: 'Standard storage location',
     },
-    tax: {
-      category: 'Apparel (5%)',
-      rate: 5,
-      inclusive: false,
-      amount: 28.52,
+    tax: p.tax || {
+      category: 'GST Standard (18%)',
+      rate: 18,
+      inclusive: true,
+      amount: Math.round((p.basePrice || 0) * 0.18),
     },
-    updatedAt: '10 May 2024 10:30 AM',
+    updatedAt: p.updatedAt
+      ? new Intl.DateTimeFormat('en-GB', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+        }).format(new Date(p.updatedAt))
+      : 'Recent',
     productIdentification: 'new',
-    hsnCode: '61091000',
-    description: 'Premium quality cotton round neck t-shirt for men. Highly breathable fabric with reinforced double stitching, tailored for daily smart casual comfort.',
-    tags: ['men t-shirt', 'round neck t-shirt', 'black t-shirt', 'summer wear', 'casual wear', 'cotton'],
+    hsnCode: p.hsnCode || '61091000',
+    description: p.description || '',
+    tags: p.tags || [],
     trackInventory: true,
     countryOfOrigin: 'India',
-    warranty: 'No Warranty',
+    warranty: 'Standard Manufacturer Warranty',
     isReturnable: true,
     weight: '0.250',
     dimensions: { length: '30', width: '20', height: '2' },
-    material: '100% Combed Cotton',
-    careInstructions: 'Machine wash cold, tumble dry low, do not bleach or iron directly on print.',
-    metaTitle: 'Men Black Round Neck T-Shirt - Cotton Casual Wear',
-    metaDescription: 'Buy premium quality men black round neck t-shirt made with 100% cotton. Perfect for summer and everyday casual wear.',
-  },
-  {
-    id: 'prd-2',
-    name: 'Men White Round Neck T-Shirt',
-    sku: 'PRD-TSHIRT-RD-WHT-M',
-    barcode: '8901234567891',
-    category: 'Men',
-    subCategory: 'T-Shirts',
-    productType: 'Round Neck T-Shirt',
-    brand: 'Roadster',
-    stock: 80,
-    lowStockThreshold: 15,
-    status: 'active',
-    price: 599,
-    costPrice: 340,
-    mrp: 899,
-    images: [
-      'https://images.unsplash.com/photo-1581655353564-df123a1eb820?auto=format&fit=crop&w=600&q=80',
-      'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=600&q=80',
-    ],
-    attributes: {
-      fit: 'Regular',
-      sleeve: 'Half Sleeve',
-      neck: 'Round Neck',
-      fabric: 'Cotton',
-      pattern: 'Solid',
-      occasion: 'Casual',
-      gender: 'Men',
-      season: 'Summer',
-      color: 'White',
-      size: 'M',
-      sizeType: 'Standard Size',
-      hasVariants: 'true',
-    },
-    storageLocation: {
-      warehouse: 'Main Warehouse',
-      room: 'Room 101',
-      rack: 'R-05',
-      shelf: 'S-03',
-      bin: 'B-04',
-      description: 'Central shelf rack A',
-    },
-    tax: {
-      category: 'Apparel (5%)',
-      rate: 5,
-      inclusive: false,
-      amount: 28.52,
-    },
-    updatedAt: '10 May 2024 10:15 AM',
-    productIdentification: 'new',
-    hsnCode: '61091000',
-    description: 'Classic plain white round neck t-shirt in pure breathable cotton fabric.',
-    tags: ['white t-shirt', 'men essentials', 'plain white', 'casual wear'],
-    trackInventory: true,
-    countryOfOrigin: 'India',
-    warranty: 'No Warranty',
-    isReturnable: true,
-    weight: '0.240',
-    dimensions: { length: '30', width: '20', height: '2' },
-    material: '100% Super-combed Cotton',
-    careInstructions: 'Machine wash warm with like colors.',
-    metaTitle: 'Men White Round Neck T-Shirt - Pure Cotton Essential',
-    metaDescription: 'Crisp and comfortable white crewneck t-shirt for daily styling.',
-  },
-  {
-    id: 'prd-3',
-    name: 'Men Navy Blue Round Neck T-Shirt',
-    sku: 'PRD-TSHIRT-RD-NVY-L',
-    barcode: '8901234567892',
-    category: 'Men',
-    subCategory: 'T-Shirts',
-    productType: 'Round Neck T-Shirt',
-    brand: 'Roadster',
-    stock: 60,
-    lowStockThreshold: 10,
-    status: 'active',
-    price: 599,
-    costPrice: 350,
-    mrp: 899,
-    images: [
-      'https://images.unsplash.com/photo-1618354691373-d851c5c3a990?auto=format&fit=crop&w=600&q=80',
-    ],
-    attributes: {
-      fit: 'Regular',
-      sleeve: 'Half Sleeve',
-      neck: 'Round Neck',
-      fabric: 'Cotton',
-      pattern: 'Solid',
-      occasion: 'Casual',
-      gender: 'Men',
-      season: 'Summer',
-      color: 'Navy Blue',
-      size: 'L',
-      sizeType: 'Standard Size',
-      hasVariants: 'true',
-    },
-    storageLocation: {
-      warehouse: 'Main Warehouse',
-      room: 'Room 102',
-      rack: 'R-02',
-      shelf: 'S-01',
-      bin: 'B-01',
-      description: 'Section Navy Bins',
-    },
-    tax: {
-      category: 'Apparel (5%)',
-      rate: 5,
-      inclusive: false,
-      amount: 28.52,
-    },
-    updatedAt: '09 May 2024 05:45 PM',
-    productIdentification: 'new',
-    hsnCode: '61091000',
-    description: 'Deep navy blue crewneck t-shirt with bio-wash finish for extra smoothness.',
-    tags: ['navy t-shirt', 'men navy blue', 'cotton t-shirt'],
-    trackInventory: true,
-    countryOfOrigin: 'India',
-    warranty: 'No Warranty',
-    isReturnable: true,
-    weight: '0.260',
-    dimensions: { length: '32', width: '22', height: '2' },
-    material: '100% Cotton Bio-Washed',
-    careInstructions: 'Machine wash cold inside out.',
-    metaTitle: 'Men Navy Blue Round Neck T-Shirt',
-    metaDescription: 'Comfortable navy blue t-shirt for men.',
-  },
-  {
-    id: 'prd-4',
-    name: 'Men Grey Round Neck T-Shirt',
-    sku: 'PRD-TSHIRT-RD-GRY-M',
-    barcode: '8901234567893',
-    category: 'Men',
-    subCategory: 'T-Shirts',
-    productType: 'Round Neck T-Shirt',
-    brand: 'Roadster',
-    stock: 45,
-    lowStockThreshold: 10,
-    status: 'active',
-    price: 599,
-    costPrice: 350,
-    mrp: 899,
-    images: [
-      'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&w=600&q=80',
-    ],
-    attributes: {
-      fit: 'Regular',
-      sleeve: 'Half Sleeve',
-      neck: 'Round Neck',
-      fabric: 'Cotton Blend',
-      pattern: 'Melange',
-      occasion: 'Casual',
-      gender: 'Men',
-      season: 'Summer',
-      color: 'Grey',
-      size: 'M',
-      sizeType: 'Standard Size',
-      hasVariants: 'true',
-    },
-    storageLocation: {
-      warehouse: 'Main Warehouse',
-      room: 'Room 101',
-      rack: 'R-03',
-      shelf: 'S-04',
-      bin: 'B-09',
-    },
-    tax: {
-      category: 'Apparel (5%)',
-      rate: 5,
-      inclusive: false,
-      amount: 28.52,
-    },
-    updatedAt: '09 May 2024 04:20 PM',
-    productIdentification: 'new',
-    hsnCode: '61091000',
-    description: 'Heather grey casual round neck tee.',
-    tags: ['grey tee', 'melange t-shirt', 'casual'],
-    trackInventory: true,
-    countryOfOrigin: 'India',
-    warranty: 'No Warranty',
-    isReturnable: true,
-    weight: '0.245',
-    dimensions: { length: '30', width: '20', height: '2' },
-  },
-  {
-    id: 'prd-5',
-    name: 'Men Black Polo T-Shirt',
-    sku: 'PRD-POLO-BLK-M',
-    barcode: '8901234567894',
-    category: 'Men',
-    subCategory: 'T-Shirts',
-    productType: 'Polo T-Shirt',
-    brand: 'Roadster',
-    stock: 30,
-    lowStockThreshold: 10,
-    status: 'inactive',
-    price: 649,
-    costPrice: 390,
-    mrp: 999,
-    images: [
-      'https://images.unsplash.com/photo-1586790170083-2f9ceadc732d?auto=format&fit=crop&w=600&q=80',
-    ],
-    attributes: {
-      fit: 'Slim Fit',
-      sleeve: 'Half Sleeve',
-      neck: 'Polo Neck',
-      fabric: 'Pique Cotton',
-      pattern: 'Solid',
-      occasion: 'Smart Casual',
-      gender: 'Men',
-      season: 'All-Season',
-      color: 'Black',
-      size: 'M',
-      sizeType: 'Standard Size',
-      hasVariants: 'true',
-    },
-    storageLocation: {
-      warehouse: 'Main Warehouse',
-      room: 'Room 103',
-      rack: 'R-08',
-      shelf: 'S-02',
-      bin: 'B-12',
-    },
-    tax: {
-      category: 'Apparel (5%)',
-      rate: 5,
-      inclusive: false,
-      amount: 30.9,
-    },
-    updatedAt: '08 May 2024 11:10 AM',
-    productIdentification: 'new',
-    hsnCode: '61051000',
-    description: 'Refined pique polo shirt featuring ribbed collar and two-button placket.',
-    tags: ['polo t-shirt', 'black polo', 'smart casual'],
-    trackInventory: true,
-    countryOfOrigin: 'India',
-    warranty: 'No Warranty',
-    isReturnable: true,
-    weight: '0.290',
-  },
-  {
-    id: 'prd-6',
-    name: 'Men Maroon Polo T-Shirt',
-    sku: 'PRD-POLO-MRN-L',
-    barcode: '8901234567895',
-    category: 'Men',
-    subCategory: 'T-Shirts',
-    productType: 'Polo T-Shirt',
-    brand: 'Roadster',
-    stock: 25,
-    lowStockThreshold: 10,
-    status: 'active',
-    price: 649,
-    costPrice: 390,
-    mrp: 999,
-    images: [
-      'https://images.unsplash.com/photo-1598033129183-c4f50c736f10?auto=format&fit=crop&w=600&q=80',
-    ],
-    attributes: {
-      fit: 'Slim Fit',
-      sleeve: 'Half Sleeve',
-      neck: 'Polo Neck',
-      fabric: 'Pique Cotton',
-      pattern: 'Solid',
-      occasion: 'Smart Casual',
-      gender: 'Men',
-      season: 'All-Season',
-      color: 'Maroon',
-      size: 'L',
-      sizeType: 'Standard Size',
-      hasVariants: 'true',
-    },
-    storageLocation: {
-      warehouse: 'Main Warehouse',
-      room: 'Room 103',
-      rack: 'R-08',
-      shelf: 'S-03',
-      bin: 'B-14',
-    },
-    tax: {
-      category: 'Apparel (5%)',
-      rate: 5,
-      inclusive: false,
-      amount: 30.9,
-    },
-    updatedAt: '08 May 2024 10:05 AM',
-    productIdentification: 'new',
-    hsnCode: '61051000',
-    description: 'Deep maroon pique polo shirt with collar tipping.',
-    tags: ['maroon polo', 'polo t-shirt'],
-    trackInventory: true,
-    countryOfOrigin: 'India',
-    isReturnable: true,
-  },
-  {
-    id: 'prd-7',
-    name: 'Men Blue Henley T-Shirt',
-    sku: 'PRD-HENLEY-BLU-M',
-    barcode: '8901234567896',
-    category: 'Men',
-    subCategory: 'T-Shirts',
-    productType: 'Henley T-Shirt',
-    brand: 'Roadster',
-    stock: 20,
-    lowStockThreshold: 10,
-    status: 'active',
-    price: 699,
-    costPrice: 420,
-    mrp: 1099,
-    images: [
-      'https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&fit=crop&w=600&q=80',
-    ],
-    attributes: {
-      fit: 'Regular',
-      sleeve: 'Full Sleeve',
-      neck: 'Henley Neck',
-      fabric: 'Waffle Knit Cotton',
-      pattern: 'Solid',
-      occasion: 'Casual',
-      gender: 'Men',
-      season: 'Winter/Fall',
-      color: 'Blue',
-      size: 'M',
-      sizeType: 'Standard Size',
-      hasVariants: 'true',
-    },
-    storageLocation: {
-      warehouse: 'Main Warehouse',
-      room: 'Room 102',
-      rack: 'R-06',
-      shelf: 'S-01',
-      bin: 'B-07',
-    },
-    tax: {
-      category: 'Apparel (5%)',
-      rate: 5,
-      inclusive: false,
-      amount: 33.28,
-    },
-    updatedAt: '07 May 2024 03:30 PM',
-    productIdentification: 'new',
-    hsnCode: '61091000',
-    description: 'Comfortable waffle knit Henley tee with 3-button neckline.',
-    tags: ['henley', 'blue t-shirt', 'full sleeve'],
-    trackInventory: true,
-  },
-  {
-    id: 'prd-8',
-    name: 'Men Striped Round Neck T-Shirt',
-    sku: 'PRD-TSHIRT-RD-STP-M',
-    barcode: '8901234567897',
-    category: 'Men',
-    subCategory: 'T-Shirts',
-    productType: 'Round Neck T-Shirt',
-    brand: 'Roadster',
-    stock: 15,
-    lowStockThreshold: 20,
-    status: 'inactive',
-    price: 599,
-    costPrice: 350,
-    mrp: 899,
-    images: [
-      'https://images.unsplash.com/photo-1523381294911-8d3cead13475?auto=format&fit=crop&w=600&q=80',
-    ],
-    attributes: {
-      fit: 'Regular',
-      sleeve: 'Half Sleeve',
-      neck: 'Round Neck',
-      fabric: 'Cotton',
-      pattern: 'Striped',
-      occasion: 'Casual',
-      gender: 'Men',
-      season: 'Summer',
-      color: 'White/Black',
-      size: 'M',
-      sizeType: 'Standard Size',
-      hasVariants: 'true',
-    },
-    storageLocation: {
-      warehouse: 'Main Warehouse',
-      room: 'Room 101',
-      rack: 'R-04',
-      shelf: 'S-02',
-      bin: 'B-10',
-    },
-    tax: {
-      category: 'Apparel (5%)',
-      rate: 5,
-      inclusive: false,
-      amount: 28.52,
-    },
-    updatedAt: '07 May 2024 02:15 PM',
-    productIdentification: 'new',
-    hsnCode: '61091000',
-    description: 'Horizontal black and white nautical striped round neck tee.',
-    tags: ['striped tee', 'nautical t-shirt'],
-    trackInventory: true,
-  },
-];
+    material: 'Standard Material',
+    careInstructions: 'Handle with care',
+    metaTitle: p.name,
+    metaDescription: p.description,
+  };
+}
 
 const initialDefaultDraft: Partial<ProductItem> = {
   id: '',
-  name: 'Men Black Round Neck T-Shirt',
-  sku: 'PRD-2025-06-28-000124',
+  name: '',
+  sku: `PRD-${new Date().toISOString().slice(0, 10)}-${Math.floor(100000 + Math.random() * 900000)}`,
   barcode: '8901234567890',
-  category: 'Men',
-  subCategory: 'T-Shirts',
-  productType: 'Round Neck T-Shirt',
-  brand: 'PUMA',
-  stock: 120,
-  lowStockThreshold: 10,
+  category: 'Fashion',
+  subCategory: 'Apparel',
+  productType: 'Clothing',
+  brand: 'Brand',
+  stock: 10,
+  lowStockThreshold: 5,
   status: 'active',
-  price: 599,
-  costPrice: 350,
+  price: 499,
+  costPrice: 250,
   mrp: 699,
   images: [
     'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1618354691373-d851c5c3a990?auto=format&fit=crop&w=600&q=80',
-    'https://images.unsplash.com/photo-1622445268121-ac30457e24cb?auto=format&fit=crop&w=600&q=80',
   ],
-  attributes: {
-    fit: 'Regular',
-    sleeve: 'Half Sleeve',
-    neck: 'Round Neck',
-    fabric: 'Cotton',
-    pattern: 'Solid',
-    occasion: 'Casual',
-    gender: 'Men',
-    season: 'Summer',
-    color: 'Black',
-    size: 'M',
-    sizeType: 'Standard Size',
-    hasVariants: 'true',
-  },
+  attributes: {},
   storageLocation: {
     warehouse: 'Main Warehouse',
     room: 'Room 101',
-    rack: 'R-05',
-    shelf: 'S-02',
-    bin: 'B-03',
-    description: 'Near window side, second rack',
+    rack: 'R-01',
+    shelf: 'S-01',
+    bin: 'B-01',
+    description: 'Standard shelf',
   },
   tax: {
-    category: 'Apparel (5%)',
-    rate: 5,
-    inclusive: false,
-    amount: 28.52,
+    category: 'GST (18%)',
+    rate: 18,
+    inclusive: true,
+    amount: 90,
   },
   productIdentification: 'new',
   hsnCode: '61091000',
-  description: 'Premium quality cotton round neck t-shirt for men.',
-  tags: ['men t-shirt', 'round neck t-shirt', 'black t-shirt', 'summer wear', 'casual wear', 'cotton'],
+  description: '',
+  tags: [],
   trackInventory: true,
   countryOfOrigin: 'India',
   warranty: 'No Warranty',
   isReturnable: true,
   weight: '0.250',
   dimensions: { length: '30', width: '20', height: '2' },
-  material: '100% Cotton',
-  careInstructions: 'Machine wash cold, tumble dry low.',
-  metaTitle: 'Men Black Round Neck T-Shirt - Cotton Casual Wear',
-  metaDescription: 'Buy premium quality men black round neck t-shirt made with 100% cotton. Perfect for summer.',
+  material: 'Cotton',
+  careInstructions: 'Hand wash cold',
+  metaTitle: '',
+  metaDescription: '',
 };
 
 export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
-  products: initialMockProducts,
+  products: [],
   kpis: {
-    totalProducts: 1248,
-    activeProducts: 1132,
-    lowStock: 78,
-    outOfStock: 38,
-    draft: 12,
-    totalChangePct: 12,
-    activeChangePct: 8,
-    lowStockChangePct: -5,
-    outOfStockChangePct: -3,
+    totalProducts: 0,
+    activeProducts: 0,
+    lowStock: 0,
+    outOfStock: 0,
+    draft: 0,
+    totalChangePct: 0,
+    activeChangePct: 0,
+    lowStockChangePct: 0,
+    outOfStockChangePct: 0,
   },
+  isLoading: false,
+  error: null,
 
   // Table filtering & search
   searchQuery: '',
@@ -708,6 +333,21 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
   selectedProductForLabel: null,
   isDeleteModalOpen: false,
   selectedProductForDelete: null,
+
+  fetchProducts: async (storeId?: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const endpoint = storeId ? `/catalog/stores/${storeId}/products` : '/catalog/products?limit=100';
+      const rawData = await api.get<any>(endpoint);
+      const productList = Array.isArray(rawData) ? rawData : rawData?.products || rawData?.data || [];
+      const mapped = productList.map(mapApiProductToProductItem);
+      const computedKpis = calculateKPIs(mapped);
+      set({ products: mapped, kpis: computedKpis, isLoading: false });
+    } catch (err: any) {
+      console.warn('Could not fetch products from API:', err?.message || err);
+      set({ products: [], kpis: calculateKPIs([]), isLoading: false, error: err?.message || 'Failed to fetch products' });
+    }
+  },
 
   setSearchQuery: (searchQuery) => set({ searchQuery, currentPage: 1 }),
   setCategoryFilter: (categoryFilter) => set({ categoryFilter, currentPage: 1 }),
@@ -787,10 +427,10 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
       name: draftProduct.name || 'Untitled Product',
       sku: draftProduct.sku || `PRD-${Date.now()}`,
       barcode: draftProduct.barcode || '8901234567890',
-      category: draftProduct.category || 'Men',
-      subCategory: draftProduct.subCategory || 'T-Shirts',
-      productType: draftProduct.productType || 'Round Neck T-Shirt',
-      brand: draftProduct.brand || 'Roadster',
+      category: draftProduct.category || 'Fashion',
+      subCategory: draftProduct.subCategory || 'Apparel',
+      productType: draftProduct.productType || 'Clothing',
+      brand: draftProduct.brand || 'Generic',
       stock: Number(draftProduct.stock ?? 100),
       lowStockThreshold: Number(draftProduct.lowStockThreshold ?? 10),
       status: draftProduct.status || 'active',
@@ -802,9 +442,6 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
         : ['https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=600&q=80'],
       attributes: draftProduct.attributes || {
         fit: 'Regular',
-        sleeve: 'Half Sleeve',
-        neck: 'Round Neck',
-        fabric: 'Cotton',
         color: 'Black',
         size: 'M',
       },
@@ -816,9 +453,9 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
         bin: 'B-03',
       },
       tax: draftProduct.tax || {
-        category: 'Apparel (5%)',
-        rate: 5,
-        inclusive: false,
+        category: 'GST (18%)',
+        rate: 18,
+        inclusive: true,
         amount: 28.52,
       },
       updatedAt: nowStr,
@@ -826,23 +463,24 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
       description: draftProduct.description || '',
       tags: draftProduct.tags || [],
       countryOfOrigin: draftProduct.countryOfOrigin || 'India',
-      warranty: draftProduct.warranty || 'No Warranty',
+      warranty: draftProduct.warranty || 'Standard Warranty',
       isReturnable: draftProduct.isReturnable ?? true,
       weight: draftProduct.weight || '0.250',
       dimensions: draftProduct.dimensions || { length: '30', width: '20', height: '2' },
-      material: draftProduct.material || '100% Cotton',
-      careInstructions: draftProduct.careInstructions || 'Machine wash cold',
+      material: draftProduct.material || 'Cotton',
+      careInstructions: draftProduct.careInstructions || 'Standard care',
       metaTitle: draftProduct.metaTitle || draftProduct.name,
       metaDescription: draftProduct.metaDescription || draftProduct.description,
     };
 
+    let updatedList: ProductItem[];
     if (existingIndex >= 0) {
-      const updatedList = [...products];
+      updatedList = [...products];
       updatedList[existingIndex] = finalizedProduct;
-      set({ products: updatedList, activeView: 'list' });
     } else {
-      set({ products: [finalizedProduct, ...products], activeView: 'list' });
+      updatedList = [finalizedProduct, ...products];
     }
+    set({ products: updatedList, kpis: calculateKPIs(updatedList), activeView: 'list' });
 
     return finalizedProduct;
   },
@@ -861,36 +499,43 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
         barcode: String(Math.floor(8900000000000 + Math.random() * 99999999999)),
         updatedAt: 'Just now',
       };
-      return { products: [duplicated, ...state.products] };
+      const updatedList = [duplicated, ...state.products];
+      return { products: updatedList, kpis: calculateKPIs(updatedList) };
     }),
 
   toggleProductStatus: (id) =>
-    set((state) => ({
-      products: state.products.map((p) =>
-        p.id === id ? { ...p, status: p.status === 'active' ? 'inactive' : 'active' } : p
-      ),
-    })),
+    set((state) => {
+      const updatedList = state.products.map((p) =>
+        p.id === id ? { ...p, status: (p.status === 'active' ? 'inactive' : 'active') as any } : p
+      );
+      return { products: updatedList, kpis: calculateKPIs(updatedList) };
+    }),
 
   updateStock: (id, newStock, lowStockThreshold) =>
-    set((state) => ({
-      products: state.products.map((p) =>
+    set((state) => {
+      const updatedList = state.products.map((p) =>
         p.id === id
           ? {
               ...p,
               stock: newStock,
-              status: newStock <= 0 ? 'out_of_stock' : p.status === 'out_of_stock' ? 'active' : p.status,
+              status: (newStock <= 0 ? 'out_of_stock' : p.status === 'out_of_stock' ? 'active' : p.status) as any,
               lowStockThreshold: lowStockThreshold !== undefined ? lowStockThreshold : p.lowStockThreshold,
               updatedAt: 'Just now',
             }
           : p
-      ),
-    })),
+      );
+      return { products: updatedList, kpis: calculateKPIs(updatedList) };
+    }),
 
   deleteProduct: (id) =>
-    set((state) => ({
-      products: state.products.filter((p) => p.id !== id),
-      selectedProductIds: state.selectedProductIds.filter((item) => item !== id),
-    })),
+    set((state) => {
+      const updatedList = state.products.filter((p) => p.id !== id);
+      return {
+        products: updatedList,
+        kpis: calculateKPIs(updatedList),
+        selectedProductIds: state.selectedProductIds.filter((item) => item !== id),
+      };
+    }),
 
   openStockModal: (product) =>
     set({ isStockModalOpen: true, selectedProductForStock: product }),

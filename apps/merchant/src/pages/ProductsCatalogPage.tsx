@@ -19,7 +19,13 @@ export const ProductsCatalogPage: React.FC<ProductsCatalogPageProps> = ({
     closeDeleteModal,
     selectedProductForDelete,
     deleteProduct,
+    fetchProducts,
+    products,
   } = useCatalogStore();
+
+  React.useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
 
   const handleConfirmDelete = () => {
     if (selectedProductForDelete) {

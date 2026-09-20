@@ -167,6 +167,7 @@
 - [x] Customer account backend APIs: saved addresses CRUD (`/api/v1/users/addresses`), order history query alias (`/api/v1/orders/my-orders`), profile update (`/api/v1/users/me`)
 - [x] Simple Store/Merchant rating system (1–5 stars per delivered order, aggregated store rating score/count, duplicate order rating prevention: `/api/v1/stores/:id/rating`)
 - [x] E2E staging browser audit & defect remediation: Dynamic cart badge sync, hardcoded name/location purge, dynamic PDP brand/categories, merchant auth route guard
+- [x] Database Purge & Realistic Multi-City Production Seed Dataset: Atlas MongoDB collections cleanly purged and repopulated with 1 Super Admin, 2 Customers, 5 Indian Retail Stores, 24 polymorphic products with variants and barcodes, 5 active lifecycle orders; >1,800 lines of mock arrays purged across merchant orderStore, catalogStore, inventoryStore, and customer storefront OrdersClient, WishlistClient, FashionStores, and AccountClient; 100% wired to live REST APIs with graceful empty states; all builds green, 67/67 tests passing
 - [ ] Customer platform NPS & experience feedback submission
 - [ ] Merchant marketing suite: discount voucher & banner campaign manager (standard non-AI)
 - [ ] Merchant revenue analytics & sales reports

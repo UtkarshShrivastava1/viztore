@@ -9,6 +9,7 @@ import {
   Eye,
 } from 'lucide-react';
 import { useInventoryStore } from '../stores/inventoryStore.js';
+import { useCatalogStore } from '../stores/catalogStore.js';
 import { InventoryKPICards } from '../components/inventory/InventoryKPICards.js';
 import { InventoryFilterBar } from '../components/inventory/InventoryFilterBar.js';
 import { InventoryTable } from '../components/inventory/InventoryTable.js';
@@ -18,7 +19,10 @@ import { BulkAdjustStockView } from '../components/inventory/BulkAdjustStockView
 import { StockHistoryView } from '../components/inventory/StockHistoryView.js';
 
 export const InventoryPage: React.FC = () => {
+  const { fetchProducts, products } = useCatalogStore();
   const {
+    items,
+    setItemsFromProducts,
     viewMode,
     setViewMode,
     deleteConfirmItem,
@@ -27,6 +31,18 @@ export const InventoryPage: React.FC = () => {
     detailModalItem,
     closeDetailModal,
   } = useInventoryStore();
+
+  React.useEffect(() => {
+    if (products.length === 0) {
+      fetchProducts();
+    }
+  }, [fetchProducts, products.length]);
+
+  React.useEffect(() => {
+    if (products.length > 0) {
+      setItemsFromProducts(products);
+    }
+  }, [products, setItemsFromProducts]);
 
   return (
     <div className="space-y-4">

@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import type { ProductItem } from './catalogStore.js';
 
 export interface InventoryItem {
   id: string;
@@ -42,10 +43,10 @@ interface InventoryStoreState {
   items: InventoryItem[];
   transactions: StockTransaction[];
   viewMode: InventoryViewMode;
-  
+
   // Selection
   selectedIds: string[];
-  
+
   // Filters for Overview & Bulk
   searchQuery: string;
   categoryFilter: string;
@@ -53,7 +54,7 @@ interface InventoryStoreState {
   productTypeFilter: string;
   brandFilter: string;
   statusFilter: string;
-  
+
   // Pagination for Overview
   currentPage: number;
   pageSize: number;
@@ -75,11 +76,12 @@ interface InventoryStoreState {
   detailModalItem: InventoryItem | null;
 
   // Actions
+  setItemsFromProducts: (products: ProductItem[]) => void;
   setViewMode: (mode: InventoryViewMode) => void;
   setSelectedIds: (ids: string[]) => void;
   toggleSelectId: (id: string) => void;
   toggleSelectAll: () => void;
-  
+
   setSearchQuery: (q: string) => void;
   setCategoryFilter: (cat: string) => void;
   setSubcategoryFilter: (sub: string) => void;
@@ -87,7 +89,7 @@ interface InventoryStoreState {
   setBrandFilter: (brand: string) => void;
   setStatusFilter: (status: string) => void;
   clearFilters: () => void;
-  
+
   setCurrentPage: (page: number) => void;
   setPageSize: (size: number) => void;
 
@@ -114,7 +116,7 @@ interface InventoryStoreState {
     quantity: number,
     reason: string,
     reference?: string,
-    notes?: string
+    notes?: string,
   ) => void;
 
   bulkAdjustStock: (
@@ -125,326 +127,18 @@ interface InventoryStoreState {
       reason?: string;
       reference?: string;
       notes?: string;
-    }>
+    }>,
   ) => void;
 
   duplicateItem: (productId: string) => void;
   deleteItem: (productId: string) => void;
 }
 
-const mockInventoryItems: InventoryItem[] = [
-  {
-    id: 'inv-1',
-    name: 'Men Black Round Neck T-Shirt',
-    sku: 'PRD-TSHIRT-RD-BLK-M',
-    barcode: '8901234567890',
-    category: 'Men',
-    subcategory: 'T-Shirts',
-    productType: 'Round Neck T-Shirt',
-    brand: 'Roadster',
-    stock: 120,
-    reserved: 10,
-    available: 110,
-    status: 'in_stock',
-    stockValue: 65880,
-    lastUpdated: '10 May 2024 10:30 AM',
-    imageUrl: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=120&auto=format&fit=crop&q=80',
-    size: 'M',
-    color: 'Black',
-  },
-  {
-    id: 'inv-2',
-    name: 'Men White Round Neck T-Shirt',
-    sku: 'PRD-TSHIRT-RD-WHT-M',
-    barcode: '8901234567891',
-    category: 'Men',
-    subcategory: 'T-Shirts',
-    productType: 'Round Neck T-Shirt',
-    brand: 'Roadster',
-    stock: 80,
-    reserved: 5,
-    available: 75,
-    status: 'in_stock',
-    stockValue: 44920,
-    lastUpdated: '10 May 2024 10:15 AM',
-    imageUrl: 'https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=120&auto=format&fit=crop&q=80',
-    size: 'M',
-    color: 'White',
-  },
-  {
-    id: 'inv-3',
-    name: 'Men Navy Blue Round Neck T-Shirt',
-    sku: 'PRD-TSHIRT-RD-NVY-L',
-    barcode: '8901234567892',
-    category: 'Men',
-    subcategory: 'T-Shirts',
-    productType: 'Round Neck T-Shirt',
-    brand: 'Roadster',
-    stock: 60,
-    reserved: 8,
-    available: 52,
-    status: 'in_stock',
-    stockValue: 32940,
-    lastUpdated: '09 May 2024 05:45 PM',
-    imageUrl: 'https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=120&auto=format&fit=crop&q=80',
-    size: 'L',
-    color: 'Navy Blue',
-  },
-  {
-    id: 'inv-4',
-    name: 'Men Grey Round Neck T-Shirt',
-    sku: 'PRD-TSHIRT-RD-GRY-M',
-    barcode: '8901234567893',
-    category: 'Men',
-    subcategory: 'T-Shirts',
-    productType: 'Round Neck T-Shirt',
-    brand: 'Roadster',
-    stock: 45,
-    reserved: 2,
-    available: 43,
-    status: 'in_stock',
-    stockValue: 24705,
-    lastUpdated: '09 May 2024 04:20 PM',
-    imageUrl: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=120&auto=format&fit=crop&q=80',
-    size: 'M',
-    color: 'Grey',
-  },
-  {
-    id: 'inv-5',
-    name: 'Men Black Polo T-Shirt',
-    sku: 'PRD-POLO-BLK-M',
-    barcode: '8901234567894',
-    category: 'Men',
-    subcategory: 'T-Shirts',
-    productType: 'Polo T-Shirt',
-    brand: 'Roadster',
-    stock: 30,
-    reserved: 5,
-    available: 25,
-    status: 'low_stock',
-    stockValue: 18725,
-    lastUpdated: '08 May 2024 11:10 AM',
-    imageUrl: 'https://images.unsplash.com/photo-1625910513413-7a544f800be3?w=120&auto=format&fit=crop&q=80',
-    size: 'M',
-    color: 'Black',
-  },
-  {
-    id: 'inv-6',
-    name: 'Men Maroon Polo T-Shirt',
-    sku: 'PRD-POLO-MRN-L',
-    barcode: '8901234567895',
-    category: 'Men',
-    subcategory: 'T-Shirts',
-    productType: 'Polo T-Shirt',
-    brand: 'Roadster',
-    stock: 25,
-    reserved: 3,
-    available: 22,
-    status: 'low_stock',
-    stockValue: 16470,
-    lastUpdated: '08 May 2024 10:05 AM',
-    imageUrl: 'https://images.unsplash.com/photo-1586363104862-3a5e2ab60d99?w=120&auto=format&fit=crop&q=80',
-    size: 'L',
-    color: 'Maroon',
-  },
-  {
-    id: 'inv-7',
-    name: 'Men Blue Henley T-Shirt',
-    sku: 'PRD-HENLEY-BLU-M',
-    barcode: '8901234567896',
-    category: 'Men',
-    subcategory: 'T-Shirts',
-    productType: 'Henley T-Shirt',
-    brand: 'Roadster',
-    stock: 20,
-    reserved: 0,
-    available: 20,
-    status: 'in_stock',
-    stockValue: 13980,
-    lastUpdated: '07 May 2024 03:30 PM',
-    imageUrl: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=120&auto=format&fit=crop&q=80',
-    size: 'M',
-    color: 'Blue',
-  },
-  {
-    id: 'inv-8',
-    name: 'Men Striped Round Neck T-Shirt',
-    sku: 'PRD-TSHIRT-RD-STP-M',
-    barcode: '8901234567897',
-    category: 'Men',
-    subcategory: 'T-Shirts',
-    productType: 'Round Neck T-Shirt',
-    brand: 'Roadster',
-    stock: 0,
-    reserved: 0,
-    available: 0,
-    status: 'out_of_stock',
-    stockValue: 0,
-    lastUpdated: '07 May 2024 02:15 PM',
-    imageUrl: 'https://images.unsplash.com/photo-1523381294911-8d3cead13475?w=120&auto=format&fit=crop&q=80',
-    size: 'M',
-    color: 'White/Black',
-  },
-];
-
-const mockStockTransactions: StockTransaction[] = [
-  {
-    id: 'tx-1',
-    productId: 'inv-1',
-    productName: 'Men Black Round Neck T-Shirt',
-    sku: 'PRD-TSHIRT-RD-BLK-M',
-    date: '11 May 2024, 10:30 AM',
-    type: 'stock_in',
-    referenceType: 'Purchase',
-    referenceNo: 'PO#1234',
-    quantity: 120,
-    stockBefore: 0,
-    stockAfter: 120,
-    notes: 'Stock received from supplier',
-    performedBy: 'Sujal Verma',
-  },
-  {
-    id: 'tx-2',
-    productId: 'inv-2',
-    productName: 'Men White Round Neck T-Shirt',
-    sku: 'PRD-TSHIRT-RD-WHT-M',
-    date: '11 May 2024, 09:15 AM',
-    type: 'stock_in',
-    referenceType: 'Purchase',
-    referenceNo: 'PO#1234',
-    quantity: 80,
-    stockBefore: 0,
-    stockAfter: 80,
-    notes: 'Stock received from supplier',
-    performedBy: 'Sujal Verma',
-  },
-  {
-    id: 'tx-3',
-    productId: 'inv-1',
-    productName: 'Men Black Round Neck T-Shirt',
-    sku: 'PRD-TSHIRT-RD-BLK-M',
-    date: '10 May 2024, 07:45 PM',
-    type: 'stock_out',
-    referenceType: 'Order',
-    referenceNo: 'ORD-4567',
-    quantity: -10,
-    stockBefore: 120,
-    stockAfter: 110,
-    notes: 'Order packed',
-    performedBy: 'System',
-  },
-  {
-    id: 'tx-4',
-    productId: 'inv-3',
-    productName: 'Men Navy Blue Round Neck T-Shirt',
-    sku: 'PRD-TSHIRT-RD-NVY-L',
-    date: '10 May 2024, 06:20 PM',
-    type: 'stock_out',
-    referenceType: 'Order',
-    referenceNo: 'ORD-4566',
-    quantity: -8,
-    stockBefore: 60,
-    stockAfter: 52,
-    notes: 'Order packed',
-    performedBy: 'System',
-  },
-  {
-    id: 'tx-5',
-    productId: 'inv-4',
-    productName: 'Men Grey Round Neck T-Shirt',
-    sku: 'PRD-TSHIRT-RD-GRY-M',
-    date: '10 May 2024, 05:10 PM',
-    type: 'stock_in',
-    referenceType: 'Purchase',
-    referenceNo: 'PO#1220',
-    quantity: 45,
-    stockBefore: 0,
-    stockAfter: 43,
-    notes: 'Stock received from supplier',
-    performedBy: 'Sujal Verma',
-  },
-  {
-    id: 'tx-6',
-    productId: 'inv-5',
-    productName: 'Men Black Polo T-Shirt',
-    sku: 'PRD-POLO-BLK-M',
-    date: '10 May 2024, 04:00 PM',
-    type: 'stock_out',
-    referenceType: 'Order',
-    referenceNo: 'ORD-4565',
-    quantity: -5,
-    stockBefore: 30,
-    stockAfter: 25,
-    notes: 'Order packed',
-    performedBy: 'System',
-  },
-  {
-    id: 'tx-7',
-    productId: 'inv-6',
-    productName: 'Men Maroon Polo T-Shirt',
-    sku: 'PRD-POLO-MRN-L',
-    date: '09 May 2024, 08:30 PM',
-    type: 'stock_out',
-    referenceType: 'Order',
-    referenceNo: 'ORD-4564',
-    quantity: -3,
-    stockBefore: 25,
-    stockAfter: 22,
-    notes: 'Order packed',
-    performedBy: 'System',
-  },
-  {
-    id: 'tx-8',
-    productId: 'inv-7',
-    productName: 'Men Blue Henley T-Shirt',
-    sku: 'PRD-HENLEY-BLU-M',
-    date: '09 May 2024, 03:20 PM',
-    type: 'stock_in',
-    referenceType: 'Purchase',
-    referenceNo: 'PO#1215',
-    quantity: 20,
-    stockBefore: 0,
-    stockAfter: 20,
-    notes: 'Stock received from supplier',
-    performedBy: 'Sujal Verma',
-  },
-  {
-    id: 'tx-9',
-    productId: 'inv-1',
-    productName: 'Men Black Round Neck T-Shirt',
-    sku: 'PRD-TSHIRT-RD-BLK-M',
-    date: '09 May 2024, 11:05 AM',
-    type: 'stock_out',
-    referenceType: 'Order',
-    referenceNo: 'ORD-4563',
-    quantity: -10,
-    stockBefore: 130,
-    stockAfter: 120,
-    notes: 'Order packed',
-    performedBy: 'System',
-  },
-  {
-    id: 'tx-10',
-    productId: 'inv-5',
-    productName: 'Men Black Polo T-Shirt',
-    sku: 'PRD-POLO-BLK-M',
-    date: '08 May 2024, 09:40 PM',
-    type: 'stock_in',
-    referenceType: 'Stock Adjustment',
-    referenceNo: 'ADJ-1001',
-    quantity: 5,
-    stockBefore: 25,
-    stockAfter: 30,
-    notes: 'Stock adjustment',
-    performedBy: 'Sujal Verma',
-  },
-];
-
 export const useInventoryStore = create<InventoryStoreState>((set, get) => ({
-  items: mockInventoryItems,
-  transactions: mockStockTransactions,
+  items: [],
+  transactions: [],
   viewMode: 'overview',
-  
+
   selectedIds: [],
 
   searchQuery: '',
@@ -453,12 +147,12 @@ export const useInventoryStore = create<InventoryStoreState>((set, get) => ({
   productTypeFilter: 'All Product Types',
   brandFilter: 'All Brands',
   statusFilter: 'All Statuses',
-  
+
   currentPage: 1,
   pageSize: 10,
-  totalProductCount: 1248,
+  totalProductCount: 0,
 
-  historyDateRange: 'Last 30 Days (12 Apr 2024 - 11 May 2024)',
+  historyDateRange: 'Recent Activity',
   historyProductFilter: 'All Products',
   historyCategoryFilter: 'All Categories',
   historyTypeFilter: 'All Types',
@@ -470,6 +164,36 @@ export const useInventoryStore = create<InventoryStoreState>((set, get) => ({
   historyDrawerItem: null,
   deleteConfirmItem: null,
   detailModalItem: null,
+
+  setItemsFromProducts: (products: ProductItem[]) => {
+    const items: InventoryItem[] = products.map((p) => {
+      const stock = p.stock || 0;
+      const reserved = Math.min(stock, Math.floor(stock * 0.1));
+      const available = Math.max(0, stock - reserved);
+      const status: 'in_stock' | 'low_stock' | 'out_of_stock' =
+        stock <= 0 ? 'out_of_stock' : stock <= p.lowStockThreshold ? 'low_stock' : 'in_stock';
+      return {
+        id: p.id,
+        name: p.name,
+        sku: p.sku,
+        barcode: p.barcode,
+        category: p.category,
+        subcategory: p.subCategory,
+        productType: p.productType,
+        brand: p.brand,
+        stock,
+        reserved,
+        available,
+        status,
+        stockValue: Math.round(stock * p.price),
+        lastUpdated: p.updatedAt || 'Recent',
+        imageUrl: p.images[0] || '',
+        size: p.attributes?.size || 'Standard',
+        color: p.attributes?.color || 'Standard',
+      };
+    });
+    set({ items, totalProductCount: items.length });
+  },
 
   setViewMode: (mode) => set({ viewMode: mode }),
   setSelectedIds: (ids) => set({ selectedIds: ids }),
@@ -555,7 +279,7 @@ export const useInventoryStore = create<InventoryStoreState>((set, get) => ({
       }
 
       const newAvailable = Math.max(0, newStock - item.reserved);
-      const unitValue = item.stock > 0 ? item.stockValue / item.stock : 549;
+      const unitValue = item.stock > 0 ? item.stockValue / item.stock : 500;
       const newStockValue = Math.round(newStock * unitValue);
       const newStatus: 'in_stock' | 'low_stock' | 'out_of_stock' =
         newStock <= 0 ? 'out_of_stock' : newStock <= 30 ? 'low_stock' : 'in_stock';
@@ -570,7 +294,7 @@ export const useInventoryStore = create<InventoryStoreState>((set, get) => ({
               status: newStatus,
               lastUpdated: 'Just now',
             }
-          : i
+          : i,
       );
 
       const newTx: StockTransaction = {
@@ -586,7 +310,7 @@ export const useInventoryStore = create<InventoryStoreState>((set, get) => ({
         stockBefore: item.stock,
         stockAfter: newStock,
         notes: notes || reason || 'Manual adjustment',
-        performedBy: 'Sujal Verma',
+        performedBy: 'Store Staff',
       };
 
       return {
@@ -611,7 +335,7 @@ export const useInventoryStore = create<InventoryStoreState>((set, get) => ({
         const delta = adj.adjustmentType === 'increase' ? adj.quantity : -adj.quantity;
         const newStock = Math.max(0, currentItem.stock + delta);
         const newAvailable = Math.max(0, newStock - currentItem.reserved);
-        const unitValue = currentItem.stock > 0 ? currentItem.stockValue / currentItem.stock : 549;
+        const unitValue = currentItem.stock > 0 ? currentItem.stockValue / currentItem.stock : 500;
         const newStockValue = Math.round(newStock * unitValue);
         const newStatus: 'in_stock' | 'low_stock' | 'out_of_stock' =
           newStock <= 0 ? 'out_of_stock' : newStock <= 30 ? 'low_stock' : 'in_stock';
@@ -639,7 +363,7 @@ export const useInventoryStore = create<InventoryStoreState>((set, get) => ({
             stockBefore: currentItem.stock,
             stockAfter: newStock,
             notes: adj.notes || adj.reason || 'Batch Stock Adjustment',
-            performedBy: 'Sujal Verma',
+            performedBy: 'Store Staff',
           });
         }
       });

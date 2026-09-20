@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { api, ordersApi } from '../lib/api.js';
 
 export type OrderTab =
   | 'new_orders'
@@ -99,6 +100,8 @@ export interface MerchantOrderRecord {
 
 interface OrderStoreState {
   orders: MerchantOrderRecord[];
+  isLoading: boolean;
+  error: string | null;
   activeTab: OrderTab;
   searchQuery: string;
   paymentStatusFilter: string;
@@ -108,6 +111,7 @@ interface OrderStoreState {
   selectedOrderIds: string[];
 
   // Actions
+  fetchOrders: (storeId?: string) => Promise<void>;
   setActiveTab: (tab: OrderTab) => void;
   setSearchQuery: (query: string) => void;
   setPaymentStatusFilter: (status: string) => void;
@@ -127,1068 +131,134 @@ interface OrderStoreState {
   addManualOrder: (newOrder: Partial<MerchantOrderRecord>) => void;
 }
 
-const initialMockOrders: MerchantOrderRecord[] = [
-  // 1. New Orders
-  {
-    id: 'ord-1',
-    orderNumber: '#ORD-10325',
-    orderType: 'Online Order',
-    status: 'new',
-    customer: {
-      name: 'Rohan Verma',
-      email: 'rohanverma@gmail.com',
-      phone: '+91 98765 43210',
-      avatarInitials: 'RV',
-    },
-    deliveryAddress: {
-      street: '123, Green Park, Lajpat Nagar',
-      locality: 'Lajpat Nagar',
-      city: 'New Delhi',
-      state: 'Delhi',
-      pincode: '110024',
-      fullText: 'Rohan Verma\n123, Green Park, Lajpat Nagar\nNew Delhi - 110024',
-    },
-    items: [
-      { id: 'i1', name: 'Men Graphic Print T-shirt', variant: 'Navy Blue, L', price: 999, quantity: 1 },
-      { id: 'i2', name: 'Slim Fit Denim Jeans', variant: 'Dark Blue, 32', price: 1800, quantity: 2 },
-    ],
-    itemsSummary: {
-      count: 3,
-      title: 'Men T-shirt, Jeans',
-      extraCount: 1,
-      categoryIconType: 'tshirt',
-    },
-    pricing: {
-      itemsTotal: 2799,
-      packagingFee: 0,
-      deliveryFee: 0,
-      totalAmount: 2799,
-    },
-    payment: {
-      status: 'Paid',
-      paymentMethod: 'Online Paid',
-      mode: 'UPI',
-    },
-    otp: '4827',
-    timestamps: {
-      createdAt: '19 May 2024\n09:42 AM',
-    },
-    currentStageName: 'New Order (19 May)',
-  },
-  {
-    id: 'ord-2',
-    orderNumber: '#ORD-10324',
-    orderType: 'Online Order',
-    status: 'new',
-    customer: {
-      name: 'Sneha Kapoor',
-      email: 'snehakapoor@gmail.com',
-      phone: '+91 91234 56789',
-      avatarInitials: 'SK',
-    },
-    deliveryAddress: {
-      street: 'Flat 4B, Shanti Apartments',
-      locality: 'Andheri West',
-      city: 'Mumbai',
-      state: 'Maharashtra',
-      pincode: '400058',
-      fullText: 'Sneha Kapoor\nFlat 4B, Shanti Apartments\nAndheri West, Mumbai - 400058',
-    },
-    items: [
-      { id: 'i3', name: 'Embroidered Anarkali Kurti', variant: 'Red, M', price: 1199, quantity: 1 },
-      { id: 'i4', name: 'Chiffon Printed Dupatta', variant: 'Red, Free Size', price: 450, quantity: 1 },
-    ],
-    itemsSummary: {
-      count: 2,
-      title: 'Kurti, Dupatta',
-      categoryIconType: 'kurti',
-    },
-    pricing: {
-      itemsTotal: 1649,
-      packagingFee: 0,
-      deliveryFee: 0,
-      totalAmount: 1649,
-    },
-    payment: {
-      status: 'Paid',
-      paymentMethod: 'Online Paid',
-      mode: 'UPI',
-    },
-    otp: '3194',
-    timestamps: {
-      createdAt: '19 May 2024\n09:37 AM',
-    },
-    currentStageName: 'New Order (19 May)',
-  },
-  {
-    id: 'ord-3',
-    orderNumber: '#ORD-10323',
-    orderType: 'Online Order',
-    status: 'new',
-    customer: {
-      name: 'Arjun Mehta',
-      email: 'arjunmehta@gmail.com',
-      phone: '+91 99887 66554',
-      avatarInitials: 'AM',
-    },
-    deliveryAddress: {
-      street: '56, Sector 15',
-      locality: 'Sector 15',
-      city: 'Gurgaon',
-      state: 'Haryana',
-      pincode: '122001',
-      fullText: 'Arjun Mehta\n56, Sector 15\nGurgaon - 122001',
-    },
-    items: [
-      { id: 'i5', name: 'Men Straight Fit Jeans', variant: 'Grey, 34', price: 899, quantity: 1 },
-    ],
-    itemsSummary: {
-      count: 1,
-      title: 'Men Jeans',
-      categoryIconType: 'jeans',
-    },
-    pricing: {
-      itemsTotal: 899,
-      packagingFee: 0,
-      deliveryFee: 0,
-      totalAmount: 899,
-    },
-    payment: {
-      status: 'Paid',
-      paymentMethod: 'Online Paid',
-      mode: 'UPI',
-    },
-    otp: '7641',
-    timestamps: {
-      createdAt: '19 May 2024\n09:22 AM',
-    },
-    currentStageName: 'New Order (19 May)',
-  },
-  {
-    id: 'ord-4',
-    orderNumber: '#ORD-10322',
-    orderType: 'Online Order',
-    status: 'new',
-    customer: {
-      name: 'Neha Singh',
-      email: 'nehasingh@gmail.com',
-      phone: '+91 88990 12233',
-      avatarInitials: 'NS',
-    },
-    deliveryAddress: {
-      street: '23, Lotus Residency',
-      locality: 'Kothrud',
-      city: 'Pune',
-      state: 'Maharashtra',
-      pincode: '411014',
-      fullText: 'Neha Singh\n23, Lotus Residency\nPune - 411014',
-    },
-    items: [
-      { id: 'i6', name: 'Casual Crop Top', variant: 'Coral, S', price: 899, quantity: 2 },
-      { id: 'i7', name: 'Cotton Wide Palazzo Pants', variant: 'White, Free Size', price: 1701, quantity: 2 },
-    ],
-    itemsSummary: {
-      count: 4,
-      title: 'Top, Palazzo',
-      extraCount: 2,
-      categoryIconType: 'kurti',
-    },
-    pricing: {
-      itemsTotal: 3499,
-      packagingFee: 0,
-      deliveryFee: 0,
-      totalAmount: 3499,
-    },
-    payment: {
-      status: 'Paid',
-      paymentMethod: 'Online Paid',
-      mode: 'Card',
-    },
-    otp: '2058',
-    timestamps: {
-      createdAt: '19 May 2024\n08:58 AM',
-    },
-    currentStageName: 'New Order (19 May)',
-  },
-  {
-    id: 'ord-5',
-    orderNumber: '#ORD-10321',
-    orderType: 'Online Order',
-    status: 'new',
-    customer: {
-      name: 'Rahul Sharma',
-      email: 'rahulsharma@gmail.com',
-      phone: '+91 77660 33445',
-      avatarInitials: 'RS',
-    },
-    deliveryAddress: {
-      street: 'B-12, Vivek Vihar',
-      locality: 'Vivek Vihar',
-      city: 'Jaipur',
-      state: 'Rajasthan',
-      pincode: '302019',
-      fullText: 'Rahul Sharma\nB-12, Vivek Vihar\nJaipur - 302019',
-    },
-    items: [
-      { id: 'i8', name: 'Pure Linen Full Sleeve Shirt', variant: 'Beige, 42', price: 2199, quantity: 1 },
-      { id: 'i9', name: 'Graphic Crewneck T-shirt', variant: 'Grey, L', price: 1698, quantity: 1 },
-    ],
-    itemsSummary: {
-      count: 2,
-      title: 'Shirt, T-shirt',
-      categoryIconType: 'tshirt',
-    },
-    pricing: {
-      itemsTotal: 3897,
-      packagingFee: 0,
-      deliveryFee: 0,
-      totalAmount: 3897,
-    },
-    payment: {
-      status: 'Paid',
-      paymentMethod: 'Online Paid',
-      mode: 'UPI',
-    },
-    otp: '5932',
-    timestamps: {
-      createdAt: '19 May 2024\n08:30 AM',
-    },
-    currentStageName: 'New Order (19 May)',
-  },
-  {
-    id: 'ord-6',
-    orderNumber: '#ORD-10320',
-    orderType: 'Online Order',
-    status: 'new',
-    customer: {
-      name: 'Priya Patel',
-      email: 'priyapatel@gmail.com',
-      phone: '+91 81234 56789',
-      avatarInitials: 'PP',
-    },
-    deliveryAddress: {
-      street: '9, Shreeji Society',
-      locality: 'Alkapuri',
-      city: 'Vadodara',
-      state: 'Gujarat',
-      pincode: '390007',
-      fullText: 'Priya Patel\n9, Shreeji Society\nVadodara - 390007',
-    },
-    items: [
-      { id: 'i10', name: 'Bandhani Printed Silk Saree', variant: 'Yellow / Gold', price: 2199, quantity: 1 },
-    ],
-    itemsSummary: {
-      count: 1,
-      title: 'Saree',
-      categoryIconType: 'saree',
-    },
-    pricing: {
-      itemsTotal: 2199,
-      packagingFee: 0,
-      deliveryFee: 0,
-      totalAmount: 2199,
-    },
-    payment: {
-      status: 'Paid',
-      paymentMethod: 'Online Paid',
-      mode: 'UPI',
-    },
-    otp: '8716',
-    timestamps: {
-      createdAt: '19 May 2024\n08:15 AM',
-    },
-    currentStageName: 'New Order (19 May)',
-  },
+export function mapApiOrderToMerchantRecord(apiOrder: any): MerchantOrderRecord {
+  let mappedStatus: OrderStatus = 'new';
+  if (apiOrder.status === 'confirmed') mappedStatus = 'accepted';
+  else if (apiOrder.status === 'packed') mappedStatus = 'ready_to_ship';
+  else if (apiOrder.status === 'out_for_delivery') mappedStatus = 'shipped';
+  else if (apiOrder.status === 'delivered') mappedStatus = 'delivered';
+  else if (apiOrder.status === 'cancelled') mappedStatus = 'cancelled';
+  else mappedStatus = 'new';
 
-  // 2. Accepted Orders
-  {
-    id: 'ord-acc-1',
-    orderNumber: '#ORD-10098',
+  const items: OrderItemDetail[] = (apiOrder.items || []).map((it: any, idx: number) => ({
+    id: it.productId || `item-${idx}`,
+    name: it.name || 'Product Item',
+    variant: it.sku || undefined,
+    price: it.unitPrice || 0,
+    quantity: it.quantity || 1,
+    imageUrl: it.imageUrl,
+  }));
+
+  const firstItemName = items[0]?.name || 'Standard Item';
+  const customerName = apiOrder.shippingAddress?.fullName || 'Customer';
+  const initials = customerName
+    .split(' ')
+    .map((n: string) => n[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+
+  return {
+    id: apiOrder._id || apiOrder.id,
+    orderNumber: apiOrder.orderNumber || `#ORD-${(apiOrder._id || '').slice(-5)}`,
     orderType: 'Online Order',
-    status: 'accepted',
+    status: mappedStatus,
     customer: {
-      name: 'Rohan Verma',
-      email: 'rohanverma@gmail.com',
-      phone: '+91 98765 43210',
-      avatarInitials: 'RV',
+      name: customerName,
+      email: apiOrder.customerEmail || 'customer@example.com',
+      phone: apiOrder.shippingAddress?.phone || '+91 98765 43210',
+      avatarInitials: initials || 'CS',
     },
     deliveryAddress: {
-      street: '123, Green Park, Lajpat Nagar',
-      locality: 'Lajpat Nagar',
-      city: 'New Delhi',
-      state: 'Delhi',
-      pincode: '110024',
-      fullText: 'Rohan Verma\n123, Green Park, Lajpat Nagar\nNew Delhi - 110024',
+      street: apiOrder.shippingAddress?.street || '',
+      locality: apiOrder.shippingAddress?.city || '',
+      city: apiOrder.shippingAddress?.city || '',
+      state: apiOrder.shippingAddress?.state || '',
+      pincode: apiOrder.shippingAddress?.postalCode || '',
+      fullText: `${apiOrder.shippingAddress?.street || ''}, ${apiOrder.shippingAddress?.city || ''}, ${apiOrder.shippingAddress?.state || ''} - ${apiOrder.shippingAddress?.postalCode || ''}`,
     },
-    items: [
-      { id: 'i1', name: 'Men T-shirt', variant: 'Navy, L', price: 999, quantity: 1 },
-      { id: 'i2', name: 'Slim Fit Jeans', variant: '32', price: 1800, quantity: 2 },
-    ],
+    items,
     itemsSummary: {
-      count: 3,
-      title: 'Men T-shirt, Jeans',
-      extraCount: 1,
+      count: items.reduce((acc: number, curr: OrderItemDetail) => acc + curr.quantity, 0) || 1,
+      title: firstItemName,
+      extraCount: items.length > 1 ? items.length - 1 : undefined,
       categoryIconType: 'tshirt',
     },
     pricing: {
-      itemsTotal: 2799,
-      packagingFee: 0,
-      deliveryFee: 0,
-      totalAmount: 2799,
+      itemsTotal: apiOrder.subtotal || 0,
+      packagingFee: 20,
+      deliveryFee: apiOrder.shippingFee || 0,
+      totalAmount: apiOrder.grandTotal || 0,
     },
     payment: {
-      status: 'Paid',
+      status:
+        apiOrder.status === 'delivered' ||
+        apiOrder.status === 'confirmed' ||
+        apiOrder.status === 'packed' ||
+        apiOrder.status === 'out_for_delivery'
+          ? 'Paid'
+          : 'Pending',
       paymentMethod: 'Online Paid',
       mode: 'UPI',
     },
-    otp: '4827',
+    otp: apiOrder.deliveryOtp || '0000',
     timestamps: {
-      createdAt: '19 May 2024\n09:42 AM',
-      acceptedAt: '19 May 2024 09:50 AM',
-    },
-    currentStageName: 'Accepted (19 May)',
-  },
-  {
-    id: 'ord-acc-2',
-    orderNumber: '#ORD-10097',
-    orderType: 'Online Order',
-    status: 'accepted',
-    customer: {
-      name: 'Sneha Kapoor',
-      email: 'snehakapoor@gmail.com',
-      phone: '+91 91234 56789',
-      avatarInitials: 'SK',
-    },
-    deliveryAddress: {
-      street: 'Flat 4B, Shanti Apartments',
-      locality: 'Andheri West',
-      city: 'Mumbai',
-      state: 'Maharashtra',
-      pincode: '400058',
-      fullText: 'Sneha Kapoor\nFlat 4B, Shanti Apartments\nAndheri West, Mumbai - 400058',
-    },
-    items: [
-      { id: 'i3', name: 'Kurti', variant: 'Red, M', price: 1199, quantity: 1 },
-      { id: 'i4', name: 'Dupatta', variant: 'Red', price: 450, quantity: 1 },
-    ],
-    itemsSummary: {
-      count: 2,
-      title: 'Kurti, Dupatta',
-      categoryIconType: 'kurti',
-    },
-    pricing: {
-      itemsTotal: 1649,
-      packagingFee: 0,
-      deliveryFee: 0,
-      totalAmount: 1649,
-    },
-    payment: {
-      status: 'Paid',
-      paymentMethod: 'Online Paid',
-      mode: 'UPI',
-    },
-    otp: '3194',
-    timestamps: {
-      createdAt: '19 May 2024\n09:37 AM',
-      acceptedAt: '19 May 2024 09:45 AM',
-    },
-    currentStageName: 'Accepted (19 May)',
-  },
-  {
-    id: 'ord-acc-3',
-    orderNumber: '#ORD-10096',
-    orderType: 'Online Order',
-    status: 'accepted',
-    customer: {
-      name: 'Arjun Mehta',
-      email: 'arjunmehta@gmail.com',
-      phone: '+91 99887 66554',
-      avatarInitials: 'AM',
-    },
-    deliveryAddress: {
-      street: '56, Sector 15',
-      locality: 'Sector 15',
-      city: 'Gurgaon',
-      state: 'Haryana',
-      pincode: '122001',
-      fullText: 'Arjun Mehta\n56, Sector 15\nGurgaon - 122001',
-    },
-    items: [
-      { id: 'i5', name: 'Men Jeans', variant: 'Grey, 34', price: 899, quantity: 1 },
-    ],
-    itemsSummary: {
-      count: 1,
-      title: 'Men Jeans',
-      categoryIconType: 'jeans',
-    },
-    pricing: {
-      itemsTotal: 899,
-      packagingFee: 0,
-      deliveryFee: 0,
-      totalAmount: 899,
-    },
-    payment: {
-      status: 'Paid',
-      paymentMethod: 'Online Paid',
-      mode: 'UPI',
-    },
-    otp: '7641',
-    timestamps: {
-      createdAt: '19 May 2024\n09:22 AM',
-      acceptedAt: '19 May 2024 09:30 AM',
-    },
-    currentStageName: 'Accepted (19 May)',
-  },
-
-  // 3. Ready to Ship Orders
-  {
-    id: 'ord-rts-1',
-    orderNumber: '#ORD-10098',
-    orderType: 'Online Order',
-    status: 'ready_to_ship',
-    customer: {
-      name: 'Rohan Verma',
-      email: 'rohanverma@gmail.com',
-      phone: '+91 98765 43210',
-      avatarInitials: 'RV',
-    },
-    deliveryAddress: {
-      street: '123, Green Park, Lajpat Nagar',
-      locality: 'Lajpat Nagar',
-      city: 'New Delhi',
-      state: 'Delhi',
-      pincode: '110024',
-      fullText: 'Rohan Verma\n123, Green Park, Lajpat Nagar\nNew Delhi - 110024',
-    },
-    items: [
-      { id: 'i1', name: 'Men T-shirt', variant: 'Navy, L', price: 999, quantity: 1 },
-      { id: 'i2', name: 'Slim Fit Jeans', variant: '32', price: 1800, quantity: 2 },
-    ],
-    itemsSummary: {
-      count: 3,
-      title: 'Men T-shirt, Jeans',
-      extraCount: 1,
-      categoryIconType: 'tshirt',
-    },
-    pricing: {
-      itemsTotal: 2799,
-      packagingFee: 0,
-      deliveryFee: 0,
-      totalAmount: 2799,
-    },
-    payment: {
-      status: 'Paid',
-      paymentMethod: 'Online Paid',
-      mode: 'UPI',
-    },
-    otp: '4827',
-    timestamps: {
-      createdAt: '19 May 2024\n10:15 AM',
-      acceptedAt: '19 May 2024 10:20 AM',
-    },
-    currentStageName: 'Ready to Ship (19 May)',
-  },
-  {
-    id: 'ord-rts-2',
-    orderNumber: '#ORD-10097',
-    orderType: 'Online Order',
-    status: 'ready_to_ship',
-    customer: {
-      name: 'Sneha Kapoor',
-      email: 'snehakapoor@gmail.com',
-      phone: '+91 91234 56789',
-      avatarInitials: 'SK',
-    },
-    deliveryAddress: {
-      street: 'Flat 4B, Shanti Apartments',
-      locality: 'Andheri West',
-      city: 'Mumbai',
-      state: 'Maharashtra',
-      pincode: '400058',
-      fullText: 'Sneha Kapoor\nFlat 4B, Shanti Apartments\nAndheri West, Mumbai - 400058',
-    },
-    items: [
-      { id: 'i3', name: 'Kurti', variant: 'Red, M', price: 1199, quantity: 1 },
-      { id: 'i4', name: 'Dupatta', variant: 'Red', price: 450, quantity: 1 },
-    ],
-    itemsSummary: {
-      count: 2,
-      title: 'Kurti, Dupatta',
-      categoryIconType: 'kurti',
-    },
-    pricing: {
-      itemsTotal: 1649,
-      packagingFee: 0,
-      deliveryFee: 0,
-      totalAmount: 1649,
-    },
-    payment: {
-      status: 'Paid',
-      paymentMethod: 'Online Paid',
-      mode: 'UPI',
-    },
-    otp: '3194',
-    timestamps: {
-      createdAt: '19 May 2024\n10:08 AM',
-      acceptedAt: '19 May 2024 10:12 AM',
-    },
-    currentStageName: 'Ready to Ship (19 May)',
-  },
-  {
-    id: 'ord-rts-3',
-    orderNumber: '#ORD-10096',
-    orderType: 'Online Order',
-    status: 'ready_to_ship',
-    customer: {
-      name: 'Arjun Mehta',
-      email: 'arjunmehta@gmail.com',
-      phone: '+91 99887 66554',
-      avatarInitials: 'AM',
-    },
-    deliveryAddress: {
-      street: '56, Sector 15',
-      locality: 'Sector 15',
-      city: 'Gurgaon',
-      state: 'Haryana',
-      pincode: '122001',
-      fullText: 'Arjun Mehta\n56, Sector 15\nGurgaon - 122001',
-    },
-    items: [
-      { id: 'i5', name: 'Men Jeans', variant: 'Grey, 34', price: 899, quantity: 1 },
-    ],
-    itemsSummary: {
-      count: 1,
-      title: 'Men Jeans',
-      categoryIconType: 'jeans',
-    },
-    pricing: {
-      itemsTotal: 899,
-      packagingFee: 0,
-      deliveryFee: 0,
-      totalAmount: 899,
-    },
-    payment: {
-      status: 'Paid',
-      paymentMethod: 'Online Paid',
-      mode: 'UPI',
-    },
-    otp: '7641',
-    timestamps: {
-      createdAt: '19 May 2024\n09:55 AM',
-      acceptedAt: '19 May 2024 10:00 AM',
-    },
-    currentStageName: 'Ready to Ship (19 May)',
-  },
-
-  // 4. Shipped Orders
-  {
-    id: 'ord-shp-1',
-    orderNumber: '#ORD-10089',
-    orderType: 'Online Order',
-    status: 'shipped',
-    customer: {
-      name: 'Rohan Verma',
-      email: 'rohanverma@gmail.com',
-      phone: '+91 98765 43210',
-      avatarInitials: 'RV',
-    },
-    deliveryAddress: {
-      street: '123, Green Park, Lajpat Nagar',
-      locality: 'Lajpat Nagar',
-      city: 'New Delhi',
-      state: 'Delhi',
-      pincode: '110024',
-      fullText: 'Rohan Verma\n123, Green Park, Lajpat Nagar\nNew Delhi - 110024',
-    },
-    items: [
-      { id: 'i1', name: 'Men T-shirt', variant: 'Navy, L', price: 999, quantity: 1 },
-      { id: 'i2', name: 'Slim Fit Jeans', variant: '32', price: 1800, quantity: 2 },
-    ],
-    itemsSummary: {
-      count: 3,
-      title: 'Men T-shirt, Jeans',
-      extraCount: 1,
-      categoryIconType: 'tshirt',
-    },
-    pricing: {
-      itemsTotal: 2799,
-      packagingFee: 0,
-      deliveryFee: 0,
-      totalAmount: 2799,
-    },
-    payment: {
-      status: 'Paid',
-      paymentMethod: 'Online Paid',
-      mode: 'UPI',
-    },
-    otp: '4827',
-    timestamps: {
-      createdAt: '19 May 2024 08:30 AM',
-      shippedAt: '19 May 2024\n10:20 AM',
-    },
-    courier: {
-      partner: 'Delhivery',
-      trackingId: '1234567890123',
-      trackingUrl: '#track',
-    },
-    currentStageName: 'Shipped (19 May)',
-  },
-  {
-    id: 'ord-shp-2',
-    orderNumber: '#ORD-10088',
-    orderType: 'Online Order',
-    status: 'shipped',
-    customer: {
-      name: 'Sneha Kapoor',
-      email: 'snehakapoor@gmail.com',
-      phone: '+91 91234 56789',
-      avatarInitials: 'SK',
-    },
-    deliveryAddress: {
-      street: 'Flat 4B, Shanti Apartments',
-      locality: 'Andheri West',
-      city: 'Mumbai',
-      state: 'Maharashtra',
-      pincode: '400058',
-      fullText: 'Sneha Kapoor\nFlat 4B, Shanti Apartments\nAndheri West, Mumbai - 400058',
-    },
-    items: [
-      { id: 'i3', name: 'Kurti', variant: 'Red, M', price: 1199, quantity: 1 },
-      { id: 'i4', name: 'Dupatta', variant: 'Red', price: 450, quantity: 1 },
-    ],
-    itemsSummary: {
-      count: 2,
-      title: 'Kurti, Dupatta',
-      categoryIconType: 'kurti',
-    },
-    pricing: {
-      itemsTotal: 1649,
-      packagingFee: 0,
-      deliveryFee: 0,
-      totalAmount: 1649,
-    },
-    payment: {
-      status: 'Paid',
-      paymentMethod: 'Online Paid',
-      mode: 'UPI',
-    },
-    otp: '3194',
-    timestamps: {
-      createdAt: '19 May 2024 08:20 AM',
-      shippedAt: '19 May 2024\n10:05 AM',
-    },
-    courier: {
-      partner: 'Delhivery',
-      trackingId: '1234567890124',
-      trackingUrl: '#track',
-    },
-    currentStageName: 'Shipped (19 May)',
-  },
-  {
-    id: 'ord-shp-3',
-    orderNumber: '#ORD-10087',
-    orderType: 'Online Order',
-    status: 'shipped',
-    customer: {
-      name: 'Arjun Mehta',
-      email: 'arjunmehta@gmail.com',
-      phone: '+91 99887 66554',
-      avatarInitials: 'AM',
-    },
-    deliveryAddress: {
-      street: '56, Sector 15',
-      locality: 'Sector 15',
-      city: 'Gurgaon',
-      state: 'Haryana',
-      pincode: '122001',
-      fullText: 'Arjun Mehta\n56, Sector 15\nGurgaon - 122001',
-    },
-    items: [
-      { id: 'i5', name: 'Men Jeans', variant: 'Grey, 34', price: 899, quantity: 1 },
-    ],
-    itemsSummary: {
-      count: 1,
-      title: 'Men Jeans',
-      categoryIconType: 'jeans',
-    },
-    pricing: {
-      itemsTotal: 899,
-      packagingFee: 0,
-      deliveryFee: 0,
-      totalAmount: 899,
-    },
-    payment: {
-      status: 'Paid',
-      paymentMethod: 'Online Paid',
-      mode: 'UPI',
-    },
-    otp: '7641',
-    timestamps: {
-      createdAt: '19 May 2024 08:10 AM',
-      shippedAt: '19 May 2024\n09:58 AM',
-    },
-    courier: {
-      partner: 'Delhivery',
-      trackingId: '1234567890456',
-      trackingUrl: '#track',
-    },
-    currentStageName: 'Shipped (19 May)',
-  },
-
-  // 5. Delivered Orders
-  {
-    id: 'ord-del-1',
-    orderNumber: '#ORD-10089',
-    orderType: 'Online Order',
-    status: 'delivered',
-    customer: {
-      name: 'Rohan Verma',
-      email: 'rohanverma@gmail.com',
-      phone: '+91 98765 43210',
-      avatarInitials: 'RV',
-    },
-    deliveryAddress: {
-      street: '123, Green Park, Lajpat Nagar',
-      locality: 'Lajpat Nagar',
-      city: 'New Delhi',
-      state: 'Delhi',
-      pincode: '110024',
-      fullText: 'Rohan Verma\n123, Green Park, Lajpat Nagar\nNew Delhi - 110024',
-    },
-    items: [
-      { id: 'i1', name: 'Men T-shirt', variant: 'Navy, L', price: 999, quantity: 1 },
-      { id: 'i2', name: 'Slim Fit Jeans', variant: '32', price: 1800, quantity: 2 },
-    ],
-    itemsSummary: {
-      count: 3,
-      title: 'Men T-shirt, Jeans',
-      extraCount: 1,
-      categoryIconType: 'tshirt',
-    },
-    pricing: {
-      itemsTotal: 2799,
-      packagingFee: 0,
-      deliveryFee: 0,
-      totalAmount: 2799,
-    },
-    payment: {
-      status: 'Paid',
-      paymentMethod: 'Online Paid',
-      mode: 'UPI',
-    },
-    otp: '4827',
-    timestamps: {
-      createdAt: '19 May 2024 08:00 AM',
-      deliveredAt: '19 May 2024\n12:30 PM',
-    },
-    currentStageName: 'Delivered (19 May)',
-  },
-  {
-    id: 'ord-del-2',
-    orderNumber: '#ORD-10088',
-    orderType: 'Online Order',
-    status: 'delivered',
-    customer: {
-      name: 'Sneha Kapoor',
-      email: 'snehakapoor@gmail.com',
-      phone: '+91 91234 56789',
-      avatarInitials: 'SK',
-    },
-    deliveryAddress: {
-      street: 'Flat 4B, Shanti Apartments',
-      locality: 'Andheri West',
-      city: 'Mumbai',
-      state: 'Maharashtra',
-      pincode: '400058',
-      fullText: 'Sneha Kapoor\nFlat 4B, Shanti Apartments\nAndheri West, Mumbai - 400058',
-    },
-    items: [
-      { id: 'i3', name: 'Kurti', variant: 'Red, M', price: 1199, quantity: 1 },
-      { id: 'i4', name: 'Dupatta', variant: 'Red', price: 450, quantity: 1 },
-    ],
-    itemsSummary: {
-      count: 2,
-      title: 'Kurti, Dupatta',
-      categoryIconType: 'kurti',
-    },
-    pricing: {
-      itemsTotal: 1649,
-      packagingFee: 0,
-      deliveryFee: 0,
-      totalAmount: 1649,
-    },
-    payment: {
-      status: 'Paid',
-      paymentMethod: 'Online Paid',
-      mode: 'UPI',
-    },
-    otp: '3194',
-    timestamps: {
-      createdAt: '19 May 2024 07:50 AM',
-      deliveredAt: '19 May 2024\n12:05 PM',
-    },
-    currentStageName: 'Delivered (19 May)',
-  },
-  {
-    id: 'ord-del-3',
-    orderNumber: '#ORD-10087',
-    orderType: 'Online Order',
-    status: 'delivered',
-    customer: {
-      name: 'Arjun Mehta',
-      email: 'arjunmehta@gmail.com',
-      phone: '+91 99887 66554',
-      avatarInitials: 'AM',
-    },
-    deliveryAddress: {
-      street: '56, Sector 15',
-      locality: 'Sector 15',
-      city: 'Gurgaon',
-      state: 'Haryana',
-      pincode: '122001',
-      fullText: 'Arjun Mehta\n56, Sector 15\nGurgaon - 122001',
-    },
-    items: [
-      { id: 'i5', name: 'Men Jeans', variant: 'Grey, 34', price: 899, quantity: 1 },
-    ],
-    itemsSummary: {
-      count: 1,
-      title: 'Men Jeans',
-      categoryIconType: 'jeans',
-    },
-    pricing: {
-      itemsTotal: 899,
-      packagingFee: 0,
-      deliveryFee: 0,
-      totalAmount: 899,
-    },
-    payment: {
-      status: 'Paid',
-      paymentMethod: 'Online Paid',
-      mode: 'UPI',
-    },
-    otp: '7641',
-    timestamps: {
-      createdAt: '19 May 2024 07:30 AM',
-      deliveredAt: '19 May 2024\n11:45 AM',
-    },
-    currentStageName: 'Delivered (19 May)',
-  },
-
-  // 6. Cancelled Orders
-  {
-    id: 'ord-can-1',
-    orderNumber: '#ORD-10072',
-    orderType: 'Online Order',
-    status: 'cancelled',
-    customer: {
-      name: 'Vikram Sengupta',
-      email: 'vikram.s@outlook.com',
-      phone: '+91 98450 11223',
-      avatarInitials: 'VS',
-    },
-    deliveryAddress: {
-      street: '14, Palm Avenue',
-      locality: 'Ballygunge',
-      city: 'Kolkata',
-      state: 'West Bengal',
-      pincode: '700019',
-      fullText: 'Vikram Sengupta\n14, Palm Avenue\nKolkata - 700019',
-    },
-    items: [
-      { id: 'i11', name: 'Leather Formal Loafers', variant: 'Tan, 42', price: 2499, quantity: 1 },
-    ],
-    itemsSummary: {
-      count: 1,
-      title: 'Leather Loafers',
-      categoryIconType: 'jeans',
-    },
-    pricing: {
-      itemsTotal: 2499,
-      packagingFee: 0,
-      deliveryFee: 0,
-      totalAmount: 2499,
-    },
-    payment: {
-      status: 'Refunded',
-      paymentMethod: 'Online Paid',
-      mode: 'UPI',
-    },
-    otp: '9120',
-    timestamps: {
-      createdAt: '18 May 2024 11:20 AM',
-      cancelledAt: '18 May 2024\n01:15 PM',
-    },
-    cancellation: {
-      reason: 'Customer requested cancellation before shipment',
-      refundStatus: 'Refunded to UPI (₹2,499)',
-    },
-    currentStageName: 'Cancelled (18 May)',
-  },
-  {
-    id: 'ord-can-2',
-    orderNumber: '#ORD-10071',
-    orderType: 'Online Order',
-    status: 'cancelled',
-    customer: {
-      name: 'Ananya Roy',
-      email: 'ananya.roy@gmail.com',
-      phone: '+91 97312 44556',
-      avatarInitials: 'AR',
-    },
-    deliveryAddress: {
-      street: '88, 7th Main',
-      locality: 'Indiranagar',
-      city: 'Bengaluru',
-      state: 'Karnataka',
-      pincode: '560038',
-      fullText: 'Ananya Roy\n88, 7th Main\nBengaluru - 560038',
-    },
-    items: [
-      { id: 'i12', name: 'Cotton Summer Maxi Dress', variant: 'Floral, M', price: 1899, quantity: 1 },
-    ],
-    itemsSummary: {
-      count: 1,
-      title: 'Summer Dress',
-      categoryIconType: 'dress',
-    },
-    pricing: {
-      itemsTotal: 1899,
-      packagingFee: 0,
-      deliveryFee: 0,
-      totalAmount: 1899,
-    },
-    payment: {
-      status: 'Refunded',
-      paymentMethod: 'Online Paid',
-      mode: 'Card',
-    },
-    otp: '6543',
-    timestamps: {
-      createdAt: '18 May 2024 10:05 AM',
-      cancelledAt: '18 May 2024\n11:00 AM',
-    },
-    cancellation: {
-      reason: 'Item variant unavailable in store inventory',
-      refundStatus: 'Refunded to Card (₹1,899)',
-    },
-    currentStageName: 'Cancelled (18 May)',
-  },
-
-  // 7. Returns
-  {
-    id: 'ord-ret-1',
-    orderNumber: '#ORD-10065',
-    orderType: 'Online Order',
-    status: 'return_requested',
-    customer: {
-      name: 'Manoj Tiwari',
-      email: 'manoj.tiwari@gmail.com',
-      phone: '+91 99100 88221',
-      avatarInitials: 'MT',
-    },
-    deliveryAddress: {
-      street: 'Flat 102, Silver Oak Heights',
-      locality: 'Noida Sector 62',
-      city: 'Noida',
-      state: 'Uttar Pradesh',
-      pincode: '201309',
-      fullText: 'Manoj Tiwari\nFlat 102, Silver Oak Heights\nNoida - 201309',
-    },
-    items: [
-      { id: 'i13', name: 'Tailored Blazer Jacket', variant: 'Black, 40', price: 3499, quantity: 1 },
-    ],
-    itemsSummary: {
-      count: 1,
-      title: 'Tailored Blazer',
-      categoryIconType: 'tshirt',
-    },
-    pricing: {
-      itemsTotal: 3499,
-      packagingFee: 0,
-      deliveryFee: 0,
-      totalAmount: 3499,
-    },
-    payment: {
-      status: 'Pending',
-      paymentMethod: 'Online Paid',
-      mode: 'UPI',
-    },
-    otp: '1829',
-    timestamps: {
-      createdAt: '17 May 2024 02:30 PM',
-      deliveredAt: '18 May 2024 01:10 PM',
-      returnRequestedAt: '19 May 2024\n09:15 AM',
-    },
-    returns: {
-      returnStatus: 'Pickup Scheduled',
-      refundStatus: 'Pending Inspection',
-      returnReason: 'Size did not fit (too tight on shoulders)',
-    },
-    currentStageName: 'Return Requested (19 May)',
-  },
-  {
-    id: 'ord-ret-2',
-    orderNumber: '#ORD-10064',
-    orderType: 'Online Order',
-    status: 'return_requested',
-    customer: {
-      name: 'Kavita Joshi',
-      email: 'kavita.j@yahoo.com',
-      phone: '+91 98220 33991',
-      avatarInitials: 'KJ',
-    },
-    deliveryAddress: {
-      street: '45, Deccan Gymkhana',
-      locality: 'FC Road',
-      city: 'Pune',
-      state: 'Maharashtra',
-      pincode: '411004',
-      fullText: 'Kavita Joshi\n45, Deccan Gymkhana\nPune - 411004',
-    },
-    items: [
-      { id: 'i14', name: 'Handcrafted Silk Dupatta', variant: 'Emerald Green', price: 1299, quantity: 1 },
-    ],
-    itemsSummary: {
-      count: 1,
-      title: 'Silk Dupatta',
-      categoryIconType: 'kurti',
-    },
-    pricing: {
-      itemsTotal: 1299,
-      packagingFee: 0,
-      deliveryFee: 0,
-      totalAmount: 1299,
-    },
-    payment: {
-      status: 'Pending',
-      paymentMethod: 'Online Paid',
-      mode: 'UPI',
-    },
-    otp: '4288',
-    timestamps: {
-      createdAt: '17 May 2024 10:15 AM',
-      deliveredAt: '18 May 2024 11:30 AM',
-      returnRequestedAt: '18 May 2024\n05:40 PM',
-    },
-    returns: {
-      returnStatus: 'Under Inspection',
-      refundStatus: 'Refund Initiated',
-      returnReason: 'Color shade differs from website photo',
-    },
-    currentStageName: 'Return Requested (18 May)',
-  },
-];
+      createdAt: apiOrder.createdAt
+        ? new Date(apiOrder.createdAt).toLocaleString('en-IN', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          })
+        : 'Recent',
+      deliveredAt: apiOrder.deliveredAt
+        ? new Date(apiOrder.deliveredAt).toLocaleString('en-IN')
+        : undefined,
+    },
+    currentStageName:
+      mappedStatus === 'new'
+        ? 'New Order'
+        : mappedStatus === 'accepted'
+        ? 'Accepted'
+        : mappedStatus === 'ready_to_ship'
+        ? 'Ready to Ship'
+        : mappedStatus === 'shipped'
+        ? 'Shipped'
+        : mappedStatus === 'delivered'
+        ? 'Delivered'
+        : 'Cancelled',
+  };
+}
 
 export const useOrderStore = create<OrderStoreState>((set, get) => ({
-  orders: initialMockOrders,
+  orders: [],
+  isLoading: false,
+  error: null,
   activeTab: 'new_orders',
   searchQuery: '',
   paymentStatusFilter: 'all',
   orderStatusFilter: 'all',
   fulfillmentTypeFilter: 'all',
-  dateRange: '13 May 2024 - 19 May 2024',
-  selectedOrderIds: ['ord-1'], // Pre-selected row 1 matching mockup!
+  dateRange: 'Recent Orders',
+  selectedOrderIds: [],
+
+  fetchOrders: async (storeId?: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const endpoint = storeId ? `/orders/store/${storeId}` : '/orders/all';
+      const rawData = await api.get<any[]>(endpoint).catch(async () => {
+        // Fallback to my-orders if /orders/all is forbidden
+        return await api.get<any[]>('/orders');
+      });
+      const orderList = Array.isArray(rawData) ? rawData : (rawData as any)?.data || [];
+      const mapped = orderList.map(mapApiOrderToMerchantRecord);
+      set({ orders: mapped, isLoading: false });
+    } catch (err: any) {
+      console.warn('Could not fetch orders from API:', err?.message || err);
+      set({ orders: [], isLoading: false, error: err?.message || 'Failed to fetch orders' });
+    }
+  },
 
   setActiveTab: (tab) => set({ activeTab: tab, selectedOrderIds: [] }),
   setSearchQuery: (query) => set({ searchQuery: query }),
@@ -1207,14 +277,18 @@ export const useOrderStore = create<OrderStoreState>((set, get) => ({
   selectAllOrders: (orderIds) => set({ selectedOrderIds: orderIds }),
   clearSelection: () => set({ selectedOrderIds: [] }),
 
-  acceptOrder: (orderId) =>
+  acceptOrder: (orderId) => {
+    ordersApi.updateOrderStatus(orderId, 'confirmed').catch((err) => {
+      console.warn('API update order status error:', err);
+    });
     set((state) => ({
       orders: state.orders.map((o) =>
         o.id === orderId
           ? { ...o, status: 'accepted', currentStageName: 'Accepted (Just now)' }
           : o
       ),
-    })),
+    }));
+  },
 
   acceptAllNewOrders: () =>
     set((state) => ({
@@ -1225,7 +299,10 @@ export const useOrderStore = create<OrderStoreState>((set, get) => ({
       ),
     })),
 
-  rejectOrder: (orderId) =>
+  rejectOrder: (orderId) => {
+    ordersApi.updateOrderStatus(orderId, 'cancelled').catch((err) => {
+      console.warn('API update order status error:', err);
+    });
     set((state) => ({
       orders: state.orders.map((o) =>
         o.id === orderId
@@ -1240,18 +317,26 @@ export const useOrderStore = create<OrderStoreState>((set, get) => ({
             }
           : o
       ),
-    })),
+    }));
+  },
 
-  markReadyToShip: (orderId) =>
+  markReadyToShip: (orderId) => {
+    ordersApi.updateOrderStatus(orderId, 'packed').catch((err) => {
+      console.warn('API update order status error:', err);
+    });
     set((state) => ({
       orders: state.orders.map((o) =>
         o.id === orderId
           ? { ...o, status: 'ready_to_ship', currentStageName: 'Ready to Ship (Just now)' }
           : o
       ),
-    })),
+    }));
+  },
 
-  dispatchOrder: (orderId) =>
+  dispatchOrder: (orderId) => {
+    ordersApi.updateOrderStatus(orderId, 'out_for_delivery').catch((err) => {
+      console.warn('API update order status error:', err);
+    });
     set((state) => ({
       orders: state.orders.map((o) =>
         o.id === orderId
@@ -1259,8 +344,8 @@ export const useOrderStore = create<OrderStoreState>((set, get) => ({
               ...o,
               status: 'shipped',
               courier: {
-                partner: 'Delhivery',
-                trackingId: `1234567${Math.floor(100000 + Math.random() * 900000)}`,
+                partner: 'Local Express Delivery',
+                trackingId: `TRK-${Math.floor(100000 + Math.random() * 900000)}`,
                 trackingUrl: '#track',
               },
               timestamps: {
@@ -1271,7 +356,8 @@ export const useOrderStore = create<OrderStoreState>((set, get) => ({
             }
           : o
       ),
-    })),
+    }));
+  },
 
   addManualOrder: (newOrder) => {
     const nextNum = Math.floor(10330 + Math.random() * 50);

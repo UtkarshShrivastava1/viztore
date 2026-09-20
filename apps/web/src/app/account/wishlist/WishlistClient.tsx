@@ -3,74 +3,20 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { 
-  Share2, 
-  PenLine, 
-  Heart, 
-  MoreVertical,
-  ChevronRight,
-  ChevronDown
+import {
+  Heart,
+  Share2,
+  PenLine,
+  Trash2,
+  ShoppingBag,
 } from 'lucide-react';
-
-const mockWishlist = [
-  {
-    id: 1,
-    title: 'Men White Sneakers',
-    store: 'fashion hub',
-    size: '9',
-    price: 1299,
-    inStock: true,
-    image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&q=80&w=200',
-  },
-  {
-    id: 2,
-    title: 'boAt Wave Sigma 3 Smartwatch',
-    store: 'fashion hub',
-    color: 'Black',
-    price: 1799,
-    inStock: true,
-    image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=200',
-  },
-  {
-    id: 3,
-    title: 'Men Casual Shirt',
-    store: 'fashion hub',
-    size: 'L',
-    color: 'Navy Blue',
-    price: 699,
-    inStock: true,
-    image: 'https://images.unsplash.com/photo-1596755094514-f87e32f85e2c?auto=format&fit=crop&q=80&w=200',
-  },
-  {
-    id: 4,
-    title: 'Laptop Backpack',
-    store: 'fashion hub',
-    color: 'Black',
-    price: 899,
-    inStock: true,
-    image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&q=80&w=200',
-  },
-  {
-    id: 5,
-    title: 'pTron Bassbuds Vista',
-    store: 'fashion hub',
-    color: 'Mint Green',
-    price: 1099,
-    inStock: true,
-    image: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&q=80&w=200',
-  },
-  {
-    id: 6,
-    title: 'Wild Stone Blue Eau De Parfum',
-    store: 'fashion hub',
-    size: '100 ml',
-    price: 499,
-    inStock: true,
-    image: 'https://images.unsplash.com/photo-1588265008544-716d80ff525e?auto=format&fit=crop&q=80&w=200',
-  }
-];
+import { useWishlistFlyoutStore } from '@/stores/wishlistFlyoutStore';
+import { useCartStore } from '@/stores/cart.store';
 
 export function WishlistClient() {
+  const { items, removeItem } = useWishlistFlyoutStore();
+  const { addItem: addToCart } = useCartStore();
+
   return (
     <div className="min-h-screen bg-white md:bg-[#f4f5f9] pb-24 relative">
       {/* Background Gradient matching header */}
@@ -80,14 +26,16 @@ export function WishlistClient() {
         {/* Header */}
         <div>
           <h1 className="text-[22px] font-bold text-[#192168]">My Wishlist</h1>
-          <p className="text-[12px] font-medium text-surface-500 mt-0.5">Items you love, saved for later.</p>
+          <p className="text-[12px] font-medium text-surface-500 mt-0.5">
+            Items you love, saved for later.
+          </p>
         </div>
 
         {/* Action Bar */}
         <div className="flex items-center justify-between pb-3 border-b border-surface-100">
           <div className="flex items-center gap-2">
             <Heart className="w-4 h-4 text-rose-500 fill-rose-500" />
-            <span className="text-[12px] font-bold text-[#192168]">{mockWishlist.length} Items</span>
+            <span className="text-[12px] font-bold text-[#192168]">{items.length} Items</span>
           </div>
           <div className="flex items-center gap-4">
             <button className="flex items-center gap-1.5 text-[#1668F6]">
@@ -103,81 +51,97 @@ export function WishlistClient() {
         </div>
 
         {/* Wishlist Items */}
-        <div className="space-y-4">
-          {mockWishlist.map((item) => (
-            <div key={item.id} className="bg-white md:rounded-2xl md:shadow-sm md:border md:border-surface-200/50 flex gap-4 md:p-4">
-              {/* Product Image */}
-              <div className="w-[100px] h-[100px] bg-[#f4f5f9] rounded-xl overflow-hidden flex-shrink-0 relative">
-                <Image 
-                  src={item.image}
-                  alt={item.title}
-                  fill
-                  className="object-cover mix-blend-multiply"
-                />
-              </div>
-
-              {/* Product Details */}
-              <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5 relative">
-                <div className="pr-8">
-                  <h3 className="text-[14px] font-bold text-[#192168] line-clamp-1">{item.title}</h3>
-                  <p className="text-[10px] font-bold text-[#1668F6] mt-0.5 lowercase">{item.store}</p>
-                  
-                  {/* Selectors */}
-                  <div className="mt-1.5 flex flex-wrap gap-2">
-                    {(item.size || item.color) && (
-                      <button className="flex items-center gap-1.5 px-2 py-1 rounded border border-surface-200 bg-white hover:bg-surface-50 transition-colors">
-                        <span className="text-[9px] font-semibold text-surface-600">
-                          {item.size && `Size: ${item.size}`}
-                          {item.size && item.color && '  •  '}
-                          {item.color && `Color: ${item.color}`}
-                        </span>
-                        <ChevronDown className="w-3 h-3 text-surface-400" />
-                      </button>
-                    )}
-                  </div>
+        {items.length === 0 ? (
+          <div className="py-16 text-center bg-white rounded-3xl p-8 border border-slate-100">
+            <Heart className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+            <h3 className="text-base font-bold text-slate-800">Your wishlist is empty</h3>
+            <p className="text-xs text-slate-500 mt-1">
+              Explore local stores and products to save items you love.
+            </p>
+            <Link
+              href="/"
+              className="inline-block mt-4 px-5 py-2 rounded-xl bg-blue-600 text-white font-semibold text-xs hover:bg-blue-700 transition-colors"
+            >
+              Explore Products
+            </Link>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {items.map((item) => (
+              <div
+                key={item.id}
+                className="bg-white rounded-2xl shadow-sm border border-surface-200/50 flex gap-4 p-4"
+              >
+                {/* Product Image */}
+                <div className="w-[100px] h-[100px] bg-[#f4f5f9] rounded-xl overflow-hidden flex-shrink-0 relative">
+                  <Image
+                    src={item.imageUrl}
+                    alt={item.title}
+                    fill
+                    className="object-cover mix-blend-multiply"
+                  />
                 </div>
 
-                {/* Price and Action */}
-                <div className="mt-3 flex items-center justify-between">
-                  <div>
-                    <span className="text-[16px] font-extrabold text-[#192168]">₹{item.price.toLocaleString('en-IN')}</span>
-                    {item.inStock && (
-                      <p className="text-[10px] font-bold text-[#06B95F] mt-0.5">In Stock</p>
+                {/* Product Details */}
+                <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5 relative">
+                  <div className="pr-8">
+                    <h3 className="text-[14px] font-bold text-[#192168] line-clamp-1">
+                      {item.title}
+                    </h3>
+                    <p className="text-[10px] font-bold text-[#1668F6] mt-0.5 lowercase">
+                      {item.storeName}
+                    </p>
+                    {item.selectedVariant && (
+                      <p className="text-[11px] text-slate-500 mt-1">
+                        Variant: {item.selectedVariant}
+                      </p>
                     )}
                   </div>
-                  <div className="flex items-center gap-3">
-                    <button className="px-4 py-1.5 rounded border border-[#1668F6] text-[#1668F6] text-[11px] font-bold hover:bg-[#1668F6]/5 transition-colors">
+
+                  {/* Remove Button */}
+                  <button
+                    onClick={() => removeItem(item.id)}
+                    className="absolute top-0 right-0 p-1 text-slate-400 hover:text-rose-500 transition-colors"
+                    title="Remove item"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+
+                  <div className="flex items-center justify-between mt-3">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-[15px] font-extrabold text-[#192168]">
+                        ₹{item.price.toLocaleString('en-IN')}
+                      </span>
+                      {item.originalPrice && item.originalPrice > item.price && (
+                        <span className="text-[12px] text-surface-400 line-through">
+                          ₹{item.originalPrice.toLocaleString('en-IN')}
+                        </span>
+                      )}
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        addToCart({
+                          productId: item.productId,
+                          name: item.title,
+                          unitPrice: item.price,
+                          storeId: 'store-1',
+                          storeName: item.storeName || 'Local Store',
+                          imageUrl: item.imageUrl,
+                        });
+                        removeItem(item.id);
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1668F6] text-white rounded-lg text-xs font-bold hover:bg-blue-700 transition-colors"
+                    >
+                      <ShoppingBag className="w-3.5 h-3.5" />
                       Move to Cart
                     </button>
-                    <button className="text-surface-400 p-1">
-                      <MoreVertical className="w-4 h-4" />
-                    </button>
                   </div>
                 </div>
-
-                {/* Heart Button */}
-                <button className="absolute top-0 right-0 p-1 text-rose-500">
-                  <Heart className="w-4 h-4 fill-rose-500" />
-                </button>
               </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Price Drop Alerts */}
-        <div className="bg-[#f8faff] border border-blue-100 rounded-xl p-4 flex items-center justify-between mt-8 mb-4">
-          <div className="flex items-center gap-3">
-            <Heart className="w-5 h-5 text-[#1668F6] fill-[#1668F6]" />
-            <div>
-              <h4 className="text-[12px] font-bold text-[#192168]">Price Drop Alerts</h4>
-              <p className="text-[10px] font-medium text-surface-500 mt-0.5">We'll notify you when prices drop on your wishlist items.</p>
-            </div>
+            ))}
           </div>
-          <button className="flex items-center gap-1 text-[11px] font-bold text-[#1668F6]">
-            Enable Alerts <ChevronRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
+        )}
       </main>
     </div>
   );

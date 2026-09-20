@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   Settings, 
@@ -23,50 +23,27 @@ import {
   User,
   Star
 } from 'lucide-react';
-import { branding } from '@repo/shared-types';
+import { branding, type IStore } from '@repo/shared-types';
 import { useAuthStore } from '@/stores/auth.store';
-
-const mockStores = [
-  {
-    id: 1,
-    name: 'Fashion Hub',
-    category: 'Clothing, Accessories',
-    rating: 4.5,
-    reviews: '1.2K',
-    bgColor: 'bg-black',
-    textColor: 'text-white'
-  },
-  {
-    id: 2,
-    name: 'Tech World',
-    category: 'Electronics',
-    rating: 4.3,
-    reviews: '856',
-    bgColor: 'bg-[#1e4620]',
-    textColor: 'text-[#ffc107]'
-  },
-  {
-    id: 3,
-    name: 'Home Delight',
-    category: 'Home & Kitchen',
-    rating: 4.6,
-    reviews: '1.1K',
-    bgColor: 'bg-[#6b1e22]',
-    textColor: 'text-white'
-  },
-  {
-    id: 4,
-    name: 'Beauty Glow',
-    category: 'Beauty & Personal Care',
-    rating: 4.2,
-    reviews: '732',
-    bgColor: 'bg-[#ffc1cc]',
-    textColor: 'text-[#e91e63]'
-  }
-];
+import { fetchAllStores } from '@/lib/api/stores';
 
 export function AccountClient() {
   const { user, isAuthenticated, openAuthModal } = useAuthStore();
+  const [favouriteStores, setFavouriteStores] = useState<IStore[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetchAllStores({ limit: 6 })
+      .then((res) => {
+        if (isMounted && res.stores?.length) {
+          setFavouriteStores(res.stores);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#f4f5f9] pb-24 relative">
@@ -261,44 +238,55 @@ export function AccountClient() {
           </div>
           
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
-            {mockStores.map((store) => (
-              <div key={store.id} className="w-[110px] flex-shrink-0 bg-white rounded-2xl p-3 shadow-sm border border-surface-200/50 flex flex-col items-center relative">
-                <button className="absolute top-2 right-2 text-[#192168]">
-                   <Heart className="w-3.5 h-3.5" />
-                </button>
-                <div className={`w-[52px] h-[52px] rounded-full ${store.bgColor} flex items-center justify-center mb-2.5`}>
-                  {store.name.includes('Tech') ? (
-                    <div className="flex flex-col items-center">
-                      <span className={`text-[10px] font-extrabold ${store.textColor} leading-tight`}>Tech</span>
-                      <span className={`text-[10px] font-extrabold ${store.textColor} leading-tight`}>World</span>
-                    </div>
-                  ) : store.name.includes('Home') ? (
-                    <div className="flex flex-col items-center">
-                      <Store className="w-4 h-4 text-white mb-0.5" />
-                      <span className="text-[7px] text-white">Home Delight</span>
-                    </div>
-                  ) : store.name.includes('Beauty') ? (
-                     <div className="flex flex-col items-center">
-                      <span className={`text-[10px] font-extrabold ${store.textColor} leading-tight`}>Beauty</span>
-                      <span className={`text-[10px] font-extrabold ${store.textColor} leading-tight`}>Glow</span>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center text-center px-1">
-                      <span className={`text-[10px] font-extrabold ${store.textColor} leading-tight`}>
-                        {store.name.split(' ')[0]}<br/>{store.name.split(' ')[1]}
+            {favouriteStores.length === 0 ? (
+              <p className="text-xs text-slate-400 py-3 px-1">No favourite stores saved yet.</p>
+            ) : (
+              favouriteStores.map((store) => (
+                <Link
+                  key={store._id || (store as any).id}
+                  href={`/stores/${store.slug}`}
+                  className="w-[110px] flex-shrink-0 bg-white rounded-2xl p-3 shadow-sm border border-surface-200/50 flex flex-col items-center relative hover:border-blue-200 transition-colors"
+                >
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                    className="absolute top-2 right-2 text-rose-500"
+                  >
+                    <Heart className="w-3.5 h-3.5 fill-rose-500" />
+                  </button>
+                  <div className="w-[52px] h-[52px] rounded-full bg-slate-100 flex items-center justify-center mb-2.5 overflow-hidden">
+                    {store.logoUrl ? (
+                      <img
+                        src={store.logoUrl}
+                        alt={store.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-sm font-extrabold text-slate-700">
+                        {store.name.slice(0, 2).toUpperCase()}
                       </span>
-                    </div>
-                  )}
-                </div>
-                <h4 className="text-[11px] font-bold text-[#192168] text-center line-clamp-1">{store.name}</h4>
-                <p className="text-[8px] font-medium text-surface-500 mt-0.5 text-center line-clamp-1 leading-tight px-1">{store.category}</p>
-                <div className="flex items-center gap-0.5 mt-1.5">
-                  <Star className="w-2.5 h-2.5 text-[#06B95F] fill-[#06B95F]" />
-                  <span className="text-[9px] font-bold text-[#06B95F]">{store.rating}</span>
-                  <span className="text-[8px] font-medium text-surface-500">({store.reviews})</span>
-                </div>
-              </div>
-            ))}
+                    )}
+                  </div>
+                  <h4 className="text-[11px] font-bold text-[#192168] text-center line-clamp-1">
+                    {store.name}
+                  </h4>
+                  <p className="text-[8px] font-medium text-surface-500 mt-0.5 text-center line-clamp-1 leading-tight px-1">
+                    {store.category}
+                  </p>
+                  <div className="flex items-center gap-0.5 mt-1.5">
+                    <Star className="w-2.5 h-2.5 text-[#06B95F] fill-[#06B95F]" />
+                    <span className="text-[9px] font-bold text-[#06B95F]">
+                      {(store as any).rating || 4.5}
+                    </span>
+                    <span className="text-[8px] font-medium text-surface-500">
+                      ({(store as any).reviewCount || 100}+)
+                    </span>
+                  </div>
+                </Link>
+              ))
+            )}
           </div>
         </div>
 

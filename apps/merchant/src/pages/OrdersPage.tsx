@@ -13,7 +13,11 @@ interface OrdersPageProps {
 }
 
 export const OrdersPage: React.FC<OrdersPageProps> = ({ onOpenCreateOrder }) => {
-  const { activeTab, setActiveTab, orders } = useOrderStore();
+  const { activeTab, setActiveTab, orders, fetchOrders, isLoading } = useOrderStore();
+
+  React.useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
 
   const [selectedOrder, setSelectedOrder] = useState<MerchantOrderRecord | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
