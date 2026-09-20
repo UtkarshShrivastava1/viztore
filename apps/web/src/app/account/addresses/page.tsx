@@ -6,30 +6,9 @@ import { Plus, ShieldCheck, Loader2 } from 'lucide-react';
 import { userApi } from '@/lib/api/user';
 import type { IAddress } from '@repo/shared-types';
 
-const defaultFallbackAddresses: Address[] = [
-  {
-    id: 'addr-1',
-    type: 'home',
-    label: 'Home',
-    name: 'Customer Account',
-    addressString: 'House No. 123, Ring Road,\nCity Center - 800001\nIndia',
-    phone: '+91 98765 43210',
-    isDefault: true,
-  },
-  {
-    id: 'addr-2',
-    type: 'work',
-    label: 'Office / Work',
-    name: 'Customer Account',
-    addressString: 'Tech Park, 3rd Floor,\nCommercial Zone - 800001\nIndia',
-    phone: '+91 98765 43210',
-    isDefault: false,
-  },
-];
-
 export default function AddressesPage() {
-  const [addresses, setAddresses] = useState<Address[]>(defaultFallbackAddresses);
-  const [isLoading, setIsLoading] = useState(false);
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Fetch real addresses from backend API
   useEffect(() => {
@@ -49,9 +28,11 @@ export default function AddressesPage() {
             isDefault: !!addr.isDefault,
           }));
           setAddresses(mapped);
+        } else if (isMounted) {
+          setAddresses([]);
         }
       } catch {
-        // Fallback to default mock addresses gracefully if unauthenticated or offline
+        if (isMounted) setAddresses([]);
       } finally {
         if (isMounted) setIsLoading(false);
       }
@@ -162,6 +143,22 @@ export default function AddressesPage() {
           <div className="py-12 flex items-center justify-center text-slate-400 gap-2">
             <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
             <span className="text-sm">Loading addresses...</span>
+          </div>
+        ) : addresses.length === 0 ? (
+          <div className="py-12 px-4 bg-white rounded-2xl border border-gray-200/80 shadow-xs flex flex-col items-center justify-center text-center mb-8">
+            <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center text-[#1668F6] mb-3 border border-blue-100">
+              <Plus className="w-6 h-6" />
+            </div>
+            <p className="text-sm font-bold text-gray-900 mb-1">No saved addresses yet</p>
+            <p className="text-xs text-gray-500 max-w-sm mb-4">
+              Add your delivery address to enable fast, accurate order fulfillment within your neighborhood.
+            </p>
+            <button
+              onClick={handleAddNew}
+              className="px-4 py-2 bg-[#1668F6] hover:bg-[#0f4bba] text-white text-xs font-semibold rounded-xl transition-colors shadow-sm cursor-pointer inline-flex items-center gap-1.5"
+            >
+              <Plus className="w-4 h-4" /> Add Delivery Address
+            </button>
           </div>
         ) : (
           <div className="flex flex-col gap-4 mb-8">

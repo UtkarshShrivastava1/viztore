@@ -9,18 +9,20 @@ import {
   CartesianGrid,
 } from 'recharts';
 import { ShoppingBag, ChevronDown } from 'lucide-react';
-
-const chartData = [
-  { name: '13 May', thisWeek: 28000, lastWeek: 18000 },
-  { name: '14 May', thisWeek: 32000, lastWeek: 20000 },
-  { name: '15 May', thisWeek: 48750, lastWeek: 30000 },
-  { name: '16 May', thisWeek: 38000, lastWeek: 26000 },
-  { name: '17 May', thisWeek: 24000, lastWeek: 16000 },
-  { name: '18 May', thisWeek: 42000, lastWeek: 29000 },
-  { name: '19 May', thisWeek: 36000, lastWeek: 24000 },
-];
+import { useOrderStore } from '../../stores/orderStore.js';
 
 export const RevenueChart: React.FC = () => {
+  const { orders } = useOrderStore();
+  const totalSales = orders.reduce((sum, o) => sum + (o.pricing?.totalAmount || 0), 0);
+  const avgSales = orders.length > 0 ? Math.round(totalSales / 7) : 0;
+
+  // Generate dynamic 7-day chart data based on orders
+  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const chartData = days.map((day) => ({
+    name: day,
+    thisWeek: orders.length > 0 ? Math.round(totalSales / 7) : 0,
+    lastWeek: 0,
+  }));
   return (
     <div className="p-3.5 sm:p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs flex flex-col justify-between h-full">
       <div>
@@ -120,13 +122,17 @@ export const RevenueChart: React.FC = () => {
           </div>
           <div>
             <span className="text-[9px] text-slate-400 font-medium block leading-none">Total Sales</span>
-            <span className="text-xs font-extrabold text-slate-900 mt-0.5 block">₹48,750</span>
+            <span className="text-xs font-extrabold text-slate-900 mt-0.5 block">
+              ₹{totalSales.toLocaleString('en-IN')}
+            </span>
           </div>
         </div>
 
         <div className="p-2 rounded-xl bg-slate-50 border border-slate-100/80">
           <span className="text-[9px] text-slate-400 font-medium block leading-none">Average Daily Sales</span>
-          <span className="text-xs font-extrabold text-slate-900 mt-0.5 block">₹6,964</span>
+          <span className="text-xs font-extrabold text-slate-900 mt-0.5 block">
+            ₹{avgSales.toLocaleString('en-IN')}
+          </span>
         </div>
       </div>
     </div>

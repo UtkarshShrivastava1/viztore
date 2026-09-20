@@ -49,10 +49,10 @@ export function OrderDetailsClient({ id }: { id: string }) {
   }, [id]);
 
   const displayId = order?.orderNumber || (id.startsWith('ORD') ? `#${id}` : `#ORD-${id}`);
-  const otpDigits = (order?.deliveryOtp || '7382').split('');
+  const otpDigits = (order?.deliveryOtp || '----').split('');
 
   // Status progression checks
-  const currentStatus = order?.status || 'CONFIRMED';
+  const currentStatus = order?.status || 'PENDING';
   const isConfirmed = ['CONFIRMED', 'PACKED', 'SHIPPED', 'OUT_FOR_DELIVERY', 'DELIVERED'].includes(currentStatus);
   const isPacked = ['PACKED', 'SHIPPED', 'OUT_FOR_DELIVERY', 'DELIVERED'].includes(currentStatus);
   const isOutForDelivery = ['SHIPPED', 'OUT_FOR_DELIVERY', 'DELIVERED'].includes(currentStatus);
@@ -60,21 +60,35 @@ export function OrderDetailsClient({ id }: { id: string }) {
 
   const orderDate = order?.createdAt 
     ? new Date(order.createdAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
-    : 'Today, Just now';
+    : 'Recently';
 
-  const address = order?.shippingAddress || {
-    fullName: 'Customer Account',
-    phone: '9876543210',
-    street: '12-B, Sea Breeze Apts, Bandra West',
-    city: 'Mumbai',
-    state: 'Maharashtra',
-    postalCode: '400050',
-    country: 'IN',
-  };
+  const address = order?.shippingAddress;
 
-  const totalAmount = order?.grandTotal ?? 399;
-  const subtotal = order?.subtotal ?? 399;
+  const totalAmount = order?.grandTotal ?? 0;
+  const subtotal = order?.subtotal ?? 0;
   const deliveryFee = order?.shippingFee ?? 0;
+
+  if (!loading && !order) {
+    return (
+      <div className="min-h-screen bg-[#f4f5f9] flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white rounded-2xl p-8 border border-surface-200/80 shadow-sm text-center flex flex-col items-center">
+          <div className="w-16 h-16 rounded-full bg-blue-50 text-[#1668F6] flex items-center justify-center mb-4">
+            <Package className="w-8 h-8" />
+          </div>
+          <h2 className="text-lg font-bold text-[#192168] mb-1">Order Not Found</h2>
+          <p className="text-xs text-gray-500 mb-6 leading-relaxed">
+            We couldn't locate order #{id}. It may not exist in this account or the database was refreshed.
+          </p>
+          <Link
+            href="/account/orders"
+            className="px-5 py-2.5 bg-[#1668F6] hover:bg-[#0f4bba] text-white text-xs font-semibold rounded-xl transition-colors shadow-sm inline-flex items-center gap-2"
+          >
+            View My Orders
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#f4f5f9] pb-24">
@@ -143,21 +157,8 @@ export function OrderDetailsClient({ id }: { id: string }) {
                     </div>
                   ))
                 ) : (
-                  <div className="flex gap-4 py-4">
-                    <div className="w-[60px] h-[70px] rounded-lg overflow-hidden bg-surface-100 flex-shrink-0">
-                      <Image 
-                        src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&q=80&w=200&h=200" 
-                        alt="Product"
-                        width={60}
-                        height={70}
-                        className="w-full h-full object-cover mix-blend-multiply"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="text-[13px] font-extrabold text-[#192168]">Men Graphic Print T-shirt</h4>
-                      <p className="text-[10px] font-medium text-surface-500 mt-1">Olive Green • Size: L • Qty: 1</p>
-                      <p className="text-[13px] font-extrabold text-[#192168] mt-1.5">₹399</p>
-                    </div>
+                  <div className="py-6 text-center text-xs text-gray-400">
+                    No items recorded for this order.
                   </div>
                 )}
               </div>
@@ -189,19 +190,23 @@ export function OrderDetailsClient({ id }: { id: string }) {
                 <h4 className="text-[12px] font-bold text-[#192168]">Delivery Address</h4>
                 <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">Standard Delivery</span>
               </div>
-              <div className="flex gap-3">
-                <div className="w-8 h-8 bg-[#E8F0FE] rounded-full flex items-center justify-center flex-shrink-0">
-                  <MapPin className="w-4 h-4 text-[#1668F6]" />
+              {address ? (
+                <div className="flex gap-3">
+                  <div className="w-8 h-8 bg-[#E8F0FE] rounded-full flex items-center justify-center flex-shrink-0">
+                    <MapPin className="w-4 h-4 text-[#1668F6]" />
+                  </div>
+                  <div>
+                    <h5 className="text-[11px] font-bold text-[#192168]">{address.fullName}</h5>
+                    <p className="text-[10px] font-medium text-surface-500 mt-0.5">
+                      {address.street}<br/>
+                      {address.city}, {address.state} - {address.postalCode}
+                    </p>
+                    <p className="text-[10px] font-medium text-surface-500 mt-1">Phone: +91 {address.phone}</p>
+                  </div>
                 </div>
-                <div>
-                  <h5 className="text-[11px] font-bold text-[#192168]">{address.fullName}</h5>
-                  <p className="text-[10px] font-medium text-surface-500 mt-0.5">
-                    {address.street}<br/>
-                    {address.city}, {address.state} - {address.postalCode}
-                  </p>
-                  <p className="text-[10px] font-medium text-surface-500 mt-1">Phone: +91 {address.phone}</p>
-                </div>
-              </div>
+              ) : (
+                <p className="text-xs text-gray-400">No delivery address attached to this order.</p>
+              )}
             </div>
 
             {/* Bottom Actions */}

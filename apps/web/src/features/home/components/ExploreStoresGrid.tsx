@@ -4,7 +4,6 @@ import React from 'react';
 import Link from 'next/link';
 import { Star, ChevronRight, Zap, Truck, RotateCcw, ShieldCheck, Headphones, Store as StoreIcon } from 'lucide-react';
 import { useAllStores } from '@/hooks/useAllStores';
-import { StoreCardSkeleton } from '@/components/ui/Skeleton';
 
 const trustItems = [
   { icon: Truck, label: 'Fast Delivery', description: 'On orders above ₹199' },
@@ -13,35 +12,7 @@ const trustItems = [
   { icon: Headphones, label: 'Support', description: '24x7 assistance' },
 ];
 
-const fallbackStores = [
-  {
-    id: 'urban-vogue-studio',
-    name: 'Urban Vogue Studio',
-    rating: 4.8,
-    reviewCount: '42',
-    categories: 'Fashion & Ethnic Wear',
-    imageUrl: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=800',
-    hasFastDelivery: true,
-  },
-  {
-    id: 'nexgen-gadget-hub',
-    name: 'NexGen Gadget Hub',
-    rating: 4.9,
-    reviewCount: '88',
-    categories: 'Electronics, Audio & Accessories',
-    imageUrl: 'https://images.unsplash.com/photo-1550009158-9ebf69173e03?auto=format&fit=crop&q=80&w=800',
-    hasFastDelivery: true,
-  },
-  {
-    id: 'greenvalley-organics',
-    name: 'GreenValley Organics',
-    rating: 4.7,
-    reviewCount: '65',
-    categories: 'Grocery & Organic Staples',
-    imageUrl: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&q=80&w=800',
-    hasFastDelivery: true,
-  },
-];
+
 
 export function ExploreStoresGrid() {
   const { data: storesResponse, isLoading } = useAllStores({ limit: 6 });
@@ -119,41 +90,15 @@ export function ExploreStoresGrid() {
             </Link>
           ))
         ) : (
-          fallbackStores.map((store) => (
-            <Link
-              href={`/stores/${store.id}`}
-              key={store.id}
-              className="group flex flex-col bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-lg hover:border-brand-300 transition-all duration-300"
-            >
-              <div className="relative aspect-video w-full overflow-hidden bg-gray-100 border-b border-gray-100">
-                <img
-                  src={store.imageUrl}
-                  alt={store.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-              </div>
-              <div className="p-4 sm:p-5 flex flex-col flex-1">
-                <div className="flex items-start justify-between gap-4 mb-2">
-                  <h3 className="text-xl font-bold text-gray-900 group-hover:text-brand-600 transition-colors line-clamp-1">
-                    {store.name}
-                  </h3>
-                  <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-brand-600 transition-colors shrink-0" />
-                </div>
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="flex items-center gap-1 text-base font-bold text-gray-900">
-                    {store.rating} <Star className="w-4 h-4 fill-[#00B56A] text-[#00B56A]" />
-                  </div>
-                  <span className="text-base text-gray-500">({store.reviewCount})</span>
-                </div>
-                <p className="text-base text-gray-600 line-clamp-1 mb-4">{store.categories}</p>
-                <div className="mt-auto pt-2">
-                  <div className="inline-flex items-center gap-1.5 bg-[#F5F8FF] text-brand-600 text-xs font-semibold px-2.5 py-1 rounded-md">
-                    <Zap className="w-3.5 h-3.5 fill-current" /> Fast Delivery
-                  </div>
-                </div>
-              </div>
-            </Link>
-          ))
+          <div className="col-span-full py-16 px-4 bg-white rounded-2xl border border-gray-200/80 shadow-xs flex flex-col items-center justify-center text-center">
+            <div className="w-16 h-16 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-[#1668F6] mb-3">
+              <StoreIcon className="w-8 h-8" />
+            </div>
+            <h3 className="text-base font-bold text-gray-900 mb-1">No Stores Available Yet</h3>
+            <p className="text-xs text-gray-500 max-w-sm">
+              Local retail partners in your delivery zone will appear here once onboarded.
+            </p>
+          </div>
         )}
       </div>
 

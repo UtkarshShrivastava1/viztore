@@ -1,10 +1,12 @@
 import React from 'react';
 import { ShoppingBag, ClipboardList, Users, ArrowUpRight, Calendar } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore.js';
+import { useOrderStore } from '../../stores/orderStore.js';
+import { useCatalogStore } from '../../stores/catalogStore.js';
 
 export const GreetingHeader: React.FC = () => {
   const { user } = useAuthStore();
-  const storeName = user?.fullName || 'Fashion Hub';
+  const storeName = user?.fullName || 'Merchant Partner';
 
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -33,30 +35,35 @@ export const GreetingHeader: React.FC = () => {
 };
 
 export const KpiCards: React.FC = () => {
+  const { orders } = useOrderStore();
+  const { products } = useCatalogStore();
+
+  const totalSalesAmount = orders.reduce((sum, o) => sum + (o.pricing?.totalAmount || 0), 0);
+
   const kpis = [
     {
       title: 'Total Sales',
-      value: '₹48,750',
-      change: '18.6%',
+      value: `₹${totalSalesAmount.toLocaleString('en-IN')}`,
+      change: orders.length > 0 ? '+100%' : '0%',
       timeframe: 'vs last 7 days',
       icon: ShoppingBag,
       iconColor: 'text-blue-600',
       iconBg: 'bg-blue-50/80 border border-blue-100/60',
     },
     {
-      title: 'Orders',
-      value: '128',
-      change: '12.3%',
+      title: 'Total Orders',
+      value: `${orders.length}`,
+      change: orders.length > 0 ? '+100%' : '0%',
       timeframe: 'vs last 7 days',
       icon: ClipboardList,
       iconColor: 'text-emerald-600',
       iconBg: 'bg-emerald-50/80 border border-emerald-100/60',
     },
     {
-      title: 'Visitors',
-      value: '2,354',
-      change: '15.7%',
-      timeframe: 'vs last 7 days',
+      title: 'Products Listed',
+      value: `${products.length}`,
+      change: products.length > 0 ? '+100%' : '0%',
+      timeframe: 'active in catalog',
       icon: Users,
       iconColor: 'text-purple-600',
       iconBg: 'bg-purple-50/80 border border-purple-100/60',
