@@ -64,13 +64,20 @@ export function createOrderRepository(
   }
 
   async function findById(id: string): Promise<OrderResponse | null> {
-    if (!isValidObjectId(id)) return null;
-    const order = await model.findById(id).read('secondaryPreferred');
-    return order ? toResponse(order) : null;
+    if (isValidObjectId(id)) {
+      const order = await model.findById(id).read('secondaryPreferred');
+      if (order) return toResponse(order);
+    }
+    return findByOrderNumber(id);
   }
 
   async function findByOrderNumber(orderNumber: string): Promise<OrderResponse | null> {
-    const order = await model.findOne({ orderNumber }).read('secondaryPreferred');
+    const cleanNumber = orderNumber.replace(/^#+/, '');
+    const order = await model
+      .findOne({
+        $or: [{ orderNumber: cleanNumber }, { orderNumber: `#${cleanNumber}` }],
+      })
+      .read('secondaryPreferred');
     return order ? toResponse(order) : null;
   }
 
