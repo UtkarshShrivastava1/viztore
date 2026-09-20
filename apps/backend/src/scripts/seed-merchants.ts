@@ -112,28 +112,28 @@ const TEST_CUSTOMERS = [
         label: 'Home',
         recipientName: 'Arjun Mehta',
         phone: '9876543299',
-        street: '12-B, Sea Breeze Apts, Bandra West',
-        city: 'Mumbai',
-        state: 'Maharashtra',
-        pincode: '400050',
+        street: 'Plot 14, Nehru Nagar West',
+        city: 'Bhilai',
+        state: 'Chhattisgarh',
+        pincode: '490020',
         isDefault: true,
-        coordinates: [72.8362, 19.0596],
+        coordinates: [81.3410, 21.2180],
       },
       {
         label: 'Office',
         recipientName: 'Arjun Mehta',
         phone: '9876543299',
-        street: 'Level 4, Maker Maxity, BKC',
-        city: 'Mumbai',
-        state: 'Maharashtra',
-        pincode: '400051',
+        street: 'Shop 4, Civic Centre Commercial Complex, Sector 6',
+        city: 'Bhilai',
+        state: 'Chhattisgarh',
+        pincode: '490006',
         isDefault: false,
-        coordinates: [72.8656, 19.0607],
+        coordinates: [81.3780, 21.1960],
       },
     ],
   },
   {
-    fullName: 'Sneha Rao',
+    fullName: 'Sneha Verma',
     email: 'sneha.customer@example.com',
     phone: '9876543288',
     password: 'Password@123',
@@ -143,14 +143,25 @@ const TEST_CUSTOMERS = [
     addresses: [
       {
         label: 'Home',
-        recipientName: 'Sneha Rao',
+        recipientName: 'Sneha Verma',
         phone: '9876543288',
-        street: '402, Palm Grove, Indiranagar',
-        city: 'Bengaluru',
-        state: 'Karnataka',
-        pincode: '560038',
+        street: 'Flat 202, Surya Vihar, Malviya Nagar',
+        city: 'Durg',
+        state: 'Chhattisgarh',
+        pincode: '491001',
         isDefault: true,
-        coordinates: [77.6412, 12.9716],
+        coordinates: [81.2820, 21.1950],
+      },
+      {
+        label: 'Office',
+        recipientName: 'Sneha Verma',
+        phone: '9876543288',
+        street: 'Ganj Para Commercial Belt, Station Road',
+        city: 'Durg',
+        state: 'Chhattisgarh',
+        pincode: '491001',
+        isDefault: false,
+        coordinates: [81.2790, 21.1880],
       },
     ],
   },
@@ -158,7 +169,7 @@ const TEST_CUSTOMERS = [
 
 const SEED_DATA: MerchantSeedDefinition[] = [
   // ──────────────────────────────────────────────────────────────────────────
-  // 1. Fashion Merchant (Approved - Bandra West, Mumbai)
+  // 1. Fashion Merchant (Approved - Civic Centre, Bhilai)
   // ──────────────────────────────────────────────────────────────────────────
   {
     user: {
@@ -179,14 +190,14 @@ const SEED_DATA: MerchantSeedDefinition[] = [
       bannerUrl: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&auto=format&fit=crop',
       location: {
         type: 'Point',
-        coordinates: [72.8362, 19.0596], // Bandra West, Mumbai
+        coordinates: [81.3780, 21.1960], // Civic Centre, Bhilai
       },
       address: {
-        street: 'Plot 42, Hill Road, Bandra West',
-        landmark: 'Opposite Elco Arcade',
-        city: 'Mumbai',
-        state: 'Maharashtra',
-        pincode: '400050',
+        street: 'Shop 18, Commercial Complex, Civic Centre',
+        landmark: 'Opposite Kala Mandir, Civic Centre',
+        city: 'Bhilai',
+        state: 'Chhattisgarh',
+        pincode: '490006',
       },
       operatingHours: {
         monday: { open: '10:00', close: '22:00', isOpen: true },
@@ -419,14 +430,14 @@ const SEED_DATA: MerchantSeedDefinition[] = [
       bannerUrl: 'https://images.unsplash.com/photo-1550009158-9ebf69173e03?w=1200&auto=format&fit=crop',
       location: {
         type: 'Point',
-        coordinates: [77.6412, 12.9716], // Indiranagar, Bengaluru
+        coordinates: [81.3540, 21.2050], // Akash Ganga / Supela, Bhilai
       },
       address: {
-        street: '784, 100ft Road, HAL 2nd Stage, Indiranagar',
-        landmark: 'Near Metro Pillar 84',
-        city: 'Bengaluru',
-        state: 'Karnataka',
-        pincode: '560038',
+        street: 'Shop 45, G.E. Road, Akash Ganga Market, Supela',
+        landmark: 'Near Supela Clock Tower',
+        city: 'Bhilai',
+        state: 'Chhattisgarh',
+        pincode: '490023',
       },
       operatingHours: {
         monday: { open: '09:30', close: '21:30', isOpen: true },
@@ -443,7 +454,7 @@ const SEED_DATA: MerchantSeedDefinition[] = [
       rating: 4.9,
       reviewCount: 88,
       legalDetails: {
-        gstin: '29AAACP9832K1ZR',
+        gstin: '22AAACP9832K1ZR',
         pan: 'AAACP9832K',
         legalBusinessName: 'NexGen Digital Electronics Pvt Ltd',
         isGstVerified: true,
@@ -627,7 +638,7 @@ const SEED_DATA: MerchantSeedDefinition[] = [
   },
 
   // ──────────────────────────────────────────────────────────────────────────
-  // 3. Grocery & Staples Merchant (Approved - Connaught Place, New Delhi)
+  // 3. Grocery & Staples Merchant (Approved - Nehru Nagar, Bhilai)
   // ──────────────────────────────────────────────────────────────────────────
   {
     user: {
@@ -648,14 +659,14 @@ const SEED_DATA: MerchantSeedDefinition[] = [
       bannerUrl: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=1200&auto=format&fit=crop',
       location: {
         type: 'Point',
-        coordinates: [77.2167, 28.6315], // Connaught Place, New Delhi
+        coordinates: [81.3460, 21.2150], // Nehru Nagar East, Bhilai
       },
       address: {
-        street: 'Block B, Inner Circle, Connaught Place',
-        landmark: 'Near Rajiv Chowk Metro Gate 3',
-        city: 'New Delhi',
-        state: 'Delhi',
-        pincode: '110001',
+        street: 'Plot 12, Commercial Belt, Nehru Nagar East',
+        landmark: 'Near Bhilai Hotel Square',
+        city: 'Bhilai',
+        state: 'Chhattisgarh',
+        pincode: '490020',
       },
       operatingHours: {
         monday: { open: '08:00', close: '22:00', isOpen: true },
@@ -672,7 +683,7 @@ const SEED_DATA: MerchantSeedDefinition[] = [
       rating: 4.7,
       reviewCount: 65,
       legalDetails: {
-        gstin: '07AAACV4120M1ZQ',
+        gstin: '22AAACV4120M1ZQ',
         pan: 'AAACV4120M',
         legalBusinessName: 'GreenValley Agro Naturals LLP',
         isGstVerified: true,
@@ -845,7 +856,7 @@ const SEED_DATA: MerchantSeedDefinition[] = [
   },
 
   // ──────────────────────────────────────────────────────────────────────────
-  // 4. Pharmacy & Wellness Merchant (Approved - Bandra West, Mumbai)
+  // 4. Pharmacy & Wellness Merchant (Approved - Malviya Nagar, Durg)
   // ──────────────────────────────────────────────────────────────────────────
   {
     user: {
@@ -866,14 +877,14 @@ const SEED_DATA: MerchantSeedDefinition[] = [
       bannerUrl: 'https://images.unsplash.com/photo-1631549916768-4119b2e5f926?w=1200&auto=format&fit=crop',
       location: {
         type: 'Point',
-        coordinates: [72.8335, 19.0600], // Bandra West, Mumbai
+        coordinates: [81.2820, 21.1950], // Station Road / Malviya Nagar, Durg
       },
       address: {
-        street: 'Shop 8, Ground Floor, Linking Road',
-        landmark: 'Near National College',
-        city: 'Mumbai',
-        state: 'Maharashtra',
-        pincode: '400050',
+        street: 'Shop 6, Station Road, Malviya Nagar',
+        landmark: 'Near Durg Railway Station Gate 1',
+        city: 'Durg',
+        state: 'Chhattisgarh',
+        pincode: '491001',
       },
       operatingHours: {
         monday: { open: '08:00', close: '23:00', isOpen: true },
@@ -890,7 +901,7 @@ const SEED_DATA: MerchantSeedDefinition[] = [
       rating: 4.9,
       reviewCount: 94,
       legalDetails: {
-        gstin: '27AABCA7712C1ZX',
+        gstin: '22AABCA7712C1ZX',
         pan: 'AABCA7712C',
         legalBusinessName: 'Aura Medico Healthcare LLP',
         isGstVerified: true,
@@ -1073,14 +1084,14 @@ const SEED_DATA: MerchantSeedDefinition[] = [
       bannerUrl: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=1200&auto=format&fit=crop',
       location: {
         type: 'Point',
-        coordinates: [72.8400, 19.0550], // Bandra West
+        coordinates: [81.2790, 21.1880], // Ganj Para, Durg
       },
       address: {
-        street: 'Shop 2, Pali Naka, Bandra West',
-        landmark: 'Near 555 Bakery',
-        city: 'Mumbai',
-        state: 'Maharashtra',
-        pincode: '400050',
+        street: 'Shop 8, Ganj Para Main Market',
+        landmark: 'Near Indira Market, Durg',
+        city: 'Durg',
+        state: 'Chhattisgarh',
+        pincode: '491001',
       },
       operatingHours: {
         monday: { open: '07:00', close: '22:00', isOpen: true },
@@ -1097,7 +1108,7 @@ const SEED_DATA: MerchantSeedDefinition[] = [
       rating: 5.0,
       reviewCount: 0,
       legalDetails: {
-        gstin: '27AABCK9901M1Z5',
+        gstin: '22AABCK9901M1Z5',
         pan: 'AABCK9901M',
         legalBusinessName: 'Karan Fresh Mart Retail LLP',
         isGstVerified: false,
@@ -1227,10 +1238,10 @@ export async function seedMerchantsAndData(): Promise<void> {
       ],
       shippingAddress: {
         fullName: primaryCustomer.fullName,
-        street: '12-B, Sea Breeze Apts, Bandra West',
-        city: 'Mumbai',
-        state: 'Maharashtra',
-        postalCode: '400050',
+        street: 'Plot 14, Nehru Nagar West',
+        city: 'Bhilai',
+        state: 'Chhattisgarh',
+        postalCode: '490020',
         country: 'IN',
         phone: primaryCustomer.phone,
       },
@@ -1267,10 +1278,10 @@ export async function seedMerchantsAndData(): Promise<void> {
       ],
       shippingAddress: {
         fullName: primaryCustomer.fullName,
-        street: 'Level 4, Maker Maxity, BKC',
-        city: 'Mumbai',
-        state: 'Maharashtra',
-        postalCode: '400051',
+        street: 'Shop 4, Civic Centre Commercial Complex, Sector 6',
+        city: 'Bhilai',
+        state: 'Chhattisgarh',
+        postalCode: '490006',
         country: 'IN',
         phone: primaryCustomer.phone,
       },
@@ -1307,10 +1318,10 @@ export async function seedMerchantsAndData(): Promise<void> {
       ],
       shippingAddress: {
         fullName: secondaryCustomer.fullName,
-        street: '402, Palm Grove, Indiranagar',
-        city: 'Bengaluru',
-        state: 'Karnataka',
-        postalCode: '560038',
+        street: 'Flat 202, Surya Vihar, Malviya Nagar',
+        city: 'Durg',
+        state: 'Chhattisgarh',
+        postalCode: '491001',
         country: 'IN',
         phone: secondaryCustomer.phone,
       },
@@ -1357,10 +1368,10 @@ export async function seedMerchantsAndData(): Promise<void> {
       ],
       shippingAddress: {
         fullName: primaryCustomer.fullName,
-        street: '12-B, Sea Breeze Apts, Bandra West',
-        city: 'Mumbai',
-        state: 'Maharashtra',
-        postalCode: '400050',
+        street: 'Plot 14, Nehru Nagar West',
+        city: 'Bhilai',
+        state: 'Chhattisgarh',
+        postalCode: '490020',
         country: 'IN',
         phone: primaryCustomer.phone,
       },
@@ -1397,10 +1408,10 @@ export async function seedMerchantsAndData(): Promise<void> {
       ],
       shippingAddress: {
         fullName: primaryCustomer.fullName,
-        street: '12-B, Sea Breeze Apts, Bandra West',
-        city: 'Mumbai',
-        state: 'Maharashtra',
-        postalCode: '400050',
+        street: 'Plot 14, Nehru Nagar West',
+        city: 'Bhilai',
+        state: 'Chhattisgarh',
+        postalCode: '490020',
         country: 'IN',
         phone: primaryCustomer.phone,
       },
