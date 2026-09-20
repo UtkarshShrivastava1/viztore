@@ -1,11 +1,11 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
-import { AnyZodObject, ZodError } from 'zod';
+import { ZodTypeAny, ZodError } from 'zod';
 import { AppError } from '../utils/AppError.js';
 
 interface RequestValidationSchemas {
-  body?: AnyZodObject;
-  query?: AnyZodObject;
-  params?: AnyZodObject;
+  body?: ZodTypeAny;
+  query?: ZodTypeAny;
+  params?: ZodTypeAny;
 }
 
 export const validateRequest = (schemas: RequestValidationSchemas): RequestHandler => {
@@ -35,7 +35,7 @@ export const validateRequest = (schemas: RequestValidationSchemas): RequestHandl
   };
 };
 
-export const validateBody = (schema: AnyZodObject): RequestHandler => validateRequest({ body: schema });
-export const validateQuery = (schema: AnyZodObject): RequestHandler => validateRequest({ query: schema });
-export const validateParams = (schema: AnyZodObject): RequestHandler => validateRequest({ params: schema });
+export const validateBody = (schema: ZodTypeAny): RequestHandler => validateRequest({ body: schema });
+export const validateQuery = (schema: ZodTypeAny): RequestHandler => validateRequest({ query: schema });
+export const validateParams = (schema: ZodTypeAny): RequestHandler => validateRequest({ params: schema });
 

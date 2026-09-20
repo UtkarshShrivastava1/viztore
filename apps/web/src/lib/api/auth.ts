@@ -18,7 +18,8 @@ export interface RegisterPayload {
 }
 
 export interface LoginPayload {
-  email: string;
+  email?: string;
+  identifier?: string;
   password: string;
 }
 
@@ -35,10 +36,14 @@ export const authApi = {
   },
 
   /**
-   * Login existing customer
+   * Login existing customer (supports email or 10-digit mobile number)
    */
   login: async (payload: LoginPayload): Promise<AuthSessionResponse> => {
-    const res = await api.post<AuthSessionResponse>('/auth/login', payload);
+    const identifier = (payload.identifier || payload.email || '').trim();
+    const res = await api.post<AuthSessionResponse>('/auth/login', {
+      identifier,
+      password: payload.password,
+    });
     return res.data;
   },
 
@@ -46,7 +51,7 @@ export const authApi = {
    * Get current authenticated user profile
    */
   getProfile: async (): Promise<IUserProfile> => {
-    const res = await api.get<IUserProfile>('/users/me');
+    const res = await api.get<IUserProfile>('/auth/me');
     return res.data;
   },
 };

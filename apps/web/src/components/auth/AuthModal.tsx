@@ -81,42 +81,20 @@ export const AuthModal: React.FC = () => {
     setError(null);
 
     try {
+      const cleanedPhone = phone ? phone.replace(/\D/g, '').slice(-10) : undefined;
       const res = await authApi.register({
         fullName: fullName.trim(),
         email: email.trim(),
         password,
-        phone: phone.trim() || undefined,
+        phone: cleanedPhone || undefined,
       });
       setSuccessMsg('Account created successfully!');
       setTimeout(() => {
         setAuth(res.user, res.tokens.accessToken);
         resetForm();
-      }, 600);
+      }, 500);
     } catch (err: any) {
-      // Graceful demo fallback
-      if (email.includes('@') && fullName.length >= 2) {
-        setSuccessMsg('Account registered successfully (Demo Session)');
-        setTimeout(() => {
-          setAuth(
-            {
-              _id: 'usr_demo_' + Date.now(),
-              fullName: fullName.trim(),
-              email: email.trim(),
-              phone: phone || '+91 98765 43210',
-              role: UserRole.CUSTOMER,
-              isVerified: true,
-              isActive: true,
-              addresses: [],
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-            },
-            'mock_customer_jwt_token'
-          );
-          resetForm();
-        }, 600);
-      } else {
-        setError(err?.message || 'Registration failed. Please check your details.');
-      }
+      setError(err?.message || 'Registration failed. Please check your details and try again.');
     } finally {
       setIsLoading(false);
     }

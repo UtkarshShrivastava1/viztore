@@ -67,10 +67,20 @@ export const registerUserSchema = z.object({
   role: z.nativeEnum(UserRole).default(UserRole.CUSTOMER),
 });
 
-export const loginUserSchema = z.object({
-  identifier: z.string().min(3, 'Email or phone number is required'), // accepts email or 10-digit phone
-  password: z.string().min(1, 'Password is required'),
-});
+export const loginUserSchema = z
+  .object({
+    identifier: z.string().min(3, 'Email or phone number is required').optional(),
+    email: z.string().email('Invalid email address').optional(),
+    password: z.string().min(1, 'Password is required'),
+  })
+  .refine((data) => Boolean(data.identifier || data.email), {
+    message: 'Email or phone number identifier is required',
+    path: ['identifier'],
+  })
+  .transform((data) => ({
+    identifier: (data.identifier || data.email) as string,
+    password: data.password,
+  }));
 
 export const refreshTokenSchema = z.object({
   refreshToken: z.string().min(1, 'Refresh token is required'),
