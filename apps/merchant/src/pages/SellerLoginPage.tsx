@@ -52,8 +52,44 @@ export const SellerLoginPage: React.FC<SellerLoginPageProps> = ({
 
       {/* Floating Centered Login Card Modal Overlay */}
       <div className="fixed inset-0 z-50 bg-slate-900/10 backdrop-blur-[2px] flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl p-7 sm:p-9 shadow-2xl border border-slate-100 w-full max-w-[420px] animate-in fade-in zoom-in-95 duration-200">
-          <h2 className="text-2xl font-bold text-slate-900 mb-6 tracking-tight">Login</h2>
+        <div className="bg-white rounded-2xl p-7 sm:p-9 shadow-2xl border border-slate-100 w-full max-w-[440px] animate-in fade-in zoom-in-95 duration-200">
+          <h2 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight">Login</h2>
+          <p className="text-xs text-slate-500 mb-4">Access your merchant store management dashboard</p>
+
+          {/* Quick Demo Test Accounts Bar */}
+          <div className="mb-4 p-3 bg-blue-50/70 border border-blue-100 rounded-xl">
+            <div className="text-[11px] font-semibold text-blue-900 mb-2 flex items-center justify-between">
+              <span>Demo Accounts (Durg / Bhilai):</span>
+              <span className="text-[10px] text-blue-600 font-medium">Click to auto-fill</span>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {[
+                { label: '👔 Rahul (Fashion)', email: 'rahul.merchant@example.com' },
+                { label: '📱 Vikram (Gadgets)', email: 'vikram.electronics@example.com' },
+                { label: '🌾 Anita (Grocery)', email: 'anita.organics@example.com' },
+                { label: '🌾 Amit (Provisions)', email: 'amit.merchant@example.com' },
+                { label: '💊 Dr. Priya (Pharmacy)', email: 'priya.pharmacy@example.com' },
+                { label: '⏳ Karan (Pending Mart)', email: 'karan.retail@example.com' },
+              ].map((acc) => (
+                <button
+                  key={acc.email}
+                  type="button"
+                  onClick={() => {
+                    setIdentifier(acc.email);
+                    setPassword('Password@123');
+                    setError(null);
+                  }}
+                  className={`px-2 py-1 rounded text-[11px] font-medium transition-all cursor-pointer ${
+                    identifier === acc.email
+                      ? 'bg-[#0038ed] text-white shadow-xs font-semibold'
+                      : 'bg-white text-slate-700 border border-slate-200 hover:border-[#0038ed] hover:text-[#0038ed]'
+                  }`}
+                >
+                  {acc.label}
+                </button>
+              ))}
+            </div>
+          </div>
 
           {error && (
             <div className="mb-4 p-3 bg-rose-50 border border-rose-200 rounded-lg text-rose-600 text-xs font-medium">

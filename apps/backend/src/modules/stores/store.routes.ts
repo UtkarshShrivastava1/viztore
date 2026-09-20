@@ -78,7 +78,7 @@ router.get(
 // Merchant Authenticated Store Management
 // ==========================================
 router.get(
-  '/mine',
+  ['/mine', '/my-stores', '/my-store'],
   authGuard,
   roleGuard(UserRole.MERCHANT, UserRole.ADMIN),
   storeController.getMyStores,

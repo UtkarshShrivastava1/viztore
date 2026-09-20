@@ -166,6 +166,46 @@ Used for logging into the **Merchant Management Panel**, managing live product c
 
 ---
 
+### Store F: Daily Provisions & Spices (Approved ✅)
+*Daily essential staples, chakki fresh flour, and cold-pressed oils in Sector 7, Bhilai.*
+
+| Field | Value |
+|---|---|
+| **Merchant Name** | Amit Verma |
+| **Email** | `amit.merchant@example.com` |
+| **Phone** | `9876543212` |
+| **Password** | `Password@123` |
+| **Store Name** | Verma Daily Provisions |
+| **Store Slug** | `verma-daily-provisions` |
+| **Category** | `grocery_staples` |
+| **Address** | Shop 14, Main Market, Sector 7, Bhilai, Chhattisgarh - 490006 |
+| **Coordinates** | `[81.3650, 21.1920]` (Sector 7, Bhilai) |
+| **Approval Status** | `approved` ✅ |
+| **GSTIN** | `22AABCV1029C1ZZ` |
+| **Seeded Products** | Whole Sharbati Wheat Flour (Chakki Fresh Atta) 5kg, Kachi Ghani Mustard Oil 1L |
+
+---
+
+### Store G: Electronics & Smart Accessories (Approved ✅)
+*Mobile accessories, wireless power banks, audio gadgets in Supela, Bhilai.*
+
+| Field | Value |
+|---|---|
+| **Merchant Name** | Priya Patel |
+| **Email** | `priya.merchant@example.com` |
+| **Phone** | `9876543211` |
+| **Password** | `Password@123` |
+| **Store Name** | Patel Electronics & Smart Gadgets |
+| **Store Slug** | `patel-electronics-and-smart-gadgets` |
+| **Category** | `electronics` |
+| **Address** | Shop 22, Dakshin Gangotri Commercial Complex, Supela, Bhilai - 490023 |
+| **Coordinates** | `[81.3590, 21.2020]` (Supela, Bhilai) |
+| **Approval Status** | `approved` ✅ |
+| **GSTIN** | `22AAACP1029K1ZX` |
+| **Seeded Products** | Fast Wireless Magnetic Power Bank 10000mAh |
+
+---
+
 ## 📦 4. Seeded Active Orders (Lifecycle Pipeline)
 
 The database includes 5 pre-seeded orders to test every stage of merchant fulfillment and customer tracking:

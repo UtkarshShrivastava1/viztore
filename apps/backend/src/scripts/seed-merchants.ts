@@ -1122,6 +1122,197 @@ const SEED_DATA: MerchantSeedDefinition[] = [
       },
     },
   },
+  // ──────────────────────────────────────────────────────────────────────────
+  // 6. Grocery Provisions Merchant (Amit Verma - Sector 7, Bhilai)
+  // ──────────────────────────────────────────────────────────────────────────
+  {
+    user: {
+      fullName: 'Amit Verma',
+      email: 'amit.merchant@example.com',
+      phone: '9876543212',
+      password: 'Password@123',
+      role: UserRole.MERCHANT,
+      isVerified: true,
+      isActive: true,
+    },
+    store: {
+      name: 'Verma Daily Provisions',
+      slug: 'verma-daily-provisions',
+      description: 'Daily fresh staples, grains, pulses, and organic spices directly sourced from local mandis.',
+      category: StoreCategory.GROCERY_STAPLES,
+      logoUrl: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=300&auto=format&fit=crop',
+      bannerUrl: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=1200&auto=format&fit=crop',
+      location: {
+        type: 'Point',
+        coordinates: [81.3650, 21.1920], // Sector 7, Bhilai
+      },
+      address: {
+        street: 'Shop 14, Main Market, Sector 7',
+        landmark: 'Near Central Park, Sector 7, Bhilai',
+        city: 'Bhilai',
+        state: 'Chhattisgarh',
+        pincode: '490006',
+      },
+      operatingHours: {
+        monday: { open: '08:00', close: '22:00', isOpen: true },
+        tuesday: { open: '08:00', close: '22:00', isOpen: true },
+        wednesday: { open: '08:00', close: '22:00', isOpen: true },
+        thursday: { open: '08:00', close: '22:00', isOpen: true },
+        friday: { open: '08:00', close: '22:00', isOpen: true },
+        saturday: { open: '08:00', close: '22:00', isOpen: true },
+        sunday: { open: '08:00', close: '21:00', isOpen: true },
+      },
+      deliveryRadiusKm: 4.0,
+      approvalStatus: StoreApprovalStatus.APPROVED,
+      isActive: true,
+      rating: 4.7,
+      reviewCount: 22,
+      legalDetails: {
+        gstin: '22AABCV1029C1ZZ',
+        pan: 'AABCV1029C',
+        legalBusinessName: 'Verma Daily Provisions Retail LLP',
+        isGstVerified: true,
+      },
+      bankDetails: {
+        accountNumber: '92102008471920',
+        ifscCode: 'SBIN0000332',
+        accountHolderName: 'Verma Daily Provisions Retail LLP',
+        bankName: 'State Bank of India',
+        isVerified: true,
+      },
+    },
+    products: [
+      {
+        name: 'Whole Sharbati Wheat Flour (Chakki Fresh Atta)',
+        slug: 'whole-sharbati-wheat-flour-5kg',
+        description: '100% whole grain stone-milled MP Sharbati wheat flour with zero maida and natural dietary fiber.',
+        category: ProductCategory.GROCERY_STAPLES,
+        subCategory: 'Flours & Grains',
+        subType: ProductSubType.ORGANIC,
+        brand: 'Verma Farm',
+        tags: ['atta', 'sharbati', 'wheat', 'flour', 'staples'],
+        isFeatured: true,
+        variants: [
+          {
+            sku: 'VDP-WHT-5KG',
+            size: '5 kg',
+            price: 265,
+            mrp: 320,
+            stock: 45,
+            images: ['https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600&auto=format&fit=crop'],
+            isActive: true,
+          },
+        ],
+      },
+      {
+        name: 'Kachi Ghani Mustard Oil (Cold-Pressed)',
+        slug: 'kachi-ghani-mustard-oil-1l',
+        description: 'Traditional wood-pressed unfiltered mustard oil with high pungency and rich aroma.',
+        category: ProductCategory.GROCERY_STAPLES,
+        subCategory: 'Oils & Ghee',
+        subType: ProductSubType.ORGANIC,
+        brand: 'Verma Farm',
+        tags: ['mustard oil', 'cold-pressed', 'kachi ghani', 'cooking oil'],
+        isFeatured: true,
+        variants: [
+          {
+            sku: 'VDP-MST-1L',
+            size: '1 Litre',
+            price: 185,
+            mrp: 230,
+            stock: 60,
+            images: ['https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=600&auto=format&fit=crop'],
+            isActive: true,
+          },
+        ],
+      },
+    ],
+  },
+  // ──────────────────────────────────────────────────────────────────────────
+  // 7. Electronics & Accessories Merchant (Priya Patel - Supela, Bhilai)
+  // ──────────────────────────────────────────────────────────────────────────
+  {
+    user: {
+      fullName: 'Priya Patel',
+      email: 'priya.merchant@example.com',
+      phone: '9876543211',
+      password: 'Password@123',
+      role: UserRole.MERCHANT,
+      isVerified: true,
+      isActive: true,
+    },
+    store: {
+      name: 'Patel Electronics & Smart Gadgets',
+      slug: 'patel-electronics-and-smart-gadgets',
+      description: 'Authorized smart accessories, chargers, wireless audio, and device accessories in Supela.',
+      category: StoreCategory.ELECTRONICS,
+      logoUrl: 'https://images.unsplash.com/photo-1550009158-9ebf69173e03?w=300&auto=format&fit=crop',
+      bannerUrl: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=1200&auto=format&fit=crop',
+      location: {
+        type: 'Point',
+        coordinates: [81.3590, 21.2020], // Supela, Bhilai
+      },
+      address: {
+        street: 'Shop 22, Dakshin Gangotri Commercial Complex',
+        landmark: 'Near Supela Clock Tower, Bhilai',
+        city: 'Bhilai',
+        state: 'Chhattisgarh',
+        pincode: '490023',
+      },
+      operatingHours: {
+        monday: { open: '10:00', close: '21:30', isOpen: true },
+        tuesday: { open: '10:00', close: '21:30', isOpen: true },
+        wednesday: { open: '10:00', close: '21:30', isOpen: true },
+        thursday: { open: '10:00', close: '21:30', isOpen: true },
+        friday: { open: '10:00', close: '21:30', isOpen: true },
+        saturday: { open: '10:00', close: '22:00', isOpen: true },
+        sunday: { open: '11:00', close: '20:00', isOpen: true },
+      },
+      deliveryRadiusKm: 4.5,
+      approvalStatus: StoreApprovalStatus.APPROVED,
+      isActive: true,
+      rating: 4.9,
+      reviewCount: 38,
+      legalDetails: {
+        gstin: '22AAACP1029K1ZX',
+        pan: 'AAACP1029K',
+        legalBusinessName: 'Patel Electronics Retail LLP',
+        isGstVerified: true,
+      },
+      bankDetails: {
+        accountNumber: '92102008471921',
+        ifscCode: 'ICIC0000102',
+        accountHolderName: 'Patel Electronics Retail LLP',
+        bankName: 'ICICI Bank Ltd',
+        isVerified: true,
+      },
+    },
+    products: [
+      {
+        name: 'Fast Wireless Magnetic Power Bank 10000mAh',
+        slug: 'fast-wireless-magnetic-power-bank-10000mah',
+        description: 'Compact 20W magnetic snap-on wireless power bank with bidirectional USB-C PD fast charging.',
+        category: ProductCategory.ELECTRONICS,
+        subCategory: 'Power Banks',
+        subType: ProductSubType.STANDARD,
+        brand: 'VoltCharge',
+        tags: ['powerbank', 'wireless', 'magnetic', 'fast charge', 'battery'],
+        isFeatured: true,
+        variants: [
+          {
+            sku: 'PE-MAG-PB-BLK',
+            color: 'Midnight Black',
+            colorHex: '#1e293b',
+            price: 1899,
+            mrp: 3299,
+            stock: 35,
+            images: ['https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?w=600&auto=format&fit=crop'],
+            isActive: true,
+          },
+        ],
+      },
+    ],
+  },
 ];
 
 export async function seedMerchantsAndData(): Promise<void> {
