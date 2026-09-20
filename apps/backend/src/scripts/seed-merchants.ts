@@ -214,7 +214,7 @@ const SEED_DATA: MerchantSeedDefinition[] = [
       rating: 4.8,
       reviewCount: 42,
       legalDetails: {
-        gstin: '27AABCS1429B1ZB',
+        gstin: '22AABCS1429B1ZB',
         pan: 'AABCS1429B',
         legalBusinessName: 'Urban Vogue Studio Retail LLP',
         isGstVerified: true,
@@ -409,7 +409,7 @@ const SEED_DATA: MerchantSeedDefinition[] = [
   },
 
   // ──────────────────────────────────────────────────────────────────────────
-  // 2. Electronics Merchant (Approved - Indiranagar, Bengaluru)
+  // 2. Electronics Merchant (Approved - Supela, Bhilai)
   // ──────────────────────────────────────────────────────────────────────────
   {
     user: {
