@@ -168,6 +168,7 @@
 - [x] Simple Store/Merchant rating system (1–5 stars per delivered order, aggregated store rating score/count, duplicate order rating prevention: `/api/v1/stores/:id/rating`)
 - [x] E2E staging browser audit & defect remediation: Dynamic cart badge sync, hardcoded name/location purge, dynamic PDP brand/categories, merchant auth route guard
 - [x] Database Purge & Realistic Multi-City Production Seed Dataset: Atlas MongoDB collections cleanly purged and repopulated with 1 Super Admin, 2 Customers, 5 Indian Retail Stores, 24 polymorphic products with variants and barcodes, 5 active lifecycle orders; >1,800 lines of mock arrays purged across merchant orderStore, catalogStore, inventoryStore, and customer storefront OrdersClient, WishlistClient, FashionStores, and AccountClient; 100% wired to live REST APIs with graceful empty states; all builds green, 67/67 tests passing
+- [x] Zero Residual Static Fallback & Dynamic Dashboard Architecture: Purged all lingering static injectors and dummy arrays in customer NotificationsDropdown, WishlistFlyout, ExploreStoresGrid, addresses/page, and OrderDetailsClient; purged merchant LiveOrderAlerts, TopProducts, LowStockWarnings, OrderSummaryCard, SalesOverview, RevenueChart, and billingStore; verified live database connectivity and genuine empty states across empty and seeded collections
 - [ ] Customer platform NPS & experience feedback submission
 - [ ] Merchant marketing suite: discount voucher & banner campaign manager (standard non-AI)
 - [ ] Merchant revenue analytics & sales reports
