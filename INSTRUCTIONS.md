@@ -99,7 +99,23 @@ CLIENT_MERCHANT_URL=http://localhost:3001
 
 ## 4. Running Applications & Modules
 
-You can run applications individually using targeted Turborepo workspace filters:
+### 🚀 Run All Applications Concurrently (All-in-One)
+
+To spin up the entire platform stack simultaneously with a single terminal command from the workspace root:
+
+```bash
+# Launch Backend (:5000) + Web Storefront (:3000) + Merchant Panel (:3001) concurrently
+pnpm dev
+
+# Or using the explicit alias
+pnpm dev:all
+```
+
+---
+
+### 📦 Running Individual Services Separately
+
+You can also run applications individually using targeted Turborepo workspace filters:
 
 ### ⚙️ Backend Modular Monolith (`apps/backend`)
 

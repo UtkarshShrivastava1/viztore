@@ -5,6 +5,7 @@
   "packageManager": "pnpm@11.24.0",
   "scripts": {
     "dev": "turbo run dev --parallel",
+    "dev:all": "turbo run dev --parallel",
     "dev:backend": "turbo run dev --filter=@repo/backend",
     "dev:merchant": "turbo run dev --filter=@repo/merchant",
     "dev:web": "turbo run dev --filter=@repo/web",
