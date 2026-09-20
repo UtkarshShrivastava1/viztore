@@ -141,6 +141,7 @@
   - [x] Order Tax Invoice ("Print Bill" packing slip)
   - [x] Secure 4-digit Delivery OTP generation & physical handoff verification
   - [x] ordersApi client wired for backend order synchronization
+  - [x] Merchant auth and order lifecycle defect fixes: dynamic store hydration, clean logout redirect to login, dynamic tab badges, uppercase `OrderStatus` mapping, and persistent active tab across page refresh
 
 ---
 

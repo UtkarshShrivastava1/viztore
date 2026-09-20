@@ -100,9 +100,15 @@ export function DesktopHeader({
   }, []);
   
   // Determine active category based on pathname
-  let activeCategoryId = "all";
-  if (pathname === '/category/fashion') {
-    activeCategoryId = "fashion";
+  let activeCategoryId = "home";
+  if (pathname === '/') {
+    activeCategoryId = "home";
+  } else if (pathname === '/category') {
+    activeCategoryId = "all";
+  } else if (pathname?.startsWith('/category/')) {
+    activeCategoryId = pathname.replace('/category/', '');
+  } else {
+    activeCategoryId = "";
   }
 
   const toggleOverlay = (overlay: 'notifications' | 'wishlist') => {
