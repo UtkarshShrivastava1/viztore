@@ -300,7 +300,45 @@ router.post(
 
 ## 4. Distributed Systems Resilience, Transaction Management & High-Concurrency Engine
 
-### 4.1 Modular Monolith ACID Transaction Management
+### 4.1 The CAP Theorem & Domain Consistency Partitioning
+
+In a high-throughput, multi-vendor commerce platform, applying a single global consistency model across all domains is an anti-pattern:
+* **Global Strong Consistency Everywhere**: Synchronizing consensus across primary database nodes for every catalog view, faceted filter count, rating query, and notification collapses throughput and degrades availability (CAP: pure CP).
+* **Global Eventual Consistency Everywhere**: Asynchronous replication delays on stock balances or session states lead to catastrophic overselling (two customers checking out the last physical item) or revoked staff tokens continuing to approve orders.
+
+#### The Architectural Bifurcation:
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                   THE SYSTEM CONSISTENCY BIFURCATION                   │
+├───────────────────────────────────┬────────────────────────────────────┤
+│ 🔒 Strong Consistency (CP Tier)   │ ⚡ Eventual Consistency (AP Tier)  │
+├───────────────────────────────────┼────────────────────────────────────┤
+│ 1. Auth & Session Revocation      │ 1. Catalog Search & Faceted Filters│
+│ 2. Orders & Payment State Machine │ 2. Product Ratings & Review Counts │
+│ 3. Inventory Stock Allocation     │ 3. Asynchronous Notifications      │
+│ 4. Financial Ledger & Wallet      │ 4. Rider GPS Polyline Telematics   │
+│                                   │ 5. Analytics & KPI Aggregations    │
+├───────────────────────────────────┼────────────────────────────────────┤
+│ • Primary Node Routing Only       │ • Secondary Replica / Cache Reads  │
+│ • writeConcern: { w: 'majority' } │ • readPreference: 'secondary'      │
+│ • readConcern: 'majority'         │ • Causal Consistency Sessions      │
+│ • Multi-Document ACID Transactions│ • Asynchronous Domain Events / Queue│
+└───────────────────────────────────┴────────────────────────────────────┘
+```
+
+#### How MongoDB Provides Both Consistency Models:
+MongoDB is a **Tunable Consistency Database**. Consistency is dynamically configured per-bounded-context using 4 primary levers:
+
+| Lever | CP Configuration (Auth & Orders) | AP Configuration (Catalog & Notifications) |
+|---|---|---|
+| **`writeConcern`** | `{ w: 'majority', j: true }` — Quorum disk commit before return. | `{ w: 1 }` — Fast in-memory acknowledgment on primary. |
+| **`readConcern`** | `'majority'` or `'linearizable'` — Zero dirty or rollback reads. | `'local'` or `'available'` — Maximum read throughput. |
+| **`readPreference`** | `'primary'` — Read exclusively from single source of truth. | `'secondaryPreferred'` — Offload read load to replicas. |
+| **Session Model** | Multi-Document ACID Transaction (`withTransaction`). | Causal Consistency Session (`afterClusterTime`). |
+
+---
+
+### 4.2 Modular Monolith ACID Transaction Management
 
 Because our architecture is a **Modular Monolith** sharing a single MongoDB Atlas cluster (rather than physically isolated microservices), we avoid the high latency, distributed deadlocks, and complex compensating sagas of microservices. We execute **True ACID Multi-Document Transactions** across module boundaries without violating domain encapsulation.
 
@@ -428,9 +466,90 @@ export async function createOrder(userId: string, dto: CreateOrderDTO) {
 }
 ```
 
+### 4.3 The Dual-Write Dilemma & Transactional Outbox Pattern
+
+In distributed multi-vendor commerce, modifying the database and emitting an external message (WhatsApp, Redis, BullMQ) inside a single handler introduces the **Dual-Write Failure Mode**:
+* **Database First, Message Fails**: The order is recorded in MongoDB, but the server crashes or network fails before the event publishes to BullMQ $\rightarrow$ the customer is charged, but merchant notifications and rider dispatch never fire.
+* **Message First, Database Fails**: The notification is sent, but the database write throws a concurrency error or validation fault $\rightarrow$ the merchant/customer receives a confirmation for an order that does not exist in the database.
+
+#### The Architecture Solution: Transactional Outbox
+We eliminate this vulnerability by persisting outbound domain events into an `outbox_events` collection **within the exact same atomic MongoDB transaction session (`session`)** that records the order and deducts stock:
+
+```mermaid
+flowchart TD
+    subgraph "Atomic Multi-Document Transaction (withTransaction)"
+        A["1. Create Order Document"]
+        B["2. Decrement Variant Inventory"]
+        C["3. Append to 'outbox_events' collection"]
+    end
+
+    subgraph "Guaranteed Delivery Engine"
+        D["MongoDB Change Stream / Poller Worker"]
+        E["Pushes to BullMQ Persistent Redis Queue"]
+        F["Marks Outbox Event as 'PUBLISHED'"]
+    end
+
+    subgraph "External Consumer Pipeline"
+        G["Merchant Audio & WebSockets"]
+        H["WhatsApp & SMS Gateways"]
+        I["Automated Rider Dispatch"]
+    end
+
+    A & B & C -->|Commit or Abort Atomically| D
+    D --> E
+    E --> F
+    E --> G & H & I
+```
+
+#### Outbox Event Schema:
+```typescript
+// apps/backend/src/shared/database/outbox.model.ts
+import mongoose, { Schema, Document } from 'mongoose';
+
+export interface IOutboxEvent extends Document {
+  eventType: string;
+  aggregateId: string;
+  payload: Record<string, unknown>;
+  status: 'PENDING' | 'PUBLISHED' | 'FAILED';
+  attempts: number;
+  createdAt: Date;
+  publishedAt?: Date;
+}
+
+const outboxSchema = new Schema<IOutboxEvent>({
+  eventType: { type: String, required: true, index: true },
+  aggregateId: { type: String, required: true },
+  payload: { type: Schema.Types.Mixed, required: true },
+  status: { type: String, enum: ['PENDING', 'PUBLISHED', 'FAILED'], default: 'PENDING', index: true },
+  attempts: { type: Number, default: 0 },
+  createdAt: { type: Date, default: Date.now, index: true },
+  publishedAt: { type: Date },
+});
+
+export const OutboxModel = mongoose.model<IOutboxEvent>('OutboxEvent', outboxSchema);
+```
+
 ---
 
-### 4.2 Asynchronous Event Delivery & BullMQ Persistent Queueing
+### 4.4 The Saga Pattern: Internal ACID vs. External Distributed Orchestration
+
+When operations span boundaries where a single atomic database transaction cannot be held:
+
+```
+[Order Placed] ──► [Authorize Payment] ──► [Reserve Inventory] ──► [Assign Rider]
+                         │ (Payment Failed)
+                         ▼
+             [COMPENSATING TRANSACTION]
+             (Cancel Order & Release Inventory)
+```
+
+* **Internal Modules (Modular Monolith)**: Managed via **Local Multi-Document ACID Transactions (`withTransaction`)**. Zero Saga orchestration needed because all core domains (`auth`, `stores`, `catalog`, `orders`, `billing`) share the MongoDB Atlas cluster.
+* **External Third-Party Handshakes (Payment Gateways & Telematics)**: Managed via an **Orchestrated Webhook Saga**:
+  - Payment Webhook (`razorpay.payment.failed` / `order.timeout`) $\rightarrow$ executes a state machine transition to `CANCELLED` and triggers an automated compensating inventory increment (`incrementStockAtomic`).
+
+---
+
+### 4.5 Asynchronous Boundary Isolation & BullMQ Persistent Queueing
 
 Relying exclusively on Node.js in-memory `EventEmitter` in production guarantees data loss:
 1. **Server Restarts & Redeploys**: Unprocessed in-memory events in RAM are permanently lost.
@@ -473,7 +592,7 @@ We preserve `eventBus.emit(...)` for clean developer ergonomics, but back all **
 
 ---
 
-### 4.3 Dead Letter Queue (DLQ) & Self-Healing Fault Tolerance
+### 4.6 Dead Letter Queue (DLQ) & Self-Healing Fault Tolerance
 
 When external services (SMS gateway, GST portal, WhatsApp API) experience extended downtime, jobs that exhaust all 5 retries are routed to a dedicated **`platform-dead-letter-queue`**:
 
@@ -544,7 +663,7 @@ Mount `@bull-board/express` under an admin-authenticated route (`/api/v1/admin/q
 
 ---
 
-### 4.4 Architectural Comparison: BullMQ vs. Apache Kafka
+### 4.7 Architectural Comparison: BullMQ vs. Apache Kafka
 
 | Dimension | Apache Kafka (Streaming Log) | BullMQ + Redis (Job Queue) | Our Architectural Choice |
 |---|---|---|---|
@@ -557,7 +676,7 @@ Mount `@bull-board/express` under an admin-authenticated route (`/api/v1/admin/q
 
 ---
 
-### 4.5 Concurrency, Deadlocks, Query Optimization & Null Safety
+### 4.8 Concurrency, Deadlocks, Query Optimization & Null Safety
 
 #### A. Concurrency & Race Conditions:
 * **The Counter-Store Collision**: Handled via MongoDB conditional updates (`{ 'variants.stock': { $gte: quantity } }`).
