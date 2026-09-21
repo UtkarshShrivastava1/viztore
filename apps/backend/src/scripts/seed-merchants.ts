@@ -76,9 +76,9 @@ interface MerchantSeedDefinition {
     isFeatured: boolean;
     variants: Array<{
       sku: string;
-      size: string;
-      color: string;
-      colorHex: string;
+      size?: string;
+      color?: string;
+      colorHex?: string;
       price: number;
       mrp: number;
       stock: number;
@@ -1188,7 +1188,7 @@ const SEED_DATA: MerchantSeedDefinition[] = [
         description: '100% whole grain stone-milled MP Sharbati wheat flour with zero maida and natural dietary fiber.',
         category: ProductCategory.GROCERY_STAPLES,
         subCategory: 'Flours & Grains',
-        subType: ProductSubType.ORGANIC,
+        subType: ProductSubType.OTHER,
         brand: 'Verma Farm',
         tags: ['atta', 'sharbati', 'wheat', 'flour', 'staples'],
         isFeatured: true,
@@ -1210,7 +1210,7 @@ const SEED_DATA: MerchantSeedDefinition[] = [
         description: 'Traditional wood-pressed unfiltered mustard oil with high pungency and rich aroma.',
         category: ProductCategory.GROCERY_STAPLES,
         subCategory: 'Oils & Ghee',
-        subType: ProductSubType.ORGANIC,
+        subType: ProductSubType.OTHER,
         brand: 'Verma Farm',
         tags: ['mustard oil', 'cold-pressed', 'kachi ghani', 'cooking oil'],
         isFeatured: true,
@@ -1294,7 +1294,7 @@ const SEED_DATA: MerchantSeedDefinition[] = [
         description: 'Compact 20W magnetic snap-on wireless power bank with bidirectional USB-C PD fast charging.',
         category: ProductCategory.ELECTRONICS,
         subCategory: 'Power Banks',
-        subType: ProductSubType.STANDARD,
+        subType: ProductSubType.OTHER,
         brand: 'VoltCharge',
         tags: ['powerbank', 'wireless', 'magnetic', 'fast charge', 'battery'],
         isFeatured: true,
