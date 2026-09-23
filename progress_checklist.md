@@ -121,7 +121,7 @@
 
 ---
 
-## 🟡 Phase 4: Cart, Checkout & Orders (BACKEND COMPLETED, UI IN PROGRESS)
+## 🟢 Phase 4: Cart, Checkout & Orders (COMPLETED & WIRED ✅)
 
 - [x] **Enterprise Modular Monolith & Clean Architecture Foundation**:
   - [x] Module Public Facades (`index.ts`) for `auth`, `stores`, `catalog`, and `orders`
@@ -134,18 +134,23 @@
   - [x] 3-tier testing pyramid: Service unit tests, Supertest route integration tests, Repository unit tests (13 tests, 39 total tests passing)
 - [x] **Customer Storefront Cart & Checkout UI (`apps/web`)**
   - [x] Cart page with single-store check & item quantity steppers (`/cart`)
-  - [x] Checkout page with address, fulfillment mode, and payment summary (`/checkout`)
-- [x] **Merchant Panel Live Orders Pipeline (`apps/merchant`)**
+  - [x] Modular CartView with store grouping, item steppers & savings breakdown (`Web 5.0.png`, `Web 5.0a.png`)
+  - [x] 4-Step Checkout layout coordinating address, delivery mode, store pickup, and payment (`/checkout`)
+  - [x] Dedicated Store Pickup Card with operating hours and map link (`Web 5.2.png`)
+  - [x] Order confirmation & success view with tracking timer, Order ID, and Delivery OTP badge (`/checkout/success`)
+- [x] **Merchant Panel Live Orders Pipeline & Store Operations (`apps/merchant`)**
   - [x] 8-Tab Orders Pipeline Board (`OrdersPage.tsx`) (New, Accepted, Ready to Ship, Shipped, Delivered, Cancelled)
   - [x] WhatsApp Delivery Partner Dispatch Generator (Pre-populated manifest with customer address, items, bill, and OTP)
   - [x] Order Tax Invoice ("Print Bill" packing slip)
   - [x] Secure 4-digit Delivery OTP generation & physical handoff verification
+  - [x] Storefront Merchandising suite (Store Sections 14.0, Add Section 14.01, Product Placement 14.1, Store View Settings 14.2) with interactive live phone preview chassis
+  - [x] Operational Settings Hub (15.0) for store profiles, tax parameters, and notification policies
   - [x] ordersApi client wired for backend order synchronization
   - [x] Merchant auth and order lifecycle defect fixes: dynamic store hydration, clean logout redirect to login, dynamic tab badges, uppercase `OrderStatus` mapping, and persistent active tab across page refresh
 
 ---
 
-## 🟢 Phase 5: Hyperlocal Delivery & Real-Time Sync (BACKEND COMPLETE ✅, UI PENDING INTERN MERGE)
+## 🟢 Phase 5: Hyperlocal Delivery & Real-Time Sync (BACKEND COMPLETE ✅)
 
 - [x] Hyperlocal `delivery/` modular backend architecture (`delivery.module.ts`, `delivery.service.ts`, `delivery.repository.ts`, `delivery.controller.ts`)
 - [x] Delivery partner assignment, vehicle type tracking & dispatch state machine
