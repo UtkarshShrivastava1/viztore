@@ -27,6 +27,7 @@ import { branding } from '../../lib/branding.js';
 import { useAuthStore } from '../../stores/authStore.js';
 import { useOrderStore } from '../../stores/orderStore.js';
 import { useBillingStore, BillingSubTab } from '../../stores/billingStore.js';
+import { useStoreManagementStore, StoreManagementSubTab } from '../../stores/storeManagementStore.js';
 
 export type DashboardTab =
   | 'overview'
@@ -67,6 +68,12 @@ const billingSubItems = [
   { id: 'quotes', label: 'Estimates / Quotes', icon: FileText },
 ] as const;
 
+const storeSubItems = [
+  { id: 'sections' as const, label: 'Sections' },
+  { id: 'placement' as const, label: 'Product Placement' },
+  { id: 'view_settings' as const, label: 'Store View Settings' },
+] as const;
+
 export const Sidebar: React.FC<SidebarProps> = ({
   currentTab,
   onSelectTab,
@@ -76,6 +83,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { logout } = useAuthStore();
   const { orders } = useOrderStore();
   const { activeSubTab, setActiveSubTab, setActiveView } = useBillingStore();
+  const { activeSubTab: activeStoreSubTab, setActiveSubTab: setActiveStoreSubTab } =
+    useStoreManagementStore();
 
   const newOrdersCount = orders.filter((o) => o.status === 'new').length;
   const returnsCount = orders.filter((o) => o.status === 'return_requested' || o.status === 'returned').length;
@@ -155,6 +164,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isBilling = item.id === 'billing';
+          const isStore = item.id === 'store';
           const isActive = currentTab === item.id;
           const isSubActiveItem = isBilling && isActive && activeSubTab !== 'invoices';
 
@@ -167,6 +177,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   if (isBilling && currentTab !== 'billing') {
                     setActiveSubTab('invoices');
                     setActiveView('list');
+                  }
+                  if (isStore && currentTab !== 'store') {
+                    setActiveStoreSubTab('sections');
                   }
                 }}
                 title={isCollapsed ? item.label : undefined}
@@ -232,6 +245,38 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         }`}
                       >
                         <SubIcon className="w-3.5 h-3.5 shrink-0" />
+                        <span className="truncate">{sub.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Sub-navigation tabs for Store Management (14.0.png, 14.1.png, 14.2.png) */}
+              {isStore && isActive && !isCollapsed && (
+                <div className="pl-4 pr-1 py-1 space-y-0.5 animate-in fade-in duration-150">
+                  {storeSubItems.map((sub) => {
+                    const isSubActive = activeStoreSubTab === sub.id;
+                    return (
+                      <button
+                        key={sub.id}
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSelectTab('store');
+                          setActiveStoreSubTab(sub.id);
+                        }}
+                        className={`w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all duration-150 ${
+                          isSubActive
+                            ? 'bg-[#1a56db] text-white font-semibold shadow-xs'
+                            : 'text-slate-400 hover:text-white hover:bg-[#101d42]'
+                        }`}
+                      >
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                            isSubActive ? 'bg-white' : 'bg-slate-500'
+                          }`}
+                        />
                         <span className="truncate">{sub.label}</span>
                       </button>
                     );
