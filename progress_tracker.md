@@ -15,7 +15,7 @@
 
 | Scope Dimension | Weight | Progress Bar | % Complete | Status | Target Milestone |
 |---|:---:|---|:---:|:---:|---|
-| **Overall Production Launch** (Phases 1–6) | **100%** | `[████████████████████]` | **100%** | 🟢 Cloud Staging Ready | Deployment Frozen Before Vacation |
+| **Overall Production Launch** (Phases 1–6) | **100%** | `[████████████████████]` | **100%** | 🟢 Cloud Staging Ready | Deployment Frozen for Handover |
 | ↳ **Backend Architecture & APIs** | 30% | `[████████████████████]` | **100%** | 🟢 Live on Render | `https://viztore.onrender.com` Healthy |
 | ↳ **Merchant & Admin Panel** | 25% | `[████████████████████]` | **100%** | 🟢 Complete Suite | All 7/7 Modules & Settings Merged (`b92a159`) |
 | ↳ **Customer Web Storefront** | 25% | `[████████████████████]` | **100%** | 🟢 Storefront & Cart Engine | All 4/4 Modular Suites Merged (`e942cc9`) |
@@ -38,8 +38,8 @@ timeline
         WhatsApp Delivery Partner Dispatch Engine
         Online Purchase Billing & Invoicing (INV-ORD-xxxxx)
         Cloud Staging Deployment (Railway/Render + Vercel)
-    section Vacation Break
-        Team Vacation & Deployment Freeze
+    section Transition & Alignment
+        Milestone Review & Deployment Freeze
     section Tier 2: Mid-Late Oct Soft Launch
         Basic In-House Retail Billing (Folder 5: 7 screens)
         Socket.io Real-Time Audio & Push Order Alerts
@@ -55,7 +55,7 @@ timeline
 ---
 
 ### 🌟 Tier 1 — Core Working Production Flow (Release Gate: September 22, 2026)
-> **Mandate:** An end-to-end working system deployed to cloud staging before the team vacation. Covers customer discovery, single-store purchase, merchant order processing, WhatsApp delivery coordination, and full online purchase invoicing.
+> **Mandate:** An end-to-end working system deployed to cloud staging for the initial release milestone. Covers customer discovery, single-store purchase, merchant order processing, WhatsApp delivery coordination, and full online purchase invoicing.
 
 #### 1. The Core Triangle Purchase & Fulfillment Engine
 1. **Customer Web Storefront (`apps/web`)**:
@@ -97,7 +97,7 @@ Every online order placed through `apps/web` generates an authoritative, complia
 ---
 
 ### 🏬 Tier 2 — Basic In-House Retail Billing & Pilot Operations (Mid-to-Late October 2026)
-> **Mandate:** In the 10–15 day runway following vacation, implement working basic in-house counter billing and onboard pilot merchant clients for real-world on-ground operations.
+> **Mandate:** In the subsequent operational runway, implement working basic in-house counter billing and onboard pilot merchant clients for real-world on-ground operations.
 
 1. **Basic In-House Retail Billing (`apps/merchant` - Folder 5 Revised Scope)**:
    - **Manual Counter Sale Mode (`5.1`, `5.2`)**: Merchant creates counter bills for walk-in retail shoppers.
