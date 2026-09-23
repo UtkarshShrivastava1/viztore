@@ -243,10 +243,10 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
               <SizeSelector sizes={sizes} />
             </div>
 
-            {/* Quantity and Actions Row (Desktop) */}
-            <div className="hidden md:flex items-center gap-4 pt-6">
+            {/* Quantity and Actions Row */}
+            <div className="flex flex-col md:flex-row items-center gap-4 pt-6 w-full">
               
-              <div className="flex items-center justify-between w-[120px] h-12 border-2 border-surface-200 rounded-xl px-1">
+              <div className="flex items-center justify-between w-full md:w-[120px] h-12 border-2 border-surface-200 rounded-xl px-4 md:px-1">
                 <button 
                   type="button"
                   onClick={() => setQty(prev => Math.max(1, prev - 1))}
@@ -267,33 +267,34 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
                 </button>
               </div>
 
-              <button 
-                type="button"
-                onClick={handleAddToCart}
-                className="flex-1 flex items-center justify-center gap-2 h-12 rounded-xl border-2 border-[#1668F6] text-[#1668F6] font-extrabold text-sm hover:bg-blue-50 active:scale-[0.98] transition-all"
-              >
-                {isAdded ? (
-                  <>
-                    <Check className="w-5 h-5 text-emerald-600" />
-                    <span className="text-emerald-600">Added to Cart</span>
-                  </>
-                ) : (
-                  <>
-                    <ShoppingBag className="w-5 h-5" strokeWidth={2.5} />
-                    <span>Add to Cart</span>
-                  </>
-                )}
-              </button>
+              <div className="flex items-center gap-4 w-full">
+                <button 
+                  type="button"
+                  onClick={handleAddToCart}
+                  className="flex-1 flex items-center justify-center gap-2 h-12 rounded-xl border-2 border-[#1668F6] text-[#1668F6] font-extrabold text-sm hover:bg-blue-50 active:scale-[0.98] transition-all"
+                >
+                  {isAdded ? (
+                    <>
+                      <Check className="w-5 h-5 text-emerald-600" />
+                      <span className="text-emerald-600">Added to Cart</span>
+                    </>
+                  ) : (
+                    <>
+                      <ShoppingBag className="w-5 h-5" strokeWidth={2.5} />
+                      <span>Add to Cart</span>
+                    </>
+                  )}
+                </button>
 
-              <button 
-                type="button"
-                onClick={handleBuyNow}
-                className="flex-1 flex items-center justify-center gap-2 h-12 rounded-xl bg-[#1668F6] text-white font-extrabold text-sm hover:bg-blue-700 active:scale-[0.98] transition-all shadow-lg shadow-blue-500/20"
-              >
-                <Zap className="w-5 h-5 fill-white" />
-                Buy Now
-              </button>
-
+                <button 
+                  type="button"
+                  onClick={handleBuyNow}
+                  className="flex-1 flex items-center justify-center gap-2 h-12 rounded-xl bg-[#1668F6] text-white font-extrabold text-sm hover:bg-blue-700 active:scale-[0.98] transition-all shadow-lg shadow-blue-500/20"
+                >
+                  <Zap className="w-5 h-5 fill-white" />
+                  Buy Now
+                </button>
+              </div>
             </div>
 
             {/* Service Badges */}
@@ -459,6 +460,7 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
       {/* ── MOBILE FIXED BOTTOM BAR ── */}
       <StickyBottomBar 
         onAddToCart={handleAddToCart}
+        onBuyNow={handleBuyNow}
         isAdded={isAdded}
       />
       

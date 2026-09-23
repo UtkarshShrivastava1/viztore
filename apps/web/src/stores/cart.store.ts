@@ -14,10 +14,7 @@ export interface CartItem {
 
 interface CartStore {
   items: CartItem[];
-  storeId: string | null;
-  storeName: string | null;
   isOpen: boolean;
-  conflictItem: CartItem | null;
 
   // Drawer Controls
   openCart: () => void;
@@ -29,14 +26,14 @@ interface CartStore {
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
-  resolveConflict: (confirmReplace: boolean) => void;
+  clearStoreCart: (storeId: string) => void;
 
   // Computed Totals
-  getSubtotal: () => number;
-  getTax: () => number;
-  getShippingFee: () => number;
-  getGrandTotal: () => number;
-  getItemCount: () => number;
+  getSubtotal: (storeId?: string) => number;
+  getTax: (storeId?: string) => number;
+  getShippingFee: (storeId?: string) => number;
+  getGrandTotal: (storeId?: string) => number;
+  getItemCount: (storeId?: string) => number;
 }
 
 const TAX_RATE = 0.05; // 5% GST
@@ -47,26 +44,14 @@ export const useCartStore = create<CartStore>()(
   persist(
     (set, get) => ({
       items: [],
-      storeId: null,
-      storeName: null,
       isOpen: false,
-      conflictItem: null,
 
       openCart: () => set({ isOpen: true }),
       closeCart: () => set({ isOpen: false }),
       toggleCart: () => set((state) => ({ isOpen: !state.isOpen })),
 
       addItem: (item, quantity = 1) => {
-        const { items, storeId } = get();
-
-        // Single-Store Cart Invariant Check
-        if (storeId && storeId !== item.storeId && items.length > 0) {
-          // Trigger conflict state
-          set({
-            conflictItem: { ...item, quantity },
-          });
-          return false;
-        }
+        const { items } = get();
 
         // Existing item in cart -> increment quantity
         const existingIndex = items.findIndex((i) => i.productId === item.productId);
@@ -79,13 +64,11 @@ export const useCartStore = create<CartStore>()(
               quantity: currentItem.quantity + quantity,
             };
           }
-          set({ items: updated, storeId: item.storeId, storeName: item.storeName });
+          set({ items: updated });
         } else {
-          // New item from the same store
+          // New item
           set({
             items: [...items, { ...item, quantity }],
-            storeId: item.storeId,
-            storeName: item.storeName,
           });
         }
 
@@ -93,11 +76,8 @@ export const useCartStore = create<CartStore>()(
       },
 
       removeItem: (productId) => {
-        const remaining = get().items.filter((i) => i.productId !== productId);
         set({
-          items: remaining,
-          storeId: remaining.length === 0 ? null : get().storeId,
-          storeName: remaining.length === 0 ? null : get().storeName,
+          items: get().items.filter((i) => i.productId !== productId),
         });
       },
 
@@ -114,56 +94,49 @@ export const useCartStore = create<CartStore>()(
       },
 
       clearCart: () => {
-        set({ items: [], storeId: null, storeName: null, conflictItem: null });
+        set({ items: [] });
       },
 
-      resolveConflict: (confirmReplace) => {
-        const { conflictItem } = get();
-        if (confirmReplace && conflictItem) {
-          set({
-            items: [conflictItem],
-            storeId: conflictItem.storeId,
-            storeName: conflictItem.storeName,
-            conflictItem: null,
-            isOpen: true,
-          });
-        } else {
-          set({ conflictItem: null });
-        }
+      clearStoreCart: (storeId: string) => {
+        set({ items: get().items.filter((i) => i.storeId !== storeId) });
       },
 
-      getSubtotal: () => {
+      getSubtotal: (storeId?: string) => {
+        const itemsToCalculate = storeId 
+          ? get().items.filter(i => i.storeId === storeId) 
+          : get().items;
         return Number(
-          get().items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0).toFixed(2),
+          itemsToCalculate.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0).toFixed(2),
         );
       },
 
-      getTax: () => {
-        return Number((get().getSubtotal() * TAX_RATE).toFixed(2));
+      getTax: (storeId?: string) => {
+        return Number((get().getSubtotal(storeId) * TAX_RATE).toFixed(2));
       },
 
-      getShippingFee: () => {
-        const subtotal = get().getSubtotal();
+      getShippingFee: (storeId?: string) => {
+        const subtotal = get().getSubtotal(storeId);
         if (subtotal === 0) return 0;
         return subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : STANDARD_SHIPPING_FEE;
       },
 
-      getGrandTotal: () => {
+      getGrandTotal: (storeId?: string) => {
         return Number(
-          (get().getSubtotal() + get().getTax() + get().getShippingFee()).toFixed(2),
+          (get().getSubtotal(storeId) + get().getTax(storeId) + get().getShippingFee(storeId)).toFixed(2),
         );
       },
 
-      getItemCount: () => {
-        return get().items.reduce((sum, item) => sum + item.quantity, 0);
+      getItemCount: (storeId?: string) => {
+        const itemsToCalculate = storeId 
+          ? get().items.filter(i => i.storeId === storeId) 
+          : get().items;
+        return itemsToCalculate.reduce((sum, item) => sum + item.quantity, 0);
       },
     }),
     {
       name: 'platform-cart-storage',
       partialize: (state) => ({
         items: state.items,
-        storeId: state.storeId,
-        storeName: state.storeName,
       }),
     },
   ),

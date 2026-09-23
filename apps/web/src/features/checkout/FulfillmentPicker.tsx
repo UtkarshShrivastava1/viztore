@@ -10,7 +10,7 @@ export function FulfillmentPicker() {
       <h2 className="text-sm font-bold text-[#192168] mb-1">2. Delivery Options</h2>
       <p className="text-[11px] text-gray-500 mb-3">Choose how you want to receive your order</p>
       
-      <div className="flex flex-col gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <OptionCard 
           icon={<Calendar className="h-5 w-5" />}
           title="Reserve"
