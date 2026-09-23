@@ -182,7 +182,7 @@
 
 ---
 
-## ⚫ Phase 7: Tier 2 Enterprise Retail Operations & Mobile App (POST-VACATION / ROADMAP RESERVED)
+## ⚫ Phase 7: Tier 2 Enterprise Retail Operations & Mobile App (FUTURE ROADMAP / SUBSEQUENT PHASES)
 
 - [ ] Merchant Point-of-Sale (POS) counter billing terminal mode & barcode scanner integration
 - [ ] Merchant wallet financial ledger, payout triggers & automated bank settlements
