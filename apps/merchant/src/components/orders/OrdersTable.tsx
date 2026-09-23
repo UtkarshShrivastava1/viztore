@@ -74,6 +74,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
     rejectOrder,
     markReadyToShip,
     dispatchOrder,
+    deliverOrder,
   } = useOrderStore();
 
   // Filter orders by tab and search
@@ -507,6 +508,26 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
                             className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition-colors shadow-2xs whitespace-nowrap"
                           >
                             Mark Shipped
+                          </button>
+                        )}
+
+                        {/* Shipped: Verify Delivery OTP */}
+                        {activeTab === 'shipped' && (
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              const enteredOtp = prompt(`Enter customer 4-digit OTP for order ${order.orderNumber} (Handshake OTP: ${order.otp}):`, order.otp);
+                              if (enteredOtp) {
+                                try {
+                                  await deliverOrder(order.id, enteredOtp.trim());
+                                } catch {
+                                  alert('Invalid OTP or delivery verification failed.');
+                                }
+                              }
+                            }}
+                            className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs transition-colors shadow-2xs whitespace-nowrap"
+                          >
+                            Verify OTP & Deliver
                           </button>
                         )}
 

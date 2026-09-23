@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import {
   CreateProductDto,
   UpdateProductDto,
@@ -409,11 +410,15 @@ export async function getFeaturedProducts(limit = 12): Promise<IProduct[]> {
 // ── Inter-Module Contract Functions ────────────────────────────────────
 
 /**
- * Used by orders module (Phase 4) to fetch products by IDs
+ * Used by orders module (Phase 4) to fetch products by IDs or slugs
  */
 export async function getProductsByIds(ids: string[]): Promise<IProduct[]> {
+  const validIds = ids.filter((id) => mongoose.isValidObjectId(id));
   const products = await ProductModel.find({
-    _id: { $in: ids },
+    $or: [
+      { _id: { $in: validIds } },
+      { slug: { $in: ids } },
+    ],
     isActive: true,
   }).lean();
   return products as unknown as IProduct[];

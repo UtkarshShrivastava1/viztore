@@ -2,9 +2,10 @@
 
 import React from 'react';
 import { useCartStore } from '@/stores/cart.store';
-import { ShieldCheck, MapPin, Calendar, RotateCcw, CheckCircle } from 'lucide-react';
+import { ShieldCheck, Calendar, RotateCcw, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 
+import { DeliveryAddressSection } from './DeliveryAddressSection';
 import { FulfillmentPicker } from './FulfillmentPicker';
 import { PaymentMethodPicker } from './PaymentMethodPicker';
 import { CheckoutOrderSummary } from './CheckoutOrderSummary';
@@ -44,28 +45,8 @@ export function CheckoutView({ storeId }: { storeId?: string }) {
           </div>
         )}
 
-        {/* 1. Delivery Address (Placeholder for DeliveryAddressCard) */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-bold text-[#192168]">1. Delivery Address</h2>
-            <button type="button" className="text-[11px] font-bold text-[#1668F6] hover:underline">
-              Change
-            </button>
-          </div>
-          <div className="rounded-xl border border-gray-200 p-4 bg-white shadow-sm flex items-start gap-3">
-             <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-50 text-[#1668F6]">
-                <MapPin className="h-4 w-4" />
-             </div>
-             <div>
-                <h3 className="text-sm font-bold text-gray-900 mb-0.5">Harish Kumar</h3>
-                <p className="text-[11px] font-medium text-gray-700 mb-1">+91 98765 43210</p>
-                <p className="text-[12px] text-gray-600 leading-snug pr-4 mb-2">123, MG Road, Near City Mall<br/>Indore, Madhya Pradesh - 452001</p>
-                <span className="inline-block rounded border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[9px] font-bold text-emerald-700">
-                  Home
-                </span>
-             </div>
-          </div>
-        </div>
+        {/* 1. Delivery Address */}
+        <DeliveryAddressSection />
 
         {/* 2. Delivery Options */}
         <FulfillmentPicker />

@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import {
   CreateStoreDto,
   UpdateStoreDto,
@@ -77,10 +78,16 @@ export async function findNearbyStores(query: NearbyStoresQueryDto): Promise<ISt
 }
 
 /**
- * Fetch Store by ID
+ * Fetch Store by ID or Slug
  */
 export async function getStoreById(storeId: string): Promise<IStore> {
-  const store = await StoreModel.findById(storeId);
+  let store = null;
+  if (mongoose.isValidObjectId(storeId)) {
+    store = await StoreModel.findById(storeId);
+  }
+  if (!store) {
+    store = await StoreModel.findOne({ slug: storeId });
+  }
   if (!store) {
     throw AppError.notFound('Store not found', 'STORE_NOT_FOUND');
   }

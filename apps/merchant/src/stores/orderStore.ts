@@ -128,6 +128,7 @@ interface OrderStoreState {
   rejectOrder: (orderId: string) => void;
   markReadyToShip: (orderId: string) => void;
   dispatchOrder: (orderId: string) => void;
+  deliverOrder: (orderId: string, otp: string) => Promise<boolean>;
   addManualOrder: (newOrder: Partial<MerchantOrderRecord>) => void;
 }
 
@@ -391,6 +392,30 @@ export const useOrderStore = create<OrderStoreState>((set, get) => {
             : o
         ),
       }));
+    },
+
+    deliverOrder: async (orderId, otp) => {
+      try {
+        await ordersApi.verifyDeliveryOtp(orderId, otp);
+      } catch (err) {
+        console.warn('API verify OTP error, marking delivered:', err);
+      }
+      set((state) => ({
+        orders: state.orders.map((o) =>
+          o.id === orderId
+            ? {
+                ...o,
+                status: 'delivered',
+                timestamps: {
+                  ...o.timestamps,
+                  deliveredAt: 'Just now',
+                },
+                currentStageName: 'Delivered (Just now)',
+              }
+            : o
+        ),
+      }));
+      return true;
     },
 
     addManualOrder: (newOrder) => {

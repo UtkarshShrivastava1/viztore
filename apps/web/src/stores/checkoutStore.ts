@@ -4,11 +4,23 @@ import { persist } from 'zustand/middleware';
 export type FulfillmentType = 'deliver' | 'pickup' | 'reserve';
 export type PaymentMethodType = 'upi' | 'card' | 'netbanking' | 'cod';
 
+export interface ShippingAddressData {
+  fullName: string;
+  street: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country?: string;
+  phone: string;
+}
+
 export interface CheckoutState {
   fulfillmentType: FulfillmentType;
   setFulfillmentType: (type: FulfillmentType) => void;
   selectedAddressId: string | null;
   setSelectedAddressId: (id: string) => void;
+  shippingAddress: ShippingAddressData | null;
+  setShippingAddress: (addr: ShippingAddressData | null) => void;
   paymentMethod: PaymentMethodType;
   setPaymentMethod: (method: PaymentMethodType) => void;
   reserveDateTime: string | null;
@@ -28,6 +40,8 @@ export const useCheckoutStore = create<CheckoutState>()(
       setFulfillmentType: (type) => set({ fulfillmentType: type }),
       selectedAddressId: null,
       setSelectedAddressId: (id) => set({ selectedAddressId: id }),
+      shippingAddress: null,
+      setShippingAddress: (addr) => set({ shippingAddress: addr }),
       paymentMethod: 'upi',
       setPaymentMethod: (method) => set({ paymentMethod: method }),
       reserveDateTime: null,
@@ -44,6 +58,7 @@ export const useCheckoutStore = create<CheckoutState>()(
       partialize: (state) => ({
         fulfillmentType: state.fulfillmentType,
         selectedAddressId: state.selectedAddressId,
+        shippingAddress: state.shippingAddress,
         paymentMethod: state.paymentMethod,
         reserveDateTime: state.reserveDateTime,
       }),
