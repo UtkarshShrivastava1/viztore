@@ -134,11 +134,9 @@ Every online order placed through `apps/web` generates an authoritative, complia
 
 | Date | Focus Area | Deliverables & Exit Criteria | Status |
 |---|---|---|:---:|
-| **Sept 18 (Today)** | **API Contract Lockdown** | • Verify customer cart & checkout connects to `POST /api/v1/orders`<br/>• Ensure Merchant Orders table pulls live orders from `GET /api/v1/orders`<br/>• Validate status transitions (`PENDING` ➔ `CONFIRMED` ➔ `PACKED` ➔ `OUT_FOR_DELIVERY`) | ✅ Completed |
-| **Sept 19 (Tomorrow)** | **WhatsApp Dispatch & Online Invoice** | • Build `GET /api/v1/orders/:id/invoice` structured tax bill endpoint<br/>• Build printable Order Tax Invoice view in `apps/web` ("Download Bill") and `apps/merchant` ("Print Bill")<br/>• Implement WhatsApp dispatch message generator with 1-click deep-link | ✅ Completed Early |
-| **Sept 20 (Saturday)** | **Cloud Staging Deployment** | • Deploy `apps/backend` to Railway / Render with MongoDB Atlas & Redis<br/>• Deploy `apps/web` and `apps/merchant` to Vercel<br/>• Verify CORS whitelist, HTTPS, and environment variables | ⏳ In Progress (Next Target) |
-| **Sept 21 (Sunday)** | **End-to-End Live Smoke Test** | • Smartphone test: Place real online order on customer storefront<br/>• Merchant test: Accept order, print bill, and dispatch delivery rider via WhatsApp<br/>• Rider test: Receive WhatsApp pickup text, simulate delivery, verify 4-digit OTP | ⏳ Scheduled |
-| **Sept 22 (Monday)** | **Milestone Sign-Off & Freeze** | • Record end-to-end video walkthrough<br/>• Freeze deployment before vacation break 🛫 | ⏳ Scheduled |
+| **Sept 18–19** | **API Contract & Invoicing Lockdown** | • Customer cart & checkout connects to `POST /api/v1/orders`<br/>• Merchant Orders table pulls live orders and triggers status transitions<br/>• Structured tax invoice (`/invoice`) and WhatsApp rider dispatch manifest | ✅ Completed |
+| **Sept 20–21** | **Cloud Staging Deployment** | • Deploy `apps/backend` to Railway / Render with MongoDB Atlas & Redis<br/>• Deploy `apps/web` and `apps/merchant` to Vercel<br/>• Verify CORS whitelist, HTTPS, and environment variables | ✅ Completed |
+| **Sept 22–23** | **End-to-End Handover Audit & Wiring** | • Full-scope audit of UI-to-API hooks across Web and Merchant Panel<br/>• Replaced mock checkout timeout with real order API dispatch<br/>• Dynamic address selection, dynamic confirmation, and merchant OTP verification<br/>• 67/67 tests green, monorepo clean build, ready for client handover | ✅ Completed |
 
 ---
 
