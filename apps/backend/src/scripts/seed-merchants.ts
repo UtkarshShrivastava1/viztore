@@ -1480,7 +1480,7 @@ export async function seedMerchantsAndData(): Promise<void> {
       tax,
       shippingFee: 49,
       grandTotal: subtotal + tax + 49,
-      status: OrderStatus.CONFIRMED,
+      status: OrderStatus.PACKED,
       deliveryOtp: '7192',
       createdAt: new Date(Date.now() - 2 * 3600 * 1000), // 2 hours ago
     });

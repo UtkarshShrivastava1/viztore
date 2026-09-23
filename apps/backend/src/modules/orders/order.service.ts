@@ -15,7 +15,7 @@ import type { IStoreFacade } from '../stores/index.js';
 import type { ICatalogFacade } from '../catalog/index.js';
 
 const allowedTransitions: Record<OrderStatus, OrderStatus[]> = {
-  [OrderStatus.PENDING]: [OrderStatus.CONFIRMED, OrderStatus.CANCELLED],
+  [OrderStatus.PENDING]: [OrderStatus.PACKED, OrderStatus.CONFIRMED, OrderStatus.CANCELLED],
   [OrderStatus.CONFIRMED]: [OrderStatus.PROCESSING, OrderStatus.PACKED, OrderStatus.CANCELLED],
   [OrderStatus.PROCESSING]: [OrderStatus.PACKED, OrderStatus.SHIPPED, OrderStatus.CANCELLED],
   [OrderStatus.PACKED]: [OrderStatus.OUT_FOR_DELIVERY, OrderStatus.READY_FOR_PICKUP, OrderStatus.SHIPPED, OrderStatus.CANCELLED],
@@ -251,7 +251,7 @@ export function createOrderService(
         actorUserId,
       };
 
-      if (status === OrderStatus.CONFIRMED) bus.emit(EVENTS.ORDER_CONFIRMED, payload);
+      if (status === OrderStatus.CONFIRMED || status === OrderStatus.PACKED) bus.emit(EVENTS.ORDER_CONFIRMED, payload);
       if (status === OrderStatus.CANCELLED) bus.emit(EVENTS.ORDER_CANCELLED, payload);
       if (status === OrderStatus.DELIVERED) bus.emit(EVENTS.ORDER_DELIVERED, payload);
     }

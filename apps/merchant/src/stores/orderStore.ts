@@ -3,7 +3,6 @@ import { api, ordersApi } from '../lib/api.js';
 
 export type OrderTab =
   | 'new_orders'
-  | 'accepted'
   | 'ready_to_ship'
   | 'shipped'
   | 'delivered'
@@ -13,7 +12,6 @@ export type OrderTab =
 
 export type OrderStatus =
   | 'new'
-  | 'accepted'
   | 'ready_to_ship'
   | 'shipped'
   | 'delivered'
@@ -125,6 +123,7 @@ interface OrderStoreState {
   // Pipeline transitions
   acceptOrder: (orderId: string) => void;
   acceptAllNewOrders: () => void;
+  packAllNewOrders: () => void;
   rejectOrder: (orderId: string) => void;
   markReadyToShip: (orderId: string) => void;
   dispatchOrder: (orderId: string) => void;
@@ -135,8 +134,7 @@ interface OrderStoreState {
 export function mapApiOrderToMerchantRecord(apiOrder: any): MerchantOrderRecord {
   let mappedStatus: OrderStatus = 'new';
   const raw = String(apiOrder.status || '').toUpperCase();
-  if (raw === 'CONFIRMED' || raw === 'ACCEPTED' || raw === 'PROCESSING') mappedStatus = 'accepted';
-  else if (raw === 'PACKED' || raw === 'READY_TO_SHIP') mappedStatus = 'ready_to_ship';
+  if (raw === 'CONFIRMED' || raw === 'ACCEPTED' || raw === 'PROCESSING' || raw === 'PACKED' || raw === 'READY_TO_SHIP') mappedStatus = 'ready_to_ship';
   else if (raw === 'SHIPPED' || raw === 'OUT_FOR_DELIVERY') mappedStatus = 'shipped';
   else if (raw === 'DELIVERED') mappedStatus = 'delivered';
   else if (raw === 'CANCELLED') mappedStatus = 'cancelled';
@@ -223,8 +221,6 @@ export function mapApiOrderToMerchantRecord(apiOrder: any): MerchantOrderRecord 
     currentStageName:
       mappedStatus === 'new'
         ? 'New Order'
-        : mappedStatus === 'accepted'
-        ? 'Accepted'
         : mappedStatus === 'ready_to_ship'
         ? 'Ready to Ship'
         : mappedStatus === 'shipped'
@@ -239,7 +235,7 @@ export const useOrderStore = create<OrderStoreState>((set, get) => {
   const getInitialTab = (): OrderTab => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('merchant_active_order_tab') as OrderTab | null;
-      if (saved) return saved;
+      if (saved && (saved as any) !== 'accepted') return saved;
     }
     return 'new_orders';
   };
@@ -295,26 +291,11 @@ export const useOrderStore = create<OrderStoreState>((set, get) => {
     selectAllOrders: (orderIds) => set({ selectedOrderIds: orderIds }),
     clearSelection: () => set({ selectedOrderIds: [] }),
 
-    acceptOrder: async (orderId) => {
-      try {
-        await ordersApi.updateOrderStatus(orderId, 'CONFIRMED');
-      } catch (err) {
-        console.warn('API update order status error:', err);
-      }
-      set((state) => ({
-        orders: state.orders.map((o) =>
-          o.id === orderId
-            ? { ...o, status: 'accepted', currentStageName: 'Accepted (Just now)' }
-            : o
-        ),
-      }));
-    },
-
-    acceptAllNewOrders: async () => {
+    packAllNewOrders: async () => {
       const newOrders = get().orders.filter((o) => o.status === 'new');
       for (const order of newOrders) {
         try {
-          await ordersApi.updateOrderStatus(order.id, 'CONFIRMED');
+          await ordersApi.updateOrderStatus(order.id, 'PACKED');
         } catch (err) {
           console.warn('API update order status error:', err);
         }
@@ -322,10 +303,18 @@ export const useOrderStore = create<OrderStoreState>((set, get) => {
       set((state) => ({
         orders: state.orders.map((o) =>
           o.status === 'new'
-            ? { ...o, status: 'accepted', currentStageName: 'Accepted (Just now)' }
+            ? { ...o, status: 'ready_to_ship', currentStageName: 'Ready to Ship (Just now)' }
             : o
         ),
       }));
+    },
+
+    acceptOrder: async (orderId) => {
+      await get().markReadyToShip(orderId);
+    },
+
+    acceptAllNewOrders: async () => {
+      await get().packAllNewOrders();
     },
 
     rejectOrder: async (orderId) => {

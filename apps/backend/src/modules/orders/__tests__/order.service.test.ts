@@ -106,6 +106,29 @@ describe('OrderService (Enterprise Clean Architecture Unit Tests)', () => {
     expect(repo.updateStatus).not.toHaveBeenCalled();
   });
 
+  it('allows direct transition from PENDING to PACKED (Ready to Ship)', async () => {
+    const repo = buildFakeRepository();
+    const bus = buildFakeEventBus();
+    vi.mocked(repo.findById).mockResolvedValue({
+      ...mockOrder,
+      status: OrderStatus.PENDING,
+    });
+    vi.mocked(repo.updateStatus).mockResolvedValue({
+      ...mockOrder,
+      status: OrderStatus.PACKED,
+    });
+
+    const service = createOrderService(repo, bus);
+    const result = await service.updateOrderStatus('order-123', OrderStatus.PACKED, 'merchant-1');
+
+    expect(result?.status).toBe(OrderStatus.PACKED);
+    expect(repo.updateStatus).toHaveBeenCalledWith('order-123', OrderStatus.PACKED);
+    expect(bus.emit).toHaveBeenCalledWith('order.confirmed', expect.objectContaining({
+      orderId: 'order-123',
+      newStatus: OrderStatus.PACKED,
+    }));
+  });
+
   it('verifies 4-digit Delivery OTP before marking as DELIVERED', async () => {
     const repo = buildFakeRepository();
     vi.mocked(repo.findById).mockResolvedValue({

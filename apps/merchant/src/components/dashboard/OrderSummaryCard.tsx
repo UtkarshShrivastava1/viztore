@@ -19,9 +19,8 @@ export const OrderSummaryCard: React.FC<OrderSummaryCardProps> = ({ onNavigateSt
 
   const getStatusCount = (label: string) => {
     const l = label.toLowerCase();
-    if (l === 'pending') return orders.filter((o) => o.status === 'new').length;
-    if (l === 'confirmed') return orders.filter((o) => o.status === 'accepted').length;
-    if (l === 'packed') return orders.filter((o) => o.status === 'ready_to_ship').length;
+    if (l === 'new orders' || l === 'pending') return orders.filter((o) => o.status === 'new').length;
+    if (l === 'ready to ship' || l === 'packed' || l === 'confirmed') return orders.filter((o) => o.status === 'ready_to_ship').length;
     if (l === 'shipped') return orders.filter((o) => o.status === 'shipped').length;
     if (l === 'delivered') return orders.filter((o) => o.status === 'delivered').length;
     if (l === 'cancelled') return orders.filter((o) => o.status === 'cancelled').length;
@@ -29,9 +28,8 @@ export const OrderSummaryCard: React.FC<OrderSummaryCardProps> = ({ onNavigateSt
   };
 
   const statuses = [
-    { label: 'Pending', icon: Clock, color: 'text-amber-500', bg: 'bg-amber-50/80 border border-amber-100' },
-    { label: 'Confirmed', icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-50/80 border border-emerald-100' },
-    { label: 'Packed', icon: Package, color: 'text-blue-500', bg: 'bg-blue-50/80 border border-blue-100' },
+    { label: 'New Orders', icon: Clock, color: 'text-amber-500', bg: 'bg-amber-50/80 border border-amber-100' },
+    { label: 'Ready to Ship', icon: Package, color: 'text-blue-500', bg: 'bg-blue-50/80 border border-blue-100' },
     { label: 'Shipped', icon: Truck, color: 'text-cyan-500', bg: 'bg-cyan-50/80 border border-cyan-100' },
     { label: 'Delivered', icon: CheckCheck, color: 'text-emerald-500', bg: 'bg-emerald-50/80 border border-emerald-100' },
     { label: 'Cancelled', icon: XCircle, color: 'text-rose-500', bg: 'bg-rose-50/80 border border-rose-100' },
@@ -50,7 +48,11 @@ export const OrderSummaryCard: React.FC<OrderSummaryCardProps> = ({ onNavigateSt
           return (
             <div
               key={s.label}
-              onClick={() => onNavigateStatus?.(s.label.toLowerCase())}
+              onClick={() => {
+                const l = s.label.toLowerCase();
+                const targetTab = l === 'new orders' ? 'new_orders' : l === 'ready to ship' ? 'ready_to_ship' : l;
+                onNavigateStatus?.(targetTab);
+              }}
               className="flex items-center justify-between py-1 px-1.5 hover:bg-slate-50/80 rounded-lg cursor-pointer transition-colors group"
             >
               <div className="flex items-center gap-2">

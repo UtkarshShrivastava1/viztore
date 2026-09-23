@@ -26,9 +26,7 @@ export const OrdersPage: React.FC<OrdersPageProps> = ({ onOpenCreateOrder }) => 
   const getSubtitle = (tab: OrderTab) => {
     switch (tab) {
       case 'new_orders':
-        return 'Orders that are waiting for your confirmation';
-      case 'accepted':
-        return 'Orders that have been accepted and waiting for processing';
+        return 'Orders that are waiting for packing and processing';
       case 'ready_to_ship':
         return 'Orders packed and ready for runner pickup';
       case 'shipped':
@@ -42,7 +40,7 @@ export const OrdersPage: React.FC<OrdersPageProps> = ({ onOpenCreateOrder }) => 
       case 'returns':
         return 'Customer return requests and status';
       default:
-        return 'Orders that are waiting for your confirmation';
+        return 'Orders that are waiting for your processing';
     }
   };
 

@@ -1,8 +1,6 @@
 import React from 'react';
 import {
   ShoppingCart,
-  FileCheck2,
-  Printer,
   Package,
   Truck,
   CheckCircle2,
@@ -32,26 +30,6 @@ export const OrderStepper: React.FC<OrderStepperProps> = ({ activeTab = 'new_ord
     },
     {
       id: '02',
-      name: 'Accept Order',
-      icon: FileCheck2,
-      color: 'purple',
-      tabKey: 'accepted' as OrderTab,
-      circleStyle: activeTab === 'accepted'
-        ? 'border-purple-400 bg-purple-50 text-purple-600 ring-2 ring-purple-100'
-        : 'border-purple-300 bg-purple-50/30 text-purple-600',
-      labelStyle: activeTab === 'accepted' ? 'text-purple-600 font-bold' : 'text-slate-800 font-semibold',
-    },
-    {
-      id: '03',
-      name: 'Print Label',
-      icon: Printer,
-      color: 'purple',
-      tabKey: 'accepted' as OrderTab,
-      circleStyle: 'border-purple-300 bg-purple-50/30 text-purple-600',
-      labelStyle: 'text-slate-800 font-semibold',
-    },
-    {
-      id: '04',
       name: 'Ready to Ship',
       icon: Package,
       color: 'orange',
@@ -62,7 +40,7 @@ export const OrderStepper: React.FC<OrderStepperProps> = ({ activeTab = 'new_ord
       labelStyle: activeTab === 'ready_to_ship' ? 'text-orange-600 font-bold' : 'text-slate-800 font-semibold',
     },
     {
-      id: '05',
+      id: '03',
       name: 'Shipped',
       icon: Truck,
       color: 'green',
@@ -73,7 +51,7 @@ export const OrderStepper: React.FC<OrderStepperProps> = ({ activeTab = 'new_ord
       labelStyle: activeTab === 'shipped' ? 'text-emerald-600 font-bold' : 'text-slate-800 font-semibold',
     },
     {
-      id: '06',
+      id: '04',
       name: isReturns ? 'Returns' : 'Delivered',
       icon: isReturns ? RotateCcw : CheckCircle2,
       color: isReturns ? 'red' : 'teal',
@@ -97,7 +75,7 @@ export const OrderStepper: React.FC<OrderStepperProps> = ({ activeTab = 'new_ord
 
       {/* Overflow wrapper with sufficient top padding so the badges are never clipped */}
       <div className="w-full overflow-x-auto pt-3 pb-2 px-1">
-        <div className="flex items-start justify-between min-w-[720px]">
+        <div className="flex items-start justify-between min-w-[560px]">
           {steps.map((step, index) => {
             const Icon = step.icon;
             const isLast = index === steps.length - 1;

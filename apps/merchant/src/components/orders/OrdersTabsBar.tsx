@@ -11,7 +11,6 @@ export const OrdersTabsBar: React.FC<OrdersTabsBarProps> = ({ activeTab, onSelec
 
   const counts = {
     new_orders: orders.filter((o) => o.status === 'new').length,
-    accepted: orders.filter((o) => o.status === 'accepted').length,
     ready_to_ship: orders.filter((o) => o.status === 'ready_to_ship').length,
     shipped: orders.filter((o) => o.status === 'shipped').length,
     delivered: orders.filter((o) => o.status === 'delivered').length,
@@ -27,7 +26,6 @@ export const OrdersTabsBar: React.FC<OrdersTabsBarProps> = ({ activeTab, onSelec
     badgeStyle?: 'default' | 'success' | 'danger';
   }[] = [
     { id: 'new_orders', label: 'New Orders', count: counts.new_orders },
-    { id: 'accepted', label: 'Accepted', count: counts.accepted },
     { id: 'ready_to_ship', label: 'Ready to Ship', count: counts.ready_to_ship },
     { id: 'shipped', label: 'Shipped', count: counts.shipped, badgeStyle: 'success' },
     { id: 'delivered', label: 'Delivered', count: counts.delivered, badgeStyle: 'success' },

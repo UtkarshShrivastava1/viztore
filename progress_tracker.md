@@ -65,8 +65,8 @@ timeline
    - Multi-address selector and order checkout (`/checkout`).
    - Order submission via `POST /api/v1/orders`.
 2. **Merchant Management Panel (`apps/merchant`)**:
-   - Real-time orders pipeline (`OrdersPage.tsx`): All, Pending, Confirmed, Preparing, Ready, Out for Delivery, Delivered, Cancelled.
-   - Order status progression: "Accept Order" (`CONFIRMED`) ➔ "Pack & Ready" (`PACKED`).
+   - Real-time orders pipeline (`OrdersPage.tsx`): New Orders, Ready to Ship, Shipped, Delivered, All Orders, Cancelled, Returns.
+   - Order status progression: Direct fulfillment transition from New Order ➔ Ready to Ship (`PACKED`).
    - Slide-out order details drawer with customer delivery address, contact info, and line items.
 3. **WhatsApp Delivery Partner Coordination**:
    - Merchant clicks **"Dispatch Delivery Rider"** in order details drawer.

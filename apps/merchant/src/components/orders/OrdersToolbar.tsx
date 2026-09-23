@@ -25,7 +25,7 @@ export const OrdersToolbar: React.FC<OrdersToolbarProps> = ({ activeTab }) => {
     setFulfillmentTypeFilter,
     dateRange,
     setDateRange,
-    acceptAllNewOrders,
+    packAllNewOrders,
   } = useOrderStore();
 
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -84,7 +84,6 @@ export const OrdersToolbar: React.FC<OrdersToolbarProps> = ({ activeTab }) => {
           >
             <option value="all">Order Status</option>
             <option value="new">New Order</option>
-            <option value="accepted">Accepted</option>
             <option value="ready_to_ship">Ready to Ship</option>
             <option value="shipped">Shipped</option>
             <option value="delivered">Delivered</option>
@@ -131,19 +130,19 @@ export const OrdersToolbar: React.FC<OrdersToolbarProps> = ({ activeTab }) => {
         </button>
       </div>
 
-      {/* Right Action: Accept All button specifically on New Orders tab */}
+      {/* Right Action: Ready to Ship All button specifically on New Orders tab */}
       {activeTab === 'new_orders' && (
         <button
           type="button"
           onClick={() => {
-            if (confirm('Accept all pending new orders?')) {
-              acceptAllNewOrders();
+            if (confirm('Pack and mark all new orders as Ready to Ship?')) {
+              packAllNewOrders();
             }
           }}
           className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-xs shrink-0 cursor-pointer"
         >
           <CheckCheck className="w-3.5 h-3.5" />
-          <span>Accept All</span>
+          <span>Ready to Ship All</span>
         </button>
       )}
     </div>

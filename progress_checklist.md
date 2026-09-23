@@ -9,7 +9,7 @@
 | Functional Flow | Tier 1 (Core Launch — Target: Sept 22) | Tier 2 (Pilot Operations — Mid-to-Late Oct) | Tier 3 (Enterprise Accounting & Native App — Nov) |
 |---|---|---|---|
 | **Online Order & Checkout** | `[x]` Single-store cart, address book, checkout, `POST /orders` | `[ ]` Real-time live order tracking map & ETA | `[ ]` One-tap wallet checkout & saved cards |
-| **Merchant Order Processing**| `[x]` 8-tab pipeline, Accept (`CONFIRMED`), Pack (`PACKED`) | `[ ]` Socket.io real-time order sound alerts | `[ ]` Automated kitchen display / printer dispatch |
+| **Merchant Order Processing**| `[x]` 7-tab pipeline: New Orders ➔ Ready to Ship (`PACKED`) ➔ Shipped ➔ Delivered | `[ ]` Socket.io real-time order sound alerts | `[ ]` Automated kitchen display / printer dispatch |
 | **Delivery Coordination** | `[x]` WhatsApp dispatch text + 1-click deep link + 4-digit OTP | `[ ]` On-ground pilot rider fleet execution (5–10 stores) | `[ ]` Automated pooled rider matching algorithm |
 | **Billing & Invoicing** | `[x]` **Online Purchase Tax Invoice** (`INV-ORD-xxxxx`), Customer "Download Bill", Merchant "Print Bill" | `[ ]` **Basic In-House Retail Billing**: Manual counter sales, basic tax invoices, estimates (`5.0`–`5.6`) | `[ ]` **Enterprise Zoho Books Accounting**: Credit/Debit notes, GSTR-1 ledgers, multi-series |
 | **Merchant Store Profile** | `[x]` Dedicated `register.<domain>` 6-step flow, Leaflet pin | `[ ]` Onboarding 5–10 pilot local shops (free beta) | `[ ]` Multi-outlet franchise management & advanced RBAC |

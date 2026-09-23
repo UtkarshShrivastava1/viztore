@@ -85,9 +85,6 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
       case 'new_orders':
         matchesTab = order.status === 'new';
         break;
-      case 'accepted':
-        matchesTab = order.status === 'accepted';
-        break;
       case 'ready_to_ship':
         matchesTab = order.status === 'ready_to_ship';
         break;
@@ -184,7 +181,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
               )}
 
               {/* Tab-Specific Columns */}
-              {(activeTab === 'accepted' || activeTab === 'ready_to_ship') && (
+              {activeTab === 'ready_to_ship' && (
                 <th className="py-3 px-3 min-w-[90px]">OTP</th>
               )}
 
@@ -225,8 +222,8 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
                 </>
               )}
 
-              {/* Order Time (for new_orders, accepted, ready_to_ship) */}
-              {['new_orders', 'accepted', 'ready_to_ship'].includes(activeTab) && (
+              {/* Order Time (for new_orders, ready_to_ship) */}
+              {['new_orders', 'ready_to_ship'].includes(activeTab) && (
                 <th className="py-3 px-3 min-w-[110px]">Order Time</th>
               )}
 
@@ -282,9 +279,6 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
                       <div className="text-[10px] mt-0.5 font-medium">
                         {activeTab === 'new_orders' && (
                           <span className="text-slate-400">{order.orderType}</span>
-                        )}
-                        {activeTab === 'accepted' && (
-                          <span className="text-emerald-600 font-semibold">Accepted</span>
                         )}
                         {activeTab === 'ready_to_ship' && (
                           <span className="text-amber-600 font-semibold">Ready to Ship</span>
@@ -358,8 +352,8 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
 
                     {/* TAB SPECIFIC DATA CELLS */}
 
-                    {/* OTP Column for Accepted & Ready to Ship */}
-                    {(activeTab === 'accepted' || activeTab === 'ready_to_ship') && (
+                    {/* OTP Column for Ready to Ship */}
+                    {activeTab === 'ready_to_ship' && (
                       <td className="py-3.5 px-3">
                         <span className="font-extrabold text-slate-900 text-sm tracking-wide font-mono">
                           {order.otp}
@@ -459,8 +453,8 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
                       </>
                     )}
 
-                    {/* Order Time (for new_orders, accepted, ready_to_ship) */}
-                    {['new_orders', 'accepted', 'ready_to_ship'].includes(activeTab) && (
+                    {/* Order Time (for new_orders, ready_to_ship) */}
+                    {['new_orders', 'ready_to_ship'].includes(activeTab) && (
                       <td className="py-3.5 px-3 text-slate-700 whitespace-pre-line text-[11px]">
                         {order.timestamps.createdAt}
                       </td>
@@ -469,32 +463,12 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
                     {/* Actions Column */}
                     <td className="py-3.5 px-3.5 text-right">
                       <div className="flex items-center justify-end gap-1.5">
-                        {/* New Orders: Accept & Reject */}
+                        {/* New Orders: Ready to Ship */}
                         {activeTab === 'new_orders' && (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => acceptOrder(order.id)}
-                              className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition-colors shadow-2xs"
-                            >
-                              Accept Order
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => rejectOrder(order.id)}
-                              className="px-2 py-1.5 rounded-lg text-rose-600 hover:text-rose-700 hover:bg-rose-50 font-semibold text-xs transition-colors"
-                            >
-                              Reject
-                            </button>
-                          </>
-                        )}
-
-                        {/* Accepted: Ready to Ship */}
-                        {activeTab === 'accepted' && (
                           <button
                             type="button"
                             onClick={() => markReadyToShip(order.id)}
-                            className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition-colors shadow-2xs"
+                            className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition-colors shadow-2xs whitespace-nowrap cursor-pointer"
                           >
                             Ready to Ship
                           </button>
