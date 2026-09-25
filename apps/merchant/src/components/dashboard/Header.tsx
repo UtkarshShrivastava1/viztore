@@ -17,9 +17,14 @@ import { ProfileInformationDrawer } from './drawers/ProfileInformationDrawer.js'
 interface HeaderProps {
   isCollapsed: boolean;
   onToggleMobileMenu: () => void;
+  onNavigateToWallet?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ isCollapsed, onToggleMobileMenu }) => {
+export const Header: React.FC<HeaderProps> = ({
+  isCollapsed,
+  onToggleMobileMenu,
+  onNavigateToWallet,
+}) => {
   const { user, currentStore } = useAuthStore();
 
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -64,14 +69,15 @@ export const Header: React.FC<HeaderProps> = ({ isCollapsed, onToggleMobileMenu 
 
         {/* Right Action Icons */}
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Wallet Button */}
+          {/* Wallet Button matching mockups 6.0, 6.1, 7.0 */}
           <button
             type="button"
-            onClick={() => alert('Wallet & Payouts: ₹32,450')}
-            className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl border border-blue-200/80 bg-white hover:bg-blue-50/50 text-slate-800 text-xs font-medium transition-all shadow-2xs"
+            onClick={() => (onNavigateToWallet ? onNavigateToWallet() : alert('Wallet: ₹32,450'))}
+            className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl border border-blue-200/80 bg-white hover:bg-blue-50/50 text-slate-800 text-xs font-semibold transition-all shadow-2xs"
           >
             <Wallet className="w-3.5 h-3.5 text-blue-600" />
             <span>Wallet</span>
+            <span className="text-[11px] font-bold text-slate-600 font-mono">₹ 32,450</span>
           </button>
 
           {/* Notifications Bell with Badge */}
