@@ -102,7 +102,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'inventory', label: 'Inventory', icon: Boxes },
     { id: 'billing', label: 'Billing & Invoicing', icon: Receipt, badge: 'New', badgeColor: 'green' },
     { id: 'customers', label: 'Customers', icon: Users },
-    { id: 'wallet', label: 'Wallet', icon: Wallet },
+    { id: 'wallet', label: 'Wallet', icon: Wallet, badge: '₹32,450', badgeColor: 'blue' },
     { id: 'expenses', label: 'Expenses', icon: ReceiptText },
     {
       id: 'returns',
@@ -206,6 +206,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md leading-none ${
                           item.badgeColor === 'green'
                             ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                            : item.badgeColor === 'blue'
+                            ? 'bg-blue-600/30 text-blue-300 border border-blue-500/40 font-mono text-[10px]'
                             : item.badgeColor === 'dark'
                             ? 'bg-[#0f172a] text-slate-300 border border-slate-700 font-mono text-[10px]'
                             : 'bg-[#152348] text-slate-300 text-[11px]'
