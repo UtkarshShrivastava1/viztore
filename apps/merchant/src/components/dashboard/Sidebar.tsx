@@ -28,6 +28,7 @@ import { useAuthStore } from '../../stores/authStore.js';
 import { useOrderStore } from '../../stores/orderStore.js';
 import { useBillingStore, BillingSubTab } from '../../stores/billingStore.js';
 import { useStoreManagementStore, StoreManagementSubTab } from '../../stores/storeManagementStore.js';
+import { useMarketingStore, MarketingSubTab } from '../../stores/marketingStore.js';
 
 export type DashboardTab =
   | 'overview'
@@ -74,6 +75,17 @@ const storeSubItems = [
   { id: 'view_settings' as const, label: 'Store View Settings' },
 ] as const;
 
+const marketingSubItems = [
+  { id: 'campaigns' as const, label: 'Campaigns' },
+  { id: 'discounts' as const, label: 'Discounts & Offers' },
+  { id: 'coupons' as const, label: 'Coupons' },
+  { id: 'push' as const, label: 'Push Notifications' },
+  { id: 'email_sms' as const, label: 'Email & SMS' },
+  { id: 'loyalty' as const, label: 'Loyalty Program' },
+  { id: 'social' as const, label: 'Social Media' },
+  { id: 'analytics' as const, label: 'Analytics' },
+] as const;
+
 export const Sidebar: React.FC<SidebarProps> = ({
   currentTab,
   onSelectTab,
@@ -85,6 +97,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { activeSubTab, setActiveSubTab, setActiveView } = useBillingStore();
   const { activeSubTab: activeStoreSubTab, setActiveSubTab: setActiveStoreSubTab } =
     useStoreManagementStore();
+  const { activeSubTab: activeMarketingSubTab, setActiveSubTab: setActiveMarketingSubTab } =
+    useMarketingStore();
 
   const newOrdersCount = orders.filter((o) => o.status === 'new').length;
   const returnsCount = orders.filter((o) => o.status === 'return_requested' || o.status === 'returned').length;
@@ -166,8 +180,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
           const Icon = item.icon;
           const isBilling = item.id === 'billing';
           const isStore = item.id === 'store';
+          const isMarketing = item.id === 'marketing';
           const isActive = currentTab === item.id;
-          const isSubActiveItem = isBilling && isActive && activeSubTab !== 'invoices';
+          const isSubActiveItem =
+            (isBilling && isActive && activeSubTab !== 'invoices') ||
+            (isMarketing && isActive && activeMarketingSubTab !== 'overview');
 
           return (
             <div key={item.id} className="space-y-0.5">
@@ -181,6 +198,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   }
                   if (isStore && currentTab !== 'store') {
                     setActiveStoreSubTab('sections');
+                  }
+                  if (isMarketing && currentTab !== 'marketing') {
+                    setActiveMarketingSubTab('overview');
                   }
                 }}
                 title={isCollapsed ? item.label : undefined}
@@ -268,6 +288,38 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           e.stopPropagation();
                           onSelectTab('store');
                           setActiveStoreSubTab(sub.id);
+                        }}
+                        className={`w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all duration-150 ${
+                          isSubActive
+                            ? 'bg-[#1a56db] text-white font-semibold shadow-xs'
+                            : 'text-slate-400 hover:text-white hover:bg-[#101d42]'
+                        }`}
+                      >
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                            isSubActive ? 'bg-white' : 'bg-slate-500'
+                          }`}
+                        />
+                        <span className="truncate">{sub.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Sub-navigation tabs for Marketing (13.3.png, 13.4.png) */}
+              {isMarketing && isActive && !isCollapsed && (
+                <div className="pl-4 pr-1 py-1 space-y-0.5 animate-in fade-in duration-150">
+                  {marketingSubItems.map((sub) => {
+                    const isSubActive = activeMarketingSubTab === sub.id;
+                    return (
+                      <button
+                        key={sub.id}
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSelectTab('marketing');
+                          setActiveMarketingSubTab(sub.id);
                         }}
                         className={`w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all duration-150 ${
                           isSubActive
