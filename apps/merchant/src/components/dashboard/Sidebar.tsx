@@ -104,6 +104,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'customers', label: 'Customers', icon: Users },
     { id: 'wallet', label: 'Wallet', icon: Wallet, badge: '₹32,450', badgeColor: 'blue' },
     { id: 'expenses', label: 'Expenses', icon: ReceiptText },
+    { id: 'assets', label: 'Asset Management', icon: HardDrive },
     {
       id: 'returns',
       label: 'Returns & Refunds',

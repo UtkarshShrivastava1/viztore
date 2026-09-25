@@ -14,6 +14,8 @@ import { SettingsPage } from './pages/SettingsPage.js';
 import { BillingPage } from './pages/BillingPage.js';
 import { CustomersPage } from './pages/CustomersPage.js';
 import { WalletPage } from './pages/WalletPage.js';
+import { ExpensesPage } from './pages/ExpensesPage.js';
+import { AssetsPage } from './pages/AssetsPage.js';
 import { useBillingStore } from './stores/billingStore.js';
 import { Sidebar, DashboardTab } from './components/dashboard/Sidebar.js';
 import { Header } from './components/dashboard/Header.js';
@@ -172,6 +174,14 @@ export const App: React.FC = () => {
             <WalletPage onNavigateHome={() => setCurrentTab('overview')} />
           )}
 
+          {currentTab === 'expenses' && (
+            <ExpensesPage onNavigateHome={() => setCurrentTab('overview')} />
+          )}
+
+          {currentTab === 'assets' && (
+            <AssetsPage onNavigateHome={() => setCurrentTab('overview')} />
+          )}
+
           {currentTab === 'store' && <StoreManagementPage />}
 
           {currentTab === 'settings' && (
@@ -184,7 +194,7 @@ export const App: React.FC = () => {
           )}
 
           {/* Fallback placeholder for other modules */}
-          {!['overview', 'orders', 'catalog', 'inventory', 'billing', 'customers', 'wallet', 'store', 'settings'].includes(currentTab) && (
+          {!['overview', 'orders', 'catalog', 'inventory', 'billing', 'customers', 'wallet', 'expenses', 'assets', 'store', 'settings'].includes(currentTab) && (
             <div className="p-8 text-center bg-white rounded-2xl border border-slate-200/80 shadow-2xs max-w-xl mx-auto mt-8">
               <h3 className="text-base font-bold text-slate-800 capitalize">
                 {currentTab.replace(/_/g, ' ')} Module
