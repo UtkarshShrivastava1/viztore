@@ -45,7 +45,7 @@ html {
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
- font-size: 12.5px;
+ font-size: 14.5px;
   /* Scaled down from default 16px to feel less 'zoomed in' */
 }
 
@@ -62,17 +62,6 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-
-
-
-
-/* body {
-  font-family: var(--font-primary);
-  background-color: #FFFF;
-  color: var(--color-text-muted);
-  min-height: 100vh;
-
-} */
 
 html::-webkit-scrollbar {
   display: none;
