@@ -140,8 +140,8 @@ export function NotificationsClient() {
   // }, []);
 
   const formData = {
-    firstName: user?.name?.split(' ')[0] || '',
-    lastName: user?.name?.split(' ')[1] || '',
+    firstName: user?.fullName?.split(' ')[0] || '',
+    lastName: user?.fullName?.split(' ')[1] || '',
     email: user?.email || '',
     mobileNumber: user?.phone || '',
   };
