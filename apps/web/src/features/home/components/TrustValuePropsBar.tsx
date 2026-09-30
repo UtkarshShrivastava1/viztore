@@ -10,7 +10,7 @@ const trustItems = [
 
 export function TrustValuePropsBar() {
   return (
-    <div className="w-full bg-[#F5F9FE] md:bg-[#F5F9FE] rounded-2xl p-4 md:p-6 border-none">
+    <div className="w-full bg-[#F5F9FE] md:bg-[#F5F9FE] rounded-2xl p-4 md:p-6 border-none ">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {trustItems.map((item) => (
           <div key={item.label} className="flex items-center gap-3">

@@ -23,6 +23,7 @@ export interface DesktopHeaderProps {
   isAccountPage?: boolean;
   isAuthenticated?: boolean;
   openAuthModal?: (mode: "login" | "signup") => void;
+  isStoreDetailsPage?: boolean;
 }
 
 export function DesktopHeader({
@@ -34,6 +35,7 @@ export function DesktopHeader({
   isAccountPage,
   isAuthenticated: propIsAuthenticated,
   openAuthModal: propOpenAuthModal,
+  isStoreDetailsPage,
 }: DesktopHeaderProps) {
   const router = useRouter();
   const pathname = usePathname();

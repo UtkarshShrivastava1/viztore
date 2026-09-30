@@ -12,6 +12,7 @@ import { ProductCategory, ProductSortOption, type ProductQueryDto } from '@repo/
 import { SlidersHorizontal, X, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List } from 'lucide-react';
 import { SubcategoryBubbleFilter } from '@/features/catalog/SubcategoryBubbleFilter';
 import { FilterSortBar } from '@/features/catalog/FilterSortBar';
+import { MobileProductsPLP } from '@/features/products/components/MobileProductsPLP';
 
 const sortOptions = [
   { label: 'Relevance', value: ProductSortOption.RELEVANCE },
@@ -75,117 +76,125 @@ function ProductsContent() {
 
   return (
     <div className="min-h-screen bg-transparent">
-      {/* <Header address={address} className="hidden md:block" /> */}
+      {/* Mobile View */}
+      <div className="block md:hidden">
+        <MobileProductsPLP products={products as any[]} totalProducts={meta.total} />
+      </div>
 
-      <main className="max-w-[1920px] mx-auto px-4 sm:px-6 py-6 space-y-6">
-        {/* Page Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-surface-100">
-              {query.search ? `Results for "${query.search}"` : 'All Products'}
-            </h1>
-            <p className="text-sm text-surface-400 mt-0.5">
-              {meta.total.toLocaleString()} products found
-            </p>
-          </div>
-        </div>
+      {/* Desktop View */}
+      <div className="hidden md:block">
+        {/* <Header address={address} className="hidden md:block" /> */}
 
-
-
-        {/* Active Filter Tags */}
-        {activeFilterCount > 0 && (
-          <div className="flex items-center gap-2 flex-wrap">
-            {query.category && (
-              <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-500/10 text-brand-400 text-xs font-medium border border-brand-500/20">
-                {query.category.replace('_', ' ')}
-                <button onClick={() => updateFilter('category', undefined)} className="hover:text-brand-300">
-                  <X className="w-3 h-3" />
-                </button>
-              </span>
-            )}
-            {query.search && (
-              <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-800 text-surface-300 text-xs font-medium">
-                Search: {query.search}
-                <button onClick={() => updateFilter('search', undefined)} className="hover:text-surface-100">
-                  <X className="w-3 h-3" />
-                </button>
-              </span>
-            )}
-            <button
-              onClick={() => router.push('/products')}
-              className="text-xs text-surface-500 hover:text-surface-300 underline transition-colors"
-            >
-              Clear all
-            </button>
-          </div>
-        )}
-
-        {/* Mobile-first Filters */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <FilterSortBar totalProducts={meta.total} />
-        </div>
-
-        {/* Product Grid */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-          {isLoading ? (
-            <ProductGridSkeleton count={8} />
-          ) : products.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6">
-              {products.map((product) => (
-                <ProductCard key={product._id} product={product} />
-              ))}
+        <main className="max-w-[1920px] mx-auto px-4 sm:px-6 py-6 space-y-6">
+          {/* Page Header */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-surface-100">
+                {query.search ? `Results for "${query.search}"` : 'All Products'}
+              </h1>
+              <p className="text-sm text-surface-400 mt-0.5">
+                {meta.total.toLocaleString()} products found
+              </p>
             </div>
-          ) : (
-            <div className="py-20 text-center glass-card rounded-2xl">
-              <SlidersHorizontal className="w-10 h-10 mx-auto text-surface-600 mb-3" />
-              <p className="text-surface-400 text-sm">No products match your filters.</p>
+          </div>
+
+
+
+          {/* Active Filter Tags */}
+          {activeFilterCount > 0 && (
+            <div className="flex items-center gap-2 flex-wrap">
+              {query.category && (
+                <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-500/10 text-brand-400 text-xs font-medium border border-brand-500/20">
+                  {query.category.replace('_', ' ')}
+                  <button onClick={() => updateFilter('category', undefined)} className="hover:text-brand-300">
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+              {query.search && (
+                <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-800 text-surface-300 text-xs font-medium">
+                  Search: {query.search}
+                  <button onClick={() => updateFilter('search', undefined)} className="hover:text-surface-100">
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
               <button
                 onClick={() => router.push('/products')}
-                className="mt-4 px-5 py-2 rounded-xl bg-brand-500 text-white text-sm font-semibold hover:bg-brand-600 transition-colors"
+                className="text-xs text-surface-500 hover:text-surface-300 underline transition-colors"
               >
-                Reset Filters
+                Clear all
               </button>
             </div>
           )}
-        </div>
 
-        {/* Pagination */}
-        {meta.totalPages > 1 && (
-          <div className="flex items-center justify-center gap-2 mt-8">
-            <button
-              onClick={() => updateFilter('page', String(meta.page - 1))}
-              disabled={!meta.hasPrevPage}
-              className="p-2 rounded-lg bg-surface-900 text-surface-400 hover:bg-surface-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-
-            {Array.from({ length: Math.min(meta.totalPages, 5) }).map((_, i) => {
-              const pageNum = i + 1;
-              return (
-                <button
-                  key={pageNum}
-                  onClick={() => updateFilter('page', String(pageNum))}
-                  className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${meta.page === pageNum
-                    ? 'bg-brand-500 text-white'
-                    : 'bg-surface-900 text-surface-400 hover:bg-surface-800'
-                    }`}
-                >
-                  {pageNum}
-                </button>
-              );
-            })}
-
-            <button
-              onClick={() => updateFilter('page', String(meta.page + 1))}
-              disabled={!meta.hasNextPage}
-              className="p-2 rounded-lg bg-surface-900 text-surface-400 hover:bg-surface-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
+          {/* Mobile-first Filters */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <FilterSortBar totalProducts={meta.total} />
           </div>
-        )}
-      </main>
+
+          {/* Product Grid */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+            {isLoading ? (
+              <ProductGridSkeleton count={8} />
+            ) : products.length > 0 ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-6">
+                {products.map((product) => (
+                  <ProductCard key={product._id} product={product} />
+                ))}
+              </div>
+            ) : (
+              <div className="py-20 text-center glass-card rounded-2xl">
+                <SlidersHorizontal className="w-10 h-10 mx-auto text-surface-600 mb-3" />
+                <p className="text-surface-400 text-sm">No products match your filters.</p>
+                <button
+                  onClick={() => router.push('/products')}
+                  className="mt-4 px-5 py-2 rounded-xl bg-brand-500 text-white text-sm font-semibold hover:bg-brand-600 transition-colors"
+                >
+                  Reset Filters
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Pagination */}
+          {meta.totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 mt-8">
+              <button
+                onClick={() => updateFilter('page', String(meta.page - 1))}
+                disabled={!meta.hasPrevPage}
+                className="p-2 rounded-lg bg-surface-900 text-surface-400 hover:bg-surface-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+
+              {Array.from({ length: Math.min(meta.totalPages, 5) }).map((_, i) => {
+                const pageNum = i + 1;
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => updateFilter('page', String(pageNum))}
+                    className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${meta.page === pageNum
+                      ? 'bg-brand-500 text-white'
+                      : 'bg-surface-900 text-surface-400 hover:bg-surface-800'
+                      }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+
+              <button
+                onClick={() => updateFilter('page', String(meta.page + 1))}
+                disabled={!meta.hasNextPage}
+                className="p-2 rounded-lg bg-surface-900 text-surface-400 hover:bg-surface-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+        </main>
+      </div>
 
       <Footer />
     </div>

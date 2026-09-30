@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-
+import Link from "next/link";
 /**
  * Home page promo hero banner.
  *
@@ -114,25 +114,26 @@ export default function HomeHeroBanner({
     <section className="relative w-full overflow-hidden rounded-[28px] bg-gradient-to-br from-[#DCEBFD] via-[#CFE3FC] to-[#A9C9F7] font-sans">
       <RaysBackground />
 
-      <div className="relative flex w-full flex-col md:flex-row md:items-stretch">
+      <div className="relative flex w-full flex-row md:items-stretch">
         {/* Left: copy */}
-        <div className="flex shrink-0 flex-col justify-center gap-4 px-8 py-10 md:w-[30%] md:py-12">
-          <span className="w-fit rounded-full bg-white px-4 py-1.5 text-xs font-extrabold tracking-wide text-[#3B39E4] shadow-sm">
+        <div className="relative z-10 flex w-[60%] shrink-0 flex-col justify-center gap-2.5 px-6 py-6 md:w-[30%] md:gap-4 md:px-8 md:py-12">
+          <span className="w-fit rounded-full bg-white px-3 py-1 text-[10px] md:text-xs font-extrabold tracking-wide text-[#3B39E4] shadow-sm">
             {tag}
           </span>
 
-          <div>
-            <p className="text-lg font-extrabold tracking-wide text-[#0E1442]">{discountPrefix}</p>
-            <p className="text-[56px] font-extrabold leading-none tracking-tight text-[#0E1442] drop-shadow-[0_2px_12px_rgba(255,255,255,0.6)]">
+          <div className="mt-1">
+            <p className="text-[13px] md:text-lg font-extrabold tracking-wide text-[#0E1442]">{discountPrefix}</p>
+            <p className="text-[42px] md:text-[56px] font-extrabold leading-none tracking-tight text-[#0E1442] drop-shadow-[0_2px_12px_rgba(255,255,255,0.6)]">
               {discountValue}
             </p>
           </div>
 
-          <p className="text-lg font-semibold leading-snug text-[#1E2A5E]">
+          <p className="text-[12px] md:text-lg font-semibold leading-snug text-[#1E2A5E]">
             {description.map((line) => (
               <React.Fragment key={line}>
                 {line}
-                <br />
+                <br className="hidden md:block" />
+                <span className="md:hidden"> </span>
               </React.Fragment>
             ))}
           </p>
@@ -140,7 +141,7 @@ export default function HomeHeroBanner({
           <button
             type="button"
             onClick={onCtaClick}
-            className="flex w-fit items-center gap-2 rounded-full bg-[#101235] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#1B1E4A]"
+            className="mt-1 flex w-fit items-center gap-2 rounded-full bg-[#101235] px-5 py-2.5 md:px-6 md:py-3 text-[12px] md:text-sm font-semibold text-white transition hover:bg-[#1B1E4A]"
           >
             {ctaLabel}
             <span aria-hidden>&rarr;</span>
@@ -148,20 +149,24 @@ export default function HomeHeroBanner({
         </div>
 
         {/* Middle: podium + product image + script text */}
-        <div className="relative flex min-h-[220px] flex-1 items-end justify-center pb-10 pt-6">
-          <Podium />
+        <div className="absolute -right-12 bottom-6 flex h-[150px] w-[220px] items-end justify-center sm:-right-4 md:relative md:bottom-auto md:right-auto md:flex-1 md:min-h-[220px] md:h-auto md:w-auto md:pb-10 md:pt-6">
+          <div className="scale-75 md:scale-100">
+            <Podium />
+          </div>
 
-          <div className="relative z-10 mb-1.5 h-[130px] w-[280px]">
+          <Link href="/products/123" className="relative z-10 mb-1 h-[100px] w-[200px] md:mb-1.5 md:h-[130px] md:w-[280px] block cursor-pointer">
             {productImageSrc ? (
               <img
                 src={productImageSrc}
                 alt={productImageAlt}
-                className="h-full w-full object-contain drop-shadow-xl"
+                className="h-full w-full object-contain drop-shadow-xl hover:scale-105 transition-transform"
               />
             ) : (
-              <PlaceholderProducts />
+              <div className="hover:scale-105 transition-transform h-full w-full">
+                <PlaceholderProducts />
+              </div>
             )}
-          </div>
+          </Link>
 
           <div className="absolute right-4 top-1/2 hidden -translate-y-1/2 -rotate-6 text-right text-[#2540FF] sm:block">
             <p className="font-[cursive] text-2xl leading-tight">{scriptLineTop}</p>
@@ -170,20 +175,21 @@ export default function HomeHeroBanner({
               <path d="M2 8 C 30 2, 70 2, 118 6" stroke="currentColor" strokeWidth="2.4" fill="none" strokeLinecap="round" />
             </svg>
           </div>
+        </div>
 
-          <div className="absolute bottom-3 left-1/3 flex items-center gap-1.5">
-            {Array.from({ length: dotsCount }).map((_, i) =>
-              i === activeDot ? (
-                <span key={i} className="h-2 w-6 rounded-full bg-[#2554FF]" />
-              ) : (
-                <span key={i} className="h-2 w-2 rounded-full bg-[#B9C6EC]" />
-              )
-            )}
-          </div>
+        {/* Pagination Dots */}
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-20">
+          {Array.from({ length: dotsCount }).map((_, i) =>
+            i === activeDot ? (
+              <span key={i} className="h-1.5 w-5 md:h-2 md:w-6 rounded-full bg-[#2554FF]" />
+            ) : (
+              <span key={i} className="h-1.5 w-1.5 md:h-2 md:w-2 rounded-full bg-[#B9C6EC]" />
+            )
+          )}
         </div>
 
         {/* Right: feature card */}
-        <div className="relative z-10 flex shrink-0 flex-col justify-center gap-0 rounded-l-3xl bg-white/70 px-8 py-8 shadow-[0_8px_30px_rgba(20,40,120,0.08)] backdrop-blur-sm md:w-[26%] md:py-6">
+        <div className="relative z-10 flex shrink-0 flex-col justify-center gap-0 rounded-l-3xl bg-white/70 px-8 py-8 shadow-[0_8px_30px_rgba(20,40,120,0.08)] backdrop-blur-sm md:w-[26%] md:py-6 hidden lg:block">
           {features.map((feature, i) => (
             <div key={feature.title}>
               <div className="flex items-center gap-4 py-3">
