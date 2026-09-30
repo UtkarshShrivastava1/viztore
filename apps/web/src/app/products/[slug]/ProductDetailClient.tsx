@@ -217,88 +217,102 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
 
             <div className="h-px bg-surface-100 my-4" />
 
-            {/* Colour */}
-            {colors.length > 0 && (
-              <div className="space-y-3">
-                <h3 className="text-[13px] font-extrabold text-[#192168]">
-                  Color: <span className="font-bold text-surface-500 ml-1 capitalize">{colors[0]}</span>
-                </h3>
-                <div className="flex items-center flex-wrap gap-2">
-                  {colors.map((c, i) => (
-                    <button
-                      key={c}
-                      className={`w-10 h-10 rounded-xl border-2 transition-all ${
-                        i === 0 ? 'border-[#1668F6] p-[2px]' : 'border-surface-200 hover:border-surface-300'
-                      }`}
-                    >
-                      <div className="w-full h-full rounded-lg" style={{ backgroundColor: c, border: '1px solid #e5e7eb' }} title={c} />
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
             {/* Select Size */}
-            <div className="pt-2">
+            <div className="pt-4">
               <SizeSelector sizes={sizes} />
             </div>
 
-            {/* Quantity and Actions Row */}
-            <div className="flex flex-col md:flex-row items-center gap-4 pt-6 w-full">
-              
-              <div className="flex items-center justify-between w-full md:w-[120px] h-12 border-2 border-surface-200 rounded-xl px-4 md:px-1">
-                <button 
-                  type="button"
-                  onClick={() => setQty(prev => Math.max(1, prev - 1))}
-                  className="w-10 h-10 flex items-center justify-center text-surface-400 hover:text-[#192168] transition-colors disabled:opacity-40"
-                  disabled={qty <= 1}
-                  aria-label="Decrease quantity"
-                >
-                  <Minus className="w-4 h-4" />
-                </button>
-                <span className="font-extrabold text-[#192168] text-sm select-none">{qty}</span>
-                <button 
-                  type="button"
-                  onClick={() => setQty(prev => Math.min(99, prev + 1))}
-                  className="w-10 h-10 flex items-center justify-center text-surface-400 hover:text-[#192168] transition-colors"
-                  aria-label="Increase quantity"
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
+            {/* Quantity and Color Row */}
+            <div className="grid grid-cols-2 gap-4 pt-4">
+              {/* Quantity */}
+              <div className="space-y-3">
+                <h3 className="text-[13px] font-extrabold text-[#192168]">Quantity</h3>
+                <div className="flex items-center justify-between w-full h-10 border border-surface-200 rounded-lg px-2">
+                  <button 
+                    type="button"
+                    onClick={() => setQty(prev => Math.max(1, prev - 1))}
+                    className="w-8 h-8 flex items-center justify-center text-surface-400 hover:text-[#192168] transition-colors disabled:opacity-40"
+                    disabled={qty <= 1}
+                    aria-label="Decrease quantity"
+                  >
+                    <Minus className="w-4 h-4" />
+                  </button>
+                  <div className="w-px h-6 bg-surface-200"></div>
+                  <span className="font-extrabold text-[#192168] text-sm select-none flex-1 text-center">{qty}</span>
+                  <div className="w-px h-6 bg-surface-200"></div>
+                  <button 
+                    type="button"
+                    onClick={() => setQty(prev => Math.min(99, prev + 1))}
+                    className="w-8 h-8 flex items-center justify-center text-surface-400 hover:text-[#192168] transition-colors"
+                    aria-label="Increase quantity"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
-              <div className="flex items-center gap-4 w-full">
-                <button 
-                  type="button"
-                  onClick={handleAddToCart}
-                  className="flex-1 flex items-center justify-center gap-2 h-12 rounded-xl border-2 border-[#1668F6] text-[#1668F6] font-extrabold text-sm hover:bg-blue-50 active:scale-[0.98] transition-all"
-                >
-                  {isAdded ? (
-                    <>
-                      <Check className="w-5 h-5 text-emerald-600" />
-                      <span className="text-emerald-600">Added to Cart</span>
-                    </>
-                  ) : (
-                    <>
-                      <ShoppingBag className="w-5 h-5" strokeWidth={2.5} />
-                      <span>Add to Cart</span>
-                    </>
-                  )}
-                </button>
+              {/* Colour */}
+              {colors.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="text-[13px] font-extrabold text-[#192168]">
+                    Colour: <span className="text-[#192168] ml-1 capitalize">{colors[0]}</span>
+                  </h3>
+                  <div className="flex items-center flex-wrap gap-2">
+                    {colors.map((c, i) => (
+                      <button
+                        key={c}
+                        className={`w-8 h-8 rounded-lg border transition-all ${
+                          i === 0 ? 'border-[#1668F6] p-[2px]' : 'border-surface-200 hover:border-surface-300'
+                        }`}
+                      >
+                        <div className="w-full h-full rounded-md" style={{ backgroundColor: c, border: '1px solid #e5e7eb' }} title={c} />
+                      </button>
+                    ))}
+                    {/* Placeholder for other colors to match the design visually if only 1 color exists */}
+                    {colors.length === 1 && (
+                      <>
+                        <button className="w-8 h-8 rounded-lg border border-surface-200"><div className="w-full h-full rounded-md" style={{ backgroundColor: '#2f3130' }} /></button>
+                        <button className="w-8 h-8 rounded-lg border border-surface-200"><div className="w-full h-full rounded-md" style={{ backgroundColor: '#565c49' }} /></button>
+                        <button className="w-8 h-8 rounded-lg border border-surface-200"><div className="w-full h-full rounded-md" style={{ backgroundColor: '#cccccc' }} /></button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
 
-                <button 
-                  type="button"
-                  onClick={handleBuyNow}
-                  className="flex-1 flex items-center justify-center gap-2 h-12 rounded-xl bg-[#1668F6] text-white font-extrabold text-sm hover:bg-blue-700 active:scale-[0.98] transition-all shadow-lg shadow-blue-500/20"
-                >
-                  <Zap className="w-5 h-5 fill-white" />
-                  Buy Now
-                </button>
-              </div>
+            {/* Actions Row */}
+            <div className="flex items-center gap-3 pt-6 w-full">
+              <button 
+                type="button"
+                onClick={handleAddToCart}
+                className="flex-1 flex items-center justify-center gap-2 h-12 rounded-lg border border-[#1668F6] text-[#1668F6] font-semibold text-sm hover:bg-blue-50 active:scale-[0.98] transition-all"
+              >
+                {isAdded ? (
+                  <>
+                    <Check className="w-5 h-5 text-emerald-600" />
+                    <span className="text-emerald-600 font-semibold">Added</span>
+                  </>
+                ) : (
+                  <>
+                    <ShoppingBag className="w-5 h-5" strokeWidth={2} />
+                    <span className="font-semibold">Add to Cart</span>
+                  </>
+                )}
+              </button>
+
+              <button 
+                type="button"
+                onClick={handleBuyNow}
+                className="flex-1 flex items-center justify-center gap-2 h-12 rounded-lg bg-[#1668F6] text-white font-semibold text-sm hover:bg-blue-700 active:scale-[0.98] transition-all"
+              >
+                <Zap className="w-5 h-5 fill-white" />
+                <span className="font-semibold">Buy Now</span>
+              </button>
             </div>
 
             {/* Service Badges */}
-            <div className="pt-4">
+            <div className="pt-6">
               <ProductOffers />
             </div>
             
@@ -457,12 +471,14 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
         </div>
       </main>
 
-      {/* ── MOBILE FIXED BOTTOM BAR ── */}
-      <StickyBottomBar 
-        onAddToCart={handleAddToCart}
-        onBuyNow={handleBuyNow}
-        isAdded={isAdded}
-      />
+      {/* ── MOBILE FIXED BOTTOM BAR (Hidden in new design) ── */}
+      <div className="hidden">
+        <StickyBottomBar 
+          onAddToCart={handleAddToCart}
+          onBuyNow={handleBuyNow}
+          isAdded={isAdded}
+        />
+      </div>
       
       <div className="hidden md:block">
         <Footer />

@@ -19,7 +19,7 @@ export function Header(props: HeaderProps) {
   const { className = "", pageTitle, ...restProps } = props;
   const pathname = usePathname();
   const isSimpleHeader = pathname === '/checkout' || pathname === '/account/orders' || pathname === '/account/wishlist' || pathname === '/account/addresses' || pathname === '/account/edit-profile' || pathname === '/account/coupons' || pathname === '/account/support' || pathname === '/account/sell' || pathname === '/account/privacy' || pathname === '/account/feedback' || pathname === '/account/terms' || pathname === '/account/logout' || pathname === '/account/logged-out' || pathname?.startsWith('/account/orders/');
-  const isAccountPage = pathname?.startsWith('/account') && !isSimpleHeader;
+  const isAccountPage = pathname?.startsWith('/account');
 
   let displayTitle = pageTitle;
   if (!displayTitle && isSimpleHeader) {
@@ -37,7 +37,6 @@ export function Header(props: HeaderProps) {
       <MobileHeader
         {...restProps}
         displayTitle={displayTitle}
-        isSimpleHeader={isSimpleHeader}
         isAccountPage={isAccountPage}
       />
       <DesktopHeader

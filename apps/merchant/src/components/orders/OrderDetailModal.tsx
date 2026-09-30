@@ -78,7 +78,7 @@ _Please collect package from store and verify 4-digit OTP upon customer handover
               Order Details: {order.orderNumber}
             </h2>
             <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 capitalize">
-              {order.status.replace(/_/g, ' ')}
+              {order.status.replace(/_/g, ' ')} 
             </span>
           </div>
 

@@ -6,7 +6,7 @@ import {
   CheckCircle2, Truck, XCircle, Calendar, ShoppingBag, 
   ChevronRight, Loader2, MapPin, Heart, Ticket, Store, 
   MessageSquare, HeadphonesIcon, Shield, FileText, LogOut, 
-  User, Bell, ShoppingBasket, Share2
+  User, Bell, ShoppingBasket, Share2, ArrowLeft
 } from 'lucide-react';
 import { branding } from '@repo/shared-types';
 import { useAuthStore } from '@/stores/auth.store';
@@ -125,9 +125,14 @@ export function OrdersClient() {
           
           {/* Header - Transparent on Mobile, Standard on Desktop */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 lg:border-b lg:border-surface-100 pb-4 px-4 lg:px-0 pt-6 lg:pt-0 bg-white lg:bg-transparent shadow-sm lg:shadow-none">
-            <div>
-              <h1 className="text-[24px] font-bold text-[#192168]">My Orders</h1>
-              <p className="text-[13px] font-medium text-surface-600 mt-1">Track, manage and view all your orders</p>
+            <div className="flex items-center gap-3">
+              <Link href="/account" className="shrink-0 lg:hidden">
+                <ArrowLeft className="w-6 h-6 text-[#192168]" />
+              </Link>
+              <div>
+                <h1 className="text-[24px] font-bold text-[#192168]">My Orders</h1>
+                <p className="text-[13px] font-medium text-surface-600 mt-1">Track, manage and view all your orders</p>
+              </div>
             </div>
             {/* Desktop Reserve/Pickup Buttons */}
             <div className="hidden lg:flex items-center gap-3">

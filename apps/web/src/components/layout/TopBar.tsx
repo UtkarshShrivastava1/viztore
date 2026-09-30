@@ -27,16 +27,6 @@ export default function TopBar({ wishlistCount = 0, cartCount = 0 }: TopBarProps
       <Logo />
 
       <div className="flex items-center gap-4">
-        {/* User / Auth */}
-        <button
-          type="button"
-          aria-label="User Account"
-          className="relative text-white hover:opacity-85 transition-opacity"
-          onClick={handleUserClick}
-        >
-          <User className="h-[23px] w-[23px]" strokeWidth={1.75} />
-        </button>
-
         {/* Wishlist */}
         <button
           type="button"

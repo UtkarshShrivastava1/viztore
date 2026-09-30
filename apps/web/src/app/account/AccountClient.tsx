@@ -163,7 +163,7 @@ export function AccountClient() {
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-[24px] font-bold text-[#1668F6]">My Account</h1>
+              <h1 className="text-[24px] font-bold text-[#1668F6] mb-2">My Account</h1>
               <p className="text-[12px] text-surface-600 font-medium">Manage your profile, orders and preferences</p>
             </div>
             <button className="w-10 h-10 flex items-center justify-center text-[#192168]">
@@ -178,9 +178,9 @@ export function AccountClient() {
                 <User className="w-7 h-7 text-[#1668F6]" />
               </div>
               <div>
-                <h2 className="text-[15px] font-bold text-[#192168]">{isAuthenticated ? formData.fullName : 'Guest'}</h2>
-                <p className="text-[12px] font-medium text-surface-600 mt-0.5">{isAuthenticated ? formData.mobileNumber : 'Sign in'}</p>
-                {isAuthenticated && <p className="text-[12px] text-surface-500">{formData.email}</p>}
+                <h2 className="text-[14px] font-bold text-[#192168]">{isAuthenticated ? formData.fullName : 'Guest'}</h2>
+                <p className="text-[11px] font-medium text-surface-600 mt-0.5">{isAuthenticated ? formData.mobileNumber : 'Sign in'}</p>
+                {isAuthenticated && <p className="text-[10px] text-surface-500">{formData.email}</p>}
               </div>
             </div>
             <button onClick={() => setIsEditingMobile(true)} className="flex items-center text-[12px] font-bold text-[#1668F6]">
@@ -212,8 +212,8 @@ export function AccountClient() {
                   <Calendar className="w-5 h-5 text-purple-600" />
                 </div>
                 <div>
-                  <h4 className="text-[12px] font-bold text-[#192168]">Reserve Orders</h4>
-                  <p className="text-[10px] text-surface-500">View your reserved items</p>
+                  <h4 className="text-[9px] font-bold text-[#192168]">Reserve Orders</h4>
+                  <p className="text-[9px] text-surface-500">View your reserved items</p>
                 </div>
               </div>
               <ChevronRight className="w-4 h-4 text-surface-400" />

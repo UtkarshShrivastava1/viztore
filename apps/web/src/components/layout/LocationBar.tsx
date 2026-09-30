@@ -37,7 +37,7 @@ export default function LocationBar({
     : "Bhilai, Chhattisgarh";
 
   return (
-    <div className="px-4 mb-3.5">
+    <>
       <button
         type="button"
         onClick={() => setIsLocationModalOpen(true)}
@@ -60,6 +60,6 @@ export default function LocationBar({
         isOpen={isLocationModalOpen}
         onClose={() => setIsLocationModalOpen(false)}
       />
-    </div>
+    </>
   );
 }

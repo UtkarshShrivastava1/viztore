@@ -45,7 +45,7 @@ html {
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
- font-size: 14.5px;
+ font-size: 12px;
   /* Scaled down from default 16px to feel less 'zoomed in' */
 }
 
