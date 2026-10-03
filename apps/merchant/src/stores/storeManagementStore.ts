@@ -3,11 +3,13 @@ import { create } from 'zustand';
 export interface StoreSection {
   id: string;
   name: string;
-  badge?: 'Special' | 'New' | 'Popular' | 'Category' | 'Brand';
+  badge?: 'Special' | 'New' | 'Popular' | 'Category' | 'Brand' | 'Default';
   type: 'Automatic' | 'Manual';
   sectionType: 'product' | 'category' | 'banner' | 'brand';
   productCount: number;
   isActive: boolean;
+  isAlwaysOn?: boolean;
+  displayOn?: string;
   priority: number;
   productIds: string[];
   description?: string;
@@ -36,7 +38,13 @@ export interface StoreKPIs {
   clicksGrowth: string;
 }
 
-export type StoreManagementSubTab = 'sections' | 'placement' | 'view_settings';
+export type StoreManagementSubTab =
+  | 'overview'
+  | 'sections'
+  | 'banner_logo'
+  | 'qr_link'
+  | 'placement'
+  | 'view_settings';
 
 interface StoreManagementState {
   activeSubTab: StoreManagementSubTab;
@@ -46,6 +54,16 @@ interface StoreManagementState {
   kpis: StoreKPIs;
   isAddSectionModalOpen: boolean;
 
+  // Store Appearance
+  storeLogo: string;
+  storeBanner: string;
+  storeDescription: string;
+  storeSlug: string;
+  setStoreLogo: (url: string) => void;
+  setStoreBanner: (url: string) => void;
+  setStoreDescription: (desc: string) => void;
+  setStoreSlug: (slug: string) => void;
+
   // Navigation
   setActiveSubTab: (tab: StoreManagementSubTab) => void;
   setSelectedPlacementSectionId: (id: string) => void;
@@ -54,12 +72,13 @@ interface StoreManagementState {
   toggleSectionStatus: (id: string) => void;
   updateSectionPriority: (id: string, newPriority: number) => void;
   moveSectionPriority: (id: string, direction: 'up' | 'down') => void;
+  reorderSections: (newSections: StoreSection[]) => void;
   addSection: (section: {
     name: string;
     sectionType: 'product' | 'category' | 'banner' | 'brand';
     description?: string;
     isActive: boolean;
-    badge?: 'Special' | 'New' | 'Popular' | 'Category' | 'Brand';
+    badge?: 'Special' | 'New' | 'Popular' | 'Category' | 'Brand' | 'Default';
   }) => void;
   updateSection: (id: string, updates: Partial<StoreSection>) => void;
   deleteSection: (id: string) => void;
@@ -84,6 +103,7 @@ const initialSections: StoreSection[] = [
     sectionType: 'product',
     productCount: 12,
     isActive: true,
+    displayOn: 'Home',
     priority: 1,
     description: 'Limited time offers on top picks',
     productIds: ['prd-1', 'prd-2', 'prd-3', 'prd-4', 'prd-5'],
@@ -96,6 +116,7 @@ const initialSections: StoreSection[] = [
     sectionType: 'product',
     productCount: 24,
     isActive: true,
+    displayOn: 'Home',
     priority: 2,
     description: 'Check out the latest products',
     productIds: ['prd-6', 'prd-7', 'prd-8'],
@@ -108,6 +129,7 @@ const initialSections: StoreSection[] = [
     sectionType: 'product',
     productCount: 20,
     isActive: true,
+    displayOn: 'Home',
     priority: 3,
     description: 'Most loved by our customers',
     productIds: ['prd-9', 'prd-10', 'prd-11'],
@@ -120,6 +142,7 @@ const initialSections: StoreSection[] = [
     sectionType: 'category',
     productCount: 8,
     isActive: true,
+    displayOn: 'Home',
     priority: 4,
     description: 'Shop by top categories',
     productIds: [],
@@ -132,6 +155,7 @@ const initialSections: StoreSection[] = [
     sectionType: 'product',
     productCount: 16,
     isActive: true,
+    displayOn: 'Home',
     priority: 5,
     description: 'Highly rated products',
     productIds: [],
@@ -144,8 +168,23 @@ const initialSections: StoreSection[] = [
     sectionType: 'brand',
     productCount: 10,
     isActive: true,
+    displayOn: 'Home',
     priority: 6,
     description: 'Top brands in our store',
+    productIds: [],
+  },
+  {
+    id: 'sec-7',
+    name: 'All Products',
+    badge: 'Default',
+    type: 'Automatic',
+    sectionType: 'product',
+    productCount: 110,
+    isActive: true,
+    isAlwaysOn: true,
+    displayOn: 'Home',
+    priority: 7,
+    description: 'Displays all products in your store',
     productIds: [],
   },
 ];
@@ -286,11 +325,24 @@ const initialCuratedProducts: CuratedProduct[] = [
 ];
 
 export const useStoreManagementStore = create<StoreManagementState>((set, get) => ({
-  activeSubTab: 'sections',
+  activeSubTab: 'overview',
   selectedPlacementSectionId: 'sec-1',
   sections: initialSections,
   curatedProducts: initialCuratedProducts,
   isAddSectionModalOpen: false,
+
+  // Store Appearance
+  storeLogo: 'https://images.unsplash.com/photo-1544441893-675973e31985?w=512&auto=format&fit=crop&q=80',
+  storeBanner: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1200&auto=format&fit=crop&q=80',
+  storeDescription: 'Trendy fashion for everyday style. Explore our latest collection of apparel, footwear, accessories and more.',
+  storeSlug: 'fashionhub',
+
+  setStoreLogo: (url) => set({ storeLogo: url }),
+  setStoreBanner: (url) => set({ storeBanner: url }),
+  setStoreDescription: (desc) => set({ storeDescription: desc }),
+  setStoreSlug: (slug) => set({ storeSlug: slug }),
+
+  reorderSections: (newSections) => set({ sections: newSections }),
 
   kpis: {
     totalSections: 6,
@@ -309,9 +361,9 @@ export const useStoreManagementStore = create<StoreManagementState>((set, get) =
   toggleSectionStatus: (id) =>
     set((state) => {
       const updated = state.sections.map((sec) =>
-        sec.id === id ? { ...sec, isActive: !sec.isActive } : sec
+        sec.id === id ? { ...sec, isActive: sec.isAlwaysOn ? true : !sec.isActive } : sec
       );
-      const activeCount = updated.filter((s) => s.isActive).length;
+      const activeCount = updated.filter((s) => s.isActive && !s.isAlwaysOn).length;
       return {
         sections: updated,
         kpis: {
