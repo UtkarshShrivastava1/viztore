@@ -70,9 +70,10 @@ const billingSubItems = [
 ] as const;
 
 const storeSubItems = [
-  { id: 'sections' as const, label: 'Sections' },
-  { id: 'placement' as const, label: 'Product Placement' },
-  { id: 'view_settings' as const, label: 'Store View Settings' },
+  { id: 'overview' as const, label: 'Overview' },
+  { id: 'sections' as const, label: 'Manage Sections' },
+  { id: 'banner_logo' as const, label: 'Manage Banner / Logo' },
+  { id: 'qr_link' as const, label: 'My Store QR & Link' },
 ] as const;
 
 const marketingSubItems = [
