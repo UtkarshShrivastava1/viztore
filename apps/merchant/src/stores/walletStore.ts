@@ -16,6 +16,10 @@ export interface WalletTransaction {
   status: WalletTransactionStatus;
   closingBalance: number;
   referenceId?: string;
+  paymentId?: string;
+  orderId?: string;
+  bankUpi?: string;
+  paidAt?: string;
   notes?: string;
 }
 
@@ -31,10 +35,10 @@ export interface BankAccount {
 
 interface WalletState {
   currentBalance: number;
+  usedThisMonth: number;
+  usedChangePercent: number;
   totalAdded: number;
   totalUsed: number;
-  pendingRefund: number;
-  creditLimit: number;
   transactions: WalletTransaction[];
   bankAccounts: BankAccount[];
 
@@ -46,10 +50,9 @@ interface WalletState {
   methodFilter: string;
   statusFilter: string;
 
-  // Modals & Drawers
-  isAddMoneyModalOpen: boolean;
-  isWithdrawModalOpen: boolean;
-  isBankAccountsModalOpen: boolean;
+  // Drawers (Mockups 7.1, 7.2, 7.3)
+  isAddMoneyDrawerOpen: boolean;
+  isHistoryDrawerOpen: boolean;
   selectedTransaction: WalletTransaction | null;
 
   // Actions
@@ -60,12 +63,16 @@ interface WalletState {
   setMethodFilter: (method: string) => void;
   setStatusFilter: (status: string) => void;
   clearFilters: () => void;
-  setIsAddMoneyModalOpen: (open: boolean) => void;
-  setIsWithdrawModalOpen: (open: boolean) => void;
-  setIsBankAccountsModalOpen: (open: boolean) => void;
+
+  setIsAddMoneyDrawerOpen: (open: boolean) => void;
+  setIsHistoryDrawerOpen: (open: boolean) => void;
   setSelectedTransaction: (txn: WalletTransaction | null) => void;
 
-  addMoney: (amount: number, method: string, methodType: 'razorpay' | 'hdfc' | 'upi' | 'wallet' | 'bank') => void;
+  addMoney: (
+    amount: number,
+    method: string,
+    methodType: 'razorpay' | 'hdfc' | 'upi' | 'wallet' | 'bank'
+  ) => void;
   withdrawMoney: (amount: number, bankAccountId: string, notes?: string) => void;
 }
 
@@ -82,8 +89,12 @@ const initialTransactions: WalletTransaction[] = [
     amount: 20000.0,
     status: 'Success',
     closingBalance: 32450.0,
-    referenceId: 'pay_Nz82Kx92109',
-    notes: 'Direct merchant portal top-up',
+    referenceId: '—',
+    paymentId: 'pay_Oh9F2e6s7D1aXy',
+    orderId: 'order_Oh9F2e6s7D1aXy',
+    bankUpi: 'HDFC Bank **** 4567',
+    paidAt: '11 May 2024, 11:24 AM',
+    notes: '—',
   },
   {
     id: 'INV-1248',
@@ -98,7 +109,11 @@ const initialTransactions: WalletTransaction[] = [
     status: 'Success',
     closingBalance: 12450.0,
     referenceId: 'INV-1248',
-    notes: 'Order fulfillment payment deduction',
+    paymentId: 'pay_INV1248_deduct',
+    orderId: 'order_INV1248',
+    bankUpi: 'Wallet Balance Direct',
+    paidAt: '10 May 2024, 04:45 PM',
+    notes: 'Invoice INV-1248 settlement deduction',
   },
   {
     id: 'WLT-2024-000122',
@@ -112,13 +127,18 @@ const initialTransactions: WalletTransaction[] = [
     amount: 15000.0,
     status: 'Success',
     closingBalance: 20900.0,
-    referenceId: 'HDFC-NETB-48190',
+    referenceId: '—',
+    paymentId: 'pay_HDFC91024_netb',
+    orderId: 'order_HDFC91024',
+    bankUpi: 'HDFC Bank **** 4567',
+    paidAt: '09 May 2024, 02:30 PM',
+    notes: 'Net Banking instant top-up',
   },
   {
     id: 'INV-1246',
-    dateTime: '08 May 2024 11:10 AM',
+    dateTime: '08 May 2024 12:30 PM',
     date: '08 May 2024',
-    time: '11:10 AM',
+    time: '12:30 PM',
     type: 'Used',
     description: 'Payment for Invoice INV-1246',
     paymentMethod: 'Wallet Balance',
@@ -127,6 +147,10 @@ const initialTransactions: WalletTransaction[] = [
     status: 'Success',
     closingBalance: 5900.0,
     referenceId: 'INV-1246',
+    paymentId: 'pay_INV1246_deduct',
+    orderId: 'order_INV1246',
+    bankUpi: 'Wallet Balance Direct',
+    paidAt: '08 May 2024, 12:30 PM',
   },
   {
     id: 'REF-2024-00045',
@@ -141,7 +165,11 @@ const initialTransactions: WalletTransaction[] = [
     status: 'Pending',
     closingBalance: 12680.0,
     referenceId: 'REQ-124',
-    notes: 'Item damaged during logistics transit - verified by QA',
+    paymentId: 'ref_REQ124_pending',
+    orderId: 'order_REQ124',
+    bankUpi: 'Wallet Balance Refund',
+    paidAt: '07 May 2024, 05:20 PM',
+    notes: 'Return item processed, awaiting final clearance batch',
   },
   {
     id: 'WLT-2024-000121',
@@ -155,7 +183,11 @@ const initialTransactions: WalletTransaction[] = [
     amount: 10000.0,
     status: 'Success',
     closingBalance: 10330.0,
-    referenceId: 'UPI-TXN-8201948',
+    referenceId: '—',
+    paymentId: 'pay_UPI810293_gpay',
+    orderId: 'order_UPI810293',
+    bankUpi: 'merchant@okaxis',
+    paidAt: '06 May 2024, 01:15 PM',
   },
   {
     id: 'INV-1243',
@@ -170,6 +202,28 @@ const initialTransactions: WalletTransaction[] = [
     status: 'Success',
     closingBalance: 330.0,
     referenceId: 'INV-1243',
+    paymentId: 'pay_INV1243_deduct',
+    orderId: 'order_INV1243',
+    bankUpi: 'Wallet Balance Direct',
+    paidAt: '05 May 2024, 03:40 PM',
+  },
+  {
+    id: 'WLT-2024-000120',
+    dateTime: '04 May 2024 10:20 AM',
+    date: '04 May 2024',
+    time: '10:20 AM',
+    type: 'Added',
+    description: 'Added money to wallet',
+    paymentMethod: 'Razorpay',
+    methodType: 'razorpay',
+    amount: 25000.0,
+    status: 'Success',
+    closingBalance: 5080.0,
+    referenceId: '—',
+    paymentId: 'pay_Razorpay940182',
+    orderId: 'order_Razorpay940182',
+    bankUpi: 'ICICI Net Banking',
+    paidAt: '04 May 2024, 10:20 AM',
   },
 ];
 
@@ -179,40 +233,30 @@ const initialBankAccounts: BankAccount[] = [
     bankName: 'HDFC Bank',
     accountNumberMasked: '•••• •••• 4567',
     ifscCode: 'HDFC0001234',
-    accountHolderName: 'Apex Fashion Stores Ltd',
+    accountHolderName: 'Fashion Hub Seller',
     isPrimary: true,
-    verified: true,
-  },
-  {
-    id: 'BANK-02',
-    bankName: 'ICICI Bank',
-    accountNumberMasked: '•••• •••• 8912',
-    ifscCode: 'ICIC0005678',
-    accountHolderName: 'Apex Fashion Stores Ltd',
-    isPrimary: false,
     verified: true,
   },
 ];
 
 export const useWalletStore = create<WalletState>((set) => ({
   currentBalance: 32450.0,
+  usedThisMonth: 153150.0,
+  usedChangePercent: -8,
   totalAdded: 185600.0,
   totalUsed: 153150.0,
-  pendingRefund: 2350.0,
-  creditLimit: 50000.0,
   transactions: initialTransactions,
   bankAccounts: initialBankAccounts,
 
   activeTab: 'all',
   searchQuery: '',
-  dateRange: '',
+  dateRange: '01 May 2024 - 31 May 2024',
   typeFilter: 'All Types',
   methodFilter: 'All Methods',
   statusFilter: 'All Statuses',
 
-  isAddMoneyModalOpen: false,
-  isWithdrawModalOpen: false,
-  isBankAccountsModalOpen: false,
+  isAddMoneyDrawerOpen: false,
+  isHistoryDrawerOpen: false,
   selectedTransaction: null,
 
   setActiveTab: (activeTab) => set({ activeTab }),
@@ -224,23 +268,26 @@ export const useWalletStore = create<WalletState>((set) => ({
   clearFilters: () =>
     set({
       searchQuery: '',
-      dateRange: '',
+      dateRange: '01 May 2024 - 31 May 2024',
       typeFilter: 'All Types',
       methodFilter: 'All Methods',
       statusFilter: 'All Statuses',
     }),
 
-  setIsAddMoneyModalOpen: (isAddMoneyModalOpen) => set({ isAddMoneyModalOpen }),
-  setIsWithdrawModalOpen: (isWithdrawModalOpen) => set({ isWithdrawModalOpen }),
-  setIsBankAccountsModalOpen: (isBankAccountsModalOpen) => set({ isBankAccountsModalOpen }),
+  setIsAddMoneyDrawerOpen: (isAddMoneyDrawerOpen) => set({ isAddMoneyDrawerOpen }),
+  setIsHistoryDrawerOpen: (isHistoryDrawerOpen) => set({ isHistoryDrawerOpen }),
   setSelectedTransaction: (selectedTransaction) => set({ selectedTransaction }),
 
   addMoney: (amount, method, methodType) =>
     set((state) => {
       const now = new Date();
-      const dateStr = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      const dateStr = now.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      });
       const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-      const nextId = `WLT-2026-000${state.transactions.length + 120}`;
+      const nextId = `WLT-2024-000${state.transactions.length + 120}`;
       const newBal = state.currentBalance + amount;
 
       const newTxn: WalletTransaction = {
@@ -255,26 +302,33 @@ export const useWalletStore = create<WalletState>((set) => ({
         amount,
         status: 'Success',
         closingBalance: newBal,
-        referenceId: `TXN-${Date.now().toString().slice(-6)}`,
+        referenceId: '—',
+        paymentId: `pay_${Date.now().toString().slice(-10)}`,
+        orderId: `order_${Date.now().toString().slice(-10)}`,
+        bankUpi: method,
+        paidAt: `${dateStr}, ${timeStr}`,
+        notes: 'Direct wallet funds load',
       };
 
       return {
         currentBalance: newBal,
         totalAdded: state.totalAdded + amount,
         transactions: [newTxn, ...state.transactions],
-        isAddMoneyModalOpen: false,
+        isAddMoneyDrawerOpen: false,
       };
     }),
 
-  withdrawMoney: (amount, bankAccountId, notes) =>
+  withdrawMoney: (amount, _bankAccountId, notes) =>
     set((state) => {
-      if (amount > state.currentBalance) return state;
-      const bank = state.bankAccounts.find((b) => b.id === bankAccountId) || state.bankAccounts[0];
       const now = new Date();
-      const dateStr = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      const dateStr = now.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      });
       const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-      const nextId = `WLT-2026-000${state.transactions.length + 120}`;
-      const newBal = state.currentBalance - amount;
+      const nextId = `WLT-2024-000${state.transactions.length + 120}`;
+      const newBal = Math.max(0, state.currentBalance - amount);
 
       const newTxn: WalletTransaction = {
         id: nextId,
@@ -282,21 +336,24 @@ export const useWalletStore = create<WalletState>((set) => ({
         date: dateStr,
         time: timeStr,
         type: 'Used',
-        description: `Settlement withdrawal to ${bank?.bankName || 'Bank'}`,
-        paymentMethod: bank?.bankName || 'Bank Transfer',
+        description: 'Withdrawal to Bank Account',
+        paymentMethod: 'Bank Transfer',
         methodType: 'bank',
         amount: -amount,
         status: 'Success',
         closingBalance: newBal,
-        referenceId: `UTR-${Date.now().toString().slice(-8)}`,
-        notes,
+        referenceId: 'WITHDRAW',
+        paymentId: `pay_${Date.now().toString().slice(-10)}`,
+        orderId: `order_${Date.now().toString().slice(-10)}`,
+        bankUpi: 'Bank Account Transfer',
+        paidAt: `${dateStr}, ${timeStr}`,
+        notes: notes || 'Bank withdrawal settlement',
       };
 
       return {
         currentBalance: newBal,
         totalUsed: state.totalUsed + amount,
         transactions: [newTxn, ...state.transactions],
-        isWithdrawModalOpen: false,
       };
     }),
 }));

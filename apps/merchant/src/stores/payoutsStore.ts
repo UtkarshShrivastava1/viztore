@@ -4,9 +4,13 @@ export interface PayoutRecord {
   id: string;
   payoutId: string;
   date: string;
+  dateTime: string;
+  orderCount: number;
   payoutAccount: string;
+  bankAccount: string;
   amount: number;
-  status: 'Success' | 'In Process' | 'Failed' | 'Reversed';
+  status: 'Paid' | 'Failed' | 'Success' | 'In Process' | 'Reversed';
+  utr: string;
   utrNumber?: string;
   processedOn?: string;
   remarks?: string;
@@ -16,32 +20,45 @@ export interface SettlementRecord {
   id: string;
   settlementId: string;
   settlementDate: string;
-  payoutAccount: string;
-  orderRange: string;
-  settlementAmount: number;
+  period: string;
+  orderCount: number;
+  grossAmount: number;
   deductions: number;
+  settlementAmount: number;
   netAmount: number;
+  payoutAccount: string;
+  orderRange?: string;
   status: 'Settled' | 'In Transit';
+  utr: string;
   utrNumber?: string;
 }
 
 export interface PayoutTransaction {
   id: string;
-  transactionId: string;
   dateTime: string;
+  transactionId: string;
+  orderId: string;
+  customer: string;
   type:
+    | 'Order Payment'
+    | 'Shipping Charge'
+    | 'Commission'
+    | 'Refund'
     | 'Payout'
+    | 'Fee Deduction'
+    | 'Chargeback'
     | 'TDS Deducted'
     | 'Tax Collected'
-    | 'Refund'
-    | 'Commission'
-    | 'Shipping Charge'
     | 'Order Credit'
     | 'Payout Initiated';
+  paymentMethod: string;
   description: string;
   referenceId: string;
+  amount: number;
   debit?: number;
   credit?: number;
+  fee: number | null;
+  netAmount: number;
   balance: number;
   status: 'Completed' | 'Pending' | 'Failed';
 }
@@ -97,6 +114,456 @@ export type PayoutTab =
   | 'payout_requests'
   | 'payout_settings';
 
+export const mockPayoutsList: PayoutRecord[] = [
+  {
+    id: 'pay-1234',
+    payoutId: '#PAYOUT1234',
+    date: '15 May 2024, 10:30 AM',
+    dateTime: '15 May 2024, 10:30 AM',
+    orderCount: 12,
+    payoutAccount: 'HDFC Bank ••••5678',
+    bankAccount: 'HDFC Bank ••••5678',
+    amount: 12450.0,
+    status: 'Paid',
+    utr: 'AXIS123456789012',
+    utrNumber: 'AXIS123456789012',
+  },
+  {
+    id: 'pay-1233',
+    payoutId: '#PAYOUT1233',
+    date: '08 May 2024, 09:15 AM',
+    dateTime: '08 May 2024, 09:15 AM',
+    orderCount: 8,
+    payoutAccount: 'HDFC Bank ••••5678',
+    bankAccount: 'HDFC Bank ••••5678',
+    amount: 9850.0,
+    status: 'Paid',
+    utr: 'HDFC987654321098',
+    utrNumber: 'HDFC987654321098',
+  },
+  {
+    id: 'pay-1232',
+    payoutId: '#PAYOUT1232',
+    date: '01 May 2024, 11:20 AM',
+    dateTime: '01 May 2024, 11:20 AM',
+    orderCount: 11,
+    payoutAccount: 'HDFC Bank ••••5678',
+    bankAccount: 'HDFC Bank ••••5678',
+    amount: 11200.0,
+    status: 'Paid',
+    utr: 'SBIN234567890123',
+    utrNumber: 'SBIN234567890123',
+  },
+  {
+    id: 'pay-1231',
+    payoutId: '#PAYOUT1231',
+    date: '24 Apr 2024, 02:45 PM',
+    dateTime: '24 Apr 2024, 02:45 PM',
+    orderCount: 9,
+    payoutAccount: 'HDFC Bank ••••5678',
+    bankAccount: 'HDFC Bank ••••5678',
+    amount: 8750.0,
+    status: 'Paid',
+    utr: 'ICIC123456789012',
+    utrNumber: 'ICIC123456789012',
+  },
+  {
+    id: 'pay-1230',
+    payoutId: '#PAYOUT1230',
+    date: '17 Apr 2024, 11:10 AM',
+    dateTime: '17 Apr 2024, 11:10 AM',
+    orderCount: 7,
+    payoutAccount: 'HDFC Bank ••••5678',
+    bankAccount: 'HDFC Bank ••••5678',
+    amount: 7650.0,
+    status: 'Failed',
+    utr: '-',
+    utrNumber: '-',
+    remarks: 'Bank server timeout, retrying in next cycle',
+  },
+  {
+    id: 'pay-1229',
+    payoutId: '#PAYOUT1229',
+    date: '10 Apr 2024, 10:35 AM',
+    dateTime: '10 Apr 2024, 10:35 AM',
+    orderCount: 10,
+    payoutAccount: 'HDFC Bank ••••5678',
+    bankAccount: 'HDFC Bank ••••5678',
+    amount: 9420.0,
+    status: 'Paid',
+    utr: 'AXIS567890123456',
+    utrNumber: 'AXIS567890123456',
+  },
+  {
+    id: 'pay-1228',
+    payoutId: '#PAYOUT1228',
+    date: '03 Apr 2024, 09:10 AM',
+    dateTime: '03 Apr 2024, 09:10 AM',
+    orderCount: 6,
+    payoutAccount: 'HDFC Bank ••••5678',
+    bankAccount: 'HDFC Bank ••••5678',
+    amount: 6300.0,
+    status: 'Paid',
+    utr: 'HDFC456789012345',
+    utrNumber: 'HDFC456789012345',
+  },
+  {
+    id: 'pay-1227',
+    payoutId: '#PAYOUT1227',
+    date: '27 Mar 2024, 04:20 PM',
+    dateTime: '27 Mar 2024, 04:20 PM',
+    orderCount: 14,
+    payoutAccount: 'HDFC Bank ••••5678',
+    bankAccount: 'HDFC Bank ••••5678',
+    amount: 13850.0,
+    status: 'Paid',
+    utr: 'SBIN678901234567',
+    utrNumber: 'SBIN678901234567',
+  },
+  {
+    id: 'pay-1226',
+    payoutId: '#PAYOUT1226',
+    date: '20 Mar 2024, 12:05 PM',
+    dateTime: '20 Mar 2024, 12:05 PM',
+    orderCount: 9,
+    payoutAccount: 'HDFC Bank ••••5678',
+    bankAccount: 'HDFC Bank ••••5678',
+    amount: 9100.0,
+    status: 'Paid',
+    utr: 'ICIC789012345678',
+    utrNumber: 'ICIC789012345678',
+  },
+  {
+    id: 'pay-1225',
+    payoutId: '#PAYOUT1225',
+    date: '13 Mar 2024, 10:50 AM',
+    dateTime: '13 Mar 2024, 10:50 AM',
+    orderCount: 8,
+    payoutAccount: 'HDFC Bank ••••5678',
+    bankAccount: 'HDFC Bank ••••5678',
+    amount: 8420.0,
+    status: 'Paid',
+    utr: 'KKBK345678901234',
+    utrNumber: 'KKBK345678901234',
+  },
+];
+
+export const mockSettlementsList: SettlementRecord[] = [
+  {
+    id: 'sett-00128',
+    settlementId: '#SETT00128',
+    settlementDate: '15 May 2024, 10:30 AM',
+    period: '08 May - 14 May 2024',
+    orderCount: 42,
+    grossAmount: 48520.0,
+    deductions: 2425.0,
+    settlementAmount: 46095.0,
+    netAmount: 46095.0,
+    payoutAccount: 'HDFC Bank - 50200012345678',
+    status: 'Settled',
+    utr: 'AXIS123456789012',
+  },
+  {
+    id: 'sett-00127',
+    settlementId: '#SETT00127',
+    settlementDate: '08 May 2024, 09:15 AM',
+    period: '01 May - 07 May 2024',
+    orderCount: 37,
+    grossAmount: 39850.0,
+    deductions: 1992.5,
+    settlementAmount: 37857.5,
+    netAmount: 37857.5,
+    payoutAccount: 'HDFC Bank - 50200012345678',
+    status: 'Settled',
+    utr: 'HDFC987654321098',
+  },
+  {
+    id: 'sett-00126',
+    settlementId: '#SETT00126',
+    settlementDate: '01 May 2024, 11:20 AM',
+    period: '24 Apr - 30 Apr 2024',
+    orderCount: 32,
+    grossAmount: 35620.0,
+    deductions: 1781.0,
+    settlementAmount: 33839.0,
+    netAmount: 33839.0,
+    payoutAccount: 'HDFC Bank - 50200012345678',
+    status: 'Settled',
+    utr: 'SBIN234567890123',
+  },
+  {
+    id: 'sett-00125',
+    settlementId: '#SETT00125',
+    settlementDate: '24 Apr 2024, 02:45 PM',
+    period: '17 Apr - 23 Apr 2024',
+    orderCount: 28,
+    grossAmount: 28750.0,
+    deductions: 1437.5,
+    settlementAmount: 27312.5,
+    netAmount: 27312.5,
+    payoutAccount: 'HDFC Bank - 50200012345678',
+    status: 'Settled',
+    utr: 'ICIC123456789012',
+  },
+  {
+    id: 'sett-00124',
+    settlementId: '#SETT00124',
+    settlementDate: '17 Apr 2024, 11:10 AM',
+    period: '10 Apr - 16 Apr 2024',
+    orderCount: 26,
+    grossAmount: 24630.0,
+    deductions: 1231.5,
+    settlementAmount: 23398.5,
+    netAmount: 23398.5,
+    payoutAccount: 'HDFC Bank - 50200012345678',
+    status: 'Settled',
+    utr: 'UTIB987654321098',
+  },
+  {
+    id: 'sett-00123',
+    settlementId: '#SETT00123',
+    settlementDate: '10 Apr 2024, 10:35 AM',
+    period: '03 Apr - 09 Apr 2024',
+    orderCount: 21,
+    grossAmount: 19420.0,
+    deductions: 971.0,
+    settlementAmount: 18449.0,
+    netAmount: 18449.0,
+    payoutAccount: 'HDFC Bank - 50200012345678',
+    status: 'Settled',
+    utr: 'AXIS567890123456',
+  },
+  {
+    id: 'sett-00122',
+    settlementId: '#SETT00122',
+    settlementDate: '03 Apr 2024, 09:10 AM',
+    period: '27 Mar - 02 Apr 2024',
+    orderCount: 19,
+    grossAmount: 16300.0,
+    deductions: 815.0,
+    settlementAmount: 15485.0,
+    netAmount: 15485.0,
+    payoutAccount: 'HDFC Bank - 50200012345678',
+    status: 'Settled',
+    utr: 'HDFC456789012345',
+  },
+  {
+    id: 'sett-00121',
+    settlementId: '#SETT00121',
+    settlementDate: '27 Mar 2024, 04:20 PM',
+    period: '20 Mar - 26 Mar 2024',
+    orderCount: 17,
+    grossAmount: 13850.0,
+    deductions: 692.5,
+    settlementAmount: 13157.5,
+    netAmount: 13157.5,
+    payoutAccount: 'HDFC Bank - 50200012345678',
+    status: 'Settled',
+    utr: 'SBIN678901234567',
+  },
+  {
+    id: 'sett-00120',
+    settlementId: '#SETT00120',
+    settlementDate: '20 Mar 2024, 12:05 PM',
+    period: '13 Mar - 19 Mar 2024',
+    orderCount: 14,
+    grossAmount: 11900.0,
+    deductions: 595.0,
+    settlementAmount: 11305.0,
+    netAmount: 11305.0,
+    payoutAccount: 'HDFC Bank - 50200012345678',
+    status: 'Settled',
+    utr: 'ICIC789012345678',
+  },
+  {
+    id: 'sett-00119',
+    settlementId: '#SETT00119',
+    settlementDate: '13 Mar 2024, 10:50 AM',
+    period: '06 Mar - 12 Mar 2024',
+    orderCount: 11,
+    grossAmount: 8420.0,
+    deductions: 421.0,
+    settlementAmount: 7999.0,
+    netAmount: 7999.0,
+    payoutAccount: 'HDFC Bank - 50200012345678',
+    status: 'Settled',
+    utr: 'KKBK345678901234',
+  },
+];
+
+export const mockTransactionsList: PayoutTransaction[] = [
+  {
+    id: 'txn-123456',
+    transactionId: '#TXN123456',
+    orderId: '#ORD10045',
+    customer: 'Rahul Sharma',
+    dateTime: '15 May 2024, 10:30 AM',
+    type: 'Order Payment',
+    paymentMethod: 'UPI (PhonePe)',
+    description: 'Order amount for #ORD10045',
+    referenceId: '#ORD10045',
+    amount: 1299.0,
+    fee: 38.97,
+    netAmount: 1260.03,
+    credit: 1049.0,
+    balance: 12450.0,
+    status: 'Completed',
+  },
+  {
+    id: 'txn-123455',
+    transactionId: '#TXN123455',
+    orderId: '#ORD10044',
+    customer: 'Priya Verma',
+    dateTime: '15 May 2024, 09:15 AM',
+    type: 'Order Payment',
+    paymentMethod: 'UPI (Google Pay)',
+    description: 'Order amount for #ORD10044',
+    referenceId: '#ORD10044',
+    amount: 899.0,
+    fee: 26.97,
+    netAmount: 872.03,
+    credit: 899.0,
+    balance: 11189.97,
+    status: 'Completed',
+  },
+  {
+    id: 'txn-123454',
+    transactionId: '#TXN123454',
+    orderId: '#ORD10043',
+    customer: 'Amit Kumar',
+    dateTime: '14 May 2024, 08:45 PM',
+    type: 'Refund',
+    paymentMethod: 'Original Payment',
+    description: 'Refund for order #ORD10043',
+    referenceId: '#ORD10043',
+    amount: -499.0,
+    debit: 499.0,
+    fee: 0.0,
+    netAmount: -499.0,
+    balance: 10317.94,
+    status: 'Completed',
+  },
+  {
+    id: 'txn-123453',
+    transactionId: '#TXN123453',
+    orderId: '#ORD10042',
+    customer: 'Sneha Patel',
+    dateTime: '14 May 2024, 06:20 PM',
+    type: 'Order Payment',
+    paymentMethod: 'Credit Card',
+    description: 'Order amount for #ORD10042',
+    referenceId: '#ORD10042',
+    amount: 2499.0,
+    fee: 74.97,
+    netAmount: 2424.03,
+    credit: 2499.0,
+    balance: 10816.94,
+    status: 'Completed',
+  },
+  {
+    id: 'txn-123452',
+    transactionId: '#TXN123452',
+    orderId: '#ORD10041',
+    customer: 'Vikram Singh',
+    dateTime: '13 May 2024, 01:10 PM',
+    type: 'Order Payment',
+    paymentMethod: 'Net Banking',
+    description: 'Order amount for #ORD10041',
+    referenceId: '#ORD10041',
+    amount: 1199.0,
+    fee: 23.98,
+    netAmount: 1175.02,
+    credit: 1199.0,
+    balance: 8392.91,
+    status: 'Completed',
+  },
+  {
+    id: 'txn-123451',
+    transactionId: '#TXN123451',
+    orderId: '#ORD10040',
+    customer: 'Neha Jain',
+    dateTime: '12 May 2024, 11:05 AM',
+    type: 'Order Payment',
+    paymentMethod: 'UPI (Paytm)',
+    description: 'Order amount for #ORD10040',
+    referenceId: '#ORD10040',
+    amount: 749.0,
+    fee: 22.47,
+    netAmount: 726.53,
+    credit: 749.0,
+    balance: 7217.89,
+    status: 'Completed',
+  },
+  {
+    id: 'txn-123450',
+    transactionId: '#TXN123450',
+    orderId: '#ORD10039',
+    customer: 'Karan Mehta',
+    dateTime: '11 May 2024, 07:30 PM',
+    type: 'Fee Deduction',
+    paymentMethod: 'Platform Fee',
+    description: 'Platform commission for #ORD10039',
+    referenceId: '#ORD10039',
+    amount: -115.39,
+    debit: 115.39,
+    fee: null,
+    netAmount: -115.39,
+    balance: 6491.36,
+    status: 'Completed',
+  },
+  {
+    id: 'txn-123449',
+    transactionId: '#TXN123449',
+    orderId: '#ORD10038',
+    customer: 'Anjali Nair',
+    dateTime: '11 May 2024, 06:15 PM',
+    type: 'Order Payment',
+    paymentMethod: 'UPI (PhonePe)',
+    description: 'Order amount for #ORD10038',
+    referenceId: '#ORD10038',
+    amount: 1850.0,
+    fee: 55.5,
+    netAmount: 1794.5,
+    credit: 1850.0,
+    balance: 6606.75,
+    status: 'Completed',
+  },
+  {
+    id: 'txn-123448',
+    transactionId: '#TXN123448',
+    orderId: '#ORD10037',
+    customer: 'Rohit Yadav',
+    dateTime: '10 May 2024, 04:20 PM',
+    type: 'Chargeback',
+    paymentMethod: 'Original Payment',
+    description: 'Customer dispute chargeback for #ORD10037',
+    referenceId: '#ORD10037',
+    amount: -1199.0,
+    debit: 1199.0,
+    fee: 0.0,
+    netAmount: -1199.0,
+    balance: 4812.25,
+    status: 'Completed',
+  },
+  {
+    id: 'txn-123447',
+    transactionId: '#TXN123447',
+    orderId: '#ORD10036',
+    customer: 'Meera Iyer',
+    dateTime: '10 May 2024, 12:05 PM',
+    type: 'Order Payment',
+    paymentMethod: 'UPI (Google Pay)',
+    description: 'Order amount for #ORD10036',
+    referenceId: '#ORD10036',
+    amount: 910.0,
+    fee: 27.3,
+    netAmount: 882.7,
+    credit: 910.0,
+    balance: 6011.25,
+    status: 'Completed',
+  },
+];
+
 interface PayoutsState {
   activeTab: PayoutTab;
   availableForPayout: number;
@@ -105,454 +572,49 @@ interface PayoutsState {
   totalPayoutsMonth: number;
   totalSettlementsAllTime: number;
 
+  payoutAccountFilter: string;
+  dateRangeFilter: string;
+
   payouts: PayoutRecord[];
   settlements: SettlementRecord[];
   transactions: PayoutTransaction[];
   requests: PayoutRequest[];
   settings: PayoutSettingsData;
 
+  selectedPayout: PayoutRecord | null;
+  selectedSettlement: SettlementRecord | null;
+  selectedTransaction: PayoutTransaction | null;
+
+  isPayoutDrawerOpen: boolean;
+  isSettlementDrawerOpen: boolean;
+  isTransactionDrawerOpen: boolean;
+
   selectedRequest: PayoutRequest | null;
   isRequestDrawerOpen: boolean;
   isNewRequestModalOpen: boolean;
 
+  // Actions
   setActiveTab: (tab: PayoutTab) => void;
+  setPayoutAccountFilter: (val: string) => void;
+  setDateRangeFilter: (val: string) => void;
+
+  setSelectedPayout: (p: PayoutRecord | null) => void;
+  setIsPayoutDrawerOpen: (open: boolean) => void;
+
+  setSelectedSettlement: (s: SettlementRecord | null) => void;
+  setIsSettlementDrawerOpen: (open: boolean) => void;
+
+  setSelectedTransaction: (t: PayoutTransaction | null) => void;
+  setIsTransactionDrawerOpen: (open: boolean) => void;
+
   setSelectedRequest: (req: PayoutRequest | null) => void;
   setIsRequestDrawerOpen: (open: boolean) => void;
   setIsNewRequestModalOpen: (open: boolean) => void;
   updateSettings: (newSettings: Partial<PayoutSettingsData>) => void;
   createPayoutRequest: (amount: number, remarks?: string) => void;
   cancelPayoutRequest: (id: string) => void;
+  downloadStatement: (format: 'Payment History' | 'Settlements' | 'Transactions') => void;
 }
-
-const mockPayoutsList: PayoutRecord[] = [
-  {
-    id: 'pay-0045',
-    payoutId: '#PAYOUT00045',
-    date: '18 May 2024, 02:15 PM',
-    payoutAccount: 'HDFC Bank 50200012345678',
-    amount: 12450.0,
-    status: 'Success',
-    utrNumber: 'UTR: 4158669215632',
-    processedOn: '18 May 2024, 02:16 PM',
-    remarks: '-',
-  },
-  {
-    id: 'pay-0044',
-    payoutId: '#PAYOUT00044',
-    date: '11 May 2024, 01:40 PM',
-    payoutAccount: 'HDFC Bank 50200012345678',
-    amount: 9850.0,
-    status: 'Success',
-    utrNumber: 'UTR: 4123658741126',
-    processedOn: '11 May 2024, 01:41 PM',
-    remarks: '-',
-  },
-  {
-    id: 'pay-0043',
-    payoutId: '#PAYOUT00043',
-    date: '04 May 2024, 12:25 PM',
-    payoutAccount: 'HDFC Bank 50200012345678',
-    amount: 15000.0,
-    status: 'Success',
-    utrNumber: 'UTR: 409856321478',
-    processedOn: '04 May 2024, 12:26 PM',
-    remarks: '-',
-  },
-  {
-    id: 'pay-0042',
-    payoutId: '#PAYOUT00042',
-    date: '27 Apr 2024, 11:10 AM',
-    payoutAccount: 'HDFC Bank 50200012345678',
-    amount: 8750.0,
-    status: 'Success',
-    utrNumber: 'UTR: 406325874512',
-    processedOn: '27 Apr 2024, 11:11 AM',
-    remarks: '-',
-  },
-  {
-    id: 'pay-0041',
-    payoutId: '#PAYOUT00041',
-    date: '20 Apr 2024, 10:05 AM',
-    payoutAccount: 'HDFC Bank 50200012345678',
-    amount: 7650.0,
-    status: 'Success',
-    utrNumber: 'UTR: 403258745123',
-    processedOn: '20 Apr 2024, 10:06 AM',
-    remarks: '-',
-  },
-  {
-    id: 'pay-0040',
-    payoutId: '#PAYOUT00040',
-    date: '13 Apr 2024, 09:20 AM',
-    payoutAccount: 'HDFC Bank 50200012345678',
-    amount: 10150.0,
-    status: 'Success',
-    utrNumber: 'UTR: 401236985741',
-    processedOn: '13 Apr 2024, 09:21 AM',
-    remarks: '-',
-  },
-  {
-    id: 'pay-0039',
-    payoutId: '#PAYOUT00039',
-    date: '06 Apr 2024, 08:50 AM',
-    payoutAccount: 'HDFC Bank 50200012345678',
-    amount: 9950.0,
-    status: 'Success',
-    utrNumber: 'UTR: 396145698745',
-    processedOn: '06 Apr 2024, 08:51 AM',
-    remarks: '-',
-  },
-  {
-    id: 'pay-0038',
-    payoutId: '#PAYOUT00038',
-    date: '30 Mar 2024, 10:40 AM',
-    payoutAccount: 'HDFC Bank 50200012345678',
-    amount: 6300.0,
-    status: 'In Process',
-    remarks: 'Bank processing',
-  },
-  {
-    id: 'pay-0037',
-    payoutId: '#PAYOUT00037',
-    date: '23 Mar 2024, 09:00 AM',
-    payoutAccount: 'HDFC Bank 50200012345678',
-    amount: 8500.0,
-    status: 'In Process',
-    remarks: 'Bank processing',
-  },
-  {
-    id: 'pay-0036',
-    payoutId: '#PAYOUT00036',
-    date: '09 Mar 2024, 08:45 AM',
-    payoutAccount: 'HDFC Bank 50200012345678',
-    amount: 5200.0,
-    status: 'Failed',
-    processedOn: '09 Mar 2024, 08:50 AM',
-    remarks: 'Insufficient balance',
-  },
-];
-
-const mockSettlementsList: SettlementRecord[] = [
-  {
-    id: 'set-0045',
-    settlementId: '#SETLTS00045',
-    settlementDate: '18 May 2024, 02:15 PM',
-    payoutAccount: 'HDFC Bank 50200012345678',
-    orderRange: '10 May 2024 - 16 May 2024',
-    settlementAmount: 12450.0,
-    deductions: 210.0,
-    netAmount: 12240.0,
-    status: 'Settled',
-    utrNumber: 'UTR: 415869215632',
-  },
-  {
-    id: 'set-0044',
-    settlementId: '#SETLTS00044',
-    settlementDate: '11 May 2024, 01:40 PM',
-    payoutAccount: 'HDFC Bank 50200012345678',
-    orderRange: '03 May 2024 - 09 May 2024',
-    settlementAmount: 9850.0,
-    deductions: 185.0,
-    netAmount: 9665.0,
-    status: 'Settled',
-    utrNumber: 'UTR: 412365874126',
-  },
-  {
-    id: 'set-0043',
-    settlementId: '#SETLTS00043',
-    settlementDate: '04 May 2024, 12:25 PM',
-    payoutAccount: 'HDFC Bank 50200012345678',
-    orderRange: '26 Apr 2024 - 02 May 2024',
-    settlementAmount: 15000.0,
-    deductions: 220.0,
-    netAmount: 14780.0,
-    status: 'Settled',
-    utrNumber: 'UTR: 409856321478',
-  },
-  {
-    id: 'set-0042',
-    settlementId: '#SETLTS00042',
-    settlementDate: '27 Apr 2024, 11:10 AM',
-    payoutAccount: 'HDFC Bank 50200012345678',
-    orderRange: '19 Apr 2024 - 25 Apr 2024',
-    settlementAmount: 8750.0,
-    deductions: 160.0,
-    netAmount: 8590.0,
-    status: 'Settled',
-    utrNumber: 'UTR: 406325874512',
-  },
-  {
-    id: 'set-0041',
-    settlementId: '#SETLTS00041',
-    settlementDate: '20 Apr 2024, 10:05 AM',
-    payoutAccount: 'HDFC Bank 50200012345678',
-    orderRange: '12 Apr 2024 - 18 Apr 2024',
-    settlementAmount: 7650.0,
-    deductions: 120.0,
-    netAmount: 7530.0,
-    status: 'Settled',
-    utrNumber: 'UTR: 403258745123',
-  },
-  {
-    id: 'set-0040',
-    settlementId: '#SETLTS00040',
-    settlementDate: '13 Apr 2024, 09:20 AM',
-    payoutAccount: 'HDFC Bank 50200012345678',
-    orderRange: '05 Apr 2024 - 11 Apr 2024',
-    settlementAmount: 10150.0,
-    deductions: 175.0,
-    netAmount: 9975.0,
-    status: 'Settled',
-    utrNumber: 'UTR: 401236985741',
-  },
-  {
-    id: 'set-0037',
-    settlementId: '#SETLTS00037',
-    settlementDate: '23 Mar 2024, 09:15 AM',
-    payoutAccount: 'HDFC Bank 50200012345678',
-    orderRange: '15 Mar 2024 - 21 Mar 2024',
-    settlementAmount: 12000.0,
-    deductions: 200.0,
-    netAmount: 11800.0,
-    status: 'In Transit',
-  },
-  {
-    id: 'set-0036',
-    settlementId: '#SETLTS00036',
-    settlementDate: '16 Mar 2024, 09:00 AM',
-    payoutAccount: 'HDFC Bank 50200012345678',
-    orderRange: '08 Mar 2024 - 14 Mar 2024',
-    settlementAmount: 8500.0,
-    deductions: 150.0,
-    netAmount: 8350.0,
-    status: 'In Transit',
-  },
-];
-
-const mockTransactionsList: PayoutTransaction[] = [
-  {
-    id: 'txn-7501',
-    transactionId: '#TXN1287501',
-    dateTime: '18 May 2024, 10:30 AM',
-    type: 'Payout',
-    description: 'Payout to HDFC Bank - 50200012345678',
-    referenceId: '#PAYOUT1234',
-    credit: 12450.0,
-    balance: 12450.0,
-    status: 'Completed',
-  },
-  {
-    id: 'txn-7500',
-    transactionId: '#TXN1287500',
-    dateTime: '18 May 2024, 10:30 AM',
-    type: 'TDS Deducted',
-    description: 'TDS deduction on payout',
-    referenceId: '#PAYOUT1234',
-    debit: 115.39,
-    balance: 0.0,
-    status: 'Completed',
-  },
-  {
-    id: 'txn-7499',
-    transactionId: '#TXN1287499',
-    dateTime: '18 May 2024, 10:30 AM',
-    type: 'Tax Collected',
-    description: 'Tax collected (GST)',
-    referenceId: '#PAYOUT1234',
-    debit: 2300.0,
-    balance: 0.0,
-    status: 'Completed',
-  },
-  {
-    id: 'txn-7498',
-    transactionId: '#TXN1287498',
-    dateTime: '18 May 2024, 10:30 AM',
-    type: 'Refund',
-    description: 'Refund for Order #ORD10041',
-    referenceId: '#ORD10041',
-    credit: 899.0,
-    balance: 14865.39,
-    status: 'Completed',
-  },
-  {
-    id: 'txn-7497',
-    transactionId: '#TXN1287497',
-    dateTime: '18 May 2024, 10:30 AM',
-    type: 'Commission',
-    description: 'Platform commission for Order #ORD10045',
-    referenceId: '#ORD10045',
-    debit: 115.39,
-    balance: 13966.39,
-    status: 'Completed',
-  },
-  {
-    id: 'txn-7496',
-    transactionId: '#TXN1287496',
-    dateTime: '18 May 2024, 10:30 AM',
-    type: 'Shipping Charge',
-    description: 'Shipping charge for Order #ORD10045',
-    referenceId: '#ORD10045',
-    debit: 50.0,
-    balance: 13851.0,
-    status: 'Completed',
-  },
-  {
-    id: 'txn-7495',
-    transactionId: '#TXN1287495',
-    dateTime: '18 May 2024, 10:30 AM',
-    type: 'Order Credit',
-    description: 'Order amount for Order #ORD10045',
-    referenceId: '#ORD10045',
-    credit: 1049.0,
-    balance: 13901.0,
-    status: 'Completed',
-  },
-];
-
-const mockRequestsList: PayoutRequest[] = [
-  {
-    id: 'prq-0025',
-    requestId: '#PRQ00025',
-    requestDateTime: '18 May 2024, 11:20 AM',
-    payoutAccount: 'HDFC Bank 50200012345678',
-    requestedAmount: 12450.0,
-    approvedAmount: 12450.0,
-    status: 'Approved',
-    requestedOn: '18 May 2024, 11:20 AM',
-    processedOn: '18 May 2024, 02:15 PM',
-    remarks: '-',
-    bankDetails: {
-      accountHolderName: 'Fashion Hub',
-      accountNumber: '50200012345678',
-      ifscCode: 'HDFC0001234',
-      bankName: 'HDFC Bank',
-      accountType: 'Current Account',
-    },
-    timeline: {
-      created: '18 May 2024, 11:20 AM',
-      approved: '18 May 2024, 01:50 PM',
-      approvedBy: 'Admin User',
-      processed: '18 May 2024, 02:15 PM',
-      utr: '418569215632',
-    },
-  },
-  {
-    id: 'prq-0024',
-    requestId: '#PRQ00024',
-    requestDateTime: '15 May 2024, 09:45 AM',
-    payoutAccount: 'HDFC Bank 50200012345678',
-    requestedAmount: 9850.0,
-    approvedAmount: 9850.0,
-    status: 'Approved',
-    requestedOn: '15 May 2024, 09:45 AM',
-    processedOn: '15 May 2024, 12:10 PM',
-    remarks: '-',
-    bankDetails: {
-      accountHolderName: 'Fashion Hub',
-      accountNumber: '50200012345678',
-      ifscCode: 'HDFC0001234',
-      bankName: 'HDFC Bank',
-      accountType: 'Current Account',
-    },
-    timeline: {
-      created: '15 May 2024, 09:45 AM',
-      approved: '15 May 2024, 11:00 AM',
-      approvedBy: 'Admin User',
-      processed: '15 May 2024, 12:10 PM',
-      utr: '4123658741126',
-    },
-  },
-  {
-    id: 'prq-0023',
-    requestId: '#PRQ00023',
-    requestDateTime: '12 May 2024, 04:30 PM',
-    payoutAccount: 'HDFC Bank 50200012345678',
-    requestedAmount: 15000.0,
-    approvedAmount: 15000.0,
-    status: 'Pending',
-    requestedOn: '12 May 2024, 04:30 PM',
-    remarks: 'Under review',
-    bankDetails: {
-      accountHolderName: 'Fashion Hub',
-      accountNumber: '50200012345678',
-      ifscCode: 'HDFC0001234',
-      bankName: 'HDFC Bank',
-      accountType: 'Current Account',
-    },
-    timeline: {
-      created: '12 May 2024, 04:30 PM',
-    },
-  },
-  {
-    id: 'prq-0022',
-    requestId: '#PRQ00022',
-    requestDateTime: '10 May 2024, 10:05 AM',
-    payoutAccount: 'HDFC Bank 50200012345678',
-    requestedAmount: 8500.0,
-    status: 'Pending',
-    requestedOn: '10 May 2024, 10:05 AM',
-    remarks: '-',
-    bankDetails: {
-      accountHolderName: 'Fashion Hub',
-      accountNumber: '50200012345678',
-      ifscCode: 'HDFC0001234',
-      bankName: 'HDFC Bank',
-      accountType: 'Current Account',
-    },
-    timeline: {
-      created: '10 May 2024, 10:05 AM',
-    },
-  },
-  {
-    id: 'prq-0021',
-    requestId: '#PRQ00021',
-    requestDateTime: '08 May 2024, 02:25 PM',
-    payoutAccount: 'HDFC Bank 50200012345678',
-    requestedAmount: 7200.0,
-    approvedAmount: 7200.0,
-    status: 'Approved',
-    requestedOn: '08 May 2024, 02:25 PM',
-    processedOn: '08 May 2024, 04:05 PM',
-    remarks: '-',
-    bankDetails: {
-      accountHolderName: 'Fashion Hub',
-      accountNumber: '50200012345678',
-      ifscCode: 'HDFC0001234',
-      bankName: 'HDFC Bank',
-      accountType: 'Current Account',
-    },
-    timeline: {
-      created: '08 May 2024, 02:25 PM',
-      approved: '08 May 2024, 03:15 PM',
-      approvedBy: 'Admin User',
-      processed: '08 May 2024, 04:05 PM',
-      utr: '408562145632',
-    },
-  },
-  {
-    id: 'prq-0020',
-    requestId: '#PRQ00020',
-    requestDateTime: '06 May 2024, 11:10 AM',
-    payoutAccount: 'HDFC Bank 50200012345678',
-    requestedAmount: 5250.0,
-    status: 'Rejected',
-    requestedOn: '06 May 2024, 11:10 AM',
-    processedOn: '06 May 2024, 11:45 AM',
-    remarks: 'Insufficient balance',
-    bankDetails: {
-      accountHolderName: 'Fashion Hub',
-      accountNumber: '50200012345678',
-      ifscCode: 'HDFC0001234',
-      bankName: 'HDFC Bank',
-      accountType: 'Current Account',
-    },
-    timeline: {
-      created: '06 May 2024, 11:10 AM',
-      approved: '06 May 2024, 11:45 AM',
-      approvedBy: 'System Auto-Reject',
-    },
-  },
-];
 
 export const usePayoutsStore = create<PayoutsState>((set, get) => ({
   activeTab: 'overview',
@@ -560,87 +622,86 @@ export const usePayoutsStore = create<PayoutsState>((set, get) => ({
   pendingBalance: 3250.0,
   onHold: 1100.0,
   totalPayoutsMonth: 28750.0,
-  totalSettlementsAllTime: 128450.0,
+  totalSettlementsAllTime: 124560.0,
+
+  payoutAccountFilter: 'HDFC Bank - 50200012345678',
+  dateRangeFilter: '10 May 2024 - 16 May 2024',
 
   payouts: mockPayoutsList,
   settlements: mockSettlementsList,
   transactions: mockTransactionsList,
-  requests: mockRequestsList,
-
+  requests: [],
   settings: {
-    accountName: 'Fashion Hub',
+    accountName: 'Fashion Hub Retailers Pvt Ltd',
     bankName: 'HDFC Bank',
     accountNumber: '50200012345678',
     ifscCode: 'HDFC0001234',
     accountType: 'Current Account',
-    branch: 'Connaught Place, New Delhi',
-    upiId: 'fashionhub@hdfcbank',
+    branch: 'Indiranagar, Bengaluru',
     isVerified: true,
     payoutMode: 'NEFT / RTGS',
     payoutFrequency: 'Weekly',
-    payoutDay: 'Monday',
-    enableThreshold: false,
-    thresholdAmount: 1000,
+    payoutDay: 'Wednesday',
+    enableThreshold: true,
+    thresholdAmount: 5000,
   },
 
-  selectedRequest: mockRequestsList[0] || null,
+  selectedPayout: null,
+  selectedSettlement: null,
+  selectedTransaction: null,
+
+  isPayoutDrawerOpen: false,
+  isSettlementDrawerOpen: false,
+  isTransactionDrawerOpen: false,
+
+  selectedRequest: null,
   isRequestDrawerOpen: false,
   isNewRequestModalOpen: false,
 
   setActiveTab: (tab) => set({ activeTab: tab }),
+  setPayoutAccountFilter: (val) => set({ payoutAccountFilter: val }),
+  setDateRangeFilter: (val) => set({ dateRangeFilter: val }),
+
+  setSelectedPayout: (p) => set({ selectedPayout: p }),
+  setIsPayoutDrawerOpen: (open) => set({ isPayoutDrawerOpen: open }),
+
+  setSelectedSettlement: (s) => set({ selectedSettlement: s }),
+  setIsSettlementDrawerOpen: (open) => set({ isSettlementDrawerOpen: open }),
+
+  setSelectedTransaction: (t) => set({ selectedTransaction: t }),
+  setIsTransactionDrawerOpen: (open) => set({ isTransactionDrawerOpen: open }),
+
   setSelectedRequest: (req) => set({ selectedRequest: req }),
   setIsRequestDrawerOpen: (open) => set({ isRequestDrawerOpen: open }),
   setIsNewRequestModalOpen: (open) => set({ isNewRequestModalOpen: open }),
 
   updateSettings: (newSettings) =>
-    set((state) => ({
-      settings: { ...state.settings, ...newSettings },
-    })),
+    set((state) => ({ settings: { ...state.settings, ...newSettings } })),
 
   createPayoutRequest: (amount, remarks) => {
-    const nextNum = Math.floor(26 + Math.random() * 80);
-    const reqId = `#PRQ000${nextNum}`;
-    const now = new Date();
-    const formatted = `${now.getDate()} ${now.toLocaleString('default', {
-      month: 'short',
-    })} ${now.getFullYear()}, ${now.toLocaleTimeString([], {
-      hour: '2-digit',
-      minute: '2-digit',
-    })}`;
-
-    const newReq: PayoutRequest = {
-      id: `prq-${nextNum}`,
-      requestId: reqId,
-      requestDateTime: formatted,
-      payoutAccount: 'HDFC Bank 50200012345678',
-      requestedAmount: amount,
-      status: 'Pending',
-      requestedOn: formatted,
-      remarks: remarks || 'Under review',
-      bankDetails: {
-        accountHolderName: get().settings.accountName,
-        accountNumber: get().settings.accountNumber,
-        ifscCode: get().settings.ifscCode,
-        bankName: get().settings.bankName,
-        accountType: get().settings.accountType,
-      },
-      timeline: {
-        created: formatted,
-      },
-    };
-
-    set((state) => ({
-      requests: [newReq, ...state.requests],
-      availableForPayout: Math.max(0, state.availableForPayout - amount),
-      pendingBalance: state.pendingBalance + amount,
-      isNewRequestModalOpen: false,
-    }));
+    alert(`Payout request for ₹ ${amount} submitted successfully!`);
   },
 
-  cancelPayoutRequest: (id) =>
-    set((state) => ({
-      requests: state.requests.map((r) =>
-        r.id === id ? { ...r, status: 'Rejected', remarks: 'Cancelled by merchant' } : r
-      ),
-    })),
+  cancelPayoutRequest: (id) => {
+    alert(`Payout request cancelled.`);
+  },
+
+  downloadStatement: (format) => {
+    const csvHeader = 'ID,Date,Amount,Status\n';
+    let content = '';
+    if (format === 'Payment History') {
+      content = get().payouts.map((p) => `${p.payoutId},${p.dateTime},${p.amount},${p.status}`).join('\n');
+    } else if (format === 'Settlements') {
+      content = get().settlements.map((s) => `${s.settlementId},${s.settlementDate},${s.settlementAmount},${s.status}`).join('\n');
+    } else {
+      content = get().transactions.map((t) => `${t.transactionId},${t.dateTime},${t.amount},${t.status}`).join('\n');
+    }
+    const blob = new Blob([csvHeader + content], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${format.toLowerCase().replace(/\s+/g, '_')}_statement.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  },
 }));

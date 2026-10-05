@@ -1,22 +1,41 @@
 import React, { useState } from 'react';
 import {
   Package,
-  ShoppingCart,
-  CreditCard,
   TrendingUp,
   Percent,
+  CreditCard,
+  Search,
   ChevronDown,
   Info,
+  ChevronLeft,
+  ChevronRight,
+  Shirt,
+  Sparkles,
 } from 'lucide-react';
-import { useAnalyticsStore } from '../../stores/analyticsStore.js';
 
 export const ProductWiseReportTab: React.FC = () => {
-  const { productsPerformance } = useAnalyticsStore();
-
+  const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All Categories');
   const [brandFilter, setBrandFilter] = useState('All Brands');
+  const [storeFilter, setStoreFilter] = useState('All Stores');
 
-  const filteredProducts = productsPerformance.filter((p) => {
+  const productsData = [
+    { id: 1, name: "Men's Cotton Shirt", sku: 'MS001', category: "Men's Wear", sales: 25450, qty: 120, cogs: 12000, profit: 13450, margin: '52.8%', img: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=100&auto=format&fit=crop&q=80' },
+    { id: 2, name: "Women's Kurti", sku: 'WK002', category: "Women's Wear", sales: 18750, qty: 95, cogs: 8400, profit: 10350, margin: '55.2%', img: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=100&auto=format&fit=crop&q=80' },
+    { id: 3, name: "Denim Jeans", sku: 'DJ003', category: "Men's Wear", sales: 15200, qty: 60, cogs: 7500, profit: 7700, margin: '50.7%', img: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=100&auto=format&fit=crop&q=80' },
+    { id: 4, name: "Casual Shoes", sku: 'CS004', category: 'Footwear', sales: 12980, qty: 45, cogs: 6200, profit: 6780, margin: '52.2%', img: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=100&auto=format&fit=crop&q=80' },
+    { id: 5, name: "T-Shirt (Pack of 2)", sku: 'TS005', category: "Men's Wear", sales: 10450, qty: 80, cogs: 4800, profit: 5650, margin: '54.1%', img: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=100&auto=format&fit=crop&q=80' },
+    { id: 6, name: "Women's Handbag", sku: 'WH006', category: 'Accessories', sales: 9800, qty: 40, cogs: 4500, profit: 5300, margin: '54.1%', img: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=100&auto=format&fit=crop&q=80' },
+    { id: 7, name: "Saree", sku: 'SR007', category: "Women's Wear", sales: 8750, qty: 35, cogs: 4200, profit: 4550, margin: '52.0%', img: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=100&auto=format&fit=crop&q=80' },
+    { id: 8, name: "Track Pant", sku: 'TP008', category: "Men's Wear", sales: 7650, qty: 45, cogs: 3600, profit: 4050, margin: '52.9%', img: 'https://images.unsplash.com/photo-1552902865-b72c031ac5ea?w=100&auto=format&fit=crop&q=80' },
+    { id: 9, name: "Formal Shirt", sku: 'FS009', category: "Men's Wear", sales: 6900, qty: 30, cogs: 3100, profit: 3800, margin: '55.1%', img: 'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=100&auto=format&fit=crop&q=80' },
+    { id: 10, name: "Ladies Sandals", sku: 'LS010', category: 'Footwear', sales: 6450, qty: 28, cogs: 2900, profit: 3550, margin: '55.0%', img: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=100&auto=format&fit=crop&q=80' },
+  ];
+
+  const filtered = productsData.filter((p) => {
+    if (searchTerm && !p.name.toLowerCase().includes(searchTerm.toLowerCase()) && !p.sku.toLowerCase().includes(searchTerm.toLowerCase())) {
+      return false;
+    }
     if (categoryFilter !== 'All Categories' && p.category !== categoryFilter) {
       return false;
     }
@@ -24,317 +43,376 @@ export const ProductWiseReportTab: React.FC = () => {
   });
 
   return (
-    <div className="space-y-6">
-      {/* Top Filter Bar Matching 12.2.png */}
-      <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Category */}
-          <div className="flex flex-col">
-            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
-              Category
-            </span>
-            <div className="relative">
-              <select
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-                className="appearance-none bg-white border border-slate-200 rounded-xl pl-3 pr-8 py-2 text-xs font-medium text-slate-700 min-w-[140px]"
-              >
-                <option value="All Categories">All Categories</option>
-                <option value="Men's Wear">Men's Wear</option>
-                <option value="Women's Wear">Women's Wear</option>
-                <option value="Footwear">Footwear</option>
-                <option value="Accessories">Accessories</option>
-              </select>
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-            </div>
-          </div>
-
-          {/* Brand */}
-          <div className="flex flex-col">
-            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
-              Brand
-            </span>
-            <div className="relative">
-              <select
-                value={brandFilter}
-                onChange={(e) => setBrandFilter(e.target.value)}
-                className="appearance-none bg-white border border-slate-200 rounded-xl pl-3 pr-8 py-2 text-xs font-medium text-slate-700 min-w-[130px]"
-              >
-                <option value="All Brands">All Brands</option>
-                <option value="Urban Classics">Urban Classics</option>
-                <option value="TrendVibe">TrendVibe</option>
-              </select>
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-            </div>
-          </div>
-
-          {/* Product */}
-          <div className="flex flex-col">
-            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
-              Product
-            </span>
-            <div className="relative">
-              <select className="appearance-none bg-white border border-slate-200 rounded-xl pl-3 pr-8 py-2 text-xs font-medium text-slate-700 min-w-[150px]">
-                <option value="all">All Products</option>
-              </select>
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 mt-auto">
-          <button
-            onClick={() => {
-              setCategoryFilter('All Categories');
-              setBrandFilter('All Brands');
-            }}
-            className="text-xs font-semibold text-blue-600 hover:text-blue-700 px-3 py-2"
-          >
-            Clear Filters
-          </button>
-          <button className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors shadow-sm">
-            Apply Filters
-          </button>
-        </div>
-      </div>
-
-      {/* 5 KPI Cards Matching 12.2.png */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        {/* Total Products */}
-        <div className="p-5 bg-white rounded-2xl border border-slate-200/80 shadow-2xs">
+    <div className="space-y-3.5">
+      {/* 4 KPI Cards Matching 11.2.png */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        {/* Total Products Sold */}
+        <div className="p-3.5 bg-white rounded-xl border border-slate-200/80 shadow-2xs">
           <div className="flex items-start justify-between">
             <div>
-              <span className="text-xs font-semibold text-slate-500">Total Products</span>
-              <h4 className="text-xl font-black text-slate-900 mt-1">245</h4>
+              <div className="flex items-center gap-1">
+                <span className="text-xs font-semibold text-slate-500">Total Products Sold</span>
+                <Info className="w-3 h-3 text-slate-400" />
+              </div>
+              <h4 className="text-xl font-black text-slate-900 mt-1">1,245</h4>
             </div>
-            <div className="p-2.5 rounded-xl bg-purple-50 text-purple-600">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
               <Package className="w-5 h-5" />
             </div>
           </div>
-          <p className="text-xs text-emerald-600 font-semibold mt-3">
-            &uarr; 8.45% <span className="text-slate-400 font-normal">vs 03 May - 09 May 2024</span>
+          <p className="text-[11px] text-emerald-600 font-semibold mt-2.5 flex items-center gap-1">
+            <span className="font-bold">↑ 12.8%</span>
+            <span className="text-slate-400 font-normal">vs 03 May - 09 May 2024</span>
           </p>
         </div>
 
-        {/* Total Quantity Sold */}
-        <div className="p-5 bg-white rounded-2xl border border-slate-200/80 shadow-2xs">
+        {/* Total Sales */}
+        <div className="p-3.5 bg-white rounded-xl border border-slate-200/80 shadow-2xs">
           <div className="flex items-start justify-between">
             <div>
-              <span className="text-xs font-semibold text-slate-500">Total Quantity Sold</span>
-              <h4 className="text-xl font-black text-slate-900 mt-1">3,245</h4>
+              <div className="flex items-center gap-1">
+                <span className="text-xs font-semibold text-slate-500">Total Sales (₹)</span>
+                <Info className="w-3 h-3 text-slate-400" />
+              </div>
+              <h4 className="text-xl font-black text-slate-900 mt-1">₹ 1,38,500.00</h4>
             </div>
-            <div className="p-2.5 rounded-xl bg-emerald-50 text-emerald-600">
-              <ShoppingCart className="w-5 h-5" />
-            </div>
-          </div>
-          <p className="text-xs text-emerald-600 font-semibold mt-3">
-            &uarr; 10.23% <span className="text-slate-400 font-normal">vs 03 May - 09 May 2024</span>
-          </p>
-        </div>
-
-        {/* Total Revenue */}
-        <div className="p-5 bg-white rounded-2xl border border-slate-200/80 shadow-2xs">
-          <div className="flex items-start justify-between">
-            <div>
-              <span className="text-xs font-semibold text-slate-500">Total Revenue</span>
-              <h4 className="text-xl font-black text-slate-900 mt-1">₹ 1,45,230.00</h4>
-            </div>
-            <div className="p-2.5 rounded-xl bg-blue-50 text-blue-600">
+            <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
               <CreditCard className="w-5 h-5" />
             </div>
           </div>
-          <p className="text-xs text-emerald-600 font-semibold mt-3">
-            &uarr; 12.54% <span className="text-slate-400 font-normal">vs 03 May - 09 May 2024</span>
+          <p className="text-[11px] text-emerald-600 font-semibold mt-2.5 flex items-center gap-1">
+            <span className="font-bold">↑ 15.4%</span>
+            <span className="text-slate-400 font-normal">vs 03 May - 09 May 2024</span>
           </p>
         </div>
 
         {/* Total Profit */}
-        <div className="p-5 bg-white rounded-2xl border border-slate-200/80 shadow-2xs">
+        <div className="p-3.5 bg-white rounded-xl border border-slate-200/80 shadow-2xs">
           <div className="flex items-start justify-between">
             <div>
-              <span className="text-xs font-semibold text-slate-500">Total Profit</span>
-              <h4 className="text-xl font-black text-slate-900 mt-1">₹ 28,450.00</h4>
+              <div className="flex items-center gap-1">
+                <span className="text-xs font-semibold text-slate-500">Total Profit (₹)</span>
+                <Info className="w-3 h-3 text-slate-400" />
+              </div>
+              <h4 className="text-xl font-black text-slate-900 mt-1">₹ 58,450.00</h4>
             </div>
-            <div className="p-2.5 rounded-xl bg-emerald-50 text-emerald-600">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
               <TrendingUp className="w-5 h-5" />
             </div>
           </div>
-          <p className="text-xs text-emerald-600 font-semibold mt-3">
-            &uarr; 15.22% <span className="text-slate-400 font-normal">vs 03 May - 09 May 2024</span>
+          <p className="text-[11px] text-emerald-600 font-semibold mt-2.5 flex items-center gap-1">
+            <span className="font-bold">↑ 16.2%</span>
+            <span className="text-slate-400 font-normal">vs 03 May - 09 May 2024</span>
           </p>
         </div>
 
-        {/* Avg. Profit Margin */}
-        <div className="p-5 bg-white rounded-2xl border border-slate-200/80 shadow-2xs">
+        {/* Profit Margin */}
+        <div className="p-3.5 bg-white rounded-xl border border-slate-200/80 shadow-2xs">
           <div className="flex items-start justify-between">
             <div>
-              <span className="text-xs font-semibold text-slate-500">Avg. Profit Margin</span>
-              <h4 className="text-xl font-black text-slate-900 mt-1">19.59%</h4>
+              <div className="flex items-center gap-1">
+                <span className="text-xs font-semibold text-slate-500">Profit Margin</span>
+                <Info className="w-3 h-3 text-slate-400" />
+              </div>
+              <h4 className="text-xl font-black text-slate-900 mt-1">42.2%</h4>
             </div>
-            <div className="p-2.5 rounded-xl bg-amber-50 text-amber-600">
+            <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
               <Percent className="w-5 h-5" />
             </div>
           </div>
-          <p className="text-xs text-emerald-600 font-semibold mt-3">
-            &uarr; 2.15% <span className="text-slate-400 font-normal">vs 03 May - 09 May 2024</span>
+          <p className="text-[11px] text-emerald-600 font-semibold mt-2.5 flex items-center gap-1">
+            <span className="font-bold">↑ 3.8%</span>
+            <span className="text-slate-400 font-normal">vs 03 May - 09 May 2024</span>
           </p>
         </div>
       </div>
 
-      {/* Grid: Product Performance Table (2 Cols) vs Sidebar Widgets (1 Col) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Product Performance Table */}
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden flex flex-col justify-between">
-          <div className="p-5 border-b border-slate-100 flex items-center justify-between">
-            <h3 className="text-sm font-bold text-slate-900">Product Performance</h3>
+      {/* Filter Row Matching 11.2.png */}
+      <div className="p-3 bg-white rounded-xl border border-slate-200/80 shadow-2xs flex flex-wrap items-center justify-between gap-2.5">
+        <div className="flex flex-wrap items-center gap-2 flex-1">
+          <div className="relative min-w-[240px] flex-1 max-w-sm">
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Search products by name, SKU, barcode..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
           </div>
 
-          <div className="overflow-x-auto p-2">
-            <table className="w-full text-left text-xs">
+          <div className="relative">
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="appearance-none pl-3 pr-8 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-700"
+            >
+              <option value="All Categories">All Categories</option>
+              <option value="Men's Wear">Men's Wear</option>
+              <option value="Women's Wear">Women's Wear</option>
+              <option value="Footwear">Footwear</option>
+              <option value="Accessories">Accessories</option>
+            </select>
+            <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          </div>
+
+          <div className="relative">
+            <select
+              value={brandFilter}
+              onChange={(e) => setBrandFilter(e.target.value)}
+              className="appearance-none pl-3 pr-8 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-700"
+            >
+              <option value="All Brands">All Brands</option>
+              <option value="Roadster">Roadster</option>
+              <option value="Zara">Zara</option>
+            </select>
+            <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          </div>
+
+          <div className="relative">
+            <select
+              value={storeFilter}
+              onChange={(e) => setStoreFilter(e.target.value)}
+              className="appearance-none pl-3 pr-8 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-700"
+            >
+              <option value="All Stores">All Stores</option>
+              <option value="Store 1">Store 1</option>
+            </select>
+            <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              setSearchTerm('');
+              setCategoryFilter('All Categories');
+              setBrandFilter('All Brands');
+              setStoreFilter('All Stores');
+            }}
+            className="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
+          >
+            Reset
+          </button>
+          <button className="px-4 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-2xs">
+            Apply
+          </button>
+        </div>
+      </div>
+
+      {/* Main 2-Column Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5">
+        {/* Left Table (8 Cols) */}
+        <div className="lg:col-span-8 p-3.5 bg-white rounded-xl border border-slate-200/80 shadow-2xs flex flex-col justify-between">
+          <div>
+            <div className="flex items-center gap-1 mb-3">
+              <h3 className="text-xs font-bold text-slate-900">Product Wise Report</h3>
+              <Info className="w-3 h-3 text-slate-400" />
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-[11px]">
+                <thead>
+                  <tr className="text-slate-400 border-b border-slate-100 font-semibold bg-slate-50/50">
+                    <th className="py-2 px-2.5">#</th>
+                    <th className="py-2 px-2.5">Product</th>
+                    <th className="py-2 px-2.5">SKU</th>
+                    <th className="py-2 px-2.5">Category</th>
+                    <th className="py-2 px-2.5 text-right">Sales (₹)</th>
+                    <th className="py-2 px-2.5 text-right">Quantity Sold</th>
+                    <th className="py-2 px-2.5 text-right">COGS (₹)</th>
+                    <th className="py-2 px-2.5 text-right">Profit (₹)</th>
+                    <th className="py-2 px-2.5 text-right">Profit Margin</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-slate-700">
+                  {filtered.map((item, idx) => (
+                    <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="py-2 px-2.5 font-medium text-slate-400">{idx + 1}</td>
+                      <td className="py-2 px-2.5">
+                        <div className="flex items-center gap-2">
+                          <img
+                            src={item.img}
+                            alt={item.name}
+                            className="w-7 h-7 rounded-md object-cover border border-slate-200 shrink-0"
+                          />
+                          <span className="font-semibold text-slate-900 truncate max-w-[120px]">
+                            {item.name}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-2 px-2.5 font-mono text-slate-500">{item.sku}</td>
+                      <td className="py-2 px-2.5 text-slate-600">{item.category}</td>
+                      <td className="py-2 px-2.5 text-right font-semibold text-slate-900">
+                        ₹ {item.sales.toLocaleString('en-IN')}.00
+                      </td>
+                      <td className="py-2 px-2.5 text-right font-medium">{item.qty}</td>
+                      <td className="py-2 px-2.5 text-right text-slate-600">
+                        ₹ {item.cogs.toLocaleString('en-IN')}.00
+                      </td>
+                      <td className="py-2 px-2.5 text-right font-semibold text-emerald-600">
+                        ₹ {item.profit.toLocaleString('en-IN')}.00
+                      </td>
+                      <td className="py-2 px-2.5 text-right font-bold text-slate-900">{item.margin}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Pagination */}
+          <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+            <span>Showing 1 - 10 of 245 products</span>
+            <div className="flex items-center gap-1">
+              <button className="p-1 rounded-md border border-slate-200 hover:bg-slate-50 text-slate-400">
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </button>
+              <button className="px-2 py-0.5 rounded-md bg-blue-600 text-white font-semibold">1</button>
+              <button className="px-2 py-0.5 rounded-md hover:bg-slate-50">2</button>
+              <button className="px-2 py-0.5 rounded-md hover:bg-slate-50">3</button>
+              <button className="px-2 py-0.5 rounded-md hover:bg-slate-50">4</button>
+              <button className="px-2 py-0.5 rounded-md hover:bg-slate-50">5</button>
+              <span className="px-1">...</span>
+              <button className="px-2 py-0.5 rounded-md hover:bg-slate-50">25</button>
+              <button className="p-1 rounded-md border border-slate-200 hover:bg-slate-50 text-slate-400">
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+              <div className="flex items-center gap-1 ml-2">
+                <span>Show</span>
+                <select className="border border-slate-200 rounded px-1.5 py-0.5 bg-white text-[11px]">
+                  <option>10</option>
+                  <option>20</option>
+                  <option>50</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Sidebar (4 Cols) */}
+        <div className="lg:col-span-4 space-y-3.5">
+          {/* Top Selling Products */}
+          <div className="p-3.5 bg-white rounded-xl border border-slate-200/80 shadow-2xs">
+            <div className="flex items-center justify-between mb-2.5">
+              <div className="flex items-center gap-1">
+                <h4 className="text-xs font-bold text-slate-900">Top Selling Products</h4>
+                <Info className="w-3 h-3 text-slate-400" />
+              </div>
+              <button className="text-[11px] font-semibold text-blue-600 hover:text-blue-700">View All</button>
+            </div>
+
+            <table className="w-full text-left text-[11px]">
               <thead>
-                <tr className="border-b border-slate-100 bg-slate-50/50 text-slate-500 font-semibold text-[11px] uppercase tracking-wider">
-                  <th className="py-3 px-3">Product</th>
-                  <th className="py-3 px-3">SKU</th>
-                  <th className="py-3 px-3">Category</th>
-                  <th className="py-3 px-3 text-center">Quantity Sold</th>
-                  <th className="py-3 px-3 text-right">Total Revenue (₹)</th>
-                  <th className="py-3 px-3 text-right">Total Cost (₹)</th>
-                  <th className="py-3 px-3 text-right">Gross Profit (₹)</th>
-                  <th className="py-3 px-3 text-right">Profit Margin (%)</th>
+                <tr className="text-slate-400 border-b border-slate-100 font-semibold">
+                  <th className="pb-1.5">#</th>
+                  <th className="pb-1.5">Product</th>
+                  <th className="pb-1.5 text-right">Quantity Sold</th>
+                  <th className="pb-1.5 text-right">Sales (₹)</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 text-slate-700">
-                {filteredProducts.map((p) => (
-                  <tr key={p.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3 px-3 font-semibold text-slate-900 flex items-center gap-2">
-                      {p.imageUrl && (
-                        <img
-                          src={p.imageUrl}
-                          alt={p.name}
-                          className="w-7 h-7 rounded object-cover border border-slate-200 shrink-0"
-                        />
-                      )}
-                      <span>{p.name}</span>
-                    </td>
-                    <td className="py-3 px-3 text-slate-500 font-mono text-[11px]">
-                      {p.sku}
-                    </td>
-                    <td className="py-3 px-3 text-slate-700">{p.category}</td>
-                    <td className="py-3 px-3 text-center font-bold text-slate-900">
-                      {p.quantitySold}
-                    </td>
-                    <td className="py-3 px-3 text-right font-medium text-slate-900">
-                      {p.totalRevenue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                    </td>
-                    <td className="py-3 px-3 text-right text-slate-500">
-                      {p.totalCost.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                    </td>
-                    <td className="py-3 px-3 text-right font-bold text-emerald-600">
-                      {p.grossProfit.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                    </td>
-                    <td className="py-3 px-3 text-right font-bold text-slate-900">
-                      {p.profitMargin.toFixed(2)}%
-                    </td>
-                  </tr>
-                ))}
+              <tbody className="divide-y divide-slate-50 text-slate-700">
+                <tr>
+                  <td className="py-1.5 text-slate-400">1</td>
+                  <td className="py-1.5 flex items-center gap-1.5 font-medium text-slate-900">
+                    <img src="https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=100&auto=format&fit=crop&q=80" alt="" className="w-6 h-6 rounded object-cover" />
+                    <span className="truncate max-w-[90px]">Men's Cotton Shirt</span>
+                  </td>
+                  <td className="py-1.5 text-right font-medium">320</td>
+                  <td className="py-1.5 text-right font-semibold">₹ 25,450</td>
+                </tr>
+                <tr>
+                  <td className="py-1.5 text-slate-400">2</td>
+                  <td className="py-1.5 flex items-center gap-1.5 font-medium text-slate-900">
+                    <img src="https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=100&auto=format&fit=crop&q=80" alt="" className="w-6 h-6 rounded object-cover" />
+                    <span className="truncate max-w-[90px]">Women's Kurti</span>
+                  </td>
+                  <td className="py-1.5 text-right font-medium">280</td>
+                  <td className="py-1.5 text-right font-semibold">₹ 18,750</td>
+                </tr>
+                <tr>
+                  <td className="py-1.5 text-slate-400">3</td>
+                  <td className="py-1.5 flex items-center gap-1.5 font-medium text-slate-900">
+                    <img src="https://images.unsplash.com/photo-1542272604-787c3835535d?w=100&auto=format&fit=crop&q=80" alt="" className="w-6 h-6 rounded object-cover" />
+                    <span className="truncate max-w-[90px]">Denim Jeans</span>
+                  </td>
+                  <td className="py-1.5 text-right font-medium">240</td>
+                  <td className="py-1.5 text-right font-semibold">₹ 15,200</td>
+                </tr>
+                <tr>
+                  <td className="py-1.5 text-slate-400">4</td>
+                  <td className="py-1.5 flex items-center gap-1.5 font-medium text-slate-900">
+                    <img src="https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=100&auto=format&fit=crop&q=80" alt="" className="w-6 h-6 rounded object-cover" />
+                    <span className="truncate max-w-[90px]">T-Shirt (Pack of 2)</span>
+                  </td>
+                  <td className="py-1.5 text-right font-medium">210</td>
+                  <td className="py-1.5 text-right font-semibold">₹ 10,450</td>
+                </tr>
+                <tr>
+                  <td className="py-1.5 text-slate-400">5</td>
+                  <td className="py-1.5 flex items-center gap-1.5 font-medium text-slate-900">
+                    <img src="https://images.unsplash.com/photo-1549298916-b41d501d3772?w=100&auto=format&fit=crop&q=80" alt="" className="w-6 h-6 rounded object-cover" />
+                    <span className="truncate max-w-[90px]">Casual Shoes</span>
+                  </td>
+                  <td className="py-1.5 text-right font-medium">180</td>
+                  <td className="py-1.5 text-right font-semibold">₹ 12,980</td>
+                </tr>
               </tbody>
             </table>
           </div>
 
-          <div className="p-3.5 border-t border-slate-100 text-[11px] text-slate-400 bg-slate-50/50">
-            Showing 1 to {filteredProducts.length} of 245 products
-          </div>
-        </div>
-
-        {/* Right Column: Top 5 Profitable + Top 5 Low Margin + Insight */}
-        <div className="space-y-6">
-          {/* Top 5 Profitable Products */}
-          <div className="p-5 bg-white rounded-2xl border border-slate-200/80 shadow-2xs">
-            <h4 className="text-xs font-bold text-slate-900 mb-3">
-              Top 5 Profitable Products
-            </h4>
-            <div className="divide-y divide-slate-100 text-xs">
-              <div className="py-2 flex items-center justify-between">
-                <span className="font-semibold text-slate-800">Belt</span>
-                <div className="text-right">
-                  <span className="font-bold text-emerald-600">₹ 1,890.00</span>
-                  <span className="text-[10px] text-slate-400 ml-2">46.67%</span>
-                </div>
+          {/* Category Wise Performance */}
+          <div className="p-3.5 bg-white rounded-xl border border-slate-200/80 shadow-2xs">
+            <div className="flex items-center justify-between mb-2.5">
+              <div className="flex items-center gap-1">
+                <h4 className="text-xs font-bold text-slate-900">Category Wise Performance</h4>
+                <Info className="w-3 h-3 text-slate-400" />
               </div>
-              <div className="py-2 flex items-center justify-between">
-                <span className="font-semibold text-slate-800">Cap</span>
-                <div className="text-right">
-                  <span className="font-bold text-emerald-600">₹ 1,680.00</span>
-                  <span className="text-[10px] text-slate-400 ml-2">48.00%</span>
-                </div>
-              </div>
-              <div className="py-2 flex items-center justify-between">
-                <span className="font-semibold text-slate-800">Wrist Watch</span>
-                <div className="text-right">
-                  <span className="font-bold text-emerald-600">₹ 3,490.00</span>
-                  <span className="text-[10px] text-slate-400 ml-2">42.30%</span>
-                </div>
-              </div>
-              <div className="py-2 flex items-center justify-between">
-                <span className="font-semibold text-slate-800">Saree</span>
-                <div className="text-right">
-                  <span className="font-bold text-emerald-600">₹ 3,330.00</span>
-                  <span className="text-[10px] text-slate-400 ml-2">38.06%</span>
-                </div>
-              </div>
-              <div className="py-2 flex items-center justify-between">
-                <span className="font-semibold text-slate-800">T-Shirt (Pack of 2)</span>
-                <div className="text-right">
-                  <span className="font-bold text-emerald-600">₹ 5,960.00</span>
-                  <span className="text-[10px] text-slate-400 ml-2">39.21%</span>
-                </div>
-              </div>
+              <button className="text-[11px] font-semibold text-blue-600 hover:text-blue-700">View All</button>
             </div>
-          </div>
 
-          {/* Top 5 Low Profit Margin Products */}
-          <div className="p-5 bg-white rounded-2xl border border-slate-200/80 shadow-2xs">
-            <h4 className="text-xs font-bold text-slate-900 mb-3">
-              Top 5 Low Profit Margin Products
-            </h4>
-            <div className="divide-y divide-slate-100 text-xs">
-              <div className="py-2 flex items-center justify-between">
-                <span className="font-semibold text-slate-800">Men's Cotton Shirt</span>
-                <div className="text-right">
-                  <span className="font-medium text-slate-700">₹ 8,670.00</span>
-                  <span className="text-[10px] text-slate-400 ml-2">34.06%</span>
-                </div>
-              </div>
-              <div className="py-2 flex items-center justify-between">
-                <span className="font-semibold text-slate-800">Denim Jeans</span>
-                <div className="text-right">
-                  <span className="font-medium text-slate-700">₹ 4,530.00</span>
-                  <span className="text-[10px] text-slate-400 ml-2">34.87%</span>
-                </div>
-              </div>
-              <div className="py-2 flex items-center justify-between">
-                <span className="font-semibold text-slate-800">Casual Shoes</span>
-                <div className="text-right">
-                  <span className="font-medium text-slate-700">₹ 3,730.00</span>
-                  <span className="text-[10px] text-slate-400 ml-2">35.70%</span>
-                </div>
-              </div>
-              <div className="py-2 flex items-center justify-between">
-                <span className="font-semibold text-slate-800">Formal Shirt</span>
-                <div className="text-right">
-                  <span className="font-medium text-slate-700">₹ 3,700.00</span>
-                  <span className="text-[10px] text-slate-400 ml-2">37.56%</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Insight Box */}
-          <div className="p-4 bg-blue-50/60 border border-blue-200/60 rounded-xl flex items-start gap-2.5 text-xs text-blue-900">
-            <Info className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
-            <p>
-              <span className="font-bold">Insight:</span> Men's Wear category has highest sales volume of 1,250 units (38.52% of total).
-            </p>
+            <table className="w-full text-left text-[11px]">
+              <thead>
+                <tr className="text-slate-400 border-b border-slate-100 font-semibold">
+                  <th className="pb-1.5">Category</th>
+                  <th className="pb-1.5 text-right">Total Sales (₹)</th>
+                  <th className="pb-1.5 text-right">Qty Sold</th>
+                  <th className="pb-1.5 text-right">Margin</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50 text-slate-700">
+                <tr>
+                  <td className="py-1.5 font-medium text-slate-900">Men's Wear</td>
+                  <td className="py-1.5 text-right font-semibold">₹ 61,050</td>
+                  <td className="py-1.5 text-right">305</td>
+                  <td className="py-1.5 text-right font-bold text-emerald-600">↑ 52.5%</td>
+                </tr>
+                <tr>
+                  <td className="py-1.5 font-medium text-slate-900">Women's Wear</td>
+                  <td className="py-1.5 text-right font-semibold">₹ 40,650</td>
+                  <td className="py-1.5 text-right">230</td>
+                  <td className="py-1.5 text-right font-bold text-emerald-600">↑ 53.1%</td>
+                </tr>
+                <tr>
+                  <td className="py-1.5 font-medium text-slate-900">Footwear</td>
+                  <td className="py-1.5 text-right font-semibold">₹ 21,780</td>
+                  <td className="py-1.5 text-right">125</td>
+                  <td className="py-1.5 text-right font-bold text-emerald-600">↑ 53.4%</td>
+                </tr>
+                <tr>
+                  <td className="py-1.5 font-medium text-slate-900">Accessories</td>
+                  <td className="py-1.5 text-right font-semibold">₹ 14,500</td>
+                  <td className="py-1.5 text-right">70</td>
+                  <td className="py-1.5 text-right font-bold text-emerald-600">↑ 54.6%</td>
+                </tr>
+                <tr>
+                  <td className="py-1.5 font-medium text-slate-900">Others</td>
+                  <td className="py-1.5 text-right font-semibold">₹ 7,250</td>
+                  <td className="py-1.5 text-right">45</td>
+                  <td className="py-1.5 text-right font-bold text-emerald-600">↑ 51.8%</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>

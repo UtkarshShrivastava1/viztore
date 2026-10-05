@@ -2,6 +2,8 @@ import { create } from 'zustand';
 
 export type MarketingSubTab =
   | 'overview'
+  | 'advertisements'
+  | 'discounts_coupons'
   | 'campaigns'
   | 'discounts'
   | 'coupons'
@@ -11,729 +13,550 @@ export type MarketingSubTab =
   | 'social'
   | 'analytics';
 
-export type CampaignType =
-  | 'Discount'
-  | 'Offer'
-  | 'Delivery'
-  | 'Referral'
-  | 'Awareness'
-  | 'Loyalty'
-  | 'Others';
+export type AdType =
+  | 'Sponsored Product'
+  | 'Sponsored Store'
+  | 'Category Promotion'
+  | 'Best Deals'
+  | 'Best Deals Promotion'
+  | 'Banner Advertisement';
 
-export type CampaignStatus = 'Active' | 'Scheduled' | 'Completed' | 'Inactive';
+export type AdStatus = 'Active' | 'Scheduled' | 'Completed' | 'Inactive';
 
-export interface Campaign {
+export interface AdvertisementItem {
   id: string;
   name: string;
-  type: CampaignType;
-  status: CampaignStatus;
-  banner: string;
-  bannerImageUrl: string;
-  bannerPosition: 'Top Banner' | 'Below Search Bar' | 'Middle Banner' | 'Bottom Banner';
-  bannerPlacement: 'Homepage Banner' | 'Category Page' | 'Product Page' | 'Offer Page' | 'Others';
+  subtitle: string;
+  type: AdType;
+  duration: string;
+  amount: number;
   startDate: string;
   endDate: string;
-  reach: number;
-  redemptions: number;
-  revenue: number;
-  goal: string;
-  description: string;
-  title: string;
-  subtitle: string;
-  buttonText: string;
-  buttonAction: string;
-  selectedOffer?: string;
-  audienceType: 'All Customers' | 'Specific Segment' | 'Custom Audience';
-  audienceLocation: string;
-  audienceGroup: string;
-  audienceGender: string;
-  audienceAge: string;
-  displayFrequency: string;
-  allowDismiss: boolean;
-  autoRotate: boolean;
-  rotationInterval: string;
-  cost: number;
+  status: AdStatus;
+  views: number | null;
+  clicks: number | null;
+  imageUrl: string;
 }
 
-export type OfferType = 'Discount' | 'Offer' | 'Free Delivery' | 'BOGO';
-export type OfferStatus = 'Active' | 'Scheduled' | 'Completed' | 'Inactive';
-
-export interface DiscountOffer {
-  id: string;
-  name: string;
-  subtitle: string;
-  type: OfferType;
-  code: string;
-  applicableOn: string;
-  discountBenefit: string;
-  status: OfferStatus;
-  validity: string;
-  redemptions: number;
-  revenueImpact: number;
+export interface DraftAd {
+  type: AdType;
+  productId: string;
+  productName: string;
+  productSku: string;
+  productPrice: number;
+  productRating: number;
+  productReviews: number;
+  productCategory: string;
+  productSubcategory: string;
+  productType: string;
+  productImage: string;
+  planDuration: '3 Days' | '7 Days' | '15 Days' | '30 Days';
+  pricePerDay: number;
+  totalAmount: number;
+  startDate: string;
+  endDate: string;
+  message: string;
+  paymentMethod: 'wallet' | 'upi' | 'card';
+  agreeTerms: boolean;
 }
 
 export type CouponType = 'Percentage' | 'Free Shipping' | 'Fixed Amount' | 'BOGO';
-export type CouponStatus = 'Active' | 'Scheduled' | 'Completed' | 'Inactive';
+export type CouponStatus = 'Active' | 'Scheduled' | 'Completed' | 'Expired';
 
-export interface Coupon {
+export interface CouponItem {
   id: string;
   code: string;
-  name: string;
-  couponType: CouponType;
-  discountBenefit: string;
+  title: string;
+  type: CouponType;
+  benefit: string;
   applicableOn: string;
+  startDate: string;
+  endDate: string;
   usedCount: number;
   totalLimit: number;
-  validity: string;
   status: CouponStatus;
+  // Legacy aliases
+  name?: string;
+  couponType?: any;
+  discountBenefit?: string;
+  validity?: string;
 }
 
-export interface DraftCampaign {
+export interface DraftCoupon {
+  code: string;
   name: string;
-  goal: string;
   description: string;
+  discountType: 'Percentage' | 'Fixed Amount' | 'Free Shipping';
+  discountValue: number;
+  maxDiscount: number;
+  minOrderValue: number;
+  usageLimit: 'Limited' | 'Unlimited';
+  maxUsage: number;
+  applicableOn: 'All Products' | 'Selected Products' | 'Selected Categories';
+  selectedProductIds: string[];
+  selectedCategoryIds: string[];
   startDate: string;
-  startTime: string;
   endDate: string;
-  endTime: string;
-  bannerImageUrl: string;
-  bannerAltText: string;
-  title: string;
-  subtitle: string;
-  buttonText: string;
-  buttonAction: string;
-  selectedOffer: string;
-  audienceType: 'All Customers' | 'Specific Segment' | 'Custom Audience';
-  audienceLocation: string;
-  audienceGroup: string;
-  audienceGender: string;
-  audienceAge: string;
-  audienceLastOrder: string;
-  audienceOrderCount: string;
-  audienceTotalSpent: string;
-  audienceTags: string;
-  estimatedReach: number;
-  placement: 'Homepage Banner' | 'Category Page' | 'Product Page' | 'Offer Page' | 'Others';
-  bannerPosition: 'Top Banner' | 'Below Search Bar' | 'Middle Banner' | 'Bottom Banner';
-  displayFrequency: string;
-  allowDismiss: boolean;
-  autoRotate: boolean;
-  rotationInterval: string;
-  baseCost: number;
-  reachCost: number;
-  platformFee: number;
+  showOnStore: boolean;
+  multiplePerCustomer: boolean;
+  combineOffers: boolean;
+  confirmed: boolean;
 }
 
-const initialDraftCampaign: DraftCampaign = {
-  name: 'Summer Sale - Get 20% Off',
-  goal: 'Increase Sales',
-  description: "Flat 20% off on all Men's Wear products.",
-  startDate: '2024-05-10',
-  startTime: '10:00 AM',
-  endDate: '2024-05-20',
-  endTime: '11:59 PM',
-  bannerImageUrl: 'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=600&auto=format&fit=crop&q=80',
-  bannerAltText: 'Summer Sale Banner',
-  title: 'SUMMER SALE',
-  subtitle: 'GET 20% OFF',
-  buttonText: 'SHOP NOW',
-  buttonAction: 'Go to Offer Page',
-  selectedOffer: 'Summer Sale - 20% Off',
-  audienceType: 'All Customers',
-  audienceLocation: 'All Locations',
-  audienceGroup: 'All Groups',
-  audienceGender: 'All',
-  audienceAge: 'All Ages',
-  audienceLastOrder: 'Anytime',
-  audienceOrderCount: 'Any',
-  audienceTotalSpent: 'Any Amount',
-  audienceTags: 'All Tags',
-  estimatedReach: 12450,
-  placement: 'Homepage Banner',
-  bannerPosition: 'Top Banner',
-  displayFrequency: 'Show every time',
-  allowDismiss: true,
-  autoRotate: true,
-  rotationInterval: '5 seconds',
-  baseCost: 1000,
-  reachCost: 200,
-  platformFee: 50,
-};
+// Legacy types for compatibility
+export type Campaign = any;
+export type Coupon = CouponItem;
+export type DiscountOffer = any;
+export type OfferType = any;
 
-const initialCampaigns: Campaign[] = [
+// Initial Advertisements matching 12.1.png
+export const initialAds: AdvertisementItem[] = [
   {
-    id: 'CMP-101',
-    name: 'Summer Sale - Get 20% Off',
-    type: 'Discount',
-    status: 'Active',
-    banner: 'Homepage Top Banner',
-    bannerImageUrl: 'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=600&auto=format&fit=crop&q=80',
-    bannerPosition: 'Top Banner',
-    bannerPlacement: 'Homepage Banner',
+    id: 'AD-001',
+    name: 'Men Solid Cotton Shirt',
+    subtitle: 'Product: Blue, M',
+    type: 'Sponsored Product',
+    duration: '7 Days',
+    amount: 1499,
     startDate: '10 May 2024',
-    endDate: '20 May 2024',
-    reach: 5450,
-    redemptions: 320,
-    revenue: 12450,
-    goal: 'Increase Sales',
-    description: "Flat 20% off on all Men's Wear",
-    title: 'SUMMER SALE',
-    subtitle: 'GET 20% OFF',
-    buttonText: 'SHOP NOW',
-    buttonAction: 'Go to Offer Page',
-    selectedOffer: 'Summer Sale - 20% Off',
-    audienceType: 'All Customers',
-    audienceLocation: 'All Locations',
-    audienceGroup: 'All Groups',
-    audienceGender: 'All',
-    audienceAge: 'All Ages',
-    displayFrequency: 'Show every time',
-    allowDismiss: true,
-    autoRotate: true,
-    rotationInterval: '5 seconds',
-    cost: 1250,
-  },
-  {
-    id: 'CMP-102',
-    name: 'Weekend Special Offer',
-    type: 'Offer',
+    endDate: '17 May 2024',
     status: 'Active',
-    banner: 'Category Page Banner',
-    bannerImageUrl: 'https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?w=600&auto=format&fit=crop&q=80',
-    bannerPosition: 'Below Search Bar',
-    bannerPlacement: 'Category Page',
-    startDate: '11 May 2024',
-    endDate: '12 May 2024',
-    reach: 3210,
-    redemptions: 210,
-    revenue: 6750,
-    goal: 'Boost Weekend Traffic',
-    description: 'Upto 30% off on selected items',
-    title: 'WEEKEND SPECIAL',
-    subtitle: 'UP TO 30% OFF',
-    buttonText: 'EXPLORE',
-    buttonAction: 'Open Category',
-    audienceType: 'All Customers',
-    audienceLocation: 'All Locations',
-    audienceGroup: 'All Groups',
-    audienceGender: 'All',
-    audienceAge: 'All Ages',
-    displayFrequency: 'Show every time',
-    allowDismiss: true,
-    autoRotate: true,
-    rotationInterval: '5 seconds',
-    cost: 850,
+    views: 1245,
+    clicks: 98,
+    imageUrl: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=120&auto=format&fit=crop&q=80',
   },
   {
-    id: 'CMP-103',
-    name: 'Free Delivery Campaign',
-    type: 'Delivery',
+    id: 'AD-002',
+    name: 'Fashion Hub Store',
+    subtitle: 'Store Promotion',
+    type: 'Sponsored Store',
+    duration: '15 Days',
+    amount: 2999,
+    startDate: '08 May 2024',
+    endDate: '23 May 2024',
+    status: 'Active',
+    views: 2430,
+    clicks: 210,
+    imageUrl: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=120&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'AD-003',
+    name: "Men's Fashion",
+    subtitle: 'Category: Men',
+    type: 'Category Promotion',
+    duration: '7 Days',
+    amount: 1999,
+    startDate: '12 May 2024',
+    endDate: '19 May 2024',
     status: 'Scheduled',
-    banner: 'Cart Page Banner',
-    bannerImageUrl: 'https://images.unsplash.com/photo-1526367790999-0150786686a2?w=600&auto=format&fit=crop&q=80',
-    bannerPosition: 'Middle Banner',
-    bannerPlacement: 'Offer Page',
+    views: null,
+    clicks: null,
+    imageUrl: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=120&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'AD-004',
+    name: 'Weekend Sale',
+    subtitle: 'Offer Promotion',
+    type: 'Best Deals',
+    duration: '3 Days',
+    amount: 999,
+    startDate: '15 May 2024',
+    endDate: '18 May 2024',
+    status: 'Active',
+    views: 986,
+    clicks: 76,
+    imageUrl: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=120&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'AD-005',
+    name: 'Summer Banner',
+    subtitle: 'Homepage Banner',
+    type: 'Banner Advertisement',
+    duration: '15 Days',
+    amount: 2499,
+    startDate: '05 May 2024',
+    endDate: '20 May 2024',
+    status: 'Completed',
+    views: 3210,
+    clicks: 340,
+    imageUrl: 'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=120&auto=format&fit=crop&q=80',
+  },
+  {
+    id: 'AD-006',
+    name: 'Running Shoes',
+    subtitle: 'Product: Red, 8',
+    type: 'Sponsored Product',
+    duration: '7 Days',
+    amount: 1299,
     startDate: '18 May 2024',
     endDate: '25 May 2024',
-    reach: 2850,
-    redemptions: 0,
-    revenue: 0,
-    goal: 'Increase Average Order Value',
-    description: 'Free delivery on orders above ₹499',
-    title: 'FREE DELIVERY',
-    subtitle: 'ON ORDERS ABOVE ₹499',
-    buttonText: 'SHOP NOW',
-    buttonAction: 'Go to Offer Page',
-    audienceType: 'All Customers',
-    audienceLocation: 'All Locations',
-    audienceGroup: 'All Groups',
-    audienceGender: 'All',
-    audienceAge: 'All Ages',
-    displayFrequency: 'Show every time',
-    allowDismiss: false,
-    autoRotate: false,
-    rotationInterval: '5 seconds',
-    cost: 950,
-  },
-  {
-    id: 'CMP-104',
-    name: 'New User Welcome Offer',
-    type: 'Discount',
-    status: 'Completed',
-    banner: 'Homepage Middle Banner',
-    bannerImageUrl: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=600&auto=format&fit=crop&q=80',
-    bannerPosition: 'Middle Banner',
-    bannerPlacement: 'Homepage Banner',
-    startDate: '06 May 2024',
-    endDate: '07 May 2024',
-    reach: 4600,
-    redemptions: 185,
-    revenue: 4600,
-    goal: 'Customer Acquisition',
-    description: 'Flat 15% off for new users',
-    title: 'WELCOME OFFER',
-    subtitle: 'FLAT 15% OFF',
-    buttonText: 'CLAIM NOW',
-    buttonAction: 'Go to Offer Page',
-    audienceType: 'Specific Segment',
-    audienceLocation: 'All Locations',
-    audienceGroup: 'New Customers',
-    audienceGender: 'All',
-    audienceAge: 'All Ages',
-    displayFrequency: 'Once per session',
-    allowDismiss: true,
-    autoRotate: true,
-    rotationInterval: '10 seconds',
-    cost: 1100,
-  },
-  {
-    id: 'CMP-105',
-    name: 'Refer & Earn',
-    type: 'Referral',
-    status: 'Completed',
-    banner: 'Account Page Banner',
-    bannerImageUrl: 'https://images.unsplash.com/photo-1556742049-0a67e55722c3?w=600&auto=format&fit=crop&q=80',
-    bannerPosition: 'Bottom Banner',
-    bannerPlacement: 'Others',
-    startDate: '20 Apr 2024',
-    endDate: '30 Apr 2024',
-    reach: 1980,
-    redemptions: 130,
-    revenue: 3250,
-    goal: 'Viral Growth',
-    description: 'Refer a friend & earn ₹100',
-    title: 'REFER & EARN',
-    subtitle: 'EARN ₹100 PER REFERRAL',
-    buttonText: 'INVITE',
-    buttonAction: 'External URL',
-    audienceType: 'All Customers',
-    audienceLocation: 'All Locations',
-    audienceGroup: 'All Groups',
-    audienceGender: 'All',
-    audienceAge: 'All Ages',
-    displayFrequency: 'Show every time',
-    allowDismiss: true,
-    autoRotate: false,
-    rotationInterval: '5 seconds',
-    cost: 750,
-  },
-  {
-    id: 'CMP-106',
-    name: 'Flash Sale - Today Only',
-    type: 'Discount',
-    status: 'Inactive',
-    banner: 'Homepage Bottom Banner',
-    bannerImageUrl: 'https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=600&auto=format&fit=crop&q=80',
-    bannerPosition: 'Bottom Banner',
-    bannerPlacement: 'Homepage Banner',
-    startDate: '08 May 2024',
-    endDate: '08 May 2024',
-    reach: 980,
-    redemptions: 98,
-    revenue: 2150,
-    goal: 'Urgency Sales',
-    description: 'Flat 10% off on storewide items',
-    title: 'FLASH SALE',
-    subtitle: 'FLAT 10% OFF STOREWIDE',
-    buttonText: 'SHOP NOW',
-    buttonAction: 'Go to Offer Page',
-    audienceType: 'All Customers',
-    audienceLocation: 'All Locations',
-    audienceGroup: 'All Groups',
-    audienceGender: 'All',
-    audienceAge: 'All Ages',
-    displayFrequency: 'Show every time',
-    allowDismiss: true,
-    autoRotate: true,
-    rotationInterval: '5 seconds',
-    cost: 500,
-  },
-  {
-    id: 'CMP-107',
-    name: 'New Arrivals Showcase',
-    type: 'Awareness',
-    status: 'Completed',
-    banner: 'Homepage Top Banner',
-    bannerImageUrl: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=600&auto=format&fit=crop&q=80',
-    bannerPosition: 'Top Banner',
-    bannerPlacement: 'Homepage Banner',
-    startDate: '01 May 2024',
-    endDate: '01 May 2024',
-    reach: 2430,
-    redemptions: 102,
-    revenue: 2350,
-    goal: 'Product Discovery',
-    description: 'Check out our latest collection',
-    title: 'NEW ARRIVALS',
-    subtitle: 'SUMMER FASHION LINE',
-    buttonText: 'VIEW COLLECTION',
-    buttonAction: 'Open Category',
-    audienceType: 'All Customers',
-    audienceLocation: 'All Locations',
-    audienceGroup: 'All Groups',
-    audienceGender: 'All',
-    audienceAge: 'All Ages',
-    displayFrequency: 'Show every time',
-    allowDismiss: true,
-    autoRotate: true,
-    rotationInterval: '5 seconds',
-    cost: 800,
-  },
-  {
-    id: 'CMP-108',
-    name: 'Loyalty Bonus Campaign',
-    type: 'Loyalty',
     status: 'Active',
-    banner: 'Homepage Middle Banner',
-    bannerImageUrl: 'https://images.unsplash.com/photo-1513151233558-d860c5398176?w=600&auto=format&fit=crop&q=80',
-    bannerPosition: 'Middle Banner',
-    bannerPlacement: 'Homepage Banner',
-    startDate: '12 May 2024',
-    endDate: '22 May 2024',
-    reach: 1430,
-    redemptions: 78,
-    revenue: 1200,
-    goal: 'Retention & Loyalty',
-    description: 'Double points on every purchase',
-    title: '2X REWARD POINTS',
-    subtitle: 'EXCLUSIVE MEMBER REWARDS',
-    buttonText: 'START SHOPPING',
-    buttonAction: 'Go to Offer Page',
-    audienceType: 'Specific Segment',
-    audienceLocation: 'All Locations',
-    audienceGroup: 'VIP Members',
-    audienceGender: 'All',
-    audienceAge: 'All Ages',
-    displayFrequency: 'Show every time',
-    allowDismiss: true,
-    autoRotate: true,
-    rotationInterval: '5 seconds',
-    cost: 650,
-  },
-];
-
-const initialOffers: DiscountOffer[] = [
-  {
-    id: 'OFF-201',
-    name: 'Summer Sale - 20% Off',
-    subtitle: "Flat 20% off on all Men's Wear",
-    type: 'Discount',
-    code: 'SUMMER20',
-    applicableOn: 'All Products',
-    discountBenefit: '20% OFF Max ₹1,000',
-    status: 'Active',
-    validity: '10 May 2024 - 20 May 2024',
-    redemptions: 320,
-    revenueImpact: 12450,
+    views: 1876,
+    clicks: 164,
+    imageUrl: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=120&auto=format&fit=crop&q=80',
   },
   {
-    id: 'OFF-202',
-    name: 'Weekend Special - ₹100 Off',
-    subtitle: '₹100 off on orders above ₹999',
-    type: 'Discount',
-    code: 'WEEKEND100',
-    applicableOn: 'All Products',
-    discountBenefit: '₹100 OFF Min. order ₹999',
-    status: 'Active',
-    validity: '11 May 2024 - 12 May 2024',
-    redemptions: 210,
-    revenueImpact: 6750,
-  },
-  {
-    id: 'OFF-203',
-    name: 'Free Delivery',
-    subtitle: 'Free delivery on orders above ₹499',
-    type: 'Offer',
-    code: 'FREDEL499',
-    applicableOn: 'All Products',
-    discountBenefit: 'Free Delivery Min. order ₹499',
-    status: 'Active',
-    validity: '18 May 2024 - 25 May 2024',
-    redemptions: 560,
-    revenueImpact: 8450,
-  },
-  {
-    id: 'OFF-204',
-    name: 'New User Welcome Offer',
-    subtitle: 'Flat 15% off for new users',
-    type: 'Discount',
-    code: 'WELCOME15',
-    applicableOn: 'New Users',
-    discountBenefit: '15% OFF Max ₹750',
-    status: 'Completed',
-    validity: '06 May 2024 - 07 May 2024',
-    redemptions: 185,
-    revenueImpact: 4600,
-  },
-  {
-    id: 'OFF-205',
-    name: 'Flash Sale - Today Only',
-    subtitle: 'Flat 10% off on storewide',
-    type: 'Discount',
-    code: 'FLASH10',
-    applicableOn: 'All Products',
-    discountBenefit: '10% OFF Max ₹500',
-    status: 'Inactive',
-    validity: '08 May 2024 - 08 May 2024',
-    redemptions: 98,
-    revenueImpact: 2150,
-  },
-  {
-    id: 'OFF-206',
-    name: 'Buy 1 Get 1 Free',
-    subtitle: 'Buy 1 product get 1 free',
-    type: 'Offer',
-    code: 'BOGO',
-    applicableOn: 'Selected Products',
-    discountBenefit: 'Buy 1 Get 1 Free',
+    id: 'AD-007',
+    name: 'Kids World Store',
+    subtitle: 'Store Promotion',
+    type: 'Sponsored Store',
+    duration: '15 Days',
+    amount: 2999,
+    startDate: '20 May 2024',
+    endDate: '04 Jun 2024',
     status: 'Scheduled',
-    validity: '22 May 2024 - 29 May 2024',
-    redemptions: 0,
-    revenueImpact: 0,
+    views: null,
+    clicks: null,
+    imageUrl: 'https://images.unsplash.com/photo-1514989940723-e8e51635b782?w=120&auto=format&fit=crop&q=80',
   },
 ];
 
-const initialCoupons: Coupon[] = [
+// Initial Coupons matching 12.7.png
+export const initialCoupons: CouponItem[] = [
   {
-    id: 'CPN-301',
+    id: 'CPN-001',
     code: 'SUMMER20',
-    name: 'Summer Sale - 20% Off',
-    couponType: 'Percentage',
-    discountBenefit: '20% OFF Max ₹1,000',
+    title: 'Summer Sale - 20% Off',
+    type: 'Percentage',
+    benefit: '20% OFF Max ₹1,000',
     applicableOn: 'All Products',
+    startDate: '10 May 2024',
+    endDate: '20 May 2024',
     usedCount: 320,
     totalLimit: 1000,
-    validity: '10 May 2024 - 20 May 2024',
     status: 'Active',
   },
   {
-    id: 'CPN-302',
-    code: 'FREDEL499',
-    name: 'Free Delivery',
-    couponType: 'Free Shipping',
-    discountBenefit: 'Free Delivery Min. order ₹499',
+    id: 'CPN-002',
+    code: 'WEEKEND100',
+    title: 'Weekend Special',
+    type: 'Fixed Amount',
+    benefit: '₹100 OFF Min. order ₹999',
     applicableOn: 'All Products',
+    startDate: '11 May 2024',
+    endDate: '12 May 2024',
     usedCount: 560,
     totalLimit: 2000,
-    validity: '18 May 2024 - 25 May 2024',
     status: 'Active',
   },
   {
-    id: 'CPN-303',
-    code: 'WELCOME15',
-    name: 'New User Welcome Offer',
-    couponType: 'Percentage',
-    discountBenefit: '15% OFF Max ₹750',
-    applicableOn: 'New Users',
+    id: 'CPN-003',
+    code: 'FREDEL499',
+    title: 'Free Delivery Offer',
+    type: 'Free Shipping',
+    benefit: 'Free Shipping Min. order ₹499',
+    applicableOn: 'All Products',
+    startDate: '18 May 2024',
+    endDate: '25 May 2024',
     usedCount: 185,
     totalLimit: 500,
-    validity: '06 May 2024 - 07 May 2024',
+    status: 'Active',
+  },
+  {
+    id: 'CPN-004',
+    code: 'WELCOME15',
+    title: 'New User Offer',
+    type: 'Percentage',
+    benefit: '15% OFF Max ₹750',
+    applicableOn: 'New Users',
+    startDate: '06 May 2024',
+    endDate: '07 May 2024',
+    usedCount: 210,
+    totalLimit: 1000,
     status: 'Completed',
   },
   {
-    id: 'CPN-304',
-    code: 'WEEKEND100',
-    name: 'Weekend Special - ₹100 Off',
-    couponType: 'Fixed Amount',
-    discountBenefit: '₹100 OFF Min. order ₹999',
-    applicableOn: 'All Products',
-    usedCount: 210,
-    totalLimit: 1000,
-    validity: '11 May 2024 - 12 May 2024',
+    id: 'CPN-005',
+    code: 'FASHION50',
+    title: 'Fashion Festival',
+    type: 'Percentage',
+    benefit: '50% OFF Max ₹2,000',
+    applicableOn: 'Selected Products',
+    startDate: '01 May 2024',
+    endDate: '31 May 2024',
+    usedCount: 98,
+    totalLimit: 500,
     status: 'Active',
   },
   {
-    id: 'CPN-305',
-    code: 'FLASH10',
-    name: 'Flash Sale - Today Only',
-    couponType: 'Percentage',
-    discountBenefit: '10% OFF Max ₹500',
-    applicableOn: 'All Products',
-    usedCount: 98,
-    totalLimit: 500,
-    validity: '08 May 2024 - 08 May 2024',
-    status: 'Inactive',
+    id: 'CPN-006',
+    code: 'MENS100',
+    title: "Men's Collection Offer",
+    type: 'Fixed Amount',
+    benefit: '₹100 OFF Min. order ₹799',
+    applicableOn: 'Men Category',
+    startDate: '12 May 2024',
+    endDate: '22 May 2024',
+    usedCount: 46,
+    totalLimit: 300,
+    status: 'Active',
   },
   {
-    id: 'CPN-306',
+    id: 'CPN-007',
     code: 'BOGO',
-    name: 'Buy 1 Get 1 Free',
-    couponType: 'BOGO',
-    discountBenefit: 'Buy 1 Get 1 Free',
+    title: 'Buy 1 Get 1 Free',
+    type: 'BOGO',
+    benefit: 'Buy 1 Get 1 Free',
     applicableOn: 'Selected Products',
-    usedCount: 0,
-    totalLimit: 500,
-    validity: '22 May 2024 - 29 May 2024',
+    startDate: '20 May 2024',
+    endDate: '30 May 2024',
+    usedCount: 12,
+    totalLimit: 200,
     status: 'Scheduled',
   },
+  {
+    id: 'CPN-008',
+    code: 'CLEARANCE30',
+    title: 'Clearance Sale',
+    type: 'Percentage',
+    benefit: '30% OFF Max ₹1,500',
+    applicableOn: 'All Products',
+    startDate: '15 May 2024',
+    endDate: '31 May 2024',
+    usedCount: 75,
+    totalLimit: 400,
+    status: 'Active',
+  },
 ];
+
+const initialDraftAd: DraftAd = {
+  type: 'Sponsored Product',
+  productId: 'PRD-TS001',
+  productName: 'Men Checked Shirt',
+  productSku: '#P54321',
+  productPrice: 699,
+  productRating: 4.5,
+  productReviews: 120,
+  productCategory: 'Men',
+  productSubcategory: 'Top Wear',
+  productType: 'T-Shirt',
+  productImage: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=400&auto=format&fit=crop&q=80',
+  planDuration: '7 Days',
+  pricePerDay: 185,
+  totalAmount: 1299,
+  startDate: '20 May 2024',
+  endDate: '26 May 2024',
+  message: 'Stylish Checked Shirt – Premium Quality at Best Price!',
+  paymentMethod: 'wallet',
+  agreeTerms: true,
+};
+
+const initialDraftCoupon: DraftCoupon = {
+  code: 'SUMMER20',
+  name: 'Summer Sale - 20% Off',
+  description: 'Get 20% off on your favorite fashion styles this summer!',
+  discountType: 'Percentage',
+  discountValue: 20,
+  maxDiscount: 1000,
+  minOrderValue: 999,
+  usageLimit: 'Limited',
+  maxUsage: 1000,
+  applicableOn: 'All Products',
+  selectedProductIds: ['p1', 'p2', 'p3', 'p4', 'p5'],
+  selectedCategoryIds: ['c1', 'c2'],
+  startDate: '20 May 2024',
+  endDate: '20 Jun 2024',
+  showOnStore: true,
+  multiplePerCustomer: true,
+  combineOffers: false,
+  confirmed: true,
+};
 
 interface MarketingState {
   activeSubTab: MarketingSubTab;
-  activeCampaignView: 'list' | 'create';
-  wizardStep: number;
-  draftCampaign: DraftCampaign;
-  campaigns: Campaign[];
-  offers: DiscountOffer[];
-  coupons: Coupon[];
-  searchQuery: string;
-  statusFilter: string;
-  typeFilter: string;
-
-  // Actions
   setActiveSubTab: (tab: MarketingSubTab) => void;
-  setActiveCampaignView: (view: 'list' | 'create') => void;
-  setWizardStep: (step: number) => void;
-  updateDraftCampaign: (partial: Partial<DraftCampaign>) => void;
-  resetDraftCampaign: () => void;
+
+  // Advertisements
+  ads: AdvertisementItem[];
+  advertisements: AdvertisementItem[];
+  adView: 'list' | 'create';
+  setAdView: (view: 'list' | 'create') => void;
+  isCreateAdWizardOpen: boolean;
+  openCreateAdWizard: () => void;
+  closeCreateAdWizard: () => void;
+  adWizardStep: number;
+  setAdWizardStep: (step: number) => void;
+  draftAd: DraftAd;
+  updateDraftAd: (partial: Partial<DraftAd>) => void;
+  resetDraftAd: () => void;
+  launchDraftAd: () => void;
+  addAdvertisement: (ad: Partial<AdvertisementItem>) => void;
+
+  // Discounts & Coupons
+  coupons: CouponItem[];
+  couponView: 'list' | 'create';
+  setCouponView: (view: 'list' | 'create') => void;
+  isCreateCouponWizardOpen: boolean;
+  openCreateCouponWizard: () => void;
+  closeCreateCouponWizard: () => void;
+  couponWizardStep: number;
+  setCouponWizardStep: (step: number) => void;
+  draftCoupon: DraftCoupon;
+  updateDraftCoupon: (partial: Partial<DraftCoupon>) => void;
+  resetDraftCoupon: () => void;
+  createDraftCoupon: () => void;
+
+  // Modals for Coupon Creation
+  isSelectProductsModalOpen: boolean;
+  setIsSelectProductsModalOpen: (open: boolean) => void;
+  isSelectCategoriesModalOpen: boolean;
+  setIsSelectCategoriesModalOpen: (open: boolean) => void;
+
+  // Backward compatibility helpers
+  activeCampaignView: 'list' | 'create';
+  setActiveCampaignView: (v: 'list' | 'create') => void;
+  campaigns: any[];
+  offers: any[];
+  wizardStep: number;
+  setWizardStep: (s: number) => void;
+  deleteCampaign: (id: string) => void;
+  deleteOffer: (id: string) => void;
+  deleteCoupon: (id: string) => void;
+  addCoupon: (c: any) => void;
+  addOffer: (o: any) => void;
+
+  // Legacy state filters
+  searchQuery: string;
+  setSearchQuery: (q: string) => void;
+  statusFilter: string;
+  setStatusFilter: (s: string) => void;
+  typeFilter: string;
+  setTypeFilter: (t: string) => void;
+  draftCampaign: any;
+  updateDraftCampaign: (u: any) => void;
   launchDraftCampaign: () => void;
   saveDraftCampaign: () => void;
-  addCampaign: (campaign: Campaign) => void;
-  deleteCampaign: (id: string) => void;
-  addOffer: (offer: DiscountOffer) => void;
-  deleteOffer: (id: string) => void;
-  addCoupon: (coupon: Coupon) => void;
-  deleteCoupon: (id: string) => void;
-  setSearchQuery: (query: string) => void;
-  setStatusFilter: (status: string) => void;
-  setTypeFilter: (type: string) => void;
+  resetDraftCampaign: () => void;
 }
 
 export const useMarketingStore = create<MarketingState>((set, get) => ({
   activeSubTab: 'overview',
-  activeCampaignView: 'list',
-  wizardStep: 1,
-  draftCampaign: initialDraftCampaign,
-  campaigns: initialCampaigns,
-  offers: initialOffers,
+  setActiveSubTab: (tab) => set({ activeSubTab: tab, adView: 'list', couponView: 'list', isCreateAdWizardOpen: false, isCreateCouponWizardOpen: false }),
+
+  ads: initialAds,
+  advertisements: initialAds,
+  adView: 'list',
+  setAdView: (view) => set({ adView: view, isCreateAdWizardOpen: view === 'create', adWizardStep: 1 }),
+  isCreateAdWizardOpen: false,
+  openCreateAdWizard: () => set({ isCreateAdWizardOpen: true, adView: 'create' }),
+  closeCreateAdWizard: () => set({ isCreateAdWizardOpen: false, adView: 'list' }),
+  adWizardStep: 1,
+  setAdWizardStep: (step) => set({ adWizardStep: step }),
+  draftAd: initialDraftAd,
+  updateDraftAd: (partial) => set((s) => ({ draftAd: { ...s.draftAd, ...partial } })),
+  resetDraftAd: () => set({ draftAd: initialDraftAd, adWizardStep: 1, adView: 'list', isCreateAdWizardOpen: false }),
+  addAdvertisement: (ad) => {
+    const newAd: AdvertisementItem = {
+      id: `AD-${Date.now().toString().slice(-3)}`,
+      name: ad.name || 'New Ad',
+      subtitle: ad.subtitle || 'Promotion',
+      type: (ad.type as AdType) || 'Sponsored Product',
+      duration: ad.duration || '7 Days',
+      amount: ad.amount || 1299,
+      startDate: ad.startDate || '20 May 2024',
+      endDate: ad.endDate || '26 May 2024',
+      status: (ad.status as AdStatus) || 'Active',
+      views: 0,
+      clicks: 0,
+      imageUrl: ad.imageUrl || (initialAds[0]?.imageUrl ?? ''),
+    };
+    set((s) => ({
+      ads: [newAd, ...s.ads],
+      advertisements: [newAd, ...s.advertisements],
+      isCreateAdWizardOpen: false,
+      adView: 'list',
+    }));
+  },
+  launchDraftAd: () => {
+    const d = get().draftAd;
+    get().addAdvertisement({
+      name: d.productName,
+      subtitle: `Product: ${d.productName}`,
+      type: d.type,
+      duration: d.planDuration,
+      amount: d.totalAmount,
+      startDate: d.startDate,
+      endDate: d.endDate,
+      imageUrl: d.productImage,
+    });
+  },
+
   coupons: initialCoupons,
-  searchQuery: '',
-  statusFilter: 'all',
-  typeFilter: 'all',
-
-  setActiveSubTab: (tab) => set({ activeSubTab: tab, activeCampaignView: 'list' }),
-  setActiveCampaignView: (view) => set({ activeCampaignView: view, wizardStep: 1 }),
-  setWizardStep: (step) => set({ wizardStep: Math.min(Math.max(step, 1), 5) }),
-
-  updateDraftCampaign: (partial) =>
-    set((state) => ({
-      draftCampaign: { ...state.draftCampaign, ...partial },
-    })),
-
-  resetDraftCampaign: () =>
-    set({
-      draftCampaign: initialDraftCampaign,
-      wizardStep: 1,
-      activeCampaignView: 'list',
+  couponView: 'list',
+  setCouponView: (view) => set({ couponView: view, isCreateCouponWizardOpen: view === 'create', couponWizardStep: 1 }),
+  isCreateCouponWizardOpen: false,
+  openCreateCouponWizard: () => set({ isCreateCouponWizardOpen: true, couponView: 'create' }),
+  closeCreateCouponWizard: () => set({ isCreateCouponWizardOpen: false, couponView: 'list' }),
+  couponWizardStep: 1,
+  setCouponWizardStep: (step) => set({ couponWizardStep: step }),
+  draftCoupon: initialDraftCoupon,
+  updateDraftCoupon: (partial) => set((s) => ({ draftCoupon: { ...s.draftCoupon, ...partial } })),
+  resetDraftCoupon: () => set({ draftCoupon: initialDraftCoupon, couponWizardStep: 1, couponView: 'list', isCreateCouponWizardOpen: false }),
+  addCoupon: (c) =>
+    set((s) => {
+      const newCoupon: CouponItem = {
+        id: c.id || `CPN-${Date.now().toString().slice(-3)}`,
+        code: c.code || 'COUPON',
+        title: c.title || c.name || 'Special Offer',
+        type: c.type || c.couponType || 'Percentage',
+        benefit: c.benefit || c.discountBenefit || '10% OFF',
+        applicableOn: c.applicableOn || 'All Products',
+        startDate: c.startDate || '20 May 2024',
+        endDate: c.endDate || '20 Jun 2024',
+        usedCount: c.usedCount || 0,
+        totalLimit: c.totalLimit || 1000,
+        status: c.status || 'Active',
+        name: c.name || c.title,
+        couponType: c.type || c.couponType,
+        discountBenefit: c.benefit || c.discountBenefit,
+        validity: c.validity || `${c.startDate || '20 May'} - ${c.endDate || '20 Jun'}`,
+      };
+      return {
+        coupons: [newCoupon, ...s.coupons],
+        isCreateCouponWizardOpen: false,
+        couponView: 'list',
+      };
     }),
-
-  launchDraftCampaign: () => {
-    const draft = get().draftCampaign;
-    const newCampaign: Campaign = {
-      id: `CMP-${Date.now().toString().slice(-4)}`,
-      name: draft.name,
-      type: 'Discount',
-      status: 'Active',
-      banner: `${draft.placement} ${draft.bannerPosition}`,
-      bannerImageUrl: draft.bannerImageUrl,
-      bannerPosition: draft.bannerPosition,
-      bannerPlacement: draft.placement,
-      startDate: draft.startDate,
-      endDate: draft.endDate,
-      reach: draft.estimatedReach,
-      redemptions: 0,
-      revenue: 0,
-      goal: draft.goal,
-      description: draft.description,
-      title: draft.title,
-      subtitle: draft.subtitle,
-      buttonText: draft.buttonText,
-      buttonAction: draft.buttonAction,
-      selectedOffer: draft.selectedOffer,
-      audienceType: draft.audienceType,
-      audienceLocation: draft.audienceLocation,
-      audienceGroup: draft.audienceGroup,
-      audienceGender: draft.audienceGender,
-      audienceAge: draft.audienceAge,
-      displayFrequency: draft.displayFrequency,
-      allowDismiss: draft.allowDismiss,
-      autoRotate: draft.autoRotate,
-      rotationInterval: draft.rotationInterval,
-      cost: draft.baseCost + draft.reachCost + draft.platformFee,
-    };
-
-    set((state) => ({
-      campaigns: [newCampaign, ...state.campaigns],
-      activeCampaignView: 'list',
-      activeSubTab: 'campaigns',
-      draftCampaign: initialDraftCampaign,
-      wizardStep: 1,
-    }));
+  createDraftCoupon: () => {
+    const d = get().draftCoupon;
+    get().addCoupon({
+      code: d.code,
+      title: d.name,
+      type: d.discountType,
+      benefit: d.discountType === 'Percentage' ? `${d.discountValue}% OFF Max ₹${d.maxDiscount}` : `₹${d.discountValue} OFF Min. order ₹${d.minOrderValue}`,
+      applicableOn: d.applicableOn,
+      startDate: d.startDate,
+      endDate: d.endDate,
+      totalLimit: d.maxUsage,
+    });
   },
 
-  saveDraftCampaign: () => {
-    const draft = get().draftCampaign;
-    const newCampaign: Campaign = {
-      id: `CMP-${Date.now().toString().slice(-4)}`,
-      name: draft.name,
-      type: 'Discount',
-      status: 'Scheduled',
-      banner: `${draft.placement} ${draft.bannerPosition}`,
-      bannerImageUrl: draft.bannerImageUrl,
-      bannerPosition: draft.bannerPosition,
-      bannerPlacement: draft.placement,
-      startDate: draft.startDate,
-      endDate: draft.endDate,
-      reach: draft.estimatedReach,
-      redemptions: 0,
-      revenue: 0,
-      goal: draft.goal,
-      description: draft.description,
-      title: draft.title,
-      subtitle: draft.subtitle,
-      buttonText: draft.buttonText,
-      buttonAction: draft.buttonAction,
-      selectedOffer: draft.selectedOffer,
-      audienceType: draft.audienceType,
-      audienceLocation: draft.audienceLocation,
-      audienceGroup: draft.audienceGroup,
-      audienceGender: draft.audienceGender,
-      audienceAge: draft.audienceAge,
-      displayFrequency: draft.displayFrequency,
-      allowDismiss: draft.allowDismiss,
-      autoRotate: draft.autoRotate,
-      rotationInterval: draft.rotationInterval,
-      cost: draft.baseCost + draft.reachCost + draft.platformFee,
-    };
+  isSelectProductsModalOpen: false,
+  setIsSelectProductsModalOpen: (open) => set({ isSelectProductsModalOpen: open }),
+  isSelectCategoriesModalOpen: false,
+  setIsSelectCategoriesModalOpen: (open) => set({ isSelectCategoriesModalOpen: open }),
 
-    set((state) => ({
-      campaigns: [newCampaign, ...state.campaigns],
-      activeCampaignView: 'list',
-      activeSubTab: 'campaigns',
-      draftCampaign: initialDraftCampaign,
-      wizardStep: 1,
-    }));
-  },
+  // Backward compatibility helpers
+  activeCampaignView: 'list',
+  setActiveCampaignView: (v) => set({ activeCampaignView: v, isCreateAdWizardOpen: v === 'create' }),
+  campaigns: [],
+  offers: [],
+  wizardStep: 1,
+  setWizardStep: (s) => set({ wizardStep: s }),
+  deleteCampaign: (id) => set((s) => ({ ads: s.ads.filter((a) => a.id !== id), advertisements: s.advertisements.filter((a) => a.id !== id) })),
+  deleteOffer: (id) => set((s) => ({ coupons: s.coupons.filter((c) => c.id !== id) })),
+  deleteCoupon: (id) => set((s) => ({ coupons: s.coupons.filter((c) => c.id !== id) })),
+  addOffer: () => {},
 
-  addCampaign: (campaign) =>
-    set((state) => ({ campaigns: [campaign, ...state.campaigns] })),
-
-  deleteCampaign: (id) =>
-    set((state) => ({ campaigns: state.campaigns.filter((c) => c.id !== id) })),
-
-  addOffer: (offer) =>
-    set((state) => ({ offers: [offer, ...state.offers] })),
-
-  deleteOffer: (id) =>
-    set((state) => ({ offers: state.offers.filter((o) => o.id !== id) })),
-
-  addCoupon: (coupon) =>
-    set((state) => ({ coupons: [coupon, ...state.coupons] })),
-
-  deleteCoupon: (id) =>
-    set((state) => ({ coupons: state.coupons.filter((c) => c.id !== id) })),
-
-  setSearchQuery: (query) => set({ searchQuery: query }),
-  setStatusFilter: (status) => set({ statusFilter: status }),
-  setTypeFilter: (type) => set({ typeFilter: type }),
+  searchQuery: '',
+  setSearchQuery: (q) => set({ searchQuery: q }),
+  statusFilter: 'all',
+  setStatusFilter: (s) => set({ statusFilter: s }),
+  typeFilter: 'all',
+  setTypeFilter: (t) => set({ typeFilter: t }),
+  draftCampaign: {},
+  updateDraftCampaign: () => {},
+  launchDraftCampaign: () => {},
+  saveDraftCampaign: () => {},
+  resetDraftCampaign: () => {},
 }));

@@ -4,7 +4,7 @@ export interface ReturnCustomer {
   name: string;
   email: string;
   phone: string;
-  address: string;
+  address?: string;
 }
 
 export interface ReturnProduct {
@@ -20,9 +20,9 @@ export interface ReturnProduct {
 export type ReturnStatus =
   | 'Pending'
   | 'Approved'
-  | 'Exchange Initiated'
   | 'Refunded'
-  | 'Rejected';
+  | 'Rejected'
+  | 'Exchange Initiated';
 
 export type ReturnType = 'Return' | 'Exchange' | 'Refund Only';
 
@@ -37,17 +37,16 @@ export interface ReturnRecord {
   amount: number;
   status: ReturnStatus;
   returnDate: string;
+  returnTime?: string;
   refundMethod: string;
   refundAmount: number;
-  pickupDate: string;
-  pickupTime: string;
-  pickupAddress: string;
+  pickupDate?: string;
+  pickupTime?: string;
+  pickupAddress?: string;
   comments?: string;
   internalNote?: string;
-  notifyCustomer: boolean;
+  notifyCustomer?: boolean;
   rejectionReason?: string;
-  inspectionStatus?: 'Pending' | 'Passed' | 'Failed';
-  conditionNotes?: string;
 }
 
 export interface OrderLookupOption {
@@ -75,94 +74,22 @@ export const initialAvailableOrders: OrderLookupOption[] = [
     customerName: 'Rohan Verma',
     customerEmail: 'rohan@email.com',
     customerPhone: '9876543210',
-    customerAddress: '12, Green Park, South Extension, New Delhi - 110049, Delhi',
+    customerAddress: '12, Green Park, South Extension, New Delhi - 110049',
     orderDate: '18 May 2024, 10:30 AM',
     amount: 1049.0,
     paymentMethod: 'Prepaid',
     product: {
       name: 'Men Solid Cotton Shirt',
       variant: 'Blue, M',
-      sku: 'PRD-TSHIRT-RN-BL-M',
+      sku: 'MCS-001',
       price: 1049.0,
       quantity: 1,
       imageUrl: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=120&auto=format&fit=crop&q=80',
     },
   },
-  {
-    orderNumber: '#ORD10042',
-    customerName: 'Sneha Kapoor',
-    customerEmail: 'sneha@email.com',
-    customerPhone: '9876543211',
-    customerAddress: '45, Rosewood Lane, Indiranagar, Bengaluru - 560038, Karnataka',
-    orderDate: '18 May 2024, 09:15 AM',
-    amount: 1849.0,
-    paymentMethod: 'Prepaid',
-    product: {
-      name: 'Women Floral Dress',
-      variant: 'Red, M',
-      sku: 'PRD-DRESS-FL-RD-M',
-      price: 1849.0,
-      quantity: 1,
-      imageUrl: 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=120&auto=format&fit=crop&q=80',
-    },
-  },
-  {
-    orderNumber: '#ORD10041',
-    customerName: 'Arjun Mehta',
-    customerEmail: 'arjun@email.com',
-    customerPhone: '9876543212',
-    customerAddress: '88, Sector 14, Gurugram - 122001, Haryana',
-    orderDate: '17 May 2024, 07:45 PM',
-    amount: 899.0,
-    paymentMethod: 'Prepaid',
-    product: {
-      name: 'Men Polo T-shirt',
-      variant: 'Black, L',
-      sku: 'PRD-POLO-BK-L',
-      price: 899.0,
-      quantity: 1,
-      imageUrl: 'https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=120&auto=format&fit=crop&q=80',
-    },
-  },
-  {
-    orderNumber: '#ORD10039',
-    customerName: 'Neha Singh',
-    customerEmail: 'neha@email.com',
-    customerPhone: '9876543213',
-    customerAddress: '14, Bandra Kurla Complex, Mumbai - 400051, Maharashtra',
-    orderDate: '17 May 2024, 06:20 PM',
-    amount: 699.0,
-    paymentMethod: 'Prepaid',
-    product: {
-      name: 'Men Graphic Print T-shirt',
-      variant: 'White, L',
-      sku: 'PRD-GRAPHIC-WH-L',
-      price: 699.0,
-      quantity: 1,
-      imageUrl: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=120&auto=format&fit=crop&q=80',
-    },
-  },
-  {
-    orderNumber: '#ORD10038',
-    customerName: 'Rahul Sharma',
-    customerEmail: 'rahul@email.com',
-    customerPhone: '9876543214',
-    customerAddress: '22A, Model Town, Jalandhar - 144003, Punjab',
-    orderDate: '17 May 2024, 03:10 PM',
-    amount: 1299.0,
-    paymentMethod: 'Prepaid',
-    product: {
-      name: 'Olive Green Cargo Pants',
-      variant: '32',
-      sku: 'PRD-CARGO-OLV-32',
-      price: 1299.0,
-      quantity: 1,
-      imageUrl: 'https://images.unsplash.com/photo-1517445312882-bc9910d016b7?w=120&auto=format&fit=crop&q=80',
-    },
-  },
 ];
 
-const mockReturnsList: ReturnRecord[] = [
+export const mockReturnsList: ReturnRecord[] = [
   {
     id: 'rtn-10025',
     returnNumber: '#RTN10025',
@@ -170,13 +97,13 @@ const mockReturnsList: ReturnRecord[] = [
     customer: {
       name: 'Rohan Verma',
       email: 'rohan@email.com',
-      phone: '9876543210',
-      address: '12, Green Park, South Extension, New Delhi - 110049, Delhi',
+      phone: '+91 98765 43210',
+      address: '12, Green Park, South Extension, New Delhi - 110049',
     },
     product: {
       name: 'Men Solid Cotton Shirt',
       variant: 'Blue, M',
-      sku: 'PRD-TSHIRT-RN-BL-M',
+      sku: 'MCS-001',
       price: 1049.0,
       quantity: 1,
       returnQuantity: 1,
@@ -186,15 +113,14 @@ const mockReturnsList: ReturnRecord[] = [
     reason: 'Size issue',
     amount: 1049.0,
     status: 'Pending',
-    returnDate: '18 May 2024, 10:30 AM',
-    refundMethod: 'Original Payment Method',
+    returnDate: '18 May 2024',
+    returnTime: '10:30 AM',
+    refundMethod: 'Original Payment (UPI)',
     refundAmount: 1049.0,
     pickupDate: '19 May 2024',
     pickupTime: '10:00 AM - 01:00 PM',
-    pickupAddress: '12, Green Park, South Extension, New Delhi - 110049, Delhi',
-    comments: 'Fabric is great, but size M is slightly tighter around the chest.',
-    internalNote: 'Customer contacted support asking for quicker pickup.',
-    notifyCustomer: true,
+    pickupAddress: '12, Green Park, South Extension, New Delhi - 110049',
+    comments: 'The size is smaller than expected. Please arrange a return.',
   },
   {
     id: 'rtn-10024',
@@ -203,13 +129,13 @@ const mockReturnsList: ReturnRecord[] = [
     customer: {
       name: 'Sneha Kapoor',
       email: 'sneha@email.com',
-      phone: '9876543211',
-      address: '45, Rosewood Lane, Indiranagar, Bengaluru - 560038, Karnataka',
+      phone: '+91 98765 43211',
+      address: '45, Rosewood Lane, Indiranagar, Bengaluru - 560038',
     },
     product: {
       name: 'Women Floral Dress',
       variant: 'Red, M',
-      sku: 'PRD-DRESS-FL-RD-M',
+      sku: 'WFD-002',
       price: 1849.0,
       quantity: 1,
       returnQuantity: 1,
@@ -219,15 +145,14 @@ const mockReturnsList: ReturnRecord[] = [
     reason: 'Product not as described',
     amount: 1849.0,
     status: 'Approved',
-    returnDate: '18 May 2024, 09:15 AM',
-    refundMethod: 'Original Payment Method',
+    returnDate: '18 May 2024',
+    returnTime: '09:15 AM',
+    refundMethod: 'Original Payment (UPI)',
     refundAmount: 1849.0,
     pickupDate: '19 May 2024',
     pickupTime: '02:00 PM - 05:00 PM',
-    pickupAddress: '45, Rosewood Lane, Indiranagar, Bengaluru - 560038, Karnataka',
-    comments: 'Print color differs noticeably from the online listing photo.',
-    internalNote: 'Approved under 7-day hassle free return policy.',
-    notifyCustomer: true,
+    pickupAddress: '45, Rosewood Lane, Indiranagar, Bengaluru - 560038',
+    comments: 'Fabric pattern differs significantly from the product photos.',
   },
   {
     id: 'rtn-10023',
@@ -236,31 +161,27 @@ const mockReturnsList: ReturnRecord[] = [
     customer: {
       name: 'Arjun Mehta',
       email: 'arjun@email.com',
-      phone: '9876543212',
-      address: '88, Sector 14, Gurugram - 122001, Haryana',
+      phone: '+91 98765 43212',
+      address: '88, Sector 14, Gurugram - 122001',
     },
     product: {
       name: 'Men Polo T-shirt',
       variant: 'Black, L',
-      sku: 'PRD-POLO-BK-L',
+      sku: 'MPT-003',
       price: 899.0,
       quantity: 1,
       returnQuantity: 1,
       imageUrl: 'https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=120&auto=format&fit=crop&q=80',
     },
-    returnType: 'Exchange',
+    returnType: 'Return',
     reason: 'Size issue',
     amount: 899.0,
-    status: 'Exchange Initiated',
-    returnDate: '17 May 2024, 07:45 PM',
-    refundMethod: 'Original Payment Method',
+    status: 'Refunded',
+    returnDate: '17 May 2024',
+    returnTime: '06:20 PM',
+    refundMethod: 'Original Payment (Credit Card)',
     refundAmount: 899.0,
-    pickupDate: '18 May 2024',
-    pickupTime: '10:00 AM - 01:00 PM',
-    pickupAddress: '88, Sector 14, Gurugram - 122001, Haryana',
-    comments: 'Exchange requested for XL size instead of L.',
-    internalNote: 'Replacement item reserved in warehouse stock.',
-    notifyCustomer: true,
+    comments: 'Fit is too tight around shoulders.',
   },
   {
     id: 'rtn-10022',
@@ -269,13 +190,13 @@ const mockReturnsList: ReturnRecord[] = [
     customer: {
       name: 'Neha Singh',
       email: 'neha@email.com',
-      phone: '9876543213',
-      address: '14, Bandra Kurla Complex, Mumbai - 400051, Maharashtra',
+      phone: '+91 98765 43213',
+      address: '14, Bandra Kurla Complex, Mumbai - 400051',
     },
     product: {
       name: 'Men Graphic Print T-shirt',
       variant: 'White, L',
-      sku: 'PRD-GRAPHIC-WH-L',
+      sku: 'MGT-004',
       price: 699.0,
       quantity: 1,
       returnQuantity: 1,
@@ -284,16 +205,13 @@ const mockReturnsList: ReturnRecord[] = [
     returnType: 'Return',
     reason: 'Fabric quality',
     amount: 699.0,
-    status: 'Refunded',
-    returnDate: '17 May 2024, 06:20 PM',
-    refundMethod: 'Store Credit / Wallet',
+    status: 'Rejected',
+    returnDate: '17 May 2024',
+    returnTime: '03:10 PM',
+    refundMethod: 'Original Payment',
     refundAmount: 699.0,
-    pickupDate: '18 May 2024',
-    pickupTime: '02:00 PM - 05:00 PM',
-    pickupAddress: '14, Bandra Kurla Complex, Mumbai - 400051, Maharashtra',
-    comments: 'Material felt thinner than expected.',
-    internalNote: 'Refund credited directly to customer store wallet balance.',
-    notifyCustomer: true,
+    comments: 'Material is very thin.',
+    rejectionReason: 'Security tag removed and item washed.',
   },
   {
     id: 'rtn-10021',
@@ -302,13 +220,13 @@ const mockReturnsList: ReturnRecord[] = [
     customer: {
       name: 'Rahul Sharma',
       email: 'rahul@email.com',
-      phone: '9876543214',
-      address: '22A, Model Town, Jalandhar - 144003, Punjab',
+      phone: '+91 98765 43214',
+      address: '22A, Model Town, Jalandhar - 144003',
     },
     product: {
       name: 'Olive Green Cargo Pants',
       variant: '32',
-      sku: 'PRD-CARGO-OLV-32',
+      sku: 'OGC-005',
       price: 1299.0,
       quantity: 1,
       returnQuantity: 1,
@@ -317,17 +235,12 @@ const mockReturnsList: ReturnRecord[] = [
     returnType: 'Return',
     reason: 'Received wrong item',
     amount: 1299.0,
-    status: 'Rejected',
-    returnDate: '17 May 2024, 03:10 PM',
-    refundMethod: 'Original Payment Method',
+    status: 'Pending',
+    returnDate: '16 May 2024',
+    returnTime: '11:05 AM',
+    refundMethod: 'Original Payment (Net Banking)',
     refundAmount: 1299.0,
-    pickupDate: '18 May 2024',
-    pickupTime: '10:00 AM - 01:00 PM',
-    pickupAddress: '22A, Model Town, Jalandhar - 144003, Punjab',
-    comments: 'Wrong size received in shipment.',
-    rejectionReason: 'Item returned does not match serial dispatch security seal.',
-    internalNote: 'Serial seal tampered; rejection notice sent via email.',
-    notifyCustomer: true,
+    comments: 'Received different color than ordered.',
   },
   {
     id: 'rtn-10020',
@@ -336,13 +249,13 @@ const mockReturnsList: ReturnRecord[] = [
     customer: {
       name: 'Priya Patel',
       email: 'priya@email.com',
-      phone: '9876543215',
-      address: '101, Navrangpura, Ahmedabad - 380009, Gujarat',
+      phone: '+91 98765 43215',
+      address: '101, Navrangpura, Ahmedabad - 380009',
     },
     product: {
       name: 'Men Checked Shirt',
       variant: 'Red, M',
-      sku: 'PRD-CHECKED-RD-M',
+      sku: 'MCS-006',
       price: 1199.0,
       quantity: 1,
       returnQuantity: 1,
@@ -351,16 +264,12 @@ const mockReturnsList: ReturnRecord[] = [
     returnType: 'Return',
     reason: 'Too large',
     amount: 1199.0,
-    status: 'Pending',
-    returnDate: '16 May 2024, 11:05 AM',
-    refundMethod: 'Original Payment Method',
+    status: 'Approved',
+    returnDate: '16 May 2024',
+    returnTime: '10:40 AM',
+    refundMethod: 'Original Payment (UPI)',
     refundAmount: 1199.0,
-    pickupDate: '17 May 2024',
-    pickupTime: '02:00 PM - 05:00 PM',
-    pickupAddress: '101, Navrangpura, Ahmedabad - 380009, Gujarat',
-    comments: 'Size M runs bigger than standard sizing.',
-    internalNote: 'Awaiting warehouse inspection slot.',
-    notifyCustomer: true,
+    comments: 'Size does not fit properly.',
   },
   {
     id: 'rtn-10019',
@@ -369,31 +278,27 @@ const mockReturnsList: ReturnRecord[] = [
     customer: {
       name: 'Karan Joshi',
       email: 'karan@email.com',
-      phone: '9876543216',
-      address: '502, Skyline Towers, Jaipur - 302001, Rajasthan',
+      phone: '+91 98765 43216',
+      address: '502, Skyline Towers, Jaipur - 302001',
     },
     product: {
       name: 'Men Solid Polo T-shirt',
       variant: 'Navy, M',
-      sku: 'PRD-POLO-NV-M',
+      sku: 'MSP-007',
       price: 949.0,
       quantity: 1,
       returnQuantity: 1,
       imageUrl: 'https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=120&auto=format&fit=crop&q=80',
     },
-    returnType: 'Exchange',
+    returnType: 'Return',
     reason: 'Need different size',
     amount: 949.0,
-    status: 'Approved',
-    returnDate: '16 May 2024, 10:40 AM',
-    refundMethod: 'Original Payment Method',
+    status: 'Refunded',
+    returnDate: '15 May 2024',
+    returnTime: '04:25 PM',
+    refundMethod: 'Original Payment (UPI)',
     refundAmount: 949.0,
-    pickupDate: '17 May 2024',
-    pickupTime: '05:00 PM - 08:00 PM',
-    pickupAddress: '502, Skyline Towers, Jaipur - 302001, Rajasthan',
-    comments: 'Requesting exchange for Large size.',
-    internalNote: 'Exchange order will be dispatched upon pickup receipt.',
-    notifyCustomer: true,
+    comments: 'Required size L instead.',
   },
 ];
 
@@ -402,8 +307,15 @@ export type ReturnFilterTab =
   | 'Pending'
   | 'Approved'
   | 'Refunded'
-  | 'Rejected'
-  | 'Exchange Requests';
+  | 'Rejected';
+
+export interface RaiseRequestPayload {
+  returnId: string;
+  requestType: 'Complaint' | 'Request';
+  reason: string;
+  description: string;
+  files: string[];
+}
 
 interface ReturnsState {
   returns: ReturnRecord[];
@@ -417,10 +329,13 @@ interface ReturnsState {
   activeView: 'overview' | 'new_return';
 
   // Modals & Drawers
+  isDetailsModalOpen: boolean;
   isDetailsDrawerOpen: boolean;
-  isSlipModalOpen: boolean;
+  isRaiseModalOpen: boolean;
+  returnForRaise: ReturnRecord | null;
   isRejectModalOpen: boolean;
   returnToReject: ReturnRecord | null;
+  isSlipModalOpen: boolean;
 
   // Actions
   setActiveTab: (tab: ReturnFilterTab) => void;
@@ -434,22 +349,21 @@ interface ReturnsState {
   deselectAllReturns: () => void;
   setSelectedReturn: (ret: ReturnRecord | null) => void;
   setActiveView: (view: 'overview' | 'new_return') => void;
+  setIsDetailsModalOpen: (open: boolean) => void;
   setIsDetailsDrawerOpen: (open: boolean) => void;
-  setIsSlipModalOpen: (open: boolean) => void;
   setIsRejectModalOpen: (open: boolean) => void;
   setReturnToReject: (ret: ReturnRecord | null) => void;
+  setIsSlipModalOpen: (open: boolean) => void;
+  openRaiseModal: (ret: ReturnRecord) => void;
+  closeRaiseModal: () => void;
+  submitRaiseRequest: (payload: RaiseRequestPayload) => void;
 
-  // Business Workflow Actions
-  addReturn: (newRet: Omit<ReturnRecord, 'id' | 'returnNumber' | 'returnDate'>) => void;
-  updateReturn: (id: string, updates: Partial<ReturnRecord>) => void;
+  // Workflow actions
+  addReturn: (data: any) => void;
   approveReturn: (id: string) => void;
   rejectReturn: (id: string, reason: string) => void;
   initiateRefund: (id: string) => void;
   markAsRefunded: (id: string) => void;
-  cancelReturn: (id: string) => void;
-  deleteReturn: (id: string) => void;
-  bulkApprove: () => void;
-  bulkReject: () => void;
 }
 
 export const useReturnsStore = create<ReturnsState>((set, get) => ({
@@ -463,10 +377,13 @@ export const useReturnsStore = create<ReturnsState>((set, get) => ({
   selectedReturn: null,
   activeView: 'overview',
 
+  isDetailsModalOpen: false,
   isDetailsDrawerOpen: false,
-  isSlipModalOpen: false,
+  isRaiseModalOpen: false,
+  returnForRaise: null,
   isRejectModalOpen: false,
   returnToReject: null,
+  isSlipModalOpen: false,
 
   setActiveTab: (tab) => set({ activeTab: tab }),
   setSearchQuery: (query) => set({ searchQuery: query }),
@@ -498,89 +415,83 @@ export const useReturnsStore = create<ReturnsState>((set, get) => ({
 
   setSelectedReturn: (ret) => set({ selectedReturn: ret }),
   setActiveView: (view) => set({ activeView: view }),
+  setIsDetailsModalOpen: (open) => set({ isDetailsModalOpen: open }),
   setIsDetailsDrawerOpen: (open) => set({ isDetailsDrawerOpen: open }),
-  setIsSlipModalOpen: (open) => set({ isSlipModalOpen: open }),
   setIsRejectModalOpen: (open) => set({ isRejectModalOpen: open }),
   setReturnToReject: (ret) => set({ returnToReject: ret }),
+  setIsSlipModalOpen: (open) => set({ isSlipModalOpen: open }),
+
+  openRaiseModal: (ret) =>
+    set({
+      returnForRaise: ret,
+      isRaiseModalOpen: true,
+    }),
+
+  closeRaiseModal: () =>
+    set({
+      returnForRaise: null,
+      isRaiseModalOpen: false,
+    }),
+
+  submitRaiseRequest: (payload) => {
+    set((state) => ({
+      returns: state.returns.map((r) =>
+        r.id === payload.returnId
+          ? {
+              ...r,
+              internalNote: `[${payload.requestType}] ${payload.reason}: ${payload.description}`,
+            }
+          : r
+      ),
+      isRaiseModalOpen: false,
+      returnForRaise: null,
+    }));
+  },
 
   addReturn: (data) => {
     const nextNum = Math.floor(10026 + Math.random() * 900);
-    const now = new Date();
-    const formattedDate = `${now.getDate()} ${now.toLocaleString('default', {
-      month: 'short',
-    })} ${now.getFullYear()}, ${now.toLocaleTimeString([], {
-      hour: '2-digit',
-      minute: '2-digit',
-    })}`;
-
     const newRecord: ReturnRecord = {
       ...data,
       id: `rtn-${nextNum}`,
       returnNumber: `#RTN${nextNum}`,
-      returnDate: formattedDate,
+      returnDate: '18 May 2024',
+      returnTime: '10:30 AM',
     };
-
     set((state) => ({
       returns: [newRecord, ...state.returns],
       activeView: 'overview',
     }));
   },
 
-  updateReturn: (id, updates) =>
-    set((state) => ({
-      returns: state.returns.map((r) => (r.id === id ? { ...r, ...updates } : r)),
-      selectedReturn:
-        state.selectedReturn?.id === id
-          ? { ...state.selectedReturn, ...updates }
-          : state.selectedReturn,
-    })),
-
   approveReturn: (id) => {
-    get().updateReturn(id, { status: 'Approved' });
-  },
-
-  rejectReturn: (id, reason) => {
-    get().updateReturn(id, { status: 'Rejected', rejectionReason: reason });
-  },
-
-  initiateRefund: (id) => {
-    get().updateReturn(id, { status: 'Refunded' });
-  },
-
-  markAsRefunded: (id) => {
-    get().updateReturn(id, { status: 'Refunded' });
-  },
-
-  cancelReturn: (id) => {
-    get().updateReturn(id, { status: 'Rejected', rejectionReason: 'Cancelled by merchant request' });
-  },
-
-  deleteReturn: (id) =>
-    set((state) => ({
-      returns: state.returns.filter((r) => r.id !== id),
-      selectedReturnIds: state.selectedReturnIds.filter((item) => item !== id),
-      selectedReturn: state.selectedReturn?.id === id ? null : state.selectedReturn,
-    })),
-
-  bulkApprove: () => {
-    const ids = get().selectedReturnIds;
     set((state) => ({
       returns: state.returns.map((r) =>
-        ids.includes(r.id) ? { ...r, status: 'Approved' } : r
+        r.id === id ? { ...r, status: 'Approved' } : r
       ),
-      selectedReturnIds: [],
     }));
   },
 
-  bulkReject: () => {
-    const ids = get().selectedReturnIds;
+  rejectReturn: (id, reason) => {
     set((state) => ({
       returns: state.returns.map((r) =>
-        ids.includes(r.id)
-          ? { ...r, status: 'Rejected', rejectionReason: 'Bulk rejection by merchant' }
-          : r
+        r.id === id ? { ...r, status: 'Rejected', rejectionReason: reason } : r
       ),
-      selectedReturnIds: [],
+    }));
+  },
+
+  initiateRefund: (id) => {
+    set((state) => ({
+      returns: state.returns.map((r) =>
+        r.id === id ? { ...r, status: 'Refunded' } : r
+      ),
+    }));
+  },
+
+  markAsRefunded: (id) => {
+    set((state) => ({
+      returns: state.returns.map((r) =>
+        r.id === id ? { ...r, status: 'Refunded' } : r
+      ),
     }));
   },
 }));

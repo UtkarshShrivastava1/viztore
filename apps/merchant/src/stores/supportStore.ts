@@ -37,7 +37,7 @@ const initialTickets: SupportTicket[] = [
   {
     id: '#TKT1256',
     subject: 'Unable to sync inventory',
-    category: 'Inventory',
+    category: 'Products & Inventory',
     status: 'in_progress',
     priority: 'high',
     lastUpdated: '18 May 2024',
@@ -63,7 +63,7 @@ const initialTickets: SupportTicket[] = [
   {
     id: '#TKT1255',
     subject: 'Payment not received',
-    category: 'Payments & Payouts',
+    category: 'Billing & Payments',
     status: 'resolved',
     priority: 'medium',
     lastUpdated: '17 May 2024',
@@ -84,19 +84,12 @@ const initialTickets: SupportTicket[] = [
         text: 'The settlement cycle takes 24 hours post customer delivery confirmation. We verified the UPI gateway trace and credited ₹1,499 to your settlement bucket.',
         timestamp: '17 May 2024, 11:00 AM',
       },
-      {
-        id: 'msg-3',
-        sender: 'merchant',
-        senderName: 'Fashion Hub Admin',
-        text: 'Confirmed, the funds are now visible. Thank you!',
-        timestamp: '17 May 2024, 11:30 AM',
-      },
     ],
   },
   {
     id: '#TKT1254',
     subject: 'How to add a new section?',
-    category: 'Store Settings',
+    category: 'Store Management',
     status: 'resolved',
     priority: 'low',
     lastUpdated: '16 May 2024',
@@ -113,52 +106,8 @@ const initialTickets: SupportTicket[] = [
         id: 'msg-2',
         sender: 'support',
         senderName: 'Storefront Merchandising Specialist',
-        text: 'You can easily configure this under Store Management > Store Sections > "+ Add New Section". Choose the Product Carousel layout and assign your Summer items.',
+        text: 'You can easily configure this under Store Management > Manage Sections > "+ Add New Section".',
         timestamp: '16 May 2024, 09:10 AM',
-      },
-    ],
-  },
-  {
-    id: '#TKT1253',
-    subject: 'Invoice download issue',
-    category: 'Invoicing & Tax',
-    status: 'open',
-    priority: 'high',
-    lastUpdated: '15 May 2024',
-    createdAt: '15 May 2024, 01:20 PM',
-    orderRef: 'INV-2024-0089',
-    messages: [
-      {
-        id: 'msg-1',
-        sender: 'merchant',
-        senderName: 'Fashion Hub Admin',
-        text: 'When clicking "Download PDF" for GST Tax Invoice INV-2024-0089, the PDF generates a blank page on mobile browser.',
-        timestamp: '15 May 2024, 01:20 PM',
-      },
-    ],
-  },
-  {
-    id: '#TKT1252',
-    subject: 'Product image not uploading',
-    category: 'Product Catalog',
-    status: 'resolved',
-    priority: 'medium',
-    lastUpdated: '14 May 2024',
-    createdAt: '13 May 2024, 11:00 AM',
-    messages: [
-      {
-        id: 'msg-1',
-        sender: 'merchant',
-        senderName: 'Fashion Hub Admin',
-        text: 'High-res JPG images above 3MB fail to compress on bulk catalog upload.',
-        timestamp: '13 May 2024, 11:00 AM',
-      },
-      {
-        id: 'msg-2',
-        sender: 'support',
-        senderName: 'Platform Technical Support',
-        text: 'Our server client-side compressor has been updated to support images up to 5MB automatically with WebP transcoding.',
-        timestamp: '14 May 2024, 10:20 AM',
       },
     ],
   },
@@ -167,8 +116,8 @@ const initialTickets: SupportTicket[] = [
 const initialHelpTopics: HelpTopic[] = [
   {
     id: 'art-1',
-    title: 'How to add a new product?',
-    category: 'Product Catalog',
+    title: 'How do I create a new product?',
+    category: 'Products & Inventory',
     summary: 'Step-by-step guide to add single SKUs or batch import with CSV barcodes.',
     content:
       'Go to Products / Catalog from the navigation menu. Click "+ Add Product" at the top right. Fill in SKU details, name, category, pricing, GST slab, and upload up to 5 product photos. Click Save to publish immediately to your store.',
@@ -176,66 +125,70 @@ const initialHelpTopics: HelpTopic[] = [
   },
   {
     id: 'art-2',
-    title: 'How to manage orders?',
-    category: 'Order Management',
-    summary: 'Learn order workflow states: New, Confirmed, Packed, Shipped, and Delivered.',
+    title: 'How do I manage inventory?',
+    category: 'Products & Inventory',
+    summary: 'Learn inventory threshold tracking, low-stock alerts and multi-location management.',
     content:
-      'Incoming orders appear in your Orders dashboard with audio alerts. Confirm orders within 15 minutes, print thermal packing slips, hand over packages to logistics partners, and verify delivery OTPs upon handover.',
+      'Navigate to Inventory to view real-time item counts, adjust stock levels per warehouse, and set minimum alert thresholds to receive automated alerts before running out.',
     readTime: '4 min read',
   },
   {
     id: 'art-3',
-    title: 'How to configure delivery settings?',
-    category: 'Store Operations',
+    title: 'How do I enable delivery?',
+    category: 'Orders & Delivery',
     summary: 'Set delivery radius in kilometers, minimum order threshold, and delivery fees.',
     content:
-      'Open Settings > Operational Store Settings. Configure your store delivery radius (e.g. 5.5 km), express vs standard time windows, free delivery threshold (e.g. above ₹499), and enable store pickup if applicable.',
+      'Open Settings > Shipping & Returns. Turn on "Enable delivery for customer orders", select your service area, delivery partner, and estimated delivery window.',
     readTime: '2 min read',
   },
   {
     id: 'art-4',
-    title: 'How to receive payments?',
-    category: 'Payouts & Banking',
-    summary: 'Bank account verification, automated Tuesday settlements, and instant withdrawals.',
-    content:
-      'All merchant sales collected via UPI, Credit Card, and Cash on Delivery are credited to your merchant wallet. Weekly automatic settlements transfer funds to your verified IFSC bank account every Tuesday morning without transaction fees.',
-    readTime: '5 min read',
-  },
-  {
-    id: 'art-5',
-    title: 'How to generate invoices?',
-    category: 'Billing & Invoicing',
+    title: 'How do I generate an invoice?',
+    category: 'Billing & Payments',
     summary: 'Generate GST-compliant tax invoices, quotation estimates, and thermal bill slips.',
     content:
-      'Navigate to Billing & Invoicing > "+ Create New Bill". Use barcode scanning or quick SKU search to add items. The system auto-calculates CGST/SGST/IGST breakdown and generates printable PDF invoices with your business GSTIN and FSSAI license.',
+      'Navigate to Billing & Invoicing > "+ Create New Bill". Use barcode scanning or quick SKU search to add items. The system auto-calculates CGST/SGST/IGST breakdown and generates printable PDF invoices.',
     readTime: '3 min read',
   },
   {
-    id: 'art-6',
-    title: 'How to handle customer returns?',
-    category: 'Returns & Refunds',
-    summary: 'Process return requests, verify product condition, and initiate refund credits.',
+    id: 'art-5',
+    title: 'How do I update my store details?',
+    category: 'Store Management',
+    summary: 'Update store profile, business timing, banner logo and address information.',
     content:
-      'Customers can request returns within 7 days. Review the customer photographic reason in Returns & Refunds. Upon accepting the package at your doorstep, verify item tag integrity and click "Approve Refund" to release wallet credit.',
-    readTime: '4 min read',
+      'Go to Settings > Store Profile. Modify your store display name, description, address, city, and upload a square brand logo.',
+    readTime: '3 min read',
   },
 ];
 
+export type SupportViewMode = 'hub' | 'create_ticket' | 'faq_detail';
+
 interface SupportState {
+  activeView: SupportViewMode;
   activeTab: SupportSubTab;
   tickets: SupportTicket[];
   helpTopics: HelpTopic[];
   selectedTicketId: string | null;
+  selectedHelpTopicId: string | null;
   isCreateTicketModalOpen: boolean;
   searchQuery: string;
   statusFilter: string;
   priorityFilter: string;
 
   // Actions
+  setActiveView: (view: SupportViewMode) => void;
   setActiveTab: (tab: SupportSubTab) => void;
   setSelectedTicketId: (id: string | null) => void;
+  setSelectedHelpTopicId: (id: string | null) => void;
   setIsCreateTicketModalOpen: (isOpen: boolean) => void;
-  addTicket: (ticket: Omit<SupportTicket, 'id' | 'createdAt' | 'lastUpdated' | 'messages'> & { initialMessage: string }) => void;
+  addTicket: (ticket: {
+    subject: string;
+    category: string;
+    priority: TicketPriority;
+    status?: TicketStatus;
+    orderRef?: string;
+    initialMessage: string;
+  }) => void;
   addTicketMessage: (ticketId: string, text: string, sender?: 'merchant' | 'support') => void;
   updateTicketStatus: (ticketId: string, status: TicketStatus) => void;
   setSearchQuery: (query: string) => void;
@@ -244,17 +197,21 @@ interface SupportState {
 }
 
 export const useSupportStore = create<SupportState>((set) => ({
+  activeView: 'hub',
   activeTab: 'overview',
   tickets: initialTickets,
   helpTopics: initialHelpTopics,
   selectedTicketId: null,
+  selectedHelpTopicId: null,
   isCreateTicketModalOpen: false,
   searchQuery: '',
   statusFilter: 'all',
   priorityFilter: 'all',
 
+  setActiveView: (view) => set({ activeView: view }),
   setActiveTab: (tab) => set({ activeTab: tab }),
   setSelectedTicketId: (id) => set({ selectedTicketId: id }),
+  setSelectedHelpTopicId: (id) => set({ selectedHelpTopicId: id }),
   setIsCreateTicketModalOpen: (isOpen) => set({ isCreateTicketModalOpen: isOpen }),
 
   addTicket: ({ subject, category, priority, status, orderRef, initialMessage }) =>
@@ -287,7 +244,7 @@ export const useSupportStore = create<SupportState>((set) => ({
       return {
         tickets: [newTicket, ...state.tickets],
         isCreateTicketModalOpen: false,
-        activeTab: 'tickets',
+        activeView: 'hub',
         selectedTicketId: newId,
       };
     }),

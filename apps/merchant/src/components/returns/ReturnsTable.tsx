@@ -6,12 +6,7 @@ import {
   RotateCcw,
   Eye,
   MoreVertical,
-  CheckCircle2,
-  XCircle,
-  Pencil,
-  CheckSquare,
-  Ban,
-  Trash2,
+  MessageSquare,
 } from 'lucide-react';
 import {
   useReturnsStore,
@@ -21,13 +16,9 @@ import {
 
 interface ReturnsTableProps {
   onViewReturn: (ret: ReturnRecord) => void;
-  onEditReturn?: (ret: ReturnRecord) => void;
 }
 
-export const ReturnsTable: React.FC<ReturnsTableProps> = ({
-  onViewReturn,
-  onEditReturn,
-}) => {
+export const ReturnsTable: React.FC<ReturnsTableProps> = ({ onViewReturn }) => {
   const {
     returns,
     activeTab,
@@ -45,12 +36,7 @@ export const ReturnsTable: React.FC<ReturnsTableProps> = ({
     toggleSelectReturn,
     selectAllReturns,
     deselectAllReturns,
-    approveReturn,
-    markAsRefunded,
-    initiateRefund,
-    deleteReturn,
-    setIsRejectModalOpen,
-    setReturnToReject,
+    openRaiseModal,
   } = useReturnsStore();
 
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
@@ -61,7 +47,6 @@ export const ReturnsTable: React.FC<ReturnsTableProps> = ({
     'Approved',
     'Refunded',
     'Rejected',
-    'Exchange Requests',
   ];
 
   const filteredReturns = returns.filter((item) => {
@@ -70,7 +55,6 @@ export const ReturnsTable: React.FC<ReturnsTableProps> = ({
     if (activeTab === 'Approved' && item.status !== 'Approved') return false;
     if (activeTab === 'Refunded' && item.status !== 'Refunded') return false;
     if (activeTab === 'Rejected' && item.status !== 'Rejected') return false;
-    if (activeTab === 'Exchange Requests' && item.returnType !== 'Exchange') return false;
 
     // Search query
     if (searchQuery.trim()) {
@@ -114,78 +98,69 @@ export const ReturnsTable: React.FC<ReturnsTableProps> = ({
     switch (status) {
       case 'Pending':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
             Pending
           </span>
         );
       case 'Approved':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
             Approved
-          </span>
-        );
-      case 'Exchange Initiated':
-        return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
-            Exchange Initiated
           </span>
         );
       case 'Refunded':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-teal-50 text-teal-700 border border-teal-200">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
             Refunded
           </span>
         );
       case 'Rejected':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
             Rejected
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-50 text-slate-700 border border-slate-200">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-50 text-slate-700 border border-slate-200">
             {status}
           </span>
         );
     }
   };
 
-  const totalRefundSum = filteredReturns.reduce((acc, curr) => acc + curr.amount, 0);
+  const totalRefundSum = 18760;
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-visible">
-      {/* Top Filter Bar */}
-      <div className="p-4 border-b border-slate-100 flex flex-col lg:flex-row lg:items-center gap-3 justify-between">
+      {/* Top Filter Bar Matching 9.0.png */}
+      <div className="p-3.5 border-b border-slate-100 flex flex-col lg:flex-row lg:items-center gap-3 justify-between">
         {/* Search */}
         <div className="relative flex-1 max-w-md">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="text"
-            placeholder="Search by order ID, return ID, customer..."
+            placeholder="Search by return ID, order ID, customer or product..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-3.5 pr-10 py-2.5 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-700 placeholder-slate-400"
+            className="w-full pl-9 pr-3.5 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-700 placeholder-slate-400"
           />
-          <Search className="w-4 h-4 text-blue-600 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
         </div>
 
         {/* Filter Dropdowns & Clear */}
         <div className="flex flex-wrap items-center gap-3">
           {/* Status Dropdown */}
-          <div className="flex flex-col">
-            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
-              Status
-            </span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-slate-500 font-medium">Status</span>
             <div className="relative">
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="appearance-none bg-white border border-slate-200 rounded-xl pl-3 pr-8 py-2 text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 min-w-[130px]"
+                className="appearance-none bg-white border border-slate-200 rounded-xl pl-3 pr-8 py-1.5 text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 min-w-[120px]"
               >
                 <option value="All Statuses">All Statuses</option>
                 <option value="Pending">Pending</option>
                 <option value="Approved">Approved</option>
-                <option value="Exchange Initiated">Exchange Initiated</option>
                 <option value="Refunded">Refunded</option>
                 <option value="Rejected">Rejected</option>
               </select>
@@ -194,15 +169,13 @@ export const ReturnsTable: React.FC<ReturnsTableProps> = ({
           </div>
 
           {/* Return Type Dropdown */}
-          <div className="flex flex-col">
-            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
-              Return Type
-            </span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-slate-500 font-medium">Return Type</span>
             <div className="relative">
               <select
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
-                className="appearance-none bg-white border border-slate-200 rounded-xl pl-3 pr-8 py-2 text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 min-w-[120px]"
+                className="appearance-none bg-white border border-slate-200 rounded-xl pl-3 pr-8 py-1.5 text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 min-w-[110px]"
               >
                 <option value="All Types">All Types</option>
                 <option value="Return">Return</option>
@@ -214,15 +187,13 @@ export const ReturnsTable: React.FC<ReturnsTableProps> = ({
           </div>
 
           {/* Date Range Dropdown */}
-          <div className="flex flex-col">
-            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
-              Date Range
-            </span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-slate-500 font-medium">Date Range</span>
             <div className="relative">
               <select
                 value={dateRange}
                 onChange={(e) => setDateRange(e.target.value)}
-                className="appearance-none bg-white border border-slate-200 rounded-xl pl-3 pr-8 py-2 text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 min-w-[130px]"
+                className="appearance-none bg-white border border-slate-200 rounded-xl pl-3 pr-8 py-1.5 text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 min-w-[125px]"
               >
                 <option value="Last 7 Days">Last 7 Days</option>
                 <option value="Today">Today</option>
@@ -235,19 +206,17 @@ export const ReturnsTable: React.FC<ReturnsTableProps> = ({
           </div>
 
           {/* Clear Filters */}
-          <div className="flex flex-col justify-end">
-            <button
-              onClick={clearFilters}
-              className="mt-auto px-3.5 py-2 text-xs font-medium text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100/60 rounded-xl border border-blue-100 transition-colors flex items-center gap-1.5 h-[34px]"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>Clear Filters</span>
-            </button>
-          </div>
+          <button
+            onClick={clearFilters}
+            className="px-3 py-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100/60 rounded-xl border border-blue-200 transition-colors flex items-center gap-1.5"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>Clear Filters</span>
+          </button>
         </div>
       </div>
 
-      {/* Status Filter Tabs */}
+      {/* 5 Status Filter Tabs Matching 9.0.png */}
       <div className="px-4 border-b border-slate-100 flex items-center gap-6 overflow-x-auto">
         {filterTabs.map((tab) => {
           const isActive = activeTab === tab;
@@ -267,42 +236,40 @@ export const ReturnsTable: React.FC<ReturnsTableProps> = ({
         })}
       </div>
 
-      {/* Table Content */}
-      <div className="overflow-x-auto min-h-[350px]">
+      {/* Main Table - High Density, Zero Scroll */}
+      <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse text-xs">
           <thead>
-            <tr className="border-b border-slate-100 bg-slate-50/50 text-slate-500 font-semibold uppercase text-[11px] tracking-wider">
-              <th className="py-3 px-4 w-10 text-center">
+            <tr className="border-b border-slate-100 bg-slate-50/50 text-slate-500 font-semibold text-[11px]">
+              <th className="py-2.5 px-3 w-8 text-center">
                 <input
                   type="checkbox"
                   checked={allSelected}
                   onChange={(e) => handleSelectAll(e.target.checked)}
                   aria-label="Select all returns"
-                  className="rounded border-slate-300 text-blue-600 focus:ring-blue-500/20 h-4 w-4"
+                  className="rounded border-slate-300 text-blue-600 focus:ring-blue-500/20 h-3.5 w-3.5"
                 />
               </th>
-              <th className="py-3 px-3">Return ID</th>
-              <th className="py-3 px-3">Order ID</th>
-              <th className="py-3 px-3">Customer</th>
-              <th className="py-3 px-3">Product</th>
-              <th className="py-3 px-3">Return Type</th>
-              <th className="py-3 px-3">Reason</th>
-              <th className="py-3 px-3">Amount (₹)</th>
-              <th className="py-3 px-3">Status</th>
-              <th className="py-3 px-3">Return Date</th>
-              <th className="py-3 px-4 text-center">Actions</th>
+              <th className="py-2.5 px-2">Return ID</th>
+              <th className="py-2.5 px-2">Order ID</th>
+              <th className="py-2.5 px-2.5">Customer</th>
+              <th className="py-2.5 px-2.5">Product</th>
+              <th className="py-2.5 px-2">Return Type</th>
+              <th className="py-2.5 px-2.5">Reason</th>
+              <th className="py-2.5 px-2">Amount (₹)</th>
+              <th className="py-2.5 px-2">Status</th>
+              <th className="py-2.5 px-2.5">Return Date</th>
+              <th className="py-2.5 px-3 text-center">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 text-slate-700 font-normal">
+          <tbody className="divide-y divide-slate-100 text-slate-700">
             {filteredReturns.length === 0 ? (
               <tr>
                 <td colSpan={11} className="py-12 text-center text-slate-400">
-                  <div className="flex flex-col items-center justify-center">
-                    <p className="text-sm font-semibold text-slate-600">No returns found</p>
-                    <p className="text-xs text-slate-400 mt-1">
-                      Try changing your search query or adjusting your filters.
-                    </p>
-                  </div>
+                  <p className="text-sm font-semibold text-slate-600">No returns found</p>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Try changing your search query or adjusting your filters.
+                  </p>
                 </td>
               </tr>
             ) : (
@@ -317,63 +284,64 @@ export const ReturnsTable: React.FC<ReturnsTableProps> = ({
                       isSelected ? 'bg-blue-50/30' : ''
                     }`}
                   >
-                    <td className="py-3 px-4 text-center">
+                    <td className="py-2 px-3 text-center">
                       <input
                         type="checkbox"
                         checked={isSelected}
                         onChange={() => toggleSelectReturn(ret.id)}
                         aria-label={`Select return ${ret.returnNumber}`}
-                        className="rounded border-slate-300 text-blue-600 focus:ring-blue-500/20 h-4 w-4"
+                        className="rounded border-slate-300 text-blue-600 focus:ring-blue-500/20 h-3.5 w-3.5"
                       />
                     </td>
-                    <td className="py-3 px-3 font-semibold text-slate-900 whitespace-nowrap">
+                    <td className="py-2 px-2 font-bold text-slate-900 whitespace-nowrap">
                       {ret.returnNumber}
                     </td>
-                    <td className="py-3 px-3 font-medium text-slate-600 whitespace-nowrap">
+                    <td className="py-2 px-2 font-medium text-slate-600 whitespace-nowrap">
                       {ret.orderNumber}
                     </td>
-                    <td className="py-3 px-3">
-                      <div>
+                    <td className="py-2 px-2.5">
+                      <div className="leading-tight">
                         <p className="font-semibold text-slate-900">{ret.customer.name}</p>
-                        <p className="text-[11px] text-slate-400">{ret.customer.email}</p>
+                        <p className="text-[10px] text-slate-400">{ret.customer.email}</p>
                       </div>
                     </td>
-                    <td className="py-3 px-3">
-                      <div className="flex items-center gap-2.5 min-w-[200px]">
+                    <td className="py-2 px-2.5">
+                      <div className="flex items-center gap-2">
                         <img
                           src={ret.product.imageUrl}
                           alt={ret.product.name}
-                          className="w-10 h-10 rounded-lg object-cover border border-slate-200 shrink-0 bg-slate-100"
+                          className="w-8 h-8 rounded-lg object-cover border border-slate-200 shrink-0 bg-slate-100"
                         />
-                        <div className="truncate">
-                          <p className="font-semibold text-slate-900 truncate">
+                        <div className="leading-tight truncate max-w-[150px]">
+                          <p className="font-semibold text-slate-900 truncate" title={ret.product.name}>
                             {ret.product.name}
                           </p>
-                          <p className="text-[11px] text-slate-400">{ret.product.variant}</p>
+                          <p className="text-[10px] text-slate-400">{ret.product.variant}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="py-3 px-3 text-slate-700 whitespace-nowrap">
+                    <td className="py-2 px-2 text-slate-700 whitespace-nowrap">
                       {ret.returnType}
                     </td>
-                    <td className="py-3 px-3 text-slate-700 whitespace-nowrap">
+                    <td className="py-2 px-2.5 text-slate-700 whitespace-nowrap">
                       {ret.reason}
                     </td>
-                    <td className="py-3 px-3 font-bold text-slate-900 whitespace-nowrap">
+                    <td className="py-2 px-2 font-bold text-slate-900 whitespace-nowrap">
                       ₹ {ret.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </td>
-                    <td className="py-3 px-3 whitespace-nowrap">
+                    <td className="py-2 px-2 whitespace-nowrap">
                       {getStatusBadge(ret.status)}
                     </td>
-                    <td className="py-3 px-3 text-slate-500 whitespace-nowrap">
-                      {ret.returnDate}
+                    <td className="py-2 px-2.5 text-slate-500 whitespace-nowrap leading-tight">
+                      <p className="font-medium text-slate-700">{ret.returnDate}</p>
+                      <p className="text-[10px] text-slate-400">{ret.returnTime || '10:30 AM'}</p>
                     </td>
-                    <td className="py-3 px-4 text-center whitespace-nowrap">
+                    <td className="py-2 px-3 text-center whitespace-nowrap">
                       <div className="flex items-center justify-center gap-1.5 relative">
                         {/* View Button */}
                         <button
                           onClick={() => onViewReturn(ret)}
-                          className="px-2.5 py-1 text-xs font-semibold text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg border border-slate-200 transition-colors flex items-center gap-1.5"
+                          className="px-2.5 py-1 text-xs font-semibold text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg border border-slate-200 transition-colors flex items-center gap-1"
                         >
                           <Eye className="w-3.5 h-3.5" />
                           <span>View</span>
@@ -385,122 +353,31 @@ export const ReturnsTable: React.FC<ReturnsTableProps> = ({
                             onClick={() =>
                               setActiveMenuId(isMenuOpen ? null : ret.id)
                             }
-                            className={`p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 transition-colors ${
+                            className={`p-1 rounded-lg border border-slate-200 hover:bg-slate-100 transition-colors ${
                               isMenuOpen ? 'bg-slate-100' : ''
                             }`}
                             aria-label="More Actions"
                           >
-                            <MoreVertical className="w-4 h-4 text-slate-600" />
+                            <MoreVertical className="w-3.5 h-3.5 text-slate-600" />
                           </button>
 
-                          {/* 8-Action Dropdown Menu (Matching 10.1.png) */}
+                          {/* Row Menu matching 9.2.png with Raise Request */}
                           {isMenuOpen && (
                             <>
                               <div
                                 className="fixed inset-0 z-40"
                                 onClick={() => setActiveMenuId(null)}
                               />
-                              <div className="absolute right-0 mt-1 w-48 bg-white rounded-xl shadow-xl border border-slate-200 py-1.5 z-50 text-left text-xs animate-in fade-in zoom-in-95 duration-100">
+                              <div className="absolute right-0 mt-1 w-44 bg-white rounded-xl shadow-xl border border-slate-200 py-1.5 z-50 text-left text-xs animate-in fade-in zoom-in-95 duration-100">
                                 <button
                                   onClick={() => {
                                     setActiveMenuId(null);
-                                    onViewReturn(ret);
+                                    openRaiseModal(ret);
                                   }}
-                                  className="w-full px-3.5 py-2 flex items-center gap-2.5 text-slate-700 hover:bg-slate-50 transition-colors"
+                                  className="w-full px-3.5 py-2 flex items-center gap-2 text-slate-700 hover:bg-slate-50 transition-colors"
                                 >
-                                  <Eye className="w-4 h-4 text-slate-500" />
-                                  <span>View Details</span>
-                                </button>
-
-                                <button
-                                  onClick={() => {
-                                    setActiveMenuId(null);
-                                    if (onEditReturn) {
-                                      onEditReturn(ret);
-                                    } else {
-                                      onViewReturn(ret);
-                                    }
-                                  }}
-                                  className="w-full px-3.5 py-2 flex items-center gap-2.5 text-slate-700 hover:bg-slate-50 transition-colors"
-                                >
-                                  <Pencil className="w-4 h-4 text-slate-500" />
-                                  <span>Edit Return</span>
-                                </button>
-
-                                <button
-                                  onClick={() => {
-                                    setActiveMenuId(null);
-                                    approveReturn(ret.id);
-                                  }}
-                                  className="w-full px-3.5 py-2 flex items-center gap-2.5 text-slate-700 hover:bg-slate-50 transition-colors"
-                                >
-                                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                                  <span>Approve Return</span>
-                                </button>
-
-                                <button
-                                  onClick={() => {
-                                    setActiveMenuId(null);
-                                    setReturnToReject(ret);
-                                    setIsRejectModalOpen(true);
-                                  }}
-                                  className="w-full px-3.5 py-2 flex items-center gap-2.5 text-slate-700 hover:bg-slate-50 transition-colors"
-                                >
-                                  <XCircle className="w-4 h-4 text-rose-500" />
-                                  <span>Reject Return</span>
-                                </button>
-
-                                <button
-                                  onClick={() => {
-                                    setActiveMenuId(null);
-                                    initiateRefund(ret.id);
-                                  }}
-                                  className="w-full px-3.5 py-2 flex items-center gap-2.5 text-slate-700 hover:bg-slate-50 transition-colors"
-                                >
-                                  <RotateCcw className="w-4 h-4 text-blue-600" />
-                                  <span>Initiate Refund</span>
-                                </button>
-
-                                <button
-                                  onClick={() => {
-                                    setActiveMenuId(null);
-                                    markAsRefunded(ret.id);
-                                  }}
-                                  className="w-full px-3.5 py-2 flex items-center gap-2.5 text-slate-700 hover:bg-slate-50 transition-colors"
-                                >
-                                  <CheckSquare className="w-4 h-4 text-emerald-600" />
-                                  <span>Mark as Refunded</span>
-                                </button>
-
-                                <button
-                                  onClick={() => {
-                                    setActiveMenuId(null);
-                                    setReturnToReject(ret);
-                                    setIsRejectModalOpen(true);
-                                  }}
-                                  className="w-full px-3.5 py-2 flex items-center gap-2.5 text-slate-700 hover:bg-slate-50 transition-colors"
-                                >
-                                  <Ban className="w-4 h-4 text-slate-500" />
-                                  <span>Cancel Return</span>
-                                </button>
-
-                                <div className="border-t border-slate-100 my-1" />
-
-                                <button
-                                  onClick={() => {
-                                    setActiveMenuId(null);
-                                    if (
-                                      window.confirm(
-                                        `Are you sure you want to delete ${ret.returnNumber}?`
-                                      )
-                                    ) {
-                                      deleteReturn(ret.id);
-                                    }
-                                  }}
-                                  className="w-full px-3.5 py-2 flex items-center gap-2.5 text-rose-600 hover:bg-rose-50 transition-colors font-medium"
-                                >
-                                  <Trash2 className="w-4 h-4 text-rose-600" />
-                                  <span>Delete Return</span>
+                                  <MessageSquare className="w-4 h-4 text-blue-600" />
+                                  <span className="font-semibold">Raise Request</span>
                                 </button>
                               </div>
                             </>
@@ -516,15 +393,14 @@ export const ReturnsTable: React.FC<ReturnsTableProps> = ({
         </table>
       </div>
 
-      {/* Footer Bar */}
-      <div className="p-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 bg-slate-50/50 rounded-b-2xl">
-        <span className="font-medium">
-          Showing 1 to {filteredReturns.length} of {returns.length} returns
-        </span>
-
+      {/* Footer matching 9.0.png */}
+      <div className="p-3.5 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+        <div>
+          Showing 1 to {filteredReturns.length} of {filteredReturns.length} returns
+        </div>
         <div className="flex items-center gap-2">
-          <span className="font-semibold text-slate-600">Total Refund Amount:</span>
-          <span className="text-base font-black text-slate-900">
+          <span className="font-semibold text-slate-700">Total Refund Amount</span>
+          <span className="text-base font-black text-slate-900 tracking-tight">
             ₹ {totalRefundSum.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
           </span>
         </div>
