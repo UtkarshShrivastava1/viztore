@@ -77,14 +77,9 @@ const storeSubItems = [
 ] as const;
 
 const marketingSubItems = [
-  { id: 'campaigns' as const, label: 'Campaigns' },
-  { id: 'discounts' as const, label: 'Discounts & Offers' },
-  { id: 'coupons' as const, label: 'Coupons' },
-  { id: 'push' as const, label: 'Push Notifications' },
-  { id: 'email_sms' as const, label: 'Email & SMS' },
-  { id: 'loyalty' as const, label: 'Loyalty Program' },
-  { id: 'social' as const, label: 'Social Media' },
-  { id: 'analytics' as const, label: 'Analytics' },
+  { id: 'overview' as const, label: 'Overview' },
+  { id: 'advertisements' as const, label: 'Advertisements' },
+  { id: 'discounts_coupons' as const, label: 'Discounts & Coupons' },
 ] as const;
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -118,7 +113,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'billing', label: 'Billing & Invoicing', icon: Receipt, badge: 'New', badgeColor: 'green' },
     { id: 'customers', label: 'Customers', icon: Users },
     { id: 'wallet', label: 'Wallet', icon: Wallet, badge: '₹32,450', badgeColor: 'blue' },
-    { id: 'expenses', label: 'Expenses', icon: ReceiptText },
+    { id: 'expenses', label: 'Purchase / Expense', icon: ReceiptText },
     { id: 'assets', label: 'Asset Management', icon: HardDrive },
     {
       id: 'returns',
@@ -198,7 +193,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     setActiveView('list');
                   }
                   if (isStore && currentTab !== 'store') {
-                    setActiveStoreSubTab('sections');
+                    setActiveStoreSubTab('overview');
                   }
                   if (isMarketing && currentTab !== 'marketing') {
                     setActiveMarketingSubTab('overview');

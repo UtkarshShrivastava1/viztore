@@ -145,7 +145,7 @@ export const App: React.FC = () => {
         />
 
         <main
-          className={`flex-1 p-3 sm:p-4 transition-all duration-300 ${
+          className={`flex-1 p-3.5 sm:px-6 sm:py-4 transition-[margin] duration-300 ${
             isSidebarCollapsed ? 'sm:ml-20' : 'sm:ml-64'
           }`}
         >
@@ -211,6 +211,7 @@ export const App: React.FC = () => {
                 setCurrentTab('billing');
                 useBillingStore.getState().setActiveView('settings');
               }}
+              onNavigateToSupport={() => setCurrentTab('support')}
             />
           )}
 

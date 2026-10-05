@@ -1,111 +1,102 @@
-import React, { useState } from 'react';
-import { Plus, RotateCcw, Landmark, Home, ChevronRight } from 'lucide-react';
-import { useWalletStore, WalletTransaction } from '../stores/walletStore.js';
+import React from 'react';
+import { Plus, History, Home, ChevronRight } from 'lucide-react';
+import { useWalletStore } from '../stores/walletStore.js';
 import { WalletKPIBar } from '../components/wallet/WalletKPIBar.js';
 import { WalletTransactionTable } from '../components/wallet/WalletTransactionTable.js';
 import { WalletSecurityBanner } from '../components/wallet/WalletSecurityBanner.js';
-import { AddMoneyModal } from '../components/wallet/AddMoneyModal.js';
-import { RequestWithdrawalModal } from '../components/wallet/RequestWithdrawalModal.js';
-import { TransactionDetailModal } from '../components/wallet/TransactionDetailModal.js';
+import { AddMoneyDrawer } from '../components/wallet/AddMoneyDrawer.js';
+import { TransactionDetailDrawer } from '../components/wallet/TransactionDetailDrawer.js';
+import { TransactionHistoryDrawer } from '../components/wallet/TransactionHistoryDrawer.js';
 
 interface WalletPageProps {
   onNavigateHome?: () => void;
+  onNavigateSupport?: () => void;
 }
 
-export const WalletPage: React.FC<WalletPageProps> = ({ onNavigateHome }) => {
+export const WalletPage: React.FC<WalletPageProps> = ({
+  onNavigateHome,
+  onNavigateSupport,
+}) => {
   const {
-    isAddMoneyModalOpen,
-    setIsAddMoneyModalOpen,
-    isWithdrawModalOpen,
-    setIsWithdrawModalOpen,
+    isAddMoneyDrawerOpen,
+    setIsAddMoneyDrawerOpen,
+    isHistoryDrawerOpen,
+    setIsHistoryDrawerOpen,
     selectedTransaction,
     setSelectedTransaction,
-    setActiveTab,
   } = useWalletStore();
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-      {/* Breadcrumb matching mockup 7.0.png */}
-      <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
-        <button
-          type="button"
-          onClick={onNavigateHome}
-          className="hover:text-blue-600 flex items-center gap-1"
-        >
-          <Home className="w-3.5 h-3.5" />
-          <span>Home</span>
-        </button>
-        <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-        <span className="text-slate-800">Wallet</span>
-      </div>
-
-      {/* Page Header matching mockup 7.0.png */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="w-full max-w-[1600px] mx-auto space-y-3.5">
+      {/* Breadcrumb + Header compact block */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Wallet</h1>
-          <p className="text-xs text-slate-500 mt-1">
+          <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 mb-0.5">
+            <button
+              type="button"
+              onClick={onNavigateHome}
+              className="hover:text-blue-600 flex items-center gap-1 transition-colors"
+            >
+              <Home className="w-3 h-3" />
+              <span>Home</span>
+            </button>
+            <ChevronRight className="w-3 h-3 text-slate-400" />
+            <span className="text-slate-800">Wallet</span>
+          </div>
+          <h1 className="text-xl font-black text-slate-900 tracking-tight">Wallet</h1>
+          <p className="text-[11px] text-slate-500">
             Manage your wallet balance, transactions and add funds.
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        {/* Header Action Buttons matching 7.0.png */}
+        <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => setIsWithdrawModalOpen(true)}
-            className="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors shadow-2xs"
+            onClick={() => setIsAddMoneyDrawerOpen(true)}
+            className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors shadow-2xs"
           >
-            <Landmark className="w-3.5 h-3.5 text-slate-500" />
-            <span>Withdraw Now</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('all')}
-            className="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors shadow-2xs"
-          >
-            <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
-            <span>Transaction History</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setIsAddMoneyModalOpen(true)}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors shadow-2xs"
-          >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3.5 h-3.5" />
             <span>Add Money</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsHistoryDrawerOpen(true)}
+            className="px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors shadow-2xs"
+          >
+            <History className="w-3.5 h-3.5 text-slate-500" />
+            <span>Transaction History</span>
           </button>
         </div>
       </div>
 
-      {/* 5 KPI Metric Cards matching 7.0.png */}
+      {/* 2 KPI Metrics Cards matching 7.0.png */}
       <WalletKPIBar />
 
-      {/* Transactions Table matching 7.0.png */}
+      {/* Transaction Ledger Table matching 7.0.png */}
       <WalletTransactionTable
         onViewTransaction={(txn) => setSelectedTransaction(txn)}
       />
 
-      {/* Bottom Security Banner matching 7.0.png */}
-      <WalletSecurityBanner />
+      {/* Security Banner matching 7.0.png */}
+      <WalletSecurityBanner onLearnMore={onNavigateSupport} />
 
-      {/* Add Money Modal */}
-      <AddMoneyModal
-        isOpen={isAddMoneyModalOpen}
-        onClose={() => setIsAddMoneyModalOpen(false)}
+      {/* Slide-Over Drawers (Mounted to document.body via Portal) */}
+      <AddMoneyDrawer
+        isOpen={isAddMoneyDrawerOpen}
+        onClose={() => setIsAddMoneyDrawerOpen(false)}
       />
-
-      {/* Request Settlement Modal */}
-      <RequestWithdrawalModal
-        isOpen={isWithdrawModalOpen}
-        onClose={() => setIsWithdrawModalOpen(false)}
+      <TransactionHistoryDrawer
+        isOpen={isHistoryDrawerOpen}
+        onClose={() => setIsHistoryDrawerOpen(false)}
+        onSelectTransaction={(txn) => setSelectedTransaction(txn)}
       />
-
-      {/* Transaction Detail Receipt Modal */}
-      <TransactionDetailModal
+      <TransactionDetailDrawer
         transaction={selectedTransaction}
         isOpen={!!selectedTransaction}
         onClose={() => setSelectedTransaction(null)}
+        onContactSupport={onNavigateSupport}
       />
     </div>
   );

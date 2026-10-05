@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Download,
   Calendar,
@@ -8,11 +8,11 @@ import {
   ShoppingBag,
   Store,
   Receipt,
-  Flame,
   CreditCard,
-  Boxes,
+  Landmark,
   ArrowLeftRight,
-  SendHorizontal,
+  ChevronDown,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { useAnalyticsStore, AnalyticsReportTab } from '../stores/analyticsStore.js';
 import { AnalyticsOverviewTab } from '../components/analytics/AnalyticsOverviewTab.js';
@@ -21,11 +21,9 @@ import { ProductWiseReportTab } from '../components/analytics/ProductWiseReportT
 import { TotalOrdersReportTab } from '../components/analytics/TotalOrdersReportTab.js';
 import { OfflineBillingReportTab } from '../components/analytics/OfflineBillingReportTab.js';
 import { GSTReportTab } from '../components/analytics/GSTReportTab.js';
-import { HighSellingReportTab } from '../components/analytics/HighSellingReportTab.js';
-import { PayoutOverviewTab } from '../components/payouts/PayoutOverviewTab.js';
-import { SettlementsTab } from '../components/payouts/SettlementsTab.js';
-import { TransactionsTab } from '../components/payouts/TransactionsTab.js';
-import { PayoutRequestsTab } from '../components/payouts/PayoutRequestsTab.js';
+import { PayoutsReportTab } from '../components/analytics/PayoutsReportTab.js';
+import { SettlementsReportTab } from '../components/analytics/SettlementsReportTab.js';
+import { TransactionsReportTab } from '../components/analytics/TransactionsReportTab.js';
 
 interface AnalyticsPageProps {
   onNavigateHome?: () => void;
@@ -33,10 +31,7 @@ interface AnalyticsPageProps {
 
 export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onNavigateHome }) => {
   const { activeTab, setActiveTab, dateRange } = useAnalyticsStore();
-
-  const handleDownloadReport = () => {
-    alert(`Downloading ${activeTab.replace(/_/g, ' ')} report PDF...`);
-  };
+  const [isDownloadOpen, setIsDownloadOpen] = useState(false);
 
   const tabs: { id: AnalyticsReportTab; label: string; icon: React.ElementType }[] = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
@@ -45,18 +40,21 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onNavigateHome }) 
     { id: 'total_orders', label: 'Total Orders', icon: ShoppingBag },
     { id: 'offline_billing', label: 'Offline Billing', icon: Store },
     { id: 'gst_report', label: 'GST Report', icon: Receipt },
-    { id: 'high_selling', label: 'High Selling Products', icon: Flame },
     { id: 'payouts', label: 'Payouts', icon: CreditCard },
-    { id: 'settlements', label: 'Settlements', icon: Boxes },
+    { id: 'settlements', label: 'Settlements', icon: Landmark },
     { id: 'transactions', label: 'Transactions', icon: ArrowLeftRight },
-    { id: 'payout_requests', label: 'Payout Requests', icon: SendHorizontal },
   ];
 
+  const handleDownload = (reportName: string) => {
+    setIsDownloadOpen(false);
+    alert(`Downloading ${reportName} (PDF/Excel)...`);
+  };
+
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-3.5 max-w-7xl mx-auto">
       {/* Header Section */}
       <div>
-        <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-2 font-medium">
+        <div className="flex items-center gap-1.5 text-xs text-slate-400 mb-1.5 font-medium">
           <span
             className="hover:text-slate-600 cursor-pointer"
             onClick={onNavigateHome}
@@ -76,107 +74,106 @@ export const AnalyticsPage: React.FC<AnalyticsPageProps> = ({ onNavigateHome }) 
             <>
               <span>&gt;</span>
               <span className="text-slate-800 font-semibold capitalize">
-                {activeTab.replace(/_/g, ' ')}
+                {tabs.find((t) => t.id === activeTab)?.label}
               </span>
             </>
           )}
         </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight">
-              {activeTab === 'profit_loss'
-                ? 'Profit & Loss'
-                : activeTab === 'product_wise'
-                ? 'Product Wise Report'
-                : activeTab === 'total_orders'
-                ? 'Total Orders Report'
-                : activeTab === 'offline_billing'
-                ? 'Offline Billing Report'
-                : activeTab === 'gst_report'
-                ? 'GST Report'
-                : activeTab === 'high_selling'
-                ? 'High Selling Products'
-                : activeTab === 'payouts'
-                ? 'Payouts'
-                : activeTab === 'settlements'
-                ? 'Settlements'
-                : activeTab === 'transactions'
-                ? 'Transactions'
-                : activeTab === 'payout_requests'
-                ? 'Payout Requests'
-                : 'Reports & Analytics'}
+            <h1 className="text-xl font-black text-slate-900 tracking-tight">
+              Reports & Analytics
             </h1>
-            <p className="text-xs text-slate-500 mt-1">
-              {activeTab === 'profit_loss'
-                ? "View your store's financial performance summary."
-                : activeTab === 'product_wise'
-                ? 'Detailed performance of each product sold in your store.'
-                : activeTab === 'total_orders'
-                ? 'Detailed analysis of all orders received in your store.'
-                : activeTab === 'offline_billing'
-                ? 'Detailed analysis of all offline (walk-in) billings in your store.'
-                : activeTab === 'gst_report'
-                ? 'Detailed GST summary of all sales, tax collected, and returns.'
-                : activeTab === 'high_selling'
-                ? 'View products with the highest sales in the selected period.'
-                : 'Track and analyze your business performance with detailed reports and insights.'}
+            <p className="text-xs text-slate-500 mt-0.5">
+              Track and analyze your business performance with detailed reports and insights.
             </p>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
             {/* Date Range Picker */}
-            <div className="flex items-center gap-2 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 shadow-2xs">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 shadow-2xs">
               <Calendar className="w-3.5 h-3.5 text-slate-400" />
               <span>{dateRange}</span>
+              <ChevronDown className="w-3 h-3 text-slate-400 ml-0.5" />
             </div>
 
-            {/* Download Report */}
-            <button
-              onClick={handleDownloadReport}
-              className="px-4 py-2 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-colors shadow-2xs flex items-center gap-1.5"
-            >
-              <Download className="w-4 h-4 text-slate-500" />
-              <span>Download Report</span>
-            </button>
+            {/* Download Report Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setIsDownloadOpen(!isDownloadOpen)}
+                className="px-3 py-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-colors shadow-2xs flex items-center gap-1.5"
+              >
+                <Download className="w-3.5 h-3.5 text-slate-500" />
+                <span>Download Report</span>
+                <ChevronDown className="w-3 h-3 text-slate-400" />
+              </button>
+
+              {isDownloadOpen && (
+                <div className="absolute right-0 top-full mt-1.5 w-60 bg-white border border-slate-200 rounded-xl shadow-lg z-50 p-1.5 space-y-1 animate-in fade-in zoom-in-95 duration-100">
+                  {[
+                    { label: 'Profit & Loss Report', sub: 'Download (PDF, Excel)' },
+                    { label: 'Product Wise Report', sub: 'Download (PDF, Excel)' },
+                    { label: 'Total Orders Report', sub: 'Download (PDF, Excel)' },
+                    { label: 'Offline Billing Report', sub: 'Download (PDF, Excel)' },
+                    { label: 'GST Report', sub: 'Download (PDF, Excel)' },
+                  ].map((r, i) => (
+                    <button
+                      key={i}
+                      onClick={() => handleDownload(r.label)}
+                      className="w-full text-left p-2 rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-2.5"
+                    >
+                      <div className="p-1.5 rounded-md bg-blue-50 text-blue-600">
+                        <FileSpreadsheet className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <span className="text-xs font-bold text-slate-900 block leading-tight">{r.label}</span>
+                        <span className="text-[10px] text-slate-400">{r.sub}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Tabs Navigation Matching Mockup 12.0.png */}
-      <div className="border-b border-slate-200 flex items-center gap-4 sm:gap-6 overflow-x-auto text-xs font-semibold">
+      {/* 9 Tabs Navigation Bar Matching 11.0.png */}
+      <div className="border-b border-slate-200 flex items-center gap-2 sm:gap-4 overflow-x-auto text-xs font-semibold no-scrollbar">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
           const Icon = tab.icon;
+
           return (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`py-3.5 border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
+              className={`flex items-center gap-2 py-2.5 px-3 border-b-2 whitespace-nowrap transition-colors ${
                 isActive
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-slate-500 hover:text-slate-800'
+                  ? 'border-blue-600 text-blue-600 font-bold'
+                  : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
               }`}
             >
-              <Icon className="w-4 h-4" />
+              <Icon className="w-4 h-4 shrink-0" />
               <span>{tab.label}</span>
             </button>
           );
         })}
       </div>
 
-      {/* Report Content */}
-      {activeTab === 'overview' && <AnalyticsOverviewTab />}
-      {activeTab === 'profit_loss' && <ProfitLossReportTab />}
-      {activeTab === 'product_wise' && <ProductWiseReportTab />}
-      {activeTab === 'total_orders' && <TotalOrdersReportTab />}
-      {activeTab === 'offline_billing' && <OfflineBillingReportTab />}
-      {activeTab === 'gst_report' && <GSTReportTab />}
-      {activeTab === 'high_selling' && <HighSellingReportTab />}
-      {activeTab === 'payouts' && <PayoutOverviewTab />}
-      {activeTab === 'settlements' && <SettlementsTab />}
-      {activeTab === 'transactions' && <TransactionsTab />}
-      {activeTab === 'payout_requests' && <PayoutRequestsTab />}
+      {/* Tab Views */}
+      <div>
+        {activeTab === 'overview' && <AnalyticsOverviewTab />}
+        {activeTab === 'profit_loss' && <ProfitLossReportTab />}
+        {activeTab === 'product_wise' && <ProductWiseReportTab />}
+        {activeTab === 'total_orders' && <TotalOrdersReportTab />}
+        {activeTab === 'offline_billing' && <OfflineBillingReportTab />}
+        {activeTab === 'gst_report' && <GSTReportTab />}
+        {activeTab === 'payouts' && <PayoutsReportTab />}
+        {activeTab === 'settlements' && <SettlementsReportTab />}
+        {activeTab === 'transactions' && <TransactionsReportTab />}
+      </div>
     </div>
   );
 };

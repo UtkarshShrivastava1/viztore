@@ -6,188 +6,377 @@ import {
   RotateCcw,
   Eye,
   MoreVertical,
-  Building,
-  CreditCard,
-  Banknote,
   ArrowUpDown,
+  Download,
+  Upload,
+  Copy,
+  CheckCircle,
   FileText,
-  CheckCircle2,
+  Truck,
+  Trash2,
+  Edit2,
+  ChevronLeft,
+  ChevronRight,
+  FileSpreadsheet,
 } from 'lucide-react';
-import { useExpenseStore, Expense } from '../../stores/expenseStore.js';
+import {
+  useExpenseStore,
+  PurchaseSubTab,
+  PurchaseTransaction,
+  PurchaseBill,
+} from '../../stores/expenseStore.js';
 
 interface ExpensesTableProps {
-  onViewExpense: (expense: Expense) => void;
+  onViewDetails: (item: any) => void;
+  onEditItem: (item: any) => void;
+  onCreateCreditNote: (item: any) => void;
+  onGenerateEWayBill: (item: any) => void;
 }
 
-export const ExpensesTable: React.FC<ExpensesTableProps> = ({ onViewExpense }) => {
+export const ExpensesTable: React.FC<ExpensesTableProps> = ({
+  onViewDetails,
+  onEditItem,
+  onCreateCreditNote,
+  onGenerateEWayBill,
+}) => {
   const {
+    activeSubTab,
+    setActiveSubTab,
+    allTransactions,
+    purchaseOrders,
+    purchaseBills,
     expenses,
-    activeTab,
-    setActiveTab,
+    creditNotes,
+    ewayBills,
+    vendors,
     searchQuery,
     setSearchQuery,
     dateRange,
     setDateRange,
+    typeFilter,
+    setTypeFilter,
     categoryFilter,
     setCategoryFilter,
-    methodFilter,
-    setMethodFilter,
     statusFilter,
     setStatusFilter,
+    vendorFilter,
+    setVendorFilter,
     clearFilters,
-    updateExpenseStatus,
   } = useExpenseStore();
 
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState('10');
+  const [isDownloadOpen, setIsDownloadOpen] = useState(false);
 
-  const filteredExpenses = expenses.filter((e) => {
-    // Tab filter
-    if (activeTab === 'business' && e.expenseType !== 'Business Expense') return false;
-    if (activeTab === 'personal' && e.expenseType !== 'Personal Expense') return false;
-    if (activeTab === 'reimbursable' && !e.isReimbursable) return false;
-    if (activeTab === 'non_reimbursable' && e.isReimbursable) return false;
+  // Tabs list matching mockup 8.0.png
+  const tabs: { id: PurchaseSubTab; label: string }[] = [
+    { id: 'all', label: 'All Transactions' },
+    { id: 'orders', label: 'Purchase Orders' },
+    { id: 'bills', label: 'Purchases (Bills)' },
+    { id: 'expenses', label: 'Expenses' },
+    { id: 'credit_notes', label: 'Credit Notes' },
+    { id: 'eway_bills', label: 'E-Way Bills' },
+    { id: 'vendors', label: 'Vendors' },
+  ];
 
-    // Search query
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      const match =
-        e.id.toLowerCase().includes(q) ||
-        e.name.toLowerCase().includes(q) ||
-        e.category.toLowerCase().includes(q) ||
-        e.vendor.toLowerCase().includes(q) ||
-        (e.notes && e.notes.toLowerCase().includes(q)) ||
-        (e.referenceNumber && e.referenceNumber.toLowerCase().includes(q));
-      if (!match) return false;
-    }
-
-    // Category filter
-    if (categoryFilter !== 'All Categories' && e.category !== categoryFilter) {
-      return false;
-    }
-
-    // Payment Method filter
-    if (methodFilter !== 'All Methods' && e.paymentMethod !== methodFilter) {
-      return false;
-    }
-
-    // Status filter
-    if (statusFilter !== 'All Statuses' && e.status !== statusFilter) {
-      return false;
-    }
-
-    return true;
-  });
-
-  const handleSelectAll = (checked: boolean) => {
+  const handleSelectAll = (checked: boolean, count: number, ids: string[]) => {
     if (checked) {
-      setSelectedIds(filteredExpenses.map((e) => e.id));
+      setSelectedIds(ids);
     } else {
       setSelectedIds([]);
     }
   };
 
-  const handleToggleSelect = (id: string) => {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
-    );
-  };
-
-  const renderPaymentIcon = (method: string) => {
-    switch (method) {
-      case 'Bank Transfer':
-        return <Building className="w-3.5 h-3.5 text-blue-600" />;
-      case 'UPI':
-        return (
-          <div className="w-4 h-4 rounded bg-amber-500 text-white flex items-center justify-center text-[7px] font-black leading-none">
-            UPI
-          </div>
-        );
-      case 'Card':
-        return <CreditCard className="w-3.5 h-3.5 text-purple-600" />;
-      case 'Cash':
-        return <Banknote className="w-3.5 h-3.5 text-emerald-600" />;
-      default:
-        return <FileText className="w-3.5 h-3.5 text-slate-500" />;
+  const handleSelectOne = (id: string, checked: boolean) => {
+    if (checked) {
+      setSelectedIds((prev) => [...prev, id]);
+    } else {
+      setSelectedIds((prev) => prev.filter((item) => item !== id));
     }
   };
 
-  const thisMonthTotal = filteredExpenses.reduce((sum, e) => sum + e.amount, 0);
+  // Render floating action menu matching mockup 8.1.png
+  const renderRowMenu = (rowItem: any) => (
+    <div
+      className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl border border-slate-100 shadow-xl py-1 z-30 animate-in fade-in zoom-in-95 duration-100 text-left"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <button
+        type="button"
+        onClick={() => {
+          setActiveMenuId(null);
+          onViewDetails(rowItem);
+        }}
+        className="w-full px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+      >
+        <Eye className="w-3.5 h-3.5 text-slate-400" />
+        <span>View Details</span>
+      </button>
+
+      <button
+        type="button"
+        onClick={() => {
+          setActiveMenuId(null);
+          onEditItem(rowItem);
+        }}
+        className="w-full px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+      >
+        <Edit2 className="w-3.5 h-3.5 text-slate-400" />
+        <span>Edit</span>
+      </button>
+
+      <button
+        type="button"
+        onClick={() => {
+          setActiveMenuId(null);
+          alert('Entry duplicated successfully.');
+        }}
+        className="w-full px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+      >
+        <Copy className="w-3.5 h-3.5 text-slate-400" />
+        <span>Duplicate</span>
+      </button>
+
+      <button
+        type="button"
+        onClick={() => {
+          setActiveMenuId(null);
+          alert('Marked as Paid.');
+        }}
+        className="w-full px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+      >
+        <CheckCircle className="w-3.5 h-3.5 text-slate-400" />
+        <span>Mark as Paid</span>
+      </button>
+
+      <button
+        type="button"
+        onClick={() => {
+          setActiveMenuId(null);
+          alert('Downloading invoice PDF...');
+        }}
+        className="w-full px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+      >
+        <Download className="w-3.5 h-3.5 text-slate-400" />
+        <span>Download Invoice</span>
+      </button>
+
+      <button
+        type="button"
+        onClick={() => {
+          setActiveMenuId(null);
+          onGenerateEWayBill(rowItem);
+        }}
+        className="w-full px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+      >
+        <Truck className="w-3.5 h-3.5 text-slate-400" />
+        <span>Generate E-Way Bill</span>
+      </button>
+
+      <button
+        type="button"
+        onClick={() => {
+          setActiveMenuId(null);
+          onCreateCreditNote(rowItem);
+        }}
+        className="w-full px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+      >
+        <FileText className="w-3.5 h-3.5 text-slate-400" />
+        <span>Create Credit Note</span>
+      </button>
+
+      <div className="border-t border-slate-100 my-1" />
+
+      <button
+        type="button"
+        onClick={() => {
+          setActiveMenuId(null);
+          if (confirm('Are you sure you want to delete this record?')) {
+            alert('Record deleted.');
+          }
+        }}
+        className="w-full px-3 py-1.5 text-xs text-rose-600 hover:bg-rose-50 flex items-center gap-2"
+      >
+        <Trash2 className="w-3.5 h-3.5" />
+        <span>Delete</span>
+      </button>
+    </div>
+  );
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">
-      {/* 1. Filter Toolbar matching 8.0.png */}
-      <div className="p-4 border-b border-slate-100 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-end">
+      {/* 1. Sub-Tab Strip matching mockup 8.0.png */}
+      <div className="px-5 pt-3 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-5 overflow-x-auto">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => {
+                setActiveSubTab(tab.id);
+                setSelectedIds([]);
+              }}
+              className={`pb-3 text-xs font-bold transition-all relative whitespace-nowrap ${
+                activeSubTab === tab.id
+                  ? 'text-blue-600 border-b-2 border-blue-600'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Tab Right Action (Download Report / Import PO) */}
+        <div className="relative pb-2 sm:pb-0">
+          {activeSubTab === 'orders' ? (
+            <button
+              type="button"
+              onClick={() => alert('Import purchase orders via CSV/Excel...')}
+              className="px-3.5 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors shadow-2xs"
+            >
+              <Upload className="w-3.5 h-3.5 text-slate-500" />
+              <span>Import Purchase Orders</span>
+            </button>
+          ) : (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsDownloadOpen(!isDownloadOpen)}
+                className="px-3.5 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors shadow-2xs"
+              >
+                <Download className="w-3.5 h-3.5 text-slate-500" />
+                <span>Download Report</span>
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+              </button>
+
+              {isDownloadOpen && (
+                <div className="absolute right-0 mt-1.5 w-44 bg-white rounded-xl shadow-lg border border-slate-100 py-1.5 z-20 animate-in fade-in zoom-in-95 duration-100">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsDownloadOpen(false);
+                      alert('Generating PDF Report...');
+                    }}
+                    className="w-full px-3 py-2 text-left text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                  >
+                    <FileText className="w-4 h-4 text-rose-500" />
+                    <span>PDF Report</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsDownloadOpen(false);
+                      alert('Exporting to Excel (CSV)...');
+                    }}
+                    className="w-full px-3 py-2 text-left text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                  >
+                    <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+                    <span>Excel / CSV</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 2. Filters Bar matching mockup 8.0.png */}
+      <div className="p-3.5 border-b border-slate-100 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2.5 items-end">
         {/* Search Input */}
         <div className="lg:col-span-4 relative">
           <input
             type="text"
-            placeholder="Search by expense name, category, vendor, or notes..."
+            placeholder={
+              activeSubTab === 'orders'
+                ? 'Search by PO no., vendor, item or notes...'
+                : activeSubTab === 'bills'
+                ? 'Search by bill no., vendor, item or notes...'
+                : activeSubTab === 'expenses'
+                ? 'Search by expense no., category, vendor or notes...'
+                : activeSubTab === 'credit_notes'
+                ? 'Search by credit note no., vendor, reference or notes...'
+                : activeSubTab === 'eway_bills'
+                ? 'Search by e-way bill no., invoice no., vendor or notes...'
+                : activeSubTab === 'vendors'
+                ? 'Search by vendor name, code, GSTIN, phone or email...'
+                : 'Search by invoice no., vendor, item, category or notes...'
+            }
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-3.5 pr-9 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all shadow-2xs"
+            className="w-full pl-3 pr-8 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all shadow-2xs"
           />
-          <Search className="w-4 h-4 text-blue-600 absolute right-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-3.5 h-3.5 text-blue-600 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
         </div>
 
         {/* Date Range */}
+        {activeSubTab !== 'vendors' && (
+          <div className="lg:col-span-2">
+            <label className="block text-[10px] font-semibold text-slate-500 mb-1">Date Range</label>
+            <div className="relative">
+              <input
+                type="text"
+                value={dateRange}
+                onChange={(e) => setDateRange(e.target.value)}
+                className="w-full pl-6 pr-6 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-2xs cursor-pointer truncate"
+              />
+              <Calendar className="w-3 h-3 text-slate-400 absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <ChevronDown className="w-3 h-3 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
+          </div>
+        )}
+
+        {/* Type / Vendor Dropdown */}
         <div className="lg:col-span-2">
-          <label className="block text-[10px] font-semibold text-slate-500 mb-1">Date Range</label>
+          <label className="block text-[10px] font-semibold text-slate-500 mb-1">
+            {activeSubTab === 'all'
+              ? 'Type'
+              : activeSubTab === 'vendors'
+              ? 'City'
+              : 'Vendor'}
+          </label>
           <div className="relative">
             <select
-              value={dateRange}
-              onChange={(e) => setDateRange(e.target.value)}
-              className="w-full pl-3 pr-8 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none shadow-2xs cursor-pointer"
+              value={activeSubTab === 'all' ? typeFilter : vendorFilter}
+              onChange={(e) =>
+                activeSubTab === 'all'
+                  ? setTypeFilter(e.target.value)
+                  : setVendorFilter(e.target.value)
+              }
+              className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none shadow-2xs cursor-pointer"
             >
-              <option value="This Month">This Month</option>
-              <option value="Last Month">Last Month</option>
-              <option value="This Quarter">This Quarter</option>
-              <option value="This Year">This Year</option>
+              <option value="All Types">
+                {activeSubTab === 'all' ? 'All Types' : 'All Vendors'}
+              </option>
+              <option value="Purchase">Purchase</option>
+              <option value="Expense">Expense</option>
+              <option value="Purchase Order">Purchase Order</option>
+              <option value="Credit Note">Credit Note</option>
             </select>
-            <Calendar className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <ChevronDown className="w-3 h-3 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
         </div>
 
-        {/* Category */}
+        {/* Category / Status Dropdown */}
         <div className="lg:col-span-2">
-          <label className="block text-[10px] font-semibold text-slate-500 mb-1">Category</label>
+          <label className="block text-[10px] font-semibold text-slate-500 mb-1">
+            {activeSubTab === 'vendors' ? 'Category' : 'Category'}
+          </label>
           <div className="relative">
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none shadow-2xs cursor-pointer"
+              className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none shadow-2xs cursor-pointer"
             >
               <option value="All Categories">All Categories</option>
+              <option value="Inventory (Apparel)">Inventory (Apparel)</option>
+              <option value="Inventory (Footwear)">Inventory (Footwear)</option>
               <option value="Rent">Rent</option>
-              <option value="Utilities">Utilities</option>
-              <option value="Office Supplies">Office Supplies</option>
-              <option value="Meals & Entertainment">Meals & Entertainment</option>
               <option value="Marketing">Marketing</option>
-              <option value="Software">Software</option>
-              <option value="Travel">Travel</option>
             </select>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-          </div>
-        </div>
-
-        {/* Payment Method */}
-        <div className="lg:col-span-2">
-          <label className="block text-[10px] font-semibold text-slate-500 mb-1">
-            Payment Method
-          </label>
-          <div className="relative">
-            <select
-              value={methodFilter}
-              onChange={(e) => setMethodFilter(e.target.value)}
-              className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none shadow-2xs cursor-pointer"
-            >
-              <option value="All Methods">All Methods</option>
-              <option value="Bank Transfer">Bank Transfer</option>
-              <option value="UPI">UPI</option>
-              <option value="Cash">Cash</option>
-              <option value="Card">Card</option>
-            </select>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <ChevronDown className="w-3 h-3 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
         </div>
 
@@ -199,278 +388,992 @@ export const ExpensesTable: React.FC<ExpensesTableProps> = ({ onViewExpense }) =
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none shadow-2xs cursor-pointer"
+                className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none shadow-2xs cursor-pointer"
               >
                 <option value="All Statuses">All Statuses</option>
                 <option value="Paid">Paid</option>
-                <option value="Needs Review">Needs Review</option>
+                <option value="Open">Open</option>
                 <option value="Pending">Pending</option>
+                <option value="Partially Received">Partially Received</option>
+                <option value="Active">Active</option>
               </select>
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <ChevronDown className="w-3 h-3 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
           </div>
 
           <button
             type="button"
             onClick={clearFilters}
-            className="px-2.5 py-1.5 mt-5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 text-xs font-semibold flex items-center gap-1 transition-colors shrink-0 shadow-2xs"
+            className="px-2.5 py-1.5 mt-4 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 text-[11px] font-semibold flex items-center gap-1 transition-colors shrink-0 shadow-2xs"
             title="Clear filters"
           >
-            <RotateCcw className="w-3.5 h-3.5" />
+            <RotateCcw className="w-3 h-3" />
             <span className="hidden sm:inline">Clear</span>
           </button>
         </div>
       </div>
 
-      {/* 2. Status Tabs matching 8.0.png */}
-      <div className="px-6 pt-3 border-b border-slate-100 flex items-center gap-6 overflow-x-auto">
-        <button
-          type="button"
-          onClick={() => setActiveTab('all')}
-          className={`pb-3 text-xs font-bold transition-all whitespace-nowrap relative ${
-            activeTab === 'all'
-              ? 'text-blue-600 border-b-2 border-blue-600'
-              : 'text-slate-500 hover:text-slate-800'
-          }`}
-        >
-          All Expenses
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('business')}
-          className={`pb-3 text-xs font-bold transition-all whitespace-nowrap relative ${
-            activeTab === 'business'
-              ? 'text-blue-600 border-b-2 border-blue-600'
-              : 'text-slate-500 hover:text-slate-800'
-          }`}
-        >
-          Business Expenses
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('personal')}
-          className={`pb-3 text-xs font-bold transition-all whitespace-nowrap relative ${
-            activeTab === 'personal'
-              ? 'text-blue-600 border-b-2 border-blue-600'
-              : 'text-slate-500 hover:text-slate-800'
-          }`}
-        >
-          Personal Expenses
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('reimbursable')}
-          className={`pb-3 text-xs font-bold transition-all whitespace-nowrap relative ${
-            activeTab === 'reimbursable'
-              ? 'text-blue-600 border-b-2 border-blue-600'
-              : 'text-slate-500 hover:text-slate-800'
-          }`}
-        >
-          Reimbursable
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab('non_reimbursable')}
-          className={`pb-3 text-xs font-bold transition-all whitespace-nowrap relative ${
-            activeTab === 'non_reimbursable'
-              ? 'text-blue-600 border-b-2 border-blue-600'
-              : 'text-slate-500 hover:text-slate-800'
-          }`}
-        >
-          Non-Reimbursable
-        </button>
-      </div>
-
-      {/* 3. Expenses Data Table matching 8.0.png */}
+      {/* 3. Compact High-Density Data Table (Fits 100% width cleanly without horizontal scroll) */}
       <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="border-b border-slate-100 bg-slate-50/75 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-              <th className="py-3 px-4 w-10">
-                <input
-                  type="checkbox"
-                  checked={
-                    filteredExpenses.length > 0 &&
-                    selectedIds.length === filteredExpenses.length
-                  }
-                  onChange={(e) => handleSelectAll(e.target.checked)}
-                  className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
-                />
-              </th>
-              <th className="py-3 px-4">
-                <span className="inline-flex items-center gap-1">
-                  Date <ArrowUpDown className="w-3 h-3 text-slate-400" />
-                </span>
-              </th>
-              <th className="py-3 px-4">Expense ID</th>
-              <th className="py-3 px-4">Expense Name</th>
-              <th className="py-3 px-4">Category</th>
-              <th className="py-3 px-4">Vendor</th>
-              <th className="py-3 px-4">Payment Method</th>
-              <th className="py-3 px-4">Amount (₹)</th>
-              <th className="py-3 px-4">Status</th>
-              <th className="py-3 px-4 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100 text-xs">
-            {filteredExpenses.length === 0 ? (
-              <tr>
-                <td colSpan={10} className="py-12 text-center text-slate-400">
-                  No business expenses found matching your filter criteria.
-                </td>
+        {/* Tab 1: All Transactions (Mockup 8.0.png) */}
+        {activeSubTab === 'all' && (
+          <table className="w-full text-left border-collapse text-[11px]">
+            <thead>
+              <tr className="border-b border-slate-100 bg-slate-50/75 text-[10px] sm:text-[11px] font-bold text-slate-600 tracking-tight">
+                <th className="py-2.5 px-2 w-8 text-center">
+                  <input
+                    type="checkbox"
+                    checked={
+                      allTransactions.length > 0 && selectedIds.length === allTransactions.length
+                    }
+                    onChange={(e) =>
+                      handleSelectAll(
+                        e.target.checked,
+                        allTransactions.length,
+                        allTransactions.map((t) => t.id)
+                      )
+                    }
+                    className="rounded text-blue-600 focus:ring-blue-500 w-3.5 h-3.5 cursor-pointer"
+                  />
+                </th>
+                <th className="py-2.5 px-2 whitespace-nowrap">
+                  <span className="inline-flex items-center gap-1">
+                    Date <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                  </span>
+                </th>
+                <th className="py-2.5 px-2 whitespace-nowrap">Reference No.</th>
+                <th className="py-2.5 px-1.5 whitespace-nowrap">Type</th>
+                <th className="py-2.5 px-2 whitespace-nowrap">Vendor / Paid To</th>
+                <th className="py-2.5 px-2 whitespace-nowrap">Category</th>
+                <th className="py-2.5 px-2 whitespace-nowrap text-right">Amount (₹)</th>
+                <th className="py-2.5 px-1.5 whitespace-nowrap">Status</th>
+                <th className="py-2.5 px-2 text-center whitespace-nowrap">Actions</th>
               </tr>
-            ) : (
-              filteredExpenses.map((exp) => {
-                const isSelected = selectedIds.includes(exp.id);
-                const isMenuOpen = activeMenuId === exp.id;
-
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {allTransactions.map((txn) => {
+                const isSelected = selectedIds.includes(txn.id);
+                const isMenuOpen = activeMenuId === txn.id;
                 return (
                   <tr
-                    key={exp.id}
-                    className="hover:bg-slate-50/70 transition-colors cursor-pointer group"
-                    onClick={() => onViewExpense(exp)}
+                    key={txn.id}
+                    className={`transition-colors cursor-pointer group ${
+                      isSelected ? 'bg-blue-50/40' : 'hover:bg-slate-50/70'
+                    }`}
+                    onClick={() => onViewDetails(txn)}
                   >
-                    {/* Checkbox */}
-                    <td className="py-3.5 px-4" onClick={(e) => e.stopPropagation()}>
+                    <td className="py-2.5 px-2 text-center" onClick={(e) => e.stopPropagation()}>
                       <input
                         type="checkbox"
                         checked={isSelected}
-                        onChange={() => handleToggleSelect(exp.id)}
-                        className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+                        onChange={(e) => handleSelectOne(txn.id, e.target.checked)}
+                        className="rounded text-blue-600 focus:ring-blue-500 w-3.5 h-3.5 cursor-pointer"
                       />
                     </td>
-
-                    {/* Date */}
-                    <td className="py-3.5 px-4 whitespace-nowrap">
-                      <div className="font-bold text-slate-900">{exp.date}</div>
-                      <div className="text-[11px] text-slate-400 mt-0.5">{exp.time}</div>
+                    <td className="py-2.5 px-2 whitespace-nowrap">
+                      <div className="font-bold text-slate-900 leading-tight">{txn.date}</div>
+                      <div className="text-[10px] text-slate-400">{txn.time}</div>
                     </td>
-
-                    {/* Expense ID */}
-                    <td className="py-3.5 px-4 font-mono font-bold text-slate-700 text-[11px]">
-                      {exp.id}
+                    <td className="py-2.5 px-2 font-mono font-medium text-slate-800 text-[11px] whitespace-nowrap">
+                      {txn.referenceNo}
                     </td>
-
-                    {/* Expense Name & Subtitle */}
-                    <td className="py-3.5 px-4">
-                      <div className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
-                        {exp.name}
-                      </div>
-                      <div className="text-[11px] text-slate-400 mt-0.5">{exp.subtitle}</div>
-                    </td>
-
-                    {/* Category */}
-                    <td className="py-3.5 px-4 font-semibold text-slate-700">
-                      {exp.category}
-                    </td>
-
-                    {/* Vendor */}
-                    <td className="py-3.5 px-4 font-medium text-slate-800">
-                      {exp.vendor}
-                    </td>
-
-                    {/* Payment Method */}
-                    <td className="py-3.5 px-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        {renderPaymentIcon(exp.paymentMethod)}
-                        <span className="font-medium text-slate-800">{exp.paymentMethod}</span>
-                      </div>
-                    </td>
-
-                    {/* Amount (₹) in Bold Red matching 8.0.png */}
-                    <td className="py-3.5 px-4 font-black text-rose-600 whitespace-nowrap">
-                      ₹{' '}
-                      {exp.amount.toLocaleString('en-IN', {
-                        minimumFractionDigits: 2,
-                      })}
-                    </td>
-
-                    {/* Status */}
-                    <td className="py-3.5 px-4">
+                    <td className="py-2.5 px-1.5 whitespace-nowrap">
                       <span
-                        className={`inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                        className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                          txn.type === 'Purchase'
+                            ? 'bg-blue-50 text-blue-700'
+                            : txn.type === 'Expense'
+                            ? 'bg-purple-50 text-purple-700'
+                            : txn.type === 'Purchase Order'
+                            ? 'bg-amber-50 text-amber-700'
+                            : txn.type === 'Credit Note'
+                            ? 'bg-emerald-50 text-emerald-700'
+                            : 'bg-sky-50 text-sky-700'
+                        }`}
+                      >
+                        {txn.type}
+                      </span>
+                    </td>
+                    <td className="py-2.5 px-2 font-medium text-slate-800 whitespace-nowrap">
+                      {txn.vendorOrPaidTo}
+                    </td>
+                    <td className="py-2.5 px-2 font-medium text-slate-600 whitespace-nowrap">
+                      {txn.category}
+                    </td>
+                    <td className="py-2.5 px-2 font-bold text-right whitespace-nowrap">
+                      {txn.amount === 0 ? (
+                        <span className="text-slate-400">—</span>
+                      ) : txn.amount > 0 ? (
+                        <span className="text-emerald-600">
+                          + ₹ {txn.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                        </span>
+                      ) : (
+                        <span className="text-rose-600">
+                          - ₹{' '}
+                          {Math.abs(txn.amount).toLocaleString('en-IN', {
+                            minimumFractionDigits: 2,
+                          })}
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-2.5 px-1.5 whitespace-nowrap">
+                      <span
+                        className={`inline-flex px-1.5 py-0.5 rounded-full text-[10px] font-medium border ${
+                          txn.status === 'Paid' || txn.status === 'Processed' || txn.status === 'Generated'
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            : txn.status === 'Open'
+                            ? 'bg-amber-50 text-amber-700 border-amber-200'
+                            : 'bg-sky-50 text-sky-700 border-sky-200'
+                        }`}
+                      >
+                        {txn.status}
+                      </span>
+                    </td>
+                    <td
+                      className="py-2.5 px-2 text-center whitespace-nowrap relative"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="flex items-center justify-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => onViewDetails(txn)}
+                          className="px-2 py-0.5 rounded border border-slate-200 hover:border-blue-300 hover:bg-blue-50 text-blue-600 text-[10px] font-semibold inline-flex items-center gap-1 transition-colors"
+                        >
+                          <Eye className="w-3 h-3" />
+                          <span>View</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setActiveMenuId(isMenuOpen ? null : txn.id)}
+                          className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded"
+                        >
+                          <MoreVertical className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      {isMenuOpen && renderRowMenu(txn)}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+
+        {/* Tab 2: Purchase Orders (Mockup 8.5.png) */}
+        {activeSubTab === 'orders' && (
+          <table className="w-full text-left border-collapse text-[11px]">
+            <thead>
+              <tr className="border-b border-slate-100 bg-slate-50/75 text-[10px] sm:text-[11px] font-bold text-slate-600 tracking-tight">
+                <th className="py-2.5 px-2 w-8 text-center">
+                  <input
+                    type="checkbox"
+                    checked={
+                      purchaseOrders.length > 0 && selectedIds.length === purchaseOrders.length
+                    }
+                    onChange={(e) =>
+                      handleSelectAll(
+                        e.target.checked,
+                        purchaseOrders.length,
+                        purchaseOrders.map((t) => t.id)
+                      )
+                    }
+                    className="rounded text-blue-600 focus:ring-blue-500 w-3.5 h-3.5 cursor-pointer"
+                  />
+                </th>
+                <th className="py-2.5 px-2 whitespace-nowrap">PO No. ⇅</th>
+                <th className="py-2.5 px-2 whitespace-nowrap">Date ⇅</th>
+                <th className="py-2.5 px-2 whitespace-nowrap">Vendor</th>
+                <th className="py-2.5 px-1.5 whitespace-nowrap">Items ⇅</th>
+                <th className="py-2.5 px-2 whitespace-nowrap text-right">Total Amount (₹)</th>
+                <th className="py-2.5 px-2 whitespace-nowrap">Expected Date</th>
+                <th className="py-2.5 px-1.5 whitespace-nowrap">Status</th>
+                <th className="py-2.5 px-2 text-center whitespace-nowrap">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {purchaseOrders.map((po) => {
+                const isSelected = selectedIds.includes(po.id);
+                const isMenuOpen = activeMenuId === po.id;
+                return (
+                  <tr
+                    key={po.id}
+                    className={`transition-colors cursor-pointer group ${
+                      isSelected ? 'bg-blue-50/40' : 'hover:bg-slate-50/70'
+                    }`}
+                    onClick={() => onViewDetails(po)}
+                  >
+                    <td className="py-2.5 px-2 text-center" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={(e) => handleSelectOne(po.id, e.target.checked)}
+                        className="rounded text-blue-600 focus:ring-blue-500 w-3.5 h-3.5 cursor-pointer"
+                      />
+                    </td>
+                    <td className="py-2.5 px-2 font-mono font-medium text-slate-800 text-[11px] whitespace-nowrap">
+                      {po.poNumber}
+                    </td>
+                    <td className="py-2.5 px-2 whitespace-nowrap">
+                      <div className="font-bold text-slate-900 leading-tight">{po.date}</div>
+                      <div className="text-[10px] text-slate-400">{po.time}</div>
+                    </td>
+                    <td className="py-2.5 px-2 font-medium text-slate-800 whitespace-nowrap">
+                      {po.vendor}
+                    </td>
+                    <td className="py-2.5 px-1.5 text-blue-600 font-semibold whitespace-nowrap">
+                      {po.itemsCount}
+                    </td>
+                    <td className="py-2.5 px-2 font-bold text-right text-slate-900 whitespace-nowrap">
+                      {po.totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="py-2.5 px-2 text-slate-600 whitespace-nowrap">
+                      {po.expectedDate}
+                    </td>
+                    <td className="py-2.5 px-1.5 whitespace-nowrap">
+                      <span
+                        className={`inline-flex px-1.5 py-0.5 rounded-full text-[10px] font-medium border ${
+                          po.status === 'Received'
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            : po.status === 'Pending'
+                            ? 'bg-amber-50 text-amber-700 border-amber-200'
+                            : po.status === 'Partially Received'
+                            ? 'bg-sky-50 text-sky-700 border-sky-200'
+                            : 'bg-rose-50 text-rose-700 border-rose-200'
+                        }`}
+                      >
+                        {po.status}
+                      </span>
+                    </td>
+                    <td
+                      className="py-2.5 px-2 text-center whitespace-nowrap relative"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="flex items-center justify-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => onViewDetails(po)}
+                          className="px-2 py-0.5 rounded border border-slate-200 hover:border-blue-300 hover:bg-blue-50 text-blue-600 text-[10px] font-semibold inline-flex items-center gap-1 transition-colors"
+                        >
+                          <Eye className="w-3 h-3" />
+                          <span>View</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setActiveMenuId(isMenuOpen ? null : po.id)}
+                          className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded"
+                        >
+                          <MoreVertical className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      {isMenuOpen && renderRowMenu(po)}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+
+        {/* Tab 3: Purchases (Bills) (Mockup 8.6.png) */}
+        {activeSubTab === 'bills' && (
+          <table className="w-full text-left border-collapse text-[11px]">
+            <thead>
+              <tr className="border-b border-slate-100 bg-slate-50/75 text-[10px] sm:text-[11px] font-bold text-slate-600 tracking-tight">
+                <th className="py-2.5 px-2 w-8 text-center">
+                  <input
+                    type="checkbox"
+                    checked={
+                      purchaseBills.length > 0 && selectedIds.length === purchaseBills.length
+                    }
+                    onChange={(e) =>
+                      handleSelectAll(
+                        e.target.checked,
+                        purchaseBills.length,
+                        purchaseBills.map((t) => t.id)
+                      )
+                    }
+                    className="rounded text-blue-600 focus:ring-blue-500 w-3.5 h-3.5 cursor-pointer"
+                  />
+                </th>
+                <th className="py-2.5 px-2 whitespace-nowrap">Bill No. ⇅</th>
+                <th className="py-2.5 px-2 whitespace-nowrap">Date ⇅</th>
+                <th className="py-2.5 px-2 whitespace-nowrap">Vendor</th>
+                <th className="py-2.5 px-1.5 whitespace-nowrap">Items ⇅</th>
+                <th className="py-2.5 px-2 whitespace-nowrap text-right">Total Amount (₹)</th>
+                <th className="py-2.5 px-1.5 whitespace-nowrap">Payment Status</th>
+                <th className="py-2.5 px-2 whitespace-nowrap">Due Date</th>
+                <th className="py-2.5 px-2 text-center whitespace-nowrap">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {purchaseBills.map((bill) => {
+                const isSelected = selectedIds.includes(bill.id);
+                const isMenuOpen = activeMenuId === bill.id;
+                return (
+                  <tr
+                    key={bill.id}
+                    className={`transition-colors cursor-pointer group ${
+                      isSelected ? 'bg-blue-50/40' : 'hover:bg-slate-50/70'
+                    }`}
+                    onClick={() => onViewDetails(bill)}
+                  >
+                    <td className="py-2.5 px-2 text-center" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={(e) => handleSelectOne(bill.id, e.target.checked)}
+                        className="rounded text-blue-600 focus:ring-blue-500 w-3.5 h-3.5 cursor-pointer"
+                      />
+                    </td>
+                    <td className="py-2.5 px-2 font-mono font-medium text-slate-800 text-[11px] whitespace-nowrap">
+                      {bill.billNumber}
+                    </td>
+                    <td className="py-2.5 px-2 whitespace-nowrap">
+                      <div className="font-bold text-slate-900 leading-tight">{bill.date}</div>
+                      <div className="text-[10px] text-slate-400">{bill.time}</div>
+                    </td>
+                    <td className="py-2.5 px-2 font-medium text-slate-800 whitespace-nowrap">
+                      {bill.vendor}
+                    </td>
+                    <td className="py-2.5 px-1.5 text-blue-600 font-semibold whitespace-nowrap">
+                      {bill.itemsCount}
+                    </td>
+                    <td className="py-2.5 px-2 font-bold text-right text-slate-900 whitespace-nowrap">
+                      {bill.totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="py-2.5 px-1.5 whitespace-nowrap">
+                      <span
+                        className={`inline-flex px-1.5 py-0.5 rounded-full text-[10px] font-medium border ${
+                          bill.paymentStatus === 'Paid'
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            : bill.paymentStatus === 'Partially Paid'
+                            ? 'bg-sky-50 text-sky-700 border-sky-200'
+                            : 'bg-amber-50 text-amber-700 border-amber-200'
+                        }`}
+                      >
+                        {bill.paymentStatus}
+                      </span>
+                    </td>
+                    <td className="py-2.5 px-2 text-slate-600 whitespace-nowrap">
+                      {bill.dueDate}
+                    </td>
+                    <td
+                      className="py-2.5 px-2 text-center whitespace-nowrap relative"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="flex items-center justify-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => onViewDetails(bill)}
+                          className="px-2 py-0.5 rounded border border-slate-200 hover:border-blue-300 hover:bg-blue-50 text-blue-600 text-[10px] font-semibold inline-flex items-center gap-1 transition-colors"
+                        >
+                          <Eye className="w-3 h-3" />
+                          <span>View</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setActiveMenuId(isMenuOpen ? null : bill.id)}
+                          className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded"
+                        >
+                          <MoreVertical className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      {isMenuOpen && renderRowMenu(bill)}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+
+        {/* Tab 4: Expenses (Mockup 8.7.png) */}
+        {activeSubTab === 'expenses' && (
+          <table className="w-full text-left border-collapse text-[11px]">
+            <thead>
+              <tr className="border-b border-slate-100 bg-slate-50/75 text-[10px] sm:text-[11px] font-bold text-slate-600 tracking-tight">
+                <th className="py-2.5 px-2 w-8 text-center">
+                  <input
+                    type="checkbox"
+                    checked={expenses.length > 0 && selectedIds.length === expenses.length}
+                    onChange={(e) =>
+                      handleSelectAll(
+                        e.target.checked,
+                        expenses.length,
+                        expenses.map((t) => t.id)
+                      )
+                    }
+                    className="rounded text-blue-600 focus:ring-blue-500 w-3.5 h-3.5 cursor-pointer"
+                  />
+                </th>
+                <th className="py-2.5 px-2 whitespace-nowrap">Expense No. ⇅</th>
+                <th className="py-2.5 px-2 whitespace-nowrap">Date ⇅</th>
+                <th className="py-2.5 px-2 whitespace-nowrap">Category</th>
+                <th className="py-2.5 px-2 whitespace-nowrap">Description</th>
+                <th className="py-2.5 px-2 whitespace-nowrap text-right">Amount (₹)</th>
+                <th className="py-2.5 px-2 whitespace-nowrap">Payment Method</th>
+                <th className="py-2.5 px-1.5 whitespace-nowrap">Status</th>
+                <th className="py-2.5 px-2 text-center whitespace-nowrap">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {expenses.map((exp) => {
+                const isSelected = selectedIds.includes(exp.id);
+                const isMenuOpen = activeMenuId === exp.id;
+                return (
+                  <tr
+                    key={exp.id}
+                    className={`transition-colors cursor-pointer group ${
+                      isSelected ? 'bg-blue-50/40' : 'hover:bg-slate-50/70'
+                    }`}
+                    onClick={() => onViewDetails(exp)}
+                  >
+                    <td className="py-2.5 px-2 text-center" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={(e) => handleSelectOne(exp.id, e.target.checked)}
+                        className="rounded text-blue-600 focus:ring-blue-500 w-3.5 h-3.5 cursor-pointer"
+                      />
+                    </td>
+                    <td className="py-2.5 px-2 font-mono font-medium text-slate-800 text-[11px] whitespace-nowrap">
+                      {exp.expenseNo}
+                    </td>
+                    <td className="py-2.5 px-2 whitespace-nowrap">
+                      <div className="font-bold text-slate-900 leading-tight">{exp.date}</div>
+                      <div className="text-[10px] text-slate-400">{exp.time}</div>
+                    </td>
+                    <td className="py-2.5 px-2 whitespace-nowrap">
+                      <span className="px-2 py-0.5 rounded bg-slate-100 font-semibold text-slate-700 text-[10px]">
+                        {exp.category}
+                      </span>
+                    </td>
+                    <td className="py-2.5 px-2 font-medium text-slate-800 whitespace-nowrap max-w-[160px] truncate">
+                      {exp.description}
+                    </td>
+                    <td className="py-2.5 px-2 font-bold text-right text-slate-900 whitespace-nowrap">
+                      {exp.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="py-2.5 px-2 text-slate-600 whitespace-nowrap">
+                      {exp.paymentMethod}
+                    </td>
+                    <td className="py-2.5 px-1.5 whitespace-nowrap">
+                      <span
+                        className={`inline-flex px-1.5 py-0.5 rounded-full text-[10px] font-medium border ${
                           exp.status === 'Paid'
-                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                            : exp.status === 'Needs Review'
-                            ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                            : 'bg-slate-100 text-slate-600 border border-slate-200'
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            : exp.status === 'Partially Paid'
+                            ? 'bg-sky-50 text-sky-700 border-sky-200'
+                            : 'bg-amber-50 text-amber-700 border-amber-200'
                         }`}
                       >
                         {exp.status}
                       </span>
                     </td>
-
-                    {/* Actions */}
-                    <td className="py-3.5 px-4 text-right" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex items-center justify-end gap-1.5 relative">
+                    <td
+                      className="py-2.5 px-2 text-center whitespace-nowrap relative"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="flex items-center justify-center gap-1">
                         <button
                           type="button"
-                          onClick={() => onViewExpense(exp)}
-                          className="px-2.5 py-1 rounded-lg border border-blue-200 hover:bg-blue-50 text-blue-700 text-[11px] font-semibold inline-flex items-center gap-1 transition-colors"
+                          onClick={() => onViewDetails(exp)}
+                          className="px-2 py-0.5 rounded border border-slate-200 hover:border-blue-300 hover:bg-blue-50 text-blue-600 text-[10px] font-semibold inline-flex items-center gap-1 transition-colors"
                         >
                           <Eye className="w-3 h-3" />
-                          View
+                          <span>View</span>
                         </button>
-
                         <button
                           type="button"
                           onClick={() => setActiveMenuId(isMenuOpen ? null : exp.id)}
-                          className="p-1 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition-colors"
+                          className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded"
                         >
-                          <MoreVertical className="w-4 h-4" />
+                          <MoreVertical className="w-3.5 h-3.5" />
                         </button>
-
-                        {/* Dropdown Menu */}
-                        {isMenuOpen && (
-                          <div className="absolute right-0 top-full mt-1 w-44 bg-white rounded-xl border border-slate-200 shadow-xl py-1 z-30 animate-in fade-in duration-100 text-left">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setActiveMenuId(null);
-                                onViewExpense(exp);
-                              }}
-                              className="w-full px-3 py-1.5 hover:bg-slate-50 text-slate-700 text-xs flex items-center gap-2"
-                            >
-                              <Eye className="w-3.5 h-3.5 text-slate-400" />
-                              View Details
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setActiveMenuId(null);
-                                updateExpenseStatus(exp.id, exp.status === 'Paid' ? 'Needs Review' : 'Paid');
-                              }}
-                              className="w-full px-3 py-1.5 hover:bg-slate-50 text-slate-700 text-xs flex items-center gap-2"
-                            >
-                              <CheckCircle2 className="w-3.5 h-3.5 text-slate-400" />
-                              Toggle Paid Status
-                            </button>
-                          </div>
-                        )}
                       </div>
+                      {isMenuOpen && renderRowMenu(exp)}
                     </td>
                   </tr>
                 );
-              })
-            )}
-          </tbody>
-        </table>
+              })}
+            </tbody>
+          </table>
+        )}
+
+        {/* Tab 5: Credit Notes (Mockup 8.8.png) */}
+        {activeSubTab === 'credit_notes' && (
+          <table className="w-full text-left border-collapse text-[11px]">
+            <thead>
+              <tr className="border-b border-slate-100 bg-slate-50/75 text-[10px] sm:text-[11px] font-bold text-slate-600 tracking-tight">
+                <th className="py-2.5 px-2 w-8 text-center">
+                  <input
+                    type="checkbox"
+                    checked={
+                      creditNotes.length > 0 && selectedIds.length === creditNotes.length
+                    }
+                    onChange={(e) =>
+                      handleSelectAll(
+                        e.target.checked,
+                        creditNotes.length,
+                        creditNotes.map((t) => t.id)
+                      )
+                    }
+                    className="rounded text-blue-600 focus:ring-blue-500 w-3.5 h-3.5 cursor-pointer"
+                  />
+                </th>
+                <th className="py-2.5 px-2 whitespace-nowrap">Credit Note No. ⇅</th>
+                <th className="py-2.5 px-2 whitespace-nowrap">Date ⇅</th>
+                <th className="py-2.5 px-2 whitespace-nowrap">Reference (Purchase)</th>
+                <th className="py-2.5 px-2 whitespace-nowrap">Vendor</th>
+                <th className="py-2.5 px-2 whitespace-nowrap">Reason / Type</th>
+                <th className="py-2.5 px-2 whitespace-nowrap text-right">Amount (₹)</th>
+                <th className="py-2.5 px-1.5 whitespace-nowrap">Status</th>
+                <th className="py-2.5 px-2 text-center whitespace-nowrap">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {creditNotes.map((cn) => {
+                const isSelected = selectedIds.includes(cn.id);
+                const isMenuOpen = activeMenuId === cn.id;
+                return (
+                  <tr
+                    key={cn.id}
+                    className={`transition-colors cursor-pointer group ${
+                      isSelected ? 'bg-blue-50/40' : 'hover:bg-slate-50/70'
+                    }`}
+                    onClick={() => onViewDetails(cn)}
+                  >
+                    <td className="py-2.5 px-2 text-center" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={(e) => handleSelectOne(cn.id, e.target.checked)}
+                        className="rounded text-blue-600 focus:ring-blue-500 w-3.5 h-3.5 cursor-pointer"
+                      />
+                    </td>
+                    <td className="py-2.5 px-2 font-mono font-medium text-slate-800 text-[11px] whitespace-nowrap">
+                      {cn.creditNoteNo}
+                    </td>
+                    <td className="py-2.5 px-2 whitespace-nowrap">
+                      <div className="font-bold text-slate-900 leading-tight">{cn.date}</div>
+                      <div className="text-[10px] text-slate-400">{cn.time}</div>
+                    </td>
+                    <td className="py-2.5 px-2 font-mono text-slate-600 whitespace-nowrap">
+                      {cn.referencePurchase}
+                    </td>
+                    <td className="py-2.5 px-2 font-medium text-slate-800 whitespace-nowrap">
+                      {cn.vendor}
+                    </td>
+                    <td className="py-2.5 px-2 text-slate-600 whitespace-nowrap">
+                      {cn.reasonType}
+                    </td>
+                    <td className="py-2.5 px-2 font-bold text-right text-rose-600 whitespace-nowrap">
+                      - ₹ {Math.abs(cn.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="py-2.5 px-1.5 whitespace-nowrap">
+                      <span
+                        className={`inline-flex px-1.5 py-0.5 rounded-full text-[10px] font-medium border ${
+                          cn.status === 'Processed'
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            : cn.status === 'Pending'
+                            ? 'bg-amber-50 text-amber-700 border-amber-200'
+                            : 'bg-rose-50 text-rose-700 border-rose-200'
+                        }`}
+                      >
+                        {cn.status}
+                      </span>
+                    </td>
+                    <td
+                      className="py-2.5 px-2 text-center whitespace-nowrap relative"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="flex items-center justify-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => onViewDetails(cn)}
+                          className="px-2 py-0.5 rounded border border-slate-200 hover:border-blue-300 hover:bg-blue-50 text-blue-600 text-[10px] font-semibold inline-flex items-center gap-1 transition-colors"
+                        >
+                          <Eye className="w-3 h-3" />
+                          <span>View</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setActiveMenuId(isMenuOpen ? null : cn.id)}
+                          className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded"
+                        >
+                          <MoreVertical className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      {isMenuOpen && renderRowMenu(cn)}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+
+        {/* Tab 6: E-Way Bills (Mockup 8.9.png) */}
+        {activeSubTab === 'eway_bills' && (
+          <table className="w-full text-left border-collapse text-[11px]">
+            <thead>
+              <tr className="border-b border-slate-100 bg-slate-50/75 text-[10px] sm:text-[11px] font-bold text-slate-600 tracking-tight">
+                <th className="py-2.5 px-2 w-8 text-center">
+                  <input
+                    type="checkbox"
+                    checked={
+                      ewayBills.length > 0 && selectedIds.length === ewayBills.length
+                    }
+                    onChange={(e) =>
+                      handleSelectAll(
+                        e.target.checked,
+                        ewayBills.length,
+                        ewayBills.map((t) => t.id)
+                      )
+                    }
+                    className="rounded text-blue-600 focus:ring-blue-500 w-3.5 h-3.5 cursor-pointer"
+                  />
+                </th>
+                <th className="py-2.5 px-2 whitespace-nowrap">E-Way Bill No. ⇅</th>
+                <th className="py-2.5 px-2 whitespace-nowrap">Date ⇅</th>
+                <th className="py-2.5 px-2 whitespace-nowrap">Invoice / Bill No.</th>
+                <th className="py-2.5 px-2 whitespace-nowrap">Vendor</th>
+                <th className="py-2.5 px-2 whitespace-nowrap">From → To</th>
+                <th className="py-2.5 px-1.5 whitespace-nowrap text-right">Distance (KM)</th>
+                <th className="py-2.5 px-2 whitespace-nowrap">Valid Till</th>
+                <th className="py-2.5 px-1.5 whitespace-nowrap">Status</th>
+                <th className="py-2.5 px-2 text-center whitespace-nowrap">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {ewayBills.map((ewb) => {
+                const isSelected = selectedIds.includes(ewb.id);
+                const isMenuOpen = activeMenuId === ewb.id;
+                return (
+                  <tr
+                    key={ewb.id}
+                    className={`transition-colors cursor-pointer group ${
+                      isSelected ? 'bg-blue-50/40' : 'hover:bg-slate-50/70'
+                    }`}
+                    onClick={() => onViewDetails(ewb)}
+                  >
+                    <td className="py-2.5 px-2 text-center" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={(e) => handleSelectOne(ewb.id, e.target.checked)}
+                        className="rounded text-blue-600 focus:ring-blue-500 w-3.5 h-3.5 cursor-pointer"
+                      />
+                    </td>
+                    <td className="py-2.5 px-2 font-mono font-bold text-blue-600 text-[11px] whitespace-nowrap">
+                      {ewb.eWayBillNo}
+                    </td>
+                    <td className="py-2.5 px-2 whitespace-nowrap">
+                      <div className="font-bold text-slate-900 leading-tight">{ewb.date}</div>
+                      <div className="text-[10px] text-slate-400">{ewb.time}</div>
+                    </td>
+                    <td className="py-2.5 px-2 font-mono text-slate-600 whitespace-nowrap">
+                      {ewb.invoiceBillNo}
+                    </td>
+                    <td className="py-2.5 px-2 font-medium text-slate-800 whitespace-nowrap">
+                      {ewb.vendor}
+                    </td>
+                    <td className="py-2.5 px-2 font-medium text-slate-700 whitespace-nowrap">
+                      {ewb.fromTo}
+                    </td>
+                    <td className="py-2.5 px-1.5 text-right font-medium text-slate-800 whitespace-nowrap">
+                      {ewb.distanceKm}
+                    </td>
+                    <td className="py-2.5 px-2 text-slate-600 whitespace-nowrap">
+                      {ewb.validTill}
+                    </td>
+                    <td className="py-2.5 px-1.5 whitespace-nowrap">
+                      <span
+                        className={`inline-flex px-1.5 py-0.5 rounded-full text-[10px] font-medium border ${
+                          ewb.status === 'Active'
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            : ewb.status === 'In Transit'
+                            ? 'bg-amber-50 text-amber-700 border-amber-200'
+                            : ewb.status === 'Expired'
+                            ? 'bg-rose-50 text-rose-700 border-rose-200'
+                            : 'bg-slate-100 text-slate-600 border-slate-200'
+                        }`}
+                      >
+                        {ewb.status}
+                      </span>
+                    </td>
+                    <td
+                      className="py-2.5 px-2 text-center whitespace-nowrap relative"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="flex items-center justify-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => onViewDetails(ewb)}
+                          className="px-2 py-0.5 rounded border border-slate-200 hover:border-blue-300 hover:bg-blue-50 text-blue-600 text-[10px] font-semibold inline-flex items-center gap-1 transition-colors"
+                        >
+                          <Eye className="w-3 h-3" />
+                          <span>View</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setActiveMenuId(isMenuOpen ? null : ewb.id)}
+                          className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded"
+                        >
+                          <MoreVertical className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      {isMenuOpen && renderRowMenu(ewb)}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+
+        {/* Tab 7: Vendors (Mockup 8.10.png) */}
+        {activeSubTab === 'vendors' && (
+          <table className="w-full text-left border-collapse text-[11px]">
+            <thead>
+              <tr className="border-b border-slate-100 bg-slate-50/75 text-[10px] sm:text-[11px] font-bold text-slate-600 tracking-tight">
+                <th className="py-2.5 px-2 w-8 text-center">
+                  <input
+                    type="checkbox"
+                    checked={vendors.length > 0 && selectedIds.length === vendors.length}
+                    onChange={(e) =>
+                      handleSelectAll(
+                        e.target.checked,
+                        vendors.length,
+                        vendors.map((t) => t.id)
+                      )
+                    }
+                    className="rounded text-blue-600 focus:ring-blue-500 w-3.5 h-3.5 cursor-pointer"
+                  />
+                </th>
+                <th className="py-2.5 px-2 whitespace-nowrap">Vendor Code ⇅</th>
+                <th className="py-2.5 px-2 whitespace-nowrap">Vendor Name ⇅</th>
+                <th className="py-2.5 px-2 whitespace-nowrap">Contact Person</th>
+                <th className="py-2.5 px-2 whitespace-nowrap">Phone ⇅</th>
+                <th className="py-2.5 px-2 whitespace-nowrap">Email</th>
+                <th className="py-2.5 px-2 whitespace-nowrap">City ⇅</th>
+                <th className="py-2.5 px-2 whitespace-nowrap text-right">Total Purchases (₹)</th>
+                <th className="py-2.5 px-1.5 whitespace-nowrap">Status</th>
+                <th className="py-2.5 px-2 text-center whitespace-nowrap">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {vendors.map((v) => {
+                const isSelected = selectedIds.includes(v.id);
+                const isMenuOpen = activeMenuId === v.id;
+                return (
+                  <tr
+                    key={v.id}
+                    className={`transition-colors cursor-pointer group ${
+                      isSelected ? 'bg-blue-50/40' : 'hover:bg-slate-50/70'
+                    }`}
+                    onClick={() => onViewDetails(v)}
+                  >
+                    <td className="py-2.5 px-2 text-center" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={(e) => handleSelectOne(v.id, e.target.checked)}
+                        className="rounded text-blue-600 focus:ring-blue-500 w-3.5 h-3.5 cursor-pointer"
+                      />
+                    </td>
+                    <td className="py-2.5 px-2 font-mono font-medium text-slate-800 text-[11px] whitespace-nowrap">
+                      {v.vendorCode}
+                    </td>
+                    <td className="py-2.5 px-2 font-bold text-slate-900 whitespace-nowrap">
+                      {v.vendorName}
+                    </td>
+                    <td className="py-2.5 px-2 font-medium text-slate-700 whitespace-nowrap">
+                      {v.contactPerson}
+                    </td>
+                    <td className="py-2.5 px-2 font-mono text-slate-700 whitespace-nowrap">
+                      {v.phone}
+                    </td>
+                    <td className="py-2.5 px-2 text-slate-500 whitespace-nowrap">
+                      {v.email}
+                    </td>
+                    <td className="py-2.5 px-2 font-medium text-slate-700 whitespace-nowrap">
+                      {v.city}
+                    </td>
+                    <td className="py-2.5 px-2 font-bold text-right text-slate-900 whitespace-nowrap">
+                      {v.totalPurchases.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td className="py-2.5 px-1.5 whitespace-nowrap">
+                      <span
+                        className={`inline-flex px-1.5 py-0.5 rounded-full text-[10px] font-medium border ${
+                          v.status === 'Active'
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            : v.status === 'Inactive'
+                            ? 'bg-amber-50 text-amber-700 border-amber-200'
+                            : 'bg-rose-50 text-rose-700 border-rose-200'
+                        }`}
+                      >
+                        {v.status}
+                      </span>
+                    </td>
+                    <td
+                      className="py-2.5 px-2 text-center whitespace-nowrap relative"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="flex items-center justify-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => onViewDetails(v)}
+                          className="px-2 py-0.5 rounded border border-slate-200 hover:border-blue-300 hover:bg-blue-50 text-blue-600 text-[10px] font-semibold inline-flex items-center gap-1 transition-colors"
+                        >
+                          <Eye className="w-3 h-3" />
+                          <span>View</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setActiveMenuId(isMenuOpen ? null : v.id)}
+                          className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded"
+                        >
+                          <MoreVertical className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      {isMenuOpen && renderRowMenu(v)}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
       </div>
 
-      {/* 4. Footer Summary matching 8.0.png */}
-      <div className="px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-        <div className="text-slate-500">
-          Showing 1 to {filteredExpenses.length} of {expenses.length} expenses
+      {/* 4. Compact Pagination Bar matching mockup 8.0.png */}
+      <div className="p-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+        {/* Left: Per page dropdown & count */}
+        <div className="flex items-center gap-2.5">
+          <div className="relative">
+            <select
+              value={pageSize}
+              onChange={(e) => setPageSize(e.target.value)}
+              className="pl-2.5 pr-6 py-1 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 appearance-none shadow-2xs cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-500"
+            >
+              <option value="10">10 per page</option>
+              <option value="25">25 per page</option>
+              <option value="50">50 per page</option>
+            </select>
+            <ChevronDown className="w-3 h-3 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+          </div>
+
+          <span className="text-[11px] text-slate-500">
+            Showing 1 to 8 of{' '}
+            {activeSubTab === 'orders'
+              ? '48 purchase orders'
+              : activeSubTab === 'bills'
+              ? '48 purchase bills'
+              : activeSubTab === 'expenses'
+              ? '48 expenses'
+              : activeSubTab === 'credit_notes'
+              ? '12 credit notes'
+              : activeSubTab === 'eway_bills'
+              ? '12 e-way bills'
+              : activeSubTab === 'vendors'
+              ? '28 vendors'
+              : '48 transactions'}
+          </span>
         </div>
 
-        <div className="flex items-center gap-4">
-          <span className="text-slate-500 font-semibold">Total Expenses (This Month)</span>
-          <span className="text-lg font-black text-slate-900 tracking-tight">
-            ₹{' '}
-            {thisMonthTotal.toLocaleString('en-IN', {
-              minimumFractionDigits: 2,
-            })}
-          </span>
+        {/* Right: Page Buttons */}
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            className="w-7 h-7 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 flex items-center justify-center transition-colors disabled:opacity-40 disabled:pointer-events-none shadow-2xs"
+          >
+            <ChevronLeft className="w-3.5 h-3.5" />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setCurrentPage(1)}
+            className={`w-7 h-7 rounded-lg font-bold text-xs flex items-center justify-center transition-colors ${
+              currentPage === 1
+                ? 'bg-blue-600 text-white shadow-2xs'
+                : 'border border-slate-200 hover:bg-slate-50 text-slate-700'
+            }`}
+          >
+            1
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setCurrentPage(2)}
+            className={`w-7 h-7 rounded-lg font-bold text-xs flex items-center justify-center transition-colors ${
+              currentPage === 2
+                ? 'bg-blue-600 text-white shadow-2xs'
+                : 'border border-slate-200 hover:bg-slate-50 text-slate-700'
+            }`}
+          >
+            2
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setCurrentPage(3)}
+            className={`w-7 h-7 rounded-lg font-bold text-xs flex items-center justify-center transition-colors ${
+              currentPage === 3
+                ? 'bg-blue-600 text-white shadow-2xs'
+                : 'border border-slate-200 hover:bg-slate-50 text-slate-700'
+            }`}
+          >
+            3
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setCurrentPage(4)}
+            className={`w-7 h-7 rounded-lg font-bold text-xs flex items-center justify-center transition-colors ${
+              currentPage === 4
+                ? 'bg-blue-600 text-white shadow-2xs'
+                : 'border border-slate-200 hover:bg-slate-50 text-slate-700'
+            }`}
+          >
+            4
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setCurrentPage(5)}
+            className={`w-7 h-7 rounded-lg font-bold text-xs flex items-center justify-center transition-colors ${
+              currentPage === 5
+                ? 'bg-blue-600 text-white shadow-2xs'
+                : 'border border-slate-200 hover:bg-slate-50 text-slate-700'
+            }`}
+          >
+            5
+          </button>
+
+          <span className="px-1 text-slate-400 font-bold text-xs">...</span>
+
+          <button
+            type="button"
+            onClick={() => setCurrentPage(25)}
+            className={`w-7 h-7 rounded-lg font-bold text-xs flex items-center justify-center transition-colors ${
+              currentPage === 25
+                ? 'bg-blue-600 text-white shadow-2xs'
+                : 'border border-slate-200 hover:bg-slate-50 text-slate-700'
+            }`}
+          >
+            25
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setCurrentPage((p) => p + 1)}
+            className="w-7 h-7 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 flex items-center justify-center transition-colors shadow-2xs"
+          >
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
         </div>
       </div>
     </div>
