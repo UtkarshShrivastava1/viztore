@@ -260,8 +260,8 @@ export const BillingInvoicingTab: React.FC = () => {
               </div>
               <div className="text-right">
                 <p className="font-black text-slate-900">INVOICE</p>
-                <p className="text-[10px] text-slate-500 font-mono font-semibold">VZ1001</p>
-                <p className="text-[9px] text-slate-400">Order ID: #VZT10325</p>
+                <p className="text-[10px] text-slate-500 font-mono font-semibold">INV-1001</p>
+                <p className="text-[9px] text-slate-400">Order ID: #ORD-10325</p>
                 <p className="text-[9px] text-slate-400">Date: 18 May 2024</p>
               </div>
             </div>

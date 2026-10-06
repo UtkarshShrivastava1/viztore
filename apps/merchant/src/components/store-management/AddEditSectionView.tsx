@@ -18,6 +18,7 @@ import {
   Signal,
 } from 'lucide-react';
 import { useStoreManagementStore, StoreSection } from '../../stores/storeManagementStore.js';
+import { branding } from '@repo/shared-types';
 
 interface AddEditSectionViewProps {
   sectionId?: string | null;
@@ -68,7 +69,7 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
       id: 'p1',
       name: 'Men Black Round Neck T-Shirt',
       details: 'Size: M • Color: Black',
-      sku: 'VZT-TSHIRT-BLK-M',
+      sku: 'PRD-TSHIRT-BLK-M',
       category: "Men's Fashion > T-Shirts",
       stock: 120,
       price: 599,
@@ -80,7 +81,7 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
       id: 'p2',
       name: 'Men White Round Neck T-Shirt',
       details: 'Size: M • Color: White',
-      sku: 'VZT-TSHIRT-WHT-M',
+      sku: 'PRD-TSHIRT-WHT-M',
       category: "Men's Fashion > T-Shirts",
       stock: 80,
       price: 599,
@@ -92,7 +93,7 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
       id: 'p3',
       name: 'Men Navy Blue Bound Neck T-Shirt',
       details: 'Size: L • Color: Navy Blue',
-      sku: 'VZT-TSHIRT-NVY-L',
+      sku: 'PRD-TSHIRT-NVY-L',
       category: "Men's Fashion > T-Shirts",
       stock: 60,
       price: 599,
@@ -104,7 +105,7 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
       id: 'p4',
       name: 'Men Grey Round Neck T-Shirt',
       details: 'Size: M • Color: Grey',
-      sku: 'VZT-TSHIRT-GRY-M',
+      sku: 'PRD-TSHIRT-GRY-M',
       category: "Men's Fashion > T-Shirts",
       stock: 45,
       price: 599,
@@ -116,7 +117,7 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
       id: 'p5',
       name: 'Men Black Polo T-Shirt',
       details: 'Size: M • Color: Black',
-      sku: 'VZT-POLO-BLK-M',
+      sku: 'PRD-POLO-BLK-M',
       category: "Men's Fashion > Polo T-Shirt",
       stock: 30,
       price: 649,
@@ -128,7 +129,7 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
       id: 'p6',
       name: 'Men Maroon Polo T-Shirt',
       details: 'Size: L • Color: Maroon',
-      sku: 'VZT-POLO-MRN-L',
+      sku: 'PRD-POLO-MRN-L',
       category: "Men's Fashion > Polo T-Shirt",
       stock: 25,
       price: 649,
@@ -140,7 +141,7 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
       id: 'p7',
       name: 'Men Blue Henley T-Shirt',
       details: 'Size: M • Color: Blue',
-      sku: 'VZT-HENLEY-BLU-M',
+      sku: 'PRD-HENLEY-BLU-M',
       category: "Men's Fashion > T-Shirts",
       stock: 20,
       price: 699,
@@ -152,7 +153,7 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
       id: 'p8',
       name: 'Men Striped Round Neck T-Shirt',
       details: 'Size: M • Color: White/Black',
-      sku: 'VZT-TSHIRT-STP-M',
+      sku: 'PRD-TSHIRT-STP-M',
       category: "Men's Fashion > T-Shirts",
       stock: 15,
       price: 599,
@@ -382,7 +383,7 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
               className="px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-semibold text-slate-700"
             >
               <option>All Brands</option>
-              <option>Viztore Brand</option>
+              <option>{branding.appName} In-House</option>
             </select>
           </div>
 

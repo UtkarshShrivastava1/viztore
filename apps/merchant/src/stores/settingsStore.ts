@@ -361,7 +361,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
 
   shippingReturns: {
     serviceArea: 'Bhilai, Durg (Selected Areas)',
-    deliveryPartner: 'Viztore Delivery',
+    deliveryPartner: 'Platform Fleet Delivery',
     estimatedDeliveryTime: '30 - 45 minutes',
     enableDelivery: true,
     allowReturns: true,
@@ -384,7 +384,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
     set((state) => ({ notifications: { ...state.notifications, ...data } })),
 
   securityLogin: {
-    email: 'harish@viztore.com',
+    email: 'merchant@example.com',
     isEmailVerified: true,
     phone: '+91 98765 43210',
     isPhoneVerified: true,

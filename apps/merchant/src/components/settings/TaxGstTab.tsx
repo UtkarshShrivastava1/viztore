@@ -280,7 +280,7 @@ export const TaxGstTab: React.FC = () => {
               </div>
               <div className="text-right">
                 <p className="font-black text-slate-900">TAX INVOICE</p>
-                <p className="text-[9px] text-slate-500 font-mono font-semibold">#VZT10325</p>
+                <p className="text-[9px] text-slate-500 font-mono font-semibold">#ORD-10325</p>
                 <p className="text-[9px] text-slate-400">Date: 18 May 2024</p>
               </div>
             </div>

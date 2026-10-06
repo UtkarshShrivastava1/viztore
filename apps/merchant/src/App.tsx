@@ -40,7 +40,7 @@ export const App: React.FC = () => {
       const host = window.location.hostname.toLowerCase();
       const params = new URLSearchParams(window.location.search);
 
-      // Dedicated subdomain routing (e.g. register.viztore.com / register.localhost) or path (/register)
+      // Dedicated subdomain routing (e.g. register.<domain> / register.localhost) or path (/register)
       if (host.startsWith('register.') || path.startsWith('/register')) {
         return 'onboarding';
       }
