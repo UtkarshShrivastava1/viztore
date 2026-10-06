@@ -2,8 +2,17 @@ import dotenv from 'dotenv';
 import { z } from 'zod';
 import { logger } from '../utils/logger.js';
 
-// Load .env
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Load .env with fallback paths for monorepo roots
 dotenv.config();
+try {
+  const currentDir = path.dirname(fileURLToPath(import.meta.url));
+  dotenv.config({ path: path.resolve(currentDir, '../../../../.env') });
+} catch {
+  // Ignore resolution errors in bundled environments
+}
 
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
