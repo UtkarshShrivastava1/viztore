@@ -95,6 +95,8 @@ export function createOrderService(
         storeId: order.storeId,
         grandTotal: order.grandTotal,
         itemsCount: order.items.length,
+        customerPhone: order.shippingAddress?.phone,
+        deliveryOtp: order.deliveryOtp,
       });
     }
 

@@ -1,6 +1,6 @@
 # Viztore Platform — Implementation Checklist
 
-> **Overall Status:** Phase 1, Phase 2 (UI Refined), Phase 3, Phase 4/5/6 Backend Complete | 67/67 Unit & Integration Tests Passing | Full Monorepo Clean Build | Docker & Staging Blueprints Ready
+> **Overall Status:** Phase 1, Phase 2 (UI Refined), Phase 3, Phase 4/5/6 Backend Complete | 82/82 Unit & Integration Tests Passing | Full Monorepo Clean Build | Docker & Staging Blueprints Ready
 
 ---
 
@@ -158,8 +158,8 @@
 - [x] WhatsApp notification link constructor & Google Maps turn-by-turn routing URL generator
 - [x] Physical 4-digit Delivery OTP handshake & handoff verification
 - [x] Centralized `notifications/` modular backend architecture (`notification.module.ts`, `notification.service.ts`, `notification.repository.ts`, `notification.controller.ts`)
-- [x] Multi-recipient routing (`merchant`, `customer`, `admin`) and category segregation (`order`, `inventory`, `system`, `promo`)
 - [x] Real-time Socket.io push broadcasts (`NOTIFICATION_CREATED`) & Redis adapter integration
+- [x] Live Meta WhatsApp Cloud API outbound service (`whatsapp.service.ts`): Automated dispatches for Customer Order Placed (`#ORD-xxxxx`, OTP), Rider Dispatch (pickup, destination, navigation link, OTP collection), Out-For-Delivery OTP reminder, and Delivery Completed receipts with resilient Indian phone normalization (14 unit tests passing)
 - [ ] Merchant audio chime alerts for incoming orders (Frontend UI)
 - [ ] Live customer order tracking map with driver ETA (Frontend UI)
 

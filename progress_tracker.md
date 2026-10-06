@@ -19,7 +19,7 @@
 | ↳ **Backend Architecture & APIs** | 30% | `[████████████████████]` | **100%** | 🟢 Live on Render | `https://viztore.onrender.com` Healthy |
 | ↳ **Merchant & Admin Panel** | 25% | `[████████████████████]` | **100%** | 🟢 Complete Suite | All 7/7 Modules & Settings Merged (`b92a159`) |
 | ↳ **Customer Web Storefront** | 25% | `[████████████████████]` | **100%** | 🟢 Storefront & Cart Engine | All 4/4 Modular Suites Merged (`e942cc9`) |
-| ↳ **Production Readiness & DevOps** | 20% | `[████████████████████]` | **100%** | 🟢 Staging Live | 67/67 Tests Green, Monorepo Clean Build |
+| ↳ **Production Readiness & DevOps** | 20% | `[████████████████████]` | **100%** | 🟢 Staging Live | 82/82 Tests Green, Monorepo Clean Build |
 | **Total Full-Platform Scope** (Phases 1–7) | — | `[█████████████████░░░]` | **88%** | ⚪ Roadmap Reserved | Customer Mobile App (Phase 7 / Tier 3) |
 
 > **Auto-Update Invariant**: This progress bar is recalculated and updated dynamically on every task assignment, milestone delivery, and PR merge per `.agents/rules/progress-tracking.md`.
@@ -150,7 +150,7 @@ Every online order placed through `apps/web` generates an authoritative, complia
 | **Shared Types** | TypeScript, Zod | **100% In Sync** ✅ | All contracts, validation schemas, DTOs, branding config |
 | **Real-Time & Events** | Socket.io + Redis Adapter + TypedEventBus | **Wired** ✅ | In-process domain events forwarded to Socket.io rooms with Redis distributed scaling |
 | **Agent Workflows** | Custom Skills & Rules | **Active** ✅ | Fullstack Feature Workflow, UI Matching, Intern Delegation, /create-task |
-| **Test Suite** | Vitest | **67/67 Passing** ✅ | 13 test suites (AppError, Auth/Addresses, Stores/Ratings, Onboarding, Catalog, Orders, Delivery, Notifications, WorkerPool, Cache-Aside, CORS Validation) |
+| **Test Suite** | Vitest | **82/82 Passing** ✅ | 14 test suites (AppError, Auth/Addresses, Stores/Ratings, Onboarding, Catalog, Orders, Delivery, Notifications, WhatsApp Cloud API, WorkerPool, Cache-Aside, CORS Validation) |
 | **Build Status** | Turborepo | **Clean** ✅ | Full monorepo builds with zero errors across all packages |
 | **Engineering Standards** | 8/8 Pillars (`structure.md`) | **100% Implemented** ✅ | Facades, Composition roots, 3-tier testing, EventBus, WorkerPool, Cache-Aside + Replica split, ESR indexing, Decoupled repos |
 
@@ -204,4 +204,5 @@ Every online order placed through `apps/web` generates an authoritative, complia
 - [x] Database Purge, Production Dataset Re-seed & Zero Static Mock Architecture (Complete purge and re-seed of MongoDB Atlas with 1 Super Admin, 2 Customers, 5 Indian Stores across Mumbai/BLR/Delhi, 24 polymorphic products with barcodes & variants, 5 active lifecycle orders; purged >1,800 lines of hardcoded mock data across merchant orderStore, catalogStore, inventoryStore, and customer web OrdersClient, WishlistClient, FashionStores, and AccountClient; full live API wiring with graceful empty states; all monorepo packages building cleanly, 67/67 unit tests passing)
 - [x] End-to-End Residual Static Fallback Elimination (Purged all residual hardcoded dummy arrays and automatic injectors: customer NotificationsDropdown, WishlistFlyout, ExploreStoresGrid fallbackStores, addresses defaultFallbackAddresses, OrderDetailsClient mock product/address; merchant LiveOrderAlerts, TopProducts, LowStockWarnings, OrderSummaryCard, SalesOverview, RevenueChart, and billingStore; verified live database connectivity and genuine empty states across empty and seeded collections)
 - [x] Merchant Operations & Orders Pipeline Defect Remediation (Fixed merchant logout transition preventing stale Fashion Hub dashboard views; removed static fallback tab counters `|| 18`, `|| 12`, etc., wiring pure dynamic order counts; unified `OrderStatus` casing to uppercase and persisted active tab state across page reloads; verified dynamic store profile hydration from `/stores/mine`)
+- [x] Live Meta WhatsApp Cloud API Service Integration (`whatsapp.service.ts`): Wired official Meta Graph API v20.0 service into event-driven notification lifecycle; automated outbound dispatches for Customer Order Placed (`#ORD-xxxxx`, items, total, 4-digit Delivery OTP), Rider Delivery Assignment (pickup/drop coordinates, Google Maps route, OTP instructions), Customer Out-For-Delivery, and Delivery Completed receipts; resilient Indian/E.164 phone number normalization, test dry-run mode, and 14 unit tests passing (82/82 total tests passing).
 

@@ -7,12 +7,14 @@ import { createNotificationRouter } from './notification.routes.js';
 import { eventBus, type IEventBus } from '../../shared/events/eventBus.js';
 import { EVENTS } from '../../shared/events/eventTypes.js';
 import type { INotificationRepository, INotificationService } from './notification.types.js';
+import { createWhatsAppService, type IWhatsAppService } from './whatsapp.service.js';
 import { logger } from '../../shared/utils/logger.js';
 
 export interface NotificationModule {
   router: Router;
   service: INotificationService;
   repository: INotificationRepository;
+  whatsapp: IWhatsAppService;
 }
 
 export function createNotificationModule(events: IEventBus = eventBus): NotificationModule {
@@ -20,6 +22,7 @@ export function createNotificationModule(events: IEventBus = eventBus): Notifica
   const service = createNotificationService(repository, events);
   const controller = createNotificationController(service);
   const router = createNotificationRouter(controller);
+  const whatsapp = createWhatsAppService();
 
   // Wire asynchronous domain event listeners to generate persistent notifications
   events.on(EVENTS.ORDER_PLACED, async (payload) => {
@@ -34,7 +37,7 @@ export function createNotificationModule(events: IEventBus = eventBus): Notifica
         data: { orderId: payload.orderId, orderNumber: payload.orderNumber },
       });
 
-      // 2. Customer Notification
+      // 2. Customer In-App Notification
       await service.createNotification({
         recipientId: payload.userId,
         recipientRole: 'customer',
@@ -43,6 +46,16 @@ export function createNotificationModule(events: IEventBus = eventBus): Notifica
         message: `Your order #${payload.orderNumber} has been received and is awaiting store confirmation.`,
         data: { orderId: payload.orderId, orderNumber: payload.orderNumber },
       });
+
+      // 3. Outbound Meta WhatsApp Notification to Customer
+      if (payload.customerPhone) {
+        await whatsapp.sendOrderConfirmation(payload.customerPhone, {
+          orderNumber: payload.orderNumber,
+          grandTotal: payload.grandTotal,
+          itemsCount: payload.itemsCount,
+          deliveryOtp: payload.deliveryOtp,
+        });
+      }
     } catch (err) {
       logger.warn(`[NotificationModule] Failed to generate notification on ORDER_PLACED: ${err instanceof Error ? err.message : String(err)}`);
     }
@@ -80,6 +93,7 @@ export function createNotificationModule(events: IEventBus = eventBus): Notifica
 
   events.on(EVENTS.DELIVERY_ASSIGNED, async (payload) => {
     try {
+      // 1. In-app customer notification
       await service.createNotification({
         recipientId: payload.orderId,
         recipientRole: 'customer',
@@ -88,6 +102,21 @@ export function createNotificationModule(events: IEventBus = eventBus): Notifica
         message: `Rider ${payload.riderId} assigned. Estimated arrival in ${payload.estimatedMinutes} mins.`,
         data: { orderId: payload.orderId, riderId: payload.riderId },
       });
+
+      // 2. Outbound WhatsApp to Assigned Rider with dispatch instructions & map link
+      if (payload.riderPhone && payload.dispatchMessage) {
+        await whatsapp.sendTextMessage(payload.riderPhone, payload.dispatchMessage);
+      }
+
+      // 3. Outbound WhatsApp to Customer (Out for Delivery + Delivery OTP)
+      if (payload.customerPhone && payload.deliveryOtp) {
+        await whatsapp.sendOutForDelivery(payload.customerPhone, {
+          orderNumber: payload.orderId,
+          riderName: payload.riderName || 'Assigned Partner',
+          deliveryOtp: payload.deliveryOtp,
+          etaMinutes: payload.estimatedMinutes,
+        });
+      }
     } catch (err) {
       logger.warn(`[NotificationModule] Failed to generate notification on DELIVERY_ASSIGNED: ${err instanceof Error ? err.message : String(err)}`);
     }
@@ -95,6 +124,7 @@ export function createNotificationModule(events: IEventBus = eventBus): Notifica
 
   events.on(EVENTS.DELIVERY_COMPLETED, async (payload) => {
     try {
+      // 1. In-app customer notification
       await service.createNotification({
         recipientId: payload.orderId,
         recipientRole: 'customer',
@@ -103,6 +133,13 @@ export function createNotificationModule(events: IEventBus = eventBus): Notifica
         message: `Your order #${payload.orderNumber} was successfully delivered.`,
         data: { orderId: payload.orderId, orderNumber: payload.orderNumber },
       });
+
+      // 2. Outbound WhatsApp delivery completion receipt
+      if (payload.customerPhone) {
+        await whatsapp.sendDeliveryCompleted(payload.customerPhone, {
+          orderNumber: payload.orderNumber,
+        });
+      }
     } catch (err) {
       logger.warn(`[NotificationModule] Failed to generate notification on DELIVERY_COMPLETED: ${err instanceof Error ? err.message : String(err)}`);
     }
@@ -123,5 +160,5 @@ export function createNotificationModule(events: IEventBus = eventBus): Notifica
     }
   });
 
-  return { router, service, repository };
+  return { router, service, repository, whatsapp };
 }

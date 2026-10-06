@@ -140,6 +140,9 @@ export function createDeliveryService(
         orderId,
         riderId: dto.rider.id,
         estimatedMinutes: dto.estimatedMinutes,
+        riderPhone: dto.rider.phone,
+        riderName: dto.rider.name,
+        dispatchMessage,
       });
       logger.info(`[DeliveryService] Emitted DELIVERY_ASSIGNED for order ${orderId} to rider ${dto.rider.id}`);
     }

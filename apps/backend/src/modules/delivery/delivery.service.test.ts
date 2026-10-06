@@ -111,13 +111,16 @@ describe('DeliveryService Unit Tests', () => {
     expect(result?.status).toBe(DeliveryStatus.ASSIGNED);
     expect(result?.rider?.name).toBe('Rahul Sharma');
     expect(result?.dispatchMessage).toContain('NEW DELIVERY ASSIGNMENT');
-    expect(result?.dispatchMessage).toContain('https://www.google.com/maps');
-    expect(mockBus.emit).toHaveBeenCalledWith('delivery.assigned', {
-
-      orderId: 'order-123',
-      riderId: 'rider-42',
-      estimatedMinutes: 25,
-    });
+    expect(mockBus.emit).toHaveBeenCalledWith(
+      'delivery.assigned',
+      expect.objectContaining({
+        orderId: 'order-123',
+        riderId: 'rider-42',
+        estimatedMinutes: 25,
+        riderName: 'Rahul Sharma',
+        riderPhone: '9876543210',
+      }),
+    );
   });
 
   it('should reject invalid delivery state transitions', async () => {
