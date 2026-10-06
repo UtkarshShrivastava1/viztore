@@ -23,7 +23,7 @@ const DUMMY_NOTIFICATIONS = [
     id: 1,
     type: 'orders',
     title: 'Your order has been delivered',
-    message: 'Order #VZ785612 has been delivered successfully.',
+    message: 'Order #ORD-785612 has been delivered successfully.',
     time: '10 minutes ago',
     icon: <Briefcase className="w-5 h-5 text-purple-600" />,
     bgClass: 'bg-purple-50',
@@ -112,7 +112,7 @@ const DUMMY_NOTIFICATIONS = [
   {
     id: 10,
     type: 'updates',
-    title: 'Welcome to Viztore!',
+    title: `Welcome to ${branding.appName}!`,
     message: 'Explore local stores, amazing products and exclusive offers.',
     time: '1 week ago',
     icon: <Megaphone className="w-5 h-5 text-emerald-500" />,

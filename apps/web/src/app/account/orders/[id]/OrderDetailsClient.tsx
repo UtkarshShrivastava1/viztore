@@ -70,7 +70,7 @@ export function OrderDetailsClient({ id }: { id: string }) {
   }, [id]);
 
   // Use fallback values matching screenshot if order is not loaded but we don't want to show empty state just for UI
-  const displayId = order?.orderNumber || (id.startsWith('ORD') ? `#${id}` : `#VZT123456789`);
+  const displayId = order?.orderNumber || (id.startsWith('ORD') ? `#${id}` : `#ORD-123456789`);
   const otpDigits = (order?.deliveryOtp || '738216').split('');
 
   // Status progression checks

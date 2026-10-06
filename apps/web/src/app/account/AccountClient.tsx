@@ -258,7 +258,7 @@ export function AccountClient() {
               <MobileNav 
                 icon={<Store className="w-5 h-5 text-blue-500" />} 
                 bg="bg-blue-50" 
-                title="Sell on Viztore" 
+                title={`Sell on ${branding.appName}`} 
                 desc="Start selling and grow your business" 
                 href="/account/sell" 
                 badge="New"

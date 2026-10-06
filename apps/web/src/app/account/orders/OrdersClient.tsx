@@ -55,27 +55,27 @@ export function OrdersClient() {
         // Using mock data to match the screenshot precisely for demo purposes
         const liveOrders: DisplayOrder[] = [
           {
-            id: '#VZT123456789', type: 'regular', status: 'Delivered', date: '08 May 2024, 10:30 AM',
+            id: '#ORD-123456789', type: 'regular', status: 'Delivered', date: '08 May 2024, 10:30 AM',
             productName: 'Men Graphic Print T-shirt', variants: 'Olive Green • Size: L • Qty: 1', price: 399, total: 399, image: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&q=80&w=200&h=200'
           },
           {
-            id: '#VZT123456788', type: 'regular', status: 'To Be Delivered', date: '05 May 2024, 09:15 PM',
+            id: '#ORD-123456788', type: 'regular', status: 'To Be Delivered', date: '05 May 2024, 09:15 PM',
             productName: 'Men Striped Round Neck T-shirt', variants: 'White/Navy • Size: M • Qty: 1', price: 449, total: 449, image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&q=80&w=200&h=200'
           },
           {
-            id: '#VZT123456787', type: 'regular', status: 'Delivered', date: '02 May 2024, 06:40 PM',
+            id: '#ORD-123456787', type: 'regular', status: 'Delivered', date: '02 May 2024, 06:40 PM',
             productName: 'Men Oversized T-shirt', variants: 'Black • Size: XL • Qty: 1', price: 499, total: 499, image: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?auto=format&fit=crop&q=80&w=200&h=200'
           },
           {
-            id: '#VZT123456786', type: 'regular', status: 'Cancelled', date: '28 Apr 2024, 11:20 AM',
+            id: '#ORD-123456786', type: 'regular', status: 'Cancelled', date: '28 Apr 2024, 11:20 AM',
             productName: 'Men Cotton Plain T-shirt', variants: 'Mauve • Size: M • Qty: 1', price: 329, total: 329, image: 'https://images.unsplash.com/photo-1618517351616-38fb9c52e0c6?auto=format&fit=crop&q=80&w=200&h=200'
           },
           {
-            id: '#VZT123456785', type: 'regular', status: 'Delivered', date: '25 Apr 2024, 08:10 PM',
+            id: '#ORD-123456785', type: 'regular', status: 'Delivered', date: '25 Apr 2024, 08:10 PM',
             productName: 'Men Polo T-shirt', variants: 'Navy Blue • Size: L • Qty: 1', price: 349, total: 349, image: 'https://images.unsplash.com/photo-1581655353564-df123a1eb820?auto=format&fit=crop&q=80&w=200&h=200'
           },
           {
-            id: '#VZR123456782', type: 'reserve', status: 'Reserved', date: '26 Apr 2024, 04:30 PM',
+            id: '#RSV-123456782', type: 'reserve', status: 'Reserved', date: '26 Apr 2024, 04:30 PM',
             productName: 'Men White Sneakers', variants: 'White • Size: 9 • Qty: 1', price: 1299, total: 1299, reserveTill: '30 Apr 2024, 08:00 PM', image: 'https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?auto=format&fit=crop&q=80&w=200&h=200'
           },
           {

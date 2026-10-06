@@ -81,7 +81,7 @@ export function PrivacyClient() {
                   <h1 className="text-[24px] md:text-[32px] font-extrabold text-[#192168] leading-tight">Privacy Policy</h1>
                 </div>
                 <p className="text-[12px] text-surface-500 leading-relaxed max-w-[220px]">
-                  Your privacy is important to us. This Privacy Policy explains how Viztore collects, uses, discloses and protects your information...
+                  Your privacy is important to us. This Privacy Policy explains how {branding.appName} collects, uses, discloses and protects your information...
                 </p>
               </div>
 

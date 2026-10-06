@@ -38,7 +38,7 @@ export function SupportClient() {
     { id: 'returns', icon: <RotateCcw className="w-5 h-5 text-amber-500" />, title: 'Returns &\nRefunds' },
     { id: 'payments', icon: <CreditCard className="w-5 h-5 text-emerald-500" />, title: 'Payments &\nOffers' },
     { id: 'account', icon: <User className="w-5 h-5 text-purple-500" />, title: 'Account &\nProfile' },
-    { id: 'selling', icon: <Store className="w-5 h-5 text-rose-500" />, title: 'Selling on\nViztore' },
+    { id: 'selling', icon: <Store className="w-5 h-5 text-rose-500" />, title: `Selling on\n${branding.appName}` },
   ];
 
   const TOP_TOPICS = [
@@ -179,7 +179,7 @@ export function SupportClient() {
                     Email Us <ChevronRight className="w-3.5 h-3.5 text-surface-400" />
                   </h4>
                   <p className="text-[10px] text-surface-500 mb-3 leading-tight flex-1">Drop us an email and we'll get back to you</p>
-                  <span className="text-[10px] font-bold text-[#1668F6]">support@viztore.com</span>
+                  <span className="text-[10px] font-bold text-[#1668F6]">{branding.supportEmail}</span>
                 </div>
               </div>
             </div>
