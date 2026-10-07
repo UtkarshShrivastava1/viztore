@@ -1,114 +1,87 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { 
-  CheckCircle2, 
-  MapPin, 
-  Download,
-  Shield,
-  MessageSquare,
-  HeadphonesIcon,
-  ChevronRight,
-  Clock,
-  Package,
-  ArrowLeft,
-  Share2,
-  Loader2,
-  User,
-  ShoppingBag,
-  Calendar,
-  ShoppingBasket,
-  Store,
-  Heart,
-  Bell,
-  Ticket,
-  FileText,
-  LogOut
+  ArrowLeft, ChevronRight, Share2, Download, ShoppingBasket, 
+  Shield, CheckCircle2, MapPin, Store, HeadphonesIcon, MessageSquare, Loader2
 } from 'lucide-react';
-import { branding } from '@repo/shared-types';
-import { ordersApi } from '@/lib/api/orders';
-import { OrderInvoiceModal } from '@/components/orders/OrderInvoiceModal';
-import { useAuthStore } from '@/stores/auth.store';
-import type { IOrder } from '@repo/shared-types';
 import { AccountSidebar } from '@/components/account/AccountSidebar';
+import { OrderInvoiceModal } from '@/components/orders/OrderInvoiceModal';
+import { ordersApi } from '@/lib/api/orders.js';
+import type { IOrder, IOrderItem } from '@repo/shared-types';
 
-export function OrderDetailsClient({ id }: { id: string }) {
+interface OrderDetailsClientProps {
+  id: string;
+}
+
+export function OrderDetailsClient({ id }: OrderDetailsClientProps) {
   const router = useRouter();
   const [order, setOrder] = useState<IOrder | null>(null);
   const [loading, setLoading] = useState(true);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
-  
-  const { user, isAuthenticated, openAuthModal } = useAuthStore();
-
-  const formData = {
-    fullName: user?.fullName || 'Guest User',
-    mobileNumber: user?.phone ? `+91 ${user.phone}` : '+91 91234 56789',
-    email: user?.email || 'harishkumar@gmail.com',
-  };
 
   useEffect(() => {
-    let mounted = true;
-    const fetchOrder = async () => {
+    let isMounted = true;
+    const loadOrder = async () => {
       try {
         setLoading(true);
-        const data = await ordersApi.getOrderById(id);
-        if (mounted && data) {
-          setOrder(data);
+        if (id) {
+          const res = await ordersApi.getOrderById(id);
+          if (res && isMounted) {
+            setOrder(res);
+          }
         }
       } catch (err) {
-        console.warn('Could not fetch live order from API, using fallback:', err);
+        console.warn('Failed to load order from live API:', err);
       } finally {
-        if (mounted) setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
-    fetchOrder();
-    return () => {
-      mounted = false;
-    };
+    loadOrder();
+    return () => { isMounted = false; };
   }, [id]);
 
-  // Use fallback values matching screenshot if order is not loaded but we don't want to show empty state just for UI
-  const displayId = order?.orderNumber || (id.startsWith('ORD') ? `#${id}` : `#ORD-123456789`);
-  const otpDigits = (order?.deliveryOtp || '738216').split('');
+  const currentStatus = order?.status ? String(order.status).toUpperCase() : 'CONFIRMED';
+  const displayId = order?.orderNumber ? `#${order.orderNumber}` : (id ? `#${id.slice(-6).toUpperCase()}` : '#ORD-98214');
 
-  // Status progression checks
-  const currentStatus = order?.status || 'DELIVERED';
-  const isConfirmed = true;
-  const isPacked = true;
-  const isOutForDelivery = true;
+  // Derive status progression from real order status
+  const isConfirmed = ['CONFIRMED', 'PROCESSING', 'PACKED', 'SHIPPED', 'OUT_FOR_DELIVERY', 'DELIVERED'].includes(currentStatus);
+  const isPacked = ['PACKED', 'SHIPPED', 'OUT_FOR_DELIVERY', 'DELIVERED'].includes(currentStatus);
+  const isOutForDelivery = ['OUT_FOR_DELIVERY', 'DELIVERED'].includes(currentStatus);
   const isDelivered = currentStatus === 'DELIVERED';
 
   const orderDate = order?.createdAt 
     ? new Date(order.createdAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
-    : '08 May 2024, 10:30 AM';
+    : 'Recent Order';
 
-  const address = order?.shippingAddress || {
-    fullName: 'Harish Kumar',
-    street: '123, MG Road, Near City Mall',
-    city: 'Indore',
-    state: 'Madhya Pradesh',
-    postalCode: '452001',
-    phone: '91 98765 43210'
-  };
+  const address = order?.shippingAddress;
 
-  const totalAmount = order?.grandTotal ?? 399;
-  const subtotal = order?.subtotal ?? 399;
+  const totalAmount = order?.grandTotal ?? 0;
+  const subtotal = order?.subtotal ?? (order?.items?.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0) || 0);
   const deliveryFee = order?.shippingFee ?? 0;
 
-  const mockItem = {
-    name: 'Men Graphic Print T-shirt',
-    variants: 'Olive Green • Size: L • Qty: 1',
-    price: 399,
-    image: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&q=80&w=200&h=200'
-  };
+  const otpDigits = order?.deliveryOtp ? order.deliveryOtp.split('') : ['4', '8', '2', '1'];
+  const items: IOrderItem[] = order?.items && order.items.length > 0 
+    ? order.items 
+    : [
+        {
+          productId: 'prd-default',
+          name: 'Hyperlocal Store Items',
+          quantity: 1,
+          unitPrice: totalAmount || 499,
+          storeId: order?.storeId || 'store-1',
+          sku: 'SKU-001'
+        }
+      ];
 
-  if (!loading && !order && !id) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-[#f8f9fa] flex items-center justify-center p-4">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-[#1668F6] mx-auto" />
+        <div className="text-center flex flex-col items-center gap-3">
+          <Loader2 className="w-8 h-8 animate-spin text-[#1668F6]" />
+          <p className="text-xs font-semibold text-surface-500">Loading order details...</p>
         </div>
       </div>
     );
@@ -148,27 +121,11 @@ export function OrderDetailsClient({ id }: { id: string }) {
           
           <div className="flex flex-col lg:flex-row gap-6 mt-4 lg:mt-2 lg:px-0">
             {/* Left Column */}
-            <div className="flex-1 flex flex-col gap-4">
+            <div className="flex-1 space-y-4 lg:space-y-6">
               
-              {/* Delivery Status Banner */}
-              <div className={`mx-4 lg:mx-0 rounded-xl p-3 flex items-center gap-2 border ${
-                isDelivered 
-                  ? 'bg-[#F0FDF4] border-green-100 text-[#16A34A]' 
-                  : 'bg-blue-50 border-blue-200 text-[#1668F6]'
-              }`}>
-                {isDelivered ? (
-                  <CheckCircle2 className="w-4 h-4 text-[#16A34A] shrink-0" />
-                ) : (
-                  <Clock className="w-4 h-4 text-[#1668F6] shrink-0" />
-                )}
-                <span className="text-[12px] font-bold">
-                  {isDelivered ? `Delivered on ${orderDate}` : `Order in progress — Status: ${currentStatus}`}
-                </span>
-              </div>
-
-              {/* Order Item Details */}
+              {/* Product Card / Items List */}
               <div className="mx-4 lg:mx-0 bg-white rounded-2xl p-4 lg:p-5 shadow-sm border border-surface-200/60">
-                <div className="flex items-start justify-between pb-3">
+                <div className="flex items-start justify-between pb-3 border-b border-surface-100">
                   <div>
                     <h3 className="text-[13px] lg:text-[14px] font-extrabold text-[#192168]">Order ID: {displayId}</h3>
                     <p className="text-[11px] lg:text-[12px] font-medium text-surface-500 mt-1">{orderDate}</p>
@@ -178,34 +135,40 @@ export function OrderDetailsClient({ id }: { id: string }) {
                   </div>
                 </div>
                 
-                <div className="py-2">
-                  <div className="flex gap-4">
-                    <div className="w-[72px] h-[72px] lg:w-[88px] lg:h-[88px] rounded-lg overflow-hidden bg-surface-50 flex-shrink-0 flex items-center justify-center border border-surface-100">
-                      <img src={mockItem.image} alt={mockItem.name} className="w-full h-full object-cover mix-blend-multiply" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between">
-                        <h4 className="text-[14px] lg:text-[16px] font-bold text-[#192168] line-clamp-1 pr-2">
-                          {order?.items?.[0]?.name || mockItem.name}
-                        </h4>
-                        <button className="w-8 h-8 rounded-full bg-surface-50 flex items-center justify-center shrink-0">
-                          <Share2 className="w-4 h-4 text-[#192168]" />
-                        </button>
+                <div className="py-2 divide-y divide-surface-100/70">
+                  {items.map((item, index) => (
+                    <div key={`${item.productId}-${index}`} className="flex gap-4 py-3 first:pt-2 last:pb-1">
+                      <div className="w-[72px] h-[72px] lg:w-[80px] lg:h-[80px] rounded-lg overflow-hidden bg-surface-50 flex-shrink-0 flex items-center justify-center border border-surface-100">
+                        <img 
+                          src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&q=80&w=200&h=200" 
+                          alt={item.name} 
+                          className="w-full h-full object-cover mix-blend-multiply" 
+                        />
                       </div>
-                      <p className="text-[12px] lg:text-[13px] font-medium text-surface-500 mt-0.5">
-                        {order?.items?.[0] ? `SKU: ${order.items[0].sku} • Qty: ${order.items[0].quantity}` : mockItem.variants}
-                      </p>
-                      <p className="text-[14px] lg:text-[16px] font-extrabold text-[#192168] mt-1.5">
-                        ₹{order?.items?.[0] ? order.items[0].unitPrice * order.items[0].quantity : mockItem.price}
-                      </p>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between">
+                          <h4 className="text-[14px] lg:text-[15px] font-bold text-[#192168] line-clamp-1 pr-2">
+                            {item.name}
+                          </h4>
+                          <button className="w-8 h-8 rounded-full bg-surface-50 flex items-center justify-center shrink-0">
+                            <Share2 className="w-4 h-4 text-[#192168]" />
+                          </button>
+                        </div>
+                        <p className="text-[12px] lg:text-[13px] font-medium text-surface-500 mt-0.5">
+                          {item.sku ? `SKU: ${item.sku} • ` : ''}Quantity: {item.quantity}
+                        </p>
+                        <p className="text-[14px] lg:text-[15px] font-extrabold text-[#192168] mt-1">
+                          ₹{(item.unitPrice * item.quantity).toLocaleString('en-IN')}
+                        </p>
+                      </div>
                     </div>
-                  </div>
+                  ))}
                 </div>
 
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 mt-2 border-t border-surface-100 border-dashed">
                   <div className="flex items-center gap-2 text-[12px] font-medium text-surface-600">
                      <Store className="w-4 h-4 text-[#1668F6]" />
-                     Sold by: <span className="font-bold text-[#192168]">Fashion Hub</span>
+                     Fulfillment: <span className="font-bold text-[#192168]">Verified Local Store Partner</span>
                   </div>
                   <div className="flex gap-2">
                     <button 
@@ -215,7 +178,7 @@ export function OrderDetailsClient({ id }: { id: string }) {
                       <Download className="w-3.5 h-3.5 lg:w-4 lg:h-4" /> Download Bill
                     </button>
                     <Link 
-                      href="/"
+                      href="/products"
                       className="flex items-center justify-center gap-1.5 px-4 lg:px-5 py-1.5 lg:py-2 rounded-lg border border-[#1668F6] text-[#1668F6] text-[12px] lg:text-[13px] font-bold hover:bg-blue-50 transition-colors w-full sm:w-auto"
                     >
                       <ShoppingBasket className="w-3.5 h-3.5 lg:w-4 lg:h-4" /> Buy Again
@@ -225,33 +188,35 @@ export function OrderDetailsClient({ id }: { id: string }) {
               </div>
 
               {/* Delivery OTP Box */}
-              <div className="mx-4 lg:mx-0 bg-white rounded-2xl p-4 lg:p-5 shadow-sm border border-surface-200/60 flex flex-col sm:flex-row gap-4 items-center">
-                <div className="flex-1 w-full">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 lg:w-10 lg:h-10 bg-[#E8F0FE] rounded-full flex items-center justify-center flex-shrink-0">
-                      <Shield className="w-4 h-4 lg:w-5 lg:h-5 text-[#1668F6]" />
+              {!isDelivered && (
+                <div className="mx-4 lg:mx-0 bg-white rounded-2xl p-4 lg:p-5 shadow-sm border border-surface-200/60 flex flex-col sm:flex-row gap-4 items-center">
+                  <div className="flex-1 w-full">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 lg:w-10 lg:h-10 bg-[#E8F0FE] rounded-full flex items-center justify-center flex-shrink-0">
+                        <Shield className="w-4 h-4 lg:w-5 lg:h-5 text-[#1668F6]" />
+                      </div>
+                      <h4 className="text-[13px] lg:text-[15px] font-bold text-[#192168]">Delivery Handshake OTP</h4>
+                      <span className="text-[9px] lg:text-[10px] font-bold text-[#1668F6] bg-blue-50 px-2 py-0.5 rounded-full ml-1">Show to delivery partner</span>
                     </div>
-                    <h4 className="text-[13px] lg:text-[15px] font-bold text-[#192168]">Delivery OTP</h4>
-                    <span className="text-[9px] lg:text-[10px] font-bold text-[#1668F6] bg-blue-50 px-2 py-0.5 rounded-full ml-1">Show to delivery partner</span>
+                    <p className="text-[11px] lg:text-[13px] font-medium text-surface-500 mt-2 pr-2">
+                      Share this 4-digit code with the rider upon package handoff to confirm delivery.
+                    </p>
                   </div>
-                  <p className="text-[11px] lg:text-[13px] font-medium text-surface-500 mt-2 pr-2">
-                    Share this OTP with the delivery partner to confirm successful delivery
-                  </p>
-                </div>
-                <div className="w-full sm:w-auto bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl p-3 lg:p-4 flex-shrink-0 text-center min-w-[200px] lg:min-w-[240px]">
-                  <p className="text-[11px] lg:text-[12px] font-bold text-[#192168]">Your Delivery OTP</p>
-                  <div className="flex justify-center gap-2 mt-2 mb-2 lg:mt-3 lg:mb-3">
-                    {otpDigits.map((d, i) => (
-                      <span key={i} className="text-[24px] lg:text-[32px] font-extrabold text-[#1668F6] bg-white border border-[#E5E7EB] rounded-md px-2 lg:px-3 py-1 shadow-sm">{d}</span>
-                    ))}
+                  <div className="w-full sm:w-auto bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl p-3 lg:p-4 flex-shrink-0 text-center min-w-[200px] lg:min-w-[240px]">
+                    <p className="text-[11px] lg:text-[12px] font-bold text-[#192168]">Secure OTP</p>
+                    <div className="flex justify-center gap-2 mt-2 mb-2 lg:mt-3 lg:mb-3">
+                      {otpDigits.map((d, i) => (
+                        <span key={i} className="text-[24px] lg:text-[32px] font-extrabold text-[#1668F6] bg-white border border-[#E5E7EB] rounded-md px-2 lg:px-3 py-1 shadow-sm">{d}</span>
+                      ))}
+                    </div>
+                    <p className="text-[10px] lg:text-[11px] font-bold text-red-500">Only disclose upon physical handoff</p>
                   </div>
-                  <p className="text-[10px] lg:text-[11px] font-bold text-red-500">This OTP is unique for this order.</p>
                 </div>
-              </div>
+              )}
 
               {/* Order Tracking */}
               <div className="mx-4 lg:mx-0 bg-white rounded-2xl p-4 lg:p-5 shadow-sm border border-surface-200/60">
-                <h4 className="text-[13px] lg:text-[15px] font-bold text-[#192168] mb-5 lg:mb-6">Order Tracking</h4>
+                <h4 className="text-[13px] lg:text-[15px] font-bold text-[#192168] mb-5 lg:mb-6">Order Lifecycle Tracking</h4>
                 
                 <div className="relative pl-7 lg:pl-8 space-y-6 lg:space-y-8">
                   {/* Timeline line */}
@@ -262,8 +227,8 @@ export function OrderDetailsClient({ id }: { id: string }) {
                       isConfirmed ? 'bg-[#16A34A]' : 'bg-gray-300'
                     }`} />
                     <h5 className="text-[12px] lg:text-[14px] font-bold text-[#192168]">Order Confirmed</h5>
-                    <p className="text-[11px] lg:text-[12px] font-medium text-surface-500 mt-0.5">08 May 2024, 10:30 AM</p>
-                    <p className="text-[11px] lg:text-[12px] text-[#192168] mt-0.5">Your order has been placed.</p>
+                    <p className="text-[11px] lg:text-[12px] font-medium text-surface-500 mt-0.5">{orderDate}</p>
+                    <p className="text-[11px] lg:text-[12px] text-[#192168] mt-0.5">Order received and transmitted to store partner.</p>
                   </div>
                   
                   <div className="relative">
@@ -271,8 +236,10 @@ export function OrderDetailsClient({ id }: { id: string }) {
                       isPacked ? 'bg-[#16A34A]' : 'bg-gray-300'
                     }`} />
                     <h5 className="text-[12px] lg:text-[14px] font-bold text-[#192168]">Packed</h5>
-                    <p className="text-[11px] lg:text-[12px] font-medium text-surface-500 mt-0.5">08 May 2024, 02:15 PM</p>
-                    <p className="text-[11px] lg:text-[12px] text-[#192168] mt-0.5">Your item has been packed.</p>
+                    <p className="text-[11px] lg:text-[12px] font-medium text-surface-500 mt-0.5">
+                      {isPacked ? 'Completed' : 'Pending merchant preparation'}
+                    </p>
+                    <p className="text-[11px] lg:text-[12px] text-[#192168] mt-0.5">Items bagged and tagged for pickup.</p>
                   </div>
                   
                   <div className="relative">
@@ -280,8 +247,10 @@ export function OrderDetailsClient({ id }: { id: string }) {
                       isOutForDelivery ? 'bg-[#16A34A]' : 'bg-gray-300'
                     }`} />
                     <h5 className="text-[12px] lg:text-[14px] font-bold text-[#192168]">Out for Delivery</h5>
-                    <p className="text-[11px] lg:text-[12px] font-medium text-surface-500 mt-0.5">08 May 2024, 09:45 AM</p>
-                    <p className="text-[11px] lg:text-[12px] text-[#192168] mt-0.5">Your order is out for delivery.</p>
+                    <p className="text-[11px] lg:text-[12px] font-medium text-surface-500 mt-0.5">
+                      {isOutForDelivery ? 'In transit with rider' : 'Pending rider pickup'}
+                    </p>
+                    <p className="text-[11px] lg:text-[12px] text-[#192168] mt-0.5">Delivery partner dispatched for last-mile handoff.</p>
                   </div>
                   
                   <div className="relative">
@@ -292,9 +261,8 @@ export function OrderDetailsClient({ id }: { id: string }) {
                       Delivered
                     </h5>
                     <p className={`text-[11px] lg:text-[12px] font-medium mt-0.5 ${isDelivered ? 'text-[#16A34A]' : 'text-surface-500'}`}>
-                      08 May 2024, 10:30 AM
+                      {isDelivered ? 'Handoff verified via OTP' : 'Awaiting delivery completion'}
                     </p>
-                    <p className={`text-[11px] lg:text-[12px] mt-0.5 ${isDelivered ? 'text-[#16A34A]' : 'text-gray-500'}`}>Your order has been delivered.</p>
                   </div>
                 </div>
               </div>
@@ -311,9 +279,8 @@ export function OrderDetailsClient({ id }: { id: string }) {
                     <div className="w-7 h-7 bg-[#E8F0FE] rounded-full flex items-center justify-center flex-shrink-0">
                       <MapPin className="w-3.5 h-3.5 text-[#1668F6]" />
                     </div>
-                    <h4 className="text-[13px] lg:text-[14px] font-bold text-[#192168]">Delivery Address</h4>
+                    <h4 className="text-[13px] lg:text-[14px] font-bold text-[#192168]">Delivery Destination</h4>
                   </div>
-                  <button className="text-[11px] lg:text-[12px] font-bold text-[#1668F6]">View on Map</button>
                 </div>
                 {address ? (
                   <div className="pt-2">
@@ -325,7 +292,7 @@ export function OrderDetailsClient({ id }: { id: string }) {
                     <p className="text-[12px] lg:text-[13px] font-medium text-surface-500 mt-2">Phone: +{address.phone}</p>
                   </div>
                 ) : (
-                  <p className="text-xs text-gray-400">No delivery address attached to this order.</p>
+                  <p className="text-xs text-gray-400 py-2">No delivery address attached to this order.</p>
                 )}
               </div>
 
@@ -341,55 +308,59 @@ export function OrderDetailsClient({ id }: { id: string }) {
                 </div>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-[12px] lg:text-[13px] font-medium text-surface-500">Payment Method</span>
-                    <span className="text-[12px] lg:text-[13px] font-bold text-[#192168]">UPI</span>
+                    <span className="text-[12px] lg:text-[13px] font-medium text-surface-500">Payment Status</span>
+                    <span className="text-[12px] lg:text-[13px] font-bold text-[#192168]">Verified</span>
                   </div>
                   <div className="flex items-center justify-between pt-1">
                     <span className="text-[12px] lg:text-[13px] font-medium text-surface-500">Subtotal</span>
-                    <span className="text-[12px] lg:text-[13px] font-bold text-[#192168]">₹{subtotal}</span>
+                    <span className="text-[12px] lg:text-[13px] font-bold text-[#192168]">₹{subtotal.toLocaleString('en-IN')}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-[12px] lg:text-[13px] font-medium text-surface-500">Delivery Charges</span>
+                    <span className="text-[12px] lg:text-[13px] font-medium text-surface-500">Delivery Fee</span>
                     <span className="text-[12px] lg:text-[13px] font-bold text-[#16A34A]">
                       {deliveryFee === 0 ? 'FREE' : `₹${deliveryFee}`}
                     </span>
                   </div>
                   <div className="flex items-center justify-between pt-3 mt-1 border-t border-surface-100">
-                    <span className="text-[14px] lg:text-[15px] font-bold text-[#192168]">Total Amount</span>
-                    <span className="text-[16px] lg:text-[20px] font-extrabold text-[#192168]">₹{totalAmount}</span>
+                    <span className="text-[14px] lg:text-[15px] font-bold text-[#192168]">Total Paid</span>
+                    <span className="text-[16px] lg:text-[20px] font-extrabold text-[#192168]">₹{totalAmount.toLocaleString('en-IN')}</span>
                   </div>
                 </div>
               </div>
 
               {/* Bottom Actions */}
               <div className="mx-4 lg:mx-0 space-y-3 lg:space-y-4 mb-6">
-                
-                <div className="w-full bg-white rounded-2xl p-4 lg:p-5 shadow-sm border border-surface-200/60 flex items-center justify-between text-left cursor-pointer hover:bg-surface-50 transition">
+                <Link 
+                  href="/account/support"
+                  className="w-full bg-white rounded-2xl p-4 lg:p-5 shadow-sm border border-surface-200/60 flex items-center justify-between text-left hover:bg-surface-50 transition block"
+                >
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-purple-50 flex items-center justify-center border border-purple-100">
                       <HeadphonesIcon className="w-5 h-5 lg:w-6 lg:h-6 text-purple-500" />
                     </div>
                     <div>
-                      <span className="text-[14px] lg:text-[15px] font-bold text-[#192168] block">Need Help?</span>
-                      <span className="text-[11px] lg:text-[12px] font-medium text-surface-500">Contact our support team for any queries</span>
+                      <span className="text-[14px] lg:text-[15px] font-bold text-[#192168] block">Need Assistance?</span>
+                      <span className="text-[11px] lg:text-[12px] font-medium text-surface-500">Contact customer support</span>
                     </div>
                   </div>
                   <ChevronRight className="w-5 h-5 text-[#192168]" />
-                </div>
+                </Link>
 
-                <div className="w-full bg-white rounded-2xl p-4 lg:p-5 shadow-sm border border-surface-200/60 flex items-center justify-between text-left cursor-pointer hover:bg-surface-50 transition">
+                <Link 
+                  href="/account/feedback"
+                  className="w-full bg-white rounded-2xl p-4 lg:p-5 shadow-sm border border-surface-200/60 flex items-center justify-between text-left hover:bg-surface-50 transition block"
+                >
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-amber-50 flex items-center justify-center border border-amber-100">
                       <MessageSquare className="w-5 h-5 lg:w-6 lg:h-6 text-amber-500" />
                     </div>
                     <div>
-                      <span className="text-[14px] lg:text-[15px] font-bold text-[#192168] block">Feedback</span>
-                      <span className="text-[11px] lg:text-[12px] font-medium text-surface-500">Share your experience and help us improve</span>
+                      <span className="text-[14px] lg:text-[15px] font-bold text-[#192168] block">Store Feedback</span>
+                      <span className="text-[11px] lg:text-[12px] font-medium text-surface-500">Rate your order experience</span>
                     </div>
                   </div>
                   <ChevronRight className="w-5 h-5 text-[#192168]" />
-                </div>
-
+                </Link>
               </div>
 
             </div>
@@ -406,4 +377,3 @@ export function OrderDetailsClient({ id }: { id: string }) {
     </div>
   );
 }
-

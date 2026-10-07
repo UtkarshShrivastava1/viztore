@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   ChevronRight,
   Search,
@@ -19,6 +19,7 @@ import {
   OrderLookupOption,
   ReturnType,
 } from '../../stores/returnsStore.js';
+import { useOrderStore } from '../../stores/orderStore.js';
 
 interface NewReturnViewProps {
   onCancel: () => void;
@@ -30,11 +31,35 @@ export const NewReturnView: React.FC<NewReturnViewProps> = ({
   onSuccess,
 }) => {
   const { addReturn } = useReturnsStore();
+  const merchantOrders = useOrderStore((state) => state.orders);
 
-  const [availableOrders] = useState<OrderLookupOption[]>(initialAvailableOrders);
+  const availableOrders = useMemo<OrderLookupOption[]>(() => {
+    if (merchantOrders && merchantOrders.length > 0) {
+      return merchantOrders.map((o) => ({
+        orderNumber: o.orderNumber,
+        customerName: o.customer.name,
+        customerEmail: o.customer.email,
+        customerPhone: o.customer.phone,
+        customerAddress: o.deliveryAddress.fullText || `${o.deliveryAddress.city}, ${o.deliveryAddress.state}`,
+        orderDate: 'Recent',
+        amount: o.pricing.totalAmount,
+        paymentMethod: o.payment?.paymentMethod || 'Online Paid',
+        product: {
+          name: o.items[0]?.name || 'Standard Item',
+          variant: o.items[0]?.variant || 'Default',
+          sku: o.items[0]?.id || 'SKU-001',
+          price: o.items[0]?.price || 0,
+          quantity: o.items[0]?.quantity || 1,
+          imageUrl: o.items[0]?.imageUrl || 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=120&auto=format&fit=crop&q=80',
+        },
+      }));
+    }
+    return initialAvailableOrders;
+  }, [merchantOrders]);
+
   const [orderSearchQuery, setOrderSearchQuery] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<OrderLookupOption>(
-    initialAvailableOrders[0]!
+    availableOrders[0] || initialAvailableOrders[0]!
   );
 
   const [returnQty, setReturnQty] = useState<number>(1);

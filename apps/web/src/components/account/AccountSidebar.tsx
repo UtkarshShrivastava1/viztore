@@ -30,8 +30,10 @@ export function AccountSidebar() {
   const pathname = usePathname();
 
   const formData = {
-    fullName: user?.fullName || 'Harish Kumar',
-    mobileNumber: user?.phone ? `+91 ${user.phone}` : '+91 91234 56789',
+    fullName: user?.fullName || (isAuthenticated ? 'Customer User' : 'Guest User'),
+    mobileNumber: user?.phone
+      ? (user.phone.startsWith('+91') ? user.phone : `+91 ${user.phone}`)
+      : 'Not Provided',
   };
 
   const isActive = (path: string) => pathname === path || pathname?.startsWith(path + '/');

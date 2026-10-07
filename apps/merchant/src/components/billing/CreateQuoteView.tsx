@@ -40,7 +40,7 @@ export const CreateQuoteView: React.FC<CreateQuoteViewProps> = ({ onBack }) => {
   const [referenceNo, setReferenceNo] = useState('PO-4587');
   const [currency, setCurrency] = useState('INR - Indian Rupee (₹)');
   const [paymentTerms, setPaymentTerms] = useState('30 Days');
-  const [salesPerson, setSalesPerson] = useState('Harish Kumar');
+  const [salesPerson, setSalesPerson] = useState('Store Staff (Lead)');
   const [notes, setNotes] = useState('');
 
   // Barcode scanner modal simulation
@@ -440,8 +440,8 @@ export const CreateQuoteView: React.FC<CreateQuoteViewProps> = ({ onBack }) => {
               onChange={(e) => setSalesPerson(e.target.value)}
               className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:border-blue-500"
             >
-              <option value="Harish Kumar">Harish Kumar</option>
-              <option value="Sujal Verma">Sujal Verma</option>
+              <option value="Store Staff (Lead)">Store Staff (Lead)</option>
+              <option value="Store Associate">Store Associate</option>
             </select>
           </div>
 

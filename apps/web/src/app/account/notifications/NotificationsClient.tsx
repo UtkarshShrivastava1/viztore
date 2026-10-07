@@ -1,154 +1,88 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth.store';
 import { 
-  User, ShoppingBag, Calendar, ShoppingBasket, Store, Heart, 
-  MapPin, Bell, Ticket, HelpCircle, FileText, Shield, LogOut,
-  Settings, MoreVertical, Package, Tag, Truck, Heart as HeartIcon, Settings2, Megaphone,
-  ArrowLeft,
-  ChevronRight,
-  Briefcase,
-  Star,
-  MessageSquare,
-  HeadphonesIcon
+  Bell, Briefcase, Tag, Heart, Truck, Star, Shield, Store, Megaphone,
+  ArrowLeft, CheckCircle2, Loader2
 } from 'lucide-react';
 import { branding } from '@repo/shared-types';
 import { AccountSidebar } from '@/components/account/AccountSidebar';
-
-const DUMMY_NOTIFICATIONS = [
-  {
-    id: 1,
-    type: 'orders',
-    title: 'Your order has been delivered',
-    message: 'Order #ORD-785612 has been delivered successfully.',
-    time: '10 minutes ago',
-    icon: <Briefcase className="w-5 h-5 text-purple-600" />,
-    bgClass: 'bg-purple-50',
-    unread: true
-  },
-  {
-    id: 2,
-    type: 'offers',
-    title: 'Special offer just for you!',
-    message: 'Get up to 50% OFF on Fashion products. Limited time only!',
-    time: '1 hour ago',
-    icon: <Tag className="w-5 h-5 text-rose-500" />,
-    bgClass: 'bg-rose-50',
-    unread: true
-  },
-  {
-    id: 3,
-    type: 'updates',
-    title: 'Item back in stock',
-    message: 'The item in your wishlist "Men White Sneakers" is now back in stock.',
-    time: '3 hours ago',
-    icon: <HeartIcon className="w-5 h-5 text-rose-500" />,
-    bgClass: 'bg-rose-50',
-    unread: true
-  },
-  {
-    id: 4,
-    type: 'orders',
-    title: 'Your order is out for delivery',
-    message: 'Order #VZ785612 is out for delivery and will arrive today.',
-    time: '5 hours ago',
-    icon: <Truck className="w-5 h-5 text-orange-500" />,
-    bgClass: 'bg-orange-50',
-    unread: false
-  },
-  {
-    id: 5,
-    type: 'offers',
-    title: 'Flat ₹200 OFF',
-    message: 'Use code VZ200 and get flat ₹200 off on your next purchase.',
-    time: '1 day ago',
-    icon: <Tag className="w-5 h-5 text-emerald-500" />,
-    bgClass: 'bg-emerald-50',
-    unread: false
-  },
-  {
-    id: 6,
-    type: 'updates',
-    title: 'Price drop alert',
-    message: 'The price of boAt Wave Sigma 3 has dropped to ₹1,599.',
-    time: '2 days ago',
-    icon: <Bell className="w-5 h-5 text-amber-500" />,
-    bgClass: 'bg-amber-50',
-    unread: false
-  },
-  {
-    id: 7,
-    type: 'updates',
-    title: 'New store near you',
-    message: 'Tech World is now available near your location.',
-    time: '3 days ago',
-    icon: <Store className="w-5 h-5 text-blue-500" />,
-    bgClass: 'bg-blue-50',
-    unread: false
-  },
-  {
-    id: 8,
-    type: 'orders',
-    title: 'Rate your purchase',
-    message: 'How was your experience with Men Casual Shirt? Share your feedback.',
-    time: '4 days ago',
-    icon: <Star className="w-5 h-5 text-purple-500" />,
-    bgClass: 'bg-purple-50',
-    unread: false
-  },
-  {
-    id: 9,
-    type: 'account',
-    title: 'Account security',
-    message: 'Your password was updated successfully.',
-    time: '5 days ago',
-    icon: <Shield className="w-5 h-5 text-blue-500" />,
-    bgClass: 'bg-blue-50',
-    unread: false
-  },
-  {
-    id: 10,
-    type: 'updates',
-    title: `Welcome to ${branding.appName}!`,
-    message: 'Explore local stores, amazing products and exclusive offers.',
-    time: '1 week ago',
-    icon: <Megaphone className="w-5 h-5 text-emerald-500" />,
-    bgClass: 'bg-emerald-50',
-    unread: false
-  }
-];
+import { notificationsApi, type ICustomerNotification } from '@/lib/api/notifications.js';
 
 const TABS = [
   { id: 'all', label: 'All' },
-  { id: 'orders', label: 'Orders' },
-  { id: 'offers', label: 'Offers' },
-  { id: 'account', label: 'Account' },
-  { id: 'updates', label: 'Updates' },
+  { id: 'order', label: 'Orders' },
+  { id: 'promo', label: 'Offers' },
+  { id: 'system', label: 'System' },
 ];
 
 export function NotificationsClient() {
   const router = useRouter();
   const { user, isAuthenticated, openAuthModal } = useAuthStore();
   const [activeTab, setActiveTab] = useState('all');
+  const [notifications, setNotifications] = useState<ICustomerNotification[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isMarkingAll, setIsMarkingAll] = useState<boolean>(false);
 
-  // Leave room for APIs
-  // useEffect(() => {
-  //   fetchNotifications();
-  // }, []);
-
-  const formData = {
-    firstName: user?.fullName?.split(' ')[0] || '',
-    lastName: user?.fullName?.split(' ')[1] || '',
-    email: user?.email || '',
-    mobileNumber: user?.phone || '',
+  const loadNotifications = async () => {
+    try {
+      setIsLoading(true);
+      if (isAuthenticated) {
+        const categoryParam = activeTab === 'all' ? undefined : activeTab;
+        const data = await notificationsApi.getNotifications({ category: categoryParam });
+        setNotifications(data);
+        return;
+      }
+      setNotifications([]);
+    } catch (err) {
+      console.warn('Failed to load notifications from API:', err);
+      setNotifications([]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const filteredNotifications = activeTab === 'all' 
-    ? DUMMY_NOTIFICATIONS 
-    : DUMMY_NOTIFICATIONS.filter(n => n.type === activeTab);
+  useEffect(() => {
+    loadNotifications();
+  }, [isAuthenticated, activeTab]);
+
+  const handleMarkAllRead = async () => {
+    try {
+      setIsMarkingAll(true);
+      await notificationsApi.markAllAsRead();
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+    } catch (err) {
+      console.error('Failed to mark all as read:', err);
+    } finally {
+      setIsMarkingAll(false);
+    }
+  };
+
+  const handleMarkSingleRead = async (id: string) => {
+    try {
+      await notificationsApi.markAsRead(id);
+      setNotifications(prev => prev.map(n => n._id === id || n.id === id ? { ...n, isRead: true } : n));
+    } catch (err) {
+      console.error('Failed to mark notification as read:', err);
+    }
+  };
+
+  const getIconForCategory = (category: string) => {
+    switch (category) {
+      case 'order':
+        return { icon: <Briefcase className="w-5 h-5 text-purple-600" />, bg: 'bg-purple-50' };
+      case 'promo':
+        return { icon: <Tag className="w-5 h-5 text-rose-500" />, bg: 'bg-rose-50' };
+      case 'system':
+      default:
+        return { icon: <Bell className="w-5 h-5 text-blue-500" />, bg: 'bg-blue-50' };
+    }
+  };
+
+  const unreadCount = notifications.filter(n => !n.isRead).length;
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] pb-24 font-sans">
@@ -158,40 +92,41 @@ export function NotificationsClient() {
         <AccountSidebar />
 
         {/* ================= RIGHT MAIN CONTENT ================= */}
-        <div className="flex-1 w-full flex flex-col gap-4 min-h-screen bg-transparent lg:bg-white lg:rounded-xl lg:shadow-sm lg:border lg:border-surface-200/60 lg:p-6">
+        <div className="flex-1 w-full bg-transparent lg:bg-white lg:rounded-xl lg:shadow-sm lg:border lg:border-surface-200/60 lg:p-6 flex flex-col min-h-screen">
           
           {/* Header */}
-          <div className="px-0 w-full pt-2 pb-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-start gap-3">
-                <button onClick={() => router.back()} className="mt-1 shrink-0 lg:hidden">
-                  <ArrowLeft className="w-6 h-6 text-[#192168]" />
-                </button>
-                <div>
-                  <h1 className="text-[22px] lg:text-[28px] font-extrabold text-[#192168] leading-tight">
-                    Notifications
-                  </h1>
-                  <p className="text-[12px] lg:text-[14px] text-surface-500 mt-1">
-                    Stay updated with your orders, offers and more.
-                  </p>
-                </div>
-              </div>
-              <button className="text-[13px] font-bold text-[#1668F6] hover:underline self-start mt-2 lg:mt-0 whitespace-nowrap">
-                Mark All as Read
+          <div className="px-0 w-full flex items-start justify-between pb-3 pt-2">
+            <div className="flex items-start gap-3">
+              <button onClick={() => router.back()} className="shrink-0 lg:hidden mt-0.5">
+                <ArrowLeft className="w-6 h-6 text-[#192168]" />
               </button>
+              <div>
+                <h1 className="text-[20px] lg:text-[28px] font-bold text-[#192168] leading-tight">Notifications</h1>
+                <p className="text-[12px] lg:text-[14px] font-medium text-surface-500 mt-0.5">Stay updated with your orders and store announcements.</p>
+              </div>
             </div>
+
+            {unreadCount > 0 && (
+              <button 
+                onClick={handleMarkAllRead}
+                disabled={isMarkingAll}
+                className="text-[12px] font-bold text-[#1668F6] hover:underline shrink-0 pt-1"
+              >
+                {isMarkingAll ? 'Marking...' : 'Mark all as read'}
+              </button>
+            )}
           </div>
 
-          {/* Tabs - Pill Style on Mobile */}
-          <div className="bg-[#F8FAFF] border border-[#E5E7EB] rounded-xl p-1.5 flex items-center justify-between overflow-x-auto no-scrollbar gap-1 mt-2 mb-2">
-            {TABS.map((tab) => (
+          {/* Category Tabs */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-surface-100 my-2 hide-scrollbar">
+            {TABS.map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-4 lg:px-6 py-2 text-[13px] font-bold rounded-lg transition-colors whitespace-nowrap flex-1 text-center ${
-                  activeTab === tab.id 
-                    ? 'bg-[#E8F0FE] text-[#1668F6]' 
-                    : 'bg-transparent text-[#192168] hover:bg-surface-50'
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                  activeTab === tab.id
+                    ? 'bg-[#1668F6] text-white shadow-sm'
+                    : 'bg-white border border-surface-200 text-surface-600 hover:bg-surface-50'
                 }`}
               >
                 {tab.label}
@@ -200,45 +135,82 @@ export function NotificationsClient() {
           </div>
 
           {/* Notifications List */}
-          <div className="flex flex-col gap-3 lg:gap-4">
-            {filteredNotifications.map((notification) => (
-              <div 
-                key={notification.id} 
-                className="bg-white rounded-[14px] border border-surface-200/80 p-4 lg:p-5 flex items-start gap-4 hover:shadow-sm transition-shadow relative cursor-pointer"
-              >
-                {/* Icon Container */}
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${notification.bgClass}`}>
-                  {notification.icon}
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 min-w-0 pr-8">
-                  <h4 className="text-[14px] lg:text-[15px] font-bold text-[#192168] mb-0.5 pr-2 truncate">
-                    {notification.title}
-                  </h4>
-                  <p className="text-[12px] lg:text-[13px] text-surface-600 line-clamp-2 leading-relaxed">
-                    {notification.message}
-                  </p>
-                  <span className="text-[11px] lg:text-[12px] font-medium text-surface-400 mt-1.5 block">
-                    {notification.time}
-                  </span>
-                </div>
-
-                {/* Right Arrow & Unread Dot */}
-                <div className="absolute top-1/2 -translate-y-1/2 right-4 flex items-center gap-3">
-                  {notification.unread && (
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#1668F6]"></div>
-                  )}
-                  <ChevronRight className="w-5 h-5 text-surface-400" />
-                </div>
+          <div className="flex-1 mt-3">
+            {isLoading ? (
+              <div className="py-20 flex flex-col items-center justify-center gap-2 text-surface-400">
+                <Loader2 className="w-8 h-8 animate-spin text-[#1668F6]" />
+                <p className="text-xs font-semibold">Loading notifications...</p>
               </div>
-            ))}
+            ) : notifications.length === 0 ? (
+              /* Empty State */
+              <div className="border border-dashed border-[#E5E7EB] bg-white rounded-2xl p-8 lg:p-14 text-center flex flex-col items-center justify-center my-4">
+                <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mb-4">
+                  <Bell className="w-8 h-8 text-[#1668F6]" />
+                </div>
+                <h3 className="text-[16px] lg:text-[18px] font-bold text-[#192168] mb-1">You're All Caught Up!</h3>
+                <p className="text-[13px] text-surface-500 max-w-sm mb-6 leading-relaxed">
+                  {isAuthenticated 
+                    ? "No new notifications right now. We'll alert you here when your order is placed, shipped, or out for delivery."
+                    : "Please sign in to view your personalized order and delivery updates."}
+                </p>
+                {!isAuthenticated && (
+                  <button 
+                    onClick={() => openAuthModal('login')}
+                    className="px-6 py-2.5 bg-[#1668F6] text-white text-xs font-bold rounded-xl shadow-sm hover:bg-blue-700 transition"
+                  >
+                    Sign In
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {notifications.map(item => {
+                  const id = item._id || item.id || '';
+                  const { icon, bg } = getIconForCategory(item.category);
+                  const isUnread = !item.isRead;
+                  const formattedTime = item.createdAt 
+                    ? new Date(item.createdAt).toLocaleDateString('en-IN', {
+                        day: 'numeric',
+                        month: 'short',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })
+                    : 'Recent';
 
-            {filteredNotifications.length === 0 && (
-              <div className="p-12 text-center bg-white rounded-[14px] border border-surface-200/80 mt-4">
-                <Bell className="w-12 h-12 text-surface-300 mx-auto mb-3" />
-                <h3 className="text-[16px] font-bold text-[#192168]">No Notifications</h3>
-                <p className="text-[14px] text-surface-500 mt-1">You're all caught up!</p>
+                  return (
+                    <div 
+                      key={id}
+                      onClick={() => isUnread && handleMarkSingleRead(id)}
+                      className={`p-4 rounded-xl border transition-all flex items-start gap-3.5 cursor-pointer ${
+                        isUnread 
+                          ? 'bg-[#F8FAFF] border-blue-200 shadow-sm' 
+                          : 'bg-white border-surface-200/80 hover:bg-surface-50'
+                      }`}
+                    >
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${bg}`}>
+                        {icon}
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <h4 className="text-[13px] lg:text-[14px] font-bold text-[#192168] truncate">
+                            {item.title}
+                          </h4>
+                          <span className="text-[11px] text-surface-400 font-medium shrink-0">
+                            {formattedTime}
+                          </span>
+                        </div>
+                        <p className="text-[12px] text-surface-600 mt-1 leading-relaxed">
+                          {item.message}
+                        </p>
+                      </div>
+
+                      {isUnread && (
+                        <div className="w-2 h-2 rounded-full bg-[#1668F6] mt-2 shrink-0" title="Unread" />
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -246,25 +218,5 @@ export function NotificationsClient() {
         </div>
       </main>
     </div>
-  );
-}
-
-function MenuLink({ icon, title, href = "#", isActive = false }: { icon: React.ReactNode, title: string, href?: string, isActive?: boolean }) {
-  return (
-    <Link 
-      href={href} 
-      className={`flex items-center gap-3 px-5 py-2.5 transition-colors ${
-        isActive 
-          ? 'bg-[#E8F0FE] text-[#1668F6] border-r-2 border-[#1668F6]' 
-          : 'hover:bg-surface-50 text-surface-600'
-      }`}
-    >
-      <div className={`${isActive ? 'text-[#1668F6]' : ''}`}>
-        {icon}
-      </div>
-      <span className={`text-[13px] ${isActive ? 'font-bold' : 'font-semibold text-[#192168]'}`}>
-        {title}
-      </span>
-    </Link>
   );
 }

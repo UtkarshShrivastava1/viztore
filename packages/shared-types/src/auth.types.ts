@@ -94,6 +94,7 @@ export const userAddressSchema = z.object({
   city: z.string().min(2).max(100),
   state: z.string().min(2).max(100),
   pincode: z.string().regex(/^\d{6}$/, 'Invalid 6-digit PIN code'),
+  landmark: z.string().optional(),
   isDefault: z.boolean().optional(),
   coordinates: z.tuple([z.number(), z.number()]).optional(), // [lng, lat]
 });

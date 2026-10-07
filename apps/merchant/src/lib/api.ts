@@ -91,3 +91,42 @@ export const ordersApi = {
   getOrderInvoice: (orderId: string) =>
     api.get<any>(`/orders/${orderId}/invoice`),
 };
+
+export const catalogApi = {
+  getStoreCatalog: (storeId: string) =>
+    api.get<any>(`/catalog/store/${storeId}`),
+
+  createProduct: (productData: unknown) =>
+    api.post<any>('/catalog/products', productData),
+
+  updateProduct: (productId: string, updates: unknown) =>
+    api.patch<any>(`/catalog/products/${productId}`, updates),
+
+  updateStock: (productId: string, stock: number) =>
+    api.patch<any>(`/catalog/products/${productId}/stock`, { stock }),
+
+  deleteProduct: (productId: string) =>
+    api.delete<any>(`/catalog/products/${productId}`),
+};
+
+export const storesApi = {
+  getMyStore: () =>
+    api.get<any>('/stores/me'),
+
+  updateStoreSettings: (storeId: string, data: unknown) =>
+    api.patch<any>(`/stores/${storeId}`, data),
+
+  toggleOnlineStatus: (storeId: string, isOpen: boolean) =>
+    api.patch<any>(`/stores/${storeId}/status`, { isOpen }),
+};
+
+export const notificationsApi = {
+  getNotifications: () =>
+    api.get<any[]>('/notifications'),
+
+  markAsRead: (id: string) =>
+    api.patch<any>(`/notifications/${id}/read`),
+
+  markAllAsRead: () =>
+    api.post<any>('/notifications/read-all'),
+};

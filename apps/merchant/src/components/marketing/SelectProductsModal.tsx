@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Search, ChevronDown, ChevronLeft, ChevronRight, Check } from 'lucide-react';
+import { useCatalogStore } from '../../stores/catalogStore.js';
 
 interface SelectProductsModalProps {
   isOpen: boolean;
@@ -21,98 +22,48 @@ export const SelectProductsModal: React.FC<SelectProductsModalProps> = ({
   const [selectedStock, setSelectedStock] = useState('All Stock');
   const [selectedPrice, setSelectedPrice] = useState('All Prices');
 
-  if (!isOpen) return null;
+  const catalogProducts = useCatalogStore((state) => state.products);
 
-  const mockProducts = [
-    {
-      id: 'PRD-001',
-      name: "Men's Cotton T-Shirt",
-      subtitle: 'Black / M',
-      category: 'Men Fashion',
-      sku: 'TSH001',
-      price: 799,
-      stock: 120,
-      image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=100&auto=format&fit=crop&q=80',
-    },
-    {
-      id: 'PRD-002',
-      name: 'Slim Fit Jeans',
-      subtitle: 'Blue / 32',
-      category: 'Men Fashion',
-      sku: 'JNS002',
-      price: 1299,
-      stock: 85,
-      image: 'https://images.unsplash.com/photo-1542272604-780c96856592?w=100&auto=format&fit=crop&q=80',
-    },
-    {
-      id: 'PRD-003',
-      name: 'Floral Summer Dress',
-      subtitle: 'Pink / M',
-      category: 'Women Fashion',
-      sku: 'DRS003',
-      price: 1499,
-      stock: 60,
-      image: 'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=100&auto=format&fit=crop&q=80',
-    },
-    {
-      id: 'PRD-004',
-      name: 'Casual Sneakers',
-      subtitle: 'White / 42',
-      category: 'Footwear',
-      sku: 'SNK004',
-      price: 2499,
-      stock: 40,
-      image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?w=100&auto=format&fit=crop&q=80',
-    },
-    {
-      id: 'PRD-005',
-      name: 'Stylish Handbag',
-      subtitle: 'Black',
-      category: 'Women Accessories',
-      sku: 'BAG005',
-      price: 1199,
-      stock: 75,
-      image: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=100&auto=format&fit=crop&q=80',
-    },
-    {
-      id: 'PRD-006',
-      name: 'Analog Watch',
-      subtitle: 'Silver',
-      category: 'Men Accessories',
-      sku: 'WAT006',
-      price: 2999,
-      stock: 30,
-      image: 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?w=100&auto=format&fit=crop&q=80',
-    },
-    {
-      id: 'PRD-007',
-      name: 'UV Protection Sunglasses',
-      subtitle: 'Black',
-      category: 'Men Accessories',
-      sku: 'SUN007',
-      price: 1899,
-      stock: 50,
-      image: 'https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=100&auto=format&fit=crop&q=80',
-    },
-    {
-      id: 'PRD-008',
-      name: 'Ethnic Kurta',
-      subtitle: 'Green / L',
-      category: 'Men Fashion',
-      sku: 'KUR008',
-      price: 1099,
-      stock: 90,
-      image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=100&auto=format&fit=crop&q=80',
-    },
-  ];
+  const displayProducts = useMemo(() => {
+    return catalogProducts.map((p) => ({
+      id: p.id,
+      name: p.name,
+      subtitle: p.subCategory || (p.attributes ? Object.values(p.attributes).join(' / ') : ''),
+      category: p.category || 'General',
+      sku: p.sku || 'SKU-N/A',
+      price: p.price || 0,
+      stock: p.stock || 0,
+      image: p.images?.[0] || 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=100&auto=format&fit=crop&q=80',
+    }));
+  }, [catalogProducts]);
 
-  const filtered = mockProducts.filter((p) => {
-    const matchSearch =
-      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.category.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchSearch;
-  });
+  const categories = useMemo(() => {
+    const set = new Set(displayProducts.map((p) => p.category).filter(Boolean));
+    return ['All Categories', ...Array.from(set)];
+  }, [displayProducts]);
+
+  const filtered = useMemo(() => {
+    return displayProducts.filter((p) => {
+      const matchSearch =
+        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.category.toLowerCase().includes(searchTerm.toLowerCase());
+      if (!matchSearch) return false;
+
+      if (selectedCategory !== 'All Categories' && p.category !== selectedCategory) {
+        return false;
+      }
+
+      if (selectedStock === 'In Stock' && p.stock <= 0) return false;
+      if (selectedStock === 'Low Stock' && (p.stock > 10 || p.stock <= 0)) return false;
+
+      if (selectedPrice === 'Under ₹1,000' && p.price >= 1000) return false;
+      if (selectedPrice === '₹1,000 - ₹2,500' && (p.price < 1000 || p.price > 2500)) return false;
+      if (selectedPrice === 'Above ₹2,500' && p.price <= 2500) return false;
+
+      return true;
+    });
+  }, [displayProducts, searchTerm, selectedCategory, selectedStock, selectedPrice]);
 
   const toggleSelect = (id: string) => {
     setCurrentSelected((prev) =>
@@ -175,10 +126,11 @@ export const SelectProductsModal: React.FC<SelectProductsModalProps> = ({
                 onChange={(e) => setSelectedCategory(e.target.value)}
                 className="appearance-none pl-3 pr-7 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700"
               >
-                <option>All Categories</option>
-                <option>Men Fashion</option>
-                <option>Women Fashion</option>
-                <option>Footwear</option>
+                {categories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
               </select>
               <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
@@ -250,44 +202,52 @@ export const SelectProductsModal: React.FC<SelectProductsModalProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filtered.map((p) => {
-                const isChecked = currentSelected.includes(p.id);
-                return (
-                  <tr
-                    key={p.id}
-                    onClick={() => toggleSelect(p.id)}
-                    className={`hover:bg-slate-50 cursor-pointer transition-colors ${
-                      isChecked ? 'bg-blue-50/30' : ''
-                    }`}
-                  >
-                    <td className="py-2 px-3">
-                      <input
-                        type="checkbox"
-                        checked={isChecked}
-                        onChange={() => toggleSelect(p.id)}
-                        className="rounded border-slate-300 text-blue-600"
-                      />
-                    </td>
-                    <td className="py-2 px-3">
-                      <div className="flex items-center gap-2.5">
-                        <img
-                          src={p.image}
-                          alt={p.name}
-                          className="w-8 h-8 rounded-lg object-cover border border-slate-200 shrink-0"
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-12 text-center text-slate-400">
+                    No products found in catalog matching filters
+                  </td>
+                </tr>
+              ) : (
+                filtered.map((p) => {
+                  const isChecked = currentSelected.includes(p.id);
+                  return (
+                    <tr
+                      key={p.id}
+                      onClick={() => toggleSelect(p.id)}
+                      className={`hover:bg-slate-50 cursor-pointer transition-colors ${
+                        isChecked ? 'bg-blue-50/30' : ''
+                      }`}
+                    >
+                      <td className="py-2 px-3">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => toggleSelect(p.id)}
+                          className="rounded border-slate-300 text-blue-600"
                         />
-                        <div>
-                          <span className="font-bold text-slate-900 block">{p.name}</span>
-                          <span className="text-[10px] text-slate-400">{p.subtitle}</span>
+                      </td>
+                      <td className="py-2 px-3">
+                        <div className="flex items-center gap-2.5">
+                          <img
+                            src={p.image}
+                            alt={p.name}
+                            className="w-8 h-8 rounded-lg object-cover border border-slate-200 shrink-0"
+                          />
+                          <div>
+                            <span className="font-bold text-slate-900 block">{p.name}</span>
+                            <span className="text-[10px] text-slate-400">{p.subtitle}</span>
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="py-2 px-3 text-slate-600">{p.category}</td>
-                    <td className="py-2 px-3 font-mono text-[11px] text-slate-600">{p.sku}</td>
-                    <td className="py-2 px-3 font-bold text-slate-900">₹ {p.price.toLocaleString()}</td>
-                    <td className="py-2 px-3 text-slate-700">{p.stock}</td>
-                  </tr>
-                );
-              })}
+                      </td>
+                      <td className="py-2 px-3 text-slate-600">{p.category}</td>
+                      <td className="py-2 px-3 font-mono text-[11px] text-slate-600">{p.sku}</td>
+                      <td className="py-2 px-3 font-bold text-slate-900">₹ {p.price.toLocaleString()}</td>
+                      <td className="py-2 px-3 text-slate-700">{p.stock}</td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
@@ -295,20 +255,7 @@ export const SelectProductsModal: React.FC<SelectProductsModalProps> = ({
         {/* Footer */}
         <div className="p-3 sm:p-4 border-t border-slate-100 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-1 text-slate-500">
-            <span>Showing 1 to 8 of 248 products</span>
-            <div className="flex items-center gap-1 ml-3">
-              <button type="button" disabled className="p-1 rounded border border-slate-200 opacity-40">
-                <ChevronLeft className="w-3.5 h-3.5" />
-              </button>
-              <span className="w-5 h-5 flex items-center justify-center bg-blue-600 text-white rounded text-[11px] font-bold">
-                1
-              </span>
-              <span className="w-5 h-5 flex items-center justify-center text-slate-600 text-[11px]">2</span>
-              <span className="w-5 h-5 flex items-center justify-center text-slate-600 text-[11px]">3</span>
-              <button type="button" className="p-1 rounded border border-slate-200 text-slate-600">
-                <ChevronRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
+            <span>Showing {filtered.length} products</span>
           </div>
 
           <div className="flex items-center gap-2 self-end sm:self-auto">

@@ -5,10 +5,12 @@ import { useReturnsStore } from '../../stores/returnsStore.js';
 export const ReturnsKPIBar: React.FC = () => {
   const { returns } = useReturnsStore();
 
-  const totalReturnsCount = 18;
-  const refundsProcessedCount = 12;
-  const pendingCount = 5;
-  const refundsPendingAmount = 18760;
+  const totalReturnsCount = returns.length;
+  const refundsProcessedCount = returns.filter((r) => r.status === 'Refunded').length;
+  const pendingCount = returns.filter((r) => r.status === 'Pending').length;
+  const refundsPendingAmount = returns
+    .filter((r) => r.status === 'Pending' || r.status === 'Approved')
+    .reduce((sum, r) => sum + (r.refundAmount || r.amount || 0), 0);
 
   const cards = [
     {
