@@ -29,6 +29,7 @@ export interface OrderPlacedPayload {
   itemsCount: number;
   customerPhone?: string;
   deliveryOtp?: string;
+  correlationId?: string;
 }
 
 export interface OrderStatusChangedPayload {

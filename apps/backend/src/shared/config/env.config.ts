@@ -21,6 +21,8 @@ const envSchema = z.object({
 
   // Database
   MONGODB_URI: z.string().min(1, 'MONGODB_URI is required'),
+  MONGO_MAX_POOL_SIZE: z.coerce.number().default(25),
+  MONGO_MIN_POOL_SIZE: z.coerce.number().default(5),
 
   // Redis
   ENABLE_REDIS: z

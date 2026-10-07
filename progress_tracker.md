@@ -19,7 +19,7 @@
 | ↳ **Backend Architecture & APIs** | 30% | `[████████████████████]` | **100%** | 🟢 Live on Render | `https://viztore.onrender.com` Healthy |
 | ↳ **Merchant & Admin Panel** | 25% | `[████████████████████]` | **100%** | 🟢 Complete Suite | All 7/7 Modules & Settings Merged (`b92a159`) |
 | ↳ **Customer Web Storefront** | 25% | `[████████████████████]` | **100%** | 🟢 Storefront & Cart Engine | All 4/4 Modular Suites Merged (`e942cc9`) |
-| ↳ **Production Readiness & DevOps** | 20% | `[████████████████████]` | **100%** | 🟢 Staging Live | 82/82 Tests Green, Monorepo Clean Build |
+| ↳ **Production Readiness & DevOps** | 20% | `[████████████████████]` | **100%** | 🟢 Staging Live | 87/87 Tests Green, Monorepo Clean Build |
 | **Total Full-Platform Scope** (Phases 1–7) | — | `[█████████████████░░░]` | **88%** | ⚪ Roadmap Reserved | Customer Mobile App (Phase 7 / Tier 3) |
 
 > **Auto-Update Invariant**: This progress bar is recalculated and updated dynamically on every task assignment, milestone delivery, and PR merge per `.agents/rules/progress-tracking.md`.
@@ -150,7 +150,7 @@ Every online order placed through `apps/web` generates an authoritative, complia
 | **Shared Types** | TypeScript, Zod | **100% In Sync** ✅ | All contracts, validation schemas, DTOs, branding config |
 | **Real-Time & Events** | Socket.io + Redis Adapter + TypedEventBus | **Wired** ✅ | In-process domain events forwarded to Socket.io rooms with Redis distributed scaling |
 | **Agent Workflows** | Custom Skills & Rules | **Active** ✅ | Fullstack Feature Workflow, UI Matching, Intern Delegation, /create-task |
-| **Test Suite** | Vitest | **82/82 Passing** ✅ | 14 test suites (AppError, Auth/Addresses, Stores/Ratings, Onboarding, Catalog, Orders, Delivery, Notifications, WhatsApp Cloud API, WorkerPool, Cache-Aside, CORS Validation) |
+| **Test Suite** | Vitest | **87/87 Passing** ✅ | 14 test suites (AppError, Auth/Addresses, Stores/Ratings, Onboarding, Catalog, Orders, Delivery, Notifications, WhatsApp Cloud API, WorkerPool, Cache-Aside, CORS Validation, OCC Versioning, Outbox Transactions) |
 | **Build Status** | Turborepo | **Clean** ✅ | Full monorepo builds with zero errors across all packages |
 | **Engineering Standards** | 8/8 Pillars (`structure.md`) | **100% Implemented** ✅ | Facades, Composition roots, 3-tier testing, EventBus, WorkerPool, Cache-Aside + Replica split, ESR indexing, Decoupled repos |
 
@@ -206,4 +206,13 @@ Every online order placed through `apps/web` generates an authoritative, complia
 - [x] Merchant Operations & Orders Pipeline Defect Remediation (Fixed merchant logout transition preventing stale Fashion Hub dashboard views; removed static fallback tab counters `|| 18`, `|| 12`, etc., wiring pure dynamic order counts; unified `OrderStatus` casing to uppercase and persisted active tab state across page reloads; verified dynamic store profile hydration from `/stores/mine`)
 - [x] Live Meta WhatsApp Cloud API Service Integration (`whatsapp.service.ts`): Wired official Meta Graph API v20.0 service into event-driven notification lifecycle; automated outbound dispatches for Customer Order Placed (`#ORD-xxxxx`, items, total, 4-digit Delivery OTP), Rider Delivery Assignment (pickup/drop coordinates, Google Maps route, OTP instructions), Customer Out-For-Delivery, and Delivery Completed receipts; resilient Indian/E.164 phone number normalization, test dry-run mode, and 14 unit tests passing (82/82 total tests passing).
 - [x] Comprehensive Pre-Tier 2 Static Data Audit & Live API Wiring (Commit `1d442a8`): Audited recent pull requests across Customer Storefront (`apps/web`) and Merchant Panel (`apps/merchant`). Purged static hardcoded arrays, personal names, and client brand acronyms (`#VZT...`, `#VZP...`). Wired live API endpoints and hooks for Customer Addresses (`userApi.getAddresses`, `addAddress`, `deleteAddress`), Customer Orders (`ordersApi.getMyOrders`, `getOrderById`), Customer Stores (`fetchAllStores`), Customer Notifications (`notificationsApi.getNotifications`, `markAllAsRead`), and Merchant Marketing (`useCatalogStore.products`, dynamic categories and stock filters); converted Returns KPI metrics to pure dynamic calculations and wired `NewReturnView` to live `useOrderStore` records; verified 82/82 tests passing and 100% clean monorepo production build.
+- [x] Enterprise Catalog & Order Architecture Hardening (`enterprise_catalog_order_architecture_updated(1).md`):
+  - Strict modular boundaries with facade encapsulation (`catalogFacade`, `orderFacade`).
+  - Optimistic Concurrency Control (OCC) with explicit numeric `version` fields on both Product and Order models, preventing race conditions during concurrent checkouts and status mutations.
+  - Authoritative product pricing & line-item snapshots derived strictly through `catalogFacade` (never trusting client prices or discounts).
+  - Deterministic deadlock-free atomic inventory deduction (`$inc: { "variants.$.stock": -qty, "totalStock": -qty }`) and atomic stock restoration (`restoreStock` on order cancellation).
+  - MongoDB ACID multi-document transactions (`withTransaction`) with snapshot read isolation, majority write concern, and resilient fallback for test environments.
+  - Transactional Outbox Pattern (`OutboxModel`, `appendOutboxEvent`, `processPendingOutboxEvents`) ensuring at-least-once domain event dispatch and distributed consistency.
+  - Strongly typed `AuthenticatedRequest` across Catalog and Order controllers; bounded MongoDB connection pool sizing (`maxPoolSize: 25`, `minPoolSize: 5`, strict waitQueue and socket timeouts).
+  - 87/87 backend unit tests passing (14 suites), 100% clean Turborepo monorepo build.
 

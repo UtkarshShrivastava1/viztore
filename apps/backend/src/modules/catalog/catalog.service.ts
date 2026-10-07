@@ -12,6 +12,7 @@ import {
 import { ProductModel } from './product.model.js';
 import { AppError } from '../../shared/utils/AppError.js';
 import { findStoreById } from '../stores/store.service.js';
+import { invalidateCache } from '../../shared/redis/cache.js';
 
 // ── Helpers ────────────────────────────────────────────────────────────
 
@@ -136,6 +137,7 @@ export async function updateProduct(
   productId: string,
   ownerId: string,
   dto: UpdateProductDto,
+  expectedVersion?: number,
 ): Promise<IProduct> {
   const product = await ProductModel.findById(productId);
   if (!product) {
@@ -148,15 +150,32 @@ export async function updateProduct(
     throw AppError.forbidden('Not authorized to update this product', 'PRODUCT_ACCESS_DENIED');
   }
 
+  // OCC Version Conflict Check
+  if (typeof expectedVersion === 'number' && product.version !== expectedVersion) {
+    throw AppError.conflict(
+      'Product has been modified by another transaction',
+      'PRODUCT_CONCURRENT_MODIFICATION',
+    );
+  }
+
   Object.assign(product, dto);
+  product.version = (product.version || 1) + 1;
   await product.save(); // triggers pre-save hook to recompute derived fields
+  await invalidateCache(`catalog:product:${productId}`);
+  if (product.slug) {
+    await invalidateCache(`catalog:slug:${product.slug}`);
+  }
   return product.toJSON() as unknown as IProduct;
 }
 
 /**
  * Soft-delete a product
  */
-export async function deleteProduct(productId: string, ownerId: string): Promise<void> {
+export async function deleteProduct(
+  productId: string,
+  ownerId: string,
+  expectedVersion?: number,
+): Promise<void> {
   const product = await ProductModel.findById(productId);
   if (!product) {
     throw AppError.notFound('Product not found', 'PRODUCT_NOT_FOUND');
@@ -167,8 +186,20 @@ export async function deleteProduct(productId: string, ownerId: string): Promise
     throw AppError.forbidden('Not authorized to delete this product', 'PRODUCT_ACCESS_DENIED');
   }
 
+  if (typeof expectedVersion === 'number' && product.version !== expectedVersion) {
+    throw AppError.conflict(
+      'Product has been modified by another transaction',
+      'PRODUCT_CONCURRENT_MODIFICATION',
+    );
+  }
+
   product.isActive = false;
+  product.version = (product.version || 1) + 1;
   await product.save();
+  await invalidateCache(`catalog:product:${productId}`);
+  if (product.slug) {
+    await invalidateCache(`catalog:slug:${product.slug}`);
+  }
 }
 
 // ── Read Operations ────────────────────────────────────────────────────
@@ -450,14 +481,20 @@ export async function checkVariantStock(
 }
 
 /**
- * Atomic stock deduction using conditional $gte to prevent overselling
+ * Atomic stock deduction using conditional $gte to prevent overselling,
+ * sorted deterministically to prevent deadlocks, with version increment and cache invalidation.
  */
 export async function deductStockAtomic(
   items: Array<{ productId: string; sku?: string; quantity: number }>,
+  session?: mongoose.ClientSession,
 ): Promise<void> {
-  for (const item of items) {
+  const ordered = [...items].sort((a, b) =>
+    (a.sku ?? a.productId).localeCompare(b.sku ?? b.productId),
+  );
+
+  for (const item of ordered) {
     if (item.sku) {
-      const updated = await ProductModel.findOneAndUpdate(
+      const result = await ProductModel.updateOne(
         {
           _id: item.productId,
           'variants.sku': item.sku,
@@ -468,34 +505,86 @@ export async function deductStockAtomic(
           $inc: {
             'variants.$.stock': -item.quantity,
             totalStock: -item.quantity,
+            version: 1,
           },
         },
-        { new: true },
+        { session },
       );
-      if (!updated) {
-        throw AppError.badRequest(
-          `Insufficient inventory for SKU ${item.sku}. Item may have sold out.`,
-          'INSUFFICIENT_STOCK',
+      if (result.modifiedCount !== 1) {
+        throw AppError.conflict(
+          `Insufficient inventory or concurrent modification for variant ${item.sku}.`,
+          'STOCK_UPDATE_CONFLICT',
         );
       }
     } else {
-      const updated = await ProductModel.findOneAndUpdate(
+      const result = await ProductModel.updateOne(
         {
           _id: item.productId,
           totalStock: { $gte: item.quantity },
           isActive: true,
         },
         {
-          $inc: { totalStock: -item.quantity },
+          $inc: {
+            totalStock: -item.quantity,
+            version: 1,
+          },
         },
-        { new: true },
+        { session },
       );
-      if (!updated) {
-        throw AppError.badRequest(
-          `Insufficient inventory for product ${item.productId}. Item may have sold out.`,
-          'INSUFFICIENT_STOCK',
+      if (result.modifiedCount !== 1) {
+        throw AppError.conflict(
+          `Insufficient inventory or concurrent modification for product ${item.productId}.`,
+          'STOCK_UPDATE_CONFLICT',
         );
       }
     }
+
+    await invalidateCache(`catalog:product:${item.productId}`);
+  }
+}
+
+/**
+ * Atomic stock restoration for cancelled orders, sorted deterministically.
+ */
+export async function restoreStockAtomic(
+  items: Array<{ productId: string; sku?: string; quantity: number }>,
+  session?: mongoose.ClientSession,
+): Promise<void> {
+  const ordered = [...items].sort((a, b) =>
+    (a.sku ?? a.productId).localeCompare(b.sku ?? b.productId),
+  );
+
+  for (const item of ordered) {
+    if (item.sku) {
+      await ProductModel.updateOne(
+        {
+          _id: item.productId,
+          'variants.sku': item.sku,
+        },
+        {
+          $inc: {
+            'variants.$.stock': item.quantity,
+            totalStock: item.quantity,
+            version: 1,
+          },
+        },
+        { session },
+      );
+    } else {
+      await ProductModel.updateOne(
+        {
+          _id: item.productId,
+        },
+        {
+          $inc: {
+            totalStock: item.quantity,
+            version: 1,
+          },
+        },
+        { session },
+      );
+    }
+
+    await invalidateCache(`catalog:product:${item.productId}`);
   }
 }

@@ -3,6 +3,8 @@ import {
   type CreateOrderDTO,
   type IOrderRepository,
   type IOrderService,
+  type IOrderStatusHistoryEntry,
+  type OrderItemDTO,
   type OrderResponse,
   type OrderInvoiceData,
   type Page,
@@ -11,6 +13,9 @@ import { normalizeAddress } from './order.utils.js';
 import { IEventBus } from '../../shared/events/eventBus.js';
 import { EVENTS } from '../../shared/events/eventTypes.js';
 import { AppError } from '../../shared/utils/AppError.js';
+import { logger } from '../../shared/utils/logger.js';
+import { withTransaction } from '../../shared/database/transaction.js';
+import { appendOutboxEvent, processPendingOutboxEvents } from '../../shared/database/outbox.service.js';
 import type { IStoreFacade } from '../stores/index.js';
 import type { ICatalogFacade } from '../catalog/index.js';
 
@@ -25,7 +30,6 @@ const allowedTransitions: Record<OrderStatus, OrderStatus[]> = {
   [OrderStatus.DELIVERED]: [],
   [OrderStatus.CANCELLED]: [],
 };
-
 
 export function createOrderService(
   repo: IOrderRepository,
@@ -61,10 +65,37 @@ export function createOrderService(
       }
     }
 
-    // 4. Verify catalog availability & deduct stock via Catalog facade
+    // 4. Resolve authoritative product and price snapshots via Catalog Facade
+    const authoritativeItems: OrderItemDTO[] = [];
     if (catalogFacade) {
+      for (const item of dto.items) {
+        const productSnapshot = await catalogFacade.getProductById(item.productId);
+        if (!productSnapshot || !productSnapshot.isActive) {
+          throw AppError.badRequest(
+            `Product ${item.productId} is not available or inactive`,
+            'PRODUCT_NOT_AVAILABLE',
+          );
+        }
+        if (productSnapshot.storeId && productSnapshot.storeId !== targetStoreId) {
+          throw AppError.badRequest(
+            `Product ${productSnapshot.name} does not belong to store ${targetStoreId}`,
+            'CART_STORE_MISMATCH',
+          );
+        }
+
+        authoritativeItems.push({
+          productId: item.productId,
+          sku: item.sku,
+          name: productSnapshot.name,
+          quantity: item.quantity,
+          unitPrice: productSnapshot.price, // Authoritative price snapshot
+          storeId: targetStoreId,
+        });
+      }
+
+      // Fast stock pre-check (advisory)
       const stockCheck = await catalogFacade.checkStock(
-        dto.items.map((i) => ({ productId: i.productId, sku: i.sku, quantity: i.quantity })),
+        authoritativeItems.map((i) => ({ productId: i.productId, sku: i.sku, quantity: i.quantity })),
       );
       if (!stockCheck.available) {
         throw AppError.badRequest(
@@ -73,20 +104,64 @@ export function createOrderService(
           stockCheck.unavailableItems,
         );
       }
-      await catalogFacade.deductStock(
-        dto.items.map((i) => ({ productId: i.productId, sku: i.sku, quantity: i.quantity })),
-      );
+    } else {
+      authoritativeItems.push(...dto.items);
     }
 
-    // 5. Create order record
+    // 5. ACID Transaction: Atomic stock deduction + Order creation + Outbox event insertion
     const normalizedShippingAddress = normalizeAddress(dto.shippingAddress);
-    const order = await repo.create({
-      ...dto,
-      userId,
-      shippingAddress: normalizedShippingAddress,
+
+    const order = await withTransaction(async (session) => {
+      // Final inventory authority: sorted atomic deduction
+      if (catalogFacade) {
+        await catalogFacade.deductStock(
+          authoritativeItems.map((i) => ({ productId: i.productId, sku: i.sku, quantity: i.quantity })),
+          session,
+        );
+      }
+
+      const createPayload = {
+        ...dto,
+        items: authoritativeItems,
+        userId,
+        shippingAddress: normalizedShippingAddress,
+      };
+
+      const created = session
+        ? await repo.create(createPayload, { session })
+        : await repo.create(createPayload);
+
+      // Transactional Outbox insertion
+      await appendOutboxEvent(
+        {
+          eventType: EVENTS.ORDER_PLACED,
+          schemaVersion: 1,
+          aggregateType: 'Order',
+          aggregateId: created.id,
+          correlationId,
+          payload: {
+            orderId: created.id,
+            orderNumber: created.orderNumber,
+            userId: created.userId,
+            storeId: created.storeId,
+            grandTotal: created.grandTotal,
+            itemsCount: created.items.length,
+            customerPhone: created.shippingAddress?.phone,
+            deliveryOtp: created.deliveryOtp,
+          },
+        },
+        session,
+      );
+
+      return created;
     });
 
-    // 6. Emit asynchronous domain event
+    // 6. Post-commit asynchronous dispatch triggers
+    void processPendingOutboxEvents().catch((error) => {
+      logger.warn('Outbox dispatch failed', { error, correlationId });
+    });
+
+    // 7. Emit local domain event for in-process subscribers
     if (bus) {
       bus.emit(EVENTS.ORDER_PLACED, {
         orderId: order.id,
@@ -97,6 +172,7 @@ export function createOrderService(
         itemsCount: order.items.length,
         customerPhone: order.shippingAddress?.phone,
         deliveryOtp: order.deliveryOtp,
+        correlationId,
       });
     }
 
@@ -218,6 +294,7 @@ export function createOrderService(
     status: OrderStatus,
     actorUserId: string,
     otp?: string,
+    expectedVersion?: number,
   ): Promise<OrderResponse | null> {
     const current = await repo.findById(id);
     if (!current) {
@@ -241,7 +318,31 @@ export function createOrderService(
       }
     }
 
-    const updated = await repo.updateStatus(id, status);
+    const auditEntry: IOrderStatusHistoryEntry = {
+      status,
+      changedBy: actorUserId,
+      reason: `Status transitioned to ${status}`,
+      timestamp: new Date(),
+    };
+
+    let updated: OrderResponse | null;
+    if (typeof expectedVersion === 'number') {
+      updated = await repo.updateStatusWithVersion(
+        id,
+        expectedVersion,
+        current.status,
+        status,
+        auditEntry,
+      );
+      if (!updated) {
+        throw AppError.conflict(
+          'Order was concurrently updated by another transaction',
+          'ORDER_CONCURRENT_MODIFICATION',
+        );
+      }
+    } else {
+      updated = await repo.updateStatus(id, status);
+    }
 
     // Emit domain events
     if (bus && updated) {
@@ -272,6 +373,7 @@ export function createOrderService(
     id: string,
     userId: string,
     isAdmin: boolean,
+    expectedVersion?: number,
   ): Promise<OrderResponse | null> {
     const current = await getOrderById(id, userId, isAdmin);
     if (!current) return null;
@@ -283,7 +385,77 @@ export function createOrderService(
       throw AppError.badRequest('Order cannot be cancelled at its current status', 'CANNOT_CANCEL_ORDER');
     }
 
-    return updateOrderStatus(id, OrderStatus.CANCELLED, userId);
+    // Enterprise OCC cancellation with atomic inventory restoration and Outbox event
+    const cancelled = await withTransaction(async (session) => {
+      let updated: OrderResponse | null = null;
+      if (typeof repo.cancelIfVersionMatches === 'function') {
+        updated = await repo.cancelIfVersionMatches(
+          {
+            orderId: id,
+            expectedVersion: expectedVersion ?? current.version,
+            expectedStatus: current.status,
+            reason: 'Cancelled by customer or store manager',
+            actorUserId: userId,
+          },
+          session,
+        );
+      } else {
+        updated = session
+          ? await repo.updateStatus(id, OrderStatus.CANCELLED, { session })
+          : await repo.updateStatus(id, OrderStatus.CANCELLED);
+      }
+
+      if (!updated) {
+        throw AppError.conflict(
+          'Order was concurrently modified by another transaction',
+          'ORDER_CONCURRENT_MODIFICATION',
+        );
+      }
+
+      // Restore inventory in catalog inside the same ACID session
+      if (catalogFacade) {
+        await catalogFacade.restoreStock(
+          current.items.map((i) => ({ productId: i.productId, sku: i.sku, quantity: i.quantity })),
+          session,
+        );
+      }
+
+      // Append Outbox event inside the same transaction
+      await appendOutboxEvent(
+        {
+          eventType: EVENTS.ORDER_CANCELLED,
+          schemaVersion: 1,
+          aggregateType: 'Order',
+          aggregateId: updated.id,
+          payload: {
+            orderId: updated.id,
+            orderNumber: updated.orderNumber,
+            userId: updated.userId,
+            storeId: updated.storeId,
+          },
+        },
+        session,
+      );
+
+      return updated;
+    });
+
+    // Post-commit outbox trigger & local event emission
+    void processPendingOutboxEvents().catch((err) => {
+      logger.warn('Outbox dispatch failed for order cancellation', { error: err });
+    });
+
+    if (bus) {
+      bus.emit(EVENTS.ORDER_CANCELLED, {
+        orderId: cancelled.id,
+        orderNumber: cancelled.orderNumber,
+        previousStatus: current.status,
+        newStatus: OrderStatus.CANCELLED,
+        actorUserId: userId,
+      });
+    }
+
+    return cancelled;
   }
 
   return {

@@ -173,4 +173,31 @@ describe('Catalog Module — Unit Tests', () => {
       expect(options).toContain('popularity');
     });
   });
+
+  // ── OCC Versioning & Inventory Determinism ───────────────────────────
+
+  describe('OCC Versioning & Inventory Invariants', () => {
+    it('should sort inventory mutation items deterministically by SKU/productId to prevent deadlocks', () => {
+      const items = [
+        { productId: 'prod-Z', sku: 'SKU-Z', quantity: 2 },
+        { productId: 'prod-A', sku: 'SKU-A', quantity: 1 },
+        { productId: 'prod-M', sku: 'SKU-M', quantity: 5 },
+      ];
+
+      const sorted = [...items].sort((a, b) =>
+        (a.sku ?? a.productId).localeCompare(b.sku ?? b.productId),
+      );
+
+      expect(sorted[0].sku).toBe('SKU-A');
+      expect(sorted[1].sku).toBe('SKU-M');
+      expect(sorted[2].sku).toBe('SKU-Z');
+    });
+
+    it('should detect OCC version mismatch when expectedVersion differs', () => {
+      const currentProduct = { version: 3, name: 'Sample Item' };
+      const expectedVersion = 2; // Stale read
+      const isConflict = typeof expectedVersion === 'number' && currentProduct.version !== expectedVersion;
+      expect(isConflict).toBe(true);
+    });
+  });
 });

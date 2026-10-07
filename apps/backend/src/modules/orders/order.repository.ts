@@ -1,4 +1,4 @@
-import type { Model } from 'mongoose';
+import type { ClientSession, Model } from 'mongoose';
 import {
   calculateGrandTotal,
   calculateShippingFee,
@@ -12,6 +12,7 @@ import {
   OrderStatus,
   type CreateOrderDTO,
   type IOrderRepository,
+  type IOrderStatusHistoryEntry,
   type OrderDocument,
   type OrderResponse,
   type Page,
@@ -36,6 +37,8 @@ export function createOrderRepository(
       status: raw.status,
       deliveryOtp: raw.deliveryOtp,
       deliveredAt: raw.deliveredAt,
+      version: raw.version ?? 1,
+      statusHistory: raw.statusHistory ?? [],
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt,
     };
@@ -43,13 +46,23 @@ export function createOrderRepository(
 
   async function create(
     dto: CreateOrderDTO & { userId: string },
+    options?: { session?: ClientSession },
   ): Promise<OrderResponse> {
     const subtotal = calculateSubtotal(dto.items);
     const tax = calculateTax(subtotal);
     const shippingFee = calculateShippingFee(subtotal);
     const grandTotal = calculateGrandTotal(subtotal, tax, shippingFee);
 
-    const order = await model.create({
+    const initialStatusHistory: IOrderStatusHistoryEntry[] = [
+      {
+        status: OrderStatus.PENDING,
+        changedBy: dto.userId,
+        reason: 'Order placed',
+        timestamp: new Date(),
+      },
+    ];
+
+    const orderData = {
       ...dto,
       orderNumber: generateOrderNumber(),
       deliveryOtp: generateDeliveryOtp(),
@@ -58,7 +71,17 @@ export function createOrderRepository(
       shippingFee,
       grandTotal,
       status: OrderStatus.PENDING,
-    });
+      version: 1,
+      statusHistory: initialStatusHistory,
+    };
+
+    let order: OrderDocument;
+    if (options?.session) {
+      const createdDocs = await model.create([orderData], { session: options.session });
+      order = createdDocs[0]!;
+    } else {
+      order = await model.create(orderData);
+    }
 
     return toResponse(order);
   }
@@ -171,18 +194,82 @@ export function createOrderRepository(
   async function updateStatus(
     id: string,
     status: OrderStatus,
+    options?: { session?: ClientSession },
   ): Promise<OrderResponse | null> {
     if (!isValidObjectId(id)) return null;
-    const update: Partial<OrderDocument> = { status };
-    if (status === OrderStatus.DELIVERED) {
-      update.deliveredAt = new Date();
-    }
-    const order = await model.findByIdAndUpdate(
-      id,
-      { $set: update },
-      { new: true },
-    );
+    const update: any = {
+      $set: {
+        status,
+        ...(status === OrderStatus.DELIVERED ? { deliveredAt: new Date() } : {}),
+      },
+      $inc: { version: 1 },
+      $push: {
+        statusHistory: {
+          status,
+          timestamp: new Date(),
+        },
+      },
+    };
+    const order = await model.findByIdAndUpdate(id, update, {
+      new: true,
+      session: options?.session,
+    });
     return order ? toResponse(order) : null;
+  }
+
+  async function updateStatusWithVersion(
+    id: string,
+    expectedVersion: number,
+    expectedStatus: OrderStatus,
+    newStatus: OrderStatus,
+    auditEntry: IOrderStatusHistoryEntry,
+    session?: ClientSession,
+  ): Promise<OrderResponse | null> {
+    if (!isValidObjectId(id)) return null;
+    const updated = await model.findOneAndUpdate(
+      { _id: id, version: expectedVersion, status: expectedStatus },
+      {
+        $set: {
+          status: newStatus,
+          ...(newStatus === OrderStatus.DELIVERED ? { deliveredAt: new Date() } : {}),
+        },
+        $push: { statusHistory: auditEntry },
+        $inc: { version: 1 },
+      },
+      { new: true, session },
+    );
+    return updated ? toResponse(updated) : null;
+  }
+
+  async function cancelIfVersionMatches(
+    params: { orderId: string; expectedVersion?: number; expectedStatus?: OrderStatus; reason?: string; actorUserId?: string },
+    session?: ClientSession,
+  ): Promise<OrderResponse | null> {
+    const filter: Record<string, unknown> = {
+      _id: params.orderId,
+      status: params.expectedStatus ? params.expectedStatus : { $in: [OrderStatus.PENDING, OrderStatus.CONFIRMED] },
+    };
+    if (typeof params.expectedVersion === 'number') {
+      filter.version = params.expectedVersion;
+    }
+
+    const auditEntry: IOrderStatusHistoryEntry = {
+      status: OrderStatus.CANCELLED,
+      changedBy: params.actorUserId,
+      reason: params.reason || 'Order cancelled',
+      timestamp: new Date(),
+    };
+
+    const updated = await model.findOneAndUpdate(
+      filter,
+      {
+        $set: { status: OrderStatus.CANCELLED },
+        $push: { statusHistory: auditEntry },
+        $inc: { version: 1 },
+      },
+      { new: true, session },
+    );
+    return updated ? toResponse(updated) : null;
   }
 
   return {
@@ -193,5 +280,7 @@ export function createOrderRepository(
     findByStoreId,
     findAll,
     updateStatus,
+    updateStatusWithVersion,
+    cancelIfVersionMatches,
   };
 }

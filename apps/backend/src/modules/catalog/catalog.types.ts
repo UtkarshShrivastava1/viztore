@@ -36,13 +36,17 @@ export interface StockCheckResult {
   }[];
 }
 
+import type { ClientSession } from 'mongoose';
+
 export interface ICatalogRepository {
   create(storeId: string, storeName: string, dto: CreateProductDto & { slug: string }): Promise<IProduct>;
   findById(id: string): Promise<IProduct | null>;
   findBySlug(slug: string): Promise<IProduct | null>;
   list(query: ProductQueryDto): Promise<IProductListResponse>;
-  update(id: string, dto: UpdateProductDto): Promise<IProduct | null>;
-  delete(id: string): Promise<boolean>;
+  update(id: string, dto: UpdateProductDto, expectedVersion?: number, session?: ClientSession): Promise<IProduct | null>;
+  delete(id: string, expectedVersion?: number, session?: ClientSession): Promise<boolean>;
+  deductStock?(items: CheckStockItem[], session?: ClientSession): Promise<void>;
+  restoreStock?(items: CheckStockItem[], session?: ClientSession): Promise<void>;
 }
 
 export interface ICatalogService {
@@ -52,8 +56,8 @@ export interface ICatalogService {
     ownerId: string,
     items: CreateProductDto[],
   ): Promise<{ created: number; errors: Array<{ index: number; error: string }> }>;
-  updateProduct(productId: string, ownerId: string, dto: UpdateProductDto): Promise<IProduct>;
-  deleteProduct(productId: string, ownerId: string): Promise<void>;
+  updateProduct(productId: string, ownerId: string, dto: UpdateProductDto, expectedVersion?: number): Promise<IProduct>;
+  deleteProduct(productId: string, ownerId: string, expectedVersion?: number): Promise<void>;
   getProductById(id: string): Promise<IProduct>;
   getProductBySlug(slug: string): Promise<IProduct>;
   getProductByIdOrSlug(idOrSlug: string): Promise<IProduct>;
@@ -67,7 +71,9 @@ export interface ICatalogFacade {
     price: number;
     storeId: string;
     isActive: boolean;
+    version?: number;
   } | null>;
   checkStock(items: CheckStockItem[]): Promise<StockCheckResult>;
-  deductStock(items: CheckStockItem[]): Promise<void>;
+  deductStock(items: CheckStockItem[], session?: ClientSession): Promise<void>;
+  restoreStock(items: CheckStockItem[], session?: ClientSession): Promise<void>;
 }

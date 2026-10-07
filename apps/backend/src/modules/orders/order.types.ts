@@ -1,8 +1,13 @@
-import type { Document } from 'mongoose';
+import type { ClientSession, Document } from 'mongoose';
 import { OrderStatus } from '@repo/shared-types';
 export { OrderStatus };
 
-
+export interface IOrderStatusHistoryEntry {
+  status: OrderStatus;
+  changedBy?: string;
+  reason?: string;
+  timestamp?: Date;
+}
 
 export interface OrderItemDTO {
   productId: string;
@@ -48,6 +53,8 @@ export interface OrderResponse {
   status: OrderStatus;
   deliveryOtp?: string;
   deliveredAt?: Date;
+  version: number;
+  statusHistory?: IOrderStatusHistoryEntry[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -65,6 +72,8 @@ export interface OrderDocument extends Document {
   status: OrderStatus;
   deliveryOtp: string;
   deliveredAt?: Date;
+  version: number;
+  statusHistory: IOrderStatusHistoryEntry[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -80,13 +89,25 @@ export interface Page<T> {
 }
 
 export interface IOrderRepository {
-  create(dto: CreateOrderDTO & { userId: string }): Promise<OrderResponse>;
+  create(dto: CreateOrderDTO & { userId: string }, options?: { session?: ClientSession }): Promise<OrderResponse>;
   findById(id: string): Promise<OrderResponse | null>;
   findByOrderNumber(orderNumber: string): Promise<OrderResponse | null>;
   findByUserId(userId: string, page: number, limit: number): Promise<Page<OrderResponse>>;
   findByStoreId(storeId: string, page: number, limit: number): Promise<Page<OrderResponse>>;
   findAll(page: number, limit: number): Promise<Page<OrderResponse>>;
-  updateStatus(id: string, status: OrderStatus): Promise<OrderResponse | null>;
+  updateStatus(id: string, status: OrderStatus, options?: { session?: ClientSession }): Promise<OrderResponse | null>;
+  updateStatusWithVersion(
+    id: string,
+    expectedVersion: number,
+    expectedStatus: OrderStatus,
+    newStatus: OrderStatus,
+    auditEntry: IOrderStatusHistoryEntry,
+    session?: ClientSession,
+  ): Promise<OrderResponse | null>;
+  cancelIfVersionMatches(
+    params: { orderId: string; expectedVersion?: number; expectedStatus?: OrderStatus; reason?: string; actorUserId?: string },
+    session?: ClientSession,
+  ): Promise<OrderResponse | null>;
 }
 
 export interface OrderInvoiceData {
@@ -136,10 +157,11 @@ export interface IOrderService {
     id: string,
     status: OrderStatus,
     actorUserId: string,
-    otp?: string
+    otp?: string,
+    expectedVersion?: number,
   ): Promise<OrderResponse | null>;
   verifyDeliveryOtp(id: string, otp: string): Promise<boolean>;
-  cancelOrder(id: string, userId: string, isAdmin: boolean): Promise<OrderResponse | null>;
+  cancelOrder(id: string, userId: string, isAdmin: boolean, expectedVersion?: number): Promise<OrderResponse | null>;
 }
 
 export interface IOrderFacade {

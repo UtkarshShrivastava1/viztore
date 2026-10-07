@@ -26,6 +26,16 @@ const shippingAddressSchema = new Schema(
   { _id: false },
 );
 
+const statusHistorySchema = new Schema(
+  {
+    status: { type: String, required: true },
+    changedBy: { type: String },
+    reason: { type: String },
+    timestamp: { type: Date, default: Date.now },
+  },
+  { _id: false },
+);
+
 const orderSchema = new Schema<OrderDocument>(
   {
     userId: { type: String, required: true, index: true },
@@ -45,6 +55,8 @@ const orderSchema = new Schema<OrderDocument>(
     },
     deliveryOtp: { type: String, required: true },
     deliveredAt: { type: Date },
+    statusHistory: { type: [statusHistorySchema], default: [] },
+    version: { type: Number, required: true, default: 1, min: 1, index: true },
   },
   { timestamps: true, versionKey: false },
 );

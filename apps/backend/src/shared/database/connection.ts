@@ -17,7 +17,13 @@ export async function connectDatabase(): Promise<typeof mongoose> {
     });
 
     const conn = await mongoose.connect(env.MONGODB_URI, {
-      serverSelectionTimeoutMS: 5000,
+      maxPoolSize: env.MONGO_MAX_POOL_SIZE,
+      minPoolSize: env.MONGO_MIN_POOL_SIZE,
+      maxIdleTimeMS: 60_000,
+      waitQueueTimeoutMS: 5_000,
+      serverSelectionTimeoutMS: 5_000,
+      socketTimeoutMS: 30_000,
+      retryWrites: true,
       autoIndex: env.NODE_ENV !== 'production',
     });
 

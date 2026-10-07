@@ -12,12 +12,16 @@ export const orderRouter = defaultModule.router;
 export const orderService = defaultModule.service;
 export const orderRepository = defaultModule.repository;
 
+import { logger } from '../../shared/utils/logger.js';
+
 export const orderModule: IOrderFacade = {
   getOrderById: async (id: string): Promise<OrderResponse | null> => {
     try {
       return await orderService.getOrderById(id, '__internal__', true);
-    } catch {
-      return null;
+    } catch (err: any) {
+      if (err?.statusCode === 404) return null;
+      logger.error('OrderFacade getOrderById failed', { error: err, orderId: id });
+      throw err;
     }
   },
   getOrdersByUserId: async (userId: string): Promise<Page<OrderResponse>> => {
@@ -26,15 +30,17 @@ export const orderModule: IOrderFacade = {
   markAsDelivered: async (orderId: string, otp: string): Promise<OrderResponse | null> => {
     try {
       return await orderService.updateOrderStatus(orderId, 'DELIVERED' as any, '__internal__', otp);
-    } catch {
-      return null;
+    } catch (err: any) {
+      logger.error('OrderFacade markAsDelivered failed', { error: err, orderId });
+      throw err;
     }
   },
   cancelOrder: async (orderId: string, _reason: string): Promise<OrderResponse | null> => {
     try {
       return await orderService.cancelOrder(orderId, '__internal__', true);
-    } catch {
-      return null;
+    } catch (err: any) {
+      logger.error('OrderFacade cancelOrder failed', { error: err, orderId });
+      throw err;
     }
   },
 };

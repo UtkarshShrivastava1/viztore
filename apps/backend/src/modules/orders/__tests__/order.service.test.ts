@@ -180,4 +180,99 @@ describe('OrderService (Enterprise Clean Architecture Unit Tests)', () => {
       service.getOrderById('order-123', 'attacker-user', false),
     ).rejects.toThrow(/You do not have access to this order/);
   });
+
+  it('resolves authoritative product price and name from Catalog Facade rather than client input', async () => {
+    const repo = buildFakeRepository();
+    const catalogFacade = {
+      getProductById: vi.fn().mockResolvedValue({
+        id: 'p1',
+        name: 'Fresh Fuji Apples',
+        price: 199, // Authoritative price in catalog
+        storeId: 'store-456',
+        isActive: true,
+      }),
+      checkStock: vi.fn().mockResolvedValue({ available: true }),
+      deductStock: vi.fn().mockResolvedValue(undefined),
+      restoreStock: vi.fn().mockResolvedValue(undefined),
+    };
+
+    vi.mocked(repo.create).mockResolvedValue({
+      ...mockOrder,
+      items: [
+        { productId: 'p1', sku: 'S1', name: 'Fresh Fuji Apples', quantity: 2, unitPrice: 199, storeId: 'store-456' },
+      ],
+      subtotal: 398,
+      grandTotal: 452,
+    });
+
+    const service = createOrderService(repo, undefined, undefined, catalogFacade);
+    const result = await service.createOrder('user-123', {
+      storeId: 'store-456',
+      items: [
+        // Client tampered price of 1
+        { productId: 'p1', sku: 'S1', name: 'Cheap Apples', quantity: 2, unitPrice: 1, storeId: 'store-456' },
+      ],
+      shippingAddress: mockOrder.shippingAddress,
+    });
+
+    expect(catalogFacade.getProductById).toHaveBeenCalledWith('p1');
+    expect(repo.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        items: [
+          expect.objectContaining({
+            productId: 'p1',
+            name: 'Fresh Fuji Apples',
+            unitPrice: 199,
+          }),
+        ],
+      }),
+    );
+    expect(catalogFacade.deductStock).toHaveBeenCalled();
+    expect(result.items[0]?.unitPrice).toBe(199);
+  });
+
+  it('cancels order with OCC and restores stock via catalogFacade', async () => {
+    const repo = buildFakeRepository();
+    repo.cancelIfVersionMatches = vi.fn().mockResolvedValue({
+      ...mockOrder,
+      status: OrderStatus.CANCELLED,
+      version: 2,
+    });
+    vi.mocked(repo.findById).mockResolvedValue(mockOrder);
+
+    const catalogFacade = {
+      getProductById: vi.fn(),
+      checkStock: vi.fn(),
+      deductStock: vi.fn(),
+      restoreStock: vi.fn().mockResolvedValue(undefined),
+    };
+
+    const service = createOrderService(repo, undefined, undefined, catalogFacade);
+    const result = await service.cancelOrder('order-123', 'user-123', false, 1);
+
+    expect(repo.cancelIfVersionMatches).toHaveBeenCalledWith(
+      expect.objectContaining({
+        orderId: 'order-123',
+        expectedVersion: 1,
+        expectedStatus: OrderStatus.PENDING,
+      }),
+      undefined,
+    );
+    expect(catalogFacade.restoreStock).toHaveBeenCalledWith(
+      [{ productId: 'p1', sku: 'S1', quantity: 2 }],
+      undefined,
+    );
+    expect(result?.status).toBe(OrderStatus.CANCELLED);
+  });
+
+  it('rejects updateOrderStatus when expectedVersion conflict occurs', async () => {
+    const repo = buildFakeRepository();
+    vi.mocked(repo.findById).mockResolvedValue({ ...mockOrder, version: 2 });
+    repo.updateStatusWithVersion = vi.fn().mockResolvedValue(null); // Simulated conflict
+
+    const service = createOrderService(repo);
+    await expect(
+      service.updateOrderStatus('order-123', OrderStatus.CONFIRMED, 'merchant-1', undefined, 1),
+    ).rejects.toThrow(/Order was concurrently updated by another transaction/);
+  });
 });

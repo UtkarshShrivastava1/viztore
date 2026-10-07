@@ -1,5 +1,6 @@
 import type { Request, Response, RequestHandler } from 'express';
 import type { IOrderService } from './order.types.js';
+import type { AuthenticatedRequest } from '../../shared/types/authenticated-request.js';
 import {
   createOrderSchema,
   paginationSchema,
@@ -16,20 +17,22 @@ function getUserId(req: Request): string | undefined {
 
 export function createOrderController(service: IOrderService) {
   const createOrder: RequestHandler = catchAsync(async (req: Request, res: Response) => {
-    const userId = getUserId(req);
+    const authReq = req as AuthenticatedRequest;
+    const userId = getUserId(authReq);
     if (!userId) {
       throw AppError.unauthorized('Authentication required to place an order');
     }
 
     const body = createOrderSchema.parse(req.body);
-    const order = await service.createOrder(userId, body, req.correlationId);
+    const order = await service.createOrder(userId, body, authReq.correlationId);
 
     return ApiResponse.created(res, order, 'Order created successfully');
   });
 
   const getOrder: RequestHandler = catchAsync(async (req: Request, res: Response) => {
-    const userId = getUserId(req) || '';
-    const isAdminOrMerchant = req.user?.role === 'admin' || req.user?.role === 'merchant';
+    const authReq = req as AuthenticatedRequest;
+    const userId = getUserId(authReq) || '';
+    const isAdminOrMerchant = authReq.user?.role === 'admin' || authReq.user?.role === 'merchant';
     const orderId = req.params.id as string;
 
     const order = await service.getOrderById(orderId, userId, isAdminOrMerchant);
@@ -41,7 +44,8 @@ export function createOrderController(service: IOrderService) {
   });
 
   const getMyOrders: RequestHandler = catchAsync(async (req: Request, res: Response) => {
-    const userId = getUserId(req);
+    const authReq = req as AuthenticatedRequest;
+    const userId = getUserId(authReq);
     if (!userId) {
       throw AppError.unauthorized('Authentication required');
     }
@@ -83,11 +87,13 @@ export function createOrderController(service: IOrderService) {
   });
 
   const updateStatus: RequestHandler = catchAsync(async (req: Request, res: Response) => {
-    const actorId = getUserId(req) || 'system';
+    const authReq = req as AuthenticatedRequest;
+    const actorId = getUserId(authReq) || 'system';
     const orderId = req.params.id as string;
 
     const { status, deliveryOtp } = updateOrderStatusSchema.parse(req.body);
-    const order = await service.updateOrderStatus(orderId, status, actorId, deliveryOtp);
+    const expectedVersion = req.body.expectedVersion ? Number(req.body.expectedVersion) : undefined;
+    const order = await service.updateOrderStatus(orderId, status, actorId, deliveryOtp, expectedVersion);
 
     if (!order) {
       throw AppError.notFound('Order not found', 'ORDER_NOT_FOUND');
@@ -105,11 +111,18 @@ export function createOrderController(service: IOrderService) {
   });
 
   const cancel: RequestHandler = catchAsync(async (req: Request, res: Response) => {
-    const userId = getUserId(req) || '';
-    const isAdmin = req.user?.role === 'admin';
+    const authReq = req as AuthenticatedRequest;
+    const userId = getUserId(authReq) || '';
+    const isAdmin = authReq.user?.role === 'admin';
     const orderId = req.params.id as string;
 
-    const order = await service.cancelOrder(orderId, userId, isAdmin);
+    const expectedVersion = req.body.expectedVersion
+      ? Number(req.body.expectedVersion)
+      : req.query.expectedVersion
+        ? Number(req.query.expectedVersion)
+        : undefined;
+
+    const order = await service.cancelOrder(orderId, userId, isAdmin, expectedVersion);
     if (!order) {
       throw AppError.notFound('Order not found', 'ORDER_NOT_FOUND');
     }
@@ -118,8 +131,9 @@ export function createOrderController(service: IOrderService) {
   });
 
   const getInvoice: RequestHandler = catchAsync(async (req: Request, res: Response) => {
-    const userId = getUserId(req) || '';
-    const isAdminOrMerchant = req.user?.role === 'admin' || req.user?.role === 'merchant';
+    const authReq = req as AuthenticatedRequest;
+    const userId = getUserId(authReq) || '';
+    const isAdminOrMerchant = authReq.user?.role === 'admin' || authReq.user?.role === 'merchant';
     const orderId = req.params.id as string;
 
     const invoice = await service.getOrderInvoice(orderId, userId, isAdminOrMerchant);

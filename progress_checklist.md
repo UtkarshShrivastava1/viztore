@@ -1,6 +1,6 @@
 # Viztore Platform — Implementation Checklist
 
-> **Overall Status:** Phase 1, Phase 2 (UI Refined), Phase 3, Phase 4/5/6 Backend Complete | 82/82 Unit & Integration Tests Passing | Full Monorepo Clean Build | Docker & Staging Blueprints Ready
+> **Overall Status:** Phase 1, Phase 2 (UI Refined), Phase 3, Phase 4/5/6 Backend Complete | 87/87 Unit & Integration Tests Passing | Full Monorepo Clean Build | Docker & Staging Blueprints Ready
 
 ---
 
@@ -147,6 +147,15 @@
   - [x] Operational Settings Hub (15.0) for store profiles, tax parameters, and notification policies
   - [x] ordersApi client wired for backend order synchronization
   - [x] Merchant auth and order lifecycle defect fixes: dynamic store hydration, clean logout redirect to login, dynamic tab badges, uppercase `OrderStatus` mapping, and persistent active tab across page refresh
+  - [x] Enterprise Catalog & Order Architecture Hardening (`enterprise_catalog_order_architecture_updated(1).md`):
+    - [x] Optimistic Concurrency Control (OCC) with indexed numeric `version` on Product & Order schemas
+    - [x] Authoritative product pricing & line-item snapshots via `catalogFacade` (client prices strictly ignored)
+    - [x] Deadlock-free atomic inventory deductions (deterministic SKU/ID sorting) and atomic stock restoration (`restoreStock`)
+    - [x] MongoDB ACID multi-document transactions (`withTransaction`) with snapshot read isolation and majority write concern
+    - [x] Transactional Outbox Pattern (`OutboxModel`, `appendOutboxEvent`, `processPendingOutboxEvents`) with event correlation IDs
+    - [x] Strongly-typed `AuthenticatedRequest` across Catalog and Order mutation controllers
+    - [x] Bounded MongoDB connection pool configuration (`maxPoolSize: 25`, `minPoolSize: 5`, waitQueue & socket timeouts)
+    - [x] 87/87 backend unit tests green, clean monorepo Turborepo build
 
 ---
 
