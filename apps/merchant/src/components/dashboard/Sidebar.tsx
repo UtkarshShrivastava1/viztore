@@ -105,7 +105,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       id: 'orders',
       label: 'Orders',
       icon: ShoppingBag,
-      badge: newOrdersCount > 0 ? newOrdersCount : undefined,
+      badge: 25,
       badgeColor: 'blue',
     },
     { id: 'catalog', label: 'Products / Catalog', icon: Package },
