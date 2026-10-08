@@ -205,6 +205,7 @@
   - [x] Full REST API endpoints mounted under `/api/v1/billing` (`billing.routes.ts`, `billing.controller.ts`)
   - [x] Client API integration in `apps/merchant/src/lib/api.ts` (`billingApi`)
   - [x] Automated test suite with 94/94 backend tests passing across 15 suites
+  - [x] In-House Retail Billing Customer History Enforcement & Direct New Customer Entry Workflow (zero hardcoded customer presets, dynamic past customer lookup by name/phone, direct new customer registration, 36 Indian states & UTs directory with Chhattisgarh launch default)
 - [ ] Merchant wallet financial ledger, payout triggers & automated bank settlements
 - [ ] Automated returns, exchange, RMA reverse logistics & refund credit note settlement
 - [ ] Merchant staff management & role-based access control (Manager, Cashier, Inventory Clerk)

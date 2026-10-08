@@ -38,7 +38,7 @@ export function normalizeStateIdentifier(stateStr: string): string {
   if (!stateStr) return '';
   const trimmed = stateStr.trim().toLowerCase();
   const codeMatch = trimmed.match(/\((\d{2})\)/);
-  if (codeMatch) return codeMatch[1];
+  if (codeMatch && codeMatch[1]) return codeMatch[1];
   if (/^\d{2}$/.test(trimmed)) return trimmed;
   return trimmed.replace(/\(\d{2}\)/g, '').trim();
 }

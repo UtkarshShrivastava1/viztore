@@ -233,6 +233,13 @@ Every online order placed through `apps/web` generates an authoritative, complia
   - Transactional Outbox integration (`appendOutboxEvent`) for billing domain events.
   - 7 unit tests covering billing math, stock sync, OCC conflicts, and outbox.
   - **94/94 backend unit tests passing (15 suites)**, 100% clean Turborepo monorepo build across all 5 packages.
+- [x] In-House Retail Billing Customer History Enforcement & Direct Entry Workflow:
+  - Purged static hardcoded customer presets (`initialCustomers: []`) so fresh merchant stores start with clean 0 state.
+  - Dynamic store customer history extraction from recorded store invoices and verified customer orders.
+  - If store has transaction history: renders dropdown/searchable selector of known past customers with order counts, or toggles to manual entry.
+  - If customer is new or store has no history: prompts for explicit Name (`*`) and Phone Number entry; typing a matching phone/name provides a 1-click auto-fill suggestion.
+  - Automatic registration: submitting an invoice or quote auto-saves new customers to the merchant's customer directory (`active` status) for future instant lookup.
+  - Integrated comprehensive 36 Indian States & UTs directory with Chhattisgarh as the operational launch default across billing customer state selection.
 - [ ] **Abhay Task 9 (Shell Controls & Storefront Merchandising Suite - 10 Screens) — In Progress 🟡** (`feature/abhay-shell-storefront-merchandising`, task brief: [`abhay_shell_storefront_mockup_task.md`](file:///C:/Users/utkar/.gemini/antigravity-ide/brain/6097e2b9-e42e-4d96-94a7-763a7ca8993f/abhay_shell_storefront_mockup_task.md))
 
 

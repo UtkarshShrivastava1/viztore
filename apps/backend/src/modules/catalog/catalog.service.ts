@@ -8,10 +8,11 @@ import {
   IProductFacets,
   ProductSortOption,
   ProductCategory,
+  ProductSubType,
 } from '@repo/shared-types';
 import { ProductModel } from './product.model.js';
 import { AppError } from '../../shared/utils/AppError.js';
-import { findStoreById } from '../stores/store.service.js';
+import { findStoreById, getMerchantStores } from '../stores/store.service.js';
 import { invalidateCache } from '../../shared/redis/cache.js';
 
 // ── Helpers ────────────────────────────────────────────────────────────
@@ -61,30 +62,72 @@ function buildSortStage(sort: ProductSortOption): Record<string, 1 | -1> {
  * Create a new product under a merchant's store
  */
 export async function createProduct(
-  storeId: string,
+  storeId: string | undefined,
   ownerId: string,
   dto: CreateProductDto,
+  userRole?: string,
 ): Promise<IProduct> {
+  let targetStoreId = storeId;
+  if (!targetStoreId) {
+    const merchantStores = await getMerchantStores(ownerId);
+    if (merchantStores && merchantStores.length > 0 && merchantStores[0]) {
+      targetStoreId = (merchantStores[0] as any)?._id?.toString() || (merchantStores[0] as any)?.id;
+    }
+  }
+
+  if (!targetStoreId) {
+    throw AppError.badRequest('Store ID is required to create a product', 'STORE_REQUIRED');
+  }
+
   // Validate store ownership
-  const store = await findStoreById(storeId);
+  const store = await findStoreById(targetStoreId);
   if (!store) {
     throw AppError.notFound('Store not found', 'STORE_NOT_FOUND');
   }
-  if (store.ownerId.toString() !== ownerId) {
+  if (userRole !== 'admin' && store.ownerId.toString() !== ownerId) {
     throw AppError.forbidden('You are not authorized to add products to this store', 'STORE_ACCESS_DENIED');
   }
+
+  // Ensure category is a valid enum value
+  const validCategories = Object.values(ProductCategory) as string[];
+  let resolvedCategory = (dto.category || '').toLowerCase().trim().replace(/[\s-]+/g, '_');
+  if (!validCategories.includes(resolvedCategory)) {
+    if (resolvedCategory === 'apparel' || resolvedCategory === 'clothing') {
+      resolvedCategory = ProductCategory.FASHION;
+    } else {
+      resolvedCategory = ProductCategory.OTHER;
+    }
+  }
+
+  // Ensure subType if provided is valid
+  const validSubTypes = Object.values(ProductSubType) as string[];
+  let resolvedSubType = dto.subType ? (dto.subType as string).toLowerCase().trim().replace(/[\s-]+/g, '_') : undefined;
+  if (resolvedSubType && !validSubTypes.includes(resolvedSubType)) {
+    resolvedSubType = undefined;
+  }
+
+  // Ensure variants have fallback images if empty
+  const defaultImage = 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=600&q=80';
+  const resolvedVariants = (dto.variants || []).map((v) => ({
+    ...v,
+    images: (v.images && v.images.length > 0) ? v.images : [defaultImage],
+  }));
 
   const slug = generateSlug(dto.name);
 
   const product = new ProductModel({
     ...dto,
-    storeId,
+    category: resolvedCategory,
+    subType: resolvedSubType,
+    variants: resolvedVariants,
+    storeId: targetStoreId,
     storeName: store.name,
     slug,
     isActive: true,
   });
 
   await product.save();
+  await invalidateCache(`catalog:store:${targetStoreId}`);
   return product.toJSON() as unknown as IProduct;
 }
 

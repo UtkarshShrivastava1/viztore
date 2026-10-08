@@ -31,25 +31,42 @@ export const ProductPreviewSubmitPage: React.FC = () => {
     setActiveView('wizard');
   };
 
-  const handleSaveProduct = () => {
+  const handleSaveProduct = async () => {
     setIsSubmitting(true);
-    const saved = saveDraftAsProduct();
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      const saved = await saveDraftAsProduct();
       alert(`Product "${saved.name}" published successfully!`);
-    }, 400);
+      setActiveView('list');
+    } catch (err: any) {
+      alert(`Failed to publish product: ${err?.message || 'Unknown error'}`);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleSaveAndPrint = () => {
-    const saved = saveDraftAsProduct();
-    openPrintLabelModal(saved);
+  const handleSaveAndPrint = async () => {
+    setIsSubmitting(true);
+    try {
+      const saved = await saveDraftAsProduct();
+      openPrintLabelModal(saved);
+    } catch (err: any) {
+      alert(`Failed to publish product: ${err?.message || 'Unknown error'}`);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleSaveAsDraft = () => {
-    const draft = { ...draftProduct, status: 'draft' as const };
-    saveDraftAsProduct();
-    alert('Product saved as draft!');
-    setActiveView('list');
+  const handleSaveAsDraft = async () => {
+    setIsSubmitting(true);
+    try {
+      await saveDraftAsProduct();
+      alert('Product saved as draft!');
+      setActiveView('list');
+    } catch (err: any) {
+      alert(`Failed to save draft: ${err?.message || 'Unknown error'}`);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const mrp = Number(draftProduct.mrp ?? 699);

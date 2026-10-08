@@ -13,10 +13,12 @@ export const createProduct: RequestHandler = catchAsync(async (req: Request, res
   const authReq = req as AuthenticatedRequest;
   if (!authReq.user) throw AppError.unauthorized();
 
-  const { storeId } = req.body;
-  if (!storeId) throw AppError.badRequest('storeId is required in request body');
-
-  const product = await catalogService.createProduct(storeId, authReq.user.sub, req.body);
+  const product = await catalogService.createProduct(
+    req.body.storeId,
+    authReq.user.sub,
+    req.body,
+    authReq.user.role,
+  );
   return ApiResponse.created(res, product, 'Product created successfully');
 });
 
