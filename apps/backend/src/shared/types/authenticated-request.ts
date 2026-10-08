@@ -6,6 +6,6 @@ export type AuthenticatedRequest<
   TParams = any,
   TQuery = any,
 > = Request<TParams, any, TBody, TQuery> & {
-  user: JwtTokenPayload & { id?: string };
+  user: JwtTokenPayload & { id?: string; storeId?: string };
   correlationId: string;
 };

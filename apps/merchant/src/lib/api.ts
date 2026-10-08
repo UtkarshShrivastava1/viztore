@@ -71,6 +71,13 @@ export const api = {
       ...options,
     }),
 
+  put: <T>(endpoint: string, body?: unknown, options?: RequestInit) =>
+    request<T>(endpoint, {
+      method: 'PUT',
+      body: body ? JSON.stringify(body) : undefined,
+      ...options,
+    }),
+
   delete: <T>(endpoint: string, options?: RequestInit) =>
     request<T>(endpoint, { method: 'DELETE', ...options }),
 };
@@ -129,4 +136,48 @@ export const notificationsApi = {
 
   markAllAsRead: () =>
     api.post<any>('/notifications/read-all'),
+};
+
+export const billingApi = {
+  getInvoices: (params?: Record<string, string>) => {
+    const qs = params ? '?' + new URLSearchParams(params).toString() : '';
+    return api.get<any>(`/billing/invoices${qs}`);
+  },
+
+  createInvoice: (data: unknown, idempotencyKey?: string) =>
+    api.post<any>('/billing/invoices', data, {
+      headers: idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : undefined,
+    }),
+
+  getInvoiceById: (id: string) =>
+    api.get<any>(`/billing/invoices/${id}`),
+
+  recordPayment: (id: string, data: unknown, expectedVersion?: number) => {
+    const qs = expectedVersion ? `?expectedVersion=${expectedVersion}` : '';
+    return api.patch<any>(`/billing/invoices/${id}/payment${qs}`, data);
+  },
+
+  cancelInvoice: (id: string, expectedVersion?: number) => {
+    const qs = expectedVersion ? `?expectedVersion=${expectedVersion}` : '';
+    return api.patch<any>(`/billing/invoices/${id}/cancel${qs}`);
+  },
+
+  getQuotes: (params?: Record<string, string>) => {
+    const qs = params ? '?' + new URLSearchParams(params).toString() : '';
+    return api.get<any>(`/billing/quotes${qs}`);
+  },
+
+  createQuote: (data: unknown) =>
+    api.post<any>('/billing/quotes', data),
+
+  convertQuoteToInvoice: (id: string) =>
+    api.post<any>(`/billing/quotes/${id}/convert`),
+
+  getSettings: () =>
+    api.get<any>('/billing/settings'),
+
+  updateSettings: (data: unknown, expectedVersion?: number) => {
+    const qs = expectedVersion ? `?expectedVersion=${expectedVersion}` : '';
+    return api.put<any>(`/billing/settings${qs}`, data);
+  },
 };

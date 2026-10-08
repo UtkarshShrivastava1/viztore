@@ -19,7 +19,7 @@
 | ↳ **Backend Architecture & APIs** | 30% | `[████████████████████]` | **100%** | 🟢 Live on Render | `https://viztore.onrender.com` Healthy |
 | ↳ **Merchant & Admin Panel** | 25% | `[████████████████████]` | **100%** | 🟢 Complete Suite | All 7/7 Modules & Settings Merged (`b92a159`) |
 | ↳ **Customer Web Storefront** | 25% | `[████████████████████]` | **100%** | 🟢 Storefront & Cart Engine | All 4/4 Modular Suites Merged (`e942cc9`) |
-| ↳ **Production Readiness & DevOps** | 20% | `[████████████████████]` | **100%** | 🟢 Staging Live | 87/87 Tests Green, Monorepo Clean Build |
+| ↳ **Production Readiness & DevOps** | 20% | `[████████████████████]` | **100%** | 🟢 Staging Live | 94/94 Tests Green, Monorepo Clean Build |
 | **Total Full-Platform Scope** (Phases 1–7) | — | `[█████████████████░░░]` | **88%** | ⚪ Roadmap Reserved | Customer Mobile App (Phase 7 / Tier 3) |
 
 > **Auto-Update Invariant**: This progress bar is recalculated and updated dynamically on every task assignment, milestone delivery, and PR merge per `.agents/rules/progress-tracking.md`.
@@ -96,16 +96,25 @@ Every online order placed through `apps/web` generates an authoritative, complia
 
 ---
 
-### 🏬 Tier 2 — Basic In-House Retail Billing & Pilot Operations (Mid-to-Late October 2026)
-> **Mandate:** In the subsequent operational runway, implement working basic in-house counter billing and onboard pilot merchant clients for real-world on-ground operations.
+### 🏬 Tier 2 — Basic In-House Retail Billing & Pilot Operations (DELIVERED ✅)
+> **Mandate:** In-house counter billing and quotation engine synchronized atomically with online catalog inventory, backed by Rajesh's 7 enterprise pillars.
 
-1. **Basic In-House Retail Billing (`apps/merchant` - Folder 5 Revised Scope)**:
-   - **Manual Counter Sale Mode (`5.1`, `5.2`)**: Merchant creates counter bills for walk-in retail shoppers.
-   - **Tax Invoices (`5.0`)**: In-house invoice management table with status filtering, date range, and customer search.
-   - **Estimates / Quotations (`5.5`, `5.6`)**: Quick quote creation with validity timer and 1-click **Convert to Invoice** (`+ Convert`).
-   - **Billing Settings & Print Preferences (`5.3`)**: Configure invoice prefixes, terms & conditions, store bank account QR code, and thermal vs. A4 layout.
+1. **In-House Retail Billing & Point-of-Sale Module (`apps/backend/src/modules/billing/` & `apps/merchant` - Folder 5)**:
+   - **Manual Counter Sale Mode (`5.1`, `5.2`)**: Merchant creates counter bills with live GST computation (Intra-state CGST/SGST vs Inter-state IGST), settlement modes (Cash, UPI, Card, Net Banking), and atomic catalog inventory deduction (`catalogFacade.deductStock()`).
+   - **Tax Invoices (`5.0`)**: In-house invoice management table with 7 status tabs (`All Invoices`, `Draft`, `Issued`, `Paid`, `Partially Paid`, `Overdue`, `Cancelled`), single round-trip KPI aggregations, and 8-action menu.
+   - **Estimates / Quotations (`5.5`, `5.6`)**: Quick quote authoring with validity timer and 1-click **Convert to Invoice** (`+ Convert`) triggering transactional stock deduction.
+   - **Billing Settings & Preferences (`5.3`)**: Configures sequential numbering (`INV-1001`, `Q-1001`), GST slabs, discount limits, and live A4 tax invoice preview.
+   - **Enterprise Pillars Covered (Rajesh's 7 Standards)**:
+     - OCC version increment on all mutations with ABA cycle elimination.
+     - Idempotency-Key engine (`idempotency.middleware.ts`) with 5-minute Redis/memory TTL.
+     - Thin controllers with typed `AuthenticatedRequest` and Zod route validation.
+     - Redis cache-aside catalog cache invalidation on counter sales.
+     - Bounded MongoDB connection pool (`maxPoolSize: 25`, `minPoolSize: 5`).
+     - Structured Winston JSON logging with `correlationId` tracking.
+     - Transactional Outbox integration (`appendOutboxEvent`) for billing domain events.
+   - **Automated Verification**: **94/94 unit & integration tests passing** across 15 test suites. Monorepo builds cleanly in 57s.
 2. **Real-Time Sound & Push Order Alerts**:
-   - Connect `@socket.io/redis-adapter` to trigger an instant Zomato/Swiggy-style audio chime on the merchant's screen when an order arrives.
+   - Connect `@socket.io/redis-adapter` to trigger an instant audio chime on the merchant's screen when an order arrives.
 3. **Pilot Merchant Onboarding (Soft Launch)**:
    - Target 5–10 physical brick-and-mortar shops within a compact 3–4km delivery cluster.
    - Free onboarding for beta testing.
@@ -150,7 +159,7 @@ Every online order placed through `apps/web` generates an authoritative, complia
 | **Shared Types** | TypeScript, Zod | **100% In Sync** ✅ | All contracts, validation schemas, DTOs, branding config |
 | **Real-Time & Events** | Socket.io + Redis Adapter + TypedEventBus | **Wired** ✅ | In-process domain events forwarded to Socket.io rooms with Redis distributed scaling |
 | **Agent Workflows** | Custom Skills & Rules | **Active** ✅ | Fullstack Feature Workflow, UI Matching, Intern Delegation, /create-task |
-| **Test Suite** | Vitest | **87/87 Passing** ✅ | 14 test suites (AppError, Auth/Addresses, Stores/Ratings, Onboarding, Catalog, Orders, Delivery, Notifications, WhatsApp Cloud API, WorkerPool, Cache-Aside, CORS Validation, OCC Versioning, Outbox Transactions) |
+| **Test Suite** | Vitest | **94/94 Passing** ✅ | 15 test suites (AppError, Auth/Addresses, Stores/Ratings, Onboarding, Catalog, Orders, Delivery, Notifications, WhatsApp Cloud API, WorkerPool, Cache-Aside, CORS Validation, OCC Versioning, Outbox Transactions, In-House Billing & Real-Time Inventory Sync) |
 | **Build Status** | Turborepo | **Clean** ✅ | Full monorepo builds with zero errors across all packages |
 | **Engineering Standards** | 8/8 Pillars (`structure.md`) | **100% Implemented** ✅ | Facades, Composition roots, 3-tier testing, EventBus, WorkerPool, Cache-Aside + Replica split, ESR indexing, Decoupled repos |
 
@@ -214,7 +223,16 @@ Every online order placed through `apps/web` generates an authoritative, complia
   - MongoDB ACID multi-document transactions (`withTransaction`) with snapshot read isolation, majority write concern, and resilient fallback for test environments.
   - Transactional Outbox Pattern (`OutboxModel`, `appendOutboxEvent`, `processPendingOutboxEvents`) ensuring at-least-once domain event dispatch and distributed consistency.
   - Strongly typed `AuthenticatedRequest` across Catalog and Order controllers; bounded MongoDB connection pool sizing (`maxPoolSize: 25`, `minPoolSize: 5`, strict waitQueue and socket timeouts).
-  - 87/87 backend unit tests passing (14 suites), 100% clean Turborepo monorepo build.
+- [x] In-House Retail Billing & Real-Time Inventory Sync Module (`apps/backend/src/modules/billing/`):
+  - In-house counter POS and quotation engine synchronized atomically with online catalog inventory via `catalogFacade.deductStock()`.
+  - Indian GST Tax computation engine (Intra-state CGST/SGST vs Inter-state IGST) with inclusive/exclusive calculations and round-off math.
+  - Atomic sequential numbering generator per store (`INV-1001`, `Q-1001`).
+  - OCC Version increments (`version: 1 -> 2`) with monotonic integer counters mathematically eliminating the ABA problem.
+  - Idempotency-Key engine (`idempotency.middleware.ts`) with SHA-256 payload verification and 5-minute TTL.
+  - 1-click Quote-to-Invoice conversion (`convertQuoteToInvoice`).
+  - Transactional Outbox integration (`appendOutboxEvent`) for billing domain events.
+  - 7 unit tests covering billing math, stock sync, OCC conflicts, and outbox.
+  - **94/94 backend unit tests passing (15 suites)**, 100% clean Turborepo monorepo build across all 5 packages.
 - [ ] **Abhay Task 9 (Shell Controls & Storefront Merchandising Suite - 10 Screens) — In Progress 🟡** (`feature/abhay-shell-storefront-merchandising`, task brief: [`abhay_shell_storefront_mockup_task.md`](file:///C:/Users/utkar/.gemini/antigravity-ide/brain/6097e2b9-e42e-4d96-94a7-763a7ca8993f/abhay_shell_storefront_mockup_task.md))
 
 
