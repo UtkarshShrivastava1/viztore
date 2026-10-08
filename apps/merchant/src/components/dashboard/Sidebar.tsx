@@ -105,7 +105,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       id: 'orders',
       label: 'Orders',
       icon: ShoppingBag,
-      badge: newOrdersCount > 0 ? newOrdersCount : undefined,
+      badge: 25,
       badgeColor: 'blue',
     },
     { id: 'catalog', label: 'Products / Catalog', icon: Package },
@@ -113,8 +113,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'billing', label: 'Billing & Invoicing', icon: Receipt, badge: 'New', badgeColor: 'green' },
     { id: 'customers', label: 'Customers', icon: Users },
     { id: 'wallet', label: 'Wallet', icon: Wallet, badge: '₹32,450', badgeColor: 'blue' },
-    { id: 'expenses', label: 'Purchase / Expense', icon: ReceiptText },
-    { id: 'assets', label: 'Asset Management', icon: HardDrive },
+    { id: 'expenses', label: 'Expenses', icon: ReceiptText },
     {
       id: 'returns',
       label: 'Returns & Refunds',

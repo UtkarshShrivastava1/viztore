@@ -13,6 +13,7 @@ import { NotificationsDrawer } from './drawers/NotificationsDrawer.js';
 import { HelpSupportDrawer } from './drawers/HelpSupportDrawer.js';
 import { SellerProfileDrawer } from './drawers/SellerProfileDrawer.js';
 import { ProfileInformationDrawer } from './drawers/ProfileInformationDrawer.js';
+import { StoreInactiveConfirmModal } from './StoreInactiveConfirmModal.js';
 
 interface HeaderProps {
   isCollapsed: boolean;
@@ -25,15 +26,24 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleMobileMenu,
   onNavigateToWallet,
 }) => {
-  const { user, currentStore } = useAuthStore();
+  const { user, currentStore, isStoreActive, setStoreActive } = useAuthStore();
 
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isProfileInfoOpen, setIsProfileInfoOpen] = useState(false);
+  const [isInactiveModalOpen, setIsInactiveModalOpen] = useState(false);
 
-  const storeName = currentStore?.name || user?.fullName || 'My Store';
+  const storeName = currentStore?.name || user?.fullName || 'Fashion Hub';
   const avatarInitials = storeName.slice(0, 2).toUpperCase();
+
+  const handleToggleStoreStatus = () => {
+    if (isStoreActive) {
+      setIsInactiveModalOpen(true);
+    } else {
+      setStoreActive(true);
+    }
+  };
 
   return (
     <>
@@ -93,7 +103,7 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <Bell className="w-5 h-5" />
             <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center border-2 border-white">
-              5
+              8
             </span>
           </button>
 
@@ -106,6 +116,37 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <HelpCircle className="w-5 h-5" />
           </button>
+
+          {/* Store Status Toggle Control (1.0(V1).png, 1.0b(V1).png) */}
+          <div className="hidden sm:flex items-center gap-2">
+            <Store className="w-4 h-4 text-slate-700 shrink-0" />
+            <div className="flex items-center gap-1.5 text-xs font-semibold whitespace-nowrap">
+              <span className="text-slate-800">
+                {isStoreActive ? 'Store Active' : 'Store Inactive'}
+              </span>
+              <span
+                className={`w-2 h-2 rounded-full shrink-0 ${
+                  isStoreActive ? 'bg-emerald-500' : 'bg-rose-500'
+                }`}
+              />
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={isStoreActive}
+              onClick={handleToggleStoreStatus}
+              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                isStoreActive ? 'bg-blue-600' : 'bg-slate-300'
+              }`}
+              title={isStoreActive ? 'Click to make store inactive' : 'Click to activate store'}
+            >
+              <span
+                className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs ring-0 transition duration-200 ease-in-out ${
+                  isStoreActive ? 'translate-x-4' : 'translate-x-0'
+                }`}
+              />
+            </button>
+          </div>
 
           <div className="h-6 w-px bg-slate-200 mx-1 hidden sm:block" />
 
@@ -130,6 +171,13 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
         </div>
       </header>
+
+      {/* Confirmation Modal when toggling active store off (1.0a(V1).png) */}
+      <StoreInactiveConfirmModal
+        isOpen={isInactiveModalOpen}
+        onClose={() => setIsInactiveModalOpen(false)}
+        onConfirm={() => setStoreActive(false)}
+      />
 
       {/* Drawers */}
       <NotificationsDrawer

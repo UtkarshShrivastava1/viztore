@@ -16,13 +16,40 @@ import {
   Wifi,
   Battery,
   Signal,
+  Tag,
+  Folder,
+  Crown,
+  ThumbsUp,
+  Package,
+  Plus,
+  Mic,
+  Sparkles,
 } from 'lucide-react';
 import { useStoreManagementStore, StoreSection } from '../../stores/storeManagementStore.js';
+import { branding } from '../../lib/branding.js';
 
 interface AddEditSectionViewProps {
   sectionId?: string | null;
   onBack: () => void;
 }
+
+interface PresetSectionOption {
+  name: string;
+  iconType: 'badge' | 'tag' | 'star' | 'sparkles' | 'crown' | 'folder' | 'thumbs-up' | 'package';
+  color?: string;
+  bgColor?: string;
+}
+
+const PRESET_SECTIONS: PresetSectionOption[] = [
+  { name: 'New Arrivals', iconType: 'badge', bgColor: 'bg-emerald-500 text-white' },
+  { name: "Today's Deal", iconType: 'tag', color: 'text-amber-500' },
+  { name: 'Best Sellers', iconType: 'star', color: 'text-rose-500 fill-rose-500' },
+  { name: 'Top Picks', iconType: 'sparkles', color: 'text-pink-500 fill-pink-500' },
+  { name: 'Featured Brands', iconType: 'crown', color: 'text-amber-500 fill-amber-500' },
+  { name: 'Categories', iconType: 'folder', color: 'text-amber-500 fill-amber-500' },
+  { name: 'Top Rated', iconType: 'thumbs-up', color: 'text-blue-500 fill-blue-500' },
+  { name: 'All Products', iconType: 'package', color: 'text-slate-500' },
+];
 
 export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
   sectionId,
@@ -36,6 +63,8 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
   const [displayOrder, setDisplayOrder] = useState(existingSection?.priority || 2);
   const [isActive, setIsActive] = useState(existingSection ? existingSection.isActive : true);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [dropdownSearch, setDropdownSearch] = useState('');
+  const [isCustomNameInput, setIsCustomNameInput] = useState(false);
 
   // Filters
   const [categoryFilter, setCategoryFilter] = useState('All Categories');
@@ -52,16 +81,9 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
     'p7',
   ]);
 
-  const predefinedNames = [
-    "Today's Deal",
-    'New Arrivals',
-    'Best Sellers',
-    'Top Picks',
-    'Featured Brands',
-    'Categories',
-    'Top Rated',
-    'All Products',
-  ];
+  const filteredPresets = PRESET_SECTIONS.filter((p) =>
+    p.name.toLowerCase().includes(dropdownSearch.toLowerCase())
+  );
 
   const products = [
     {
@@ -231,38 +253,135 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
             </p>
           </div>
 
-          {/* Section Name dropdown */}
+          {/* Section Name dropdown (13.1a.png, 13.1b.png) */}
           <div className="relative">
             <label className="text-[11px] font-bold text-slate-700 block mb-1">
               Section Name <span className="text-rose-500">*</span>
             </label>
-            <button
-              type="button"
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 flex items-center justify-between text-left hover:border-blue-500"
-            >
-              <span>{sectionName}</span>
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-            </button>
 
-            {isDropdownOpen && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-20 py-1 max-h-56 overflow-y-auto">
-                {predefinedNames.map((name) => (
+            {isCustomNameInput ? (
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="text"
+                  value={sectionName}
+                  onChange={(e) => setSectionName(e.target.value)}
+                  placeholder="Enter custom section name"
+                  className="flex-1 px-3 py-2 bg-white border border-blue-500 rounded-lg text-xs font-semibold text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  autoFocus
+                />
+                <button
+                  type="button"
+                  onClick={() => setIsCustomNameInput(false)}
+                  className="px-2.5 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900 border border-slate-200 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors shrink-0"
+                >
+                  Presets
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 flex items-center justify-between text-left hover:border-blue-500 transition-colors"
+              >
+                <span>{sectionName}</span>
+                {isDropdownOpen ? (
+                  <ChevronUp className="w-3.5 h-3.5 text-slate-400" />
+                ) : (
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                )}
+              </button>
+            )}
+
+            {isDropdownOpen && !isCustomNameInput && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-20 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+                {/* Search sections... input (13.1b.png) */}
+                <div className="p-2 border-b border-slate-100 bg-slate-50/50">
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      placeholder="Search sections..."
+                      value={dropdownSearch}
+                      onChange={(e) => setDropdownSearch(e.target.value)}
+                      className="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs placeholder-slate-400 focus:outline-none focus:border-blue-500 transition-colors"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </div>
+                </div>
+
+                {/* 8 Presets List with Icons (13.1b.png) */}
+                <div className="py-1 max-h-56 overflow-y-auto divide-y divide-slate-50">
+                  {filteredPresets.map((preset) => {
+                    const isSelected = sectionName === preset.name;
+                    return (
+                      <button
+                        key={preset.name}
+                        type="button"
+                        onClick={() => {
+                          setSectionName(preset.name);
+                          setIsDropdownOpen(false);
+                        }}
+                        className={`w-full px-3 py-2 text-left text-xs font-semibold flex items-center justify-between transition-colors ${
+                          isSelected
+                            ? 'bg-blue-50/80 text-blue-700'
+                            : 'text-slate-700 hover:bg-slate-50'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          {preset.iconType === 'badge' && (
+                            <span className="w-5 h-5 rounded-full bg-emerald-500 text-[8px] font-black text-white flex items-center justify-center shrink-0">
+                              NEW
+                            </span>
+                          )}
+                          {preset.iconType === 'tag' && (
+                            <Tag className="w-4 h-4 text-amber-500 shrink-0" />
+                          )}
+                          {preset.iconType === 'star' && (
+                            <Star className="w-4 h-4 text-rose-500 fill-rose-500 shrink-0" />
+                          )}
+                          {preset.iconType === 'sparkles' && (
+                            <Sparkles className="w-4 h-4 text-pink-500 fill-pink-500 shrink-0" />
+                          )}
+                          {preset.iconType === 'crown' && (
+                            <Crown className="w-4 h-4 text-amber-500 fill-amber-500 shrink-0" />
+                          )}
+                          {preset.iconType === 'folder' && (
+                            <Folder className="w-4 h-4 text-amber-500 fill-amber-500 shrink-0" />
+                          )}
+                          {preset.iconType === 'thumbs-up' && (
+                            <ThumbsUp className="w-4 h-4 text-blue-500 fill-blue-500 shrink-0" />
+                          )}
+                          {preset.iconType === 'package' && (
+                            <Package className="w-4 h-4 text-slate-500 shrink-0" />
+                          )}
+                          <span>{preset.name}</span>
+                        </div>
+                        {isSelected && <Check className="w-3.5 h-3.5 text-blue-600 shrink-0" />}
+                      </button>
+                    );
+                  })}
+                  {filteredPresets.length === 0 && (
+                    <div className="px-3 py-3 text-center text-xs text-slate-400">
+                      No matching presets
+                    </div>
+                  )}
+                </div>
+
+                {/* Create New Section Action (13.1b.png) */}
+                <div className="p-2 border-t border-slate-100 bg-slate-50/30">
                   <button
-                    key={name}
                     type="button"
                     onClick={() => {
-                      setSectionName(name);
+                      setIsCustomNameInput(true);
                       setIsDropdownOpen(false);
+                      setSectionName('');
                     }}
-                    className={`w-full px-3 py-1.5 text-left text-xs font-semibold hover:bg-slate-50 transition-colors flex items-center justify-between ${
-                      sectionName === name ? 'text-blue-600 bg-blue-50/50' : 'text-slate-700'
-                    }`}
+                    className="w-full px-2 py-1.5 text-left text-xs font-bold text-blue-600 hover:bg-blue-50/70 rounded-lg flex items-center gap-2 transition-colors"
                   >
-                    <span>{name}</span>
-                    {sectionName === name && <Check className="w-3 h-3 text-blue-600" />}
+                    <Plus className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                    <span>Create New Section</span>
                   </button>
-                ))}
+                </div>
               </div>
             )}
           </div>
@@ -528,13 +647,17 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
 
             {/* App Screen Canvas */}
             <div className="bg-white rounded-xl overflow-hidden p-2.5 space-y-2">
-              {/* Top search & icons */}
+              {/* Top brand & icons (13.1a.png) */}
               <div className="flex items-center justify-between text-slate-700">
-                <span className="text-[11px] font-black tracking-tight text-blue-600">Store</span>
+                <div className="flex items-center gap-1">
+                  <span className="text-xs font-black tracking-tight text-blue-600">
+                    {branding.appName}
+                  </span>
+                </div>
                 <div className="flex items-center gap-2">
-                  <Heart className="w-3 h-3 text-slate-500" />
+                  <Heart className="w-3.5 h-3.5 text-slate-600" />
                   <div className="relative">
-                    <ShoppingCart className="w-3 h-3 text-slate-500" />
+                    <ShoppingCart className="w-3.5 h-3.5 text-slate-600" />
                     <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-rose-500 text-white rounded-full text-[7px] flex items-center justify-center font-bold">
                       3
                     </span>
@@ -542,21 +665,35 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
                 </div>
               </div>
 
+              {/* In-app Search Bar (13.1a.png) */}
+              <div className="relative">
+                <Search className="w-2.5 h-2.5 text-slate-400 absolute left-2 top-1/2 -translate-y-1/2" />
+                <div className="w-full pl-6 pr-6 py-1 bg-slate-100 rounded-full text-[8px] text-slate-400 truncate">
+                  Search in {branding.appName}...
+                </div>
+                <Mic className="w-2.5 h-2.5 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2" />
+              </div>
+
               {/* Section Title Header */}
               <div className="flex items-center justify-between border-b border-slate-100 pb-1">
-                <h4 className="text-[11px] font-black text-slate-900">{sectionName}</h4>
-                <span className="text-[9px] text-blue-600 font-bold flex items-center">
+                <h4 className="text-[11px] font-black text-slate-900 truncate max-w-[130px]">
+                  {sectionName || 'Section Name'}
+                </h4>
+                <span className="text-[9px] text-blue-600 font-bold flex items-center shrink-0">
                   <span>View All</span>
                   <ChevronRight className="w-2.5 h-2.5" />
                 </span>
               </div>
 
-              {/* 2x2 Product Grid Preview */}
+              {/* 2x2 Product Grid Preview - Real-Time Synchronized with Selected Products! */}
               <div className="grid grid-cols-2 gap-1.5">
-                {products.slice(0, 4).map((p) => (
+                {(products.filter((p) => selectedProductIds.includes(p.id)).length > 0
+                  ? products.filter((p) => selectedProductIds.includes(p.id)).slice(0, 4)
+                  : products.slice(0, 4)
+                ).map((p) => (
                   <div
                     key={p.id}
-                    className="border border-slate-200 rounded-lg p-1.5 flex flex-col justify-between space-y-1"
+                    className="border border-slate-200 rounded-lg p-1.5 flex flex-col justify-between space-y-1 bg-white shadow-2xs"
                   >
                     <div className="relative">
                       <img
@@ -564,10 +701,12 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
                         alt={p.name}
                         className="w-full h-16 object-cover rounded-md"
                       />
-                      <Heart className="w-2.5 h-2.5 text-slate-400 absolute top-1 right-1" />
+                      <div className="w-4 h-4 rounded-full bg-white/90 text-slate-400 flex items-center justify-center absolute top-1 right-1 shadow-2xs">
+                        <Heart className="w-2.5 h-2.5" />
+                      </div>
                     </div>
                     <div>
-                      <span className="text-[9px] font-bold text-slate-900 block truncate">
+                      <span className="text-[9px] font-bold text-slate-900 block truncate leading-tight">
                         {p.name}
                       </span>
                       <span className="text-[9px] font-black text-slate-900">₹{p.price}</span>
@@ -578,7 +717,7 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
                     </div>
                     <button
                       type="button"
-                      className="w-full py-0.5 rounded border border-blue-600 text-blue-600 text-[8px] font-bold hover:bg-blue-50"
+                      className="w-full py-0.5 rounded border border-blue-600 text-blue-600 text-[8px] font-bold hover:bg-blue-50 transition-colors"
                     >
                       Add to Cart
                     </button>

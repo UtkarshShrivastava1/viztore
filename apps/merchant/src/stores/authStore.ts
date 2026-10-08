@@ -7,9 +7,12 @@ interface AuthState {
   currentStore: any | null;
   accessToken: string | null;
   isAuthenticated: boolean;
+  isStoreActive: boolean;
   setAuth: (user: IUser, token: string, refreshToken?: string) => Promise<void>;
   setCurrentStore: (store: any) => void;
   fetchCurrentStore: () => Promise<void>;
+  setStoreActive: (active: boolean) => void;
+  toggleStoreActive: () => void;
   logout: () => void;
   initialize: () => void;
 }
@@ -19,6 +22,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   currentStore: null,
   accessToken: null,
   isAuthenticated: false,
+  isStoreActive: true,
 
   setAuth: async (user, token, refreshToken) => {
     localStorage.setItem('access_token', token);
@@ -52,6 +56,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
+  setStoreActive: (active: boolean) => {
+    localStorage.setItem('is_store_active', JSON.stringify(active));
+    set({ isStoreActive: active });
+  },
+
+  toggleStoreActive: () => {
+    const next = !get().isStoreActive;
+    localStorage.setItem('is_store_active', JSON.stringify(next));
+    set({ isStoreActive: next });
+  },
+
   logout: () => {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
@@ -65,6 +80,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const token = localStorage.getItem('access_token');
     const storedUser = localStorage.getItem('user_session');
     const storedStore = localStorage.getItem('current_store');
+    const storedActive = localStorage.getItem('is_store_active');
+
+    const isStoreActive = storedActive !== null ? JSON.parse(storedActive) : true;
 
     if (token && storedUser) {
       try {
@@ -77,12 +95,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             // ignore
           }
         }
-        set({ user, currentStore, accessToken: token, isAuthenticated: true });
+        set({ user, currentStore, accessToken: token, isAuthenticated: true, isStoreActive });
         // Background refresh active store
         get().fetchCurrentStore();
       } catch {
         localStorage.clear();
       }
+    } else {
+      set({ isStoreActive });
     }
   },
 }));

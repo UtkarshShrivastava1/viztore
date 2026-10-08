@@ -9,6 +9,8 @@ import { LowStockWarnings } from '../components/dashboard/LowStockWarnings.js';
 import { QuickAccessPanel } from '../components/dashboard/QuickAccessPanel.js';
 import { AnnouncementsBar } from '../components/dashboard/AnnouncementsBar.js';
 import { DashboardTab } from '../components/dashboard/Sidebar.js';
+import { useAuthStore } from '../stores/authStore.js';
+import { AlertTriangle } from 'lucide-react';
 
 interface DashboardOverviewPageProps {
   onNavigate: (tab: DashboardTab) => void;
@@ -21,8 +23,36 @@ export const DashboardOverviewPage: React.FC<DashboardOverviewPageProps> = ({
   onOpenAddProduct,
   onOpenBulkUpload,
 }) => {
+  const { isStoreActive, setStoreActive } = useAuthStore();
+
   return (
     <div className="space-y-3.5 max-w-[1600px] mx-auto">
+      {/* Inactive Dashboard Alert Banner (1.0b(V1).png) */}
+      {!isStoreActive && (
+        <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in duration-200">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-rose-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+              <AlertTriangle className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="text-xs sm:text-sm font-bold text-rose-900">
+                Your Store is Currently Inactive
+              </h4>
+              <p className="text-[11px] sm:text-xs text-rose-700 mt-0.5 leading-snug">
+                Customer orders are paused and your store is hidden from the customer app. Activate your store to start receiving orders again.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setStoreActive(true)}
+            className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl shadow-xs whitespace-nowrap transition-colors"
+          >
+            Activate Store Now
+          </button>
+        </div>
+      )}
+
       {/* 1. Greeting & Date Filter */}
       <GreetingHeader />
 
