@@ -60,14 +60,33 @@ export const QuotesTableView: React.FC<QuotesTableViewProps> = ({
     };
   }, [activeStatusMenuQuoteId]);
 
-  // 5 KPI metrics matching 5.4.png
+  // Dynamic KPI calculations derived purely from live quotes array
+  const { totalQuoteValue, acceptedCount, convertedCount, expiredCount } = useMemo(() => {
+    let value = 0;
+    let accepted = 0;
+    let converted = 0;
+    let expired = 0;
+    quotes.forEach((q) => {
+      value += q.totalAmount || 0;
+      if (q.status === 'accepted') accepted += 1;
+      if (q.status === 'converted') converted += 1;
+      if (q.status === 'expired') expired += 1;
+    });
+    return {
+      totalQuoteValue: value,
+      acceptedCount: accepted,
+      convertedCount: converted,
+      expiredCount: expired,
+    };
+  }, [quotes]);
+
   const kpiCards = [
     {
       id: 'total-quotes',
       title: 'Total Quotes',
-      value: '356',
-      change: '18%',
-      isPositive: true,
+      value: quotes.length.toLocaleString('en-IN'),
+      change: quotes.length > 0 ? '+100%' : '0%',
+      isPositive: quotes.length > 0,
       icon: FileText,
       iconColor: 'text-blue-600',
       iconBg: 'bg-blue-50',
@@ -75,9 +94,9 @@ export const QuotesTableView: React.FC<QuotesTableViewProps> = ({
     {
       id: 'total-value',
       title: 'Total Value',
-      value: '₹18,75,230',
-      change: '22%',
-      isPositive: true,
+      value: `₹${totalQuoteValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`,
+      change: totalQuoteValue > 0 ? '+100%' : '0%',
+      isPositive: totalQuoteValue > 0,
       icon: BadgeIndianRupee,
       iconColor: 'text-emerald-600',
       iconBg: 'bg-emerald-50',
@@ -85,9 +104,9 @@ export const QuotesTableView: React.FC<QuotesTableViewProps> = ({
     {
       id: 'accepted-quotes',
       title: 'Accepted Quotes',
-      value: '128',
-      change: '16%',
-      isPositive: true,
+      value: acceptedCount.toLocaleString('en-IN'),
+      change: acceptedCount > 0 ? '+100%' : '0%',
+      isPositive: acceptedCount > 0,
       icon: CheckCircle,
       iconColor: 'text-blue-600',
       iconBg: 'bg-blue-50',
@@ -95,9 +114,9 @@ export const QuotesTableView: React.FC<QuotesTableViewProps> = ({
     {
       id: 'converted-quotes',
       title: 'Converted to Invoices',
-      value: '96',
-      change: '16%',
-      isPositive: true,
+      value: convertedCount.toLocaleString('en-IN'),
+      change: convertedCount > 0 ? '+100%' : '0%',
+      isPositive: convertedCount > 0,
       icon: FileCheck,
       iconColor: 'text-blue-600',
       iconBg: 'bg-blue-50',
@@ -105,9 +124,9 @@ export const QuotesTableView: React.FC<QuotesTableViewProps> = ({
     {
       id: 'expired-quotes',
       title: 'Expired Quotes',
-      value: '42',
-      change: '8%',
-      isPositive: false,
+      value: expiredCount.toLocaleString('en-IN'),
+      change: expiredCount > 0 ? 'Follow-up' : '0',
+      isPositive: expiredCount === 0,
       icon: Hourglass,
       iconColor: 'text-amber-600',
       iconBg: 'bg-amber-50',
@@ -462,8 +481,14 @@ export const QuotesTableView: React.FC<QuotesTableViewProps> = ({
             <tbody className="divide-y divide-slate-100 text-xs">
               {filteredQuotes.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-slate-400">
-                    No quotes found matching your selected filters.
+                  <td colSpan={8} className="py-16 text-center text-slate-400">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <FileText className="w-10 h-10 text-slate-300 stroke-1" />
+                      <p className="text-sm font-semibold text-slate-700">No quotes yet</p>
+                      <p className="text-xs text-slate-400 max-w-sm">
+                        Create estimates or formal quotations for customers and convert them into live invoices with 1 click.
+                      </p>
+                    </div>
                   </td>
                 </tr>
               ) : (

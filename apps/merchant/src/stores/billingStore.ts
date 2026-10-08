@@ -202,6 +202,8 @@ interface BillingStoreState {
   setInvoicePaymentFilter: (payment: string) => void;
   setInvoiceCurrentTab: (tab: string) => void;
   clearInvoiceFilters: () => void;
+  setInvoices: (invoices: IInvoice[]) => void;
+  setQuotes: (quotes: IQuote[]) => void;
   openCreateInvoiceModal: (draft?: Partial<IInvoice>) => void;
   closeCreateInvoiceModal: () => void;
   createInvoice: (invoice: Omit<IInvoice, 'id'>) => IInvoice;
@@ -246,15 +248,15 @@ interface BillingStoreState {
 
 export const initialBillingSettings: BillingSettings = {
   defaultCurrency: 'INR - Indian Rupee (₹)',
-  billingAddress: '12, MG Road, Commercial Area, Indore, Madhya Pradesh - 452001, India',
+  billingAddress: '',
   useCustomerBillingAddress: true,
   autoInvoiceGeneration: true,
   invoiceTemplate: 'Classic Tax Invoice',
   invoicePrefix: 'INV-',
-  startingSequenceNumber: 1249,
+  startingSequenceNumber: 1001,
   gstEnabled: true,
-  gstin: '27ABCDE1234F1Z5',
-  state: 'Maharashtra (27)',
+  gstin: '',
+  state: '',
   taxCalculationType: 'exclusive',
   categoryTaxEnabled: false,
   allowDiscounts: true,
@@ -305,14 +307,14 @@ export const useBillingStore = create<BillingStoreState>((set, get) => ({
   creditNotes: initialCreditNotes,
   creditNoteSearchQuery: '',
   creditNoteStatusFilter: 'All Status',
-  creditNoteDateRange: '01 May 2024 - 31 May 2024',
+  creditNoteDateRange: 'This Month',
   creditNoteCurrentTab: 'All',
 
   // Debit Notes State
   debitNotes: initialDebitNotes,
   debitNoteSearchQuery: '',
   debitNoteStatusFilter: 'All Status',
-  debitNoteDateRange: '01 May 2024 - 31 May 2024',
+  debitNoteDateRange: 'This Month',
   debitNoteCurrentTab: 'All',
 
   // Invoice Filters & Modals
@@ -331,6 +333,8 @@ export const useBillingStore = create<BillingStoreState>((set, get) => ({
       invoicePaymentFilter: 'All',
       invoiceCurrentTab: 'All Invoices',
     }),
+  setInvoices: (invoices) => set({ invoices }),
+  setQuotes: (quotes) => set({ quotes }),
   openCreateInvoiceModal: (draft) =>
     set({
       isCreateInvoiceModalOpen: true,
@@ -344,7 +348,7 @@ export const useBillingStore = create<BillingStoreState>((set, get) => ({
 
   createInvoice: (invoiceData) => {
     const newId = 'inv-' + Date.now();
-    const newInvoiceNo = 'INV-' + (1248 + get().invoices.length + 1);
+    const newInvoiceNo = (get().settings.invoicePrefix || 'INV-') + (get().settings.startingSequenceNumber + get().invoices.length);
     const newInvoice: IInvoice = {
       ...invoiceData,
       id: newId,
@@ -395,7 +399,7 @@ export const useBillingStore = create<BillingStoreState>((set, get) => ({
     const duplicated: IInvoice = {
       ...inv,
       id: 'inv-' + Date.now(),
-      invoiceNo: 'INV-' + (1248 + get().invoices.length + 1),
+      invoiceNo: (get().settings.invoicePrefix || 'INV-') + (get().settings.startingSequenceNumber + get().invoices.length),
       date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
       status: 'draft',
       paidAmount: 0,
@@ -448,7 +452,7 @@ export const useBillingStore = create<BillingStoreState>((set, get) => ({
   },
   createQuote: (quoteData) => {
     const newId = 'quote-' + Date.now();
-    const newQuoteNo = 'Q-' + (1025 + get().quotes.length);
+    const newQuoteNo = 'Q-' + (1001 + get().quotes.length);
     const newQuote: IQuote = {
       ...quoteData,
       id: newId,
@@ -474,19 +478,7 @@ export const useBillingStore = create<BillingStoreState>((set, get) => ({
       customerAddress: quote.customerAddress,
       placeOfSupply: quote.placeOfSupply,
       type: 'Tax Invoice',
-      items: quote.items.length > 0 ? quote.items : [
-        {
-          id: 'item-converted-1',
-          productId: 'PRD-101',
-          name: 'Cotton T-Shirt (M)',
-          hsnSac: '61091000',
-          quantity: 1,
-          rate: quote.totalAmount,
-          discountPercent: 0,
-          taxPercent: 18,
-          amount: quote.totalAmount,
-        }
-      ],
+      items: quote.items,
       subTotal: quote.subTotal,
       discountTotal: quote.discountTotal,
       taxTotal: quote.taxTotal,
@@ -513,12 +505,12 @@ export const useBillingStore = create<BillingStoreState>((set, get) => ({
     set({
       creditNoteSearchQuery: '',
       creditNoteStatusFilter: 'All Status',
-      creditNoteDateRange: '01 May 2024 - 31 May 2024',
+      creditNoteDateRange: 'This Month',
       creditNoteCurrentTab: 'All',
     }),
   createCreditNote: (noteData) => {
     const newId = 'cn-' + Date.now();
-    const newNoteNo = 'CN-' + (1004 + get().creditNotes.length);
+    const newNoteNo = 'CN-' + (1001 + get().creditNotes.length);
     const newNote: ICreditNote = {
       ...noteData,
       id: newId,
@@ -570,12 +562,12 @@ export const useBillingStore = create<BillingStoreState>((set, get) => ({
     set({
       debitNoteSearchQuery: '',
       debitNoteStatusFilter: 'All Status',
-      debitNoteDateRange: '01 May 2024 - 31 May 2024',
+      debitNoteDateRange: 'This Month',
       debitNoteCurrentTab: 'All',
     }),
   createDebitNote: (noteData) => {
     const newId = 'dn-' + Date.now();
-    const newNoteNo = 'DN-' + (1039 + get().debitNotes.length);
+    const newNoteNo = 'DN-' + (1001 + get().debitNotes.length);
     const newNote: IDebitNote = {
       ...noteData,
       id: newId,

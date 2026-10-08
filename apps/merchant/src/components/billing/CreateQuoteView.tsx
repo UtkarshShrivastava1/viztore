@@ -20,27 +20,25 @@ interface CreateQuoteViewProps {
 }
 
 export const CreateQuoteView: React.FC<CreateQuoteViewProps> = ({ onBack }) => {
-  const { createQuote } = useBillingStore();
+  const { createQuote, quotes } = useBillingStore();
   const { items: inventoryProducts } = useInventoryStore();
 
   // Header & Customer State
-  const [customerName, setCustomerName] = useState('Ramesh Stores');
-  const [customerPhone, setCustomerPhone] = useState('9876543210');
-  const [customerEmail, setCustomerEmail] = useState('ramesh@stores.com');
-  const [customerGstin, setCustomerGstin] = useState('23ABCDE1234F1Z5');
-  const [customerAddress, setCustomerAddress] = useState(
-    '12, MG Road, Commercial Area, Indore, Madhya Pradesh - 452001, India'
-  );
-  const [placeOfSupply, setPlaceOfSupply] = useState('Madhya Pradesh (23)');
+  const [customerName, setCustomerName] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [customerEmail, setCustomerEmail] = useState('');
+  const [customerGstin, setCustomerGstin] = useState('');
+  const [customerAddress, setCustomerAddress] = useState('');
+  const [placeOfSupply, setPlaceOfSupply] = useState('');
 
   // Quote Metadata
-  const [quoteNo, setQuoteNo] = useState('Q-1025');
-  const [quoteDate, setQuoteDate] = useState('11 May 2024');
-  const [validUntil, setValidUntil] = useState('25 May 2024');
-  const [referenceNo, setReferenceNo] = useState('PO-4587');
+  const [quoteNo, setQuoteNo] = useState(() => 'Q-' + (1001 + (quotes?.length || 0)));
+  const [quoteDate, setQuoteDate] = useState(() => new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }));
+  const [validUntil, setValidUntil] = useState(() => { const d = new Date(); d.setDate(d.getDate() + 14); return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }); });
+  const [referenceNo, setReferenceNo] = useState('');
   const [currency, setCurrency] = useState('INR - Indian Rupee (₹)');
   const [paymentTerms, setPaymentTerms] = useState('30 Days');
-  const [salesPerson, setSalesPerson] = useState('Store Staff (Lead)');
+  const [salesPerson, setSalesPerson] = useState('Store Staff');
   const [notes, setNotes] = useState('');
 
   // Barcode scanner modal simulation
@@ -50,42 +48,16 @@ export const CreateQuoteView: React.FC<CreateQuoteViewProps> = ({ onBack }) => {
   const [items, setItems] = useState<IInvoiceItem[]>([
     {
       id: 'qi-1',
-      productId: 'PRD-101',
-      name: 'Cotton T-Shirt (M)',
-      hsnSac: '61091000',
-      description: '100% Cotton T-Shirt Size: M, Color: Blue',
-      quantity: 50,
+      productId: '',
+      name: '',
+      hsnSac: '',
+      description: '',
+      quantity: 1,
       unit: 'Pcs',
-      rate: 450.0,
-      discountPercent: 5,
-      taxPercent: 18,
-      amount: 51975.0,
-    },
-    {
-      id: 'qi-2',
-      productId: 'PRD-102',
-      name: 'Denim Jeans (32)',
-      hsnSac: '62034200',
-      description: 'Denim Jeans Size: 32',
-      quantity: 20,
-      unit: 'Pcs',
-      rate: 850.0,
+      rate: 0,
       discountPercent: 0,
       taxPercent: 18,
-      amount: 20060.0,
-    },
-    {
-      id: 'qi-3',
-      productId: 'PRD-103',
-      name: 'Sneakers',
-      hsnSac: '64039990',
-      description: 'Sports Sneakers Size: 9',
-      quantity: 10,
-      unit: 'Pair',
-      rate: 1200.0,
-      discountPercent: 10,
-      taxPercent: 18,
-      amount: 10980.0,
+      amount: 0,
     },
   ]);
 
@@ -108,19 +80,18 @@ export const CreateQuoteView: React.FC<CreateQuoteViewProps> = ({ onBack }) => {
   const youSavePercent = totalBeforeDiscount > 0 ? (totalDiscount / totalBeforeDiscount) * 100 : 0;
 
   const handleAddItem = () => {
-    const defaultProd = inventoryProducts[0];
     const newItem: IInvoiceItem = {
       id: 'qi-' + Date.now(),
-      productId: defaultProd ? defaultProd.id : 'PRD-' + (100 + items.length + 1),
-      name: defaultProd ? defaultProd.name : 'Formal Shirt',
-      hsnSac: '62052000',
-      description: 'Standard product line',
-      quantity: 10,
+      productId: '',
+      name: '',
+      hsnSac: '',
+      description: '',
+      quantity: 1,
       unit: 'Pcs',
-      rate: 550.0,
+      rate: 0,
       discountPercent: 0,
       taxPercent: 18,
-      amount: 6490.0,
+      amount: 0,
     };
     setItems([...items, newItem]);
   };

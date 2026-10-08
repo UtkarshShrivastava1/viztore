@@ -115,7 +115,7 @@ export const BillingSettingsView: React.FC<BillingSettingsViewProps> = ({ onBack
                 <div className="relative">
                   <input
                     type="text"
-                    value={formState.billingAddress}
+                    value={formState.billingAddress || '123, Retail Street, Commercial District, City - PIN'}
                     onChange={(e) => handleChange('billingAddress', e.target.value)}
                     className="w-full pl-3 pr-8 py-2 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:border-blue-600 shadow-2xs"
                   />
@@ -355,11 +355,11 @@ export const BillingSettingsView: React.FC<BillingSettingsViewProps> = ({ onBack
             {/* Top Store Details & Tax Invoice Label */}
             <div className="flex justify-between items-start">
               <div>
-                <h4 className="font-bold text-sm text-slate-900">Fashion Hub</h4>
+                <h4 className="font-bold text-sm text-slate-900">{branding.appName || 'Store Name'}</h4>
                 <p className="text-[11px] text-slate-500 mt-0.5 leading-tight">
                   {formState.billingAddress}
                 </p>
-                <p className="text-[11px] text-slate-500 leading-tight">+91 98765 43210</p>
+                <p className="text-[11px] text-slate-500 leading-tight">+91 98765 00000</p>
               </div>
 
               <div className="text-right">
@@ -374,7 +374,7 @@ export const BillingSettingsView: React.FC<BillingSettingsViewProps> = ({ onBack
                   </span>
                 </p>
                 <p className="text-[11px] text-slate-600">
-                  <span className="text-slate-500">Date:</span> 11 May 2024
+                  <span className="text-slate-500">Date:</span> {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
                 </p>
               </div>
             </div>
@@ -383,8 +383,8 @@ export const BillingSettingsView: React.FC<BillingSettingsViewProps> = ({ onBack
             <div className="pt-2 border-t border-slate-100">
               <span className="text-xs font-bold text-slate-800 block mb-0.5">Bill To</span>
               <div className="flex items-center gap-3 text-xs">
-                <span className="font-bold text-slate-900">Ramesh Stores</span>
-                <span className="text-slate-500">+91 98765 43210</span>
+                <span className="font-bold text-slate-900">Sample Customer</span>
+                <span className="text-slate-500">+91 98765 00000</span>
               </div>
             </div>
 

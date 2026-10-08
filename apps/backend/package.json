@@ -13,6 +13,7 @@
     "seed": "tsx src/scripts/seed-merchants.ts",
     "seed:prod": "node dist/scripts/seed-merchants.js",
     "test:whatsapp": "tsx src/scripts/test-whatsapp-ping.ts",
+    "purge:billing": "tsx src/scripts/purge-billing.ts",
     "clean": "rimraf dist"
   },
   "dependencies": {

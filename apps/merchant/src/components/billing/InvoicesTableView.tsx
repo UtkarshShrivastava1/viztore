@@ -37,14 +37,35 @@ export const InvoicesTableView: React.FC = () => {
   const [activeMenuInvoiceId, setActiveMenuInvoiceId] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
-  // 5 KPI metrics matching 5.0.png
+  // Dynamic KPI calculations derived purely from live invoices array
+  const { totalSales, paidTotal, outstandingTotal, overdueTotal } = useMemo(() => {
+    let sales = 0;
+    let paid = 0;
+    let outstanding = 0;
+    let overdue = 0;
+    invoices.forEach((inv) => {
+      sales += inv.totalAmount || 0;
+      paid += inv.paidAmount || 0;
+      outstanding += inv.dueAmount || 0;
+      if (inv.status === 'overdue') {
+        overdue += inv.dueAmount || 0;
+      }
+    });
+    return {
+      totalSales: sales,
+      paidTotal: paid,
+      outstandingTotal: outstanding,
+      overdueTotal: overdue,
+    };
+  }, [invoices]);
+
   const kpiCards = [
     {
       id: 'total-invoices',
       title: 'Total Invoices',
-      value: '1,248',
-      change: '18%',
-      isPositive: true,
+      value: invoices.length.toLocaleString('en-IN'),
+      change: invoices.length > 0 ? '+100%' : '0%',
+      isPositive: invoices.length > 0,
       icon: FileText,
       iconColor: 'text-amber-500',
       iconBg: 'bg-amber-50',
@@ -52,9 +73,9 @@ export const InvoicesTableView: React.FC = () => {
     {
       id: 'total-sales',
       title: 'Total Sales',
-      value: '₹12,84,560',
-      change: '22%',
-      isPositive: true,
+      value: `₹${totalSales.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`,
+      change: totalSales > 0 ? '+100%' : '0%',
+      isPositive: totalSales > 0,
       icon: ShoppingBag,
       iconColor: 'text-indigo-600',
       iconBg: 'bg-indigo-50',
@@ -62,9 +83,9 @@ export const InvoicesTableView: React.FC = () => {
     {
       id: 'paid-amount',
       title: 'Paid Amount',
-      value: '₹9,85,420',
-      change: '16%',
-      isPositive: true,
+      value: `₹${paidTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`,
+      change: paidTotal > 0 ? '+100%' : '0%',
+      isPositive: paidTotal > 0,
       icon: CreditCard,
       iconColor: 'text-emerald-600',
       iconBg: 'bg-emerald-50',
@@ -72,9 +93,9 @@ export const InvoicesTableView: React.FC = () => {
     {
       id: 'outstanding-amount',
       title: 'Outstanding Amount',
-      value: '₹2,99,140',
-      change: '8%',
-      isPositive: false,
+      value: `₹${outstandingTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`,
+      change: outstandingTotal > 0 ? 'Active' : '0%',
+      isPositive: outstandingTotal === 0,
       icon: Clock,
       iconColor: 'text-amber-600',
       iconBg: 'bg-amber-50',
@@ -82,9 +103,9 @@ export const InvoicesTableView: React.FC = () => {
     {
       id: 'overdue-amount',
       title: 'Overdue Amount',
-      value: '₹75,230',
-      change: '12%',
-      isPositive: false,
+      value: `₹${overdueTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`,
+      change: overdueTotal > 0 ? 'Requires Action' : 'None',
+      isPositive: overdueTotal === 0,
       icon: AlertTriangle,
       iconColor: 'text-rose-600',
       iconBg: 'bg-rose-50',
@@ -390,8 +411,14 @@ export const InvoicesTableView: React.FC = () => {
             <tbody className="divide-y divide-slate-100 text-xs">
               {filteredInvoices.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-12 text-center text-slate-400">
-                    No invoices match your selected filters.
+                  <td colSpan={9} className="py-16 text-center text-slate-400">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <FileText className="w-10 h-10 text-slate-300 stroke-1" />
+                      <p className="text-sm font-semibold text-slate-700">No invoices yet</p>
+                      <p className="text-xs text-slate-400 max-w-sm">
+                        Create your first counter sale bill or tax invoice to begin tracking retail payments and inventory.
+                      </p>
+                    </div>
                   </td>
                 </tr>
               ) : (

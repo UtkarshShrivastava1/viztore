@@ -18,19 +18,17 @@ export const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
   const { items: inventoryProducts } = useInventoryStore();
 
   // Customer & Billing details
-  const [customerName, setCustomerName] = useState('Ramesh Stores');
-  const [customerPhone, setCustomerPhone] = useState('9876543210');
-  const [billingAddress, setBillingAddress] = useState(
-    '12, MG Road, Commercial Area, Indore, Madhya Pradesh - 452001'
-  );
-  const [state, setState] = useState('Madhya Pradesh (23)');
-  const [gstin, setGstin] = useState('23ABCDE1234F1Z5');
+  const [customerName, setCustomerName] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [billingAddress, setBillingAddress] = useState('');
+  const [state, setState] = useState('');
+  const [gstin, setGstin] = useState('');
 
   // Invoice Details
   const [invoiceType, setInvoiceType] = useState<'Tax Invoice' | 'Bill of Supply'>('Tax Invoice');
-  const [invoiceDate, setInvoiceDate] = useState('11 May 2024');
-  const [dueDate, setDueDate] = useState('25 May 2024');
-  const [placeOfSupply, setPlaceOfSupply] = useState('Madhya Pradesh (23)');
+  const [invoiceDate, setInvoiceDate] = useState(() => new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }));
+  const [dueDate, setDueDate] = useState(() => { const d = new Date(); d.setDate(d.getDate() + 15); return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }); });
+  const [placeOfSupply, setPlaceOfSupply] = useState('');
   const [paymentTerms, setPaymentTerms] = useState('15 Days');
 
   // Notes
@@ -40,14 +38,14 @@ export const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
   const [items, setItems] = useState<IInvoiceItem[]>([
     {
       id: 'it-1',
-      productId: 'inv-1',
-      name: 'Men Black Round Neck T-Shirt',
-      hsnSac: '61091000',
+      productId: '',
+      name: '',
+      hsnSac: '',
       quantity: 1,
-      rate: 450.0,
+      rate: 0,
       discountPercent: 0,
       taxPercent: 18,
-      amount: 450.0,
+      amount: 0,
     },
   ]);
 
@@ -57,7 +55,7 @@ export const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
   // Settlement & Payment
   const [paymentReceived, setPaymentReceived] = useState<number>(0);
   const [settlementMode, setSettlementMode] = useState<'upi' | 'cash' | 'card' | 'bank_transfer'>('upi');
-  const [paymentDate, setPaymentDate] = useState('11 May 2024');
+  const [paymentDate, setPaymentDate] = useState(() => new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }));
   const [paidStatusOption, setPaidStatusOption] = useState<'unpaid' | 'partial' | 'full'>('unpaid');
   const [saveAsDraft, setSaveAsDraft] = useState(false);
 
@@ -97,17 +95,16 @@ export const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
   const balanceDue = Math.max(0, totalAmount - effectiveReceived);
 
   const handleAddItem = () => {
-    const defaultProd = inventoryProducts[0];
     const newItem: IInvoiceItem = {
       id: 'it-' + Date.now(),
-      productId: defaultProd ? defaultProd.id : 'PRD-' + (100 + items.length + 1),
-      name: defaultProd ? defaultProd.name : 'Cotton T-Shirt',
-      hsnSac: '61091000',
+      productId: '',
+      name: '',
+      hsnSac: '',
       quantity: 1,
-      rate: 450.0,
+      rate: 0,
       discountPercent: 0,
       taxPercent: 18,
-      amount: 450.0,
+      amount: 0,
     };
     setItems([...items, newItem]);
   };
@@ -126,7 +123,9 @@ export const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
           const matched = inventoryProducts.find((p) => p.id === value);
           if (matched) {
             updated.name = matched.name;
-            updated.rate = 450; // default rate
+            const unitRate = matched.stock > 0 ? Math.round(matched.stockValue / matched.stock) : 0;
+            updated.rate = unitRate;
+            updated.amount = updated.quantity * unitRate;
           }
         }
         if (field === 'quantity' || field === 'rate') {
