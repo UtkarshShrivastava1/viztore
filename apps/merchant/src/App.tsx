@@ -12,6 +12,15 @@ import { InventoryPage } from './pages/InventoryPage.js';
 import { StoreManagementPage } from './pages/StoreManagementPage.js';
 import { SettingsPage } from './pages/SettingsPage.js';
 import { BillingPage } from './pages/BillingPage.js';
+import { CustomersPage } from './pages/CustomersPage.js';
+import { WalletPage } from './pages/WalletPage.js';
+import { ExpensesPage } from './pages/ExpensesPage.js';
+import { AssetsPage } from './pages/AssetsPage.js';
+import { ReturnsPage } from './pages/ReturnsPage.js';
+import { PayoutsPage } from './pages/PayoutsPage.js';
+import { AnalyticsPage } from './pages/AnalyticsPage.js';
+import { MarketingPage } from './pages/MarketingPage.js';
+import { SupportPage } from './pages/SupportPage.js';
 import { useBillingStore } from './stores/billingStore.js';
 import { Sidebar, DashboardTab } from './components/dashboard/Sidebar.js';
 import { Header } from './components/dashboard/Header.js';
@@ -132,10 +141,11 @@ export const App: React.FC = () => {
         <Header
           isCollapsed={isSidebarCollapsed}
           onToggleMobileMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          onNavigateToWallet={() => setCurrentTab('wallet')}
         />
 
         <main
-          className={`flex-1 p-3 sm:p-4 transition-all duration-300 ${
+          className={`flex-1 p-3.5 sm:px-6 sm:py-4 transition-[margin] duration-300 ${
             isSidebarCollapsed ? 'sm:ml-20' : 'sm:ml-64'
           }`}
         >
@@ -163,6 +173,36 @@ export const App: React.FC = () => {
 
           {currentTab === 'billing' && <BillingPage />}
 
+          {currentTab === 'customers' && <CustomersPage />}
+
+          {currentTab === 'wallet' && (
+            <WalletPage onNavigateHome={() => setCurrentTab('overview')} />
+          )}
+
+          {currentTab === 'expenses' && (
+            <ExpensesPage onNavigateHome={() => setCurrentTab('overview')} />
+          )}
+
+          {currentTab === 'assets' && (
+            <AssetsPage onNavigateHome={() => setCurrentTab('overview')} />
+          )}
+
+          {currentTab === 'returns' && (
+            <ReturnsPage onNavigateHome={() => setCurrentTab('overview')} />
+          )}
+
+          {currentTab === 'payouts' && (
+            <PayoutsPage onNavigateHome={() => setCurrentTab('overview')} />
+          )}
+
+          {currentTab === 'analytics' && (
+            <AnalyticsPage onNavigateHome={() => setCurrentTab('overview')} />
+          )}
+
+          {currentTab === 'marketing' && (
+            <MarketingPage onNavigateHome={() => setCurrentTab('overview')} />
+          )}
+
           {currentTab === 'store' && <StoreManagementPage />}
 
           {currentTab === 'settings' && (
@@ -171,11 +211,16 @@ export const App: React.FC = () => {
                 setCurrentTab('billing');
                 useBillingStore.getState().setActiveView('settings');
               }}
+              onNavigateToSupport={() => setCurrentTab('support')}
             />
           )}
 
+          {currentTab === 'support' && (
+            <SupportPage onNavigateHome={() => setCurrentTab('overview')} />
+          )}
+
           {/* Fallback placeholder for other modules */}
-          {!['overview', 'orders', 'catalog', 'inventory', 'billing', 'store', 'settings'].includes(currentTab) && (
+          {!['overview', 'orders', 'catalog', 'inventory', 'billing', 'customers', 'wallet', 'expenses', 'assets', 'returns', 'payouts', 'analytics', 'marketing', 'store', 'settings', 'support'].includes(currentTab) && (
             <div className="p-8 text-center bg-white rounded-2xl border border-slate-200/80 shadow-2xs max-w-xl mx-auto mt-8">
               <h3 className="text-base font-bold text-slate-800 capitalize">
                 {currentTab.replace(/_/g, ' ')} Module
