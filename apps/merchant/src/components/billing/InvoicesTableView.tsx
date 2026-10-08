@@ -35,6 +35,7 @@ export const InvoicesTableView: React.FC = () => {
   } = useBillingStore();
 
   const [activeMenuInvoiceId, setActiveMenuInvoiceId] = useState<string | null>(null);
+  const [activeMenuAnchorRect, setActiveMenuAnchorRect] = useState<DOMRect | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
   // Dynamic KPI calculations derived purely from live invoices array
@@ -486,22 +487,41 @@ export const InvoicesTableView: React.FC = () => {
                         <div className="relative">
                           <button
                             type="button"
-                            onClick={() =>
-                              setActiveMenuInvoiceId(
-                                activeMenuInvoiceId === inv.id ? null : inv.id
-                              )
-                            }
-                            className="px-2 py-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg text-xs font-semibold flex items-center gap-0.5 transition-colors"
+                            data-invoice-menu-trigger="true"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (activeMenuInvoiceId === inv.id) {
+                                setActiveMenuInvoiceId(null);
+                                setActiveMenuAnchorRect(null);
+                              } else {
+                                const rect = e.currentTarget.getBoundingClientRect();
+                                setActiveMenuAnchorRect(rect);
+                                setActiveMenuInvoiceId(inv.id);
+                              }
+                            }}
+                            className={`px-2 py-1 rounded-lg text-xs font-semibold flex items-center gap-0.5 transition-colors cursor-pointer ${
+                              activeMenuInvoiceId === inv.id
+                                ? 'bg-blue-50 text-blue-600 border border-blue-200'
+                                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                            }`}
                           >
                             <span>More</span>
-                            <ChevronDown className="w-3 h-3 text-slate-400" />
+                            <ChevronDown
+                              className={`w-3 h-3 transition-transform duration-150 ${
+                                activeMenuInvoiceId === inv.id ? 'rotate-180 text-blue-600' : 'text-slate-400'
+                              }`}
+                            />
                           </button>
 
                           {/* 10-Action Dropdown Menu (5.1.png) */}
                           <InvoiceRowActionMenu
                             invoice={inv}
                             isOpen={activeMenuInvoiceId === inv.id}
-                            onClose={() => setActiveMenuInvoiceId(null)}
+                            anchorRect={activeMenuInvoiceId === inv.id ? activeMenuAnchorRect : null}
+                            onClose={() => {
+                              setActiveMenuInvoiceId(null);
+                              setActiveMenuAnchorRect(null);
+                            }}
                           />
                         </div>
                       </div>
