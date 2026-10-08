@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Calendar,
   Settings,
@@ -13,6 +13,7 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { useBillingStore, IInvoiceItem } from '../../stores/billingStore.js';
+import { useCustomerStore } from '../../stores/customerStore.js';
 import { useInventoryStore } from '../../stores/inventoryStore.js';
 import { INDIAN_STATES, DEFAULT_INDIAN_STATE } from '@repo/shared-types';
 
@@ -21,8 +22,74 @@ interface CreateQuoteViewProps {
 }
 
 export const CreateQuoteView: React.FC<CreateQuoteViewProps> = ({ onBack }) => {
-  const { createQuote, quotes } = useBillingStore();
+  const { createQuote, quotes, invoices } = useBillingStore();
+  const { customers, addCustomer } = useCustomerStore();
   const { items: inventoryProducts } = useInventoryStore();
+
+  // Deduplicate and extract all customers who have actual history with this store
+  const customersWithHistory = useMemo(() => {
+    const map = new Map<string, {
+      key: string;
+      name: string;
+      phone: string;
+      email: string;
+      address: string;
+      state: string;
+      gstin: string;
+      orderCount: number;
+    }>();
+
+    // From invoices
+    invoices.forEach((inv) => {
+      const name = inv.customerName?.trim();
+      if (!name) return;
+      const key = (inv.customerPhone?.trim() || name).toLowerCase();
+      const existing = map.get(key);
+      if (existing) {
+        existing.orderCount += 1;
+      } else {
+        map.set(key, {
+          key,
+          name: inv.customerName,
+          phone: inv.customerPhone || '',
+          email: '',
+          address: inv.customerAddress || '',
+          state: inv.state || DEFAULT_INDIAN_STATE,
+          gstin: inv.customerGstin || '',
+          orderCount: 1,
+        });
+      }
+    });
+
+    // From registered customers
+    customers.forEach((c) => {
+      const name = c.name?.trim();
+      if (!name) return;
+      const key = (c.phone?.trim() || name).toLowerCase();
+      const existing = map.get(key);
+      if (existing) {
+        existing.orderCount = Math.max(existing.orderCount, c.totalOrders || 1);
+        if (!existing.address && c.billingAddress?.addressLine1) {
+          existing.address = `${c.billingAddress.addressLine1}, ${c.billingAddress.city}`;
+        }
+        if (!existing.email && c.email) existing.email = c.email;
+        if (!existing.gstin && c.gstin) existing.gstin = c.gstin;
+      } else if (c.totalOrders > 0 || (c.recentOrders && c.recentOrders.length > 0)) {
+        map.set(key, {
+          key,
+          name: c.name,
+          phone: c.phone || '',
+          email: c.email || '',
+          address: c.billingAddress ? `${c.billingAddress.addressLine1}, ${c.billingAddress.city}` : '',
+          state: c.billingAddress?.state || DEFAULT_INDIAN_STATE,
+          gstin: c.gstin || '',
+          orderCount: c.totalOrders || 1,
+        });
+      }
+    });
+
+    return Array.from(map.values());
+  }, [invoices, customers]);
 
   // Header & Customer State
   const [customerName, setCustomerName] = useState('');
@@ -31,6 +98,9 @@ export const CreateQuoteView: React.FC<CreateQuoteViewProps> = ({ onBack }) => {
   const [customerGstin, setCustomerGstin] = useState('');
   const [customerAddress, setCustomerAddress] = useState('');
   const [placeOfSupply, setPlaceOfSupply] = useState(DEFAULT_INDIAN_STATE);
+
+  const [isNewCustomerMode, setIsNewCustomerMode] = useState(() => customersWithHistory.length === 0);
+  const [selectedHistoryKey, setSelectedHistoryKey] = useState('');
 
   // Quote Metadata
   const [quoteNo, setQuoteNo] = useState(() => 'Q-' + (1001 + (quotes?.length || 0)));
@@ -175,6 +245,34 @@ export const CreateQuoteView: React.FC<CreateQuoteViewProps> = ({ onBack }) => {
       createdBy: salesPerson,
     });
 
+    if (customerName.trim()) {
+      const exists = customers.some(
+        (c) =>
+          c.name.trim().toLowerCase() === customerName.trim().toLowerCase() ||
+          (customerPhone && c.phone && c.phone.replace(/\D/g, '') === customerPhone.replace(/\D/g, ''))
+      );
+      if (!exists) {
+        addCustomer({
+          name: customerName,
+          customerType: 'Retailer',
+          status: 'active',
+          phone: customerPhone || '',
+          email: customerEmail || '',
+          gstin: customerGstin || undefined,
+          billingAddress: {
+            addressLine1: customerAddress || 'In-store retail',
+            city: 'Local',
+            state: placeOfSupply,
+            pincode: '',
+            country: 'India',
+            sameAsShipping: true,
+          },
+          paymentTerms,
+          creditPeriodDays: 30,
+        });
+      }
+    }
+
     if (print) {
       window.print();
     }
@@ -239,49 +337,169 @@ export const CreateQuoteView: React.FC<CreateQuoteViewProps> = ({ onBack }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         {/* Card 1: Customer Details */}
         <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-2xs space-y-3">
-          <span className="block text-[11px] font-bold text-slate-700">Customer Details</span>
-          <div>
-            <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-              Customer <span className="text-rose-500">*</span>
-            </label>
-            <div className="flex gap-1.5">
-              <select
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                className="flex-1 px-2.5 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:border-blue-500"
-              >
-                <option value="Ramesh Stores">Ramesh Stores</option>
-                <option value="Sharma Garments">Sharma Garments</option>
-                <option value="Kiran Collection">Kiran Collection</option>
-              </select>
+          <div className="flex items-center justify-between">
+            <span className="block text-[11px] font-bold text-slate-700">Customer Details</span>
+            {customersWithHistory.length > 0 && (
               <button
                 type="button"
-                onClick={() => alert('Add customer dialog')}
-                className="p-1.5 border border-slate-300 rounded-xl text-blue-600 hover:bg-slate-50"
+                onClick={() => {
+                  if (isNewCustomerMode) {
+                    setIsNewCustomerMode(false);
+                  } else {
+                    setIsNewCustomerMode(true);
+                    setCustomerName('');
+                    setCustomerPhone('');
+                    setCustomerEmail('');
+                    setCustomerGstin('');
+                    setCustomerAddress('');
+                    setSelectedHistoryKey('');
+                  }
+                }}
+                className="text-[10px] font-semibold text-blue-600 hover:text-blue-700 hover:underline"
               >
-                <Plus className="w-4 h-4" />
+                {isNewCustomerMode
+                  ? `← History (${customersWithHistory.length})`
+                  : '+ Add New'}
               </button>
-            </div>
+            )}
           </div>
 
-          <div className="p-2.5 bg-slate-50/70 border border-slate-200/70 rounded-xl text-xs space-y-1">
-            <div className="flex items-center justify-between">
-              <span className="font-bold text-slate-800">{customerName}</span>
-              <span className="px-1.5 py-0.5 text-[10px] font-bold rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
-                GST Registered
-              </span>
+          {!isNewCustomerMode && customersWithHistory.length > 0 ? (
+            <div className="space-y-2">
+              <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                Customer <span className="text-rose-500">*</span>
+              </label>
+              <div className="flex gap-1.5">
+                <select
+                  value={selectedHistoryKey}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    const found = customersWithHistory.find((c) => c.key === val);
+                    if (found) {
+                      setSelectedHistoryKey(val);
+                      setCustomerName(found.name);
+                      setCustomerPhone(found.phone);
+                      setCustomerEmail(found.email);
+                      setCustomerGstin(found.gstin);
+                      setCustomerAddress(found.address);
+                      setPlaceOfSupply(found.state || DEFAULT_INDIAN_STATE);
+                    } else {
+                      setSelectedHistoryKey('');
+                      setCustomerName('');
+                      setCustomerPhone('');
+                    }
+                  }}
+                  className="flex-1 px-2.5 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:border-blue-500"
+                >
+                  <option value="">Select past customer...</option>
+                  {customersWithHistory.map((c) => (
+                    <option key={c.key} value={c.key}>
+                      {c.name} {c.phone ? `(${c.phone})` : ''} • {c.orderCount} past bills
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsNewCustomerMode(true);
+                    setCustomerName('');
+                    setCustomerPhone('');
+                    setCustomerEmail('');
+                    setCustomerGstin('');
+                    setCustomerAddress('');
+                    setSelectedHistoryKey('');
+                  }}
+                  className="p-1.5 border border-slate-300 rounded-xl text-blue-600 hover:bg-slate-50 transition-colors"
+                  title="Add new customer"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
+
+              {customerName ? (
+                <div className="p-2.5 bg-slate-50/70 border border-slate-200/70 rounded-xl text-xs space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-slate-800">{customerName}</span>
+                    <span className="px-1.5 py-0.5 text-[10px] font-bold rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      Verified History
+                    </span>
+                  </div>
+                  {customerGstin && (
+                    <div className="text-slate-500 font-mono text-[11px]">GSTIN: {customerGstin}</div>
+                  )}
+                  <div className="text-slate-500 text-[11px]">
+                    Phone: {customerPhone || 'N/A'} {customerEmail ? `• Email: ${customerEmail}` : ''}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-[10px] text-slate-400">
+                  Select a past customer or click + to enter a new name.
+                </p>
+              )}
             </div>
-            <div className="text-slate-500 font-mono text-[11px]">GSTIN: {customerGstin}</div>
-            <div className="text-slate-500 text-[11px]">
-              Phone: {customerPhone} &bull; Email: {customerEmail}
+          ) : (
+            <div className="space-y-2">
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                  Customer Name <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  placeholder="Enter new customer name *"
+                  className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:border-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value)}
+                  placeholder="Mobile number"
+                  className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:border-blue-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-[10px] font-semibold text-slate-500 mb-0.5">
+                    GSTIN
+                  </label>
+                  <input
+                    type="text"
+                    value={customerGstin}
+                    onChange={(e) => setCustomerGstin(e.target.value)}
+                    placeholder="GSTIN (optional)"
+                    className="w-full px-2 py-1 bg-white border border-slate-300 rounded-lg text-xs font-medium text-slate-800 focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-semibold text-slate-500 mb-0.5">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    value={customerEmail}
+                    onChange={(e) => setCustomerEmail(e.target.value)}
+                    placeholder="Email address"
+                    className="w-full px-2 py-1 bg-white border border-slate-300 rounded-lg text-xs font-medium text-slate-800 focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              <p className="text-[10px] text-slate-400">
+                {customersWithHistory.length === 0
+                  ? 'No prior customer history found. Enter new customer details.'
+                  : 'Customer has no prior history. Enter new customer details.'}
+              </p>
             </div>
-            <button
-              type="button"
-              className="text-[11px] font-semibold text-blue-600 hover:underline pt-1 inline-block"
-            >
-              View Full Details
-            </button>
-          </div>
+          )}
         </div>
 
         {/* Card 2: Billing Address */}

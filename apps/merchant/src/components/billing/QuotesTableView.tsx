@@ -396,9 +396,11 @@ export const QuotesTableView: React.FC<QuotesTableViewProps> = ({
               className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-blue-500 cursor-pointer"
             >
               <option value="All">All</option>
-              <option value="Ramesh Stores">Ramesh Stores</option>
-              <option value="Sharma Garments">Sharma Garments</option>
-              <option value="Kiran Collection">Kiran Collection</option>
+              {Array.from(new Set(quotes.map((q) => q.customerName).filter(Boolean))).map((name) => (
+                <option key={name} value={name}>
+                  {name}
+                </option>
+              ))}
             </select>
           </div>
 
