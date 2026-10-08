@@ -215,4 +215,6 @@ Every online order placed through `apps/web` generates an authoritative, complia
   - Transactional Outbox Pattern (`OutboxModel`, `appendOutboxEvent`, `processPendingOutboxEvents`) ensuring at-least-once domain event dispatch and distributed consistency.
   - Strongly typed `AuthenticatedRequest` across Catalog and Order controllers; bounded MongoDB connection pool sizing (`maxPoolSize: 25`, `minPoolSize: 5`, strict waitQueue and socket timeouts).
   - 87/87 backend unit tests passing (14 suites), 100% clean Turborepo monorepo build.
+- [ ] **Abhay Task 9 (Shell Controls & Storefront Merchandising Suite - 10 Screens) — In Progress 🟡** (`feature/abhay-shell-storefront-merchandising`, task brief: [`abhay_shell_storefront_mockup_task.md`](file:///C:/Users/utkar/.gemini/antigravity-ide/brain/6097e2b9-e42e-4d96-94a7-763a7ca8993f/abhay_shell_storefront_mockup_task.md))
+
 
