@@ -265,3 +265,57 @@ export interface IQuoteListResponse {
   totalPages: number;
   kpis: IQuoteKPIs;
 }
+
+// ── Indian States & Union Territories (GST Compliant) ───────────────────
+
+export interface IIndianState {
+  code: string;
+  name: string;
+  label: string;
+}
+
+export const DEFAULT_INDIAN_STATE = 'Chhattisgarh (22)';
+
+export const INDIAN_STATES: IIndianState[] = [
+  // Primary Launch State at top for instant 1-click access
+  { code: '22', name: 'Chhattisgarh', label: 'Chhattisgarh (22)' },
+
+  // All other Indian States & Union Territories (alphabetical)
+  { code: '35', name: 'Andaman and Nicobar Islands', label: 'Andaman and Nicobar Islands (35)' },
+  { code: '37', name: 'Andhra Pradesh', label: 'Andhra Pradesh (37)' },
+  { code: '12', name: 'Arunachal Pradesh', label: 'Arunachal Pradesh (12)' },
+  { code: '18', name: 'Assam', label: 'Assam (18)' },
+  { code: '10', name: 'Bihar', label: 'Bihar (10)' },
+  { code: '04', name: 'Chandigarh', label: 'Chandigarh (04)' },
+  { code: '26', name: 'Dadra and Nagar Haveli and Daman and Diu', label: 'Dadra and Nagar Haveli and Daman and Diu (26)' },
+  { code: '07', name: 'Delhi', label: 'Delhi (07)' },
+  { code: '30', name: 'Goa', label: 'Goa (30)' },
+  { code: '24', name: 'Gujarat', label: 'Gujarat (24)' },
+  { code: '06', name: 'Haryana', label: 'Haryana (06)' },
+  { code: '02', name: 'Himachal Pradesh', label: 'Himachal Pradesh (02)' },
+  { code: '01', name: 'Jammu and Kashmir', label: 'Jammu and Kashmir (01)' },
+  { code: '20', name: 'Jharkhand', label: 'Jharkhand (20)' },
+  { code: '29', name: 'Karnataka', label: 'Karnataka (29)' },
+  { code: '32', name: 'Kerala', label: 'Kerala (32)' },
+  { code: '38', name: 'Ladakh', label: 'Ladakh (38)' },
+  { code: '31', name: 'Lakshadweep', label: 'Lakshadweep (31)' },
+  { code: '23', name: 'Madhya Pradesh', label: 'Madhya Pradesh (23)' },
+  { code: '27', name: 'Maharashtra', label: 'Maharashtra (27)' },
+  { code: '14', name: 'Manipur', label: 'Manipur (14)' },
+  { code: '17', name: 'Meghalaya', label: 'Meghalaya (17)' },
+  { code: '15', name: 'Mizoram', label: 'Mizoram (15)' },
+  { code: '13', name: 'Nagaland', label: 'Nagaland (13)' },
+  { code: '21', name: 'Odisha', label: 'Odisha (21)' },
+  { code: '34', name: 'Puducherry', label: 'Puducherry (34)' },
+  { code: '03', name: 'Punjab', label: 'Punjab (03)' },
+  { code: '08', name: 'Rajasthan', label: 'Rajasthan (08)' },
+  { code: '11', name: 'Sikkim', label: 'Sikkim (11)' },
+  { code: '33', name: 'Tamil Nadu', label: 'Tamil Nadu (33)' },
+  { code: '36', name: 'Telangana', label: 'Telangana (36)' },
+  { code: '16', name: 'Tripura', label: 'Tripura (16)' },
+  { code: '09', name: 'Uttar Pradesh', label: 'Uttar Pradesh (09)' },
+  { code: '05', name: 'Uttarakhand', label: 'Uttarakhand (05)' },
+  { code: '19', name: 'West Bengal', label: 'West Bengal (19)' },
+  { code: '97', name: 'Other Territory', label: 'Other Territory (97)' },
+];
+

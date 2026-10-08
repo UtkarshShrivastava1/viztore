@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useBillingStore, BillingSettings } from '../../stores/billingStore.js';
 import { branding } from '../../lib/branding.js';
+import { INDIAN_STATES } from '@repo/shared-types';
 
 interface BillingSettingsViewProps {
   onBack: () => void;
@@ -248,11 +249,11 @@ export const BillingSettingsView: React.FC<BillingSettingsViewProps> = ({ onBack
                   onChange={(e) => handleChange('state', e.target.value)}
                   className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:border-blue-600 shadow-2xs"
                 >
-                  <option value="Maharashtra">Maharashtra</option>
-                  <option value="Madhya Pradesh">Madhya Pradesh</option>
-                  <option value="Delhi">Delhi</option>
-                  <option value="Gujarat">Gujarat</option>
-                  <option value="Karnataka">Karnataka</option>
+                  {INDIAN_STATES.map((st) => (
+                    <option key={st.code} value={st.label}>
+                      {st.label}
+                    </option>
+                  ))}
                 </select>
               </div>
 

@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useBillingStore, IInvoiceItem } from '../../stores/billingStore.js';
 import { useInventoryStore } from '../../stores/inventoryStore.js';
+import { INDIAN_STATES, DEFAULT_INDIAN_STATE } from '@repo/shared-types';
 
 interface CreateQuoteViewProps {
   onBack: () => void;
@@ -29,7 +30,7 @@ export const CreateQuoteView: React.FC<CreateQuoteViewProps> = ({ onBack }) => {
   const [customerEmail, setCustomerEmail] = useState('');
   const [customerGstin, setCustomerGstin] = useState('');
   const [customerAddress, setCustomerAddress] = useState('');
-  const [placeOfSupply, setPlaceOfSupply] = useState('');
+  const [placeOfSupply, setPlaceOfSupply] = useState(DEFAULT_INDIAN_STATE);
 
   // Quote Metadata
   const [quoteNo, setQuoteNo] = useState(() => 'Q-' + (1001 + (quotes?.length || 0)));
@@ -289,7 +290,7 @@ export const CreateQuoteView: React.FC<CreateQuoteViewProps> = ({ onBack }) => {
           <div className="text-xs text-slate-600 leading-relaxed bg-slate-50/50 p-2.5 rounded-xl border border-slate-200/60">
             <div className="font-semibold text-slate-800">{customerName}</div>
             <div>{customerAddress}</div>
-            <div className="mt-1 font-medium text-slate-700">State: Madhya Pradesh (23)</div>
+            <div className="mt-1 font-medium text-slate-700">State: {placeOfSupply || DEFAULT_INDIAN_STATE}</div>
           </div>
           <div>
             <div className="flex items-center gap-1 mb-1">
@@ -301,9 +302,11 @@ export const CreateQuoteView: React.FC<CreateQuoteViewProps> = ({ onBack }) => {
               onChange={(e) => setPlaceOfSupply(e.target.value)}
               className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:border-blue-500"
             >
-              <option value="Madhya Pradesh (23)">Madhya Pradesh (23)</option>
-              <option value="Maharashtra (27)">Maharashtra (27)</option>
-              <option value="Gujarat (24)">Gujarat (24)</option>
+              {INDIAN_STATES.map((st) => (
+                <option key={st.code} value={st.label}>
+                  {st.label}
+                </option>
+              ))}
             </select>
           </div>
         </div>

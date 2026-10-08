@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Plus, Calendar, Trash2, Printer, CheckCircle2, ShieldAlert } from 'lucide-react';
 import { IInvoice, IInvoiceItem, useBillingStore } from '../../stores/billingStore.js';
 import { useInventoryStore } from '../../stores/inventoryStore.js';
+import { INDIAN_STATES, DEFAULT_INDIAN_STATE } from '@repo/shared-types';
 
 interface CreateInvoiceModalProps {
   isOpen: boolean;
@@ -21,14 +22,14 @@ export const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [billingAddress, setBillingAddress] = useState('');
-  const [state, setState] = useState('');
+  const [state, setState] = useState(DEFAULT_INDIAN_STATE);
   const [gstin, setGstin] = useState('');
 
   // Invoice Details
   const [invoiceType, setInvoiceType] = useState<'Tax Invoice' | 'Bill of Supply'>('Tax Invoice');
   const [invoiceDate, setInvoiceDate] = useState(() => new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }));
   const [dueDate, setDueDate] = useState(() => { const d = new Date(); d.setDate(d.getDate() + 15); return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }); });
-  const [placeOfSupply, setPlaceOfSupply] = useState('');
+  const [placeOfSupply, setPlaceOfSupply] = useState(DEFAULT_INDIAN_STATE);
   const [paymentTerms, setPaymentTerms] = useState('15 Days');
 
   // Notes
@@ -274,11 +275,11 @@ export const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
                     onChange={(e) => setState(e.target.value)}
                     className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
                   >
-                    <option value="Madhya Pradesh (23)">Madhya Pradesh (23)</option>
-                    <option value="Maharashtra (27)">Maharashtra (27)</option>
-                    <option value="Delhi (07)">Delhi (07)</option>
-                    <option value="Gujarat (24)">Gujarat (24)</option>
-                    <option value="Rajasthan (08)">Rajasthan (08)</option>
+                    {INDIAN_STATES.map((st) => (
+                      <option key={st.code} value={st.label}>
+                        {st.label}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
@@ -359,10 +360,11 @@ export const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
                     onChange={(e) => setPlaceOfSupply(e.target.value)}
                     className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
                   >
-                    <option value="Madhya Pradesh (23)">Madhya Pradesh (23)</option>
-                    <option value="Maharashtra (27)">Maharashtra (27)</option>
-                    <option value="Delhi (07)">Delhi (07)</option>
-                    <option value="Gujarat (24)">Gujarat (24)</option>
+                    {INDIAN_STATES.map((st) => (
+                      <option key={st.code} value={st.label}>
+                        {st.label}
+                      </option>
+                    ))}
                   </select>
                 </div>
 

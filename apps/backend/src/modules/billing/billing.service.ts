@@ -13,6 +13,7 @@ import {
   IQuoteListResponse,
   IInvoiceItemComputed,
   IInvoicePricing,
+  DEFAULT_INDIAN_STATE,
 } from '@repo/shared-types';
 import {
   InvoiceModel,
@@ -33,14 +34,23 @@ import { logger } from '../../shared/utils/logger.js';
 
 // ── Tax Math & Pricing Helpers ──────────────────────────────────────────
 
+export function normalizeStateIdentifier(stateStr: string): string {
+  if (!stateStr) return '';
+  const trimmed = stateStr.trim().toLowerCase();
+  const codeMatch = trimmed.match(/\((\d{2})\)/);
+  if (codeMatch) return codeMatch[1];
+  if (/^\d{2}$/.test(trimmed)) return trimmed;
+  return trimmed.replace(/\(\d{2}\)/g, '').trim();
+}
+
 export function computeItemTaxesAndPricing(
   rawItems: CreateInvoiceDto['items'],
-  storeState = 'Delhi',
-  placeOfSupply = 'Delhi',
+  storeState = DEFAULT_INDIAN_STATE,
+  placeOfSupply = DEFAULT_INDIAN_STATE,
   taxCalcType = TaxCalculationType.EXCLUSIVE,
 ): { computedItems: IInvoiceItemComputed[]; pricing: IInvoicePricing } {
   const isIntraState =
-    storeState.trim().toLowerCase() === placeOfSupply.trim().toLowerCase();
+    normalizeStateIdentifier(storeState) === normalizeStateIdentifier(placeOfSupply);
 
   let subTotal = 0;
   let totalDiscount = 0;
@@ -219,7 +229,7 @@ export class BillingService {
 
     // 1. Fetch store settings for state & tax calculations
     const settings = await this.getOrCreateSettings(storeId);
-    const placeOfSupply = dto.placeOfSupply || dto.customer.state || settings.state || 'Delhi';
+    const placeOfSupply = dto.placeOfSupply || dto.customer.state || settings.state || DEFAULT_INDIAN_STATE;
 
     // 2. Compute GST math & grand totals
     const { computedItems, pricing } = computeItemTaxesAndPricing(
@@ -704,7 +714,7 @@ export class BillingService {
     dto: CreateQuoteDto,
   ): Promise<IQuoteDocument> {
     const settings = await this.getOrCreateSettings(storeId);
-    const placeOfSupply = dto.customer.state || settings.state || 'Delhi';
+    const placeOfSupply = dto.customer.state || settings.state || DEFAULT_INDIAN_STATE;
 
     const { computedItems, pricing } = computeItemTaxesAndPricing(
       dto.items,

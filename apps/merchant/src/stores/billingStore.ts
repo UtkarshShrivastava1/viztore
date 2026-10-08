@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { useInventoryStore } from './inventoryStore.js';
+import { DEFAULT_INDIAN_STATE } from '@repo/shared-types';
 
 export type InvoiceStatus = 'draft' | 'issued' | 'paid' | 'partially_paid' | 'overdue' | 'cancelled';
 export type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'declined' | 'expired' | 'converted' | 'cancelled';
@@ -256,7 +257,7 @@ export const initialBillingSettings: BillingSettings = {
   startingSequenceNumber: 1001,
   gstEnabled: true,
   gstin: '',
-  state: '',
+  state: DEFAULT_INDIAN_STATE,
   taxCalculationType: 'exclusive',
   categoryTaxEnabled: false,
   allowDiscounts: true,

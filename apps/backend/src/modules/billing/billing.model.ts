@@ -8,6 +8,7 @@ import {
   IInvoiceItemComputed,
   IInvoicePricing,
   IPaymentRecord,
+  DEFAULT_INDIAN_STATE,
 } from '@repo/shared-types';
 
 // ── 1. Invoice Document & Schema ─────────────────────────────────────────
@@ -129,7 +130,7 @@ const invoiceSchema = new Schema<IInvoiceDocument>(
       invoiceDate: { type: Date, default: Date.now },
       dueDate: { type: Date, default: Date.now },
     },
-    placeOfSupply: { type: String, default: 'Delhi' },
+    placeOfSupply: { type: String, default: DEFAULT_INDIAN_STATE },
     paymentTerms: { type: String },
     notes: { type: String },
     isInventoryDeducted: { type: Boolean, default: false },
@@ -266,7 +267,7 @@ const billingSettingsSchema = new Schema<IBillingSettingsDocument>(
     defaultCurrency: { type: String, default: 'INR' },
     gstEnabled: { type: Boolean, default: true },
     gstin: { type: String },
-    state: { type: String, default: 'Delhi' },
+    state: { type: String, default: DEFAULT_INDIAN_STATE },
     taxCalculationType: {
       type: String,
       enum: Object.values(TaxCalculationType),

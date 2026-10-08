@@ -8,6 +8,7 @@ import {
   Info,
 } from 'lucide-react';
 import { useCustomerStore, Customer, CustomerType } from '../../stores/customerStore.js';
+import { INDIAN_STATES } from '@repo/shared-types';
 
 interface AddCustomerViewProps {
   onBack: () => void;
@@ -31,7 +32,7 @@ export const AddCustomerView: React.FC<AddCustomerViewProps> = ({
   const [addressLine1, setAddressLine1] = useState('');
   const [addressLine2, setAddressLine2] = useState('');
   const [city, setCity] = useState('');
-  const [state, setState] = useState('Madhya Pradesh');
+  const [state, setState] = useState('Chhattisgarh');
   const [pincode, setPincode] = useState('');
   const [country, setCountry] = useState('India');
 
@@ -56,7 +57,7 @@ export const AddCustomerView: React.FC<AddCustomerViewProps> = ({
       setAddressLine1(editingCustomer.billingAddress?.addressLine1 || '');
       setAddressLine2(editingCustomer.billingAddress?.addressLine2 || '');
       setCity(editingCustomer.billingAddress?.city || '');
-      setState(editingCustomer.billingAddress?.state || 'Madhya Pradesh');
+      setState(editingCustomer.billingAddress?.state || 'Chhattisgarh');
       setPincode(editingCustomer.billingAddress?.pincode || '');
       setCountry(editingCustomer.billingAddress?.country || 'India');
       setGstin(editingCustomer.gstin || '');
@@ -65,21 +66,6 @@ export const AddCustomerView: React.FC<AddCustomerViewProps> = ({
       setNotes(editingCustomer.notes || '');
     }
   }, [editingCustomer]);
-
-  const indianStates = [
-    'Madhya Pradesh',
-    'Maharashtra',
-    'Chhattisgarh',
-    'Gujarat',
-    'Rajasthan',
-    'Delhi',
-    'Uttar Pradesh',
-    'Karnataka',
-    'Tamil Nadu',
-    'Telangana',
-    'West Bengal',
-    'Jharkhand',
-  ];
 
   const handleSave = () => {
     if (!customerName.trim()) {
@@ -410,9 +396,9 @@ export const AddCustomerView: React.FC<AddCustomerViewProps> = ({
                   onChange={(e) => setState(e.target.value)}
                   className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none shadow-2xs cursor-pointer"
                 >
-                  {indianStates.map((st) => (
-                    <option key={st} value={st}>
-                      {st}
+                  {INDIAN_STATES.map((st) => (
+                    <option key={st.code} value={st.name}>
+                      {st.name}
                     </option>
                   ))}
                 </select>
