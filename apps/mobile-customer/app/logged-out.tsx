@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native';
 import { ChevronLeft, Check, Store, Tag, LayoutGrid, Heart, ShieldCheck } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
+import { branding } from '@repo/shared-types';
 
 export default function LoggedOutScreen() {
   const router = useRouter();
@@ -49,7 +50,7 @@ export default function LoggedOutScreen() {
         </View>
 
         <View style={styles.exploreSection}>
-          <Text style={styles.exploreTitle}>Explore Viztore</Text>
+          <Text style={styles.exploreTitle}>Explore {branding.appName}</Text>
           <View style={styles.exploreGrid}>
             {exploreItems.map((item) => {
               const Icon = item.icon;
@@ -71,7 +72,7 @@ export default function LoggedOutScreen() {
             <ShieldCheck size={20} color="#16a34a" />
           </View>
           <View style={styles.thankYouTextWrap}>
-            <Text style={styles.thankYouTitle}>Thank you for using Viztore</Text>
+            <Text style={styles.thankYouTitle}>Thank you for using {branding.appName}</Text>
             <Text style={styles.thankYouDesc}>We hope to see you again soon!</Text>
           </View>
         </View>

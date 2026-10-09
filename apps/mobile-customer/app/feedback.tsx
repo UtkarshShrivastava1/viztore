@@ -145,7 +145,7 @@ export default function FeedbackScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Experience Rating */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>How was your experience with Viztore?</Text>
+          <Text style={styles.sectionTitle}>How was your experience with {branding.appName}?</Text>
           <View style={styles.experienceRow}>
             {experienceLevels.map((exp) => {
               const Icon = exp.icon;
@@ -200,7 +200,7 @@ export default function FeedbackScreen() {
 
         {/* NPS Rating */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Would you recommend Viztore to others?</Text>
+          <Text style={styles.sectionTitle}>Would you recommend {branding.appName} to others?</Text>
           <View style={styles.npsRow}>
             {[0,1,2,3,4,5,6,7,8,9,10].map(score => (
               <TouchableOpacity 

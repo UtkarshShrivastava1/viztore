@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native';
 import { ChevronLeft, ShieldCheck, User, Lock, Sliders, FileText, ChevronRight, HeadphonesIcon } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
+import { branding } from '@repo/shared-types';
 
 export default function PrivacyPolicyScreen() {
   const router = useRouter();
@@ -40,7 +41,7 @@ export default function PrivacyPolicyScreen() {
           <View style={styles.heroTextContainer}>
             <Text style={styles.heroTitle}>Privacy Policy</Text>
             <Text style={styles.heroSubtitle}>Your privacy is important to us.</Text>
-            <Text style={styles.heroDesc}>This Privacy Policy explains how Viztore collects, uses, discloses and protects your information when you use our app, website and services.</Text>
+            <Text style={styles.heroDesc}>This Privacy Policy explains how {branding.appName} collects, uses, discloses and protects your information when you use our app, website and services.</Text>
           </View>
           <View style={styles.heroIllustration}>
              <ShieldCheck size={64} color="#3b82f6" />

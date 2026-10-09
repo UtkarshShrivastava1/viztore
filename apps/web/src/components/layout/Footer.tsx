@@ -14,8 +14,8 @@ export function Footer() {
           <div className="flex flex-col space-y-6">
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
-                <Image src="/logo_v.png" alt="Viztore Logo" width={48} height={48} className="object-contain" />
-                <span className="text-4xl font-bold tracking-tight text-black">viztore</span>
+                <Image src="/logo_v.png" alt="{branding.appName} Logo" width={48} height={48} className="object-contain" />
+                <span className="text-4xl font-bold tracking-tight text-black">{branding.appName.toLowerCase()}</span>
               </div>
               <p className="text-blue-700 text-sm font-medium mt-1 ml-[56px]">
                 Making Local Stores <span className="font-bold">Visible.</span>
@@ -122,7 +122,7 @@ export function Footer() {
         {/* Bottom Bar */}
         <div className="mt-16 pt-6 border-t border-white/20 flex flex-col md:flex-row items-center justify-between gap-4 text-white">
           <p className="text-sm font-medium">
-            © {new Date().getFullYear()} <span className="font-bold">Viztore</span>. All rights reserved.
+            © {new Date().getFullYear()} <span className="font-bold">{branding.appName}</span>. All rights reserved.
           </p>
           
           <div className="flex items-center gap-4 text-sm font-medium">

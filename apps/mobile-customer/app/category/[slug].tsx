@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Image, TextInput, FlatList } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { ChevronLeft, Heart, ShoppingCart, Search, Mic, MapPin, ChevronDown, SlidersHorizontal, ArrowUpDown, ShieldCheck, Zap, ArrowLeft, Star, ShoppingBag, Tag, Search as SearchIcon, MoreHorizontal, ChevronRight, Home } from 'lucide-react-native';
+import { branding } from '@repo/shared-types';
 
 const CATEGORY_CHIPS = [
   { id: 'all', name: 'All', image: 'https://via.placeholder.com/150' },
@@ -34,7 +35,7 @@ export default function CategoryScreen() {
             <ChevronLeft color="#081028" size={28} />
           </TouchableOpacity>
           <View style={styles.placeholderLogo}>
-            <Text style={styles.logoText}>viztore</Text>
+            <Text style={styles.logoText}>{branding.appName.toLowerCase()}</Text>
             <Text style={styles.tagline}>Making Local Stores Visible.</Text>
           </View>
           <View style={styles.headerIcons}>
