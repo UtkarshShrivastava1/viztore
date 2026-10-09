@@ -27,7 +27,8 @@ import {
   XCircle,
   Calendar,
   ShoppingBag,
-  Share2
+  Share2,
+  ChevronRight
 } from 'lucide-react-native';
 import { branding } from '@repo/shared-types';
 import { useRouter } from 'expo-router';

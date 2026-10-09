@@ -38,6 +38,7 @@ import {
   Star
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
+import { branding } from '@repo/shared-types';
 
 export default function AccountScreen() {
   const router = useRouter();

@@ -26,7 +26,9 @@ import {
   Download,
   CreditCard,
   MessageSquare,
-  HeadphonesIcon
+  HeadphonesIcon,
+  ShieldCheck,
+  ChevronRight
 } from 'lucide-react-native';
 import { branding } from '@repo/shared-types';
 import { useRouter } from 'expo-router';

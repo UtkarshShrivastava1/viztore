@@ -76,7 +76,7 @@ export default function TermsConditionsScreen() {
           <View style={styles.contentsCard}>
             {termsList.map((item, index) => {
               // Quick fix for missing icon
-              const Icon = item.icon === 'RefreshCcw' ? RefreshCcw : item.icon;
+              const Icon = item.icon;
               return (
                 <TouchableOpacity key={item.id} style={[styles.contentItem, index === termsList.length - 1 && styles.contentItemLast]}>
                   <View style={styles.contentItemIcon}>
