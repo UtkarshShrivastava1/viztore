@@ -19,7 +19,7 @@ export default function TermsConditionsScreen() {
     { id: 3, title: '3. User Accounts', desc: 'Rules and responsibilities related to creating and managing your account.', icon: Users },
     { id: 4, title: '4. Use of Services', desc: 'Guidelines for using Viztore and what you can expect from our services.', icon: ShoppingBag },
     { id: 5, title: '5. Orders and Payments', desc: 'Information about placing orders, pricing and payment methods.', icon: CreditCard },
-    { id: 6, title: '6. Returns and Refunds', desc: 'Our policy on returns, refunds and cancellations.', icon: RotateCcw: RotateCcw ? 'RefreshCcw' : 'RefreshCcw' }, // Assuming RefreshCcw is imported
+    { id: 6, title: '6. Returns and Refunds', desc: 'Our policy on returns, refunds and cancellations.', icon: RefreshCcw },
     { id: 7, title: '7. Prohibited Activities', desc: 'Activities that are not allowed on Viztore.', icon: XCircle },
     { id: 8, title: '8. Limitation of Liability', desc: 'Limitations of our liability to the fullest extent permitted by law.', icon: AlertTriangle },
     { id: 9, title: '9. Governing Law', desc: 'These terms are governed by the laws of India.', icon: Scale },
