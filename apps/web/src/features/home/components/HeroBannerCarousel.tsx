@@ -98,13 +98,13 @@ export function HeroBannerCarousel() {
           <div className="absolute inset-0 bg-gradient-to-l from-[#E1ECFF] via-[#E1ECFF]/70 to-transparent -z-10" />
           
           {trustItems.map((item) => (
-            <div key={item.label} className="flex items-center gap-5">
-              <div className="shrink-0 text-brand-600 p-3.5 bg-white/60 backdrop-blur-md rounded-full shadow-sm">
-                <item.icon strokeWidth={1} className="w-12 h-12" />
+            <div key={item.label} className="flex items-center gap-4">
+              <div className="shrink-0 text-brand-600 p-2.5 bg-white/60 backdrop-blur-md rounded-full shadow-sm">
+                <item.icon strokeWidth={1.5} className="w-8 h-8" />
               </div>
               <div className="flex flex-col">
-                <h4 className="text-base font-bold text-gray-900 leading-[1.5] mb-1">{item.label}</h4>
-                <p className="text-md text-gray-700 leading-[1.5]">{item.description}</p>
+                <h4 className="text-sm font-bold text-gray-900 leading-[1.4] mb-0.5">{item.label}</h4>
+                <p className="text-sm text-gray-700 leading-[1.4]">{item.description}</p>
               </div>
             </div>
           ))}

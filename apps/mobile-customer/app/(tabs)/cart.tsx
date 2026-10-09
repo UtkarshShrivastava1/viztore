@@ -1,147 +1,454 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, TextInput, Image, StatusBar, Platform } from 'react-native';
+import { MapPin, Search, Mic, Heart, ShoppingCart, ChevronRight, Trash2, ArrowRight } from 'lucide-react-native';
+import { branding } from '@repo/shared-types';
 import { router } from 'expo-router';
-import { ShieldCheck, ArrowRight, Store, Plus, Minus, Trash2 } from 'lucide-react-native';
 
 export default function CartScreen() {
-  const [qty1, setQty1] = useState(2);
-  const [qty2, setQty2] = useState(1);
-
-  const price1 = 185;
-  const price2 = 45;
-  const subtotal = qty1 * price1 + qty2 * price2;
-  const deliveryFee = 25;
-  const grandTotal = subtotal + deliveryFee;
+  const groupedCarts = [
+    {
+      storeId: 'fashion-hub',
+      storeName: 'Fashion Hub',
+      address: '123, MG Road, Near City Mall, Indore, Madhya Pradesh - 452001',
+      status: 'Open till 9:00 PM',
+      totalItems: 5,
+      totalAmount: '4,098',
+      mrp: '5,297',
+      savings: '1,199',
+      images: [
+        'https://via.placeholder.com/100/e0f2fe',
+        'https://via.placeholder.com/100/f1f5f9',
+        'https://via.placeholder.com/100/ffedd5'
+      ],
+      extraCount: 2
+    },
+    {
+      storeId: 'sharma-electronics',
+      storeName: 'Sharma Electronics',
+      address: '45, Nehru Nagar, Main Road, Bhilai, Chhattisgarh - 490020',
+      status: 'Open till 10:00 PM',
+      totalItems: 3,
+      totalAmount: '2,799',
+      mrp: '3,399',
+      savings: '600',
+      images: [
+        'https://via.placeholder.com/100/dbeafe',
+        'https://via.placeholder.com/100/f3f4f6',
+        'https://via.placeholder.com/100/f8fafc'
+      ],
+      extraCount: 1
+    }
+  ];
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Cart</Text>
-        <Text style={styles.headerBadge}>2 Items</Text>
+      <StatusBar barStyle="light-content" backgroundColor="#081028" />
+      
+      {/* Header Area */}
+      <View style={styles.headerBackground}>
+        <View style={styles.header}>
+          <View style={styles.logoContainer}>
+            <View style={styles.logoIcon}>
+              <Text style={styles.logoV}>V</Text>
+            </View>
+            <View>
+              <Text style={styles.logoText}>{branding.appName}</Text>
+              <Text style={styles.logoSubtext}>Making Local Stores Visible.</Text>
+            </View>
+          </View>
+
+          <View style={styles.headerActions}>
+            <TouchableOpacity style={styles.iconButton}>
+              <Heart size={24} color="#ffffff" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.iconButton}>
+              <ShoppingCart size={24} color="#ffffff" />
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>5</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={styles.locationContainer}>
+          <View style={styles.locationSelector}>
+            <MapPin size={14} color="#e2e8f0" />
+            <Text style={styles.locationText} numberOfLines={1}>
+              Deliver to Harish Kumar - Q No- 6/B, Street -13, Sector -2, Bhilai
+            </Text>
+            <ChevronRight size={14} color="#e2e8f0" style={{ transform: [{ rotate: '90deg' }] }} />
+          </View>
+        </View>
+
+        <View style={styles.searchContainer}>
+          <View style={styles.searchBar}>
+            <Search size={20} color="#64748b" />
+            <TextInput
+              placeholder="Search for products, stores and more..."
+              placeholderTextColor="#64748b"
+              style={styles.searchInput}
+            />
+            <Mic size={20} color="#64748b" />
+          </View>
+        </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scroll}>
-        {/* Single Store Lock Banner */}
-        <View style={styles.storeBanner}>
-          <Store size={16} color="#f97316" />
-          <View style={styles.storeBannerInfo}>
-            <Text style={styles.storeBannerTitle}>Ordering from Fresh Mart Supermarket</Text>
-            <Text style={styles.storeBannerSub}>Items from one store per order</Text>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        
+        {/* Cart Title Header */}
+        <View style={styles.cartTitleRow}>
+          <View>
+            <Text style={styles.cartTitle}>My Cart (2)</Text>
+            <Text style={styles.cartSubtitle}>Items from 2 stores</Text>
           </View>
+          <TouchableOpacity style={styles.clearCartBtn}>
+            <Trash2 size={16} color="#3b82f6" />
+            <Text style={styles.clearCartText}>Clear Cart</Text>
+          </TouchableOpacity>
         </View>
 
-        {/* Free Delivery Milestone Progress */}
-        <View style={styles.milestoneBox}>
-          <Text style={styles.milestoneText}>🎉 Add ₹85 more to unlock Free Delivery!</Text>
-        </View>
+        {/* Store Carts */}
+        <View style={styles.storeCartsContainer}>
+          {groupedCarts.map((storeCart, index) => (
+            <View key={index} style={styles.storeCard}>
+              <View style={styles.storeCardHeader}>
+                <Image source={{ uri: 'https://via.placeholder.com/100' }} style={styles.storeLogo} />
+                <View style={styles.storeInfo}>
+                  <TouchableOpacity style={styles.storeNameRow} onPress={() => router.push(`/stores/${storeCart.storeId}`)}>
+                    <Text style={styles.storeName}>{storeCart.storeName}</Text>
+                    <ChevronRight size={16} color="#0f172a" />
+                  </TouchableOpacity>
+                  <Text style={styles.storeAddress} numberOfLines={1}>{storeCart.address}</Text>
+                  <View style={styles.statusBadge}>
+                    <Text style={styles.statusBadgeText}>{storeCart.status}</Text>
+                  </View>
+                </View>
+              </View>
 
-        {/* Items List */}
-        <View style={styles.itemCard}>
-          <View style={styles.itemThumb} />
-          <View style={styles.itemInfo}>
-            <Text style={styles.itemTitle}>Organic Almond Milk 1L</Text>
-            <Text style={styles.itemPrice}>₹{price1}</Text>
-            <View style={styles.stepper}>
-              <TouchableOpacity onPress={() => setQty1(Math.max(1, qty1 - 1))} style={styles.stepBtn}>
-                <Minus size={12} color="#081028" />
-              </TouchableOpacity>
-              <Text style={styles.stepVal}>{qty1}</Text>
-              <TouchableOpacity onPress={() => setQty1(qty1 + 1)} style={styles.stepBtn}>
-                <Plus size={12} color="#081028" />
-              </TouchableOpacity>
+              <View style={styles.cartContentRow}>
+                <View style={styles.imagesGroup}>
+                  {storeCart.images.map((img, i) => (
+                    <View key={i} style={styles.itemThumb}>
+                      <Image source={{ uri: img }} style={styles.itemThumbImg} />
+                    </View>
+                  ))}
+                  {storeCart.extraCount > 0 && (
+                    <View style={styles.extraCountThumb}>
+                      <Text style={styles.extraCountText}>+{storeCart.extraCount}{'\n'}more</Text>
+                    </View>
+                  )}
+                </View>
+                
+                <View style={styles.priceGroup}>
+                  <Text style={styles.totalPrice}>₹{storeCart.totalAmount}</Text>
+                  <Text style={styles.mrpText}>MRP ₹{storeCart.mrp}</Text>
+                  <Text style={styles.savingsText}>You save ₹{storeCart.savings}</Text>
+                </View>
+              </View>
+
+              <View style={styles.cardFooter}>
+                <View style={styles.itemsCount}>
+                  <ShoppingCart size={16} color="#475569" />
+                  <Text style={styles.itemsCountText}>{storeCart.totalItems} items</Text>
+                </View>
+                <TouchableOpacity 
+                  style={styles.viewCartBtn}
+                  onPress={() => router.push(`/cart/store/${storeCart.storeId}`)}
+                >
+                  <Text style={styles.viewCartBtnText}>View Cart</Text>
+                  <ArrowRight size={16} color="#2563eb" />
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
+          ))}
         </View>
 
-        <View style={styles.itemCard}>
-          <View style={styles.itemThumb} />
-          <View style={styles.itemInfo}>
-            <Text style={styles.itemTitle}>Whole Wheat Bread 400g</Text>
-            <Text style={styles.itemPrice}>₹{price2}</Text>
-            <View style={styles.stepper}>
-              <TouchableOpacity onPress={() => setQty2(Math.max(1, qty2 - 1))} style={styles.stepBtn}>
-                <Minus size={12} color="#081028" />
-              </TouchableOpacity>
-              <Text style={styles.stepVal}>{qty2}</Text>
-              <TouchableOpacity onPress={() => setQty2(qty2 + 1)} style={styles.stepBtn}>
-                <Plus size={12} color="#081028" />
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-
-        {/* Bill Summary */}
-        <View style={styles.summaryCard}>
-          <Text style={styles.summaryTitle}>Bill Summary</Text>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Item Subtotal</Text>
-            <Text style={styles.summaryVal}>₹{subtotal}</Text>
-          </View>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Delivery Fee</Text>
-            <Text style={styles.summaryVal}>₹{deliveryFee}</Text>
-          </View>
-          <View style={[styles.summaryRow, styles.totalRow]}>
-            <Text style={styles.totalLabel}>To Pay</Text>
-            <Text style={styles.totalVal}>₹{grandTotal}</Text>
-          </View>
-        </View>
-
-        {/* Trust Badge */}
-        <View style={styles.trustBadge}>
-          <ShieldCheck size={16} color="#16a34a" />
-          <Text style={styles.trustText}>Safe & Contactless Delivery by Verified Local Partners</Text>
-        </View>
       </ScrollView>
-
-      {/* Sticky Bottom Bar */}
-      <View style={styles.bottomBar}>
-        <View>
-          <Text style={styles.bottomSub}>Total Amount</Text>
-          <Text style={styles.bottomPrice}>₹{grandTotal}</Text>
-        </View>
-        <TouchableOpacity style={styles.checkoutBtn} onPress={() => router.push('/checkout')}>
-          <Text style={styles.checkoutBtnText}>Proceed to Checkout</Text>
-          <ArrowRight size={16} color="#ffffff" />
-        </TouchableOpacity>
-      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8fafc' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16, backgroundColor: '#ffffff', borderBottomWidth: 1, borderColor: '#e2e8f0' },
-  headerTitle: { fontSize: 18, fontWeight: '800', color: '#081028' },
-  headerBadge: { fontSize: 12, fontWeight: '700', color: '#64748b' },
-  scroll: { padding: 16, paddingBottom: 100 },
-  storeBanner: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#fff7ed', borderWidth: 1, borderColor: '#ffedd5', padding: 12, borderRadius: 12, marginBottom: 12 },
-  storeBannerInfo: { flex: 1 },
-  storeBannerTitle: { fontSize: 13, fontWeight: '700', color: '#9a3412' },
-  storeBannerSub: { fontSize: 11, color: '#c2410c' },
-  milestoneBox: { backgroundColor: '#f0fdf4', borderWidth: 1, borderColor: '#dcfce7', padding: 10, borderRadius: 10, marginBottom: 12 },
-  milestoneText: { fontSize: 12, fontWeight: '600', color: '#15803d', textAlign: 'center' },
-  itemCard: { flexDirection: 'row', backgroundColor: '#ffffff', borderRadius: 12, padding: 12, marginBottom: 10, borderWidth: 1, borderColor: '#e2e8f0' },
-  itemThumb: { width: 64, height: 64, backgroundColor: '#f1f5f9', borderRadius: 8, marginRight: 12 },
-  itemInfo: { flex: 1 },
-  itemTitle: { fontSize: 13, fontWeight: '700', color: '#081028' },
-  itemPrice: { fontSize: 14, fontWeight: '800', color: '#081028', marginTop: 4 },
-  stepper: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8, alignSelf: 'flex-start', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
-  stepBtn: { padding: 4 },
-  stepVal: { fontSize: 12, fontWeight: '700', color: '#081028', minWidth: 16, textAlign: 'center' },
-  summaryCard: { backgroundColor: '#ffffff', borderRadius: 12, padding: 14, borderWidth: 1, borderColor: '#e2e8f0', marginTop: 8 },
-  summaryTitle: { fontSize: 14, fontWeight: '800', color: '#081028', marginBottom: 10 },
-  summaryRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4 },
-  summaryLabel: { fontSize: 13, color: '#64748b' },
-  summaryVal: { fontSize: 13, fontWeight: '600', color: '#081028' },
-  totalRow: { borderTopWidth: 1, borderColor: '#f1f5f9', marginTop: 8, paddingTop: 8 },
-  totalLabel: { fontSize: 14, fontWeight: '800', color: '#081028' },
-  totalVal: { fontSize: 16, fontWeight: '800', color: '#081028' },
-  trustBadge: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 14, justifyContent: 'center' },
-  trustText: { fontSize: 11, color: '#16a34a', fontWeight: '500' },
-  bottomBar: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#ffffff', paddingHorizontal: 16, paddingVertical: 12, borderTopWidth: 1, borderColor: '#e2e8f0' },
-  bottomSub: { fontSize: 11, color: '#64748b' },
-  bottomPrice: { fontSize: 18, fontWeight: '800', color: '#081028' },
-  checkoutBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#f97316', paddingHorizontal: 18, paddingVertical: 12, borderRadius: 10 },
-  checkoutBtnText: { color: '#ffffff', fontSize: 13, fontWeight: '700' },
+  container: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+    paddingTop: Platform.OS === 'android' ? 40 : 0,
+  },
+  headerBackground: {
+    backgroundColor: '#081028',
+    paddingBottom: 16,
+    borderBottomLeftRadius: 16,
+    borderBottomRightRadius: 16,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 16,
+  },
+  logoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  logoIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 6,
+    backgroundColor: '#3b82f6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoV: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: '900',
+  },
+  logoText: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#ffffff',
+  },
+  logoSubtext: {
+    fontSize: 9,
+    color: '#94a3b8',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  iconButton: {
+    position: 'relative',
+    padding: 4,
+  },
+  badge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    backgroundColor: '#3b82f6',
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: '#081028',
+  },
+  badgeText: {
+    color: '#ffffff',
+    fontSize: 9,
+    fontWeight: 'bold',
+  },
+  locationContainer: {
+    paddingHorizontal: 16,
+    marginBottom: 16,
+  },
+  locationSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    gap: 6,
+  },
+  locationText: {
+    color: '#f8fafc',
+    fontSize: 12,
+    flex: 1,
+  },
+  searchContainer: {
+    paddingHorizontal: 16,
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+    borderRadius: 24,
+    paddingHorizontal: 16,
+    height: 48,
+    gap: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 14,
+    color: '#081028',
+  },
+  content: {
+    padding: 16,
+    paddingBottom: 40,
+  },
+  cartTitleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 20,
+  },
+  cartTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#0f172a',
+  },
+  cartSubtitle: {
+    fontSize: 13,
+    color: '#0f172a',
+    marginTop: 2,
+    fontWeight: '600'
+  },
+  clearCartBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  clearCartText: {
+    fontSize: 13,
+    color: '#3b82f6',
+    fontWeight: '600',
+  },
+  storeCartsContainer: {
+    gap: 16,
+  },
+  storeCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  storeCardHeader: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+  },
+  storeLogo: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#f1f5f9',
+  },
+  storeInfo: {
+    flex: 1,
+  },
+  storeNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 4,
+  },
+  storeName: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#0f172a',
+  },
+  storeAddress: {
+    fontSize: 11,
+    color: '#64748b',
+    marginBottom: 6,
+  },
+  statusBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#dcfce7',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  statusBadgeText: {
+    fontSize: 10,
+    color: '#16a34a',
+    fontWeight: '700',
+  },
+  cartContentRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+    paddingBottom: 16,
+  },
+  imagesGroup: {
+    flexDirection: 'row',
+    gap: 8,
+    flex: 1,
+  },
+  itemThumb: {
+    width: 48,
+    height: 48,
+    borderRadius: 8,
+    backgroundColor: '#f8fafc',
+    overflow: 'hidden',
+  },
+  itemThumbImg: {
+    width: '100%',
+    height: '100%',
+  },
+  extraCountThumb: {
+    width: 48,
+    height: 48,
+    borderRadius: 8,
+    backgroundColor: '#eff6ff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  extraCountText: {
+    fontSize: 10,
+    color: '#2563eb',
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  priceGroup: {
+    alignItems: 'flex-end',
+  },
+  totalPrice: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#0f172a',
+  },
+  mrpText: {
+    fontSize: 11,
+    color: '#64748b',
+    textDecorationLine: 'line-through',
+    marginTop: 2,
+  },
+  savingsText: {
+    fontSize: 11,
+    color: '#16a34a',
+    fontWeight: '600',
+    marginTop: 2,
+  },
+  cardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  itemsCount: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  itemsCountText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#0f172a',
+  },
+  viewCartBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#eff6ff',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  viewCartBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#2563eb',
+  },
 });

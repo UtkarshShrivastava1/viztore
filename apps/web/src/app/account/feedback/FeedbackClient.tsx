@@ -87,11 +87,11 @@ export function FeedbackClient() {
               <div className="flex-1 min-w-0 pr-4 z-10">
                 <div className="flex items-center gap-2 mb-1.5">
                   <button type="button" onClick={() => router.back()} className="shrink-0 lg:hidden">
-                    <ArrowLeft className="w-6 h-6 text-[#192168]" />
+                    <ArrowLeft className="w-6 h-6 text-white" />
                   </button>
-                  <h1 className="text-[24px] md:text-[32px] font-extrabold text-[#192168] leading-tight">Feedback</h1>
+                  <h1 className="text-[24px] md:text-[32px] font-extrabold text-white leading-tight">Feedback</h1>
                 </div>
-                <p className="text-[12px] md:text-[14px] text-[#192168] lg:text-surface-600 font-medium lg:font-normal pl-8 lg:pl-0">We value your feedback and are always looking to improve.</p>
+                <p className="text-[12px] md:text-[14px] text-white lg:text-surface-600 font-medium lg:font-normal pl-8 lg:pl-0">We value your feedback and are always looking to improve.</p>
               </div>
 
               {/* Speech Bubble Graphic */}
