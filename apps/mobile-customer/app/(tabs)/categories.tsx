@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Image, TextInput } from 'react-native';
 import { Search, Mic, Heart, ShoppingCart, Flame, Shirt, User, Baby, Footprints, Sparkles, Home, Smartphone, ShoppingBasket, Car, Dumbbell, Gamepad2, Book, MoreHorizontal, ChevronRight } from 'lucide-react-native';
+import { branding } from '@repo/shared-types';
 
 const CATEGORIES = [
   { id: 'trending', name: 'Trending Now', icon: Flame, color: '#ff4500' },
@@ -49,7 +50,7 @@ export default function CategoriesScreen() {
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <View style={styles.placeholderLogo}>
-            <Text style={styles.logoText}>viztore</Text>
+            <Text style={styles.logoText}>{branding.appName.toLowerCase()}</Text>
             <Text style={styles.tagline}>Making Local Stores Visible.</Text>
           </View>
           <View style={styles.headerIcons}>

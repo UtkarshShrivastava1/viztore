@@ -80,7 +80,7 @@ export default function OrderDetailsScreen() {
         <View style={styles.orderCard}>
           <View style={styles.orderHeader}>
             <View>
-              <Text style={styles.orderId}>Order ID: #VZT123456789</Text>
+              <Text style={styles.orderId}>Order ID: #ORD-123456789</Text>
               <Text style={styles.orderDate}>08 May 2024, 10:30 AM</Text>
             </View>
             <View style={styles.orderStatusWrap}>
@@ -186,7 +186,7 @@ export default function OrderDetailsScreen() {
           
           <View style={styles.trackingSuccessMsg}>
             <CheckCircle2 size={16} color="#16a34a" />
-            <Text style={styles.trackingSuccessText}>Your order has been delivered. Thank you for shopping with Viztore!</Text>
+            <Text style={styles.trackingSuccessText}>Your order has been delivered. Thank you for shopping with {branding.appName}!</Text>
           </View>
         </View>
 
