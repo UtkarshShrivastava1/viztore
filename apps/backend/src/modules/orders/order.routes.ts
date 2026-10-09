@@ -2,6 +2,7 @@ import { Router } from 'express';
 import type { createOrderController } from './order.controller.js';
 import { authGuard } from '../../shared/middlewares/authGuard.js';
 import { roleGuard } from '../../shared/middlewares/roleGuard.js';
+import { idempotencyMiddleware } from '../../shared/middlewares/idempotency.middleware.js';
 import { UserRole } from '@repo/shared-types';
 
 type Controller = ReturnType<typeof createOrderController>;
@@ -15,8 +16,8 @@ export function createOrderRouter(
   // All order routes require authentication
   router.use(guard);
 
-  // Customer & Merchant order routes
-  router.post('/', controller.createOrder);
+  // Customer & Merchant order routes (Idempotency Key protected against double-submit)
+  router.post('/', idempotencyMiddleware({ ttlSeconds: 300 }), controller.createOrder);
   router.get('/', controller.getMyOrders);
   router.get('/my-orders', controller.getMyOrders);
   router.get('/store/:storeId', controller.getStoreOrders);
@@ -25,7 +26,7 @@ export function createOrderRouter(
   router.get('/:id/invoice', controller.getInvoice);
   router.patch('/:id/status', controller.updateStatus);
   router.post('/:id/verify-otp', controller.verifyOtp);
-  router.post('/:id/cancel', controller.cancel);
+  router.post('/:id/cancel', idempotencyMiddleware({ ttlSeconds: 300 }), controller.cancel);
 
   return router;
 }
