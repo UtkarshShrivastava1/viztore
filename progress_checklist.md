@@ -206,6 +206,12 @@
   - [x] Client API integration in `apps/merchant/src/lib/api.ts` (`billingApi`)
   - [x] Automated test suite with 94/94 backend tests passing across 15 suites
   - [x] In-House Retail Billing Customer History Enforcement & Direct New Customer Entry Workflow (zero hardcoded customer presets, dynamic past customer lookup by name/phone, direct new customer registration, 36 Indian states & UTs directory with Chhattisgarh launch default)
+- [x] **Merchant Shell Controls & Storefront Merchandising Suite (PR #14, commit `eac4c32`)**:
+  - [x] Header Store Active / Inactive switch with live green/red indicator and `localStorage` persistence
+  - [x] `StoreInactiveConfirmModal` dialog with warning copy, plan notice, and action buttons (`1.0a(V1).png`)
+  - [x] Sticky Inactive Store Alert Banner with 1-click "Activate Store Now" trigger (`1.0b(V1).png`)
+  - [x] Canonical 15-module sidebar navigation sync with counter badges (`Orders 25`, `Wallet ₹32,450`, `Expenses`, `Asset Management`)
+  - [x] Real-time synchronized 2x2 product grid and iPhone chassis preview for store merchandising sections (`AddEditSectionView.tsx`, `13.1a.png`, `13.1b.png`)
 - [ ] Merchant wallet financial ledger, payout triggers & automated bank settlements
 - [ ] Automated returns, exchange, RMA reverse logistics & refund credit note settlement
 - [ ] Merchant staff management & role-based access control (Manager, Cashier, Inventory Clerk)
