@@ -126,65 +126,65 @@ export const AdvertisementsTab: React.FC<AdvertisementsTabProps> = ({ onCreateAd
         </button>
       </div>
 
-      {/* 4 KPI Cards (12.1.png) */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+      {/* 4 KPI Cards Matching Purchases (Bills) Standard */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
         {/* Active Ads */}
-        <div className="bg-white rounded-xl border border-slate-200/90 p-3.5 shadow-2xs flex items-center justify-between">
-          <div>
-            <span className="text-[11px] font-semibold text-slate-500 block">Active Ads</span>
-            <div className="text-xl font-black text-slate-900 leading-tight mt-0.5">5</div>
-            <div className="flex items-center gap-1 text-[11px] text-emerald-600 font-semibold mt-1">
-              <span>↑ 25%</span>
-              <span className="text-slate-400 font-normal">vs last 30 days</span>
-            </div>
-          </div>
-          <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+        <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-xs transition-shadow flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
             <Megaphone className="w-5 h-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <span className="text-[11px] font-semibold text-slate-500 block truncate">Active Ads</span>
+            <span className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate block">5</span>
+            <div className="flex items-center gap-1 text-[10px] text-emerald-600 font-semibold mt-0.5 truncate">
+              <span>↑ 25%</span>
+              <span className="text-slate-400 font-normal">vs last 30d</span>
+            </div>
           </div>
         </div>
 
         {/* Scheduled Ads */}
-        <div className="bg-white rounded-xl border border-slate-200/90 p-3.5 shadow-2xs flex items-center justify-between">
-          <div>
-            <span className="text-[11px] font-semibold text-slate-500 block">Scheduled Ads</span>
-            <div className="text-xl font-black text-slate-900 leading-tight mt-0.5">2</div>
-            <div className="flex items-center gap-1 text-[11px] text-emerald-600 font-semibold mt-1">
-              <span>↑ 100%</span>
-              <span className="text-slate-400 font-normal">vs last 30 days</span>
-            </div>
-          </div>
-          <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+        <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-xs transition-shadow flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
             <Calendar className="w-5 h-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <span className="text-[11px] font-semibold text-slate-500 block truncate">Scheduled Ads</span>
+            <span className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate block">2</span>
+            <div className="flex items-center gap-1 text-[10px] text-emerald-600 font-semibold mt-0.5 truncate">
+              <span>↑ 100%</span>
+              <span className="text-slate-400 font-normal">vs last 30d</span>
+            </div>
           </div>
         </div>
 
         {/* Completed Ads */}
-        <div className="bg-white rounded-xl border border-slate-200/90 p-3.5 shadow-2xs flex items-center justify-between">
-          <div>
-            <span className="text-[11px] font-semibold text-slate-500 block">Completed Ads</span>
-            <div className="text-xl font-black text-slate-900 leading-tight mt-0.5">8</div>
-            <div className="flex items-center gap-1 text-[11px] text-emerald-600 font-semibold mt-1">
-              <span>↑ 14%</span>
-              <span className="text-slate-400 font-normal">vs last 30 days</span>
-            </div>
-          </div>
-          <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+        <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-xs transition-shadow flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
             <CheckCircle2 className="w-5 h-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <span className="text-[11px] font-semibold text-slate-500 block truncate">Completed Ads</span>
+            <span className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate block">8</span>
+            <div className="flex items-center gap-1 text-[10px] text-emerald-600 font-semibold mt-0.5 truncate">
+              <span>↑ 14%</span>
+              <span className="text-slate-400 font-normal">vs last 30d</span>
+            </div>
           </div>
         </div>
 
         {/* Total Ad Spend */}
-        <div className="bg-white rounded-xl border border-slate-200/90 p-3.5 shadow-2xs flex items-center justify-between">
-          <div>
-            <span className="text-[11px] font-semibold text-slate-500 block">Total Ad Spend</span>
-            <div className="text-xl font-black text-slate-900 leading-tight mt-0.5">₹ 12,450</div>
-            <div className="flex items-center gap-1 text-[11px] text-emerald-600 font-semibold mt-1">
-              <span>↑ 18.6%</span>
-              <span className="text-slate-400 font-normal">vs last 30 days</span>
-            </div>
-          </div>
-          <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+        <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-xs transition-shadow flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
             <DollarSign className="w-5 h-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <span className="text-[11px] font-semibold text-slate-500 block truncate">Total Ad Spend</span>
+            <span className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate block">₹ 12,450</span>
+            <div className="flex items-center gap-1 text-[10px] text-emerald-600 font-semibold mt-0.5 truncate">
+              <span>↑ 18.6%</span>
+              <span className="text-slate-400 font-normal">vs last 30d</span>
+            </div>
           </div>
         </div>
       </div>

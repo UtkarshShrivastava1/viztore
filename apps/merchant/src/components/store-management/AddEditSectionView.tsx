@@ -686,44 +686,52 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
               </div>
 
               {/* 2x2 Product Grid Preview - Real-Time Synchronized with Selected Products! */}
-              <div className="grid grid-cols-2 gap-1.5">
-                {(products.filter((p) => selectedProductIds.includes(p.id)).length > 0
-                  ? products.filter((p) => selectedProductIds.includes(p.id)).slice(0, 4)
-                  : products.slice(0, 4)
-                ).map((p) => (
-                  <div
-                    key={p.id}
-                    className="border border-slate-200 rounded-lg p-1.5 flex flex-col justify-between space-y-1 bg-white shadow-2xs"
-                  >
-                    <div className="relative">
-                      <img
-                        src={p.image}
-                        alt={p.name}
-                        className="w-full h-16 object-cover rounded-md"
-                      />
-                      <div className="w-4 h-4 rounded-full bg-white/90 text-slate-400 flex items-center justify-center absolute top-1 right-1 shadow-2xs">
-                        <Heart className="w-2.5 h-2.5" />
+              {selectedProductIds.length === 0 ? (
+                <div className="py-8 text-center text-slate-400 space-y-1 border border-dashed border-slate-200 rounded-lg">
+                  <Package className="w-5 h-5 mx-auto text-slate-300" />
+                  <p className="text-[9px] font-semibold text-slate-600">No products selected</p>
+                  <p className="text-[8px] text-slate-400">Select products on the left to see them live</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-1.5">
+                  {products
+                    .filter((p) => selectedProductIds.includes(p.id))
+                    .slice(0, 4)
+                    .map((p) => (
+                      <div
+                        key={p.id}
+                        className="border border-slate-200 rounded-lg p-1.5 flex flex-col justify-between space-y-1 bg-white shadow-2xs"
+                      >
+                        <div className="relative">
+                          <img
+                            src={p.image}
+                            alt={p.name}
+                            className="w-full h-16 object-cover rounded-md"
+                          />
+                          <div className="w-4 h-4 rounded-full bg-white/90 text-slate-400 flex items-center justify-center absolute top-1 right-1 shadow-2xs">
+                            <Heart className="w-2.5 h-2.5" />
+                          </div>
+                        </div>
+                        <div>
+                          <span className="text-[9px] font-bold text-slate-900 block truncate leading-tight">
+                            {p.name}
+                          </span>
+                          <span className="text-[9px] font-black text-slate-900">₹{p.price}</span>
+                          <div className="flex items-center gap-0.5 text-[8px] text-amber-500 font-bold">
+                            <Star className="w-2 h-2 fill-amber-500" />
+                            <span>{p.rating} ({p.reviews})</span>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          className="w-full py-0.5 rounded border border-blue-600 text-blue-600 text-[8px] font-bold hover:bg-blue-50 transition-colors"
+                        >
+                          Add to Cart
+                        </button>
                       </div>
-                    </div>
-                    <div>
-                      <span className="text-[9px] font-bold text-slate-900 block truncate leading-tight">
-                        {p.name}
-                      </span>
-                      <span className="text-[9px] font-black text-slate-900">₹{p.price}</span>
-                      <div className="flex items-center gap-0.5 text-[8px] text-amber-500 font-bold">
-                        <Star className="w-2 h-2 fill-amber-500" />
-                        <span>{p.rating} ({p.reviews})</span>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      className="w-full py-0.5 rounded border border-blue-600 text-blue-600 text-[8px] font-bold hover:bg-blue-50 transition-colors"
-                    >
-                      Add to Cart
-                    </button>
-                  </div>
-                ))}
-              </div>
+                    ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

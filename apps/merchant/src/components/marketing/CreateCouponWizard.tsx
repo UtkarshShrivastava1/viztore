@@ -16,6 +16,7 @@ import {
   ArrowRight,
   ArrowLeft,
   X,
+  Scissors,
 } from 'lucide-react';
 import { useMarketingStore, CouponItem } from '../../stores/marketingStore.js';
 import { SelectProductsModal } from './SelectProductsModal.js';
@@ -603,27 +604,46 @@ export const CreateCouponWizard: React.FC<CreateCouponWizardProps> = ({ onClose 
                 </span>
               </div>
 
-              {/* Realistic ticket */}
-              <div className="border border-blue-200 bg-blue-50/40 rounded-xl p-3 relative overflow-hidden flex items-center justify-between">
-                <div className="space-y-1 min-w-0 pr-2">
-                  <span className="font-mono text-sm font-black text-blue-900 block tracking-wider">
-                    {code}
+              {/* Realistic ticket with dashed borders, punch-out notches, and Scissors */}
+              <div className="relative border-2 border-dashed border-blue-300 rounded-2xl p-3.5 bg-gradient-to-r from-blue-50/70 via-white to-blue-50/50 shadow-2xs overflow-hidden flex items-stretch justify-between">
+                <div className="space-y-1 min-w-0 pr-3 flex-1">
+                  <span className="font-mono text-base font-black text-blue-700 tracking-wider block">
+                    {code || 'COUPONCODE'}
                   </span>
-                  <p className="text-[10px] text-slate-600 line-clamp-2">{description}</p>
-                  <div className="text-[9px] text-slate-400 pt-1">
-                    Min. order ₹{minOrderValue} | Max. discount ₹{maxDiscount}
+                  <p className="text-[11px] font-bold text-slate-800 line-clamp-1">
+                    {name || 'Coupon Name'}
+                  </p>
+                  <p className="text-[10px] text-slate-500 line-clamp-2">
+                    {description || 'Special savings applied at checkout.'}
+                  </p>
+                  <div className="text-[9px] font-semibold text-slate-400 pt-1">
+                    Min. order ₹{minOrderValue.toLocaleString()} | Max. discount ₹{maxDiscount.toLocaleString()}
                   </div>
                 </div>
 
-                <div className="border-l border-dashed border-blue-300 pl-3 flex flex-col items-center justify-center shrink-0">
-                  <span className="text-sm font-black text-blue-700">
+                {/* Perforated vertical separator with scissors */}
+                <div className="relative flex flex-col items-center justify-center px-2">
+                  <div className="absolute -top-5 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-white border border-blue-200" />
+                  <div className="h-full border-l-2 border-dashed border-blue-300 relative flex items-center justify-center">
+                    <div className="absolute bg-white p-0.5 rounded-full border border-blue-200 text-blue-500 shadow-2xs">
+                      <Scissors className="w-3 h-3 rotate-90" />
+                    </div>
+                  </div>
+                  <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-white border border-blue-200" />
+                </div>
+
+                {/* Benefit value */}
+                <div className="pl-3 flex flex-col items-center justify-center shrink-0 min-w-[65px] text-center">
+                  <span className="text-xl font-black text-blue-700 leading-tight">
                     {discountType === 'Percentage'
                       ? `${discountValue}%`
                       : discountType === 'Fixed Amount'
                       ? `₹${discountValue}`
                       : 'FREE'}
                   </span>
-                  <span className="text-[9px] font-black text-blue-700 uppercase">OFF</span>
+                  <span className="text-[9px] font-black text-blue-900 uppercase tracking-wider">
+                    {discountType === 'Free Shipping' ? 'DELIVERY' : 'OFF'}
+                  </span>
                 </div>
               </div>
             </div>
@@ -803,22 +823,41 @@ export const CreateCouponWizard: React.FC<CreateCouponWizardProps> = ({ onClose 
                 </span>
               </div>
 
-              <div className="border border-blue-200 bg-blue-50/40 rounded-xl p-3 relative overflow-hidden flex items-center justify-between">
-                <div className="space-y-1 min-w-0 pr-2">
-                  <span className="font-mono text-sm font-black text-blue-900 block tracking-wider">
-                    {code}
+              <div className="relative border-2 border-dashed border-blue-300 rounded-2xl p-3.5 bg-gradient-to-r from-blue-50/70 via-white to-blue-50/50 shadow-2xs overflow-hidden flex items-stretch justify-between">
+                <div className="space-y-1 min-w-0 pr-3 flex-1">
+                  <span className="font-mono text-base font-black text-blue-700 tracking-wider block">
+                    {code || 'COUPONCODE'}
                   </span>
-                  <p className="text-[10px] text-slate-600 line-clamp-2">{description}</p>
-                  <div className="text-[9px] text-slate-400 pt-1">
-                    Min. order ₹{minOrderValue} | Max. discount ₹{maxDiscount}
+                  <p className="text-[11px] font-bold text-slate-800 line-clamp-1">
+                    {name || 'Coupon Name'}
+                  </p>
+                  <p className="text-[10px] text-slate-500 line-clamp-2">
+                    {description || 'Special savings applied at checkout.'}
+                  </p>
+                  <div className="text-[9px] font-semibold text-slate-400 pt-1">
+                    Min. order ₹{minOrderValue.toLocaleString()} | Max. discount ₹{maxDiscount.toLocaleString()}
                   </div>
                 </div>
 
-                <div className="border-l border-dashed border-blue-300 pl-3 flex flex-col items-center justify-center shrink-0">
-                  <span className="text-sm font-black text-blue-700">
+                {/* Perforated vertical separator with scissors */}
+                <div className="relative flex flex-col items-center justify-center px-2">
+                  <div className="absolute -top-5 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-white border border-blue-200" />
+                  <div className="h-full border-l-2 border-dashed border-blue-300 relative flex items-center justify-center">
+                    <div className="absolute bg-white p-0.5 rounded-full border border-blue-200 text-blue-500 shadow-2xs">
+                      <Scissors className="w-3 h-3 rotate-90" />
+                    </div>
+                  </div>
+                  <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-white border border-blue-200" />
+                </div>
+
+                {/* Benefit value */}
+                <div className="pl-3 flex flex-col items-center justify-center shrink-0 min-w-[65px] text-center">
+                  <span className="text-xl font-black text-blue-700 leading-tight">
                     {discountType === 'Percentage' ? `${discountValue}%` : `₹${discountValue}`}
                   </span>
-                  <span className="text-[9px] font-black text-blue-700 uppercase">OFF</span>
+                  <span className="text-[9px] font-black text-blue-900 uppercase tracking-wider">
+                    {discountType === 'Free Shipping' ? 'DELIVERY' : 'OFF'}
+                  </span>
                 </div>
               </div>
             </div>

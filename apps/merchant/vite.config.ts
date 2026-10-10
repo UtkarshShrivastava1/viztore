@@ -12,4 +12,22 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('leaflet') || id.includes('react-leaflet')) {
+              return 'vendor-leaflet';
+            }
+            if (id.includes('lucide-react')) {
+              return 'vendor-lucide';
+            }
+            return 'vendor';
+          }
+        },
+      },
+    },
+    chunkSizeWarningLimit: 750,
+  },
 });

@@ -48,7 +48,7 @@ export const KpiCards: React.FC = () => {
       timeframe: 'vs last 7 days',
       icon: ShoppingBag,
       iconColor: 'text-blue-600',
-      iconBg: 'bg-blue-50/80 border border-blue-100/60',
+      iconBg: 'bg-blue-50 text-blue-600',
     },
     {
       title: 'Total Orders',
@@ -57,7 +57,7 @@ export const KpiCards: React.FC = () => {
       timeframe: 'vs last 7 days',
       icon: ClipboardList,
       iconColor: 'text-emerald-600',
-      iconBg: 'bg-emerald-50/80 border border-emerald-100/60',
+      iconBg: 'bg-emerald-50 text-emerald-600',
     },
     {
       title: 'Products Listed',
@@ -66,7 +66,7 @@ export const KpiCards: React.FC = () => {
       timeframe: 'active in catalog',
       icon: Users,
       iconColor: 'text-purple-600',
-      iconBg: 'bg-purple-50/80 border border-purple-100/60',
+      iconBg: 'bg-purple-50 text-purple-600',
     },
   ];
 
@@ -77,27 +77,26 @@ export const KpiCards: React.FC = () => {
         return (
           <div
             key={kpi.title}
-            className="p-3.5 rounded-2xl bg-white border border-slate-200/80 shadow-2xs hover:shadow-md transition-all flex items-center justify-between"
+            className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-xs transition-shadow flex items-center gap-3.5"
           >
-            <div className="space-y-0.5">
-              <span className="text-xs font-medium text-slate-500 block">{kpi.title}</span>
-              <span className="text-xl sm:text-2xl font-extrabold text-slate-900 block tracking-tight">
+            <div
+              className={`w-11 h-11 rounded-xl ${kpi.iconBg} flex items-center justify-center shrink-0`}
+            >
+              <Icon className="w-5 h-5" />
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <span className="text-[11px] font-semibold text-slate-500 block truncate">{kpi.title}</span>
+              <span className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate block">
                 {kpi.value}
               </span>
-              <div className="flex items-center gap-1 pt-0.5">
-                <span className="inline-flex items-center text-[10px] font-bold text-emerald-600 gap-0.5">
+              <div className="flex items-center gap-1 mt-0.5 text-[10px] truncate">
+                <span className="inline-flex items-center font-bold text-emerald-600 gap-0.5">
                   <ArrowUpRight className="w-3 h-3" />
                   {kpi.change}
                 </span>
-                <span className="text-[10px] text-slate-400">{kpi.timeframe}</span>
+                <span className="text-slate-400">{kpi.timeframe}</span>
               </div>
-            </div>
-
-            {/* Circular Badge Icon */}
-            <div
-              className={`w-10 h-10 rounded-full ${kpi.iconBg} ${kpi.iconColor} flex items-center justify-center shrink-0 shadow-2xs`}
-            >
-              <Icon className="w-4 h-4" />
             </div>
           </div>
         );

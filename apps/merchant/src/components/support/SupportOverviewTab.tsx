@@ -151,28 +151,28 @@ export const SupportOverviewTab: React.FC = () => {
         </div>
       </div>
 
-      {/* Your Support Overview 4 Mini KPI Cards (16.0.png) */}
-      <div className="space-y-3">
+      {/* Your Support Overview 4 Mini KPI Cards Matching Purchases (Bills) Standard */}
+      <div className="space-y-2.5">
         <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Your Support Overview</h4>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
           {/* Total Tickets */}
           <div
             onClick={() => {
               setStatusFilter('all');
               setActiveTab('tickets');
             }}
-            className="bg-blue-50/40 hover:bg-blue-50/70 cursor-pointer transition-all p-4 rounded-2xl border border-blue-100 flex items-center justify-between"
+            className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-xs cursor-pointer transition-all flex items-center gap-3.5"
           >
-            <div className="space-y-1">
-              <div className="text-2xl font-black text-slate-900">{totalTickets}</div>
-              <div className="text-xs font-semibold text-slate-600">Total Tickets</div>
-              <div className="text-[10px] font-bold text-blue-600 flex items-center gap-0.5 mt-1">
+            <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+              <Ticket className="w-5 h-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <span className="text-[11px] font-semibold text-slate-500 block truncate">Total Tickets</span>
+              <span className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate block">{totalTickets}</span>
+              <div className="text-[10px] font-bold text-blue-600 flex items-center gap-0.5 mt-0.5 truncate">
                 <span>View all tickets</span>
                 <ArrowRight className="w-3 h-3" />
               </div>
-            </div>
-            <div className="w-10 h-10 rounded-xl bg-blue-100/70 text-blue-600 flex items-center justify-center shrink-0">
-              <Ticket className="w-5 h-5" />
             </div>
           </div>
 
@@ -182,18 +182,18 @@ export const SupportOverviewTab: React.FC = () => {
               setStatusFilter('resolved');
               setActiveTab('tickets');
             }}
-            className="bg-emerald-50/40 hover:bg-emerald-50/70 cursor-pointer transition-all p-4 rounded-2xl border border-emerald-100 flex items-center justify-between"
+            className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-xs cursor-pointer transition-all flex items-center gap-3.5"
           >
-            <div className="space-y-1">
-              <div className="text-2xl font-black text-slate-900">{resolvedCount}</div>
-              <div className="text-xs font-semibold text-slate-600">Resolved</div>
-              <div className="text-[10px] font-bold text-emerald-700 flex items-center gap-0.5 mt-1">
+            <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+              <CheckCircle2 className="w-5 h-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <span className="text-[11px] font-semibold text-slate-500 block truncate">Resolved</span>
+              <span className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate block">{resolvedCount}</span>
+              <div className="text-[10px] font-bold text-emerald-600 flex items-center gap-0.5 mt-0.5 truncate">
                 <span>View resolved</span>
                 <ArrowRight className="w-3 h-3" />
               </div>
-            </div>
-            <div className="w-10 h-10 rounded-xl bg-emerald-100/70 text-emerald-600 flex items-center justify-center shrink-0">
-              <CheckCircle2 className="w-5 h-5" />
             </div>
           </div>
 
@@ -203,18 +203,18 @@ export const SupportOverviewTab: React.FC = () => {
               setStatusFilter('in_progress');
               setActiveTab('tickets');
             }}
-            className="bg-amber-50/40 hover:bg-amber-50/70 cursor-pointer transition-all p-4 rounded-2xl border border-amber-100 flex items-center justify-between"
+            className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-xs cursor-pointer transition-all flex items-center gap-3.5"
           >
-            <div className="space-y-1">
-              <div className="text-2xl font-black text-slate-900">{inProgressCount}</div>
-              <div className="text-xs font-semibold text-slate-600">In Progress</div>
-              <div className="text-[10px] font-bold text-amber-700 flex items-center gap-0.5 mt-1">
+            <div className="w-11 h-11 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center shrink-0">
+              <Clock className="w-5 h-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <span className="text-[11px] font-semibold text-slate-500 block truncate">In Progress</span>
+              <span className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate block">{inProgressCount}</span>
+              <div className="text-[10px] font-bold text-amber-600 flex items-center gap-0.5 mt-0.5 truncate">
                 <span>View in progress</span>
                 <ArrowRight className="w-3 h-3" />
               </div>
-            </div>
-            <div className="w-10 h-10 rounded-xl bg-amber-100/70 text-amber-600 flex items-center justify-center shrink-0">
-              <Clock className="w-5 h-5" />
             </div>
           </div>
 
@@ -224,18 +224,18 @@ export const SupportOverviewTab: React.FC = () => {
               setStatusFilter('open');
               setActiveTab('tickets');
             }}
-            className="bg-rose-50/40 hover:bg-rose-50/70 cursor-pointer transition-all p-4 rounded-2xl border border-rose-100 flex items-center justify-between"
+            className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-xs cursor-pointer transition-all flex items-center gap-3.5"
           >
-            <div className="space-y-1">
-              <div className="text-2xl font-black text-slate-900">{openCount}</div>
-              <div className="text-xs font-semibold text-slate-600">Open</div>
-              <div className="text-[10px] font-bold text-rose-700 flex items-center gap-0.5 mt-1">
+            <div className="w-11 h-11 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+              <XCircle className="w-5 h-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <span className="text-[11px] font-semibold text-slate-500 block truncate">Open</span>
+              <span className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate block">{openCount}</span>
+              <div className="text-[10px] font-bold text-rose-600 flex items-center gap-0.5 mt-0.5 truncate">
                 <span>View open</span>
                 <ArrowRight className="w-3 h-3" />
               </div>
-            </div>
-            <div className="w-10 h-10 rounded-xl bg-rose-100/70 text-rose-600 flex items-center justify-center shrink-0">
-              <XCircle className="w-5 h-5" />
             </div>
           </div>
         </div>

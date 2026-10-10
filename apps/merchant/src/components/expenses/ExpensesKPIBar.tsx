@@ -17,7 +17,7 @@ import {
 import { useExpenseStore } from '../../stores/expenseStore.js';
 
 export const ExpensesKPIBar: React.FC = () => {
-  const { activeSubTab, overviewKPIs } = useExpenseStore();
+  const { activeSubTab, overviewKPIs, purchaseBills } = useExpenseStore();
 
   if (activeSubTab === 'orders') {
     return (
@@ -63,6 +63,80 @@ export const ExpensesKPIBar: React.FC = () => {
             <span className="text-[11px] font-semibold text-slate-500 block truncate">Cancelled Orders</span>
             <h4 className="text-lg font-black text-slate-900 tracking-tight mt-0.5">8</h4>
             <span className="text-[10px] text-slate-500 mt-0.5 block font-medium">Amount: ₹ 68,500</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (activeSubTab === 'bills') {
+    const totalAmount = purchaseBills.reduce((acc, b) => acc + (b.totalAmount || 0), 0);
+    const paidBills = purchaseBills.filter((b) => b.paymentStatus === 'Paid');
+    const paidAmount = paidBills.reduce((acc, b) => acc + (b.totalAmount || 0), 0);
+    const unpaidBills = purchaseBills.filter((b) => b.paymentStatus === 'Unpaid');
+    const unpaidAmount = unpaidBills.reduce((acc, b) => acc + (b.totalAmount || 0), 0);
+    const partialBills = purchaseBills.filter((b) => b.paymentStatus === 'Partially Paid');
+    const partialAmount = partialBills.reduce((acc, b) => acc + (b.totalAmount || 0), 0);
+
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-xs transition-shadow flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+            <FileText className="w-5 h-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <span className="text-[11px] font-semibold text-slate-500 block truncate">Total Purchases</span>
+            <h4 className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate">
+              ₹ {totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+            </h4>
+            <span className="text-[10px] text-slate-400 mt-0.5 block truncate">
+              {purchaseBills.length} Bills
+            </span>
+          </div>
+        </div>
+
+        <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-xs transition-shadow flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+            <CheckCircle2 className="w-5 h-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <span className="text-[11px] font-semibold text-slate-500 block truncate">Paid Bills</span>
+            <h4 className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate">
+              ₹ {paidAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+            </h4>
+            <span className="text-[10px] text-slate-400 mt-0.5 block truncate">
+              {paidBills.length} Bills
+            </span>
+          </div>
+        </div>
+
+        <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-xs transition-shadow flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+            <XCircle className="w-5 h-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <span className="text-[11px] font-semibold text-slate-500 block truncate">Unpaid Bills</span>
+            <h4 className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate">
+              ₹ {unpaidAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+            </h4>
+            <span className="text-[10px] text-rose-500 mt-0.5 block font-medium truncate">
+              {unpaidBills.length} Bills Due
+            </span>
+          </div>
+        </div>
+
+        <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-xs transition-shadow flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center shrink-0">
+            <Clock className="w-5 h-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <span className="text-[11px] font-semibold text-slate-500 block truncate">Partially Paid</span>
+            <h4 className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate">
+              ₹ {partialAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+            </h4>
+            <span className="text-[10px] text-slate-400 mt-0.5 block truncate">
+              {partialBills.length} Bills
+            </span>
           </div>
         </div>
       </div>

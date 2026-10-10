@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { downloadCSV } from '../utils/csvExport.js';
 
 export interface PayoutRecord {
   id: string;
@@ -687,21 +688,50 @@ export const usePayoutsStore = create<PayoutsState>((set, get) => ({
   },
 
   downloadStatement: (format) => {
-    const csvHeader = 'ID,Date,Amount,Status\n';
-    let content = '';
+    const today = new Date().toISOString().slice(0, 10);
     if (format === 'Payment History') {
-      content = get().payouts.map((p) => `${p.payoutId},${p.dateTime},${p.amount},${p.status}`).join('\n');
+      downloadCSV(
+        `payouts_payment_history_${today}.csv`,
+        ['Payout ID', 'Date & Time', 'Orders', 'Account', 'Amount', 'Status', 'UTR Number'],
+        get().payouts.map((p) => [
+          p.payoutId,
+          p.dateTime || p.date,
+          p.orderCount,
+          p.bankAccount || p.payoutAccount,
+          p.amount,
+          p.status,
+          p.utrNumber || p.utr,
+        ])
+      );
     } else if (format === 'Settlements') {
-      content = get().settlements.map((s) => `${s.settlementId},${s.settlementDate},${s.settlementAmount},${s.status}`).join('\n');
+      downloadCSV(
+        `settlements_${today}.csv`,
+        ['Settlement ID', 'Date', 'Period', 'Orders', 'Gross Amount', 'Deductions', 'Net Settled', 'Status'],
+        get().settlements.map((s) => [
+          s.settlementId,
+          s.settlementDate,
+          s.period,
+          s.orderCount,
+          s.grossAmount,
+          s.deductions,
+          s.settlementAmount,
+          s.status,
+        ])
+      );
     } else {
-      content = get().transactions.map((t) => `${t.transactionId},${t.dateTime},${t.amount},${t.status}`).join('\n');
+      downloadCSV(
+        `transactions_${today}.csv`,
+        ['Transaction ID', 'Date & Time', 'Type', 'Reference / Order', 'Description', 'Amount', 'Status'],
+        get().transactions.map((t) => [
+          t.transactionId,
+          t.dateTime,
+          t.type,
+          t.orderId || t.referenceId || '',
+          t.description,
+          t.amount,
+          t.status,
+        ])
+      );
     }
-    const blob = new Blob([csvHeader + content], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${format.toLowerCase().replace(/\s+/g, '_')}_statement.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
   },
 }));
