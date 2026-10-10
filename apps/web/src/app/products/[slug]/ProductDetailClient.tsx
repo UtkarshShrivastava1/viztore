@@ -33,7 +33,7 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
     enabled: !!slug,
   });
 
-  const [selectedVariantIdx, setSelectedVariantIdx] = useState(0);
+  const [selectedVariantIdx] = useState(0);
   const [selectedImageIdx, setSelectedImageIdx] = useState(0);
   const [qty, setQty] = useState(1);
   const [isAdded, setIsAdded] = useState(false);
@@ -88,9 +88,9 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
 
   const rawStoreId = product.storeId;
   const storeId = typeof rawStoreId === 'object' && rawStoreId !== null
-    ? (rawStoreId as any)._id || String(rawStoreId)
+    ? (rawStoreId as { _id?: string })._id || String(rawStoreId)
     : String(rawStoreId || 'store-main');
-  const storeName = product.storeName || (typeof rawStoreId === 'object' && (rawStoreId as any)?.name) || 'Official Store';
+  const storeName = product.storeName || (typeof rawStoreId === 'object' && (rawStoreId as { name?: string })?.name) || 'Official Store';
 
   const handleAddToCart = () => {
     if (!product || !selectedVariant) return;

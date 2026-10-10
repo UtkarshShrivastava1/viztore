@@ -1,14 +1,12 @@
 'use client';
 
 import React from 'react';
-import { useRouter } from 'next/navigation';
 import { Store, Tag, Grid, Heart, ShieldCheck, Check } from 'lucide-react';
 import { branding } from '@repo/shared-types';
 
 import { useAuthStore } from '@/stores/auth.store';
 
 export default function LoggedOutPage() {
-  const router = useRouter();
   const openAuthModal = useAuthStore((state) => state.openAuthModal);
 
   return (
@@ -101,7 +99,7 @@ export default function LoggedOutPage() {
   );
 }
 
-function ExploreCard({ icon, bg, title, desc }: any) {
+function ExploreCard({ icon, bg, title, desc }: { icon: React.ReactNode; bg: string; title: string; desc: string }) {
   return (
     <div className="flex flex-col items-center text-center rounded-2xl border border-surface-200 bg-white p-4 shadow-[0_2px_8px_rgb(0,0,0,0.04)] hover:border-[#1668F6] transition-all cursor-pointer w-[140px] shrink-0">
       <div className={`mb-3 flex h-10 w-10 items-center justify-center rounded-full ${bg}`}>

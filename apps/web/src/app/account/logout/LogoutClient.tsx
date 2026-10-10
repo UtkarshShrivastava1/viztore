@@ -1,28 +1,16 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/stores/auth.store';
 import { 
-  User, Calendar, ShoppingBag, ShoppingBasket, Store, Heart, 
-  MapPin, Bell, Ticket, HelpCircle, FileText, Shield, LogOut,
+  User, Bell, LogOut,
   ArrowLeft, Lock, ShoppingCart, ShieldCheck
 } from 'lucide-react';
-import { branding } from '@repo/shared-types';
 import { AccountSidebar } from '@/components/account/AccountSidebar';
 
 export function LogoutClient() {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuthStore();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-
-  const formData = {
-    firstName: user?.fullName?.split(' ')[0] || 'Guest',
-    lastName: user?.fullName?.split(' ')[1] || 'User',
-    email: user?.email || 'guest@example.com',
-    mobileNumber: user?.phone ? `+91 ${user.phone}` : 'Sign in to access',
-  };
 
   const handleLogout = async () => {
     try {

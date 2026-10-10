@@ -3,7 +3,7 @@ import { useCatalogStore } from '@/stores/catalog.store';
 import { 
   Flame, Shirt, MonitorSmartphone, Car, Dumbbell, 
   ToyBrick, BookOpen, MoreHorizontal, Footprints, 
-  Sparkles, Home, ShoppingBasket, ShoppingBag, Watch 
+  Sparkles, Home, ShoppingBasket, ShoppingBag
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';

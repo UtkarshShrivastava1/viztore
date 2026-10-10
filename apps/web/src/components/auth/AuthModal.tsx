@@ -55,8 +55,8 @@ export const AuthModal: React.FC = () => {
         setAuth(res.user, res.tokens.accessToken);
         resetForm();
       }, 500);
-    } catch (err: any) {
-      setError(err?.message || 'Invalid email or password. Please check your credentials and try again.');
+    } catch (err: unknown) {
+      setError((err as { message?: string })?.message || 'Invalid email or password. Please check your credentials and try again.');
     } finally {
       setIsLoading(false);
     }
@@ -93,8 +93,8 @@ export const AuthModal: React.FC = () => {
         setAuth(res.user, res.tokens.accessToken);
         resetForm();
       }, 500);
-    } catch (err: any) {
-      setError(err?.message || 'Registration failed. Please check your details and try again.');
+    } catch (err: unknown) {
+      setError((err as { message?: string })?.message || 'Registration failed. Please check your details and try again.');
     } finally {
       setIsLoading(false);
     }

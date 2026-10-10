@@ -1,12 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/stores/auth.store';
 import { 
-  User, ShoppingBag, Calendar, ShoppingBasket, Store, Heart, 
-  MapPin, Bell, Ticket, HelpCircle, FileText, Shield, LogOut,
+  User, Store, 
   MessageSquare, HeadphonesIcon, Search, Package, RotateCcw, 
   CreditCard, ChevronRight, Phone, Mail, ShieldCheck, ArrowLeft
 } from 'lucide-react';
@@ -15,22 +12,13 @@ import { AccountSidebar } from '@/components/account/AccountSidebar';
 
 export function SupportClient() {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState('');
 
-  const formData = {
-    firstName: user?.fullName?.split(' ')[0] || 'Guest',
-    lastName: user?.fullName?.split(' ')[1] || 'User',
-    email: user?.email || 'guest@example.com',
-    mobileNumber: user?.phone ? `+91 ${user.phone}` : 'Sign in to access',
-  };
 
-  const handleSearch = async (e: React.FormEvent) => {
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+
+  const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!searchQuery.trim()) return;
-    
-    // TODO: Connect to backend API for searching help articles
-    console.log('Searching for:', searchQuery);
   };
 
   const QUICK_HELP = [
@@ -41,13 +29,19 @@ export function SupportClient() {
     { id: 'selling', icon: <Store className="w-5 h-5 text-rose-500" />, title: `Selling on\n${branding.appName}` },
   ];
 
-  const TOP_TOPICS = [
-    'How do I track my order?',
-    'How can I return or replace an item?',
-    'When will I get my refund?',
-    'How do I apply a coupon?',
-    'How do I update my address?',
+  const ALL_TOPICS = [
+    { id: '1', category: 'orders', title: 'How do I track my order?', desc: 'You can track your order in the Orders section.' },
+    { id: '2', category: 'returns', title: 'How can I return or replace an item?', desc: 'Go to your Orders, select the item and click Return/Replace.' },
+    { id: '3', category: 'payments', title: 'When will I get my refund?', desc: 'Refunds are processed within 5-7 business days.' },
+    { id: '4', category: 'payments', title: 'How do I apply a coupon?', desc: 'You can apply coupons at the checkout page.' },
+    { id: '5', category: 'account', title: 'How do I update my address?', desc: 'Go to Account > Address Book to update.' },
+    { id: '6', category: 'selling', title: `How to start selling on ${branding.appName}?`, desc: 'Visit our seller portal to register your store.' },
   ];
+
+  const filteredTopics = ALL_TOPICS.filter(t => 
+    (!activeCategory || t.category === activeCategory) &&
+    (t.title.toLowerCase().includes(searchQuery.toLowerCase()) || t.desc.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
 
   return (
     <div className="min-h-screen bg-[#ffffff] font-sans relative pb-24">
@@ -109,16 +103,28 @@ export function SupportClient() {
               </div>
             </form>
 
-            {/* Quick Help */}
             <div className="mt-4">
               <h3 className="text-[14px] font-extrabold text-[#192168] mb-4">Quick Help</h3>
               <div className="flex overflow-x-auto no-scrollbar gap-4 pb-2 -mx-4 px-4 lg:mx-0 lg:px-0">
+                <button 
+                  onClick={() => setActiveCategory(null)}
+                  className="flex flex-col items-center text-center group shrink-0 w-[60px]"
+                >
+                  <div className={`w-12 h-12 rounded-full border shadow-sm flex items-center justify-center mb-2 transition-transform group-hover:scale-105 ${!activeCategory ? 'bg-[#1668F6] border-[#1668F6] text-white' : 'bg-white border-surface-200'}`}>
+                    <Search className={`w-5 h-5 ${!activeCategory ? 'text-white' : 'text-surface-400'}`} />
+                  </div>
+                  <span className={`text-[9px] font-extrabold whitespace-pre-line leading-tight ${!activeCategory ? 'text-[#1668F6]' : 'text-[#192168]'}`}>All Topics</span>
+                </button>
                 {QUICK_HELP.map((item) => (
-                  <button key={item.id} className="flex flex-col items-center text-center group shrink-0 w-[60px]">
-                    <div className="w-12 h-12 bg-white rounded-full border border-surface-200 shadow-sm flex items-center justify-center mb-2 transition-transform group-hover:scale-105">
+                  <button 
+                    key={item.id} 
+                    onClick={() => setActiveCategory(activeCategory === item.id ? null : item.id)}
+                    className="flex flex-col items-center text-center group shrink-0 w-[60px]"
+                  >
+                    <div className={`w-12 h-12 rounded-full border shadow-sm flex items-center justify-center mb-2 transition-transform group-hover:scale-105 ${activeCategory === item.id ? 'bg-surface-50 border-[#1668F6]' : 'bg-white border-surface-200'}`}>
                       {item.icon}
                     </div>
-                    <span className="text-[9px] font-extrabold text-[#192168] whitespace-pre-line leading-tight">{item.title}</span>
+                    <span className={`text-[9px] font-extrabold whitespace-pre-line leading-tight ${activeCategory === item.id ? 'text-[#1668F6]' : 'text-[#192168]'}`}>{item.title}</span>
                   </button>
                 ))}
               </div>
@@ -127,16 +133,20 @@ export function SupportClient() {
             {/* Top Help Topics */}
             <div className="mt-4">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-[14px] font-extrabold text-[#192168]">Top Help Topics</h3>
-                <button className="text-[11px] font-bold text-[#1668F6]">View All</button>
+                <h3 className="text-[14px] font-extrabold text-[#192168]">Help Topics</h3>
               </div>
               <div className="bg-white rounded-2xl border border-surface-200 shadow-[0_2px_8px_rgb(0,0,0,0.04)] overflow-hidden flex flex-col">
-                {TOP_TOPICS.map((topic, idx) => (
-                  <button key={idx} className={`flex items-center justify-between p-4 hover:bg-surface-50 transition-colors text-left ${idx !== TOP_TOPICS.length - 1 ? 'border-b border-surface-100' : ''}`}>
-                    <span className="text-[12px] font-semibold text-[#192168]">{topic}</span>
-                    <ChevronRight className="w-4 h-4 text-surface-400" />
-                  </button>
-                ))}
+                {filteredTopics.length > 0 ? filteredTopics.map((topic, idx) => (
+                  <div key={topic.id} className={`flex flex-col p-4 text-left ${idx !== filteredTopics.length - 1 ? 'border-b border-surface-100' : ''}`}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[12px] font-semibold text-[#192168]">{topic.title}</span>
+                      <ChevronRight className="w-4 h-4 text-surface-400" />
+                    </div>
+                    <p className="text-[10px] text-surface-500">{topic.desc}</p>
+                  </div>
+                )) : (
+                  <div className="p-4 text-center text-surface-500 text-sm">No topics found.</div>
+                )}
               </div>
             </div>
 

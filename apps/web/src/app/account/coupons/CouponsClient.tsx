@@ -1,15 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/stores/auth.store';
 import { 
-  User, ShoppingBag, Calendar, ShoppingBasket, Store, Heart, 
-  MapPin, Bell, Ticket, HelpCircle, FileText, Shield, LogOut,
-  Search, Copy, ChevronDown, ChevronRight, Clock, MessageSquare, HeadphonesIcon, ArrowLeft
+  Ticket, Search, ChevronDown, Clock, ArrowLeft
 } from 'lucide-react';
-import { branding } from '@repo/shared-types';
 import { AccountSidebar } from '@/components/account/AccountSidebar';
 
 const TABS = [
@@ -109,16 +104,8 @@ const BANK_OFFERS = [
 
 export function CouponsClient() {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuthStore();
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-
-  const formData = {
-    firstName: user?.fullName?.split(' ')[0] || 'Guest',
-    lastName: user?.fullName?.split(' ')[1] || 'User',
-    email: user?.email || 'guest@example.com',
-    mobileNumber: user?.phone ? `+91 ${user.phone}` : 'Sign in to access',
-  };
 
   return (
     <div className="min-h-screen bg-[#ffffff] font-sans relative pb-24">
@@ -293,22 +280,3 @@ export function CouponsClient() {
   );
 }
 
-function MenuLink({ icon, title, href = "#", isActive = false }: { icon: React.ReactNode, title: string, href?: string, isActive?: boolean }) {
-  return (
-    <Link 
-      href={href} 
-      className={`flex items-center gap-3 px-5 py-2.5 transition-colors ${
-        isActive 
-          ? 'bg-blue-50/50 border-r-2 border-[#1668F6]' 
-          : 'hover:bg-surface-50 border-r-2 border-transparent'
-      }`}
-    >
-      <div className={isActive ? 'opacity-100' : 'opacity-70 group-hover:opacity-100 transition-opacity'}>
-        {icon}
-      </div>
-      <span className={`text-[13px] ${isActive ? 'font-bold text-[#1668F6]' : 'font-semibold text-[#192168]'}`}>
-        {title}
-      </span>
-    </Link>
-  );
-}
