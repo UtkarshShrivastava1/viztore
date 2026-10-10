@@ -33,6 +33,9 @@ timeline
 | **M2** | **End-to-End Simulation & Polish** | **Oct 16, 2026** | Full stress-test of walk-in billing + online order + OTP + WhatsApp | 🟡 **Ready for Dry-Run** |
 | **M3** | **Official Production Go-Live** | **Oct 19–20, 2026** | Cloud DNS cutover, staging sign-off, pilot merchant onboarding | 🟢 **On Track** |
 
+> **Canonical Release Specification:** See [`TIER_2_LAUNCH_SPECIFICATION.md`](file:///d:/UTKARSH/Live%20Projects/Vercel-live-Website/platform-root-vz/TIER_2_LAUNCH_SPECIFICATION.md) for the complete feature matrix across all user endpoints, architectural guarantees, and pilot onboarding scope.
+
+
 ---
 
 ## 2. Workstream 1: Backend Architecture & Reliability Hardening
