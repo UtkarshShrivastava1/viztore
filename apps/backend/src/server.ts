@@ -9,6 +9,7 @@ import { eventBus } from './shared/events/eventBus.js';
 import { EVENTS } from './shared/events/eventTypes.js';
 import { logger } from './shared/utils/logger.js';
 import { isOriginAllowed } from './shared/utils/cors.js';
+import { startOutboxWorker, stopOutboxWorker } from './shared/database/outboxWorker.js';
 
 
 async function bootstrap() {
@@ -124,14 +125,18 @@ async function bootstrap() {
       logger.info(`✨ Server running on http://localhost:${env.PORT}`);
       logger.info(`📡 API Version: /api/${env.API_VERSION}`);
       logger.info(`🌍 Environment: ${env.NODE_ENV}`);
+
+      // 6. Start Transactional Outbox Background Drain Worker (Rajesh Pillar 7)
+      startOutboxWorker({ intervalMs: 5000, batchSize: 25 });
     });
 
-    // 6. Graceful Shutdown Traps
+    // 7. Graceful Shutdown Traps
     const handleShutdown = async (signal: string) => {
       logger.info(`🛑 Received ${signal}. Initiating graceful shutdown...`);
 
       server.close(async () => {
         logger.info('🛑 HTTP server closed.');
+        await stopOutboxWorker();
         await disconnectRedis();
         await disconnectDatabase();
         logger.info('🛑 All connections terminated. Exiting process.');
