@@ -21,6 +21,8 @@ interface InvoiceRowActionMenuProps {
   anchorRect?: DOMRect | null;
   anchorPosition?: { top: number; right: number };
   onRecordPayment?: (invoice: IInvoice) => void;
+  onPrintThermal?: (invoice: IInvoice) => void;
+  onPrintA4?: (invoice: IInvoice) => void;
 }
 
 export const InvoiceRowActionMenu: React.FC<InvoiceRowActionMenuProps> = ({
@@ -30,6 +32,8 @@ export const InvoiceRowActionMenu: React.FC<InvoiceRowActionMenuProps> = ({
   anchorRect,
   anchorPosition,
   onRecordPayment,
+  onPrintThermal,
+  onPrintA4,
 }) => {
   const menuRef = useRef<HTMLDivElement>(null);
   const { duplicateInvoice, updateInvoiceStatus } = useBillingStore();
@@ -123,10 +127,18 @@ export const InvoiceRowActionMenu: React.FC<InvoiceRowActionMenuProps> = ({
     onClose();
     switch (action) {
       case 'download':
-        window.print();
+        if (onPrintThermal) {
+          onPrintThermal(invoice);
+        } else {
+          window.print();
+        }
         break;
       case 'open':
-        alert(`Opening ${invoice.invoiceNo} preview.`);
+        if (onPrintA4) {
+          onPrintA4(invoice);
+        } else {
+          window.print();
+        }
         break;
       case 'share':
         navigator.clipboard?.writeText?.(window.location.href);

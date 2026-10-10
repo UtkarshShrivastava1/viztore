@@ -8,6 +8,7 @@ import { CreateQuoteView } from '../components/billing/CreateQuoteView.js';
 import { BillingSettingsView } from '../components/billing/BillingSettingsView.js';
 import { CreateInvoiceModal } from '../components/billing/CreateInvoiceModal.js';
 import { BillingHeaderActions } from '../components/billing/BillingHeaderActions.js';
+import { CounterPOSView } from '../components/billing/CounterPOSView.js';
 
 export const BillingPage: React.FC = () => {
   const {
@@ -49,6 +50,7 @@ export const BillingPage: React.FC = () => {
     let subTabName = 'Estimates / Quotes';
     let actionName = '';
     if (activeView === 'create_quote') actionName = 'Create Estimate / Quote';
+    if (activeView === 'pos_counter') actionName = 'Counter POS Register';
 
     return (
       <div className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 mb-2">
@@ -68,9 +70,9 @@ export const BillingPage: React.FC = () => {
           onClick={() => setActiveView('list')}
           className={`${actionName ? 'hover:underline text-blue-600' : 'text-slate-800'}`}
         >
-          {subTabName}
+          {activeView === 'pos_counter' ? 'Counter POS' : subTabName}
         </button>
-        {actionName && (
+        {actionName && activeView !== 'pos_counter' && (
           <>
             <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
             <span className="text-slate-800">{actionName}</span>
@@ -120,6 +122,10 @@ export const BillingPage: React.FC = () => {
       )}
 
       {/* Sub-views routing */}
+      {activeView === 'pos_counter' && (
+        <CounterPOSView onBack={() => setActiveView('list')} />
+      )}
+
       {activeView === 'settings' && (
         <BillingSettingsView onBack={() => setActiveView('list')} />
       )}

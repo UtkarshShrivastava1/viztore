@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useBillingStore, IInvoice, InvoiceStatus } from '../../stores/billingStore.js';
 import { InvoiceRowActionMenu } from './InvoiceRowActionMenu.js';
+import { PrintReceiptModal } from './PrintReceiptModal.js';
 
 export const InvoicesTableView: React.FC = () => {
   const {
@@ -37,6 +38,8 @@ export const InvoicesTableView: React.FC = () => {
   const [activeMenuInvoiceId, setActiveMenuInvoiceId] = useState<string | null>(null);
   const [activeMenuAnchorRect, setActiveMenuAnchorRect] = useState<DOMRect | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [printModalInvoice, setPrintModalInvoice] = useState<IInvoice | null>(null);
+  const [printModalMode, setPrintModalMode] = useState<'thermal-80mm' | 'a4-tax-invoice'>('thermal-80mm');
 
   // Dynamic KPI calculations derived purely from live invoices array
   const { totalSales, paidTotal, outstandingTotal, overdueTotal } = useMemo(() => {
@@ -462,13 +465,12 @@ export const InvoicesTableView: React.FC = () => {
                       <div className="inline-flex items-center gap-1.5">
                         <button
                           type="button"
-                          onClick={() =>
-                            alert(
-                              `Previewing Invoice ${inv.invoiceNo} for ${inv.customerName}`
-                            )
-                          }
+                          onClick={() => {
+                            setPrintModalInvoice(inv);
+                            setPrintModalMode('a4-tax-invoice');
+                          }}
                           className="px-2 py-1 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors"
-                          title="View"
+                          title="View Tax Invoice"
                         >
                           <Eye className="w-3.5 h-3.5" />
                           <span>View</span>
@@ -476,9 +478,12 @@ export const InvoicesTableView: React.FC = () => {
 
                         <button
                           type="button"
-                          onClick={() => window.print()}
+                          onClick={() => {
+                            setPrintModalInvoice(inv);
+                            setPrintModalMode('thermal-80mm');
+                          }}
                           className="px-2 py-1 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors"
-                          title="Print"
+                          title="Print Receipt"
                         >
                           <Printer className="w-3.5 h-3.5" />
                           <span>Print</span>
@@ -518,6 +523,14 @@ export const InvoicesTableView: React.FC = () => {
                             invoice={inv}
                             isOpen={activeMenuInvoiceId === inv.id}
                             anchorRect={activeMenuInvoiceId === inv.id ? activeMenuAnchorRect : null}
+                            onPrintThermal={(invoice) => {
+                              setPrintModalInvoice(invoice);
+                              setPrintModalMode('thermal-80mm');
+                            }}
+                            onPrintA4={(invoice) => {
+                              setPrintModalInvoice(invoice);
+                              setPrintModalMode('a4-tax-invoice');
+                            }}
                             onClose={() => {
                               setActiveMenuInvoiceId(null);
                               setActiveMenuAnchorRect(null);
@@ -546,6 +559,14 @@ export const InvoicesTableView: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Printable Receipt & Tax Invoice Modal */}
+      <PrintReceiptModal
+        isOpen={Boolean(printModalInvoice)}
+        onClose={() => setPrintModalInvoice(null)}
+        invoice={printModalInvoice}
+        defaultMode={printModalMode}
+      />
     </div>
   );
 };
