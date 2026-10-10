@@ -257,29 +257,27 @@ export const QuotesTableView: React.FC<QuotesTableViewProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* 5 Top KPI Cards */}
+      {/* 5 Top KPI Cards Matching Purchases (Bills) Standard */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
         {kpiCards.map((card) => {
           const Icon = card.icon;
           return (
             <div
               key={card.id}
-              className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-2xs flex flex-col justify-between hover:shadow-xs transition-shadow duration-200"
+              className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-2xs hover:shadow-xs transition-shadow flex items-center gap-3.5"
             >
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-slate-600">{card.title}</span>
-                <div
-                  className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${card.iconBg} ${card.iconColor}`}
-                >
-                  <Icon className="w-4 h-4" />
-                </div>
+              <div
+                className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${card.iconBg} ${card.iconColor}`}
+              >
+                <Icon className="w-5 h-5" />
               </div>
 
-              <div className="mt-3">
-                <div className="text-2xl font-bold text-slate-900 tracking-tight leading-none">
+              <div className="min-w-0 flex-1">
+                <span className="text-[11px] font-semibold text-slate-500 block truncate">{card.title}</span>
+                <span className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate block">
                   {card.value}
-                </div>
-                <div className="flex items-center gap-1.5 mt-2 text-xs">
+                </span>
+                <div className="flex items-center gap-1 mt-0.5 text-[10px] truncate">
                   {card.isPositive ? (
                     <span className="font-semibold text-emerald-600 flex items-center">
                       &uarr; {card.change}
@@ -289,7 +287,7 @@ export const QuotesTableView: React.FC<QuotesTableViewProps> = ({
                       &darr; {card.change}
                     </span>
                   )}
-                  <span className="text-slate-400 font-normal">from last month</span>
+                  <span className="text-slate-400">vs last mo</span>
                 </div>
               </div>
             </div>
