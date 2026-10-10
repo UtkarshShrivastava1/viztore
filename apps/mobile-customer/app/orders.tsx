@@ -40,7 +40,7 @@ export default function OrdersScreen() {
 
   const orders = [
     {
-      id: '#VZT123456789',
+      id: '#ORD-123456789',
       date: '08 May 2024, 10:30 AM',
       status: 'Delivered',
       statusColor: '#16a34a',
@@ -52,7 +52,7 @@ export default function OrdersScreen() {
       btnText: 'Order Details'
     },
     {
-      id: '#VZT123456788',
+      id: '#ORD-123456788',
       date: '05 May 2024, 09:15 PM',
       status: 'To Be Delivered',
       statusColor: '#f59e0b',
@@ -64,7 +64,7 @@ export default function OrdersScreen() {
       btnText: 'Order Details'
     },
     {
-      id: '#VZT123456787',
+      id: '#ORD-123456787',
       date: '02 May 2024, 06:40 PM',
       status: 'Delivered',
       statusColor: '#16a34a',
@@ -76,7 +76,7 @@ export default function OrdersScreen() {
       btnText: 'Order Details'
     },
     {
-      id: '#VZT123456786',
+      id: '#ORD-123456786',
       date: '28 Apr 2024, 11:20 AM',
       status: 'Cancelled',
       statusColor: '#ef4444',
