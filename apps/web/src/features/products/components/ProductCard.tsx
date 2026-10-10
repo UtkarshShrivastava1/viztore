@@ -27,9 +27,9 @@ export function ProductCard({ product, badge }: ProductCardProps) {
     const firstVariant = product.variants?.[0];
     const rawStoreId = product.storeId;
     const storeId = typeof rawStoreId === 'object' && rawStoreId !== null
-      ? (rawStoreId as any)._id || String(rawStoreId)
+      ? (rawStoreId as { _id?: string })._id || String(rawStoreId)
       : String(rawStoreId || 'store-main');
-    const storeName = product.storeName || (typeof rawStoreId === 'object' && (rawStoreId as any)?.name) || 'Official Store';
+    const storeName = product.storeName || (typeof rawStoreId === 'object' && (rawStoreId as { name?: string })?.name) || 'Official Store';
 
     const success = addItem({
       productId: product._id,

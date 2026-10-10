@@ -71,7 +71,7 @@ export function CheckoutView({ storeId }: { storeId?: string }) {
   );
 }
 
-function TrustBadge({ icon, title, desc }: any) {
+function TrustBadge({ icon, title, desc }: { icon: React.ReactNode; title: string; desc: string }) {
   return (
     <div className="flex flex-col items-center text-center gap-1">
       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm border border-gray-100">

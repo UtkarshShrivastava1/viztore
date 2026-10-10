@@ -69,7 +69,7 @@ export function FashionStores() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
           {stores.map((store) => (
             <StoreCard
-              key={store._id || (store as any).id}
+              key={store._id || (store as { id?: string }).id}
               store={store}
               className="w-full flex-shrink-1"
             />

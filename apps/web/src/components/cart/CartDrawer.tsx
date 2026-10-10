@@ -14,9 +14,6 @@ export const CartDrawer: React.FC = () => {
     removeItem,
     clearCart,
     clearStoreCart,
-    getSubtotal,
-    getTax,
-    getShippingFee,
     getGrandTotal,
     getItemCount,
   } = useCartStore();

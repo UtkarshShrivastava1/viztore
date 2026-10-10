@@ -1,23 +1,17 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import { ChevronRight, Sparkles, TrendingUp } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
 import { TrustValuePropsBar } from '@/features/home/components/TrustValuePropsBar';
 import { ExploreStoresGrid } from '@/features/home/components/ExploreStoresGrid';
 import { StoresNearYouRail } from '@/features/home/components/StoresNearYouRail';
 import { BestDealsGrid } from '@/features/home/components/BestDealsGrid';
-import { useLocationStore } from '@/stores/location.store';
-import { useFeaturedProducts } from '@/hooks/useFeaturedProducts';
-import HomeHeroBanner from '@/features/home/components/HomeHeroBanner';
+
 import { HeroBannerCarousel } from '@/features/home/components/HeroBannerCarousel';
 
 export default function HomePage() {
-  const { address } = useLocationStore();
-  const [activeCategory, setActiveCategory] = useState('all');
-
-
   return (
     <div className="min-h-screen bg-white">
       <main className="mx-auto space-y-6 sm:space-y-8 pb-24 md:pb-12 bg-surface-50 min-h-screen">

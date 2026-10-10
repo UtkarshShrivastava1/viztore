@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ChevronDown, SlidersHorizontal, Check } from 'lucide-react';
+import { SlidersHorizontal } from 'lucide-react';
 
 const CATEGORIES = ['All Deals', 'Electronics', 'Fashion', 'Home & Kitchen', 'Beauty', 'Groceries'];
 const PRICE_RANGES = [

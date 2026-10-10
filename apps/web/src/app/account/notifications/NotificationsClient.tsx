@@ -1,14 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth.store';
 import { 
-  Bell, Briefcase, Tag, Heart, Truck, Star, Shield, Store, Megaphone,
-  ArrowLeft, CheckCircle2, Loader2
+  Bell, Briefcase, Tag,
+  ArrowLeft, Loader2
 } from 'lucide-react';
-import { branding } from '@repo/shared-types';
 import { AccountSidebar } from '@/components/account/AccountSidebar';
 import { notificationsApi, type ICustomerNotification } from '@/lib/api/notifications.js';
 
@@ -21,7 +19,7 @@ const TABS = [
 
 export function NotificationsClient() {
   const router = useRouter();
-  const { user, isAuthenticated, openAuthModal } = useAuthStore();
+  const { isAuthenticated, openAuthModal } = useAuthStore();
   const [activeTab, setActiveTab] = useState('all');
   const [notifications, setNotifications] = useState<ICustomerNotification[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);

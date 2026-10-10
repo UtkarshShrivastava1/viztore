@@ -8,7 +8,7 @@ export interface ICustomerNotification {
   category: 'order' | 'inventory' | 'system' | 'promo';
   title: string;
   message: string;
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
   isRead: boolean;
   createdAt: string;
 }

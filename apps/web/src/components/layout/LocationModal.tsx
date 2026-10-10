@@ -127,6 +127,26 @@ export const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose })
         </div>
 
         <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
+          {/* Map Pin-Drop Preview */}
+          <div className="relative w-full h-32 rounded-2xl overflow-hidden border border-surface-200 cursor-pointer group" onClick={handleDetectGPS}>
+            <div className="absolute inset-0 bg-blue-50/50">
+              <svg viewBox="0 0 700 220" preserveAspectRatio="xMidYMid slice" className="h-full w-full opacity-60">
+                <path d="M-10 160 C 120 120, 220 190, 340 140 S 560 90, 710 130" stroke="#C7DCF7" strokeWidth="10" fill="none" />
+                <g stroke="#FFFFFF" strokeWidth="2.2" opacity="0.85">
+                  <path d="M0 20 L700 35" /><path d="M0 55 L700 45" /><path d="M40 0 L60 220" /><path d="M120 0 L100 220" />
+                </g>
+              </svg>
+            </div>
+            <div className="absolute inset-0 flex items-center justify-center">
+               <div className="w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center group-hover:-translate-y-1 transition-transform">
+                  <MapPin className="w-5 h-5 text-[#1668F6]" fill="#1668F6" fillOpacity={0.2} />
+               </div>
+            </div>
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-white/90 px-3 py-1 rounded-full shadow-sm">
+               <span className="text-[10px] font-bold text-[#192168]">Click to pin drop</span>
+            </div>
+          </div>
+
           {/* GPS Auto-Detect Button */}
           <div>
             <button
@@ -240,7 +260,7 @@ export const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose })
                   >
                     <span className="flex items-center gap-1.5">
                       {hub.name}
-                      {(hub as any).isLaunch && (
+                      {'isLaunch' in hub && hub.isLaunch && (
                         <span className={`text-[8px] px-1.5 py-0.2 rounded-full font-bold uppercase tracking-wider ${
                           isSelected ? 'bg-white/20 text-white' : 'bg-emerald-50 text-emerald-600 border border-emerald-200'
                         }`}>

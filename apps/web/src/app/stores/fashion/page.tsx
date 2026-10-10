@@ -77,7 +77,7 @@ export default function FashionStoresPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {stores.map((store) => (
               <StoreCard
-                key={store._id || (store as any).id}
+                key={store._id || (store as { id?: string }).id}
                 store={store}
                 className="w-full flex-shrink-1"
               />

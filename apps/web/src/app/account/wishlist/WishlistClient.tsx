@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -9,36 +9,30 @@ import {
   Store,
   ShoppingBag,
   ArrowLeft,
-  Loader2,
-  ChevronDown
+  Loader2
 } from 'lucide-react';
-import { useAuthStore } from '@/stores/auth.store';
 import { useCartStore } from '@/stores/cart.store';
-import { useWishlistFlyoutStore } from '@/stores/wishlistFlyoutStore';
+import { useWishlistFlyoutStore, IWishlistFlyoutItem } from '@/stores/wishlistFlyoutStore';
 import { AccountSidebar } from '@/components/account/AccountSidebar';
-import { catalogApi } from '@/lib/api/catalog.js';
 
 export function WishlistClient() {
   const router = useRouter();
-  const { user, isAuthenticated, openAuthModal } = useAuthStore();
   const { addItem: addToCart } = useCartStore();
   const { items: wishlistStoreItems, removeItem } = useWishlistFlyoutStore();
-  
-  const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const isLoading = false;
 
   // If user has items in their client wishlist store, use those.
   // Otherwise, if empty, we provide a clean discovery experience.
   const hasItems = wishlistStoreItems.length > 0;
 
-  const handleAddToCart = (item: any) => {
+  const handleAddToCart = (item: IWishlistFlyoutItem) => {
     addToCart({
       productId: item.productId || item.id,
-      name: item.title || item.name,
+      name: item.title,
       unitPrice: item.price || 0,
-      storeId: item.storeId || 'store-1',
+      storeId: 'store-1', // Default store ID since it's not in IWishlistFlyoutItem
       storeName: item.storeName || 'Verified Store Partner',
-      imageUrl: item.imageUrl || item.image || '',
+      imageUrl: item.imageUrl || '',
     });
   };
 

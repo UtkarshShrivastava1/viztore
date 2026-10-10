@@ -7,7 +7,7 @@ import { StoreCardSkeleton } from '@/components/ui/Skeleton';
 import { useNearbyStores } from '@/hooks/useNearbyStores';
 import { useAllStores } from '@/hooks/useAllStores';
 import { useLocationStore } from '@/stores/location.store';
-import { MapPin, Search, Grid, List, CheckCircle2, Navigation, TrendingUp, Star, Clock, Tag, LayoutGrid, Truck, ShieldCheck, BadgePercent } from 'lucide-react';
+import { MapPin, Search, Grid, List, CheckCircle2, Star, Clock, Tag, LayoutGrid, Truck, ShieldCheck } from 'lucide-react';
 import { StoreCategory } from '@repo/shared-types';
 import { StoreCard } from '@/features/stores/components/StoreCard';
 
@@ -35,7 +35,7 @@ export default function StoresPage({
   const detectedState = addressParts[1]?.trim() || "India";
   const city = (searchParams?.city as string) || detectedCity;
   const state = (searchParams?.state as string) || detectedState;
-  const [activeCategory, setActiveCategory] = useState<StoreCategory | undefined>(undefined);
+  const [activeCategory] = useState<StoreCategory | undefined>(undefined);
   const { data: nearbyStores, isLoading: nearbyLoading } = useNearbyStores(lng, lat, 10, activeCategory);
   const { data: allStoresResponse, isLoading: allLoading } = useAllStores({ category: activeCategory });
 

@@ -1,5 +1,4 @@
 import React from 'react';
-import Link from 'next/link';
 import { ShieldCheck, RotateCcw, Award } from 'lucide-react';
 import { CategoryHeroBanner } from '@/features/catalog/CategoryHeroBanner';
 import { ShopByCategoryGrid } from '@/features/catalog/ShopByCategoryGrid';
