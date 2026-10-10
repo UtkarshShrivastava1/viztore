@@ -43,6 +43,26 @@ export const storeModule: IStoreFacade = {
       return false;
     }
   },
+  getStoreProfile: async (id: string) => {
+    try {
+      const store = await storeService.getStoreById(id);
+      if (!store) return null;
+      const street = store.address?.street || '';
+      const city = store.address?.city || '';
+      const state = store.address?.state || '';
+      const pincode = store.address?.pincode || '';
+      const addressParts = [street, city, state, pincode].filter(Boolean);
+      return {
+        id: store._id,
+        name: store.name,
+        phone: store.phone || '',
+        address: addressParts.join(', '),
+        gstin: store.legalDetails?.gstin,
+      };
+    } catch {
+      return null;
+    }
+  },
 };
 
 export { createStoreModule, storeService };

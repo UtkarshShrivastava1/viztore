@@ -11,6 +11,7 @@ import {
   validateCreateQuote,
   validateQuoteQuery,
   validateUpdateBillingSettings,
+  validateCreatePOSSale,
 } from './billing.validation.js';
 
 export function createBillingRouter(guard = authGuard): Router {
@@ -40,6 +41,15 @@ export function createBillingRouter(guard = authGuard): Router {
   // Billing & Invoicing Preferences (5.3.png)
   router.get('/settings', billingController.getSettings);
   router.put('/settings', validateUpdateBillingSettings, billingController.updateSettings);
+
+  // High-Speed POS Counter Sale & ESC/POS Receipt (5.4.png)
+  router.post(
+    '/pos/sale',
+    idempotencyMiddleware({ ttlSeconds: 120 }),
+    validateCreatePOSSale,
+    billingController.createPOSSale,
+  );
+  router.get('/pos/last-receipt', billingController.getLastReceipt);
 
   return router;
 }
