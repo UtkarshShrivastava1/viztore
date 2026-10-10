@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, TextInput } from 'react-native';
 import { ChevronLeft, Search, Package, RotateCcw, CreditCard, User, Store, ChevronRight, MessageCircle, PhoneCall, Mail, ShieldCheck } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
+import { branding } from '@repo/shared-types';
 
 export default function HelpSupportScreen() {
   const router = useRouter();
@@ -11,7 +12,7 @@ export default function HelpSupportScreen() {
     { id: 2, title: 'Returns & Refunds', icon: RotateCcw, color: '#f59e0b' },
     { id: 3, title: 'Payments & Offers', icon: CreditCard, color: '#10b981' },
     { id: 4, title: 'Account & Profile', icon: User, color: '#8b5cf6' },
-    { id: 5, title: 'Selling on Viztore', icon: Store, color: '#ec4899' },
+    { id: 5, title: 'Selling on {branding.appName}', icon: Store, color: '#ec4899' },
   ];
 
   const topTopics = [
@@ -128,7 +129,7 @@ export default function HelpSupportScreen() {
                 <ChevronRight size={16} color="#0f172a" />
               </View>
               <Text style={styles.contactDesc}>Drop us an email and we'll get back to you</Text>
-              <Text style={[styles.contactInfo, { color: '#3b82f6' }]}>support@viztore.com</Text>
+              <Text style={[styles.contactInfo, { color: '#3b82f6' }]}>{branding.supportEmail}</Text>
             </TouchableOpacity>
           </ScrollView>
         </View>

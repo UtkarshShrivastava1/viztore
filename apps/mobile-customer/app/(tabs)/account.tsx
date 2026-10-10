@@ -47,7 +47,7 @@ export default function AccountScreen() {
     { label: 'Notifications', subLabel: 'View your notifications and updates', icon: Bell, iconColor: '#f59e0b', href: '/notifications' },
     { label: 'Wishlist', subLabel: 'View your favourite items', icon: Heart, iconColor: '#ef4444', href: '/wishlist' },
     { label: 'Coupons & Offers', subLabel: 'View available offers and discounts', icon: Tag, iconColor: '#22c55e', href: '/coupons' },
-    { label: `Sell on ${branding.appName}`, subLabel: 'Start selling and grow your business', icon: Store, iconColor: '#3b82f6', isPromo: true, href: '/sell-on-viztore' },
+    { label: `Sell on ${branding.appName}`, subLabel: 'Start selling and grow your business', icon: Store, iconColor: '#3b82f6', isPromo: true, href: '/sell' },
     { label: 'Feedback', subLabel: 'Share your feedback with us', icon: MessageSquare, iconColor: '#f59e0b', href: '/feedback' },
     { label: 'Help & Support', subLabel: 'Get help or raise a ticket', icon: HeadphonesIcon, iconColor: '#f97316', href: '/help-support' },
     { label: 'Privacy Policy', subLabel: 'Read our privacy policy', icon: ShieldCheck, iconColor: '#3b82f6', href: '/privacy-policy' },

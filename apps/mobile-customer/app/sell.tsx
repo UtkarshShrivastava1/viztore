@@ -27,7 +27,7 @@ import {
 import { useRouter } from 'expo-router';
 import { branding } from '@repo/shared-types';
 
-export default function SellOnViztoreScreen() {
+export default function SellOnScreen() {
   const router = useRouter();
 
   return (
@@ -64,7 +64,7 @@ export default function SellOnViztoreScreen() {
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           {/* Hero Section */}
           <View style={styles.heroSection}>
-            <Text style={styles.heroTitle}>Sell on Viztore</Text>
+            <Text style={styles.heroTitle}>Sell on {branding.appName}</Text>
             <Text style={styles.heroSubtitle}>Start selling and grow your business with India's trusted local marketplace</Text>
             {/* Placeholder for illustration */}
             <View style={styles.illustrationPlaceholder} />
@@ -76,7 +76,7 @@ export default function SellOnViztoreScreen() {
               <Rocket size={24} color="#22c55e" />
             </View>
             <View style={styles.ctaTextWrap}>
-              <Text style={styles.ctaTitle}>Grow your business with Viztore</Text>
+              <Text style={styles.ctaTitle}>Grow your business with {branding.appName}</Text>
               <Text style={styles.ctaSubtitle}>Reach more local customers and boost your sales</Text>
             </View>
             <TouchableOpacity style={styles.ctaBtn}>
@@ -87,7 +87,7 @@ export default function SellOnViztoreScreen() {
 
           {/* Why Sell */}
           <View style={styles.sectionBlock}>
-            <Text style={styles.sectionTitle}>Why sell on Viztore?</Text>
+            <Text style={styles.sectionTitle}>Why sell on {branding.appName}?</Text>
             <View style={styles.featuresGrid}>
               <View style={styles.featureItem}>
                 <View style={[styles.featureIconWrap, {backgroundColor: '#eff6ff'}]}>
