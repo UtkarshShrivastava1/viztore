@@ -27,7 +27,7 @@ import {
 import { useRouter } from 'expo-router';
 import { branding } from '@repo/shared-types';
 
-export default function SellOn{branding.appName}Screen() {
+export default function SellOnScreen() {
   const router = useRouter();
 
   return (
