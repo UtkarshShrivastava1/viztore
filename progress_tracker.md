@@ -113,8 +113,11 @@ Every online order placed through `apps/web` generates an authoritative, complia
      - Structured Winston JSON logging with `correlationId` tracking.
      - Transactional Outbox integration (`appendOutboxEvent`) for billing domain events.
    - **Automated Verification**: **97/97 unit & integration tests passing** across 15 test suites. Monorepo builds cleanly in 57s.
-2. **Real-Time Sound & Push Order Alerts**:
-   - Connect `@socket.io/redis-adapter` to trigger an instant audio chime on the merchant's screen when an order arrives.
+2. **Real-Time Sound & Push Order Alerts (DELIVERED ✅)**:
+   - Built standalone Web Audio API harmonic 2-tone melodic chime engine (`audioAlert.ts`) generating crystalline D5 ➔ A5 arrival chimes without external audio assets.
+   - Connected `socket.io-client` in `apps/merchant` (`socket.ts`) joining `store:${storeId}` room to receive backend `order.placed` dispatches.
+   - Mounted global `LiveOrderSocketListener.tsx` in `App.tsx` displaying interactive amber alert toast with 1-click order navigation.
+   - Integrated volume mute toggle and interactive "Test Sound" button in `LiveOrderAlerts.tsx`.
 3. **Pilot Merchant Onboarding (Soft Launch)**:
    - Target 5–10 physical brick-and-mortar shops within a compact 3–4km delivery cluster.
    - Free onboarding for beta testing.
@@ -241,5 +244,10 @@ Every online order placed through `apps/web` generates an authoritative, complia
   - Automatic registration: submitting an invoice or quote auto-saves new customers to the merchant's customer directory (`active` status) for future instant lookup.
   - Integrated comprehensive 36 Indian States & UTs directory with Chhattisgarh as the operational launch default across billing customer state selection.
 - [x] **Abhay Task 9 (Shell Controls & Storefront Merchandising Suite - 10 Screens) — Merged via PR #14 (commit `eac4c32`) 🟢** (`feature/abhay-shell-storefront-merchandising`, task brief: [`abhay_shell_storefront_mockup_task.md`](file:///C:/Users/utkar/.gemini/antigravity-ide/brain/6097e2b9-e42e-4d96-94a7-763a7ca8993f/abhay_shell_storefront_mockup_task.md))
+- [x] Real-Time Socket.io Audible Order Alert Chime & Live Toast Engine (`apps/merchant`):
+  - Web Audio API harmonic 2-tone chime engine (`audioAlert.ts`) generating D5 (587Hz) ➔ A5 (880Hz) arrival chimes without external media dependencies.
+  - Connected `socket.io-client` in `socket.ts` joining `store:${storeId}` room to receive backend `order.placed` dispatches.
+  - Global `LiveOrderSocketListener.tsx` mounted across all authenticated views in `App.tsx` with auto-dismissing amber toast and 1-click order navigation.
+  - Sound test button and mute toggle integrated in `LiveOrderAlerts.tsx`.
 
 

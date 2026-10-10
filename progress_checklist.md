@@ -9,11 +9,11 @@
 | Functional Flow | Tier 1 (Core Launch — Target: Sept 22) | Tier 2 (Pilot Operations — Mid-to-Late Oct) | Tier 3 (Enterprise Accounting & Native App — Nov) |
 |---|---|---|---|
 | **Online Order & Checkout** | `[x]` Single-store cart, address book, checkout, `POST /orders` | `[ ]` Real-time live order tracking map & ETA | `[ ]` One-tap wallet checkout & saved cards |
-| **Merchant Order Processing**| `[x]` 7-tab pipeline: New Orders ➔ Ready to Ship (`PACKED`) ➔ Shipped ➔ Delivered | `[ ]` Socket.io real-time order sound alerts | `[ ]` Automated kitchen display / printer dispatch |
+| **Merchant Order Processing**| `[x]` 7-tab pipeline: New Orders ➔ Ready to Ship (`PACKED`) ➔ Shipped ➔ Delivered | `[x]` Socket.io real-time order sound alerts & melodic chime | `[ ]` Automated kitchen display / printer dispatch |
 | **Delivery Coordination** | `[x]` WhatsApp dispatch text + 1-click deep link + 4-digit OTP | `[ ]` On-ground pilot rider fleet execution (5–10 stores) | `[ ]` Automated pooled rider matching algorithm |
 | **Billing & Invoicing** | `[x]` **Online Purchase Tax Invoice** (`INV-ORD-xxxxx`), Customer "Download Bill", Merchant "Print Bill" | `[x]` **Basic In-House Retail Billing**: Manual counter sales, basic tax invoices, estimates (`5.0`–`5.6`), real-time stock sync | `[ ]` **Enterprise Zoho Books Accounting**: Credit/Debit notes, GSTR-1 ledgers, multi-series |
 | **Merchant Store Profile** | `[x]` Dedicated `register.<domain>` 6-step flow, Leaflet pin | `[ ]` Onboarding 5–10 pilot local shops (free beta) | `[ ]` Multi-outlet franchise management & advanced RBAC |
-| **Product & Inventory** | `[x]` Full catalog wizard, live inventory, adjust drawers | `[ ]` Live stock synchronization between store & online | `[ ]` Multi-warehouse inventory, supplier purchase orders |
+| **Product & Inventory** | `[x]` Full catalog wizard, live inventory, adjust drawers | `[x]` Live stock synchronization between store & online | `[ ]` Multi-warehouse inventory, supplier purchase orders |
 | **Client Platforms** | `[x]` Responsive Customer Web (`Next.js 14`) + Merchant Panel (`Vite`) | `[ ]` Desktop/Tablet POS counter mode | `[ ]` Customer Native Mobile App (`React Native / Expo`) |
 | **Financial Settlements** | `[x]` Order breakdown, delivery fee, payment mode (UPI/COD) | `[ ]` Basic store cash drawer reconciliation | `[ ]` Automated T+1 bank payouts & TDS 194-O ledger |
 
