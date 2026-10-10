@@ -19,7 +19,7 @@
 | ↳ **Backend Architecture & APIs** | 30% | `[████████████████████]` | **100%** | 🟢 Live on Render | `https://viztore.onrender.com` Healthy |
 | ↳ **Merchant & Admin Panel** | 25% | `[████████████████████]` | **100%** | 🟢 Complete Suite | All 7/7 Modules & Settings Merged (`b92a159`) |
 | ↳ **Customer Web Storefront** | 25% | `[████████████████████]` | **100%** | 🟢 Storefront & Cart Engine | All 4/4 Modular Suites Merged (`e942cc9`) |
-| ↳ **Production Readiness & DevOps** | 20% | `[████████████████████]` | **100%** | 🟢 Staging Live | 94/94 Tests Green, Monorepo Clean Build |
+| ↳ **Production Readiness & DevOps** | 20% | `[████████████████████]` | **100%** | 🟢 Staging Live | 97/97 Tests Green, Monorepo Clean Build |
 | **Total Full-Platform Scope** (Phases 1–7) | — | `[█████████████████░░░]` | **88%** | ⚪ Roadmap Reserved | Customer Mobile App (Phase 7 / Tier 3) |
 
 > **Auto-Update Invariant**: This progress bar is recalculated and updated dynamically on every task assignment, milestone delivery, and PR merge per `.agents/rules/progress-tracking.md`.
@@ -112,7 +112,7 @@ Every online order placed through `apps/web` generates an authoritative, complia
      - Bounded MongoDB connection pool (`maxPoolSize: 25`, `minPoolSize: 5`).
      - Structured Winston JSON logging with `correlationId` tracking.
      - Transactional Outbox integration (`appendOutboxEvent`) for billing domain events.
-   - **Automated Verification**: **94/94 unit & integration tests passing** across 15 test suites. Monorepo builds cleanly in 57s.
+   - **Automated Verification**: **97/97 unit & integration tests passing** across 15 test suites. Monorepo builds cleanly in 57s.
 2. **Real-Time Sound & Push Order Alerts**:
    - Connect `@socket.io/redis-adapter` to trigger an instant audio chime on the merchant's screen when an order arrives.
 3. **Pilot Merchant Onboarding (Soft Launch)**:
