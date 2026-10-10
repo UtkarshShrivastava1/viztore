@@ -66,23 +66,21 @@ export const StockHistoryKPICards: React.FC = () => {
         return (
           <div
             key={c.id}
-            className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-2xs flex flex-col justify-between hover:shadow-xs transition-shadow duration-200"
+            className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-2xs flex items-center gap-3.5 hover:shadow-xs transition-shadow duration-200"
           >
-            <div className="flex items-start justify-between">
-              <span className="text-xs font-semibold text-slate-500 leading-tight">
-                {c.title}
-              </span>
-              <div className={`p-2 rounded-xl shrink-0 ${c.iconBg}`}>
-                <Icon className="w-4 h-4" />
-              </div>
+            <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${c.iconBg}`}>
+              <Icon className="w-5 h-5" />
             </div>
 
-            <div className="mt-2.5">
-              <div className={`text-2xl font-black tracking-tight leading-none ${c.valueColor || 'text-slate-900'}`}>
+            <div className="min-w-0">
+              <span className="text-[11px] font-semibold text-slate-500 block truncate">
+                {c.title}
+              </span>
+              <div className={`text-lg font-black tracking-tight mt-0.5 truncate ${c.valueColor || 'text-slate-900'}`}>
                 {c.value}
               </div>
               {c.subtitle && (
-                <div className="text-[11px] font-medium text-slate-400 mt-2">
+                <div className="text-[10px] font-medium text-slate-400 mt-0.5 truncate">
                   {c.subtitle}
                 </div>
               )}

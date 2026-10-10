@@ -12,6 +12,8 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock.js';
+
 interface PurchaseDetailsDrawerProps {
   purchase: any | null;
   isOpen: boolean;
@@ -25,6 +27,8 @@ export const PurchaseDetailsDrawer: React.FC<PurchaseDetailsDrawerProps> = ({
   onClose,
   onEdit,
 }) => {
+  useBodyScrollLock(isOpen, onClose);
+
   const [activeTab, setActiveTab] = useState<'overview' | 'items' | 'payments' | 'eway' | 'notes' | 'activity'>('overview');
 
   if (!isOpen || !purchase) return null;
@@ -226,7 +230,7 @@ export const PurchaseDetailsDrawer: React.FC<PurchaseDetailsDrawerProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-slate-100 bg-white flex items-center justify-between gap-3">
+        <div className="p-4 border-t border-slate-100 bg-white flex items-center justify-between gap-3 shrink-0">
           <button
             type="button"
             onClick={() => window.print()}

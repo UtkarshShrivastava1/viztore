@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useRef } from 'react';
 import {
   Download,
   ExternalLink,
@@ -12,11 +12,13 @@ import {
   XCircle,
 } from 'lucide-react';
 import { IInvoice, useBillingStore } from '../../stores/billingStore.js';
+import { TableActionPopover } from '../ui/TableActionPopover.js';
 
 interface InvoiceRowActionMenuProps {
   invoice: IInvoice;
   isOpen: boolean;
   onClose: () => void;
+  triggerRef?: React.RefObject<HTMLElement | null>;
   anchorPosition?: { top: number; right: number };
   onRecordPayment?: (invoice: IInvoice) => void;
 }
@@ -25,24 +27,12 @@ export const InvoiceRowActionMenu: React.FC<InvoiceRowActionMenuProps> = ({
   invoice,
   isOpen,
   onClose,
+  triggerRef,
   onRecordPayment,
 }) => {
-  const menuRef = useRef<HTMLDivElement>(null);
+  const fallbackRef = useRef<HTMLDivElement>(null);
+  const effectiveTriggerRef = triggerRef || fallbackRef;
   const { duplicateInvoice, updateInvoiceStatus } = useBillingStore();
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        onClose();
-      }
-    };
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -103,9 +93,11 @@ export const InvoiceRowActionMenu: React.FC<InvoiceRowActionMenuProps> = ({
   };
 
   return (
-    <div
-      ref={menuRef}
-      className="absolute right-0 top-full mt-1.5 w-52 bg-white rounded-xl shadow-xl border border-slate-200/90 py-1.5 z-40 animate-in fade-in zoom-in-95 duration-150 text-slate-700"
+    <TableActionPopover
+      isOpen={isOpen}
+      onClose={onClose}
+      triggerRef={effectiveTriggerRef}
+      className="w-52 text-slate-700"
     >
       <button
         onClick={() => handleAction('download')}
@@ -188,6 +180,6 @@ export const InvoiceRowActionMenu: React.FC<InvoiceRowActionMenuProps> = ({
         <XCircle className="w-3.5 h-3.5 text-rose-600" />
         <span>Cancel Invoice</span>
       </button>
-    </div>
+    </TableActionPopover>
   );
 };

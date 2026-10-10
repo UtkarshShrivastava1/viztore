@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import {
   FileText,
   ShoppingBag,
@@ -15,6 +15,36 @@ import {
 } from 'lucide-react';
 import { useBillingStore, IInvoice, InvoiceStatus } from '../../stores/billingStore.js';
 import { InvoiceRowActionMenu } from './InvoiceRowActionMenu.js';
+
+const InvoiceRowMoreAction: React.FC<{
+  invoice: IInvoice;
+  isOpen: boolean;
+  onToggle: () => void;
+  onClose: () => void;
+}> = ({ invoice, isOpen, onToggle, onClose }) => {
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  return (
+    <>
+      <button
+        ref={triggerRef}
+        type="button"
+        onClick={onToggle}
+        className={`px-2 py-1 rounded-lg text-xs font-semibold flex items-center gap-0.5 transition-colors ${
+          isOpen ? 'bg-slate-100 text-slate-900' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+        }`}
+      >
+        <span>More</span>
+        <ChevronDown className="w-3 h-3 text-slate-400" />
+      </button>
+      <InvoiceRowActionMenu
+        invoice={invoice}
+        isOpen={isOpen}
+        onClose={onClose}
+        triggerRef={triggerRef}
+      />
+    </>
+  );
+};
 
 export const InvoicesTableView: React.FC = () => {
   const {
@@ -456,27 +486,16 @@ export const InvoicesTableView: React.FC = () => {
                           <span>Print</span>
                         </button>
 
-                        <div className="relative">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setActiveMenuInvoiceId(
-                                activeMenuInvoiceId === inv.id ? null : inv.id
-                              )
-                            }
-                            className="px-2 py-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg text-xs font-semibold flex items-center gap-0.5 transition-colors"
-                          >
-                            <span>More</span>
-                            <ChevronDown className="w-3 h-3 text-slate-400" />
-                          </button>
-
-                          {/* 10-Action Dropdown Menu (5.1.png) */}
-                          <InvoiceRowActionMenu
-                            invoice={inv}
-                            isOpen={activeMenuInvoiceId === inv.id}
-                            onClose={() => setActiveMenuInvoiceId(null)}
-                          />
-                        </div>
+                        <InvoiceRowMoreAction
+                          invoice={inv}
+                          isOpen={activeMenuInvoiceId === inv.id}
+                          onToggle={() =>
+                            setActiveMenuInvoiceId(
+                              activeMenuInvoiceId === inv.id ? null : inv.id
+                            )
+                          }
+                          onClose={() => setActiveMenuInvoiceId(null)}
+                        />
                       </div>
                     </td>
                   </tr>

@@ -48,21 +48,21 @@ export const ReturnsKPIBar: React.FC = () => {
         return (
           <div
             key={idx}
-            className="p-3.5 bg-white rounded-xl border border-slate-200/80 shadow-2xs hover:shadow-xs transition-shadow flex items-center gap-3.5"
+            className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-xs transition-shadow flex items-center gap-3.5"
           >
             <div
-              className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${card.iconBg}`}
+              className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${card.iconBg}`}
             >
               <Icon className="w-5 h-5" />
             </div>
             <div className="min-w-0">
-              <span className="text-[11px] font-semibold text-slate-500 block leading-tight">
+              <span className="text-[11px] font-semibold text-slate-500 block leading-tight truncate">
                 {card.title}
               </span>
-              <h4 className="text-xl font-black text-slate-900 tracking-tight leading-tight mt-0.5">
+              <h4 className="text-lg font-black text-slate-900 tracking-tight leading-tight mt-0.5 truncate">
                 {card.value}
               </h4>
-              <span className="text-[10px] text-slate-400 block leading-tight mt-0.5">
+              <span className="text-[10px] text-slate-400 block leading-tight mt-0.5 truncate">
                 {card.subtext}
               </span>
             </div>
