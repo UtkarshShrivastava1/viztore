@@ -19,7 +19,7 @@
 | ↳ **Backend Architecture & APIs** | 30% | `[████████████████████]` | **100%** | 🟢 Live on Render | `https://viztore.onrender.com` Healthy |
 | ↳ **Merchant & Admin Panel** | 25% | `[████████████████████]` | **100%** | 🟢 Complete Suite | All 7/7 Modules & Settings Merged (`b92a159`) |
 | ↳ **Customer Web Storefront** | 25% | `[████████████████████]` | **100%** | 🟢 Storefront & Cart Engine | All 4/4 Modular Suites Merged (`e942cc9`) |
-| ↳ **Production Readiness & DevOps** | 20% | `[████████████████████]` | **100%** | 🟢 Staging Live | 108/108 Tests Green, Monorepo Clean Build |
+| ↳ **Production Readiness & DevOps** | 20% | `[████████████████████]` | **100%** | 🟢 Staging Live | 116/116 Tests Green, Monorepo Clean Build |
 | **Total Full-Platform Scope** (Phases 1–7) | — | `[█████████████████░░░]` | **88%** | ⚪ Roadmap Reserved | Customer Mobile App (Phase 7 / Tier 3) |
 
 > **Auto-Update Invariant**: This progress bar is recalculated and updated dynamically on every task assignment, milestone delivery, and PR merge per `.agents/rules/progress-tracking.md`.
@@ -255,6 +255,12 @@ Every online order placed through `apps/web` generates an authoritative, complia
   - Atomically reclaims catalog stock via `catalogFacade.restoreStock()`, emits `ORDER_CANCELLED` domain event, and writes Outbox event.
   - Wired into `server.ts` startup and graceful shutdown traps.
   - **108/108 unit & integration tests passing (17 suites)**; full monorepo clean build.
+- [x] Interactive OpenAPI / Swagger UI Documentation (Task B-03):
+  - Installed `swagger-ui-express` & `swagger-jsdoc` with TypeScript type declarations.
+  - Created OpenAPI 3.0 specification (`swagger.ts`) covering all 7 core modules (`/auth`, `/stores`, `/catalog`, `/orders`, `/billing`, `/delivery`, `/notifications`) and `/healthz`/`/readyz` probes.
+  - Mounted interactive Swagger UI at `/api-docs` and `/docs`, with raw JSON schema endpoints at `/api-docs.json` and `/docs.json`.
+  - Configured Helmet CSP to allow Swagger UI inline assets.
+  - **116/116 unit & integration tests passing (18 suites)**; full monorepo clean build.
 
 
 

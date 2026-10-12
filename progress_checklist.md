@@ -1,6 +1,6 @@
 # Viztore Platform — Implementation Checklist
 
-> **Overall Status:** Phase 1, Phase 2, Phase 3, Phase 4/5/6 Backend Complete, Tier 2 In-House Retail Billing & Stale Order Auto-Reclaim Complete | 108/108 Unit & Integration Tests Passing | Full Monorepo Clean Build | Docker & Staging Blueprints Ready
+> **Overall Status:** Phase 1, Phase 2, Phase 3, Phase 4/5/6 Backend Complete, Tier 2 In-House Retail Billing, Stale Order Auto-Reclaim & OpenAPI 3.0 Docs Complete | 116/116 Unit & Integration Tests Passing | Full Monorepo Clean Build | Docker & Staging Blueprints Ready
 
 ---
 
@@ -31,6 +31,7 @@
   - [x] Generic Zod validation middleware for body/query/params
   - [x] White-label `branding.config.ts` system with `NEXT_PUBLIC_*` fallback
   - [x] Dynamic CORS origin validator supporting `*.vercel.app` preview URLs and `ADDITIONAL_ALLOWED_ORIGINS`
+  - [x] Interactive OpenAPI 3.0 / Swagger UI documentation at `/api-docs` & `/docs`, with raw JSON schema at `/api-docs.json` (Task B-03)
 - [x] **Containerization & Staging Cloud Blueprints**
   - [x] Multi-stage root `Dockerfile` and `apps/backend/Dockerfile` (`node:20-alpine`, non-root user, curl healthcheck)
   - [x] Root `.dockerignore` ignoring node_modules, .git, .env, and large assets
