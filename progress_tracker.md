@@ -277,6 +277,9 @@ Every online order placed through `apps/web` generates an authoritative, complia
   - Vite production bundle code-splitting (`vite.config.ts` manualChunks for `leaflet` and `lucide-react`).
   - Enforced strict white-label compliance with brand-agnostic design tokens and preserved POS thermal (80mm) and A4 invoice printing workflows.
   - **120/120 unit & integration tests passing (19 suites)**; full monorepo clean build.
-
-
+- [ ] **Abhay Task 11 (Merchant Portal End-to-End Operational Lifecycle & Cross-Platform Simulation Suite) — Assigned 🟡** (Task Brief: [`abhay_merchant_e2e_qa_task.md`](file:///d:/UTKARSH/Live%20Projects/Vercel-live-Website/platform-root-vz/abhay_merchant_e2e_qa_task.md), Deliverable: `apps/merchant/MERCHANT_E2E_QA_AUDIT_REPORT.md`):
+  - Track A: Merchant registration, store setup, timings, logo/banner, catalog ingestion (2 products with barcodes/stock), inventory ledger verification, and storefront display section creation.
+  - Track B: Customer discovery on `:3000`, single-store cart validation, and order placement with Delivery OTP.
+  - Track C: Real-time Socket.io audio alert chime & toast arrival, 8-tab pipeline fulfillment with OTP handoff, in-house counter POS billing sale, and 80mm thermal receipt printing.
+  - Track D: Structured discrepancy matrix and QA audit sign-off.
 

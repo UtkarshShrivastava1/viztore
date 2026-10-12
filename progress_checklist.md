@@ -222,6 +222,7 @@
   - [x] Standardized horizontal KPI stats cards across Catalog, Inventory, Customers, Expenses, Returns, and Payouts
   - [x] Vite production bundle code-splitting (`vite.config.ts` manualChunks for `leaflet` and `lucide-react`)
   - [x] Enforced strict white-label compliance and preserved thermal (80mm) and A4 invoice printing workflows
+- [ ] **Merchant Portal End-to-End Operational Lifecycle & Cross-Platform Simulation Suite (TASK-ABH-11)** (Assigned 🟡): 4-track manual operational test covering registration, store setup, cataloging, cross-platform customer checkout on `:3000`, real-time alert chime, OTP delivery completion, walk-in counter POS sale, and thermal print audit
 - [ ] Merchant wallet financial ledger, payout triggers & automated bank settlements
 - [ ] Automated returns, exchange, RMA reverse logistics & refund credit note settlement
 - [ ] Merchant staff management & role-based access control (Manager, Cashier, Inventory Clerk)
