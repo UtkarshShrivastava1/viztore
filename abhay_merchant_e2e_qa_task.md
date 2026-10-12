@@ -204,49 +204,108 @@ sequenceDiagram
 
 ---
 
+## 📦 Mandatory Task Deliverable & Completion Gate
+
+> [!IMPORTANT]
+> ### 🛑 Strict Task Completion Gate
+> This simulation task is officially signed off and evaluated as **`COMPLETED` ONLY when a well-documented, exhaustive report is submitted in:**
+> 📁 **`apps/merchant/MERCHANT_E2E_QA_AUDIT_REPORT.md`**
+>
+> You are not writing code fixes in this task — your deliverable is a **flawless, professional engineering audit log** capturing every single defect, glitch, error, and inconsistency discovered across both the **frontend** and **backend**.
+
+### What Must Be Included in the Deliverable:
+1. **Frontend Bugs & Visual Glitches**: Layout clipping, popover edge overflow, z-index layering conflicts, unresponsive buttons, modal scroll locking glitches, broken responsive views at $\ge 1280\text{px}$ or on mobile viewports.
+2. **Backend API Errors & Validation Failures**: Failed HTTP endpoints (4xx / 5xx responses), Zod schema validation rejections, missing payload parameters, unhandled promise rejections, and terminal backend console exceptions.
+3. **Cross-Platform & State Inconsistencies**: Data discrepancies between frontend Zustand stores and MongoDB database records, stock count misalignments after checkout/billing, tax rounding discrepancies, out-of-order status pipeline jumps, or dropped Socket.io audio alerts/toasts.
+4. **Console Logs & Network Payloads**: Exact HTTP status codes, failing API URLs, console error messages, and steps to reproduce for every single issue.
+
+---
+
 ## 📝 Required Deliverable: QA Audit Report Format
 
 Document all simulation observations, screen checks, and bug tickets in:  
 **`apps/merchant/MERCHANT_E2E_QA_AUDIT_REPORT.md`**
 
-Use this exact structure:
+Use this exact comprehensive structure:
 
 ### 1. Executive Summary
-* Date of Simulation, Tester Name, Operating System, Browser & Version.
-* Tested Store Name, Seeded Customer Account, Generated Order ID.
-* Overall Merchant End-to-End Grade (out of 10).
+* **Date of Simulation:**
+* **Lead Tester:** Abhay ([`@Abhay0410`](https://github.com/Abhay0410))
+* **Operating System & Browser:** e.g. Windows 11, Chrome v128 (Desktop 1920×1080)
+* **Tested Store Identity:** Store Name, Store ID (`STR-...`), Pincode (`490006`)
+* **Simulated Customer Account:** Customer Name, Phone, Email
+* **Generated Transactions:** Online Order ID (`#ORD-xxxxx`), Counter POS Invoice (`INV-1001`)
+* **Overall System Health & Stability Score:** Rate out of 10
 
-### 2. Discovered Bug & UI Discrepancy Matrix
-Record every observed glitch, visual misalignment, or functional issue in this table:
+---
 
-| # | Screen / Route | Component / Modal | Description (Expected vs Actual) | Severity (`Critical` / `High` / `Medium` / `Low`) | Steps to Reproduce |
-|---|---|---|---|:---:|---|
-| 1 | `/billing` Invoices | `TableActionPopover` | Popover clips bottom edge on small screens | Low | Open more menu on last row of table |
-| 2 | `/store` Sections | Phone Chassis | Missing thumbnail preview for section header | Medium | Add custom banner to section |
+### 2. Discovered Defects & Inconsistency Matrices
 
-*Severity Guide:*
-- **Critical**: Broken order state machine, checkout crash, inventory desynchronization.
-- **High**: Non-functional button, broken OTP verification, missing invoice generation.
-- **Medium**: Layout overflow, modal scroll locking glitch, styling discrepancy.
-- **Low**: Micro-spacing inconsistency, cosmetic font padding, animation delay.
+#### 2A. Frontend UI/UX, Component & Interaction Bug Matrix
+Record every visual mismatch, popover clipping, responsiveness bug, or button glitch:
 
-### 3. Simulation Flow Checkpoints
-| Checkpoint | Status (`PASS` / `FAIL`) | Quantitative / Qualitative Notes |
-|---|:---:|---|
-| 1. Merchant Onboarding (4 Steps) | `PASS` | Registered store in Bhilai with valid GSTIN |
-| 2. Base Store Setup & Timings | `PASS` | Set store timings & banner logo |
-| 3. Catalog Ingestion & Barcodes | `PASS` | Added 2 products with 15 & 10 units |
-| 4. Customer Storefront Discovery | `PASS` | Found store on `:3000` via Bhilai location |
-| 5. Single-Store Cart Invariant | `PASS` | Clear-cart modal triggered when mixing stores |
-| 6. Checkout & OTP Generation | `PASS` | Placed order `#ORD-xxxxx`, OTP displayed |
-| 7. Socket.io Incoming Order Alert | `PASS` | Audio chime played & live toast displayed |
-| 8. 4-Step Order Status Pipeline | `PASS` | Accepted, packed, and verified via OTP |
-| 9. Atomic Inventory Auto-Deduction | `PASS` | Kurta stock decreased from 20 to 18 |
-| 10. Counter POS & Thermal Bill Print | `PASS` | Issued `INV-1001` and verified thermal preview |
-| 11. Multi-Module Financial Ledger | `PASS` | Wallet and Analytics updated |
+| # | Screen / Route | Component / Modal | Description (Expected vs Actual) | Viewport | Severity (`Critical` / `High` / `Medium` / `Low`) | Steps to Reproduce |
+|---|---|---|---|:---:|:---:|---|
+| FE-01 | `/billing` Invoices | `TableActionPopover` | Popover clips bottom viewport edge on last row | Desktop | Low | Click `More ▾` button on the bottom row of invoice table |
+| FE-02 | `/store` Sections | Phone Chassis Frame | Missing thumbnail preview for section header | Desktop | Medium | Add custom banner to section in AddEditSectionView |
 
-### 4. Top Recommended UI/UX Enhancements
-* Highlight 3–5 high-impact refinements to make the merchant portal experience even smoother for Indian local shopkeepers (e.g. quick keyboard shortcuts, faster search, thermal print auto-trigger).
+#### 2B. Backend API, HTTP Status & Validation Error Matrix
+Record every failing HTTP request, 4xx/5xx status code, malformed payload, or server error log:
+
+| # | API Endpoint | HTTP Method | Status Code | Error Message / Response Body | Severity (`Critical` / `High` / `Medium` / `Low`) | Steps to Reproduce & Payload |
+|---|---|:---:|:---:|---|:---:|---|
+| BE-01 | `/api/v1/orders/:id/status` | `PATCH` | `400 Bad Request` | Zod validation error on missing transition reason | High | Attempt status transition without passing optional notes |
+| BE-02 | `/api/v1/billing/invoices` | `POST` | `500 Internal Error` | MongoDB transaction timeout or OCC conflict | Critical | Fast double-click on "Charge & Issue Bill" |
+
+#### 2C. Cross-Platform Data, State & Inventory Inconsistency Matrix
+Record any discrepancy between UI state, backend database records, or real-time events:
+
+| # | Domain / Flow | Expected State | Actual State | Discrepancy Description | Severity |
+|---|---|---|---|---|:---:|
+| SYNC-01 | Catalog ➔ Inventory | Stock decrements by 2 | Stock remained unchanged | Inventory ledger did not reflect online order `#ORD-xxxxx` until manual page reload | High |
+| SYNC-02 | Real-Time Alert | Audio chime plays immediately | Audio silent on first order | Audio context required prior user interaction before playing sound | Medium |
+| SYNC-03 | Tax Computation | Round-off ₹0.48 added | Total truncated without round-off | Split CGST/SGST round-off math difference of ₹1 between cart and bill | Low |
+
+*Severity Rating Guide:*
+- **Critical (Blocker)**: Broken order state machine, checkout crash, inventory desynchronization, 500 API server crashes.
+- **High (Degraded)**: Non-functional button, broken OTP verification, missing invoice generation, unhandled 400 validation error.
+- **Medium (Inconvenient)**: Layout overflow, modal scroll locking glitch, styling discrepancy, missing loading spinner, required page reload for state sync.
+- **Low (Cosmetic)**: Micro-spacing inconsistency, cosmetic font padding, animation stutter, minor round-off penny discrepancy.
+
+---
+
+### 3. Simulation Flow Checkpoints Log
+Fill in this checklist with empirical observations from your live run:
+
+| Checkpoint | Target Flow | Status (`PASS` / `FAIL`) | Empirical Observations & Notes |
+|---|---|:---:|---|
+| 1 | Merchant Onboarding (4 Steps) | `PASS` | Registered store in Bhilai with valid GSTIN & PAN |
+| 2 | Base Store Setup & Timings | `PASS` | Set store timings & banner logo |
+| 3 | Catalog Ingestion & Barcodes | `PASS` | Added 2 products with 15 & 10 units with valid SKUs |
+| 4 | Storefront Section & Preview | `PASS` | Created "Festive Highlights" section with phone chassis |
+| 5 | Customer Storefront Discovery | `PASS` | Found store on `:3000` via Bhilai location (`490006`) |
+| 6 | Single-Store Cart Invariant | `PASS` | Prompted clear-cart modal when mixing stores |
+| 7 | Checkout & OTP Generation | `PASS` | Placed order `#ORD-xxxxx`, 4-digit OTP displayed |
+| 8 | Socket.io Incoming Order Alert | `PASS` | Audio chime played & live toast displayed on `:3001` |
+| 9 | 4-Step Order Status Pipeline | `PASS` | Accepted, packed, and verified via OTP |
+| 10 | Atomic Inventory Auto-Deduction | `PASS` | Kurta stock decreased from 20 to 18 in `/inventory` |
+| 11 | Counter POS & Thermal Bill Print | `PASS` | Issued `INV-1001` and verified thermal 80mm preview |
+| 12 | Multi-Module Financial Ledger | `PASS` | Wallet and Analytics updated with order amounts |
+
+---
+
+### 4. Top Recommended UI/UX & Architectural Enhancements
+* Highlight 3–5 high-impact refinements to make the merchant portal experience even smoother for Indian local shopkeepers (e.g. quick keyboard shortcuts for POS, faster catalog barcode search, automatic thermal print popup).
+
+---
+
+### 5. Final Deliverable Submission Checklist
+Before submitting your task PR or issue report, ensure:
+- [ ] `apps/merchant/MERCHANT_E2E_QA_AUDIT_REPORT.md` is committed and pushed.
+- [ ] Every bug has clear steps to reproduce and a severity rating.
+- [ ] Any observed backend console errors or failed network payloads are pasted with snippets.
+- [ ] All 12 checkpoints have an explicit `PASS` or `FAIL` status with notes.
+- [ ] Zero brand references ("Viztore", "VZT") were found, or all found instances are flagged in the bug matrix.
 
 ---
 
