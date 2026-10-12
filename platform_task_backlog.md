@@ -45,7 +45,7 @@ timeline
 | **B-01** | **Transactional Outbox Background Drain Worker** | `P0` | Medium | `outboxWorker.ts`, `server.ts` | **DONE ✅** | Background worker running every 5s with reentrancy guard, exponential backoff, and graceful shutdown. 102/102 tests green (`commit 95da029`). |
 | **B-02** | **Stale Order Auto-Timeout & Inventory Reclaim Engine** | `P0` | Medium | `order.service.ts`, `orderExpiryWorker.ts` | **DONE ✅** | Background worker running every 60s checking orders in `pending` >30 minutes. Auto-transitions to `CANCELLED`, restores stock atomically via `catalogFacade.restoreStock()`, and emits `ORDER_CANCELLED`. 108/108 tests green (`commit fc7e9bd`). |
 | **B-03** | **Interactive OpenAPI / Swagger UI Documentation** | `P1` | Low | `apps/backend/src/app.ts`, `swagger.ts` | **DONE ✅** | Mounted Swagger UI at `/api-docs` & `/docs` with OpenAPI 3.0 specification covering all 7 modules + system probes. Raw spec served at `/api-docs.json`. 116/116 tests green (`commit 56fd227`). |
-| **B-04** | **High-Security Brute-Force Rate Limiter** | `P1` | Low | `shared/middlewares/rateLimiter.ts`, `app.ts` | **QUEUED 🟡** | Dedicated strict rate limiting (5–10 requests per 15 minutes) on sensitive routes: `/auth/login`, `/auth/otp`, `/orders/:id/verify-otp` (prevents delivery OTP brute-force). |
+| **B-04** | **High-Security Brute-Force Rate Limiter** | `P1` | Low | `shared/middlewares/rateLimiter.ts`, `app.ts` | **DONE ✅** | Mounted dedicated strict rate limiting (5–10 requests per 15 minutes) on sensitive routes: `authRateLimiter` on `/auth/login`, `deliveryOtpRateLimiter` on `/orders/:id/verify-otp`, and `otpRateLimiter` factory. 120/120 tests green (`commit 45ecdc1`). |
 | **B-05** | **MongoDB Compound Indexes Audit & Boot Verification** | `P1` | Low | `database/indexes.ts`, `server.ts` | **QUEUED 🟡** | Validate and ensure ESR-optimized compound indexes on startup: `orders` `{ storeId: 1, status: 1, createdAt: -1 }`, `invoices` `{ storeId: 1, status: 1 }`, `catalog_products` `{ storeId: 1, isActive: 1 }`. |
 | **B-06** | **Receipt & Invoicing PDF / Thermal Print Server Endpoint** | `P2` | Medium | `billing.service.ts`, `order.service.ts` | **QUEUED ⚪** | Server-side HTML render endpoint for direct PDF download (`/api/v1/orders/:id/invoice/print`) matching customer account bill requirements. |
 
@@ -99,9 +99,9 @@ timeline
   ↓
 [COMPLETED] ➔ B-03: Interactive OpenAPI / Swagger UI (/api-docs)
   ↓
-[NOW] ➔ B-04: High-Security Brute-Force Rate Limiting (OTP & Auth)
+[COMPLETED] ➔ B-04: High-Security Brute-Force Rate Limiting (OTP & Auth)
   ↓
-[NEXT] ➔ T-01: Headless E2E Simulation Script (Pre-Freeze Dry Run)
+[NOW] ➔ T-01: Headless E2E Simulation Script (Pre-Freeze Dry Run)
   ↓
 [OCT 12] ➔ I-01: Audit & Merge Abhay Task 10 (Merchant E2E Polish)
   ↓

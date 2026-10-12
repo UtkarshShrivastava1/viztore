@@ -19,7 +19,7 @@
 | ↳ **Backend Architecture & APIs** | 30% | `[████████████████████]` | **100%** | 🟢 Live on Render | `https://viztore.onrender.com` Healthy |
 | ↳ **Merchant & Admin Panel** | 25% | `[████████████████████]` | **100%** | 🟢 Complete Suite | All 7/7 Modules & Settings Merged (`b92a159`) |
 | ↳ **Customer Web Storefront** | 25% | `[████████████████████]` | **100%** | 🟢 Storefront & Cart Engine | All 4/4 Modular Suites Merged (`e942cc9`) |
-| ↳ **Production Readiness & DevOps** | 20% | `[████████████████████]` | **100%** | 🟢 Staging Live | 116/116 Tests Green, Monorepo Clean Build |
+| ↳ **Production Readiness & DevOps** | 20% | `[████████████████████]` | **100%** | 🟢 Staging Live | 120/120 Tests Green, Monorepo Clean Build |
 | **Total Full-Platform Scope** (Phases 1–7) | — | `[█████████████████░░░]` | **88%** | ⚪ Roadmap Reserved | Customer Mobile App (Phase 7 / Tier 3) |
 
 > **Auto-Update Invariant**: This progress bar is recalculated and updated dynamically on every task assignment, milestone delivery, and PR merge per `.agents/rules/progress-tracking.md`.
@@ -261,6 +261,12 @@ Every online order placed through `apps/web` generates an authoritative, complia
   - Mounted interactive Swagger UI at `/api-docs` and `/docs`, with raw JSON schema endpoints at `/api-docs.json` and `/docs.json`.
   - Configured Helmet CSP to allow Swagger UI inline assets.
   - **116/116 unit & integration tests passing (18 suites)**; full monorepo clean build.
+- [x] High-Security Brute-Force Rate Limiter (Task B-04):
+  - Built enterprise rate limiting middleware (`rateLimiter.ts`) leveraging `express-rate-limit`.
+  - Mounted `authRateLimiter` (10 requests / 15 minutes) on `/auth/login` to prevent credential stuffing and dictionary attacks.
+  - Mounted `deliveryOtpRateLimiter` (5 requests / 15 minutes) on `/orders/:id/verify-otp` to render physical delivery OTP brute-force mathematically impossible.
+  - Provided `otpRateLimiter` factory (5 requests / 15 minutes) for phone verification protection.
+  - **120/120 unit & integration tests passing (19 suites)**; full monorepo clean build.
 
 
 
