@@ -10,6 +10,7 @@ import { EVENTS } from './shared/events/eventTypes.js';
 import { logger } from './shared/utils/logger.js';
 import { isOriginAllowed } from './shared/utils/cors.js';
 import { startOutboxWorker, stopOutboxWorker } from './shared/database/outboxWorker.js';
+import { startOrderExpiryWorker, stopOrderExpiryWorker } from './modules/orders/index.js';
 
 
 async function bootstrap() {
@@ -128,15 +129,19 @@ async function bootstrap() {
 
       // 6. Start Transactional Outbox Background Drain Worker (Rajesh Pillar 7)
       startOutboxWorker({ intervalMs: 5000, batchSize: 25 });
+
+      // 7. Start Stale Order Auto-Timeout & Inventory Reclaim Engine (Task B-02)
+      startOrderExpiryWorker({ intervalMs: 60000, timeoutMinutes: 30, batchSize: 50 });
     });
 
-    // 7. Graceful Shutdown Traps
+    // 8. Graceful Shutdown Traps
     const handleShutdown = async (signal: string) => {
       logger.info(`🛑 Received ${signal}. Initiating graceful shutdown...`);
 
       server.close(async () => {
         logger.info('🛑 HTTP server closed.');
         await stopOutboxWorker();
+        await stopOrderExpiryWorker();
         await disconnectRedis();
         await disconnectDatabase();
         logger.info('🛑 All connections terminated. Exiting process.');

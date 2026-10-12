@@ -64,7 +64,9 @@ const orderSchema = new Schema<OrderDocument>(
 // Compound indexes strictly following the ESR Rule (Equality, Sort, Range)
 orderSchema.index({ storeId: 1, status: 1, createdAt: -1 });
 orderSchema.index({ userId: 1, createdAt: -1 });
+orderSchema.index({ status: 1, createdAt: 1 });
 
 export const OrderModel =
   (mongoose.models.Order as mongoose.Model<OrderDocument>) ||
   mongoose.model<OrderDocument>('Order', orderSchema);
+
