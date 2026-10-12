@@ -19,7 +19,7 @@
 | ↳ **Backend Architecture & APIs** | 30% | `[████████████████████]` | **100%** | 🟢 Live on Render | `https://viztore.onrender.com` Healthy |
 | ↳ **Merchant & Admin Panel** | 25% | `[████████████████████]` | **100%** | 🟢 Complete Suite | All 7/7 Modules & Settings Merged (`b92a159`) |
 | ↳ **Customer Web Storefront** | 25% | `[████████████████████]` | **100%** | 🟢 Storefront & Cart Engine | All 4/4 Modular Suites Merged (`e942cc9`) |
-| ↳ **Production Readiness & DevOps** | 20% | `[████████████████████]` | **100%** | 🟢 Staging Live | 102/102 Tests Green, Monorepo Clean Build |
+| ↳ **Production Readiness & DevOps** | 20% | `[████████████████████]` | **100%** | 🟢 Staging Live | 108/108 Tests Green, Monorepo Clean Build |
 | **Total Full-Platform Scope** (Phases 1–7) | — | `[█████████████████░░░]` | **88%** | ⚪ Roadmap Reserved | Customer Mobile App (Phase 7 / Tier 3) |
 
 > **Auto-Update Invariant**: This progress bar is recalculated and updated dynamically on every task assignment, milestone delivery, and PR merge per `.agents/rules/progress-tracking.md`.
@@ -249,5 +249,12 @@ Every online order placed through `apps/web` generates an authoritative, complia
   - Connected `socket.io-client` in `socket.ts` joining `store:${storeId}` room to receive backend `order.placed` dispatches.
   - Global `LiveOrderSocketListener.tsx` mounted across all authenticated views in `App.tsx` with auto-dismissing amber toast and 1-click order navigation.
   - Sound test button and mute toggle integrated in `LiveOrderAlerts.tsx`.
+- [x] Stale Order Auto-Timeout & Inventory Reclaim Engine (Task B-02):
+  - Background worker (`orderExpiryWorker.ts`) polling every 60s with reentrancy guard for orders remaining in `PENDING` > 30 minutes.
+  - Automatically transitions order status to `CANCELLED` under ACID multi-document transaction with OCC version check.
+  - Atomically reclaims catalog stock via `catalogFacade.restoreStock()`, emits `ORDER_CANCELLED` domain event, and writes Outbox event.
+  - Wired into `server.ts` startup and graceful shutdown traps.
+  - **108/108 unit & integration tests passing (17 suites)**; full monorepo clean build.
+
 
 
