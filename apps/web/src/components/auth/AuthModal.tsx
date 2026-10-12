@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, Eye, EyeOff, Lock, Mail, User, Phone, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
+import { X, Eye, EyeOff, Lock, Mail, User, Phone, CheckCircle2, AlertCircle } from 'lucide-react';
 import { branding, UserRole } from '@repo/shared-types';
 import { useAuthStore } from '@/stores/auth.store';
 import { authApi } from '@/lib/api/auth';
@@ -139,7 +139,7 @@ export const AuthModal: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 backdrop-blur-md border border-white/20">
-                <span className="font-black text-lg text-white">V</span>
+                <span className="font-black text-lg text-white">{branding.appName.charAt(0).toUpperCase()}</span>
               </div>
               <div>
                 <h3 className="font-bold text-lg leading-tight">{branding.appName}</h3>
@@ -263,22 +263,6 @@ export const AuthModal: React.FC = () => {
                   <span>Sign In</span>
                 )}
               </button>
-
-              {/* Quick Fill Test Customer Credentials */}
-              <div className="pt-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEmail('arjun.customer@example.com');
-                    setPassword('Password@123');
-                    setError(null);
-                  }}
-                  className="w-full text-xs font-semibold text-blue-600 bg-blue-50/80 hover:bg-blue-100/90 py-2.5 px-3 rounded-xl border border-blue-200/80 transition-all flex items-center justify-center gap-1.5 active:scale-[0.99]"
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-blue-500" />
-                  <span>Use Demo Customer (arjun.customer@example.com)</span>
-                </button>
-              </div>
             </form>
           ) : (
             /* REGISTER VIEW */
@@ -294,7 +278,7 @@ export const AuthModal: React.FC = () => {
                     required
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    placeholder="Rohan Sharma"
+                    placeholder="Enter your full name"
                     className="w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-10 pr-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-[#1668F6] focus:outline-none focus:ring-2 focus:ring-[#1668F6]/20 transition-all"
                   />
                 </div>
@@ -310,7 +294,7 @@ export const AuthModal: React.FC = () => {
                     type="tel"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+91 98765 43210"
+                    placeholder="10-digit mobile number"
                     className="w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-10 pr-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-[#1668F6] focus:outline-none focus:ring-2 focus:ring-[#1668F6]/20 transition-all"
                   />
                 </div>

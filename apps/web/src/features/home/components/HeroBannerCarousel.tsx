@@ -12,7 +12,7 @@ const promoSlides = [
     cta: 'Shop Now',
     href: '/products?category=deals',
     badge: 'BIG DEALS',
-    imageUrl: '/banners/hero_center_products.png', // User will supply the transparent PNG of products
+    imageUrl: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&q=80&w=800',
   },
   {
     id: 2,
@@ -21,7 +21,7 @@ const promoSlides = [
     cta: 'Explore Now',
     href: '/products?category=fashion',
     badge: 'FRESH DROPS',
-    imageUrl: '/banners/hero_center_products.png',
+    imageUrl: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&q=80&w=800',
   },
 ];
 

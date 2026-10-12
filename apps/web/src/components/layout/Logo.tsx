@@ -15,6 +15,7 @@ export default function Logo({ theme = 'light' }: { theme?: 'light' | 'dark' }) 
           width={34}
           height={34}
           className="object-contain"
+          style={{ width: 'auto', height: 'auto' }}
           priority
         />
       </div>
@@ -24,7 +25,7 @@ export default function Logo({ theme = 'light' }: { theme?: 'light' | 'dark' }) 
           {appName.toLowerCase()}
         </span>
         <p className={`text-[8.5px] font-medium tracking-tight mt-0.5 ${isDarkTheme ? 'text-[#192168]/80' : 'text-white/90'}`}>
-          Making Local Stores Visible.
+          {branding.tagline}
         </p>
       </div>
     </Link>

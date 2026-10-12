@@ -1,3 +1,4 @@
+import type { IOrderService } from './order.types.js';
 import { orderService } from './index.js';
 import { logger } from '../../shared/utils/logger.js';
 
@@ -29,8 +30,15 @@ export class OrderExpiryWorkerManager {
   private totalCancelled = 0;
   private lastRunAt: Date | null = null;
   private lastRunCancelled = 0;
+  private customService?: IOrderService;
 
-  constructor(private service = orderService) {}
+  constructor(service?: IOrderService) {
+    this.customService = service;
+  }
+
+  private get service(): IOrderService {
+    return this.customService || orderService;
+  }
 
   public start(options: OrderExpiryWorkerOptions = {}): void {
     if (this.isRunning) return;
