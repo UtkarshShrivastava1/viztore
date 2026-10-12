@@ -54,4 +54,15 @@ export const authApi = {
     const res = await api.get<IUserProfile>('/auth/me');
     return res.data;
   },
+
+  /**
+   * Logout current customer session on backend
+   */
+  logout: async (): Promise<void> => {
+    try {
+      await api.post('/auth/logout');
+    } catch {
+      // Ignore network errors to ensure client cleanup proceeds
+    }
+  },
 };

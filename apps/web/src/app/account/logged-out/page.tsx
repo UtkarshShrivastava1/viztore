@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Store, Tag, Grid, Heart, ShieldCheck, Check } from 'lucide-react';
 import { branding } from '@repo/shared-types';
@@ -10,6 +10,11 @@ import { useAuthStore } from '@/stores/auth.store';
 export default function LoggedOutPage() {
   const router = useRouter();
   const openAuthModal = useAuthStore((state) => state.openAuthModal);
+  const logout = useAuthStore((state) => state.logout);
+
+  useEffect(() => {
+    logout();
+  }, [logout]);
 
   return (
     <main className="min-h-screen bg-[#ffffff] pb-24 pt-10 flex flex-col items-center font-sans">

@@ -9,12 +9,12 @@ import {
   MapPin, Bell, Ticket, HelpCircle, FileText, Shield, LogOut,
   ArrowLeft, Lock, ShoppingCart, ShieldCheck
 } from 'lucide-react';
-import { branding } from '@repo/shared-types';
+import { authApi } from '@/lib/api/auth';
 import { AccountSidebar } from '@/components/account/AccountSidebar';
 
 export function LogoutClient() {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated, logout } = useAuthStore();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const formData = {
@@ -27,18 +27,12 @@ export function LogoutClient() {
   const handleLogout = async () => {
     try {
       setIsLoggingOut(true);
-      
-      // TODO: Connect to backend API for logout
-      // await authApi.logout();
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      // Navigate to home after successful logout
+      await authApi.logout();
+    } catch {
+      // Ignore network errors to guarantee local state purge
+    } finally {
+      logout();
       router.push('/account/logged-out');
-    } catch (error) {
-      console.error('Logout failed:', error);
-      setIsLoggingOut(false);
     }
   };
 

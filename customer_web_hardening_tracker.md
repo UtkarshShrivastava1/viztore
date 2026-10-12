@@ -11,11 +11,11 @@
 
 | Total Reported | In Progress | Resolved & Verified | Pending Verification |
 |:---:|:---:|:---:|:---:|
-| **1** | **0** | **1** | **0** |
+| **2** | **0** | **2** | **0** |
 
 ```mermaid
 pie title Customer Web Defect Resolution
-    "Resolved & Verified" : 1
+    "Resolved & Verified" : 2
     "In Progress" : 0
     "Reported / Pending" : 0
 ```
@@ -27,6 +27,7 @@ pie title Customer Web Defect Resolution
 | Fix ID | Route / Screen | Component / Element | Reported Issue & Severity | Root Cause Diagnosis | Patch Deliverables | Status |
 |:---:|---|---|---|---|---|:---:|
 | **CW-FIX-01** | Global, Auth Modal, Hero Banner | `AuthModal`, `HeroBannerCarousel`, `Logo`, `orderExpiryWorker` | **High**: User registration blocked (`NetworkError` / CORS null status), 404 on banner & favicon, demo button in auth modal | Backend crashed on boot via circular ESM import in `orderExpiryWorker.ts`; missing public assets; demo button in modal | Lazy worker getter, backend alive on `:5000`, favicon added, banner CDN assets, demo button purged, Next.js build clean | 🟢 **RESOLVED** |
+| **CW-FIX-02** | `/account/logout`, `/account/logged-out`, `/account`, Header | `LogoutClient`, `LoggedOutPage`, `AccountClient`, `DesktopHeader`, `auth.store` | **High**: Logout simulated with `setTimeout`; user remained authenticated as "John S" across header and profile after logout | `LogoutClient` had fake `setTimeout` and never called `logout()` or backend `/auth/logout`; persisted localStorage remained intact | Wired `authApi.logout()`, purged `customer-auth-storage`, added unauth gate to `/account`, fixed header name condition | 🟢 **RESOLVED** |
 
 ---
 
@@ -50,6 +51,25 @@ pie title Customer Web Defect Resolution
   - Backend API unit tests: 120/120 tests passing across 19 suites.
   - Live registration endpoint `/api/v1/auth/register` verified active and issuing JWT tokens.
   - Next.js production build (`pnpm --filter web build`): 100% clean compilation across all 29 routes.
+
+### 🛠️ CW-FIX-02: End-to-End Customer Logout & Session Purge Pipeline
+* **Date:** October 12, 2026
+* **Scope:** `apps/web/src/app/account/logout/`, `logged-out/`, `AccountClient.tsx`, `DesktopHeader.tsx`, `auth.store.ts`
+* **Root Causes:**
+  1. `LogoutClient.tsx` used a mock `setTimeout(resolve, 800)` simulator and never invoked `authApi.logout()` or `useAuthStore.getState().logout()`.
+  2. `auth.store.ts` did not clear the persisted Zustand localStorage key (`customer-auth-storage`), leaving stale user sessions in the browser.
+  3. `AccountClient.tsx` lacked an unauthenticated guard, rendering editable profile forms for guests.
+  4. `DesktopHeader.tsx` displayed the customer name in `Deliver to` even when unauthenticated.
+* **Fixes Applied:**
+  1. `apps/web/src/lib/api/auth.ts`: Added `authApi.logout()` calling backend `POST /api/v1/auth/logout`.
+  2. `apps/web/src/stores/auth.store.ts`: Updated `logout()` to purge both `token` and `customer-auth-storage` from `localStorage` and reset state (`user: null`, `token: null`, `isAuthenticated: false`).
+  3. `apps/web/src/app/account/logout/LogoutClient.tsx`: Connected live `authApi.logout()` call followed by `logout()` store trigger and navigation to `/account/logged-out`.
+  4. `apps/web/src/app/account/logged-out/page.tsx`: Added mount-time `useEffect` calling `logout()` to guarantee zero lingering tokens.
+  5. `apps/web/src/app/account/AccountClient.tsx`: Added authentic unauthenticated gate prompting user to sign in to access account details.
+  6. `apps/web/src/components/layout/DesktopHeader.tsx`: Fixed delivery location badge to only show customer name prefix when `isAuthenticated`.
+* **Verification Results:**
+  - Next.js production build (`pnpm --filter web build`): 100% clean compilation across all 29 routes.
+  - Verified token and localStorage clearing on logout.
 
 ---
 
