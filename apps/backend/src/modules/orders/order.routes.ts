@@ -4,6 +4,7 @@ import { authGuard } from '../../shared/middlewares/authGuard.js';
 import { roleGuard } from '../../shared/middlewares/roleGuard.js';
 import { idempotencyMiddleware } from '../../shared/middlewares/idempotency.middleware.js';
 import { validateRequest } from '../../shared/middlewares/validateRequest.js';
+import { deliveryOtpRateLimiter } from '../../shared/middlewares/rateLimiter.js';
 import { createOrderSchema, updateOrderStatusSchema, verifyOtpSchema } from './order.validator.js';
 import { UserRole } from '@repo/shared-types';
 
@@ -38,6 +39,7 @@ export function createOrderRouter(
   );
   router.post(
     '/:id/verify-otp',
+    deliveryOtpRateLimiter,
     validateRequest({ body: verifyOtpSchema }),
     controller.verifyOtp,
   );
