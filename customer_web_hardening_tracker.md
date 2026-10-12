@@ -11,11 +11,11 @@
 
 | Total Reported | In Progress | Resolved & Verified | Pending Verification |
 |:---:|:---:|:---:|:---:|
-| **3** | **0** | **3** | **0** |
+| **4** | **0** | **4** | **0** |
 
 ```mermaid
 pie title Customer Web Defect Resolution
-    "Resolved & Verified" : 3
+    "Resolved & Verified" : 4
     "In Progress" : 0
     "Reported / Pending" : 0
 ```
@@ -29,6 +29,7 @@ pie title Customer Web Defect Resolution
 | **CW-FIX-01** | Global, Auth Modal, Hero Banner | `AuthModal`, `HeroBannerCarousel`, `Logo`, `orderExpiryWorker` | **High**: User registration blocked (`NetworkError` / CORS null status), 404 on banner & favicon, demo button in auth modal | Backend crashed on boot via circular ESM import in `orderExpiryWorker.ts`; missing public assets; demo button in modal | Lazy worker getter, backend alive on `:5000`, favicon added, banner CDN assets, demo button purged, Next.js build clean | 🟢 **RESOLVED** |
 | **CW-FIX-02** | `/account/logout`, `/account/logged-out`, `/account`, Header | `LogoutClient`, `LoggedOutPage`, `AccountClient`, `DesktopHeader`, `auth.store` | **High**: Logout simulated with `setTimeout`; user remained authenticated as "John S" across header and profile after logout | `LogoutClient` had fake `setTimeout` and never called `logout()` or backend `/auth/logout`; persisted localStorage remained intact | Wired `authApi.logout()`, purged `customer-auth-storage`, added unauth gate to `/account`, fixed header name condition | 🟢 **RESOLVED** |
 | **CW-FIX-03** | `/account/logged-out`, Auth Modal, `/account/edit-profile` | `LoggedOutPage`, `AuthModal`, `EditProfilePage`, `LogoutClient` | **High**: Successful sign-in kept user stuck on `/account/logged-out` screen instead of homepage; demo Google OAuth fake user; stale webpack cache on dev restart | `AuthModal` did not navigate to `/` on auth success from logout screens; `LoggedOutPage` had mount-time `logout()` that erased auth on reload; fake Google OAuth mock | Added `handleSuccessfulAuth` with automatic homepage redirect, decoupled `LoggedOutPage` to auto-redirect authenticated users to `/`, wired live explore card routes, removed fake Google OAuth mock data, guarded `EditProfilePage`, purged `.next` cache | 🟢 **RESOLVED** |
+| **CW-FIX-04** | Global Desktop Header, Mobile Location Bar, Location Modal | `DesktopHeader`, `LocationBar`, `LocationModal`, `location.store`, `geocoding.ts` | **Medium-High**: Location engine lacked Blinkit/Zomato level assurance; header only rendered truncated city name; modal had no autocomplete or full address display | `DesktopHeader` truncated with `split(',')[0]`; `KNOWN_HUBS` 2km radius intercepted reverse geocode with city names; modal had no live search debounce | Built live OpenStreetMap reverse geocoding & 280ms autocomplete engine; upgraded `location.store` with two-tier `locality` + `formattedAddress`; redesigned `DesktopHeader`, `LocationBar`, and `LocationModal` with rich address cards | 🟢 **RESOLVED** |
 
 ---
 
@@ -90,6 +91,29 @@ pie title Customer Web Defect Resolution
 * **Verification Results:**
   - Next.js production build (`pnpm --filter web build`): 100% clean compilation across all 29 routes.
   - Zero mock/dummy data remaining in auth pipeline.
+
+### 🛠️ CW-FIX-04: Blinkit/Zomato Hyperlocal Delivery Location Engine
+* **Date:** October 12, 2026
+* **Scope:** `apps/web/src/components/layout/DesktopHeader.tsx`, `LocationBar.tsx`, `LocationModal.tsx`, `apps/web/src/stores/location.store.ts`, `apps/web/src/lib/location/geocoding.ts`
+* **Root Causes:**
+  1. `DesktopHeader.tsx` used `address.split(',')[0]`, discarding all road, locality, and pincode details and only presenting a bare city name.
+  2. `KNOWN_HUBS` in `geocoding.ts` used a 0.02° (~2.2km) bounding radius that intercepted any coordinate in the city with generic strings (`Bhilai, Bhilai`), preempting live OpenStreetMap reverse geocoding.
+  3. `LocationModal.tsx` lacked live debounced search autocomplete, forcing a manual single-result form submission.
+  4. `location.store.ts` stored a single unsegmented address string without structured `locality`, `city`, and `formattedAddress` hierarchy.
+* **Fixes Applied:**
+  1. `apps/web/src/lib/location/geocoding.ts`: Upgraded with real-time OpenStreetMap Nominatim reverse geocoding parsing granular street, building, suburb, city, state, and pincode components into Blinkit-style `formattedAddress`. Built a multi-result debounced (280ms) autocomplete search engine (`searchLocalities`).
+  2. `apps/web/src/stores/location.store.ts`: Added two-tier `locality`, `city`, `pincode`, and `formattedAddress` attributes, updating store actions to preserve rich address hierarchies.
+  3. `apps/web/src/components/layout/DesktopHeader.tsx`: Replaced single-line badge with two-tier layout displaying bold locality (`Locality ▾`) on line 1 and full street/pincode on line 2.
+  4. `apps/web/src/components/layout/LocationBar.tsx`: Upgraded mobile bar to two-tier bold locality + comprehensive street subtext.
+  5. `apps/web/src/components/layout/LocationModal.tsx`: Complete overhaul with:
+     - Currently Delivering To active card with full address and status badge.
+     - One-tap high-precision GPS detection with live spinner.
+     - Live autocomplete search dropdown displaying locality title + full address subtitle for every Indian search query.
+     - Saved delivery addresses integration with type-safe pincode access.
+     - Quick-tap popular delivery hubs across the 3–4 km launch zone.
+* **Verification Results:**
+  - Next.js production build (`pnpm --filter web build`): 100% clean compilation across all 29 routes (Exit Code 0).
+  - Rich two-tier address presentation verified on desktop and mobile viewports.
 
 ---
 
