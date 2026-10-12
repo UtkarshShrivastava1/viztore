@@ -31,6 +31,8 @@
     "mongo-sanitize": "^1.1.0",
     "mongoose": "^8.10.1",
     "socket.io": "^4.8.1",
+    "swagger-jsdoc": "^6.3.0",
+    "swagger-ui-express": "^5.0.1",
     "winston": "^3.17.0",
     "zod": "^3.24.2"
   },
@@ -43,6 +45,8 @@
     "@types/mongo-sanitize": "^1.0.3",
     "@types/node": "^22.13.4",
     "@types/supertest": "^7.2.1",
+    "@types/swagger-jsdoc": "^6.0.4",
+    "@types/swagger-ui-express": "^4.1.8",
     "rimraf": "^6.0.1",
     "supertest": "^7.2.2",
     "tsx": "^4.19.2",
