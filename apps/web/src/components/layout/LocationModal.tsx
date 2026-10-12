@@ -76,12 +76,29 @@ export const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose })
 
   if (!isOpen) return null;
 
-  const handleSelectLocation = (loc: GeocodedLocation) => {
-    setLocation(loc.lng, loc.lat, loc.formattedAddress, {
-      locality: loc.locality,
-      city: loc.city,
-      pincode: loc.pincode,
-      formattedAddress: loc.formattedAddress,
+  const handleSelectLocation = async (loc: GeocodedLocation & { placeId?: string }) => {
+    let resolvedLoc = { ...loc };
+
+    // If result has a Google Place ID, resolve high-precision coordinates and address components
+    if (loc.placeId && !loc.placeId.startsWith('hub_')) {
+      try {
+        const res = await fetch(`/api/location/place-details?placeId=${encodeURIComponent(loc.placeId)}`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.data) {
+            resolvedLoc = json.data;
+          }
+        }
+      } catch (err) {
+        console.warn('Place details resolution skipped, using fallback coordinates', err);
+      }
+    }
+
+    setLocation(resolvedLoc.lng, resolvedLoc.lat, resolvedLoc.formattedAddress, {
+      locality: resolvedLoc.locality,
+      city: resolvedLoc.city,
+      pincode: resolvedLoc.pincode,
+      formattedAddress: resolvedLoc.formattedAddress,
     });
     onClose();
   };

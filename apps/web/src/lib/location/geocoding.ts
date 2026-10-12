@@ -168,7 +168,7 @@ export const KNOWN_HUBS: Record<string, {
 /**
  * Clean and format address components into Blinkit/Zomato style.
  */
-function buildFormattedAddress(
+export function buildFormattedAddress(
   locality: string,
   city: string,
   state: string,
@@ -191,62 +191,26 @@ function buildFormattedAddress(
  * Reverse Geocodes a GPS coordinate pair (lat, lng) to a complete, informative Indian street address.
  */
 export async function reverseGeocode(lat: number, lng: number): Promise<GeocodedLocation> {
-  // 1. Live reverse geocoding via OpenStreetMap Nominatim with high accuracy
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 4500);
+  // 1. Live reverse geocoding via Google Places API route
+  if (typeof window !== 'undefined') {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 4500);
 
-    const res = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
-      {
-        headers: { 'User-Agent': 'HyperlocalPlatform-Storefront/2.0' },
+      const res = await fetch(`/api/location/reverse-geocode?lat=${lat}&lng=${lng}`, {
         signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && json.data) {
+          return json.data;
+        }
       }
-    );
-    clearTimeout(timeoutId);
-
-    if (res.ok) {
-      const data = await res.json();
-      const addr = data.address || {};
-
-      const road = addr.road || addr.street;
-      const building = addr.building || addr.house_name || addr.house_number;
-      const locality =
-        addr.suburb ||
-        addr.neighbourhood ||
-        addr.residential ||
-        addr.commercial ||
-        addr.road ||
-        addr.city_district ||
-        addr.village ||
-        addr.hamlet ||
-        'Local Area';
-
-      const city =
-        addr.city ||
-        addr.town ||
-        addr.county ||
-        addr.state_district ||
-        'Local Hub';
-
-      const state = addr.state || 'Chhattisgarh';
-      const pincode = addr.postcode || '';
-
-      const formatted = buildFormattedAddress(locality, city, state, pincode, road, building);
-
-      return {
-        lat,
-        lng,
-        locality,
-        city,
-        state,
-        pincode: pincode || undefined,
-        formattedAddress: formatted,
-        address: formatted,
-      };
+    } catch {
+      // Fallback
     }
-  } catch {
-    // Network or timeout failure — proceed to fallback
   }
 
   // 2. Fallback to nearest pre-cached high-fidelity hub
@@ -295,10 +259,44 @@ export async function searchLocalities(query: string): Promise<GeocodedLocation[
   const normalized = query.trim().toLowerCase();
   if (!normalized || normalized.length < 2) return [];
 
+  // 1. Live autocomplete via Google Places API route
+  if (typeof window !== 'undefined') {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3500);
+
+      const res = await fetch(`/api/location/autocomplete?q=${encodeURIComponent(query)}`, {
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+          return json.data.map((item: any) => {
+            if (item.geocoded) return item.geocoded;
+            return {
+              lat: 21.1938,
+              lng: 81.3800,
+              locality: item.mainText,
+              city: item.secondaryText.split(',')[0]?.trim() || 'Bhilai',
+              state: 'Chhattisgarh',
+              formattedAddress: item.fullText || `${item.mainText}, ${item.secondaryText}`,
+              address: item.fullText || `${item.mainText}, ${item.secondaryText}`,
+              placeId: item.placeId,
+            } as GeocodedLocation & { placeId?: string };
+          });
+        }
+      }
+    } catch {
+      // Fallback to local dictionary
+    }
+  }
+
   const results: GeocodedLocation[] = [];
   const seenAddresses = new Set<string>();
 
-  // 1. Instant match from known hubs for ultra-fast response
+  // 2. Instant match from known hubs for ultra-fast response
   for (const [key, hub] of Object.entries(KNOWN_HUBS)) {
     if (
       key.includes(normalized) ||
@@ -320,68 +318,6 @@ export async function searchLocalities(query: string): Promise<GeocodedLocation[
         });
       }
     }
-  }
-
-  // 2. Fetch live suggestions from OpenStreetMap Nominatim for full Indian locality coverage
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3500);
-
-    const res = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=in&limit=6&addressdetails=1`,
-      {
-        headers: { 'User-Agent': 'HyperlocalPlatform-Storefront/2.0' },
-        signal: controller.signal,
-      }
-    );
-    clearTimeout(timeoutId);
-
-    if (res.ok) {
-      const apiResults = await res.json();
-      if (Array.isArray(apiResults)) {
-        for (const item of apiResults) {
-          const addr = item.address || {};
-          const locality =
-            item.name ||
-            addr.suburb ||
-            addr.neighbourhood ||
-            addr.residential ||
-            addr.road ||
-            query;
-
-          const city =
-            addr.city ||
-            addr.town ||
-            addr.county ||
-            addr.state_district ||
-            'City';
-
-          const state = addr.state || 'India';
-          const pincode = addr.postcode || '';
-
-          const road = addr.road || '';
-          const building = addr.building || '';
-
-          const formatted = buildFormattedAddress(locality, city, state, pincode, road, building);
-
-          if (!seenAddresses.has(formatted)) {
-            seenAddresses.add(formatted);
-            results.push({
-              lat: parseFloat(item.lat),
-              lng: parseFloat(item.lon),
-              locality,
-              city,
-              state,
-              pincode: pincode || undefined,
-              formattedAddress: formatted,
-              address: formatted,
-            });
-          }
-        }
-      }
-    }
-  } catch {
-    // Network or timeout failure — return local dictionary results
   }
 
   return results.slice(0, 6);

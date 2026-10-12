@@ -11,11 +11,11 @@
 
 | Total Reported | In Progress | Resolved & Verified | Pending Verification |
 |:---:|:---:|:---:|:---:|
-| **4** | **0** | **4** | **0** |
+| **5** | **0** | **5** | **0** |
 
 ```mermaid
 pie title Customer Web Defect Resolution
-    "Resolved & Verified" : 4
+    "Resolved & Verified" : 5
     "In Progress" : 0
     "Reported / Pending" : 0
 ```
@@ -30,6 +30,7 @@ pie title Customer Web Defect Resolution
 | **CW-FIX-02** | `/account/logout`, `/account/logged-out`, `/account`, Header | `LogoutClient`, `LoggedOutPage`, `AccountClient`, `DesktopHeader`, `auth.store` | **High**: Logout simulated with `setTimeout`; user remained authenticated as "John S" across header and profile after logout | `LogoutClient` had fake `setTimeout` and never called `logout()` or backend `/auth/logout`; persisted localStorage remained intact | Wired `authApi.logout()`, purged `customer-auth-storage`, added unauth gate to `/account`, fixed header name condition | 🟢 **RESOLVED** |
 | **CW-FIX-03** | `/account/logged-out`, Auth Modal, `/account/edit-profile` | `LoggedOutPage`, `AuthModal`, `EditProfilePage`, `LogoutClient` | **High**: Successful sign-in kept user stuck on `/account/logged-out` screen instead of homepage; demo Google OAuth fake user; stale webpack cache on dev restart | `AuthModal` did not navigate to `/` on auth success from logout screens; `LoggedOutPage` had mount-time `logout()` that erased auth on reload; fake Google OAuth mock | Added `handleSuccessfulAuth` with automatic homepage redirect, decoupled `LoggedOutPage` to auto-redirect authenticated users to `/`, wired live explore card routes, removed fake Google OAuth mock data, guarded `EditProfilePage`, purged `.next` cache | 🟢 **RESOLVED** |
 | **CW-FIX-04** | Global Desktop Header, Mobile Location Bar, Location Modal | `DesktopHeader`, `LocationBar`, `LocationModal`, `location.store`, `geocoding.ts` | **Medium-High**: Location engine lacked Blinkit/Zomato level assurance; header only rendered truncated city name; modal had no autocomplete or full address display | `DesktopHeader` truncated with `split(',')[0]`; `KNOWN_HUBS` 2km radius intercepted reverse geocode with city names; modal had no live search debounce | Built live OpenStreetMap reverse geocoding & 280ms autocomplete engine; upgraded `location.store` with two-tier `locality` + `formattedAddress`; redesigned `DesktopHeader`, `LocationBar`, and `LocationModal` with rich address cards | 🟢 **RESOLVED** |
+| **CW-FIX-05** | Global Location Engine, Location Modal, Next.js API Routes | `google-places.ts`, `LocationModal.tsx`, `geocoding.ts`, `/api/location/*` | **High**: Live GPS detection and typing locality names did not autocomplete in browser; OpenStreetMap blocked by browser CORS and lacked Indian locality coverage | Browser CORS policy blocks client-side Nominatim queries with unsafe `User-Agent` headers; OSM lacks Indian colony/society indexing | Integrated Google Maps Platform (Places API New Autocomplete + searchNearby + Place Details); built server-side proxy routes in Next.js (`/api/location/*`); added session token & solution tracking (`gmp_git_agentskills_v1`); verified live resolution | 🟢 **RESOLVED** |
 
 ---
 
@@ -114,6 +115,31 @@ pie title Customer Web Defect Resolution
 * **Verification Results:**
   - Next.js production build (`pnpm --filter web build`): 100% clean compilation across all 29 routes (Exit Code 0).
   - Rich two-tier address presentation verified on desktop and mobile viewports.
+
+### 🛠️ CW-FIX-05: Google Maps Platform (Places API New & Reverse Geocoding) Integration
+* **Date:** October 12, 2026
+* **Scope:** `apps/web/src/lib/location/google-places.ts`, `geocoding.ts`, `LocationModal.tsx`, Next.js Route Handlers (`/api/location/*`)
+* **Root Causes:**
+  1. OpenStreetMap's public Nominatim endpoint rejected in-browser client queries due to browser CORS policies and refused unsafe headers (`User-Agent`).
+  2. OpenStreetMap database lacked comprehensive coverage of Indian residential colonies, societies, sectors, and local commercial landmarks.
+  3. Clicking "Use current location" failed to resolve granular street-level coordinates and dropped into hardcoded regional hub strings.
+* **Fixes Applied:**
+  1. Installed official `@vis.gl/react-google-maps` SDK in `@repo/web`.
+  2. Created `apps/web/src/lib/location/google-places.ts` integrating:
+     - **Places API (New) Autocomplete**: Keystroke search with region biasing to India (`includedRegionCodes: ['in']`).
+     - **Places API (New) searchNearby**: High-precision reverse geocoding resolving latitude & longitude coordinates into building/street/sector/pincode Indian addresses.
+     - **Places API (New) Place Details**: Comprehensive `id,displayName,formattedAddress,location,addressComponents` retrieval.
+     - Google solution tracking header: `X-Goog-Maps-Solution-ID: gmp_git_agentskills_v1`.
+  3. Created Next.js server-side route handlers to bypass browser CORS entirely and protect client API calls:
+     - `GET /api/location/autocomplete?q=...`
+     - `GET /api/location/reverse-geocode?lat=...&lng=...`
+     - `GET /api/location/place-details?placeId=...`
+  4. Updated `geocoding.ts` and `LocationModal.tsx` to automatically route all reverse geocoding and live autocomplete queries through the server-side Google Places pipeline, falling back to cached hubs if network is offline.
+  5. Saved provided Google Maps API Key to `apps/web/.env.local`.
+* **Verification Results:**
+  - Live reverse geocoding test via `GET /api/location/reverse-geocode?lat=21.1938&lng=81.3800`: 100% successful with exact address `HRDC, BSP BHILAI, Bhilai Steel Plant, Bhilai, Chhattisgarh 490001, India` from `google_places`.
+  - Live autocomplete test via `GET /api/location/autocomplete?q=Sector+6+Bhilai`: Returned real Google Maps suggestions (`Sector 6, Bhilai, Chhattisgarh, India`, `Bhilai Nagar Station Road`, `Shri Maa Jagdamba Mandir Sector-6`).
+  - Next.js production build (`pnpm --filter web build`): 100% clean compilation across all 32 routes with 0 errors.
 
 ---
 
