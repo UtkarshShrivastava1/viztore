@@ -36,74 +36,66 @@ export const MarketingOverviewTab: React.FC = () => {
 
   return (
     <div className="space-y-3.5">
-      {/* 4 KPI Cards Matching 12.0.png */}
+      {/* 4 KPI Cards Matching Purchases (Bills) Standard */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
         {/* Active Promotions */}
-        <div className="p-3.5 bg-white rounded-xl border border-slate-200/80 shadow-2xs">
-          <div className="flex items-start justify-between">
-            <div>
-              <span className="text-xs font-semibold text-slate-500">Active Promotions</span>
-              <h4 className="text-xl font-black text-slate-900 mt-1">5</h4>
-            </div>
-            <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
-              <Megaphone className="w-5 h-5" />
+        <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-xs transition-shadow flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+            <Megaphone className="w-5 h-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <span className="text-[11px] font-semibold text-slate-500 block truncate">Active Promotions</span>
+            <span className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate block">5</span>
+            <div className="flex items-center gap-1 text-[10px] text-emerald-600 font-semibold mt-0.5 truncate">
+              <span>↑ 25%</span>
+              <span className="text-slate-400 font-normal">vs last 30d</span>
             </div>
           </div>
-          <p className="text-[11px] text-emerald-600 font-semibold mt-2.5 flex items-center gap-1">
-            <span className="font-bold">↑ 25%</span>
-            <span className="text-slate-400 font-normal">vs last 30 days</span>
-          </p>
         </div>
 
         {/* Total Ad Spend */}
-        <div className="p-3.5 bg-white rounded-xl border border-slate-200/80 shadow-2xs">
-          <div className="flex items-start justify-between">
-            <div>
-              <span className="text-xs font-semibold text-slate-500">Total Ad Spend</span>
-              <h4 className="text-xl font-black text-slate-900 mt-1">₹ 12,450</h4>
-            </div>
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-              <IndianRupee className="w-5 h-5" />
+        <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-xs transition-shadow flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+            <IndianRupee className="w-5 h-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <span className="text-[11px] font-semibold text-slate-500 block truncate">Total Ad Spend</span>
+            <span className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate block">₹ 12,450</span>
+            <div className="flex items-center gap-1 text-[10px] text-emerald-600 font-semibold mt-0.5 truncate">
+              <span>↑ 18.6%</span>
+              <span className="text-slate-400 font-normal">vs last 30d</span>
             </div>
           </div>
-          <p className="text-[11px] text-emerald-600 font-semibold mt-2.5 flex items-center gap-1">
-            <span className="font-bold">↑ 18.6%</span>
-            <span className="text-slate-400 font-normal">vs last 30 days</span>
-          </p>
         </div>
 
         {/* Total Coupon Redemptions */}
-        <div className="p-3.5 bg-white rounded-xl border border-slate-200/80 shadow-2xs">
-          <div className="flex items-start justify-between">
-            <div>
-              <span className="text-xs font-semibold text-slate-500">Total Coupon Redemptions</span>
-              <h4 className="text-xl font-black text-slate-900 mt-1">1,245</h4>
-            </div>
-            <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
-              <Ticket className="w-5 h-5" />
+        <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-xs transition-shadow flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+            <Ticket className="w-5 h-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <span className="text-[11px] font-semibold text-slate-500 block truncate">Total Coupon Redemptions</span>
+            <span className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate block">1,245</span>
+            <div className="flex items-center gap-1 text-[10px] text-emerald-600 font-semibold mt-0.5 truncate">
+              <span>↑ 22.3%</span>
+              <span className="text-slate-400 font-normal">vs last 30d</span>
             </div>
           </div>
-          <p className="text-[11px] text-emerald-600 font-semibold mt-2.5 flex items-center gap-1">
-            <span className="font-bold">↑ 22.3%</span>
-            <span className="text-slate-400 font-normal">vs last 30 days</span>
-          </p>
         </div>
 
         {/* Revenue from Promotions */}
-        <div className="p-3.5 bg-white rounded-xl border border-slate-200/80 shadow-2xs">
-          <div className="flex items-start justify-between">
-            <div>
-              <span className="text-xs font-semibold text-slate-500">Revenue from Promotions</span>
-              <h4 className="text-xl font-black text-slate-900 mt-1">₹ 48,750</h4>
-            </div>
-            <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-              <BarChart3 className="w-5 h-5" />
+        <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-xs transition-shadow flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+            <BarChart3 className="w-5 h-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <span className="text-[11px] font-semibold text-slate-500 block truncate">Revenue from Promotions</span>
+            <span className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate block">₹ 48,750</span>
+            <div className="flex items-center gap-1 text-[10px] text-emerald-600 font-semibold mt-0.5 truncate">
+              <span>↑ 31.4%</span>
+              <span className="text-slate-400 font-normal">vs last 30d</span>
             </div>
           </div>
-          <p className="text-[11px] text-emerald-600 font-semibold mt-2.5 flex items-center gap-1">
-            <span className="font-bold">↑ 31.4%</span>
-            <span className="text-slate-400 font-normal">vs last 30 days</span>
-          </p>
         </div>
       </div>
 

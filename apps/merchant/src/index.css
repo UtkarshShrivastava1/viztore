@@ -31,3 +31,94 @@
   border-radius: 0.75rem;
   z-index: 10;
 }
+
+/* ==========================================================================
+   Comprehensive @media print Stylesheets (Day 3 Hardening)
+   Clean borderless A4 invoices, thermal receipts & QR standee counter cards
+   ========================================================================== */
+@media screen {
+  .print-only {
+    display: none !important;
+  }
+}
+
+@media print {
+  /* 1. Universal UI Chrome Stripping */
+  header,
+  nav,
+  aside,
+  [data-sidebar="true"],
+  .sidebar,
+  .no-print,
+  button,
+  input[type="checkbox"],
+  .breadcrumbs {
+    display: none !important;
+  }
+
+  /* 2. Global Document Clean Formatting */
+  html,
+  body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    font-size: 11pt !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* 3. Strip shadows & outer borders */
+  .shadow-2xs,
+  .shadow-xs,
+  .shadow-sm,
+  .shadow-md,
+  .shadow-lg,
+  .shadow-xl,
+  .shadow-2xl {
+    box-shadow: none !important;
+  }
+
+  /* 4. Thermal Receipt Layout (80mm / 3-inch roll) */
+  .thermal-receipt {
+    width: 76mm !important;
+    max-width: 76mm !important;
+    margin: 0 auto !important;
+    padding: 3mm !important;
+    font-size: 9pt !important;
+    line-height: 1.25 !important;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+    page-break-after: avoid !important;
+  }
+
+  /* 5. Full A4 Tax Invoice Layout */
+  .a4-invoice {
+    width: 100% !important;
+    max-width: 210mm !important;
+    margin: 0 auto !important;
+    padding: 8mm !important;
+    page-break-after: always;
+  }
+
+  /* 6. QR Counter Standee Layout (A5 / Counter-card display) */
+  .print-standee-container {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 90vh !important;
+    width: 100% !important;
+    padding: 20mm !important;
+    text-align: center !important;
+    page-break-after: avoid !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  @page {
+    margin: 8mm;
+    size: auto;
+  }
+}

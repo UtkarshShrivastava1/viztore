@@ -23,6 +23,7 @@ import {
   ArrowRight,
   ArrowLeft,
   X,
+  AlertTriangle,
 } from 'lucide-react';
 import { useMarketingStore, AdType } from '../../stores/marketingStore.js';
 
@@ -1066,6 +1067,44 @@ export const CreateAdvertisementWizard: React.FC<CreateAdvertisementWizardProps>
 
           {/* Right Column: Preview & Final Breakdown (4 cols) (12.2c.png) */}
           <div className="lg:col-span-4 space-y-4">
+            {/* Live Advertisement Preview (12.2c.png) */}
+            <div className="bg-white rounded-xl border border-slate-200/90 p-4 shadow-2xs space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-bold text-slate-900">Advertisement Preview</h3>
+                <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold">
+                  How it will appear
+                </span>
+              </div>
+              <div className="border border-slate-200 rounded-xl p-3 bg-slate-50/50 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-bold">
+                    Sponsored
+                  </span>
+                </div>
+                <img
+                  src={selectedProduct.image}
+                  alt={selectedProduct.name}
+                  className="w-full h-36 object-cover rounded-lg border border-slate-200"
+                />
+                <div>
+                  <h4 className="text-xs font-bold text-slate-900">{selectedProduct.name}</h4>
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="text-sm font-black text-slate-900">₹{selectedProduct.price}</span>
+                    <span className="text-[10px] text-amber-600 font-semibold flex items-center gap-0.5">
+                      <Star className="w-3 h-3 fill-amber-500" />
+                      <span>{selectedProduct.rating} ({selectedProduct.reviews})</span>
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-slate-500 mt-1">
+                    {selectedProduct.category} | {selectedProduct.color} | {selectedProduct.sizes}
+                  </p>
+                  <p className="text-[10px] text-slate-400 mt-0.5 italic line-clamp-1">
+                    Premium Quality at Best Price!
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <div className="bg-white rounded-xl border border-slate-200/90 p-4 shadow-2xs space-y-3">
               <h3 className="text-xs font-bold text-slate-900">Cost Summary</h3>
               <div className="space-y-2 text-xs">

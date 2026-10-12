@@ -26,8 +26,8 @@ const swaggerDefinition = {
       description: 'Local Development Server',
     },
     {
-      url: `https://viztore.onrender.com/api/${env.API_VERSION}`,
-      description: 'Cloud Staging Server (Render)',
+      url: process.env.API_STAGING_URL || `https://api-staging.onrender.com/api/${env.API_VERSION}`,
+      description: 'Cloud Staging Server',
     },
   ],
   tags: [

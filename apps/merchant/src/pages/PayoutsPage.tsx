@@ -185,81 +185,75 @@ export const PayoutsPage: React.FC<PayoutsPageProps> = ({ onNavigateHome }) => {
         </div>
       </div>
 
-      {/* 4 Compact KPI Cards Matching 10.0-10.3 */}
+      {/* 4 Standardized KPI Cards Matching Purchases (Bills) layout */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
         {/* Available for Payout */}
-        <div className="p-3.5 bg-white rounded-xl border border-slate-200/80 shadow-2xs flex items-center justify-between">
-          <div>
-            <span className="text-[11px] font-semibold text-slate-500 flex items-center gap-1 leading-tight">
+        <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-xs transition-shadow flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+            <Wallet className="w-5 h-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <span className="text-[11px] font-semibold text-slate-500 flex items-center gap-1 truncate">
               Available for Payout
               <Info className="w-3 h-3 text-slate-400" />
             </span>
-            <h4 className="text-xl font-black text-slate-900 tracking-tight leading-tight mt-1">
+            <div className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate">
               ₹ {availableForPayout.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-            </h4>
-            <span className="text-[10px] text-slate-400 block leading-tight mt-0.5">
-              Next payout on 22 May 2024
-            </span>
-          </div>
-          <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center shrink-0">
-            <Wallet className="w-5 h-5" />
+            </div>
+            <span className="text-[10px] text-slate-400 mt-0.5 block truncate">Next payout on 22 May 2024</span>
           </div>
         </div>
 
         {/* Pending Balance */}
-        <div className="p-3.5 bg-white rounded-xl border border-slate-200/80 shadow-2xs flex items-center justify-between">
-          <div>
-            <span className="text-[11px] font-semibold text-slate-500 flex items-center gap-1 leading-tight">
+        <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-xs transition-shadow flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+            <Clock className="w-5 h-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <span className="text-[11px] font-semibold text-slate-500 flex items-center gap-1 truncate">
               Pending Balance
               <Info className="w-3 h-3 text-slate-400" />
             </span>
-            <h4 className="text-xl font-black text-slate-900 tracking-tight leading-tight mt-1">
+            <div className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate">
               ₹ {pendingBalance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-            </h4>
-            <span className="text-[10px] text-slate-400 block leading-tight mt-0.5">
-              From 12 Orders
-            </span>
-          </div>
-          <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 border border-amber-100 flex items-center justify-center shrink-0">
-            <Clock className="w-5 h-5" />
+            </div>
+            <span className="text-[10px] text-slate-400 mt-0.5 block truncate">From 12 Orders</span>
           </div>
         </div>
 
         {/* On Hold */}
-        <div className="p-3.5 bg-white rounded-xl border border-slate-200/80 shadow-2xs flex items-center justify-between">
-          <div>
-            <span className="text-[11px] font-semibold text-slate-500 flex items-center gap-1 leading-tight">
+        <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-xs transition-shadow flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+            <Pause className="w-5 h-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <span className="text-[11px] font-semibold text-slate-500 flex items-center gap-1 truncate">
               On Hold
               <Info className="w-3 h-3 text-slate-400" />
             </span>
-            <h4 className="text-xl font-black text-slate-900 tracking-tight leading-tight mt-1">
+            <div className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate">
               ₹ {onHold.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-            </h4>
-            <span className="text-[10px] text-slate-400 block leading-tight mt-0.5">
-              From 3 Orders
-            </span>
-          </div>
-          <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 border border-rose-100 flex items-center justify-center shrink-0">
-            <Pause className="w-5 h-5" />
+            </div>
+            <span className="text-[10px] text-slate-400 mt-0.5 block truncate">From 3 Orders</span>
           </div>
         </div>
 
         {/* Total Payouts (This Month) */}
-        <div className="p-3.5 bg-white rounded-xl border border-slate-200/80 shadow-2xs flex items-center justify-between">
-          <div>
-            <span className="text-[11px] font-semibold text-slate-500 flex items-center gap-1 leading-tight">
-              Total Payouts (This Month)
+        <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-xs transition-shadow flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+            <TrendingUp className="w-5 h-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <span className="text-[11px] font-semibold text-slate-500 flex items-center gap-1 truncate">
+              Total Payouts (Month)
               <Info className="w-3 h-3 text-slate-400" />
             </span>
-            <h4 className="text-xl font-black text-slate-900 tracking-tight leading-tight mt-1">
+            <div className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate">
               ₹ {totalPayoutsMonth.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-            </h4>
-            <span className="text-[10px] text-emerald-600 font-semibold block leading-tight mt-0.5">
+            </div>
+            <span className="text-[10px] text-emerald-600 font-semibold mt-0.5 block truncate">
               &uarr; 12.5% <span className="text-slate-400 font-normal">vs Last Month</span>
             </span>
-          </div>
-          <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0">
-            <TrendingUp className="w-5 h-5" />
           </div>
         </div>
       </div>

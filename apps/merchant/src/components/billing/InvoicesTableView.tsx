@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import {
   FileText,
   ShoppingBag,
@@ -16,6 +16,40 @@ import {
 import { useBillingStore, IInvoice, InvoiceStatus } from '../../stores/billingStore.js';
 import { InvoiceRowActionMenu } from './InvoiceRowActionMenu.js';
 import { PrintReceiptModal } from './PrintReceiptModal.js';
+
+const InvoiceRowMoreAction: React.FC<{
+  invoice: IInvoice;
+  isOpen: boolean;
+  onToggle: () => void;
+  onClose: () => void;
+  onPrintThermal: (invoice: IInvoice) => void;
+  onPrintA4: (invoice: IInvoice) => void;
+}> = ({ invoice, isOpen, onToggle, onClose, onPrintThermal, onPrintA4 }) => {
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  return (
+    <>
+      <button
+        ref={triggerRef}
+        type="button"
+        onClick={onToggle}
+        className={`px-2 py-1 rounded-lg text-xs font-semibold flex items-center gap-0.5 transition-colors cursor-pointer ${
+          isOpen ? 'bg-blue-50 text-blue-600 border border-blue-200' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+        }`}
+      >
+        <span>More</span>
+        <ChevronDown className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-180 text-blue-600' : 'text-slate-400'}`} />
+      </button>
+      <InvoiceRowActionMenu
+        invoice={invoice}
+        isOpen={isOpen}
+        onClose={onClose}
+        triggerRef={triggerRef}
+        onPrintThermal={onPrintThermal}
+        onPrintA4={onPrintA4}
+      />
+    </>
+  );
+};
 
 export const InvoicesTableView: React.FC = () => {
   const {
@@ -36,7 +70,6 @@ export const InvoicesTableView: React.FC = () => {
   } = useBillingStore();
 
   const [activeMenuInvoiceId, setActiveMenuInvoiceId] = useState<string | null>(null);
-  const [activeMenuAnchorRect, setActiveMenuAnchorRect] = useState<DOMRect | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [printModalInvoice, setPrintModalInvoice] = useState<IInvoice | null>(null);
   const [printModalMode, setPrintModalMode] = useState<'thermal-80mm' | 'a4-tax-invoice'>('thermal-80mm');
@@ -489,54 +522,22 @@ export const InvoicesTableView: React.FC = () => {
                           <span>Print</span>
                         </button>
 
-                        <div className="relative">
-                          <button
-                            type="button"
-                            data-invoice-menu-trigger="true"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (activeMenuInvoiceId === inv.id) {
-                                setActiveMenuInvoiceId(null);
-                                setActiveMenuAnchorRect(null);
-                              } else {
-                                const rect = e.currentTarget.getBoundingClientRect();
-                                setActiveMenuAnchorRect(rect);
-                                setActiveMenuInvoiceId(inv.id);
-                              }
-                            }}
-                            className={`px-2 py-1 rounded-lg text-xs font-semibold flex items-center gap-0.5 transition-colors cursor-pointer ${
-                              activeMenuInvoiceId === inv.id
-                                ? 'bg-blue-50 text-blue-600 border border-blue-200'
-                                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                            }`}
-                          >
-                            <span>More</span>
-                            <ChevronDown
-                              className={`w-3 h-3 transition-transform duration-150 ${
-                                activeMenuInvoiceId === inv.id ? 'rotate-180 text-blue-600' : 'text-slate-400'
-                              }`}
-                            />
-                          </button>
-
-                          {/* 10-Action Dropdown Menu (5.1.png) */}
-                          <InvoiceRowActionMenu
-                            invoice={inv}
-                            isOpen={activeMenuInvoiceId === inv.id}
-                            anchorRect={activeMenuInvoiceId === inv.id ? activeMenuAnchorRect : null}
-                            onPrintThermal={(invoice) => {
-                              setPrintModalInvoice(invoice);
-                              setPrintModalMode('thermal-80mm');
-                            }}
-                            onPrintA4={(invoice) => {
-                              setPrintModalInvoice(invoice);
-                              setPrintModalMode('a4-tax-invoice');
-                            }}
-                            onClose={() => {
-                              setActiveMenuInvoiceId(null);
-                              setActiveMenuAnchorRect(null);
-                            }}
-                          />
-                        </div>
+                        <InvoiceRowMoreAction
+                          invoice={inv}
+                          isOpen={activeMenuInvoiceId === inv.id}
+                          onToggle={() =>
+                            setActiveMenuInvoiceId(activeMenuInvoiceId === inv.id ? null : inv.id)
+                          }
+                          onClose={() => setActiveMenuInvoiceId(null)}
+                          onPrintThermal={(invoice) => {
+                            setPrintModalInvoice(invoice);
+                            setPrintModalMode('thermal-80mm');
+                          }}
+                          onPrintA4={(invoice) => {
+                            setPrintModalInvoice(invoice);
+                            setPrintModalMode('a4-tax-invoice');
+                          }}
+                        />
                       </div>
                     </td>
                   </tr>

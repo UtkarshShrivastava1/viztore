@@ -9,6 +9,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { useSupportStore, TicketPriority } from '../../stores/supportStore.js';
+import { validatePhone } from '../../utils/validation.js';
 
 interface CreateSupportTicketViewProps {
   onBack?: () => void;
@@ -20,6 +21,8 @@ export const CreateSupportTicketView: React.FC<CreateSupportTicketViewProps> = (
   const [subject, setSubject] = useState('');
   const [category, setCategory] = useState('');
   const [priority, setPriority] = useState<TicketPriority>('medium');
+  const [contactPhone, setContactPhone] = useState('');
+  const [phoneError, setPhoneError] = useState('');
   const [description, setDescription] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
@@ -34,11 +37,16 @@ export const CreateSupportTicketView: React.FC<CreateSupportTicketViewProps> = (
       setErrorMessage('Please select a category for your issue.');
       return;
     }
+    if (contactPhone.trim() && !validatePhone(contactPhone.trim())) {
+      setPhoneError('Please enter a valid 10-digit Indian mobile number (e.g. 9876543210).');
+      return;
+    }
     if (!description.trim()) {
       setErrorMessage('Please enter a description of the issue.');
       return;
     }
 
+    setPhoneError('');
     setErrorMessage('');
     addTicket({
       subject,
@@ -218,6 +226,38 @@ export const CreateSupportTicketView: React.FC<CreateSupportTicketViewProps> = (
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* Contact Mobile Phone (Optional) */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700">
+                Contact Mobile Number (Optional)
+              </label>
+              <input
+                type="tel"
+                placeholder="Enter 10-digit mobile number for callback (e.g. 9876543210)"
+                value={contactPhone}
+                maxLength={10}
+                onChange={(e) => {
+                  setContactPhone(e.target.value);
+                  if (phoneError) setPhoneError('');
+                }}
+                onBlur={() => {
+                  if (contactPhone.trim() && !validatePhone(contactPhone.trim())) {
+                    setPhoneError('Please enter a valid 10-digit Indian mobile number (e.g. 9876543210).');
+                  } else {
+                    setPhoneError('');
+                  }
+                }}
+                className={`w-full px-3.5 py-2.5 bg-slate-50 border rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 transition-colors ${
+                  phoneError
+                    ? 'border-rose-400 focus:ring-rose-400/20 focus:border-rose-400'
+                    : 'border-slate-200 focus:ring-blue-500/20 focus:border-blue-500'
+                }`}
+              />
+              {phoneError && (
+                <p className="text-[11px] text-rose-500 mt-1 font-medium">{phoneError}</p>
+              )}
             </div>
 
             {/* Description */}
