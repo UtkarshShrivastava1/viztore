@@ -17,11 +17,17 @@ export function LogoutClient() {
   const { user, isAuthenticated, logout } = useAuthStore();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
+  React.useEffect(() => {
+    if (!isAuthenticated) {
+      router.replace('/account/logged-out');
+    }
+  }, [isAuthenticated, router]);
+
   const formData = {
-    firstName: user?.fullName?.split(' ')[0] || 'Guest',
-    lastName: user?.fullName?.split(' ')[1] || 'User',
-    email: user?.email || 'guest@example.com',
-    mobileNumber: user?.phone ? `+91 ${user.phone}` : 'Sign in to access',
+    firstName: user?.fullName?.split(' ')[0] || '',
+    lastName: user?.fullName?.split(' ')[1] || '',
+    email: user?.email || '',
+    mobileNumber: user?.phone ? `+91 ${user.phone}` : '',
   };
 
   const handleLogout = async () => {

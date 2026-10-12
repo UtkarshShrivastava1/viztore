@@ -1,12 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { X, Eye, EyeOff, Lock, Mail, User, Phone, CheckCircle2, AlertCircle } from 'lucide-react';
-import { branding, UserRole } from '@repo/shared-types';
+import { branding } from '@repo/shared-types';
 import { useAuthStore } from '@/stores/auth.store';
 import { authApi } from '@/lib/api/auth';
 
 export const AuthModal: React.FC = () => {
+  const router = useRouter();
   const { isAuthModalOpen, authModalView, closeAuthModal, openAuthModal, setAuth } = useAuthStore();
 
   // Form states
@@ -38,6 +40,17 @@ export const AuthModal: React.FC = () => {
     openAuthModal(view);
   };
 
+  const handleSuccessfulAuth = (user: any, accessToken: string) => {
+    setAuth(user, accessToken);
+    resetForm();
+    if (typeof window !== 'undefined') {
+      const currentPath = window.location.pathname;
+      if (currentPath === '/account/logged-out' || currentPath === '/account/logout') {
+        router.push('/');
+      }
+    }
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
@@ -52,8 +65,7 @@ export const AuthModal: React.FC = () => {
       const res = await authApi.login({ email: email.trim(), password });
       setSuccessMsg('Welcome back!');
       setTimeout(() => {
-        setAuth(res.user, res.tokens.accessToken);
-        resetForm();
+        handleSuccessfulAuth(res.user, res.tokens.accessToken);
       }, 500);
     } catch (err: any) {
       setError(err?.message || 'Invalid email or password. Please check your credentials and try again.');
@@ -90,8 +102,7 @@ export const AuthModal: React.FC = () => {
       });
       setSuccessMsg('Account created successfully!');
       setTimeout(() => {
-        setAuth(res.user, res.tokens.accessToken);
-        resetForm();
+        handleSuccessfulAuth(res.user, res.tokens.accessToken);
       }, 500);
     } catch (err: any) {
       setError(err?.message || 'Registration failed. Please check your details and try again.');
@@ -101,27 +112,7 @@ export const AuthModal: React.FC = () => {
   };
 
   const handleGoogleAuth = () => {
-    setIsLoading(true);
-    setSuccessMsg('Connecting with Google...');
-    setTimeout(() => {
-      setAuth(
-        {
-          _id: 'usr_google_user',
-          fullName: 'Google User',
-          email: 'user.google@example.com',
-          phone: '+91 91234 56789',
-          role: UserRole.CUSTOMER,
-          isVerified: true,
-          isActive: true,
-          addresses: [],
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        'mock_google_oauth_token'
-      );
-      resetForm();
-      setIsLoading(false);
-    }, 800);
+    setError('Google Sign-In is coming soon. Please sign in or register with your email address.');
   };
 
   return (

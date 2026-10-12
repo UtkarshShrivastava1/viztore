@@ -11,11 +11,11 @@
 
 | Total Reported | In Progress | Resolved & Verified | Pending Verification |
 |:---:|:---:|:---:|:---:|
-| **2** | **0** | **2** | **0** |
+| **3** | **0** | **3** | **0** |
 
 ```mermaid
 pie title Customer Web Defect Resolution
-    "Resolved & Verified" : 2
+    "Resolved & Verified" : 3
     "In Progress" : 0
     "Reported / Pending" : 0
 ```
@@ -28,6 +28,7 @@ pie title Customer Web Defect Resolution
 |:---:|---|---|---|---|---|:---:|
 | **CW-FIX-01** | Global, Auth Modal, Hero Banner | `AuthModal`, `HeroBannerCarousel`, `Logo`, `orderExpiryWorker` | **High**: User registration blocked (`NetworkError` / CORS null status), 404 on banner & favicon, demo button in auth modal | Backend crashed on boot via circular ESM import in `orderExpiryWorker.ts`; missing public assets; demo button in modal | Lazy worker getter, backend alive on `:5000`, favicon added, banner CDN assets, demo button purged, Next.js build clean | 🟢 **RESOLVED** |
 | **CW-FIX-02** | `/account/logout`, `/account/logged-out`, `/account`, Header | `LogoutClient`, `LoggedOutPage`, `AccountClient`, `DesktopHeader`, `auth.store` | **High**: Logout simulated with `setTimeout`; user remained authenticated as "John S" across header and profile after logout | `LogoutClient` had fake `setTimeout` and never called `logout()` or backend `/auth/logout`; persisted localStorage remained intact | Wired `authApi.logout()`, purged `customer-auth-storage`, added unauth gate to `/account`, fixed header name condition | 🟢 **RESOLVED** |
+| **CW-FIX-03** | `/account/logged-out`, Auth Modal, `/account/edit-profile` | `LoggedOutPage`, `AuthModal`, `EditProfilePage`, `LogoutClient` | **High**: Successful sign-in kept user stuck on `/account/logged-out` screen instead of homepage; demo Google OAuth fake user; stale webpack cache on dev restart | `AuthModal` did not navigate to `/` on auth success from logout screens; `LoggedOutPage` had mount-time `logout()` that erased auth on reload; fake Google OAuth mock | Added `handleSuccessfulAuth` with automatic homepage redirect, decoupled `LoggedOutPage` to auto-redirect authenticated users to `/`, wired live explore card routes, removed fake Google OAuth mock data, guarded `EditProfilePage`, purged `.next` cache | 🟢 **RESOLVED** |
 
 ---
 
@@ -70,6 +71,25 @@ pie title Customer Web Defect Resolution
 * **Verification Results:**
   - Next.js production build (`pnpm --filter web build`): 100% clean compilation across all 29 routes.
   - Verified token and localStorage clearing on logout.
+
+### 🛠️ CW-FIX-03: Post-Login Redirection, Session State Decoupling & Google Auth Hardening
+* **Date:** October 12, 2026
+* **Scope:** `apps/web/src/app/account/logged-out/`, `apps/web/src/components/auth/AuthModal.tsx`, `apps/web/src/app/account/logout/LogoutClient.tsx`, `apps/web/src/app/account/edit-profile/`
+* **Root Causes:**
+  1. `AuthModal.tsx` closed the modal in place without navigating away when a user logged in from `/account/logged-out` or `/account/logout`.
+  2. `LoggedOutPage` had a mount-time `logout()` in `useEffect` which overwrote newly authenticated sessions if the page reloaded.
+  3. Explore cards on `/account/logged-out` were unclickable cards without live links.
+  4. `AuthModal.tsx` contained a simulated `handleGoogleAuth` with fake dummy data (`usr_google_user`, `mock_google_oauth_token`).
+  5. `EditProfilePage` lacked an unauthenticated guard and displayed hardcoded mock placeholder values (`+91 98765 43210`, `12 Apr 1998`).
+* **Fixes Applied:**
+  1. `apps/web/src/components/auth/AuthModal.tsx`: Added `handleSuccessfulAuth` with automatic redirection to homepage (`/`) when logging in from logout screens; removed simulated fake user injection for Google Auth and replaced with informative status.
+  2. `apps/web/src/app/account/logged-out/page.tsx`: Decoupled `logout()` from `LoggedOutPage` mount; added reactive auth listener redirecting authenticated users immediately to `/`; wired all Explore Cards to live routes (`/stores`, `/`, `/category`, `/account/wishlist`).
+  3. `apps/web/src/app/account/logout/LogoutClient.tsx`: Added unauthenticated guard redirecting directly to `/account/logged-out`; removed dummy guest placeholder data.
+  4. `apps/web/src/app/account/edit-profile/page.tsx`: Added unauthenticated gate rendering a clean sign-in prompt; sanitized default form data to reflect true user profile.
+  5. Purged `.next` webpack cache to prevent concurrent dev/build module collisions.
+* **Verification Results:**
+  - Next.js production build (`pnpm --filter web build`): 100% clean compilation across all 29 routes.
+  - Zero mock/dummy data remaining in auth pipeline.
 
 ---
 
