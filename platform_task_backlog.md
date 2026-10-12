@@ -65,7 +65,7 @@ timeline
 
 | Task ID | Assignee / Scope | Priority | Target Branch / Files | Status | Details & Deliverables |
 |:---:|---|:---:|---|:---:|---|
-| **I-01** | **Abhay Task 10 Audit** (`apps/merchant/`) | `P0` | `feature/abhay-merchant-e2e-polish` | **IN PROGRESS 🟡** | **Target: Oct 12**. Review and merge table dropdown clipping fixes (Portal menus), Indian GSTIN/PAN regex validations, and zero-data empty states across all 15 merchant tabs. |
+| **I-01** | **Abhay Task 10 Audit** (`apps/merchant/`) | `P0` | `feature/abhay-merchant-e2e-polish` | **DONE ✅** | **Completed Oct 12 (`39add09`)**. Merged portal-rendered `TableActionPopover`, regex validation library, universal CSV export, KPI card standardization across modules, and media print stylesheets. 120/120 tests passing. |
 | **I-02** | **Vinay Task 7 Phase 2 Audit** (`apps/web/`) | `P1` | `feature/vinay-web-hardening` | **IN PROGRESS 🟡** | Customer Web ESLint Zeroing: eliminate loose `any` types in checkout/API hooks and remove 8 unused import warnings flagged during Next.js production builds. |
 | **I-03** | **Vinay Task 8 Oversight** (`apps/mobile-customer/`) | `P2` | `feature/vinay-mobile-native-api` | **ASSIGNED 🟡** | Mobile native device APIs: `expo-location` GPS geolocation for customer address picker and `expo-image-picker` for support attachments. |
 | **I-04** | **Vinay Task 9 QA Audit Report** (`apps/web/`) | `P1` | `apps/web/CUSTOMER_WEB_QA_AUDIT_REPORT.md` | **ASSIGNED 🟡** | Comprehensive 66-mockup visual fidelity audit across desktop ($\ge 1280\text{px}$) and mobile ($375\text{px}$) viewports, plus customer simulation logs. |
@@ -101,9 +101,9 @@ timeline
   ↓
 [COMPLETED] ➔ B-04: High-Security Brute-Force Rate Limiting (OTP & Auth)
   ↓
-[NOW] ➔ T-01: Headless E2E Simulation Script (Pre-Freeze Dry Run)
+[COMPLETED] ➔ I-01: Audit & Merge Abhay Task 10 (Merchant E2E Polish - PR #17)
   ↓
-[OCT 12] ➔ I-01: Audit & Merge Abhay Task 10 (Merchant E2E Polish)
+[NEXT] ➔ T-01: Headless E2E Simulation Script (Pre-Freeze Dry Run) OR B-05: Customer Profile Update API
   ↓
 [OCT 13] ➔ I-02: Audit & Merge Vinay Task 7 (Web ESLint Zeroing)
   ↓

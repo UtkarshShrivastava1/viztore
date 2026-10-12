@@ -213,7 +213,15 @@
   - [x] `StoreInactiveConfirmModal` dialog with warning copy, plan notice, and action buttons (`1.0a(V1).png`)
   - [x] Sticky Inactive Store Alert Banner with 1-click "Activate Store Now" trigger (`1.0b(V1).png`)
   - [x] Canonical 15-module sidebar navigation sync with counter badges (`Orders 25`, `Wallet ₹32,450`, `Expenses`, `Asset Management`)
-  - [x] Real-time synchronized 2x2 product grid and iPhone chassis preview for store merchandising sections (`AddEditSectionView.tsx`, `13.1a.png`, `13.1b.png`)
+- [x] **Merchant Front-End Enterprise Hardening & Polish Suite (PR #17, commit `39add09`)**:
+  - [x] Portal-rendered `TableActionPopover.tsx` with dynamic viewport boundary clamping and outside-click dismissal
+  - [x] Fixed table action dropdown clipping across Invoices (`InvoiceRowMoreAction`), Customers, Expenses, Returns, and Orders tables
+  - [x] Indian GSTIN (15 chars), PAN (10 chars), Phone (10 digits), and PIN code (6 digits) regex validation utilities (`validation.ts`)
+  - [x] Universal client-side CSV export generator (`csvExport.ts`) with UTF-8 BOM encoding and auto-download triggering
+  - [x] Clean `@media print` stylesheets in `index.css` for tax invoices, quotes, and customer statements
+  - [x] Standardized horizontal KPI stats cards across Catalog, Inventory, Customers, Expenses, Returns, and Payouts
+  - [x] Vite production bundle code-splitting (`vite.config.ts` manualChunks for `leaflet` and `lucide-react`)
+  - [x] Enforced strict white-label compliance and preserved thermal (80mm) and A4 invoice printing workflows
 - [ ] Merchant wallet financial ledger, payout triggers & automated bank settlements
 - [ ] Automated returns, exchange, RMA reverse logistics & refund credit note settlement
 - [ ] Merchant staff management & role-based access control (Manager, Cashier, Inventory Clerk)

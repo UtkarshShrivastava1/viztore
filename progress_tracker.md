@@ -267,6 +267,16 @@ Every online order placed through `apps/web` generates an authoritative, complia
   - Mounted `deliveryOtpRateLimiter` (5 requests / 15 minutes) on `/orders/:id/verify-otp` to render physical delivery OTP brute-force mathematically impossible.
   - Provided `otpRateLimiter` factory (5 requests / 15 minutes) for phone verification protection.
   - **120/120 unit & integration tests passing (19 suites)**; full monorepo clean build.
+- [x] **Abhay Task 10 (Merchant Front-End Hardening & UX Polish) — Merged via PR #17 (commit `39add09`) 🟢** (`feature/abhay-merchant-e2e-polish`):
+  - Reusable portal-rendered `TableActionPopover.tsx` with dynamic viewport boundary clamping and outside-click dismissal.
+  - Resolved table action dropdown clipping across Invoices (`InvoiceRowMoreAction`), Customers, Expenses, Returns, and Orders tables.
+  - Comprehensive regex validation library (`validation.ts`) for Indian GSTIN, PAN, Phone, and PIN codes.
+  - Universal client-side CSV export generator (`csvExport.ts`) with UTF-8 BOM encoding and auto-download triggering.
+  - Clean `@media print` stylesheets in `index.css` for tax invoices, quotes, and customer statements.
+  - Standardized horizontal KPI stats cards across Catalog, Inventory, Customers, Expenses, Returns, and Payouts.
+  - Vite production bundle code-splitting (`vite.config.ts` manualChunks for `leaflet` and `lucide-react`).
+  - Enforced strict white-label compliance with brand-agnostic design tokens and preserved POS thermal (80mm) and A4 invoice printing workflows.
+  - **120/120 unit & integration tests passing (19 suites)**; full monorepo clean build.
 
 
 
