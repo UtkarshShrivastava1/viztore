@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense, lazy } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuthStore } from './stores/authStore.js';
 import { useOnboardingStore } from './stores/onboardingStore.js';
 import { SellerLandingPage } from './pages/SellerLandingPage.js';
@@ -91,38 +91,32 @@ export const App: React.FC = () => {
   // Screen 1.png: Public Landing Page
   if (currentView === 'landing') {
     return (
-      <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-slate-400">Loading...</div>}>
-        <SellerLandingPage
-          onStartSelling={() => setCurrentView('onboarding')}
-          onLogin={() => setCurrentView('login')}
-        />
-      </Suspense>
+      <SellerLandingPage
+        onStartSelling={() => setCurrentView('onboarding')}
+        onLogin={() => setCurrentView('login')}
+      />
     );
   }
 
   // Screen 4.png: Floating Seller Login Card
   if (currentView === 'login') {
     return (
-      <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-slate-400">Loading...</div>}>
-        <SellerLoginPage
-          onLoginSuccess={() => setCurrentView('dashboard')}
-          onGoToRegister={() => setCurrentView('onboarding')}
-          onGoToHome={() => setCurrentView('landing')}
-        />
-      </Suspense>
+      <SellerLoginPage
+        onLoginSuccess={() => setCurrentView('dashboard')}
+        onGoToRegister={() => setCurrentView('onboarding')}
+        onGoToHome={() => setCurrentView('landing')}
+      />
     );
   }
 
   // Screens 3.png, 5.1.png, 2.png, 5.png, 6.png, 8.png, 7.png: Onboarding Wizard
   if (currentView === 'onboarding') {
     return (
-      <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-slate-400">Loading...</div>}>
-        <OnboardingPage
-          onEnterDashboard={() => setCurrentView('dashboard')}
-          onGoToLogin={() => setCurrentView('login')}
-          onGoToHome={() => setCurrentView('landing')}
-        />
-      </Suspense>
+      <OnboardingPage
+        onEnterDashboard={() => setCurrentView('dashboard')}
+        onGoToLogin={() => setCurrentView('login')}
+        onGoToHome={() => setCurrentView('landing')}
+      />
     );
   }
 
@@ -164,36 +158,29 @@ export const App: React.FC = () => {
             isSidebarCollapsed ? 'sm:ml-20' : 'sm:ml-64'
           }`}
         >
-          <Suspense
-            fallback={
-              <div className="p-12 text-center text-xs font-semibold text-slate-400 animate-pulse">
-                Loading module...
-              </div>
-            }
-          >
-            {currentTab === 'overview' && (
-              <DashboardOverviewPage
-                onNavigate={(tab) => {
-                  setCurrentTab(tab);
-                  setIsCreateOrderView(false);
-                }}
-                onOpenAddProduct={() => setIsGlobalAddOpen(true)}
-                onOpenBulkUpload={() => setIsGlobalBulkOpen(true)}
-              />
-            )}
+          {currentTab === 'overview' && (
+            <DashboardOverviewPage
+              onNavigate={(tab) => {
+                setCurrentTab(tab);
+                setIsCreateOrderView(false);
+              }}
+              onOpenAddProduct={() => setIsGlobalAddOpen(true)}
+              onOpenBulkUpload={() => setIsGlobalBulkOpen(true)}
+            />
+          )}
 
-            {currentTab === 'orders' &&
-              (isCreateOrderView ? (
-                <CreateOrderPage onBack={() => setIsCreateOrderView(false)} />
-              ) : (
-                <OrdersPage onOpenCreateOrder={() => setIsCreateOrderView(true)} />
-              ))}
+          {currentTab === 'orders' &&
+            (isCreateOrderView ? (
+              <CreateOrderPage onBack={() => setIsCreateOrderView(false)} />
+            ) : (
+              <OrdersPage onOpenCreateOrder={() => setIsCreateOrderView(true)} />
+            ))}
 
-            {currentTab === 'catalog' && <CatalogPage />}
+          {currentTab === 'catalog' && <CatalogPage />}
 
-            {currentTab === 'inventory' && <InventoryPage />}
+          {currentTab === 'inventory' && <InventoryPage />}
 
-            {currentTab === 'billing' && <BillingPage />}
+          {currentTab === 'billing' && <BillingPage />}
 
           {currentTab === 'customers' && <CustomersPage />}
 
@@ -256,22 +243,20 @@ export const App: React.FC = () => {
       </div>
 
       {/* Global Modals */}
-      <Suspense fallback={null}>
-        <AddProductModal
-          isOpen={isGlobalAddOpen}
-          onClose={() => setIsGlobalAddOpen(false)}
-          onAddProduct={(p) => {
-            alert(`Product '${p.name}' created with SKU ${p.sku}`);
-            setIsGlobalAddOpen(false);
-          }}
-        />
+      <AddProductModal
+        isOpen={isGlobalAddOpen}
+        onClose={() => setIsGlobalAddOpen(false)}
+        onAddProduct={(p) => {
+          alert(`Product '${p.name}' created with SKU ${p.sku}`);
+          setIsGlobalAddOpen(false);
+        }}
+      />
 
-        <BulkUploadModal
-          isOpen={isGlobalBulkOpen}
-          onClose={() => setIsGlobalBulkOpen(false)}
-          onBulkSuccess={(c) => alert(`Imported ${c} items successfully`)}
-        />
-      </Suspense>
+      <BulkUploadModal
+        isOpen={isGlobalBulkOpen}
+        onClose={() => setIsGlobalBulkOpen(false)}
+        onBulkSuccess={(c) => alert(`Imported ${c} items successfully`)}
+      />
     </div>
   );
 };
