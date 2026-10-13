@@ -9,15 +9,22 @@
 
 ## 📊 Summary Metrics
 
+### Macro Architectural Workstreams
 | Total Workstreams | In Progress | Hardened & Verified | Pending / Planned | Progress |
 |:---:|:---:|:---:|:---:|:---:|
 | **8** | **0** | **6** | **2** | **75.0%** |
 
+### 15-Module Enterprise Frontend & Backend Mockup Coverage
+| Total Modules | Mockup Subfolders | Total Mockup Screens | Fully Hardened & Verified | In Systematic Testing / Planned | Screen Audit Coverage |
+|:---:|:---:|:---:|:---:|:---:|:---:|
+| **15** | **15** | **126** | **44 screens (Modules 1–6)** | **82 screens (Modules 7–15)** | **34.9% (Screen-Level)** / **40.0% (Module-Level)** |
+
 ```mermaid
-pie title Merchant Web Hardening Workstreams
-    "Hardened & Verified" : 6
-    "In Progress" : 0
-    "Planned / Backlog" : 2
+pie title Merchant Portal 15-Module Screen Coverage (126 Mockups)
+    "Modules 1–6: Operations & Core Commerce (Hardened)" : 44
+    "Modules 7–10: Financial & Settlements (Planned)" : 32
+    "Modules 11–12: Analytics & Marketing (Planned)" : 32
+    "Modules 13–15: Storefront, Settings & Support (Planned)" : 18
 ```
 
 ---
@@ -58,12 +65,372 @@ flowchart TD
 
 ---
 
+## 🖥️ 15-Module Enterprise Frontend & Backend Testing Ledger (126 Mockups Coverage)
+
+> **Testing Protocol & Standard:** Every module is systematically inspected and tested against its exact design mockups in `mockups/Merchant_Front/`. Each screen is evaluated across both **Visible UI Element Fidelity** and **Backend / API / Persistence Enterprise Integrity** (zero alert stubs, live routes, optimistic updates, Zod validation, error handling, white-label compliance, and print/export readiness).
+
+### 📊 Master 15-Module Testing Matrix
+
+| Module ID | Module Name | Mockup Folder & File Count | Primary Route & Files (`apps/merchant`) | Visible UI Elements Mockup Fidelity | Backend Functionalities & API Hooks | Enterprise Hardening (Front + Back) | Systematic Testing Status |
+|:---:|---|:---:|---|:---:|---|:---:|:---:|
+| **MOD-01** | **Home Dashboard** | `1.) Home/`<br>**(8 files)** | `/dashboard`, `/`<br>`DashboardOverviewPage.tsx`<br>`Header.tsx`, `Sidebar.tsx` | **100%**<br>15-item sidebar, live Store Active toggle, Store Inactive modal & paused banner, KPI cards, quick actions | `PATCH /stores/:id` (`isActive`), Socket.io store rooms, live orders refetch | 🟢 **HARDENED**<br>Zero fake switches, persistent MongoDB toggle, audio alerts | 🟢 **HARDENED & VERIFIED** |
+| **MOD-02** | **Orders Pipeline** | `2.) Orders/`<br>**(9 files)** | `/orders`, `/orders/create`<br>`OrdersPage.tsx`<br>`OrdersTable.tsx`<br>`VerifyOtpModal.tsx` | **100%**<br>Status tabs (All, New, Accepted, Packed, Out for Delivery, Delivered), manual order modal, OTP modal | `GET /orders/store/:id`, `PATCH /orders/:id/status`, `POST /verify-delivery-otp`, Socket.io listeners | 🟢 **HARDENED**<br>Web Audio harmonic chime, dual store broadcast, no `window.prompt` | 🟢 **HARDENED & VERIFIED** |
+| **MOD-03** | **Product Catalog** | `3.) Product Catalog/`<br>**(6 files)** | `/catalog`, `/catalog/add`<br>`ProductsCatalogPage.tsx`<br>`AddProductWizardPage.tsx`<br>`BulkUploadModal.tsx` | **100%**<br>Catalog table, 3-step wizard, category tree, Base64 image dropzone, direct URL, bulk CSV parser | `GET /catalog/stores/:id/products`, `POST /products`, `POST /products/bulk`, `PATCH /products/:id` | 🟢 **HARDENED**<br>Real CSV parser + demo batch, multi-variant S/M/L/XL matrix, CSV export | 🟢 **HARDENED & VERIFIED** |
+| **MOD-04** | **Inventory Management** | `4.) Inventory/`<br>**(7 files)** | `/inventory`<br>`InventoryPage.tsx`<br>`InventoryTable.tsx`<br>`AdjustStockDrawer.tsx`<br>`StockHistoryView.tsx` | **100%**<br>Inventory register, dynamic pagination (no 125 hardcode), adjust drawer, bulk view, stock history | `useCatalogStore` sync, `PATCH /catalog/products/:id` with variant updates, Redis cache invalidation | 🟢 **HARDENED**<br>Real backend persistence, dynamic KPI calculation, complete inventory CSV export | 🟢 **HARDENED & VERIFIED** |
+| **MOD-05** | **Billing & Invoicing (POS)** | `5.) Billing & Invoicing/`<br>**(7 files)** | `/billing`, `/pos`<br>`BillingPage.tsx`<br>`CounterPOSView.tsx`<br>`PrintReceiptModal.tsx`<br>`InvoicesTableView.tsx` | **100%**<br>Walk-in POS, fast Enter-key barcode scanner, multi-tender panel (Cash, UPI QR, Card, Khata), thermal slip | `POST /billing/pos/sale` (Tier 2 atomic OCC stock deduction), `GET /billing/invoices`, `GET /billing/quotes` | 🟢 **HARDENED**<br>80mm/58mm `@media print` ESC/POS thermal CSS, live invoice sync, scan chimes | 🟢 **HARDENED & VERIFIED** |
+| **MOD-06** | **Customers CRM & Khata** | `6.) Customers/`<br>**(7 files)** | `/customers`<br>`CustomersPage.tsx`<br>`CustomerTable.tsx`<br>`CustomerStatementDrawer.tsx`<br>`AddStoreCreditModal.tsx` | **100%**<br>Customer table, loyalty tiers, details drawer (5 tabs), statements drawer, aging summary, debt payment modal | Synced dynamically from POS billing invoices & online orders, live balance recalculation | 🟢 **HARDENED**<br>Real CSV import/export, WhatsApp reminder link, dual debt/credit settlement | 🟢 **HARDENED & VERIFIED** |
+| **MOD-07** | **Wallet Hub** | `7.) Wallet/`<br>**(4 files)** | `/wallet`<br>`WalletPage.tsx`<br>`stores/payoutStore.ts` | **Baseline (85%)**<br>Available balance, pending settlement, transaction history drawer (`7.3`), add money drawer (`7.2`) | Real wallet balance queries, payout request mutations, transaction ledger hooks | 🟡 **AUDIT QUEUE**<br>Wire live transaction details drawer (`7.1`), Razorpay/UPI add money flow | 🟡 **TESTING IN PROGRESS** |
+| **MOD-08** | **Purchase & Expense** | `8.) Purchase Expense/`<br>**(20 files)** | `/expenses`<br>`ExpensesPage.tsx`<br>`components/expenses/` | **Baseline (70%)**<br>Expense table, vendor tab (`8.10`–`8.13`), 4 Add Purchase modals (`8.14a`–`8.14d`), E-Way bill (`8.6`) | Operating expense ledger, vendor management APIs, purchase order lifecycle | ⚪ **PLANNED**<br>Massive 20-screen audit: credit notes, PO drawers, payment recording | ⚪ **PLANNED AUDIT** |
+| **MOD-09** | **Returns & Refunds** | `9.) Returns & Refunds/`<br>**(4 files)** | `/returns`<br>`ReturnsPage.tsx`<br>`components/returns/` | **Baseline (85%)**<br>Returns table, status pills, action menu (`9.2`), `+ Raise Return Request` modal with dropzone (`9.3`) | Order return transitions, customer wallet refund credits, inspection state hooks | ⚪ **PLANNED**<br>Verify photo evidence dropzone & print return slip integration | ⚪ **PLANNED AUDIT** |
+| **MOD-10** | **Payout & Settlements** | `10.) Payout & Settlements/`<br>**(4 files)** | `/payouts`<br>`PayoutsPage.tsx`<br>`components/payouts/` | **Baseline (90%)**<br>Overview cards, settlement schedule, bank accounts, All-Transactions ledger (`10.3`) with UTR numbers | Payout settlement query, bank UTR tracking, platform fee deductions | ⚪ **PLANNED**<br>Verify net calculation math, UTR search, and ledger CSV export | ⚪ **PLANNED AUDIT** |
+| **MOD-11** | **Reports & Analytics** | `11.) Reports & Analytics/`<br>**(10 files)** | `/analytics`<br>`AnalyticsPage.tsx`<br>`components/analytics/` | **Baseline (85%)**<br>Sales charts, orders velocity, GST liability (`11.4`–`11.6`), settlements report (`11.7`), reversals (`11.9`) | Time-series aggregations, revenue bucketing, category breakdown pipelines | ⚪ **PLANNED**<br>Verify settlement trends chart, reversals report, and PDF/Excel export | ⚪ **PLANNED AUDIT** |
+| **MOD-12** | **Marketing & Ads** | `12.) Marketing/`<br>**(22 files)** | `/marketing`<br>`MarketingPage.tsx`<br>`components/marketing/` | **Baseline (75%)**<br>Campaigns table, 4-step Ad Wizard (`12.2`–`12.4b`), coupons table, 2-step Coupon Wizard with ticket preview (`12.7a`–`d`) | Ad campaign state machine, daily budget caps, coupon validation rules | ⚪ **PLANNED**<br>Verify live voucher ticket preview, ROAS analytics, and multi-ad variants | ⚪ **PLANNED AUDIT** |
+| **MOD-13** | **Store Management** | `13.) Store Management/`<br>**(7 files)** | `/store-management`<br>`StoreSectionsList.tsx`<br>`StoreViewSettings.tsx` | **Baseline (85%)**<br>Storefront hub, sections table, Add Section with live phone chassis preview (`13.1a`), My Store QR (`13.3`) | `PATCH /stores/:id` with layout sections, banner media uploads, QR code generator | ⚪ **PLANNED**<br>Verify mobile preview responsiveness, dual banners, and WhatsApp share | ⚪ **PLANNED AUDIT** |
+| **MOD-14** | **Settings Suite** | `14.) Settings/`<br>**(9 files)** | `/settings`<br>`SettingsPage.tsx`<br>`StoreSettingsPage.tsx` | **Baseline (80%)**<br>Full 9-tab suite: Profile with 80% bar (`14.0`), Tax (`14.1`), Timings (`14.2`), Billing (`14.3`), Staff (`14.8`) | Store settings persistence, timings validation, GST slabs, staff RBAC accounts | ⚪ **PLANNED**<br>Verify all 9 tabs save to backend, delivery radius circle, security tab | ⚪ **PLANNED AUDIT** |
+| **MOD-15** | **Support Desk** | `15.) Support/`<br>**(2 files)** | `/support`<br>`SupportPage.tsx`<br>`components/support/` | **Baseline (90%)**<br>Support hub (`15.0`), FAQ accordion, contact channels, `+ Create Ticket` modal with priority & upload (`15.1`) | Support ticket submission endpoint, status tracking, attachment ingestion | ⚪ **PLANNED**<br>Verify ticket creation modal, attachment upload, and status history | ⚪ **PLANNED AUDIT** |
+
+---
+
+### 🔍 Itemized 15-Module Testing & Enterprise Verification Specifications
+
+```mermaid
+graph LR
+    subgraph CoreCommerce ["Phase A: Core Commerce (Modules 1–6) — 44 Screens"]
+        M1["1. Home (8)"] --> M2["2. Orders (9)"]
+        M2 --> M3["3. Catalog (6)"]
+        M3 --> M4["4. Inventory (7)"]
+        M4 --> M5["5. POS Billing (7)"]
+        M5 --> M6["6. Customers (7)"]
+    end
+    subgraph Financials ["Phase B: Financial & Ledgers (Modules 7–10) — 32 Screens"]
+        M7["7. Wallet (4)"] --> M8["8. Purchase & Expense (20)"]
+        M8 --> M9["9. Returns & Refunds (4)"]
+        M9 --> M10["10. Payouts (4)"]
+    end
+    subgraph GrowthAdmin ["Phase C: Growth & Governance (Modules 11–15) — 50 Screens"]
+        M11["11. Analytics (10)"] --> M12["12. Marketing (22)"]
+        M12 --> M13["13. Storefront (7)"]
+        M13 --> M14["14. Settings (9)"]
+        M14 --> M15["15. Support (2)"]
+    end
+```
+
+#### 📁 Module 1: Home Dashboard & Navigation (`mockups/Merchant_Front/1.) Home/` — 8 Files
+* **Design Assets:** `1.0.png`, `1.1.png`, `1.2.png`, `1.3.png`, `1.4.png`, `1.0(V1).png`, `1.0a(V1).png`, `1.0b(V1).png`
+* **Target Files:** `apps/merchant/src/pages/DashboardOverviewPage.tsx`, `components/dashboard/Header.tsx`, `components/dashboard/Sidebar.tsx`, `stores/authStore.ts`
+* **Visible UI Elements Checklist:**
+  - [x] 15-item sidebar navigation mapping exactly to the 15 functional modules with active route highlights.
+  - [x] Header Store Status toggle pill (Online/Offline) with green/amber indicator.
+  - [x] Store Offline Confirmation Modal with impact notice ("Customers within your 3–4 km delivery radius cannot place orders").
+  - [x] Store Inactive persistent banner across top with "Turn Store On" action button.
+  - [x] KPI Summary Cards: Today's Revenue, New Orders, Delivered Orders, Average Order Value with trend badges.
+  - [x] Quick Action shortcuts: "+ New Sale (POS)", "+ Add Product", "Adjust Stock", "View Orders".
+  - [x] Live Orders feed showing incoming orders with sound toggle.
+* **Backend Functionalities & API Hooks:**
+  - [x] `PATCH /api/v1/stores/:id` persisting `{ isActive: boolean }` directly to MongoDB `StoreModel`.
+  - [x] `GET /api/v1/orders/store/:storeId` populating real-time summary cards.
+  - [x] Socket.io listener for `order:created` and `order:status_changed` updating dashboard metrics without page reload.
+* **Enterprise Hardening (Front & Back):**
+  - [x] Zero mock timers or unpersisted toggles; refresh token rotation preserves active state.
+
+---
+
+#### 📁 Module 2: Orders Pipeline & Live Dispatch (`mockups/Merchant_Front/2.) Orders/` — 9 Files
+* **Design Assets:** `2.0.png`, `2.1.png`, `2.2.png`, `2.3.png`, `2.4.png`, `2.5.png`, `2.6.png`, `2.7.png`, `2.8.png`
+* **Target Files:** `apps/merchant/src/pages/OrdersPage.tsx`, `components/orders/OrdersTable.tsx`, `components/orders/VerifyOtpModal.tsx`, `components/orders/OrderDetailsDrawer.tsx`, `stores/orderStore.ts`
+* **Visible UI Elements Checklist:**
+  - [x] Status navigation tabs: `All`, `New (Pending)`, `Accepted (Confirmed)`, `Packed`, `Out for Delivery`, `Delivered`, `Cancelled` with real-time count badges.
+  - [x] Search by Order ID (`#ORD-...`), Customer Name, or Phone number.
+  - [x] Quick Action buttons per status: `Accept Order`, `Reject`, `Mark as Packed`, `Handover to Rider`, `Deliver Order`.
+  - [x] Dedicated 4-digit PIN Delivery OTP Verification modal (`VerifyOtpModal.tsx`) with auto-advance and error shakes.
+  - [x] Comprehensive Order Details Drawer displaying customer delivery address, items table, GST breakdown, and delivery rider details.
+  - [x] Audio arrival chime toggle in toolbar.
+* **Backend Functionalities & API Hooks:**
+  - [x] `GET /api/v1/orders/store/:storeId` with status filtering and pagination.
+  - [x] `PATCH /api/v1/orders/:id/status` validating allowed state transitions (`pending` ➔ `confirmed` ➔ `packed` ➔ `out_for_delivery` ➔ `delivered`).
+  - [x] `POST /api/v1/orders/:id/verify-delivery-otp` checking OTP against hashed MongoDB record.
+  - [x] Socket.io broadcast to `store:${storeId}` on all status transitions.
+* **Enterprise Hardening (Front & Back):**
+  - [x] Web Audio API harmonic chime synthesizer with user-interaction unlock; zero crude `window.prompt` alerts.
+
+---
+
+#### 📁 Module 3: Product Catalog & Media Upload (`mockups/Merchant_Front/3.) Product Catalog/` — 6 Files
+* **Design Assets:** `3.0.png`, `3.1.png`, `3.2.png`, `3.3.png`, `3.4.png`, `3.5.png`
+* **Target Files:** `apps/merchant/src/pages/ProductsCatalogPage.tsx`, `pages/AddProductWizardPage.tsx`, `components/catalog/wizard/AddProductStep1.tsx`, `components/catalog/wizard/AddProductStep2.tsx`, `components/catalog/BulkUploadModal.tsx`, `stores/catalogStore.ts`
+* **Visible UI Elements Checklist:**
+  - [x] Product Catalog Data Table with thumbnail, SKU, category, price, MRP, discount badge, stock level, and status toggle.
+  - [x] 3-Step Add Product Wizard (Basic Details, Media & Pricing, Review & Submit).
+  - [x] Cascading category-to-subcategory dropdown selector.
+  - [x] Multi-variant generator (Sizes S/M/L/XL or Colors) with independent stock allocation and variant SKUs.
+  - [x] Media dropzone supporting permanent Base64 file upload and direct external image URL input with instant preview.
+  - [x] Bulk CSV Upload Modal with file reader, parsed data preview table, error rows display, and 1-click Demo Batch importer.
+  - [x] RFC-compliant CSV Catalog Exporter.
+* **Backend Functionalities & API Hooks:**
+  - [x] `GET /api/v1/catalog/stores/:storeId/products` querying MongoDB products with spatial and category indexing.
+  - [x] `POST /api/v1/catalog/products` validating product schema with Zod.
+  - [x] `POST /api/v1/catalog/products/bulk` atomic multi-product insertion.
+  - [x] `PATCH /api/v1/catalog/products/:id` supporting active toggle and price edits with Redis cache invalidation.
+* **Enterprise Hardening (Front & Back):**
+  - [x] Zero ephemeral blob URLs that expire on reload; full RFC CSV escaping.
+
+---
+
+#### 📁 Module 4: Inventory Management & Low-Stock Alerts (`mockups/Merchant_Front/4.) Inventory/` — 7 Files
+* **Design Assets:** `4.0.png`, `4.1.png`, `4.2.png`, `4.3.png`, `4.4.png`, `4.5.png`, `4.6.png`
+* **Target Files:** `apps/merchant/src/pages/InventoryPage.tsx`, `components/inventory/InventoryTable.tsx`, `components/inventory/AdjustStockDrawer.tsx`, `components/inventory/BulkAdjustStockView.tsx`, `components/inventory/StockHistoryView.tsx`, `components/inventory/StockHistoryDrawer.tsx`, `stores/inventoryStore.ts`
+* **Visible UI Elements Checklist:**
+  - [x] Inventory Register Table with SKU, barcode, category, current stock, reserved stock, available stock, unit valuation.
+  - [x] Dynamic mathematical pagination engine (real page counts, ellipses, jump-to-page; no 125 hardcode).
+  - [x] Real-time KPI Summary: Total Stock Units, Low Stock Items (`<= threshold`), Out of Stock Items, Total Valuation (`₹...`).
+  - [x] Quick Stock Adjust Drawer (`Add Stock`, `Reduce Stock`, `Cycle Count Adjustment`) with mandatory audit reason notes.
+  - [x] Bulk Stock Adjustment spreadsheet view with live net calculation and saving spinner.
+  - [x] Stock Audit Movement History View with date filters, user attribution, and transaction types.
+  - [x] Full Inventory CSV Exporter with valuation metrics.
+* **Backend Functionalities & API Hooks:**
+  - [x] `PATCH /api/v1/catalog/products/:id` with variant stock updates.
+  - [x] Optimistic UI updates with automatic rollback on network failure.
+  - [x] Live refresh button wired to `fetchProducts()` with animated spinner.
+* **Enterprise Hardening (Front & Back):**
+  - [x] Real backend persistence; OCC conflict prevention on concurrent stock deductions.
+
+---
+
+#### 📁 Module 5: Billing & Walk-In POS Counter (`mockups/Merchant_Front/5.) Billing & Invoicing/` — 7 Files
+* **Design Assets:** `5.0.png`, `5.1.png`, `5.2.png`, `5.3.png`, `5.4.png`, `5.5.png`, `5.6.png`
+* **Target Files:** `apps/merchant/src/pages/BillingPage.tsx`, `components/billing/CounterPOSView.tsx`, `components/billing/PrintReceiptModal.tsx`, `components/billing/InvoicesTableView.tsx`, `stores/billingStore.ts`
+* **Visible UI Elements Checklist:**
+  - [x] Fullscreen walk-in counter retail POS register.
+  - [x] Fast barcode / SKU / name search input with Enter-key instant cart addition and scan sound chimes.
+  - [x] Active Line-Item Register with quantity steppers, unit price overrides, line discount, and GST rate selector.
+  - [x] Multi-Tender Payment Station:
+    - [x] **Cash Tender:** Preset amount pills (Exact, ₹500, ₹1000, ₹2000), tendered input, and real-time "Change to Return" display.
+    - [x] **UPI QR:** Dynamic QR card with live payable amount, UPI app icons, and auto-reconciliation banner.
+    - [x] **Card POS:** Terminal swipe/tap instruction banner with transaction reference.
+    - [x] **Credit / Khata:** Debited directly against registered customer ledger.
+  - [x] Thermal Receipt Print Modal (`PrintReceiptModal.tsx`):
+    - [x] 80mm roll and 58mm roll width selectors.
+    - [x] Monospace layout with store name, GSTIN, phone, address, itemized rows, tax summary, and footer message.
+    - [x] Dedicated `@media print` CSS engine stripping browser margins and centering the roll.
+  - [x] Live Invoices Data Table with date range, payment mode filter, and live backend refresh.
+* **Backend Functionalities & API Hooks:**
+  - [x] `POST /api/v1/billing/pos/sale` atomic Tier 2 POS checkout.
+  - [x] Atomically deducts catalog product stock in MongoDB with OCC versioning.
+  - [x] Writes issued invoice and transactional outbox event.
+* **Enterprise Hardening (Front & Back):**
+  - [x] Zero-margin thermal print formatting; offline-safe fallback state.
+
+---
+
+#### 📁 Module 6: Customers CRM & Khata Ledger (`mockups/Merchant_Front/6.) Customers/` — 7 Files
+* **Design Assets:** `6.0.png`, `6.1.png`, `6.2.png`, `6.3.png`, `6.4.png`, `6.5.png`, `6.6.png`
+* **Target Files:** `apps/merchant/src/pages/CustomersPage.tsx`, `components/customers/CustomerTable.tsx`, `components/customers/CustomerDetailsDrawer.tsx`, `components/customers/CustomerStatementDrawer.tsx`, `components/customers/AddStoreCreditModal.tsx`, `stores/customerStore.ts`
+* **Visible UI Elements Checklist:**
+  - [x] Customers Register Table with Name, Phone, Email, Tier (VIP, Regular, New), Total Orders, Total Spend, Khata Due.
+  - [x] Customer Details Drawer (`6.2.png`) with 5 tabs: Overview, Orders, Invoices, Ledger, Notes.
+  - [x] Customer Statement Drawer (`6.3.png`) with date range picker, running balance, debit/credit ledger, and download buttons.
+  - [x] Aging Summary Breakdown Drawer (`6.4.png`) categorizing debt into Current, 1–15 days, 16–30 days, 30+ days.
+  - [x] 1-Click WhatsApp Payment Reminder button generating pre-formatted polite balance collection messages with dynamic `{branding.appName}`.
+  - [x] Dual Debt Settlement & Store Credit Modal (`AddStoreCreditModal.tsx`):
+    - [x] Record Khata Payment (Cash, UPI, Bank Transfer, Cheque) with 25%/50%/75%/100% quick pills.
+    - [x] Manage Store Credit (Add/Deduct credit).
+  - [x] Functional Customer CSV Import and Export with RFC escaping.
+* **Backend Functionalities & API Hooks:**
+  - [x] Dynamic customer aggregation from live POS billing invoices and online order history.
+  - [x] Real-time KPI computation (`computeCustomerKPIs`).
+* **Enterprise Hardening (Front & Back):**
+  - [x] Zero `alert()` stubs; white-label compliant messaging templates.
+
+---
+
+#### 📁 Module 7: Wallet Hub & Payout Sweeps (`mockups/Merchant_Front/7.) Wallet/` — 4 Files
+* **Design Assets:** `7.0.png`, `7.1.png`, `7.2.png`, `7.3.png`
+* **Target Files:** `apps/merchant/src/pages/WalletPage.tsx`, `stores/payoutStore.ts`, `components/wallet/`
+* **Visible UI Elements Checklist:**
+  - [ ] Available Wallet Balance Card with instant withdrawal button.
+  - [ ] Pending Settlements Card (funds locked in T+1 settlement cycle).
+  - [ ] Recent Wallet Activity table with Credit/Debit icons, description, timestamp, and balance after transaction.
+  - [ ] Transaction Details Drawer (`7.1.png`) displaying complete transaction timeline, reference ID, gateway fee deductions, and net credit.
+  - [ ] Add Money to Wallet Drawer (`7.2.png`) with preset amount chips (₹500, ₹1000, ₹2000, ₹5000), custom amount input, and Razorpay/UPI gateway selection.
+  - [ ] Filtered Transaction History Drawer (`7.3.png`) with date filters, transaction type (Sales, Refunds, Payouts, Adjustments), and export.
+* **Backend Functionalities & API Hooks:**
+  - [ ] `GET /api/v1/wallet/balance` querying live merchant wallet.
+  - [ ] `GET /api/v1/wallet/transactions` with pagination and filter params.
+  - [ ] `POST /api/v1/wallet/top-up` initializing gateway payment intent.
+  - [ ] `POST /api/v1/wallet/request-payout` submitting withdrawal request.
+* **Enterprise Hardening (Front & Back):**
+  - [ ] Ensure currency math is handled in whole paise / cents to avoid floating-point rounding bugs; verify modal backdrop dismiss.
+
+---
+
+#### 📁 Module 8: Purchase & Operating Expenses (`mockups/Merchant_Front/8.) Purchase Expense/` — 20 Files
+* **Design Assets:** `8.0.png`–`8.15.png`, `8.14a.png`–`8.14d.png` (20 files total)
+* **Target Files:** `apps/merchant/src/pages/ExpensesPage.tsx`, `components/expenses/`
+* **Visible UI Elements Checklist:**
+  - [ ] Master Tabs: `Purchase Invoices`, `Purchase Orders (PO)`, `Vendors Directory`, `Operating Expenses`, `Credit Notes`.
+  - [ ] Vendors Management Tab (`8.10`–`8.13`): Vendor list, GSTIN, payment terms, outstanding payables, Vendor Details Drawer (`8.11`), and Add Vendor Form (`8.12`).
+  - [ ] `+ Add Purchase` Dropdown & 4 Specialized Modals:
+    - [ ] `8.14a.png`: Create Purchase Order (PO) Modal with expected delivery date and line items.
+    - [ ] `8.14b.png`: Enter Purchase Bill Modal with vendor invoice number, GST slab breakdown, and payment due date.
+    - [ ] `8.14c.png`: Purchase Return Modal with reason and credit note linkage.
+    - [ ] `8.14d.png`: Direct Cash Purchase Modal for local quick stock purchases.
+  - [ ] Purchase Details Drawer (`8.2.png`) & PO Details Drawer (`8.3.png`).
+  - [ ] Create Credit Note Drawer (`8.4.png`) and Record Payment Drawer (`8.9.png`).
+  - [ ] E-Way Bill Details & Generation Drawer (`8.6.png`–`8.7.png`) with transporter ID and vehicle number.
+  - [ ] Operating Expense Drawer & Modal (`8.5.png`, `8.15.png`) for Rent, Electricity, Packaging, Labor, Logistics with receipt photo attachment.
+* **Backend Functionalities & API Hooks:**
+  - [ ] `GET /api/v1/purchases` & `POST /api/v1/purchases`.
+  - [ ] `GET /api/v1/vendors` & `POST /api/v1/vendors`.
+  - [ ] `GET /api/v1/expenses` & `POST /api/v1/expenses`.
+* **Enterprise Hardening (Front & Back):**
+  - [ ] Receipt image storage via Base64/Cloudinary; tax input validation (valid 15-char GSTIN format).
+
+---
+
+#### 📁 Module 9: Returns & Refunds Pipeline (`mockups/Merchant_Front/9.) Returns & Refunds/` — 4 Files
+* **Design Assets:** `9.0.png`, `9.1.png`, `9.2.png`, `9.3.png`
+* **Target Files:** `apps/merchant/src/pages/ReturnsPage.tsx`, `components/returns/`
+* **Visible UI Elements Checklist:**
+  - [ ] Returns Master Table with Return ID (`#RET-...`), Order ID, Customer, Return Reason, Status, Action.
+  - [ ] Status filters: `All`, `Requested`, `Rider Picked Up`, `Inspected & Restocked`, `Refunded`, `Rejected`.
+  - [ ] Row Action Menu (`9.2.png`): Accept Return, Reject with Reason, Print Return Inspection Slip.
+  - [ ] `+ Raise Return Request` Modal (`9.3.png`) with customer/order selector, return reason dropdown, and photographic evidence dropzone.
+* **Backend Functionalities & API Hooks:**
+  - [ ] `GET /api/v1/returns` with status filters.
+  - [ ] `PATCH /api/v1/returns/:id/status` transitioning states.
+  - [ ] Restocking hook automatically restoring product inventory stock when return is accepted.
+* **Enterprise Hardening (Front & Back):**
+  - [ ] Mandatory rejection explanation note; inventory reversal audit logged in stock history.
+
+---
+
+#### 📁 Module 10: Payouts & Settlement Ledger (`mockups/Merchant_Front/10.) Payout & Settlements/` — 4 Files
+* **Design Assets:** `10.0.png`, `10.1.png`, `10.2.png`, `10.3.png`
+* **Target Files:** `apps/merchant/src/pages/PayoutsPage.tsx`, `components/payouts/`
+* **Visible UI Elements Checklist:**
+  - [ ] Settlement Summary Cards: Total Disbursed to Date, Next Scheduled Payout, Unsettled Balance.
+  - [ ] Linked Bank Accounts Card with Primary status, IFSC code, and Masked Account Number.
+  - [ ] Settlement Schedule Timeline showing cut-off and bank clearing window.
+  - [ ] All Transactions Settlement Ledger Table (`10.3.png`) displaying:
+    - [ ] Transaction ID, Order Reference, Transaction Date, Gross Amount.
+    - [ ] Platform Commission Deduction (% & amount), Payment Gateway Fee, GST on Fees.
+    - [ ] Net Disbursed Amount, Bank UTR Number, and Settlement Status (Success / In Progress).
+    - [ ] RFC-compliant Settlement CSV Exporter.
+* **Backend Functionalities & API Hooks:**
+  - [ ] `GET /api/v1/payouts/settlements` querying completed disbursements.
+  - [ ] `GET /api/v1/payouts/ledger` with UTR search.
+* **Enterprise Hardening (Front & Back):**
+  - [ ] Mathematical reconciliation check: Gross - (Commission + Gateway + GST) === Net; UTR copy-to-clipboard action.
+
+---
+
+#### 📁 Module 11: Reports & Business Analytics (`mockups/Merchant_Front/11.) Reports & Analytics/` — 10 Files
+* **Design Assets:** `11.0.png`–`11.9.png` (10 files total)
+* **Target Files:** `apps/merchant/src/pages/AnalyticsPage.tsx`, `components/analytics/`
+* **Visible UI Elements Checklist:**
+  - [ ] Date Range Selector: Today, Yesterday, Last 7 Days, Last 30 Days, This Month, Custom Date Range.
+  - [ ] Sales Overview Dashboard (`11.0.png`–`11.3.png`): Gross Sales, Net Sales, Total Orders, Average Basket Size, Returning Customer Rate.
+  - [ ] Visual Interactive Charts: Revenue Trend Line Chart, Top 5 Categories Pie Chart, Hourly Peak Sales Heatmap.
+  - [ ] Top Selling Products Table with Units Sold, Revenue Generated, and Contribution %.
+  - [ ] Tax & GST Liability Report Tab (`11.4.png`–`11.6.png`): CGST, SGST, IGST liability breakdown by 0%, 5%, 12%, 18%, 28% slabs.
+  - [ ] Settlements Report Tab (`11.7.png`, `11.8.png`): Trend chart and payment methods distribution (UPI vs Cash vs Card vs Khata).
+  - [ ] Transaction Failures & Reversals Report (`11.9.png`) tracking failed POS transactions and gateway drop-offs.
+  - [ ] PDF & Excel Report Exporter.
+* **Backend Functionalities & API Hooks:**
+  - [ ] `GET /api/v1/analytics/overview` with date filters.
+  - [ ] `GET /api/v1/analytics/gst-report` with slab breakdown.
+* **Enterprise Hardening (Front & Back):**
+  - [ ] Skeleton loaders during chart rendering; zero hardcoded fake data points when connected to live store.
+
+---
+
+#### 📁 Module 12: Marketing, Ads & Coupon Suite (`mockups/Merchant_Front/12.) Marketing/` — 22 Files
+* **Design Assets:** `12.0.png`–`12.7d.png` (22 files total)
+* **Target Files:** `apps/merchant/src/pages/MarketingPage.tsx`, `components/marketing/`
+* **Visible UI Elements Checklist:**
+  - [ ] Marketing Hub Navigation: `Campaigns & Ads`, `Coupons & Vouchers`, `Store Banners`.
+  - [ ] Active Campaigns Register (`12.1.png`) with campaign name, type, daily budget, spent, impressions, clicks, orders, ROAS.
+  - [ ] 4-Step Create Ad Campaign Wizard (`12.2.png`–`12.4b.png`):
+    - [ ] Ad Type Selection: Sponsored Product (`12.2a`), Store Spotlight (`12.2b`), Category Banner (`12.2c`).
+    - [ ] Product / Category Targeting selector.
+    - [ ] Budget & Schedule: Daily budget cap, CPC bid rate, start & end dates.
+    - [ ] Campaign Preview Card.
+  - [ ] Ad Analytics Deep-Dive (`12.5.png`–`12.6a.png`) with CTR graphs and product conversion funnel.
+  - [ ] Coupons & Discounts Hub (`12.7.png`): Active coupon cards, redemption counters, usage limits.
+  - [ ] 2-Step Create Coupon Wizard (`12.7a.png`–`12.7d.png`):
+    - [ ] Coupon Code, Discount Type (% off or Flat ₹ off), Minimum Order Value, Max Discount Cap.
+    - [ ] **Live Interactive Voucher Ticket Preview (`12.7d.png`)** updating in real time as the merchant types.
+* **Backend Functionalities & API Hooks:**
+  - [ ] `GET /api/v1/marketing/campaigns` & `POST /api/v1/marketing/campaigns`.
+  - [ ] `GET /api/v1/marketing/coupons` & `POST /api/v1/marketing/coupons`.
+* **Enterprise Hardening (Front & Back):**
+  - [ ] Coupon validation logic prevents discounts greater than 100% or order value; live ticket preview has realistic dotted-line styling.
+
+---
+
+#### 📁 Module 13: Storefront Management & Merchandising (`mockups/Merchant_Front/13.) Store Management/` — 7 Files
+* **Design Assets:** `13.0.png`, `13.1.png`, `13.1a.png`, `13.1b.png`, `13.2.png`, `New 13.0.png`, `New 13.3.png`
+* **Target Files:** `apps/merchant/src/pages/StoreManagementPage.tsx`, `pages/StoreSettingsPage.tsx`, `components/store/StoreSectionsList.tsx`, `components/store/StoreViewSettings.tsx`, `pages/AssetsPage.tsx`
+* **Visible UI Elements Checklist:**
+  - [ ] Storefront Management Hub (`New 13.0.png`) with 4 tabs: Sections, Banners, Appearance, Share & QR.
+  - [ ] Homepage Sections Table (`13.1.png`): Reorderable section list (Hero Carousel, Featured Deals, Best Sellers, Category Grid) with drag-and-drop or order indicators.
+  - [ ] Add Section Modal with **Live Phone Chassis Preview (`13.1a.png`, `13.1b.png`)**: Real-time rendering of how the section will appear on customer mobile screens.
+  - [ ] Dual Banner Uploader (`13.2.png`) supporting separate desktop wide banner (1920x600) and mobile banner (750x400).
+  - [ ] **My Store QR & Share Hub (`New 13.3.png`)**:
+    - [ ] High-resolution generated Store QR Code with merchant logo.
+    - [ ] Print QR Standee action (tabletop acrylic stand format).
+    - [ ] Direct Store URL copy button with toast feedback.
+    - [ ] 1-Click WhatsApp Share button pre-filling store link.
+* **Backend Functionalities & API Hooks:**
+  - [ ] `PATCH /api/v1/stores/:id` updating `storeLayout` and banner image URLs.
+  - [ ] Dynamic QR code generation based on `branding.domain` and `storeId`.
+* **Enterprise Hardening (Front & Back):**
+  - [ ] Zero hardcoded brand URLs; all links read from `branding.domain`.
+
+---
+
+#### 📁 Module 14: Settings Suite (9 Sub-Modules) (`mockups/Merchant_Front/14.) Settings/` — 9 Files
+* **Design Assets:** `14.0.png`–`14.8.png` (9 files total)
+* **Target Files:** `apps/merchant/src/pages/SettingsPage.tsx`, `pages/StoreSettingsPage.tsx`, `components/settings/`
+* **Visible UI Elements Checklist:**
+  - [ ] Full 9-Tab Settings Suite Navigation:
+    - [ ] `14.0.png`: **Store Profile** — Name, tagline, logo upload, banner, description, and 80% completeness progress bar.
+    - [ ] `14.1.png`: **Business & Tax Info** — Registered business name, PAN, GSTIN, FSSAI certificate number with verification badges.
+    - [ ] `14.2.png`: **Store Timings & Delivery Radius** — Weekly schedule (Mon–Sun opening/closing hours), delivery radius slider (1–10 km with 3–4 km default highlight), and minimum order value.
+    - [ ] `14.3.png`: **Billing & POS Preferences** — Thermal printer roll defaults (80mm vs 58mm), tax inclusive/exclusive toggle, invoice numbering prefix.
+    - [ ] `14.4.png`: **Tax & GST Slabs** — Default tax slabs (0%, 5%, 12%, 18%, 28%), cess settings, and HSN codes requirement.
+    - [ ] `14.5.png`: **Payment Gateways & Wallet Sweep** — Auto-settlement schedule (Daily at 6 PM vs Instant T+0), bank payout account details.
+    - [ ] `14.6.png`: **Shipping & Returns Policy** — Free delivery threshold, return window (e.g. 24h, 48h, 7 days), exchange policy text.
+    - [ ] `14.7.png`: **Notifications Preferences** — SMS, WhatsApp, Email, Sound toggles for New Order, Cancellation, Low Stock, Settlement.
+    - [ ] `14.8.png`: **Security & Staff Access (RBAC)** — Password update, Two-Factor Authentication, and Staff User Management (Owner, Store Manager, Billing Cashier).
+* **Backend Functionalities & API Hooks:**
+  - [ ] `GET /api/v1/stores/:id` & `PATCH /api/v1/stores/:id` persisting settings into MongoDB.
+  - [ ] Validation through Zod schemas matching shared types.
+* **Enterprise Hardening (Front & Back):**
+  - [ ] Form unsaved changes alert; masked sensitive tax fields (PAN/GSTIN).
+
+---
+
+#### 📁 Module 15: Help & Support Desk (`mockups/Merchant_Front/15.) Support/` — 2 Files
+* **Design Assets:** `15.0.png`, `15.1.png`
+* **Target Files:** `apps/merchant/src/pages/SupportPage.tsx`, `components/support/`
+* **Visible UI Elements Checklist:**
+  - [ ] Support Hub (`15.0.png`): Search bar ("How can we help?"), Quick FAQ categories (Orders, Billing, Delivery, Payouts), and Contact Channel Cards (Toll-free phone, WhatsApp chat, Email).
+  - [ ] Merchant Support Tickets Register showing recent tickets, ticket ID (`#TCK-...`), status (Open, In Progress, Resolved), and last activity.
+  - [ ] `+ Create Support Ticket` Modal Form (`15.1.png`): Issue category dropdown, priority selector (Low, Medium, High, Critical), detailed issue description, and file attachment dropzone.
+* **Backend Functionalities & API Hooks:**
+  - [ ] `GET /api/v1/support/tickets` & `POST /api/v1/support/tickets`.
+  - [ ] WhatsApp support direct link pre-filling store name and merchant ID.
+* **Enterprise Hardening (Front & Back):**
+  - [ ] Support email and phone numbers pull dynamically from `branding.supportEmail` and config; zero dead links.
+
+---
+
 ## 📋 Itemized Defect & Observation Log (`MW-FIX-xx`)
 
 > Use this table to log your direct observations, UI bugs, or functional discrepancies found while testing the Merchant Portal (`localhost:3001`), matching the exact format used in the Customer Web tracker.
 
 | Fix ID | Route / Screen | Component / Element | Reported Issue & Severity | Root Cause Diagnosis | Patch Deliverables | Status |
-|:---:|---|---|---|---|---|:---:|
 | *Example* | `/billing` | `BillingPage`, `ThermalReceipt` | Thermal print layout overflows on 80mm roll | Default print media styles lack roll constraints | Add `@media print` 80mm roll width rules | ⚪ Planned |
 
 ---
