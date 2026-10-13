@@ -367,17 +367,20 @@ export const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose })
                         : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50'
                     }`}
                   >
-                    <span className="flex items-center gap-1.5">
-                      {hub.name}
-                      {'isLaunch' in hub && hub.isLaunch && (
-                        <span className={`text-[8px] px-1.5 py-0.2 rounded-full font-bold uppercase tracking-wider ${
-                          isSelected ? 'bg-white/20 text-white' : 'bg-emerald-50 text-emerald-600 border border-emerald-200'
-                        }`}>
-                          Launch
-                        </span>
-                      )}
-                    </span>
-                    {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                    <div className="flex items-center justify-center w-7 h-7 rounded-xl bg-blue-50 text-[#1668F6] shrink-0 mt-0.5">
+                      <Building2 className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-xs font-bold text-[#192168] truncate">
+                          {hub.locality}
+                        </h4>
+                        {isSelected && <Check className="w-3.5 h-3.5 text-[#1668F6] stroke-[3]" />}
+                      </div>
+                      <p className="text-[10px] text-slate-500 line-clamp-1 mt-0.5">
+                        {hub.city} {hub.pincode ? `(${hub.pincode})` : ''}
+                      </p>
+                    </div>
                   </button>
                 );
               })}

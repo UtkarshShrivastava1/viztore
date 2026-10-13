@@ -7,9 +7,12 @@ import {
   ArrowLeft, Lock, ShoppingCart, ShieldCheck
 } from 'lucide-react';
 import { AccountSidebar } from '@/components/account/AccountSidebar';
+import { authApi } from '@/lib/api/auth';
+import { useAuthStore } from '@/stores/auth.store';
 
 export function LogoutClient() {
   const router = useRouter();
+  const logout = useAuthStore((state) => state.logout);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogout = async () => {

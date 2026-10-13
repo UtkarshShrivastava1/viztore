@@ -1,12 +1,14 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Store, Tag, Grid, Heart, ShieldCheck, Check } from 'lucide-react';
 import { branding } from '@repo/shared-types';
 
 import { useAuthStore } from '@/stores/auth.store';
 
 export default function LoggedOutPage() {
+  const router = useRouter();
   const openAuthModal = useAuthStore((state) => state.openAuthModal);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
@@ -110,7 +112,7 @@ export default function LoggedOutPage() {
   );
 }
 
-function ExploreCard({ icon, bg, title, desc }: { icon: React.ReactNode; bg: string; title: string; desc: string }) {
+function ExploreCard({ icon, bg, title, desc, onClick }: { icon: React.ReactNode; bg: string; title: string; desc: string; onClick?: () => void }) {
   return (
     <button 
       type="button"

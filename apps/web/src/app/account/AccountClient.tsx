@@ -13,7 +13,7 @@ import { AccountSidebar } from '@/components/account/AccountSidebar';
 import { useAuthStore } from '@/stores/auth.store';
 
 export function AccountClient() {
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated, openAuthModal } = useAuthStore();
   const [isEditingMobile, setIsEditingMobile] = useState(false);
   const [mounted, setMounted] = useState(false);
 
