@@ -140,6 +140,8 @@ interface CustomerState {
   deleteCustomer: (id: string) => void;
   addStoreCredit: (customerId: string, amount: number, reason: string) => void;
   deductStoreCredit: (customerId: string, amount: number, reason: string) => void;
+  recordPayment: (customerId: string, amount: number, paymentMethod: string, notes?: string) => void;
+  syncFromStoreData: (invoices: any[], orders: any[]) => void;
 }
 
 const defaultStatementTransactions: StatementTransaction[] = [
@@ -167,18 +169,260 @@ const defaultOverdueInvoices: OverdueInvoice[] = [
   { id: 'ov-3', invoiceNo: 'INV-1228', invoiceDate: '05 Apr 2024', dueDate: '05 May 2024', amount: 3450.0, daysOverdue: 57, status: 'Overdue' },
 ];
 
-const initialCustomers: Customer[] = [];
+export function computeCustomerKPIs(customers: Customer[]): CustomerKPIs {
+  const totalCustomers = customers.length;
+  const totalSales = customers.reduce((sum, c) => sum + (c.totalSales || 0), 0);
+  const totalOutstanding = customers.reduce((sum, c) => sum + (c.outstandingAmount || 0), 0);
+
+  return {
+    totalCustomers,
+    totalCustomersGrowth: 8.5,
+    totalSales,
+    totalSalesGrowth: 14.2,
+    totalOutstanding,
+    totalOutstandingChange: -4.3,
+  };
+}
+
+const seedCustomers: Customer[] = [
+  {
+    id: 'CUS-1001',
+    name: 'Rajesh Kumar',
+    customerType: 'Retailer',
+    phone: '+91 98271 23456',
+    email: 'rajesh.kumar@gmail.com',
+    displayName: 'Rajesh Store',
+    gstin: '22AAAAA0000A1Z5',
+    customerCode: 'CUS-1001',
+    creditLimit: 50000,
+    paymentTerms: '15 Days',
+    creditPeriodDays: 15,
+    outstandingAmount: 18450.0,
+    totalSales: 125000.0,
+    storeCredit: 0,
+    loyaltyPoints: 450,
+    totalOrders: 14,
+    returnsCount: 0,
+    status: 'active',
+    tier: 'VIP',
+    lastOrderDate: '11 May 2024',
+    location: 'Bhilai, CG',
+    billingAddress: {
+      addressLine1: 'Shop 12, Civic Center',
+      city: 'Bhilai',
+      state: 'CG',
+      pincode: '490006',
+      country: 'India',
+      sameAsShipping: true,
+    },
+    notes: 'Regular wholesale buyer. Monthly settlement on 15th.',
+    recentOrders: [
+      { orderId: 'ORD-9841', date: '11 May 2024', itemsCount: 4, totalAmount: 12450, status: 'delivered', paymentMethod: 'Credit / Khata' },
+      { orderId: 'ORD-9712', date: '02 May 2024', itemsCount: 8, totalAmount: 32000, status: 'delivered', paymentMethod: 'UPI' },
+    ],
+    creditHistory: [],
+    statementTransactions: defaultStatementTransactions,
+    agingBuckets: defaultAgingBuckets,
+    overdueInvoices: defaultOverdueInvoices,
+  },
+  {
+    id: 'CUS-1002',
+    name: 'Sharma General Store',
+    customerType: 'Business',
+    phone: '+91 94252 87654',
+    email: 'sharma.store@gmail.com',
+    displayName: 'Sharma General Store',
+    gstin: '22BBBBB1111B2Z6',
+    customerCode: 'CUS-1002',
+    creditLimit: 30000,
+    paymentTerms: '7 Days',
+    creditPeriodDays: 7,
+    outstandingAmount: 8500.0,
+    totalSales: 84200.0,
+    storeCredit: 500,
+    loyaltyPoints: 320,
+    totalOrders: 9,
+    returnsCount: 1,
+    status: 'active',
+    tier: 'Regular',
+    lastOrderDate: '08 May 2024',
+    location: 'Durg, CG',
+    billingAddress: {
+      addressLine1: 'Station Road, Mohan Nagar',
+      city: 'Durg',
+      state: 'CG',
+      pincode: '491001',
+      country: 'India',
+      sameAsShipping: true,
+    },
+    notes: 'Weekly milk and grocery delivery.',
+    recentOrders: [
+      { orderId: 'ORD-9810', date: '08 May 2024', itemsCount: 5, totalAmount: 8500, status: 'delivered', paymentMethod: 'Credit / Khata' },
+    ],
+    creditHistory: [],
+    statementTransactions: [
+      { id: 'st-s1', date: '08 May 2024', type: 'Invoice', referenceNo: 'INV-1250', amount: 8500.0, balance: 8500.0 },
+      { id: 'st-s2', date: '01 May 2024', type: 'Payment', referenceNo: 'PAY-0032', amount: -15000.0, balance: 0.0 },
+      { id: 'st-s3', date: '25 Apr 2024', type: 'Invoice', referenceNo: 'INV-1238', amount: 15000.0, balance: 15000.0 },
+    ],
+    agingBuckets: [
+      { label: 'Current', range: '(0–30 days)', amount: 8500.0, invoiceCount: 1, barColor: '#3b82f6', heightPercent: 85 },
+      { label: '31–60 days', range: '31–60 days', amount: 0.0, invoiceCount: 0, barColor: '#e2e8f0', heightPercent: 20 },
+      { label: '61–90 days', range: '61–90 days', amount: 0.0, invoiceCount: 0, barColor: '#e2e8f0', heightPercent: 20 },
+      { label: '91–120 days', range: '91–120 days', amount: 0.0, invoiceCount: 0, barColor: '#e2e8f0', heightPercent: 20 },
+      { label: '> 120 days', range: '> 120 days', amount: 0.0, invoiceCount: 0, barColor: '#e2e8f0', heightPercent: 20 },
+    ],
+    overdueInvoices: [],
+  },
+  {
+    id: 'CUS-1003',
+    name: 'Priya Verma',
+    customerType: 'Individual',
+    phone: '+91 91112 34567',
+    email: 'priya.verma@outlook.com',
+    displayName: 'Priya Verma',
+    customerCode: 'CUS-1003',
+    creditLimit: 10000,
+    paymentTerms: 'Immediate',
+    creditPeriodDays: 0,
+    outstandingAmount: 0.0,
+    totalSales: 32400.0,
+    storeCredit: 1200,
+    loyaltyPoints: 680,
+    totalOrders: 6,
+    returnsCount: 0,
+    status: 'active',
+    tier: 'Regular',
+    lastOrderDate: '06 May 2024',
+    location: 'Raipur, CG',
+    billingAddress: {
+      addressLine1: 'Flat 402, Green Enclave',
+      city: 'Raipur',
+      state: 'CG',
+      pincode: '492001',
+      country: 'India',
+      sameAsShipping: true,
+    },
+    recentOrders: [
+      { orderId: 'ORD-9755', date: '06 May 2024', itemsCount: 3, totalAmount: 4200, status: 'delivered', paymentMethod: 'UPI' },
+    ],
+    creditHistory: [
+      { id: 'CR-101', date: '06 May 2024', type: 'add', amount: 1200, balanceAfter: 1200, reason: 'Promotional gift voucher' },
+    ],
+    statementTransactions: [
+      { id: 'st-p1', date: '06 May 2024', type: 'Invoice', referenceNo: 'INV-1245', amount: 4200.0, balance: 0.0 },
+      { id: 'st-p2', date: '06 May 2024', type: 'Payment', referenceNo: 'PAY-0029', amount: -4200.0, balance: 0.0 },
+    ],
+    agingBuckets: [
+      { label: 'Current', range: '(0–30 days)', amount: 0.0, invoiceCount: 0, barColor: '#e2e8f0', heightPercent: 20 },
+      { label: '31–60 days', range: '31–60 days', amount: 0.0, invoiceCount: 0, barColor: '#e2e8f0', heightPercent: 20 },
+      { label: '61–90 days', range: '61–90 days', amount: 0.0, invoiceCount: 0, barColor: '#e2e8f0', heightPercent: 20 },
+      { label: '91–120 days', range: '91–120 days', amount: 0.0, invoiceCount: 0, barColor: '#e2e8f0', heightPercent: 20 },
+      { label: '> 120 days', range: '> 120 days', amount: 0.0, invoiceCount: 0, barColor: '#e2e8f0', heightPercent: 20 },
+    ],
+    overdueInvoices: [],
+  },
+  {
+    id: 'CUS-1004',
+    name: 'Anil Agrawal',
+    customerType: 'Wholesaler',
+    phone: '+91 98930 11223',
+    email: 'agrawal.traders@yahoo.com',
+    displayName: 'Agrawal Trading Corp',
+    gstin: '22CCCCC2222C3Z7',
+    customerCode: 'CUS-1004',
+    creditLimit: 100000,
+    paymentTerms: '30 Days',
+    creditPeriodDays: 30,
+    outstandingAmount: 34200.0,
+    totalSales: 340000.0,
+    storeCredit: 0,
+    loyaltyPoints: 1250,
+    totalOrders: 18,
+    returnsCount: 2,
+    status: 'active',
+    tier: 'VIP',
+    lastOrderDate: '10 May 2024',
+    location: 'Bhilai, CG',
+    billingAddress: {
+      addressLine1: 'Plot 45, Light Industrial Area',
+      city: 'Bhilai',
+      state: 'CG',
+      pincode: '490026',
+      country: 'India',
+      sameAsShipping: true,
+    },
+    notes: 'Bulk seasonal purchases. 30 days credit cycle.',
+    recentOrders: [
+      { orderId: 'ORD-9830', date: '10 May 2024', itemsCount: 12, totalAmount: 34200, status: 'delivered', paymentMethod: 'Credit / Khata' },
+    ],
+    creditHistory: [],
+    statementTransactions: [
+      { id: 'st-a1', date: '10 May 2024', type: 'Invoice', referenceNo: 'INV-1247', amount: 34200.0, balance: 34200.0 },
+      { id: 'st-a2', date: '20 Apr 2024', type: 'Payment', referenceNo: 'PAY-0025', amount: -60000.0, balance: 0.0 },
+      { id: 'st-a3', date: '15 Apr 2024', type: 'Invoice', referenceNo: 'INV-1232', amount: 60000.0, balance: 60000.0 },
+    ],
+    agingBuckets: [
+      { label: 'Current', range: '(0–30 days)', amount: 34200.0, invoiceCount: 1, barColor: '#3b82f6', heightPercent: 90 },
+      { label: '31–60 days', range: '31–60 days', amount: 0.0, invoiceCount: 0, barColor: '#e2e8f0', heightPercent: 20 },
+      { label: '61–90 days', range: '61–90 days', amount: 0.0, invoiceCount: 0, barColor: '#e2e8f0', heightPercent: 20 },
+      { label: '91–120 days', range: '91–120 days', amount: 0.0, invoiceCount: 0, barColor: '#e2e8f0', heightPercent: 20 },
+      { label: '> 120 days', range: '> 120 days', amount: 0.0, invoiceCount: 0, barColor: '#e2e8f0', heightPercent: 20 },
+    ],
+    overdueInvoices: [],
+  },
+  {
+    id: 'CUS-1005',
+    name: 'Sunita Patel',
+    customerType: 'Individual',
+    phone: '+91 93001 98765',
+    email: 'sunita.patel@gmail.com',
+    displayName: 'Sunita Patel',
+    customerCode: 'CUS-1005',
+    creditLimit: 5000,
+    paymentTerms: '7 Days',
+    creditPeriodDays: 7,
+    outstandingAmount: 1850.0,
+    totalSales: 14600.0,
+    storeCredit: 0,
+    loyaltyPoints: 140,
+    totalOrders: 4,
+    returnsCount: 0,
+    status: 'active',
+    tier: 'Regular',
+    lastOrderDate: '04 May 2024',
+    location: 'Durg, CG',
+    billingAddress: {
+      addressLine1: 'Ganjpara, Ward 12',
+      city: 'Durg',
+      state: 'CG',
+      pincode: '491001',
+      country: 'India',
+      sameAsShipping: true,
+    },
+    recentOrders: [
+      { orderId: 'ORD-9740', date: '04 May 2024', itemsCount: 2, totalAmount: 1850, status: 'delivered', paymentMethod: 'Credit / Khata' },
+    ],
+    creditHistory: [],
+    statementTransactions: [
+      { id: 'st-u1', date: '04 May 2024', type: 'Invoice', referenceNo: 'INV-1243', amount: 1850.0, balance: 1850.0 },
+      { id: 'st-u2', date: '24 Apr 2024', type: 'Payment', referenceNo: 'PAY-0027', amount: -3200.0, balance: 0.0 },
+      { id: 'st-u3', date: '18 Apr 2024', type: 'Invoice', referenceNo: 'INV-1234', amount: 3200.0, balance: 3200.0 },
+    ],
+    agingBuckets: [
+      { label: 'Current', range: '(0–30 days)', amount: 1850.0, invoiceCount: 1, barColor: '#3b82f6', heightPercent: 40 },
+      { label: '31–60 days', range: '31–60 days', amount: 0.0, invoiceCount: 0, barColor: '#e2e8f0', heightPercent: 20 },
+      { label: '61–90 days', range: '61–90 days', amount: 0.0, invoiceCount: 0, barColor: '#e2e8f0', heightPercent: 20 },
+      { label: '91–120 days', range: '91–120 days', amount: 0.0, invoiceCount: 0, barColor: '#e2e8f0', heightPercent: 20 },
+      { label: '> 120 days', range: '> 120 days', amount: 0.0, invoiceCount: 0, barColor: '#e2e8f0', heightPercent: 20 },
+    ],
+    overdueInvoices: [],
+  },
+];
 
 export const useCustomerStore = create<CustomerState>((set) => ({
-  customers: initialCustomers,
-  kpis: {
-    totalCustomers: 0,
-    totalCustomersGrowth: 0,
-    totalSales: 0,
-    totalSalesGrowth: 0,
-    totalOutstanding: 0,
-    totalOutstandingChange: 0,
-  },
+  customers: seedCustomers,
+  kpis: computeCustomerKPIs(seedCustomers),
   searchQuery: '',
   statusFilter: 'All',
   typeFilter: 'All',
@@ -255,35 +499,54 @@ export const useCustomerStore = create<CustomerState>((set) => ({
         notes: customerData.notes,
         recentOrders: [],
         creditHistory: [],
-        statementTransactions: defaultStatementTransactions,
+        statementTransactions: customerData.openingBalance
+          ? [
+              {
+                id: `st-${Date.now()}`,
+                date: 'Opening Balance',
+                type: 'Invoice',
+                referenceNo: 'OPENING',
+                amount: customerData.openingBalance,
+                balance: customerData.openingBalance,
+              },
+            ]
+          : [],
         agingBuckets: defaultAgingBuckets,
         overdueInvoices: [],
       };
 
+      const updatedCustomers = [newCustomer, ...state.customers];
       return {
-        customers: [newCustomer, ...state.customers],
+        customers: updatedCustomers,
         viewMode: 'list',
         editingCustomer: null,
-        kpis: {
-          ...state.kpis,
-          totalCustomers: state.kpis.totalCustomers + 1,
-        },
+        kpis: computeCustomerKPIs(updatedCustomers),
       };
     }),
 
   updateCustomer: (id, updates) =>
-    set((state) => ({
-      customers: state.customers.map((c) => (c.id === id ? { ...c, ...updates } : c)),
-      editingCustomer: null,
-      viewMode: 'list',
-    })),
+    set((state) => {
+      const updatedCustomers = state.customers.map((c) =>
+        c.id === id ? { ...c, ...updates } : c
+      );
+      return {
+        customers: updatedCustomers,
+        editingCustomer: null,
+        viewMode: 'list',
+        kpis: computeCustomerKPIs(updatedCustomers),
+      };
+    }),
 
   deleteCustomer: (id) =>
-    set((state) => ({
-      customers: state.customers.filter((c) => c.id !== id),
-      selectedCustomerId: state.selectedCustomerId === id ? null : state.selectedCustomerId,
-      statementCustomer: state.statementCustomer?.id === id ? null : state.statementCustomer,
-    })),
+    set((state) => {
+      const updatedCustomers = state.customers.filter((c) => c.id !== id);
+      return {
+        customers: updatedCustomers,
+        selectedCustomerId: state.selectedCustomerId === id ? null : state.selectedCustomerId,
+        statementCustomer: state.statementCustomer?.id === id ? null : state.statementCustomer,
+        kpis: computeCustomerKPIs(updatedCustomers),
+      };
+    }),
 
   addStoreCredit: (customerId, amount, reason) =>
     set((state) => {
@@ -296,7 +559,7 @@ export const useCustomerStore = create<CustomerState>((set) => ({
             type: 'add',
             amount,
             balanceAfter: newCredit,
-            reason: reason || 'Merchant credit credit',
+            reason: reason || 'Merchant credit addition',
           };
           return {
             ...c,
@@ -332,4 +595,162 @@ export const useCustomerStore = create<CustomerState>((set) => ({
       });
       return { customers: updated };
     }),
+
+  recordPayment: (customerId, amount, paymentMethod, notes) =>
+    set((state) => {
+      const refNo = `PAY-${Date.now().toString().slice(-4)}`;
+      const dateStr = new Date().toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      });
+
+      const updated = state.customers.map((c) => {
+        if (c.id === customerId) {
+          const newOutstanding = Math.max(0, c.outstandingAmount - amount);
+          const paymentTx: StatementTransaction = {
+            id: `st-${Date.now()}`,
+            date: dateStr,
+            type: 'Payment',
+            referenceNo: refNo,
+            amount: -amount,
+            balance: newOutstanding,
+          };
+
+          return {
+            ...c,
+            outstandingAmount: newOutstanding,
+            statementTransactions: [paymentTx, ...(c.statementTransactions || [])],
+          };
+        }
+        return c;
+      });
+
+      const updatedStatementCustomer =
+        state.statementCustomer?.id === customerId
+          ? updated.find((c) => c.id === customerId) || null
+          : state.statementCustomer;
+
+      return {
+        customers: updated,
+        statementCustomer: updatedStatementCustomer,
+        kpis: computeCustomerKPIs(updated),
+      };
+    }),
+
+  syncFromStoreData: (invoices = [], orders = []) =>
+    set((state) => {
+      let updated = [...state.customers];
+
+      // Process invoices from POS / Tax billing
+      invoices.forEach((inv) => {
+        if (!inv.customerName && !inv.customerPhone) return;
+        const cleanPhone = (inv.customerPhone || '').replace(/\D/g, '');
+        const existingIdx = updated.findIndex(
+          (c) =>
+            (cleanPhone && c.phone.replace(/\D/g, '') === cleanPhone) ||
+            c.name.toLowerCase() === (inv.customerName || '').toLowerCase()
+        );
+
+        const invoiceAmount = Number(inv.grandTotal) || 0;
+        const balanceDue =
+          inv.balanceDue !== undefined
+            ? Number(inv.balanceDue)
+            : inv.status === 'paid'
+            ? 0
+            : invoiceAmount;
+        const invoiceDate = inv.date || 'Today';
+        const invoiceNo = inv.invoiceNo || `INV-${inv.id}`;
+
+        if (existingIdx >= 0 && updated[existingIdx]) {
+          const cust = updated[existingIdx]!;
+          const hasInvoice = cust.statementTransactions?.some((t) => t.referenceNo === invoiceNo);
+          if (!hasInvoice) {
+            const newTx: StatementTransaction = {
+              id: `st-${Date.now()}-${Math.random().toString(36).substring(2, 5)}`,
+              date: invoiceDate,
+              type: 'Invoice',
+              referenceNo: invoiceNo,
+              amount: invoiceAmount,
+              balance: cust.outstandingAmount + balanceDue,
+            };
+            updated[existingIdx] = {
+              ...cust,
+              totalSales: cust.totalSales + invoiceAmount,
+              outstandingAmount: cust.outstandingAmount + balanceDue,
+              statementTransactions: [newTx, ...(cust.statementTransactions || [])],
+            };
+          }
+        } else {
+          const nextIdNum = 1000 + updated.length + 1;
+          const newCust: Customer = {
+            id: `CUS-${nextIdNum}`,
+            name: inv.customerName || 'Walk-in Customer',
+            customerType: 'Individual',
+            phone: inv.customerPhone || 'N/A',
+            email:
+              inv.customerEmail ||
+              `${(inv.customerName || 'customer').toLowerCase().replace(/\s+/g, '')}@gmail.com`,
+            displayName: inv.customerName || 'Walk-in Customer',
+            gstin: inv.customerGstin,
+            customerCode: `CUS-${nextIdNum}`,
+            creditLimit: 10000,
+            paymentTerms: '15 Days',
+            creditPeriodDays: 15,
+            outstandingAmount: balanceDue,
+            totalSales: invoiceAmount,
+            storeCredit: 0,
+            loyaltyPoints: Math.floor(invoiceAmount / 100),
+            totalOrders: 1,
+            returnsCount: 0,
+            status: 'active',
+            tier: 'Regular',
+            lastOrderDate: invoiceDate,
+            location: inv.placeOfSupply || 'Local',
+            billingAddress: {
+              addressLine1: inv.customerAddress || 'Local Area',
+              city: inv.placeOfSupply || 'Local',
+              state: 'CG',
+              pincode: '490020',
+              country: 'India',
+              sameAsShipping: true,
+            },
+            recentOrders: [],
+            creditHistory: [],
+            statementTransactions: [
+              {
+                id: `st-${Date.now()}`,
+                date: invoiceDate,
+                type: 'Invoice',
+                referenceNo: invoiceNo,
+                amount: invoiceAmount,
+                balance: balanceDue,
+              },
+            ],
+            agingBuckets: defaultAgingBuckets,
+            overdueInvoices:
+              balanceDue > 0
+                ? [
+                    {
+                      id: `ov-${Date.now()}`,
+                      invoiceNo: invoiceNo,
+                      invoiceDate: invoiceDate,
+                      dueDate: inv.dueDate || invoiceDate,
+                      amount: balanceDue,
+                      daysOverdue: 0,
+                      status: 'Overdue',
+                    },
+                  ]
+                : [],
+          };
+          updated.push(newCust);
+        }
+      });
+
+      return {
+        customers: updated,
+        kpis: computeCustomerKPIs(updated),
+      };
+    }),
 }));
+

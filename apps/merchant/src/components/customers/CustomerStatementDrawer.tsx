@@ -14,6 +14,7 @@ import {
   MapPin,
   CheckCircle2,
   ExternalLink,
+  MessageCircle,
 } from 'lucide-react';
 import {
   useCustomerStore,
@@ -23,6 +24,8 @@ import {
   OverdueInvoice,
 } from '../../stores/customerStore.js';
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock.js';
+import { downloadCSV } from '../../utils/csvExport.js';
+import { branding } from '../../lib/branding.js';
 
 interface CustomerStatementDrawerProps {
   customer: Customer | null;
@@ -60,7 +63,37 @@ export const CustomerStatementDrawer: React.FC<CustomerStatementDrawerProps> = (
 
   const handleDownload = (format: 'pdf' | 'excel' | 'csv') => {
     setShowDownloadMenu(false);
-    alert(`Downloading statement for ${customer.name} in ${format.toUpperCase()} format...`);
+    if (format === 'pdf') {
+      window.print();
+      return;
+    }
+
+    if (activeStatementTab === 'aging') {
+      const headers = ['Aging Range', 'Invoices Count', 'Amount (INR)'];
+      const rows = agingBuckets.map((b) => [b.range, b.invoiceCount, b.amount]);
+      downloadCSV(`${customer.name.replace(/\s+/g, '_')}_aging_report`, headers, rows);
+    } else {
+      const headers = ['Date', 'Type', 'Reference No', 'Amount (INR)', 'Running Balance (INR)'];
+      const rows = transactions.map((tx) => [
+        tx.date,
+        tx.type,
+        tx.referenceNo,
+        tx.amount,
+        tx.balance,
+      ]);
+      downloadCSV(`${customer.name.replace(/\s+/g, '_')}_statement`, headers, rows);
+    }
+  };
+
+  const handleSendWhatsAppReminder = () => {
+    const cleanPhone = customer.phone.replace(/\D/g, '');
+    const intlPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
+    const storeName = branding.appName;
+    const outstanding = customer.outstandingAmount.toLocaleString('en-IN', {
+      minimumFractionDigits: 2,
+    });
+    const msg = `Namaste ${customer.name}, this is a gentle reminder regarding your outstanding Khata balance of ₹${outstanding} with ${storeName}. Kindly settle your balance at your earliest convenience via UPI or store visit. Thank you!`;
+    window.open(`https://wa.me/${intlPhone}?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
   const handlePrint = () => {
@@ -419,8 +452,8 @@ export const CustomerStatementDrawer: React.FC<CustomerStatementDrawerProps> = (
 
                     <button
                       type="button"
-                      onClick={() => alert('Viewing all overdue invoices...')}
-                      className="px-3 py-1 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold"
+                      onClick={() => setActiveStatementTab('history')}
+                      className="px-3 py-1 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold cursor-pointer"
                     >
                       View All Invoices
                     </button>
@@ -517,15 +550,29 @@ export const CustomerStatementDrawer: React.FC<CustomerStatementDrawerProps> = (
               )}
             </div>
 
-            {/* Print Button */}
-            <button
-              type="button"
-              onClick={handlePrint}
-              className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition-colors"
-            >
-              <Printer className="w-4 h-4" />
-              <span>{isAging ? 'Print Aging Summary' : 'Print Statement'}</span>
-            </button>
+            {/* Action Buttons: WhatsApp Reminder & Print */}
+            <div className="flex items-center gap-2">
+              {customer.outstandingAmount > 0 && (
+                <button
+                  type="button"
+                  onClick={handleSendWhatsAppReminder}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                  title="Send gentle payment reminder to customer via WhatsApp"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  <span>WhatsApp Reminder</span>
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={handlePrint}
+                className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+              >
+                <Printer className="w-4 h-4" />
+                <span>{isAging ? 'Print Aging Summary' : 'Print Statement'}</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>

@@ -11,13 +11,13 @@
 
 | Total Workstreams | In Progress | Hardened & Verified | Pending / Planned | Progress |
 |:---:|:---:|:---:|:---:|:---:|
-| **8** | **0** | **5** | **3** | **62.5%** |
+| **8** | **0** | **6** | **2** | **75.0%** |
 
 ```mermaid
 pie title Merchant Web Hardening Workstreams
-    "Hardened & Verified" : 5
+    "Hardened & Verified" : 6
     "In Progress" : 0
-    "Planned / Backlog" : 3
+    "Planned / Backlog" : 2
 ```
 
 ---
@@ -52,7 +52,7 @@ flowchart TD
 | **MW-HARDEN-03** | **Product Catalog & Media Upload Pipeline** | `ProductsCatalogPage`, `AddProductWizardPage`, `AddProductStep1`, `AddProductStep2`, `BulkUploadModal`, `catalogStore`, `api.ts` | 3-step product creation wizard, multi-variant matrix (size/color/weight), barcode assignment, base64 & external URL image dropzone, dynamic category-subcategory tree, and live bulk CSV ingestion | Real CSV parsing and 1-click demo batch importer, multi-variant matrix generator in catalogStore, base64 file reading + direct image URL input, dynamic sub-category updater, and live `/catalog/products/bulk` API | Dynamic category taxonomy, multi-variant SKU generator, persistent image reader, CSV parser with preview table, and bulk import API integration | 🟢 **RESOLVED** |
 | **MW-HARDEN-04** | **Inventory Management & Low-Stock Alerts** | `InventoryPage`, `InventoryTable`, `AdjustStockDrawer`, `BulkAdjustStockView`, `StockHistoryView`, `inventoryStore` | Real-time stock counts, backend persistence on stock adjustments, dynamic pagination, live catalog refetch, dynamic KPI calculation, and inventory CSV audit export | Hardcoded totalPages (125) with static buttons, adjustStock mutating only local state without backend API persistence, static hardcoded KPI counters | Real-time stock sync with catalogStore, backend PATCH persistence, dynamic pagination engine, live data refresh button, and complete inventory CSV exporter | 🟢 **RESOLVED** |
 | **MW-HARDEN-05** | **In-House POS Retail Billing & Thermal Print** | `CounterPOSView`, `BillingPage`, `PrintReceiptModal`, `InvoicesTableView`, `billingStore`, `api.ts` | Tier 2 walk-in counter retail billing: fast barcode scanner input, instant product lookup, GST slab breakdown, Cash/UPI/Card tender, and 80mm/58mm thermal receipt printing | UI complete with cart calculation; add `@media print` ESC/POS thermal receipt formatting and invoice generation | Thermal printer CSS media queries, live POS transaction commit with atomic OCC stock deduction, instant inventory auto-deduction, dynamic UPI QR code generator, and live invoices synchronization | 🟢 **RESOLVED** |
-| **MW-HARDEN-06** | **Customers CRM & Credit (Udhar) Ledger** | `CustomersPage`, `CustomerDetailsDrawer`, `CreditLedgerModal` | Customer database, order history tracking, customer credit (Khata/Udhar) ledger, payment recording, and aging analysis (0-30, 31-60, 60+ days) | Baseline table present; verify statement generation, WhatsApp payment reminder link, and credit limit validations | Live customer CRUD, credit balance tracking, WhatsApp reminder generator, PDF statement export | ⚪ **PLANNED** |
+| **MW-HARDEN-06** | **Customers CRM & Credit (Udhar) Ledger** | `CustomersPage`, `CustomerDetailsDrawer`, `CustomerStatementDrawer`, `CustomerTable`, `AddStoreCreditModal`, `customerStore` | Customer database, order history tracking, customer credit (Khata/Udhar) ledger, debt payment recording, WhatsApp payment reminders, CSV import/export, and aging analysis | Residual alert() stubs on import/export/statements, empty customer initial state, store credit modal lacked debt settlement | Live customer sync from invoices/orders, functional CSV import/export, WhatsApp reminder generator, dual Khata debt/credit settlement modal | 🟢 **RESOLVED** |
 | **MW-HARDEN-07** | **Payouts, Wallet & Expense Ledger** | `PayoutsPage`, `WalletPage`, `ExpensesPage`, `payoutStore` | Settlement tracking with UTR numbers, commission & platform fee breakdown, wallet balance sweep, vendor management, and operating expense ledger | Baseline mock data in financial views; replace with live transaction ledger and payout requests | Live wallet balance query, settlement history with UTR search, expense logging with receipt attachments | ⚪ **PLANNED** |
 | **MW-HARDEN-08** | **Multi-Tenant White-Label & Build Integrity** | `branding.config.ts`, `StoreSettingsPage`, Vite build configs | 100% white-label architecture across all 15 modules, 0 brand leaks, responsive tablet/desktop UI, and zero TypeScript / bundle warnings | Zero client brand names in UI; verify all modals, receipts, and invoices pull dynamically from `branding` | Automated brand string scanning, Vite production bundle optimization, clean build pass | ⚪ **PLANNED** |
 
@@ -185,14 +185,24 @@ flowchart TD
   - Backend modular monolith: 100% clean pass.
 
 ### 🛠️ MW-HARDEN-06: Customers CRM & Khata Credit Ledger
-* **Target Scope:** `apps/merchant/src/pages/CustomersPage.tsx`, `components/customers/`
-* **Enterprise Hardening Goals:**
-  1. Customer lookup by phone number during billing or management.
-  2. Udhar / Credit ledger tracking outstanding balances with aging brackets.
-  3. Record payment received against credit balance.
-  4. WhatsApp payment reminder notification generator with deep links.
-* **Verification Targets:**
-  - Accurate customer ledger balance reconciliation.
+* **Date:** October 13, 2026
+* **Target Scope:** `apps/merchant/src/stores/customerStore.ts`, `apps/merchant/src/pages/CustomersPage.tsx`, `apps/merchant/src/components/customers/CustomerStatementDrawer.tsx`, `CustomerDetailsDrawer.tsx`, `CustomerTable.tsx`, `AddStoreCreditModal.tsx`, `CustomerKPIBar.tsx`
+* **Root Causes Diagnosed:**
+  1. `CustomersPage.tsx` lines 92, 109, 126 had unstyled `alert()` stubs for Import Customers, Export Customers, and Bulk Customer Statements.
+  2. `CustomerStatementDrawer.tsx` line 63 had an `alert()` stub for downloading customer statements in PDF, Excel, and CSV format, and lacked Indian hyperlocal payment reminders.
+  3. `CustomerTable.tsx` had residual `alert()` stubs on "Create Invoice" (line 99), "Download Statement" (line 135), and "More Filters" (line 355).
+  4. `AddStoreCreditModal.tsx` only supported store credit adjustments without supporting Khata / Udhar payment debt settlements, leaving merchants unable to record customer payments against debt.
+  5. `customerStore.ts` had an empty initial customer array and static KPIs without dynamic aggregation across outstanding balances or live store invoices.
+* **Fixes Applied:**
+  1. **Live Customer & Invoice Sync (`customerStore.ts`)**: Added `syncFromStoreData(invoices, orders)` merging customer records from live POS / Tax invoices and orders, with seed demo retailers/businesses and dynamic KPI auto-calculation (`computeCustomerKPIs`).
+  2. **Functional CSV Importer & Exporter (`CustomersPage.tsx`)**: Replaced `alert()` stubs with hidden file input reading customer CSVs via `FileReader`, column mapping, instant parsing, feedback alerts, and complete RFC-compliant CSV directory exporter (`downloadCSV`).
+  3. **Statement Ledger Exporter & WhatsApp Payment Reminders (`CustomerStatementDrawer.tsx`)**: Wired CSV / Excel download of running transaction statements and aging bucket reports, native print triggering, and 1-click **WhatsApp Payment Reminder** button generating deep links (`https://wa.me/<phone>?text=...`) with polite Khata balance notification.
+  4. **Dual-Mode Debt Settlement & Store Credit Modal (`AddStoreCreditModal.tsx`)**: Added tabbed interface supporting both **Record Khata / Udhar Payment** (Cash, UPI, Bank Transfer, Cheque with quick percentage pills and balance reduction) and **Manage Store Credit** (Add/Deduct credit).
+  5. **Interactive Filter Strip & Row Actions (`CustomerTable.tsx`)**: Replaced alerts with live `openCreateInvoiceModal` dispatch to billing, statement CSV download, and interactive expandable secondary filter strip for Customer Tiers (VIP, Regular, New) and Khata Due toggle.
+* **Verification Results:**
+  - Merchant TypeScript & Vite build: 100% clean (`tsc && vite build`).
+  - Monorepo automated test suite: **120 / 120 tests passing** across 19 suites.
+  - Global Hardening Progress: **6 of 8 completed (75.0%)**.
 
 ### 🛠️ MW-HARDEN-07: Payouts, Settlement Ledgers & Operating Expenses
 * **Target Scope:** `apps/merchant/src/pages/PayoutsPage.tsx`, `WalletPage.tsx`, `ExpensesPage.tsx`

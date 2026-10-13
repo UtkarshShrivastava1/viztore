@@ -18,6 +18,7 @@ import {
 import { useCustomerStore, Customer } from '../../stores/customerStore.js';
 import { TableActionPopover } from '../ui/TableActionPopover.js';
 import { downloadCSV } from '../../utils/csvExport.js';
+import { useBillingStore } from '../../stores/billingStore.js';
 
 interface CustomerTableProps {
   onSelectCustomer: (customer: Customer) => void;
@@ -96,7 +97,12 @@ const CustomerRowMoreAction: React.FC<{
           type="button"
           onClick={() => {
             onClose();
-            alert(`Creating invoice for ${customer.name}...`);
+            useBillingStore.getState().openCreateInvoiceModal({
+              customerName: customer.name,
+              customerPhone: customer.phone,
+              customerGstin: customer.gstin,
+              customerAddress: customer.billingAddress.addressLine1,
+            });
           }}
           className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5 transition-colors cursor-pointer"
         >
@@ -132,7 +138,15 @@ const CustomerRowMoreAction: React.FC<{
           type="button"
           onClick={() => {
             onClose();
-            alert(`Downloading statement for ${customer.name}...`);
+            const headers = ['Date', 'Type', 'Reference No', 'Amount (INR)', 'Running Balance (INR)'];
+            const rows = (customer.statementTransactions || []).map((tx) => [
+              tx.date,
+              tx.type,
+              tx.referenceNo,
+              tx.amount,
+              tx.balance,
+            ]);
+            downloadCSV(`${customer.name.replace(/\s+/g, '_')}_statement`, headers, rows);
           }}
           className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5 transition-colors cursor-pointer"
         >
@@ -182,6 +196,9 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [perPage, setPerPage] = useState('10');
+  const [showMoreFilters, setShowMoreFilters] = useState(false);
+  const [tierFilter, setTierFilter] = useState<'All' | 'VIP' | 'Regular' | 'New'>('All');
+  const [hasKhataDueFilter, setHasKhataDueFilter] = useState(false);
 
   // Filter logic
   const filteredCustomers = customers.filter((c) => {
@@ -206,6 +223,14 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
     }
 
     if (locationFilter !== 'All' && !c.location.toLowerCase().includes(locationFilter.toLowerCase())) {
+      return false;
+    }
+
+    if (tierFilter !== 'All' && c.tier !== tierFilter) {
+      return false;
+    }
+
+    if (hasKhataDueFilter && (c.outstandingAmount || 0) <= 0) {
       return false;
     }
 
@@ -349,14 +374,21 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
             </div>
           </div>
 
-          {/* More Filters Button */}
+          {/* More Filters Toggle Button */}
           <button
             type="button"
-            onClick={() => alert('Additional customer attribute filters (Credit limit, Tiers, Date added)...')}
-            className="px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-2xs"
+            onClick={() => setShowMoreFilters(!showMoreFilters)}
+            className={`px-3.5 py-2 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer ${
+              showMoreFilters || tierFilter !== 'All' || hasKhataDueFilter
+                ? 'bg-blue-50 border-blue-200 text-blue-700'
+                : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
+            }`}
           >
             <Filter className="w-3.5 h-3.5 text-blue-600" />
             <span>More Filters</span>
+            {(tierFilter !== 'All' || hasKhataDueFilter) && (
+              <span className="w-2 h-2 rounded-full bg-blue-600" />
+            )}
           </button>
         </div>
 
@@ -370,6 +402,56 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
           <span>Export</span>
         </button>
       </div>
+
+      {/* Expandable Secondary Filter Panel */}
+      {showMoreFilters && (
+        <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex flex-wrap items-center justify-between gap-3 text-xs animate-in fade-in duration-100">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-slate-600">Customer Tier:</span>
+              <div className="flex items-center gap-1">
+                {(['All', 'VIP', 'Regular', 'New'] as const).map((tier) => (
+                  <button
+                    key={tier}
+                    type="button"
+                    onClick={() => setTierFilter(tier)}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                      tierFilter === tier
+                        ? 'bg-blue-600 text-white shadow-2xs'
+                        : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    {tier}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <label className="flex items-center gap-2 cursor-pointer font-semibold text-slate-700 select-none">
+              <input
+                type="checkbox"
+                checked={hasKhataDueFilter}
+                onChange={(e) => setHasKhataDueFilter(e.target.checked)}
+                className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-3.5 h-3.5 cursor-pointer"
+              />
+              <span>Has Khata / Outstanding Due (Udhar)</span>
+            </label>
+          </div>
+
+          {(tierFilter !== 'All' || hasKhataDueFilter) && (
+            <button
+              type="button"
+              onClick={() => {
+                setTierFilter('All');
+                setHasKhataDueFilter(false);
+              }}
+              className="text-[11px] font-bold text-rose-600 hover:text-rose-800 transition-colors cursor-pointer"
+            >
+              Reset Filters
+            </button>
+          )}
+        </div>
+      )}
 
       {/* 2. Customer Table (11 columns matching Mockup 6.0.png) */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
