@@ -14,6 +14,49 @@ export class ApiError extends Error {
   }
 }
 
+let isRefreshing = false;
+let refreshSubscribers: ((token: string) => void)[] = [];
+
+function subscribeTokenRefresh(cb: (token: string) => void) {
+  refreshSubscribers.push(cb);
+}
+
+function onRefreshed(token: string) {
+  refreshSubscribers.forEach((cb) => cb(token));
+  refreshSubscribers = [];
+}
+
+async function performTokenRefresh(): Promise<string | null> {
+  const refreshToken = localStorage.getItem('refresh_token');
+  if (!refreshToken) return null;
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/auth/refresh-token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken }),
+    });
+
+    const json = await res.json().catch(() => null);
+    if (res.ok && json?.success && json?.data?.accessToken) {
+      const newAccessToken = json.data.accessToken;
+      const newRefreshToken = json.data.refreshToken || refreshToken;
+      localStorage.setItem('access_token', newAccessToken);
+      localStorage.setItem('refresh_token', newRefreshToken);
+      return newAccessToken;
+    }
+  } catch (err) {
+    console.warn('Silent token refresh failed:', err);
+  }
+
+  // If refresh failed completely, purge auth to prevent loops
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('refresh_token');
+  localStorage.removeItem('user_session');
+  localStorage.removeItem('current_store');
+  return null;
+}
+
 export async function request<T>(
   endpoint: string,
   options: RequestInit = {},
@@ -27,10 +70,50 @@ export async function request<T>(
   };
 
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-  const response = await fetch(`${API_BASE_URL}${cleanEndpoint}`, {
+  let response = await fetch(`${API_BASE_URL}${cleanEndpoint}`, {
     ...options,
     headers,
   });
+
+  // Handle 401 Unauthorized via automatic token refresh
+  if (
+    response.status === 401 &&
+    !cleanEndpoint.includes('/auth/login') &&
+    !cleanEndpoint.includes('/auth/refresh-token')
+  ) {
+    if (!isRefreshing) {
+      isRefreshing = true;
+      const newToken = await performTokenRefresh();
+      isRefreshing = false;
+
+      if (newToken) {
+        onRefreshed(newToken);
+        const retryHeaders: HeadersInit = {
+          ...headers,
+          Authorization: `Bearer ${newToken}`,
+        };
+        response = await fetch(`${API_BASE_URL}${cleanEndpoint}`, {
+          ...options,
+          headers: retryHeaders,
+        });
+      }
+    } else {
+      const newToken = await new Promise<string | null>((resolve) => {
+        subscribeTokenRefresh((t) => resolve(t));
+      });
+
+      if (newToken) {
+        const retryHeaders: HeadersInit = {
+          ...headers,
+          Authorization: `Bearer ${newToken}`,
+        };
+        response = await fetch(`${API_BASE_URL}${cleanEndpoint}`, {
+          ...options,
+          headers: retryHeaders,
+        });
+      }
+    }
+  }
 
   const json: ApiResponse<T> = await response.json().catch(() => ({
     success: false,
@@ -123,8 +206,11 @@ export const storesApi = {
   updateStoreSettings: (storeId: string, data: unknown) =>
     api.patch<any>(`/stores/${storeId}`, data),
 
+  updateStoreStatus: (storeId: string, isActive: boolean) =>
+    api.patch<any>(`/stores/${storeId}`, { isActive, isOpen: isActive }),
+
   toggleOnlineStatus: (storeId: string, isOpen: boolean) =>
-    api.patch<any>(`/stores/${storeId}/status`, { isOpen }),
+    api.patch<any>(`/stores/${storeId}`, { isActive: isOpen, isOpen }),
 };
 
 export const notificationsApi = {

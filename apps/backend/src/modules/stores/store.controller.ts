@@ -37,7 +37,13 @@ export const updateStore: RequestHandler = catchAsync(async (req: Request, res: 
   if (!req.user) throw AppError.unauthorized();
   const { id } = req.params;
   if (!id) throw AppError.badRequest('Store ID is required');
-  const updatedStore = await storeService.updateStore(id, req.user.sub, req.body);
+
+  const body = { ...req.body };
+  if (body.isOpen !== undefined && body.isActive === undefined) {
+    body.isActive = body.isOpen;
+  }
+
+  const updatedStore = await storeService.updateStore(id, req.user.sub, body);
   return ApiResponse.success(res, updatedStore, 'Store updated successfully');
 });
 

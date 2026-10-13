@@ -34,7 +34,13 @@ export const SellerLoginPage: React.FC<SellerLoginPageProps> = ({
         password,
       });
 
-      setAuth(res.user, res.tokens.accessToken, res.tokens.refreshToken);
+      // Role-Based Access Control: ensure user has merchant or admin privileges
+      if (res.user.role !== 'merchant' && res.user.role !== 'admin') {
+        setError('Access denied: This account does not have merchant or seller permissions.');
+        return;
+      }
+
+      await setAuth(res.user, res.tokens.accessToken, res.tokens.refreshToken);
       onLoginSuccess();
     } catch (err: any) {
       setError(err.message || 'Invalid credentials or connection error');

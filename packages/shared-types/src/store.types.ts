@@ -139,6 +139,7 @@ export const createStoreSchema = z.object({
 
 export const updateStoreSchema = createStoreSchema.partial().extend({
   isActive: z.boolean().optional(),
+  isOpen: z.boolean().optional(),
 });
 
 export const nearbyStoresQuerySchema = z.object({

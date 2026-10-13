@@ -93,7 +93,7 @@ router.post(
 );
 
 router.patch(
-  '/:id',
+  ['/:id', '/:id/status'],
   authGuard,
   roleGuard(UserRole.MERCHANT, UserRole.ADMIN),
   validateRequest({ body: updateStoreSchema }),
