@@ -5,6 +5,7 @@ import {
   Info,
   ChevronDown,
   Boxes,
+  Loader2,
 } from 'lucide-react';
 import { useInventoryStore } from '../../stores/inventoryStore.js';
 import { InventoryFilterBar } from './InventoryFilterBar.js';
@@ -25,6 +26,8 @@ export const BulkAdjustStockView: React.FC = () => {
     bulkAdjustStock,
     totalProductCount,
   } = useInventoryStore();
+
+  const [isSaving, setIsSaving] = useState(false);
 
   // Initialize row adjustments with mockup defaults or zeroes
   const [adjustments, setAdjustments] = useState<Record<string, RowAdjustment>>(() => {
@@ -110,13 +113,21 @@ export const BulkAdjustStockView: React.FC = () => {
     }));
   };
 
-  const handleApply = () => {
+  const handleApply = async () => {
     const updates = Object.values(adjustments).filter((a) => a.quantity > 0);
     if (updates.length === 0) {
-      alert('No adjustments specified. Setting quantities first.');
+      alert('No adjustments specified. Please specify quantities before applying.');
       return;
     }
-    bulkAdjustStock(updates);
+    setIsSaving(true);
+    try {
+      await bulkAdjustStock(updates);
+    } catch (err) {
+      console.error('Failed to apply bulk stock adjustments:', err);
+      alert('Failed to apply stock adjustments. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -328,10 +339,18 @@ export const BulkAdjustStockView: React.FC = () => {
           </button>
           <button
             type="button"
+            disabled={isSaving}
             onClick={handleApply}
-            className="px-6 py-2 rounded-xl bg-[#1a56db] hover:bg-blue-700 text-white font-bold text-xs shadow-sm transition-colors cursor-pointer"
+            className="px-6 py-2 rounded-xl bg-[#1a56db] hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-xs shadow-sm transition-colors cursor-pointer flex items-center gap-2"
           >
-            Apply Stock Adjustment
+            {isSaving ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <span>Applying Adjustments...</span>
+              </>
+            ) : (
+              <span>Apply Stock Adjustment</span>
+            )}
           </button>
         </div>
       </div>

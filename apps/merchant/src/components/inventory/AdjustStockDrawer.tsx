@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Plus, Minus, Info } from 'lucide-react';
+import { X, Plus, Minus, Info, Loader2 } from 'lucide-react';
 import { useInventoryStore } from '../../stores/inventoryStore.js';
 
 export const AdjustStockDrawer: React.FC = () => {
@@ -10,6 +10,7 @@ export const AdjustStockDrawer: React.FC = () => {
   const [reason, setReason] = useState<string>('Purchase Received');
   const [reference, setReference] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (adjustDrawerItem) {
@@ -18,6 +19,7 @@ export const AdjustStockDrawer: React.FC = () => {
       setReason('Purchase Received');
       setReference('');
       setNotes('');
+      setIsSubmitting(false);
     }
   }, [adjustDrawerItem]);
 
@@ -42,20 +44,28 @@ export const AdjustStockDrawer: React.FC = () => {
     summaryText = `Stock will be set to ${quantity} units (${delta >= 0 ? '+' : ''}${delta} units change). New stock will be ${computedNewStock} units.`;
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!reason) {
       alert('Please select a reason for stock adjustment');
       return;
     }
-    adjustStock(
-      adjustDrawerItem.id,
-      adjustmentType,
-      quantity,
-      reason,
-      reference.trim() || undefined,
-      notes.trim() || undefined
-    );
+    setIsSubmitting(true);
+    try {
+      await adjustStock(
+        adjustDrawerItem.id,
+        adjustmentType,
+        quantity,
+        reason,
+        reference.trim() || undefined,
+        notes.trim() || undefined
+      );
+    } catch (err) {
+      console.error('Failed to adjust stock:', err);
+      alert('Failed to adjust stock. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -263,9 +273,17 @@ export const AdjustStockDrawer: React.FC = () => {
             </button>
             <button
               type="submit"
-              className="flex-1 px-5 py-2.5 rounded-xl bg-[#1a56db] hover:bg-blue-700 text-white font-bold transition-colors shadow-sm cursor-pointer text-center"
+              disabled={isSubmitting}
+              className="flex-1 px-5 py-2.5 rounded-xl bg-[#1a56db] hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold transition-colors shadow-sm cursor-pointer flex items-center justify-center gap-2"
             >
-              Adjust Stock
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Adjusting...</span>
+                </>
+              ) : (
+                <span>Adjust Stock</span>
+              )}
             </button>
           </div>
         </form>

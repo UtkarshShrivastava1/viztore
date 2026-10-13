@@ -9,6 +9,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { useInventoryStore, InventoryItem } from '../../stores/inventoryStore.js';
+import { useCatalogStore } from '../../stores/catalogStore.js';
 import { InventoryActionMenu } from './InventoryActionMenu.js';
 import { ReservedStockPopover } from './ReservedStockPopover.js';
 
@@ -78,13 +79,39 @@ export const InventoryTable: React.FC = () => {
     return 0;
   });
 
-  const totalPages = 125;
-  const startIndex = (currentPage - 1) * pageSize + 1;
-  const endIndex = Math.min(currentPage * pageSize, totalProductCount);
+  const totalPages = Math.max(1, Math.ceil(sortedItems.length / pageSize));
+  const safePage = Math.min(Math.max(1, currentPage), totalPages);
+  const startIndex = sortedItems.length === 0 ? 0 : (safePage - 1) * pageSize;
+  const endIndex = Math.min(safePage * pageSize, sortedItems.length);
+  const paginatedItems = sortedItems.slice(startIndex, endIndex);
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     setIsRefreshing(true);
-    setTimeout(() => setIsRefreshing(false), 600);
+    try {
+      await useCatalogStore.getState().fetchProducts();
+    } catch (err) {
+      console.warn('Failed to refresh catalog products:', err);
+    } finally {
+      setTimeout(() => setIsRefreshing(false), 400);
+    }
+  };
+
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (safePage > 3) pages.push('...');
+      const start = Math.max(2, safePage - 1);
+      const end = Math.min(totalPages - 1, safePage + 1);
+      for (let i = start; i <= end; i++) {
+        if (!pages.includes(i)) pages.push(i);
+      }
+      if (safePage < totalPages - 2) pages.push('...');
+      if (!pages.includes(totalPages)) pages.push(totalPages);
+    }
+    return pages;
   };
 
   const getStatusBadge = (status: InventoryItem['status']) => {
@@ -216,15 +243,16 @@ export const InventoryTable: React.FC = () => {
             </thead>
 
             <tbody className="divide-y divide-slate-100 text-xs text-slate-700 bg-white">
-              {sortedItems.length === 0 ? (
+              {paginatedItems.length === 0 ? (
                 <tr>
                   <td colSpan={14} className="py-12 text-center text-slate-400">
                     No inventory items match the current search or filters.
                   </td>
                 </tr>
               ) : (
-                sortedItems.map((item, index) => {
+                paginatedItems.map((item, index) => {
                   const isSelected = selectedIds.includes(item.id);
+                  const itemIndex = startIndex + index + 1;
                   return (
                     <tr
                       key={item.id}
@@ -244,7 +272,7 @@ export const InventoryTable: React.FC = () => {
 
                       {/* Row Index */}
                       <td className="w-8 px-2 py-3 text-center font-medium text-slate-400 tabular-nums">
-                        {index + 1}
+                        {itemIndex}
                       </td>
 
                       {/* Product */}
@@ -342,7 +370,7 @@ export const InventoryTable: React.FC = () => {
         <div className="border-t border-slate-200 px-4 py-3 flex flex-wrap items-center justify-between gap-3 bg-white text-xs">
           {/* Left count */}
           <div className="font-bold text-slate-900">
-            Total {totalProductCount.toLocaleString()} products
+            Total {sortedItems.length.toLocaleString()} products
           </div>
 
           {/* Center / Right controls */}
@@ -364,14 +392,14 @@ export const InventoryTable: React.FC = () => {
             </div>
 
             <span className="text-slate-500 tabular-nums">
-              {startIndex}-{endIndex} of {totalProductCount.toLocaleString()}
+              {sortedItems.length === 0 ? 0 : startIndex + 1}-{endIndex} of {sortedItems.length.toLocaleString()}
             </span>
 
             {/* Stepper Buttons */}
             <div className="flex items-center gap-1">
               <button
                 type="button"
-                disabled={currentPage === 1}
+                disabled={safePage === 1}
                 onClick={() => setCurrentPage(1)}
                 className="p-1 rounded-md border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                 title="First Page"
@@ -380,87 +408,40 @@ export const InventoryTable: React.FC = () => {
               </button>
               <button
                 type="button"
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={safePage === 1}
+                onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
                 className="p-1 rounded-md border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                 title="Previous Page"
               >
                 <ChevronLeft className="w-3.5 h-3.5" />
               </button>
 
-              {/* Numbers */}
-              <button
-                type="button"
-                onClick={() => setCurrentPage(1)}
-                className={`w-6 h-6 rounded-md text-xs font-bold cursor-pointer transition-colors ${
-                  currentPage === 1
-                    ? 'bg-[#1a56db] text-white shadow-2xs'
-                    : 'border border-slate-200 text-slate-700 hover:bg-slate-50'
-                }`}
-              >
-                1
-              </button>
-              <button
-                type="button"
-                onClick={() => setCurrentPage(2)}
-                className={`w-6 h-6 rounded-md text-xs font-bold cursor-pointer transition-colors ${
-                  currentPage === 2
-                    ? 'bg-[#1a56db] text-white shadow-2xs'
-                    : 'border border-slate-200 text-slate-700 hover:bg-slate-50'
-                }`}
-              >
-                2
-              </button>
-              <button
-                type="button"
-                onClick={() => setCurrentPage(3)}
-                className={`w-6 h-6 rounded-md text-xs font-bold cursor-pointer transition-colors ${
-                  currentPage === 3
-                    ? 'bg-[#1a56db] text-white shadow-2xs'
-                    : 'border border-slate-200 text-slate-700 hover:bg-slate-50'
-                }`}
-              >
-                3
-              </button>
-              <button
-                type="button"
-                onClick={() => setCurrentPage(4)}
-                className={`w-6 h-6 rounded-md text-xs font-bold cursor-pointer transition-colors ${
-                  currentPage === 4
-                    ? 'bg-[#1a56db] text-white shadow-2xs'
-                    : 'border border-slate-200 text-slate-700 hover:bg-slate-50'
-                }`}
-              >
-                4
-              </button>
-              <button
-                type="button"
-                onClick={() => setCurrentPage(5)}
-                className={`w-6 h-6 rounded-md text-xs font-bold cursor-pointer transition-colors ${
-                  currentPage === 5
-                    ? 'bg-[#1a56db] text-white shadow-2xs'
-                    : 'border border-slate-200 text-slate-700 hover:bg-slate-50'
-                }`}
-              >
-                5
-              </button>
-              <span className="px-1 text-slate-400">...</span>
-              <button
-                type="button"
-                onClick={() => setCurrentPage(125)}
-                className={`w-6 h-6 rounded-md text-xs font-bold cursor-pointer transition-colors ${
-                  currentPage === 125
-                    ? 'bg-[#1a56db] text-white shadow-2xs'
-                    : 'border border-slate-200 text-slate-700 hover:bg-slate-50'
-                }`}
-              >
-                125
-              </button>
+              {/* Dynamic Numbers */}
+              {getPageNumbers().map((p, idx) =>
+                typeof p === 'string' ? (
+                  <span key={`ellipsis-${idx}`} className="px-1 text-slate-400 select-none">
+                    ...
+                  </span>
+                ) : (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setCurrentPage(p)}
+                    className={`w-6 h-6 rounded-md text-xs font-bold cursor-pointer transition-colors ${
+                      safePage === p
+                        ? 'bg-[#1a56db] text-white shadow-2xs'
+                        : 'border border-slate-200 text-slate-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    {p}
+                  </button>
+                )
+              )}
 
               <button
                 type="button"
-                disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                disabled={safePage >= totalPages}
+                onClick={() => setCurrentPage(Math.min(totalPages, safePage + 1))}
                 className="p-1 rounded-md border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                 title="Next Page"
               >
@@ -468,7 +449,7 @@ export const InventoryTable: React.FC = () => {
               </button>
               <button
                 type="button"
-                disabled={currentPage === totalPages}
+                disabled={safePage >= totalPages}
                 onClick={() => setCurrentPage(totalPages)}
                 className="p-1 rounded-md border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                 title="Last Page"

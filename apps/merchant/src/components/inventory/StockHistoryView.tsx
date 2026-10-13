@@ -25,6 +25,7 @@ export const StockHistoryView: React.FC = () => {
     historyTypeFilter,
     historyRefTypeFilter,
     historyCurrentPage,
+    historyPageSize,
     setHistoryDateRange,
     setHistoryProductFilter,
     setHistoryCategoryFilter,
@@ -51,18 +52,51 @@ export const StockHistoryView: React.FC = () => {
     return true;
   });
 
-  const totalTransactions = 582;
-  const totalPages = 59;
+  const totalTransactions = filteredTxs.length;
+  const totalPages = Math.max(1, Math.ceil(totalTransactions / historyPageSize));
+  const safePage = Math.min(Math.max(1, historyCurrentPage), totalPages);
+  const startIndex = (safePage - 1) * historyPageSize;
+  const endIndex = Math.min(safePage * historyPageSize, totalTransactions);
+  const paginatedTxs = filteredTxs.slice(startIndex, endIndex);
+
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (safePage > 3) pages.push('...');
+      const start = Math.max(2, safePage - 1);
+      const end = Math.min(totalPages - 1, safePage + 1);
+      for (let i = start; i <= end; i++) {
+        if (!pages.includes(i)) pages.push(i);
+      }
+      if (safePage < totalPages - 2) pages.push('...');
+      if (!pages.includes(totalPages)) pages.push(totalPages);
+    }
+    return pages;
+  };
 
   const handleExport = () => {
-    const csvContent =
-      'Date,Product,SKU,Type,ReferenceType,ReferenceNo,Quantity,StockBefore,StockAfter,Notes\\n' +
-      transactions
-        .map(
-          (t) =>
-            `"${t.date}","${t.productName}","${t.sku}","${t.type}","${t.referenceType}","${t.referenceNo}","${t.quantity}","${t.stockBefore}","${t.stockAfter}","${t.notes}"`
-        )
-        .join('\\n');
+    const rows = [
+      ['Date', 'Product', 'SKU', 'Type', 'ReferenceType', 'ReferenceNo', 'Quantity', 'StockBefore', 'StockAfter', 'Notes', 'PerformedBy'],
+      ...transactions.map((t) => [
+        t.date,
+        t.productName,
+        t.sku,
+        t.type,
+        t.referenceType,
+        t.referenceNo,
+        t.quantity,
+        t.stockBefore,
+        t.stockAfter,
+        t.notes,
+        t.performedBy,
+      ]),
+    ];
+    const csvContent = rows
+      .map((row) => row.map((cell) => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(','))
+      .join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -264,7 +298,14 @@ export const StockHistoryView: React.FC = () => {
             </thead>
 
             <tbody className="divide-y divide-slate-150 bg-white text-slate-700">
-              {filteredTxs.map((tx) => {
+              {paginatedTxs.length === 0 ? (
+                <tr>
+                  <td colSpan={10} className="py-12 text-center text-slate-400">
+                    No stock transactions found for the selected filters.
+                  </td>
+                </tr>
+              ) : (
+                paginatedTxs.map((tx) => {
                 const isStockIn = tx.type === 'stock_in';
                 return (
                   <tr key={tx.id} className="hover:bg-slate-50/50 transition-colors">
@@ -356,7 +397,7 @@ export const StockHistoryView: React.FC = () => {
                     </td>
                   </tr>
                 );
-              })}
+              }))}
             </tbody>
           </table>
         </div>
@@ -370,57 +411,61 @@ export const StockHistoryView: React.FC = () => {
           <div className="flex items-center gap-1 ml-auto">
             <button
               type="button"
-              disabled={historyCurrentPage === 1}
+              disabled={safePage === 1}
               onClick={() => setHistoryCurrentPage(1)}
               className="p-1 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+              title="First Page"
             >
               <ChevronsLeft className="w-3.5 h-3.5" />
             </button>
             <button
               type="button"
-              disabled={historyCurrentPage === 1}
-              onClick={() => setHistoryCurrentPage(Math.max(1, historyCurrentPage - 1))}
+              disabled={safePage === 1}
+              onClick={() => setHistoryCurrentPage(Math.max(1, safePage - 1))}
               className="p-1 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+              title="Previous Page"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
             </button>
 
-            {[1, 2, 3, 4, 5].map((p) => (
-              <button
-                key={p}
-                type="button"
-                onClick={() => setHistoryCurrentPage(p)}
-                className={`w-7 h-7 rounded-lg text-xs font-bold cursor-pointer transition-colors ${
-                  historyCurrentPage === p
-                    ? 'bg-[#1a56db] text-white shadow-xs'
-                    : 'border border-slate-200 text-slate-700 hover:bg-slate-50'
-                }`}
-              >
-                {p}
-              </button>
-            ))}
-
-            <span className="px-1 text-slate-400">...</span>
-
-            <button
-              type="button"
-              onClick={() => setHistoryCurrentPage(59)}
-              className={`w-7 h-7 rounded-lg text-xs font-bold cursor-pointer transition-colors ${
-                historyCurrentPage === 59
-                  ? 'bg-[#1a56db] text-white shadow-xs'
-                  : 'border border-slate-200 text-slate-700 hover:bg-slate-50'
-              }`}
-            >
-              59
-            </button>
+            {getPageNumbers().map((p, idx) =>
+              typeof p === 'string' ? (
+                <span key={`ellipsis-${idx}`} className="px-1 text-slate-400 select-none">
+                  ...
+                </span>
+              ) : (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => setHistoryCurrentPage(p)}
+                  className={`w-7 h-7 rounded-lg text-xs font-bold cursor-pointer transition-colors ${
+                    safePage === p
+                      ? 'bg-[#1a56db] text-white shadow-xs'
+                      : 'border border-slate-200 text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  {p}
+                </button>
+              )
+            )}
 
             <button
               type="button"
-              disabled={historyCurrentPage === totalPages}
-              onClick={() => setHistoryCurrentPage(Math.min(totalPages, historyCurrentPage + 1))}
+              disabled={safePage >= totalPages}
+              onClick={() => setHistoryCurrentPage(Math.min(totalPages, safePage + 1))}
               className="p-1 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+              title="Next Page"
             >
               <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              disabled={safePage >= totalPages}
+              onClick={() => setHistoryCurrentPage(totalPages)}
+              className="p-1 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+              title="Last Page"
+            >
+              <ChevronsRight className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>

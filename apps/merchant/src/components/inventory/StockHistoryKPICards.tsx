@@ -11,11 +11,15 @@ import { useInventoryStore } from '../../stores/inventoryStore.js';
 export const StockHistoryKPICards: React.FC = () => {
   const { transactions } = useInventoryStore();
 
-  const totalTransactions = 582;
-  const stockInUnits = 1248;
-  const stockOutUnits = 968;
-  const netChangeUnits = 280;
-  const productsAffected = 156;
+  const totalTransactions = transactions.length;
+  const stockInUnits = transactions
+    .filter((t) => t.type === 'stock_in')
+    .reduce((sum, t) => sum + Math.abs(t.quantity), 0);
+  const stockOutUnits = transactions
+    .filter((t) => t.type === 'stock_out')
+    .reduce((sum, t) => sum + Math.abs(t.quantity), 0);
+  const netChangeUnits = stockInUnits - stockOutUnits;
+  const productsAffected = new Set(transactions.map((t) => t.productId)).size;
 
   const cards = [
     {

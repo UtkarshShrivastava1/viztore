@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   SlidersHorizontal,
   Upload,
@@ -7,6 +7,7 @@ import {
   Trash2,
   X,
   Eye,
+  Download,
 } from 'lucide-react';
 import { useInventoryStore } from '../stores/inventoryStore.js';
 import { useCatalogStore } from '../stores/catalogStore.js';
@@ -17,6 +18,7 @@ import { AdjustStockDrawer } from '../components/inventory/AdjustStockDrawer.js'
 import { StockHistoryDrawer } from '../components/inventory/StockHistoryDrawer.js';
 import { BulkAdjustStockView } from '../components/inventory/BulkAdjustStockView.js';
 import { StockHistoryView } from '../components/inventory/StockHistoryView.js';
+import { BulkUploadModal } from '../components/catalog/BulkUploadModal.js';
 
 export const InventoryPage: React.FC = () => {
   const { fetchProducts, products } = useCatalogStore();
@@ -31,6 +33,56 @@ export const InventoryPage: React.FC = () => {
     detailModalItem,
     closeDetailModal,
   } = useInventoryStore();
+
+  const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
+
+  const handleExportInventoryCsv = () => {
+    if (items.length === 0) {
+      alert('No inventory items to export.');
+      return;
+    }
+    const headers = [
+      'Name',
+      'SKU',
+      'Barcode',
+      'Category',
+      'Subcategory',
+      'ProductType',
+      'Brand',
+      'Stock',
+      'Reserved',
+      'Available',
+      'Status',
+      'StockValue',
+      'LastUpdated',
+    ];
+    const rows = items.map((i) => [
+      i.name,
+      i.sku,
+      i.barcode,
+      i.category,
+      i.subcategory,
+      i.productType,
+      i.brand,
+      i.stock,
+      i.reserved,
+      i.available,
+      i.status,
+      i.stockValue,
+      i.lastUpdated,
+    ]);
+    const csvContent = [headers, ...rows]
+      .map((r) => r.map((cell) => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `Inventory_Stock_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   React.useEffect(() => {
     if (products.length === 0) {
@@ -75,11 +127,23 @@ export const InventoryPage: React.FC = () => {
               {/* Import Stock Button */}
               <button
                 type="button"
-                onClick={() => alert('Bulk Import CSV: Upload stock spreadsheet to batch update products.')}
+                onClick={() => setIsBulkUploadOpen(true)}
                 className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-800 shadow-2xs transition-colors cursor-pointer"
+                title="Batch upload products & stock via CSV"
               >
                 <Upload className="w-4 h-4 text-blue-600" />
                 <span>Import Stock</span>
+              </button>
+
+              {/* Export Inventory CSV Button */}
+              <button
+                type="button"
+                onClick={handleExportInventoryCsv}
+                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold text-slate-800 shadow-2xs transition-colors cursor-pointer"
+                title="Download full inventory audit report as CSV"
+              >
+                <Download className="w-4 h-4 text-emerald-600" />
+                <span>Export CSV</span>
               </button>
 
               {/* Stock History Dropdown Button */}
@@ -221,6 +285,15 @@ export const InventoryPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* ─── Bulk Upload Modal ─── */}
+      <BulkUploadModal
+        isOpen={isBulkUploadOpen}
+        onClose={() => setIsBulkUploadOpen(false)}
+        onBulkSuccess={() => {
+          fetchProducts();
+        }}
+      />
     </div>
   );
 };

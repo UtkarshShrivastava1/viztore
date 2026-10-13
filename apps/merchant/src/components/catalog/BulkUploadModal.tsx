@@ -16,7 +16,7 @@ import { useCatalogStore } from '../../stores/catalogStore.js';
 interface BulkUploadModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onBulkSuccess: (count: number) => void;
+  onBulkSuccess?: (count: number) => void;
 }
 
 interface ParsedProductRow {
@@ -176,7 +176,7 @@ export const BulkUploadModal: React.FC<BulkUploadModalProps> = ({
       const createdCount = res?.created ?? parsedRows.length;
       setUploadSuccess(`Successfully imported ${createdCount} products into your catalog!`);
       setTimeout(() => {
-        onBulkSuccess(createdCount);
+        onBulkSuccess?.(createdCount);
         onClose();
         setUploadSuccess(null);
         setFileSelected(null);

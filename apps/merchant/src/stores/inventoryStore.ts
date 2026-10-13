@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { ProductItem } from './catalogStore.js';
+import { useCatalogStore } from './catalogStore.js';
 
 export interface InventoryItem {
   id: string;
@@ -117,7 +118,7 @@ interface InventoryStoreState {
     reason: string,
     reference?: string,
     notes?: string,
-  ) => void;
+  ) => Promise<void>;
 
   bulkAdjustStock: (
     adjustments: Array<{
@@ -128,7 +129,7 @@ interface InventoryStoreState {
       reference?: string;
       notes?: string;
     }>,
-  ) => void;
+  ) => Promise<void>;
 
   duplicateItem: (productId: string) => void;
   deleteItem: (productId: string) => void;
@@ -170,8 +171,9 @@ export const useInventoryStore = create<InventoryStoreState>((set, get) => ({
       const stock = p.stock || 0;
       const reserved = Math.min(stock, Math.floor(stock * 0.1));
       const available = Math.max(0, stock - reserved);
+      const lowThresh = p.lowStockThreshold || 10;
       const status: 'in_stock' | 'low_stock' | 'out_of_stock' =
-        stock <= 0 ? 'out_of_stock' : stock <= p.lowStockThreshold ? 'low_stock' : 'in_stock';
+        stock <= 0 ? 'out_of_stock' : stock <= lowThresh ? 'low_stock' : 'in_stock';
       return {
         id: p.id,
         name: p.name,
@@ -192,7 +194,28 @@ export const useInventoryStore = create<InventoryStoreState>((set, get) => ({
         color: p.attributes?.color || 'Standard',
       };
     });
-    set({ items, totalProductCount: items.length });
+
+    const currentTxs = get().transactions;
+    let initialTxs: StockTransaction[] = currentTxs;
+    if (currentTxs.length === 0 && items.length > 0) {
+      initialTxs = items.slice(0, 15).map((item, idx) => ({
+        id: `tx-init-${idx}-${item.id}`,
+        productId: item.id,
+        productName: item.name,
+        sku: item.sku,
+        date: item.lastUpdated || 'Initial Setup',
+        type: 'stock_in' as const,
+        referenceType: 'Purchase' as const,
+        referenceNo: `PO-${1000 + idx}`,
+        quantity: item.stock,
+        stockBefore: 0,
+        stockAfter: item.stock,
+        notes: 'Initial Inbound Stock Receipt',
+        performedBy: 'Store Admin',
+      }));
+    }
+
+    set({ items, totalProductCount: items.length, transactions: initialTxs });
   },
 
   setViewMode: (mode) => set({ viewMode: mode }),
@@ -255,124 +278,134 @@ export const useInventoryStore = create<InventoryStoreState>((set, get) => ({
   openDetailModal: (item) => set({ detailModalItem: item }),
   closeDetailModal: () => set({ detailModalItem: null }),
 
-  adjustStock: (productId, adjustmentType, quantity, reason, reference, notes) => {
-    set((state) => {
-      const item = state.items.find((i) => i.id === productId);
-      if (!item) return state;
+  adjustStock: async (productId, adjustmentType, quantity, reason, reference, notes) => {
+    const state = get();
+    const item = state.items.find((i) => i.id === productId);
+    if (!item) return;
 
-      let newStock = item.stock;
-      let delta = 0;
-      let txType: 'stock_in' | 'stock_out' = 'stock_in';
+    let newStock = item.stock;
+    let delta = 0;
+    let txType: 'stock_in' | 'stock_out' = 'stock_in';
 
-      if (adjustmentType === 'increase') {
-        delta = quantity;
-        newStock = item.stock + quantity;
-        txType = 'stock_in';
-      } else if (adjustmentType === 'decrease') {
-        delta = -quantity;
-        newStock = Math.max(0, item.stock - quantity);
-        txType = 'stock_out';
-      } else if (adjustmentType === 'set') {
-        delta = quantity - item.stock;
-        newStock = quantity;
-        txType = delta >= 0 ? 'stock_in' : 'stock_out';
-      }
+    if (adjustmentType === 'increase') {
+      delta = quantity;
+      newStock = item.stock + quantity;
+      txType = 'stock_in';
+    } else if (adjustmentType === 'decrease') {
+      delta = -quantity;
+      newStock = Math.max(0, item.stock - quantity);
+      txType = 'stock_out';
+    } else if (adjustmentType === 'set') {
+      delta = quantity - item.stock;
+      newStock = quantity;
+      txType = delta >= 0 ? 'stock_in' : 'stock_out';
+    }
 
-      const newAvailable = Math.max(0, newStock - item.reserved);
-      const unitValue = item.stock > 0 ? item.stockValue / item.stock : 500;
+    // Persist to backend catalog API via useCatalogStore
+    try {
+      await useCatalogStore.getState().updateStock(productId, newStock);
+    } catch (err) {
+      console.warn('Failed to update stock in catalog store:', err);
+    }
+
+    const newAvailable = Math.max(0, newStock - item.reserved);
+    const unitValue = item.stock > 0 ? item.stockValue / item.stock : 500;
+    const newStockValue = Math.round(newStock * unitValue);
+    const newStatus: 'in_stock' | 'low_stock' | 'out_of_stock' =
+      newStock <= 0 ? 'out_of_stock' : newStock <= 30 ? 'low_stock' : 'in_stock';
+
+    const updatedItems = get().items.map((i) =>
+      i.id === productId
+        ? {
+            ...i,
+            stock: newStock,
+            available: newAvailable,
+            stockValue: newStockValue,
+            status: newStatus,
+            lastUpdated: 'Just now',
+          }
+        : i,
+    );
+
+    const newTx: StockTransaction = {
+      id: 'tx-' + Date.now(),
+      productId: item.id,
+      productName: item.name,
+      sku: item.sku,
+      date: 'Just now',
+      type: txType,
+      referenceType: 'Stock Adjustment',
+      referenceNo: reference || 'ADJ-' + Math.floor(1000 + Math.random() * 9000),
+      quantity: delta,
+      stockBefore: item.stock,
+      stockAfter: newStock,
+      notes: notes || reason || 'Manual adjustment',
+      performedBy: 'Store Staff',
+    };
+
+    set({
+      items: updatedItems,
+      transactions: [newTx, ...get().transactions],
+      adjustDrawerItem: null,
+    });
+  },
+
+  bulkAdjustStock: async (adjustments) => {
+    const updatedItems: InventoryItem[] = [...get().items];
+    const newTxs: StockTransaction[] = [];
+
+    for (const adj of adjustments) {
+      const index = updatedItems.findIndex((i) => i.id === adj.productId);
+      if (index === -1) continue;
+      const currentItem = updatedItems[index];
+      if (!currentItem) continue;
+
+      const delta = adj.adjustmentType === 'increase' ? adj.quantity : -adj.quantity;
+      const newStock = Math.max(0, currentItem.stock + delta);
+      const newAvailable = Math.max(0, newStock - currentItem.reserved);
+      const unitValue = currentItem.stock > 0 ? currentItem.stockValue / currentItem.stock : 500;
       const newStockValue = Math.round(newStock * unitValue);
       const newStatus: 'in_stock' | 'low_stock' | 'out_of_stock' =
         newStock <= 0 ? 'out_of_stock' : newStock <= 30 ? 'low_stock' : 'in_stock';
 
-      const updatedItems = state.items.map((i) =>
-        i.id === productId
-          ? {
-              ...i,
-              stock: newStock,
-              available: newAvailable,
-              stockValue: newStockValue,
-              status: newStatus,
-              lastUpdated: 'Just now',
-            }
-          : i,
-      );
+      try {
+        await useCatalogStore.getState().updateStock(adj.productId, newStock);
+      } catch (err) {
+        console.warn('Failed to bulk update stock for product:', adj.productId, err);
+      }
 
-      const newTx: StockTransaction = {
-        id: 'tx-' + Date.now(),
-        productId: item.id,
-        productName: item.name,
-        sku: item.sku,
-        date: 'Just now',
-        type: txType,
-        referenceType: 'Stock Adjustment',
-        referenceNo: reference || 'ADJ-' + Math.floor(1000 + Math.random() * 9000),
-        quantity: delta,
-        stockBefore: item.stock,
-        stockAfter: newStock,
-        notes: notes || reason || 'Manual adjustment',
-        performedBy: 'Store Staff',
+      updatedItems[index] = {
+        ...currentItem,
+        stock: newStock,
+        available: newAvailable,
+        stockValue: newStockValue,
+        status: newStatus,
+        lastUpdated: 'Just now',
       };
 
-      return {
-        items: updatedItems,
-        transactions: [newTx, ...state.transactions],
-        adjustDrawerItem: null,
-      };
-    });
-  },
+      if (adj.quantity > 0) {
+        newTxs.push({
+          id: 'tx-' + Date.now() + '-' + currentItem.id,
+          productId: currentItem.id,
+          productName: currentItem.name,
+          sku: currentItem.sku,
+          date: 'Just now',
+          type: adj.adjustmentType === 'increase' ? 'stock_in' : 'stock_out',
+          referenceType: 'Stock Adjustment',
+          referenceNo: adj.reference || 'ADJ-BATCH',
+          quantity: delta,
+          stockBefore: currentItem.stock,
+          stockAfter: newStock,
+          notes: adj.notes || adj.reason || 'Batch Stock Adjustment',
+          performedBy: 'Store Staff',
+        });
+      }
+    }
 
-  bulkAdjustStock: (adjustments) => {
-    set((state) => {
-      const updatedItems: InventoryItem[] = [...state.items];
-      const newTxs: StockTransaction[] = [];
-
-      adjustments.forEach((adj) => {
-        const index = updatedItems.findIndex((i) => i.id === adj.productId);
-        if (index === -1) return;
-        const currentItem = updatedItems[index];
-        if (!currentItem) return;
-
-        const delta = adj.adjustmentType === 'increase' ? adj.quantity : -adj.quantity;
-        const newStock = Math.max(0, currentItem.stock + delta);
-        const newAvailable = Math.max(0, newStock - currentItem.reserved);
-        const unitValue = currentItem.stock > 0 ? currentItem.stockValue / currentItem.stock : 500;
-        const newStockValue = Math.round(newStock * unitValue);
-        const newStatus: 'in_stock' | 'low_stock' | 'out_of_stock' =
-          newStock <= 0 ? 'out_of_stock' : newStock <= 30 ? 'low_stock' : 'in_stock';
-
-        updatedItems[index] = {
-          ...currentItem,
-          stock: newStock,
-          available: newAvailable,
-          stockValue: newStockValue,
-          status: newStatus,
-          lastUpdated: 'Just now',
-        };
-
-        if (adj.quantity > 0) {
-          newTxs.push({
-            id: 'tx-' + Date.now() + '-' + currentItem.id,
-            productId: currentItem.id,
-            productName: currentItem.name,
-            sku: currentItem.sku,
-            date: 'Just now',
-            type: adj.adjustmentType === 'increase' ? 'stock_in' : 'stock_out',
-            referenceType: 'Stock Adjustment',
-            referenceNo: adj.reference || 'ADJ-BATCH',
-            quantity: delta,
-            stockBefore: currentItem.stock,
-            stockAfter: newStock,
-            notes: adj.notes || adj.reason || 'Batch Stock Adjustment',
-            performedBy: 'Store Staff',
-          });
-        }
-      });
-
-      return {
-        items: updatedItems,
-        transactions: [...newTxs, ...state.transactions],
-        viewMode: 'overview',
-      };
+    set({
+      items: updatedItems,
+      transactions: [...newTxs, ...get().transactions],
+      viewMode: 'overview',
     });
   },
 

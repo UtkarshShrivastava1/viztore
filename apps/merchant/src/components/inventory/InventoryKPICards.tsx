@@ -3,12 +3,13 @@ import { Package, ShoppingBag, AlertTriangle, PackageX, Boxes } from 'lucide-rea
 import { useInventoryStore } from '../../stores/inventoryStore.js';
 
 export const InventoryKPICards: React.FC = () => {
-  const { totalProductCount } = useInventoryStore();
+  const { items, totalProductCount } = useInventoryStore();
 
-  const totalStock = 12842;
-  const lowStockCount = 78;
-  const outOfStockCount = 38;
-  const stockValueFormatted = '\u20B918,75,320';
+  const totalStock = items.reduce((acc, item) => acc + (item.stock || 0), 0);
+  const lowStockCount = items.filter((item) => item.status === 'low_stock').length;
+  const outOfStockCount = items.filter((item) => item.status === 'out_of_stock').length;
+  const totalStockValue = items.reduce((acc, item) => acc + (item.stockValue || 0), 0);
+  const stockValueFormatted = `₹${totalStockValue.toLocaleString('en-IN')}`;
 
   const cards = [
     {

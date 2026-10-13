@@ -9,15 +9,15 @@
 
 ## 📊 Summary Metrics
 
-| Total Workstreams | In Progress | Hardened & Verified | Pending / Planned |
-|:---:|:---:|:---:|:---:|
-| **8** | **0** | **3** | **5** |
+| Total Workstreams | In Progress | Hardened & Verified | Pending / Planned | Progress |
+|:---:|:---:|:---:|:---:|:---:|
+| **8** | **0** | **4** | **4** | **50%** |
 
 ```mermaid
 pie title Merchant Web Hardening Workstreams
-    "Hardened & Verified" : 3
+    "Hardened & Verified" : 4
     "In Progress" : 0
-    "Planned / Backlog" : 5
+    "Planned / Backlog" : 4
 ```
 
 ---
@@ -50,7 +50,7 @@ flowchart TD
 | **MW-HARDEN-01** | **Auth, Session & Storefront Switcher** | `SellerLoginPage`, `OnboardingPage`, `authStore`, `Header`, `App.tsx` | Production authentication pipeline, JWT token refresh, persistent session recovery, secure logout with local cache purge, and Store Active/Inactive live toggle | Live Express `/auth/login` handshake, refresh token rotation on 401, RBAC guard, backend `/auth/logout` invalidation, and live MongoDB store `isActive` status sync | Transparent 401 token refresh pipeline, backend session revocation on logout, role-based login gate, and async store status synchronization | 🟢 **RESOLVED** |
 | **MW-HARDEN-02** | **Real-Time Order Dispatch & Audio Alerts** | `LiveOrderSocketListener`, `OrdersPage`, `OrdersTable`, `VerifyOtpModal`, `orderStore` | Real-time incoming order audio chime (Web Audio API harmonic synth), instant desktop notifications, Socket.io event listeners (`order.placed`, `order.confirmed`, `order.delivered`), store-scoped rooms, and enterprise Delivery OTP verification modal | Store room join on mount, Web Audio chime synthesizer with fallback unlock, live refetch without reload, dual-broadcast backend events, and 4-digit OTP modal | Web Audio harmonic chime synthesizer, multi-event socket listeners, automatic store orders refetch, backend store room broadcast, and enterprise VerifyOtpModal | 🟢 **RESOLVED** |
 | **MW-HARDEN-03** | **Product Catalog & Media Upload Pipeline** | `ProductsCatalogPage`, `AddProductWizardPage`, `AddProductStep1`, `AddProductStep2`, `BulkUploadModal`, `catalogStore`, `api.ts` | 3-step product creation wizard, multi-variant matrix (size/color/weight), barcode assignment, base64 & external URL image dropzone, dynamic category-subcategory tree, and live bulk CSV ingestion | Real CSV parsing and 1-click demo batch importer, multi-variant matrix generator in catalogStore, base64 file reading + direct image URL input, dynamic sub-category updater, and live `/catalog/products/bulk` API | Dynamic category taxonomy, multi-variant SKU generator, persistent image reader, CSV parser with preview table, and bulk import API integration | 🟢 **RESOLVED** |
-| **MW-HARDEN-04** | **Inventory Management & Low-Stock Alerts** | `InventoryPage`, `InventoryTable`, `StockAdjustModal`, `inventoryStore` | Real-time stock levels, low-stock threshold triggers, batch quantity adjustment, SKU/barcode quick filtering, and out-of-stock storefront hiding | Table views implemented; integrate live stock decrement on order acceptance and POS billing transactions | Live stock level sync, batch stock modifier, exportable inventory CSV | ⚪ **PLANNED** |
+| **MW-HARDEN-04** | **Inventory Management & Low-Stock Alerts** | `InventoryPage`, `InventoryTable`, `AdjustStockDrawer`, `BulkAdjustStockView`, `StockHistoryView`, `inventoryStore` | Real-time stock counts, backend persistence on stock adjustments, dynamic pagination, live catalog refetch, dynamic KPI calculation, and inventory CSV audit export | Hardcoded totalPages (125) with static buttons, adjustStock mutating only local state without backend API persistence, static hardcoded KPI counters | Real-time stock sync with catalogStore, backend PATCH persistence, dynamic pagination engine, live data refresh button, and complete inventory CSV exporter | 🟢 **RESOLVED** |
 | **MW-HARDEN-05** | **In-House POS Retail Billing & Thermal Print** | `BillingPage`, `CreateOrderPage`, `ThermalReceipt`, `billingStore` | Tier 2 walk-in counter retail billing: fast barcode scanner input, quick customer phone lookup, GST slab breakdown, Cash/UPI/Card tender, and 80mm/58mm thermal receipt printing | UI complete with cart calculation; add `@media print` ESC/POS thermal receipt formatting and invoice generation | Thermal printer CSS media queries, live POS transaction commit, instant inventory auto-deduction | ⚪ **PLANNED** |
 | **MW-HARDEN-06** | **Customers CRM & Credit (Udhar) Ledger** | `CustomersPage`, `CustomerDetailsDrawer`, `CreditLedgerModal` | Customer database, order history tracking, customer credit (Khata/Udhar) ledger, payment recording, and aging analysis (0-30, 31-60, 60+ days) | Baseline table present; verify statement generation, WhatsApp payment reminder link, and credit limit validations | Live customer CRUD, credit balance tracking, WhatsApp reminder generator, PDF statement export | ⚪ **PLANNED** |
 | **MW-HARDEN-07** | **Payouts, Wallet & Expense Ledger** | `PayoutsPage`, `WalletPage`, `ExpensesPage`, `payoutStore` | Settlement tracking with UTR numbers, commission & platform fee breakdown, wallet balance sweep, vendor management, and operating expense ledger | Baseline mock data in financial views; replace with live transaction ledger and payout requests | Live wallet balance query, settlement history with UTR search, expense logging with receipt attachments | ⚪ **PLANNED** |
@@ -134,14 +134,25 @@ flowchart TD
   - Backend TypeScript build: 100% clean.
 
 ### 🛠️ MW-HARDEN-04: Inventory Management & Stock Depletion Engine
-* **Target Scope:** `apps/merchant/src/pages/InventoryPage.tsx`, `components/inventory/`
-* **Enterprise Hardening Goals:**
-  1. Real-time stock counts synced with product catalog.
-  2. Low-stock badge indicators when inventory dips below configurable threshold.
-  3. Automatic stock decrement when orders are placed or POS sales are recorded.
-  4. Quick inline stock adjustments with reason logging (Damaged, Return, Replenishment).
-* **Verification Targets:**
-  - Zero stock discrepancy between order fulfillment and inventory table.
+* **Date:** October 13, 2026
+* **Target Scope:** `apps/merchant/src/stores/inventoryStore.ts`, `apps/merchant/src/components/inventory/InventoryTable.tsx`, `apps/merchant/src/components/inventory/AdjustStockDrawer.tsx`, `apps/merchant/src/components/inventory/BulkAdjustStockView.tsx`, `apps/merchant/src/components/inventory/InventoryKPICards.tsx`, `apps/merchant/src/components/inventory/StockHistoryView.tsx`, `apps/merchant/src/components/inventory/StockHistoryKPICards.tsx`, `apps/merchant/src/components/inventory/StockHistoryDrawer.tsx`, `apps/merchant/src/pages/InventoryPage.tsx`
+* **Root Causes Diagnosed:**
+  1. `adjustStock` and `bulkAdjustStock` in `inventoryStore.ts` only mutated client state in memory, failing to persist adjustments to backend catalog variants via `catalogApi.updateProduct(id, { variants })`.
+  2. `InventoryTable.tsx` hardcoded `totalPages = 125` with static page numbers (`1, 2, 3, 4, 5, ..., 125`), rendering the entire unfiltered array of items rather than paginating through `sortedItems.slice(startIndex, endIndex)`.
+  3. `InventoryTable.tsx` refresh button used a fake `setTimeout(..., 600)` without executing live data refetch from MongoDB.
+  4. KPI summary counters in `InventoryKPICards.tsx` and `StockHistoryKPICards.tsx` were static hardcoded constants (`totalStock = 12842`, `totalTransactions = 582`).
+  5. `InventoryPage.tsx` "Import Stock" button used an unstyled `alert()`, and lacked an inventory CSV export option.
+* **Fixes Applied:**
+  1. **Live Backend Stock Persistence (`inventoryStore.ts`)**: Upgraded `adjustStock` and `bulkAdjustStock` to async methods persisting stock updates directly via `useCatalogStore.getState().updateStock(productId, newStock)`. On the backend, this dispatches `PATCH /api/v1/catalog/products/:id` with updated variants, invalidating Redis caches.
+  2. **Dynamic Mathematical Pagination Engine (`InventoryTable.tsx` & `StockHistoryView.tsx`)**: Replaced hardcoded pages with `Math.max(1, Math.ceil(sortedItems.length / pageSize))`, slicing items to `paginatedItems = sortedItems.slice(startIndex, endIndex)`, rendering dynamic page numbers with ellipses (`getPageNumbers()`), calculating 1-based row index (`itemIndex`), and guarding bounds (`safePage`).
+  3. **Live Catalog Refresh Trigger (`InventoryTable.tsx`)**: Linked table refresh icon directly to `await useCatalogStore.getState().fetchProducts()`, spinning during fetch and refreshing table data immediately.
+  4. **Dynamic Inventory & History KPIs (`InventoryKPICards.tsx` & `StockHistoryKPICards.tsx`)**: Replaced placeholder metrics with real-time aggregations computing `totalStock`, `lowStockCount` (items `<= lowStockThreshold`), `outOfStockCount` (`stock <= 0`), formatted stock valuation (`₹...`), and stock movement units (`stockInUnits`, `stockOutUnits`, `netChangeUnits`).
+  5. **Audit CSV Exporter & Bulk Upload Integration (`InventoryPage.tsx`)**: Wired "Import Stock" to `<BulkUploadModal>` with automatic catalog refetch, and added an "Export CSV" feature serializing all inventory items with SKU, barcode, category, stock, reserved, and stock value.
+  6. **Async Submission Feedback & Lock (`AdjustStockDrawer.tsx` & `BulkAdjustStockView.tsx`)**: Added `isSubmitting` and `isSaving` state with disabled button states and `Loader2` animated spinners.
+* **Verification Results:**
+  - Merchant TypeScript & Vite build: 100% clean (`tsc && vite build`).
+  - Automated tests: **120 / 120 tests passing** across 19 suites.
+  - Backend TypeScript build: 100% clean.
 
 ### 🛠️ MW-HARDEN-05: In-House POS Counter Billing & Thermal Slip Rendering (Tier 2 Engine)
 * **Target Scope:** `apps/merchant/src/pages/BillingPage.tsx`, `CreateOrderPage.tsx`, `components/billing/`

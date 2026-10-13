@@ -14,8 +14,9 @@ export const StockHistoryDrawer: React.FC = () => {
 
   if (!historyDrawerItem) return null;
 
-  // Filter transactions for this specific product or general matching mock
+  // Filter transactions for this specific product
   const productTransactions = transactions.filter((t) => {
+    if (t.productId && t.productId !== historyDrawerItem.id) return false;
     if (filterType === 'stock_in' && t.type !== 'stock_in') return false;
     if (filterType === 'stock_out' && t.type !== 'stock_out') return false;
     return true;
