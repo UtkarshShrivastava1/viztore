@@ -63,6 +63,7 @@ export const updateOrderStatusSchema = z.object({
     z.nativeEnum(OrderStatus),
   ),
   deliveryOtp: z.string().length(4, 'Delivery OTP must be 4 digits').optional(),
+  expectedVersion: z.coerce.number().int().positive().optional(),
 });
 
 export const verifyOtpSchema = z.object({

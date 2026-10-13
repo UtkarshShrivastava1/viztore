@@ -16,13 +16,13 @@ export function AccountClient() {
   const { user, isAuthenticated, openAuthModal } = useAuthStore();
   const [isEditingMobile, setIsEditingMobile] = useState(false);
 
-  const [formData] = useState({
-    fullName: user?.fullName || 'Harish Kumar',
-    mobileNumber: user?.phone ? `+91 ${user.phone}` : '+91 91234 56789',
-    email: user?.email || 'harishkumar@gmail.com',
-    dob: '15 Mar 2002',
+  const formData = {
+    fullName: user?.fullName || (isAuthenticated ? 'Customer User' : 'Guest User'),
+    mobileNumber: user?.phone ? (user.phone.startsWith('+91') ? user.phone : `+91 ${user.phone}`) : 'Not Provided',
+    email: user?.email || (isAuthenticated ? 'user@domain.com' : 'Not Provided'),
+    dob: 'Not Provided',
     gender: 'Male',
-  });
+  };
 
   // Mobile Dashboard View
   if (isEditingMobile) {
@@ -258,7 +258,7 @@ export function AccountClient() {
               <MobileNav 
                 icon={<Store className="w-5 h-5 text-blue-500" />} 
                 bg="bg-blue-50" 
-                title="Sell on Viztore" 
+                title={`Sell on ${branding.appName}`} 
                 desc="Start selling and grow your business" 
                 href="/account/sell" 
                 badge="New"

@@ -15,6 +15,7 @@ import {
   Lightbulb,
 } from 'lucide-react';
 import { useSettingsStore } from '../../stores/settingsStore.js';
+import { branding } from '@repo/shared-types';
 
 export const StoreProfileTab: React.FC = () => {
   const { storeProfile, updateStoreProfile, setActiveSubTab } = useSettingsStore();
@@ -74,7 +75,7 @@ export const StoreProfileTab: React.FC = () => {
               onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
               className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
             />
-            <p className="text-[11px] text-slate-400">This name will be visible to customers on Viztore.</p>
+            <p className="text-[11px] text-slate-400">This name will be visible to customers on {branding.appName}.</p>
           </div>
 
           <div className="space-y-1.5">

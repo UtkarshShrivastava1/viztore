@@ -47,20 +47,20 @@ export function TermsClient() {
   }, []);
 
   const HIGHLIGHTS = [
-    { icon: <Users className="w-5 h-5 text-blue-500" />, title: 'User Agreement', desc: 'By using Viztore, you agree to these terms.' },
+    { icon: <Users className="w-5 h-5 text-blue-500" />, title: 'User Agreement', desc: `By using ${branding.appName}, you agree to these terms.` },
     { icon: <ShoppingBag className="w-5 h-5 text-emerald-500" />, title: 'Use of Services', desc: 'Use our app and services only for lawful purposes.' },
     { icon: <ShieldCheck className="w-5 h-5 text-purple-500" />, title: 'Your Responsibilities', desc: 'Provide accurate information and keep your account secure.' },
     { icon: <FileText className="w-5 h-5 text-orange-500" />, title: 'Policy Updates', desc: 'We may update these terms. Continued use means you accept the changes.' },
   ];
 
   const SECTIONS = [
-    { id: 1, title: '1. Acceptance of Terms', desc: 'By accessing or using Viztore, you agree to be bound by these Terms and Conditions.', icon: <FileText className="w-4 h-4 text-blue-500" /> },
-    { id: 2, title: '2. About Viztore', desc: 'Learn about Viztore, our platform and the services we provide.', icon: <AlertCircle className="w-4 h-4 text-blue-500" /> },
+    { id: 1, title: '1. Acceptance of Terms', desc: `By accessing or using ${branding.appName}, you agree to be bound by these Terms and Conditions.`, icon: <FileText className="w-4 h-4 text-blue-500" /> },
+    { id: 2, title: `2. About ${branding.appName}`, desc: `Learn about ${branding.appName}, our platform and the services we provide.`, icon: <AlertCircle className="w-4 h-4 text-blue-500" /> },
     { id: 3, title: '3. User Accounts', desc: 'Rules and responsibilities related to creating and managing your account.', icon: <User className="w-4 h-4 text-blue-500" /> },
-    { id: 4, title: '4. Use of Services', desc: 'Guidelines for using Viztore and what you can expect from our services.', icon: <ShoppingBag className="w-4 h-4 text-blue-500" /> },
+    { id: 4, title: '4. Use of Services', desc: `Guidelines for using ${branding.appName} and what you can expect from our services.`, icon: <ShoppingBag className="w-4 h-4 text-blue-500" /> },
     { id: 5, title: '5. Orders and Payments', desc: 'Information about placing orders, pricing and payment methods.', icon: <Ticket className="w-4 h-4 text-blue-500" /> },
     { id: 6, title: '6. Returns and Refunds', desc: 'Our policy on returns, refunds and cancellations.', icon: <HelpCircle className="w-4 h-4 text-blue-500" /> },
-    { id: 7, title: '7. Prohibited Activities', desc: 'Activities that are not allowed on Viztore.', icon: <Shield className="w-4 h-4 text-blue-500" /> },
+    { id: 7, title: '7. Prohibited Activities', desc: `Activities that are not allowed on ${branding.appName}.`, icon: <Shield className="w-4 h-4 text-blue-500" /> },
     { id: 8, title: '8. Limitation of Liability', desc: 'Limitations of our liability to the fullest extent permitted by law.', icon: <ShieldCheck className="w-4 h-4 text-blue-500" /> },
     { id: 9, title: '9. Governing Law', desc: 'These terms are governed by the laws of India.', icon: <FileText className="w-4 h-4 text-blue-500" /> },
     { id: 10, title: '10. Contact Us', desc: 'How to reach us for any questions about these terms.', icon: <HelpCircle className="w-4 h-4 text-blue-500" /> },
@@ -88,7 +88,7 @@ export function TermsClient() {
                   <h1 className="text-[24px] md:text-[32px] font-extrabold text-[#192168] leading-tight">Terms & Conditions</h1>
                 </div>
                 <p className="text-[12px] text-surface-500 leading-relaxed max-w-[220px] mb-4">
-                  Please read these terms and conditions carefully before using Viztore.
+                  Please read these terms and conditions carefully before using {branding.appName}.
                 </p>
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-[#192168]" />
@@ -157,7 +157,7 @@ export function TermsClient() {
                 <CheckCircle2 className="w-5 h-5 text-white" />
               </div>
               <p className="text-[10px] text-[#192168] leading-tight font-medium">
-                By continuing to use Viztore, you acknowledge that you have read, understood and agree to these Terms & Conditions.
+                By continuing to use {branding.appName}, you acknowledge that you have read, understood and agree to these Terms & Conditions.
               </p>
             </div>
 

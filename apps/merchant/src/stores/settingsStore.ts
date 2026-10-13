@@ -309,7 +309,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
     set((state) => ({ storeTimings: { ...state.storeTimings, ...data } })),
 
   billingInvoicing: {
-    invoicePrefix: 'VZ',
+    invoicePrefix: 'INV-',
     startingNumber: '1001',
     invoiceFormat: 'standard',
     invoiceLanguage: 'English',
@@ -323,12 +323,12 @@ export const useSettingsStore = create<SettingsState>((set) => ({
     set((state) => ({ billingInvoicing: { ...state.billingInvoicing, ...data } })),
 
   taxGst: {
-    gstin: '22ABCDE1234F1Z5',
+    gstin: '',
     isVerified: true,
-    businessLegalName: 'Fashion Hub',
-    tradeName: 'Fashion Hub',
+    businessLegalName: '',
+    tradeName: '',
     registrationType: 'Regular',
-    registeredAddress: 'Shop No. 12, City Mall, Supela, Bhilai, Chhattisgarh - 490023',
+    registeredAddress: '',
     applyGstOnOrders: true,
     priceDisplay: 'excluding_tax',
     defaultGstRate: '18% (Standard Rate)',
@@ -361,7 +361,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
 
   shippingReturns: {
     serviceArea: 'Bhilai, Durg (Selected Areas)',
-    deliveryPartner: 'Viztore Delivery',
+    deliveryPartner: 'Platform Fleet Delivery',
     estimatedDeliveryTime: '30 - 45 minutes',
     enableDelivery: true,
     allowReturns: true,
@@ -384,7 +384,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
     set((state) => ({ notifications: { ...state.notifications, ...data } })),
 
   securityLogin: {
-    email: 'harish@viztore.com',
+    email: 'merchant@example.com',
     isEmailVerified: true,
     phone: '+91 98765 43210',
     isPhoneVerified: true,

@@ -9,7 +9,9 @@ import {
 
 // ── Document Interfaces ────────────────────────────────────────────────
 
-export interface IProductDocument extends Omit<IProduct, '_id'>, Document {}
+export interface IProductDocument extends Omit<IProduct, '_id'>, Document {
+  version: number;
+}
 
 // ── Sub-Schemas ────────────────────────────────────────────────────────
 
@@ -174,6 +176,13 @@ const productSchema = new Schema<IProductDocument>(
       type: Number,
       default: 0,
       min: 0,
+    },
+    version: {
+      type: Number,
+      required: true,
+      default: 1,
+      min: 1,
+      index: true,
     },
   },
   {

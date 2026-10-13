@@ -14,6 +14,7 @@
     "test": "turbo run test",
     "seed:merchants": "pnpm --filter=@repo/backend seed",
     "seed:staging": "pnpm --filter=@repo/backend seed",
+    "test:whatsapp": "pnpm --filter=@repo/backend test:whatsapp",
     "clean": "turbo run clean && rimraf node_modules"
   },
   "devDependencies": {

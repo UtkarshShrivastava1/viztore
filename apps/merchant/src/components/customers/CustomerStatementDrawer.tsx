@@ -22,7 +22,6 @@ import {
   AgingBucket,
   OverdueInvoice,
 } from '../../stores/customerStore.js';
-import { useBodyScrollLock } from '../../hooks/useBodyScrollLock.js';
 
 interface CustomerStatementDrawerProps {
   customer: Customer | null;
@@ -39,8 +38,6 @@ export const CustomerStatementDrawer: React.FC<CustomerStatementDrawerProps> = (
   onEditCustomer,
   onViewCustomer,
 }) => {
-  useBodyScrollLock(isOpen, onClose);
-
   const { activeStatementTab, setActiveStatementTab } = useCustomerStore();
   const [dateFilter, setDateFilter] = useState('01 Apr 2024 - 31 May 2024');
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
@@ -73,7 +70,7 @@ export const CustomerStatementDrawer: React.FC<CustomerStatementDrawerProps> = (
     <div className="fixed inset-0 z-[100] overflow-hidden animate-in fade-in duration-150">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity"
+        className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs transition-opacity"
         onClick={onClose}
       />
 
@@ -474,7 +471,7 @@ export const CustomerStatementDrawer: React.FC<CustomerStatementDrawerProps> = (
           </div>
 
           {/* Fixed Bottom Footer Bar */}
-          <div className="p-4 border-t border-slate-200 bg-white flex items-center justify-between gap-4 shrink-0">
+          <div className="p-4 border-t border-slate-200 bg-white flex items-center justify-between gap-4">
             {/* Download Statement Dropdown */}
             <div className="relative">
               <button

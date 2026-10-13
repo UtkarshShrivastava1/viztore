@@ -9,6 +9,9 @@ export const EVENTS = {
   DELIVERY_COMPLETED: 'delivery.completed',
   PRODUCT_OUT_OF_STOCK: 'product.outOfStock',
   NOTIFICATION_CREATED: 'notification.created',
+  INVOICE_ISSUED: 'invoice.issued',
+  INVOICE_PAID: 'invoice.paid',
+  INVOICE_CANCELLED: 'invoice.cancelled',
 } as const;
 
 export type EventName = typeof EVENTS[keyof typeof EVENTS];
@@ -27,6 +30,9 @@ export interface OrderPlacedPayload {
   storeId: string;
   grandTotal: number;
   itemsCount: number;
+  customerPhone?: string;
+  deliveryOtp?: string;
+  correlationId?: string;
 }
 
 export interface OrderStatusChangedPayload {
@@ -35,6 +41,7 @@ export interface OrderStatusChangedPayload {
   previousStatus: string;
   newStatus: string;
   actorUserId?: string;
+  customerPhone?: string;
 }
 
 export interface PaymentSucceededPayload {
@@ -47,6 +54,11 @@ export interface DeliveryAssignedPayload {
   orderId: string;
   riderId: string;
   estimatedMinutes: number;
+  riderPhone?: string;
+  riderName?: string;
+  dispatchMessage?: string;
+  customerPhone?: string;
+  deliveryOtp?: string;
 }
 
 export interface ProductOutOfStockPayload {
@@ -66,6 +78,13 @@ export interface NotificationCreatedPayload {
   createdAt: Date | string;
 }
 
+export interface InvoiceEventPayload {
+  invoiceId: string;
+  invoiceNumber: string;
+  amount?: number;
+  correlationId?: string;
+}
+
 export interface EventPayloadMap {
   [EVENTS.USER_REGISTERED]: UserRegisteredPayload;
   [EVENTS.ORDER_PLACED]: OrderPlacedPayload;
@@ -77,5 +96,8 @@ export interface EventPayloadMap {
   [EVENTS.DELIVERY_COMPLETED]: OrderStatusChangedPayload;
   [EVENTS.PRODUCT_OUT_OF_STOCK]: ProductOutOfStockPayload;
   [EVENTS.NOTIFICATION_CREATED]: NotificationCreatedPayload;
+  [EVENTS.INVOICE_ISSUED]: InvoiceEventPayload;
+  [EVENTS.INVOICE_PAID]: InvoiceEventPayload;
+  [EVENTS.INVOICE_CANCELLED]: InvoiceEventPayload;
 }
 

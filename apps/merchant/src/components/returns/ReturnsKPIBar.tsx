@@ -5,10 +5,12 @@ import { useReturnsStore } from '../../stores/returnsStore.js';
 export const ReturnsKPIBar: React.FC = () => {
   const { returns } = useReturnsStore();
 
-  const totalReturnsCount = 18;
-  const refundsProcessedCount = 12;
-  const pendingCount = 5;
-  const refundsPendingAmount = 18760;
+  const totalReturnsCount = returns.length;
+  const refundsProcessedCount = returns.filter((r) => r.status === 'Refunded').length;
+  const pendingCount = returns.filter((r) => r.status === 'Pending').length;
+  const refundsPendingAmount = returns
+    .filter((r) => r.status === 'Pending' || r.status === 'Approved')
+    .reduce((sum, r) => sum + (r.refundAmount || r.amount || 0), 0);
 
   const cards = [
     {
@@ -48,21 +50,21 @@ export const ReturnsKPIBar: React.FC = () => {
         return (
           <div
             key={idx}
-            className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-xs transition-shadow flex items-center gap-3.5"
+            className="p-3.5 bg-white rounded-xl border border-slate-200/80 shadow-2xs hover:shadow-xs transition-shadow flex items-center gap-3.5"
           >
             <div
-              className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${card.iconBg}`}
+              className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${card.iconBg}`}
             >
               <Icon className="w-5 h-5" />
             </div>
             <div className="min-w-0">
-              <span className="text-[11px] font-semibold text-slate-500 block leading-tight truncate">
+              <span className="text-[11px] font-semibold text-slate-500 block leading-tight">
                 {card.title}
               </span>
-              <h4 className="text-lg font-black text-slate-900 tracking-tight leading-tight mt-0.5 truncate">
+              <h4 className="text-xl font-black text-slate-900 tracking-tight leading-tight mt-0.5">
                 {card.value}
               </h4>
-              <span className="text-[10px] text-slate-400 block leading-tight mt-0.5 truncate">
+              <span className="text-[10px] text-slate-400 block leading-tight mt-0.5">
                 {card.subtext}
               </span>
             </div>

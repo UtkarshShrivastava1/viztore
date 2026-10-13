@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { api } from '../lib/api.js';
+import { api, catalogApi } from '../lib/api.js';
+import { useAuthStore } from './authStore.js';
 
 export interface StorageLocation {
   warehouse: string;
@@ -127,11 +128,11 @@ interface CatalogStoreState {
   resetDraftProduct: () => void;
   loadProductIntoDraft: (product: ProductItem) => void;
 
-  saveDraftAsProduct: () => ProductItem;
+  saveDraftAsProduct: () => Promise<ProductItem>;
   duplicateProduct: (id: string) => void;
-  toggleProductStatus: (id: string) => void;
-  updateStock: (id: string, newStock: number, lowStockThreshold?: number) => void;
-  deleteProduct: (id: string) => void;
+  toggleProductStatus: (id: string) => Promise<void>;
+  updateStock: (id: string, newStock: number, lowStockThreshold?: number) => Promise<void>;
+  deleteProduct: (id: string) => Promise<void>;
 
   // Modal controls
   openStockModal: (product: ProductItem) => void;
@@ -337,7 +338,27 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
   fetchProducts: async (storeId?: string) => {
     set({ isLoading: true, error: null });
     try {
-      const endpoint = storeId ? `/catalog/stores/${storeId}/products` : '/catalog/products?limit=100';
+      let activeStoreId =
+        storeId ||
+        useAuthStore.getState().currentStore?._id ||
+        useAuthStore.getState().currentStore?.id;
+
+      if (!activeStoreId) {
+        try {
+          const stores = await api.get<any[]>('/stores/mine');
+          if (Array.isArray(stores) && stores.length > 0) {
+            activeStoreId = stores[0]._id || stores[0].id;
+            useAuthStore.getState().setCurrentStore(stores[0]);
+          }
+        } catch {
+          // Fallback to public products if not logged in
+        }
+      }
+
+      const endpoint = activeStoreId
+        ? `/catalog/stores/${activeStoreId}/products`
+        : '/catalog/products?limit=100';
+
       const rawData = await api.get<any>(endpoint);
       const productList = Array.isArray(rawData) ? rawData : rawData?.products || rawData?.data || [];
       const mapped = productList.map(mapApiProductToProductItem);
@@ -409,70 +430,141 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
       activeView: 'wizard',
     }),
 
-  saveDraftAsProduct: () => {
+  saveDraftAsProduct: async () => {
     const { draftProduct, products } = get();
-    const existingIndex = products.findIndex((p) => p.id === draftProduct.id);
 
-    const nowStr = new Intl.DateTimeFormat('en-GB', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
-    }).format(new Date());
+    // 1. Resolve storeId
+    let storeId =
+      useAuthStore.getState().currentStore?._id ||
+      useAuthStore.getState().currentStore?.id;
 
-    const finalizedProduct: ProductItem = {
-      id: draftProduct.id || `prd-${Date.now()}`,
-      name: draftProduct.name || 'Untitled Product',
-      sku: draftProduct.sku || `PRD-${Date.now()}`,
-      barcode: draftProduct.barcode || '8901234567890',
-      category: draftProduct.category || 'Fashion',
-      subCategory: draftProduct.subCategory || 'Apparel',
-      productType: draftProduct.productType || 'Clothing',
-      brand: draftProduct.brand || 'Generic',
-      stock: Number(draftProduct.stock ?? 100),
-      lowStockThreshold: Number(draftProduct.lowStockThreshold ?? 10),
-      status: draftProduct.status || 'active',
-      price: Number(draftProduct.price ?? 599),
-      costPrice: Number(draftProduct.costPrice ?? 350),
-      mrp: Number(draftProduct.mrp ?? 899),
-      images: draftProduct.images?.length
+    if (!storeId) {
+      try {
+        const stores = await api.get<any[]>('/stores/mine');
+        if (Array.isArray(stores) && stores.length > 0) {
+          storeId = stores[0]._id || stores[0].id;
+          useAuthStore.getState().setCurrentStore(stores[0]);
+        }
+      } catch (e) {
+        console.warn('Could not fetch merchant store for product creation:', e);
+      }
+    }
+
+    // 2. Prepare attributes array
+    const attributesArray = Object.entries(draftProduct.attributes || {})
+      .filter(([k, v]) => k && v)
+      .map(([key, value]) => ({
+        key: String(key).trim(),
+        value: String(value).trim(),
+      }));
+
+    // 3. Fallback sample image if none provided
+    const defaultImage =
+      'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=600&q=80';
+    const images =
+      draftProduct.images && draftProduct.images.length > 0
         ? draftProduct.images
-        : ['https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=600&q=80'],
-      attributes: draftProduct.attributes || {
-        fit: 'Regular',
-        color: 'Black',
-        size: 'M',
-      },
-      storageLocation: draftProduct.storageLocation || {
-        warehouse: 'Main Warehouse',
-        room: 'Room 101',
-        rack: 'R-05',
-        shelf: 'S-02',
-        bin: 'B-03',
-      },
-      tax: draftProduct.tax || {
-        category: 'GST (18%)',
-        rate: 18,
-        inclusive: true,
-        amount: 28.52,
-      },
-      updatedAt: nowStr,
-      hsnCode: draftProduct.hsnCode || '61091000',
-      description: draftProduct.description || '',
-      tags: draftProduct.tags || [],
-      countryOfOrigin: draftProduct.countryOfOrigin || 'India',
-      warranty: draftProduct.warranty || 'Standard Warranty',
-      isReturnable: draftProduct.isReturnable ?? true,
-      weight: draftProduct.weight || '0.250',
-      dimensions: draftProduct.dimensions || { length: '30', width: '20', height: '2' },
-      material: draftProduct.material || 'Cotton',
-      careInstructions: draftProduct.careInstructions || 'Standard care',
-      metaTitle: draftProduct.metaTitle || draftProduct.name,
-      metaDescription: draftProduct.metaDescription || draftProduct.description,
+        : [defaultImage];
+
+    // 4. Construct variant
+    const variant = {
+      sku: (draftProduct.sku || `PRD-${Date.now()}`).toUpperCase(),
+      size: draftProduct.attributes?.size || 'Standard',
+      color: draftProduct.attributes?.color || 'Standard',
+      price: Number(draftProduct.price ?? 599),
+      mrp: Number(draftProduct.mrp ?? draftProduct.price ?? 699),
+      stock: Number(draftProduct.stock ?? 10),
+      images,
+      isActive: draftProduct.status !== 'inactive',
     };
 
+    const payload = {
+      storeId,
+      name: draftProduct.name || 'Untitled Product',
+      description: draftProduct.description || '',
+      category: (draftProduct.category || 'fashion').toLowerCase().trim().replace(/[\s-]+/g, '_'),
+      subCategory: draftProduct.subCategory || 'Apparel',
+      subType: draftProduct.productType
+        ? draftProduct.productType.toLowerCase().trim().replace(/[\s-]+/g, '_')
+        : undefined,
+      brand: draftProduct.brand || 'Generic',
+      tags: draftProduct.tags || [],
+      attributes: attributesArray,
+      variants: [variant],
+      isFeatured: false,
+    };
+
+    let finalizedProduct: ProductItem;
+    try {
+      if (draftProduct.id && /^[0-9a-fA-F]{24}$/.test(draftProduct.id)) {
+        const updated = await catalogApi.updateProduct(draftProduct.id, payload);
+        finalizedProduct = mapApiProductToProductItem(updated);
+      } else {
+        const created = await catalogApi.createProduct(payload);
+        finalizedProduct = mapApiProductToProductItem(created);
+      }
+    } catch (err: any) {
+      console.warn('Could not persist product to backend API, using local fallback:', err?.message || err);
+      const nowStr = new Intl.DateTimeFormat('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      }).format(new Date());
+
+      finalizedProduct = {
+        id: draftProduct.id || `prd-${Date.now()}`,
+        name: draftProduct.name || 'Untitled Product',
+        sku: draftProduct.sku || `PRD-${Date.now()}`,
+        barcode: draftProduct.barcode || '8901234567890',
+        category: draftProduct.category || 'Fashion',
+        subCategory: draftProduct.subCategory || 'Apparel',
+        productType: draftProduct.productType || 'Clothing',
+        brand: draftProduct.brand || 'Generic',
+        stock: Number(draftProduct.stock ?? 100),
+        lowStockThreshold: Number(draftProduct.lowStockThreshold ?? 10),
+        status: draftProduct.status || 'active',
+        price: Number(draftProduct.price ?? 599),
+        costPrice: Number(draftProduct.costPrice ?? 350),
+        mrp: Number(draftProduct.mrp ?? 899),
+        images,
+        attributes: draftProduct.attributes || {
+          fit: 'Regular',
+          color: 'Black',
+          size: 'M',
+        },
+        storageLocation: draftProduct.storageLocation || {
+          warehouse: 'Main Warehouse',
+          room: 'Room 101',
+          rack: 'R-05',
+          shelf: 'S-02',
+          bin: 'B-03',
+        },
+        tax: draftProduct.tax || {
+          category: 'GST (18%)',
+          rate: 18,
+          inclusive: true,
+          amount: 28.52,
+        },
+        updatedAt: nowStr,
+        hsnCode: draftProduct.hsnCode || '61091000',
+        description: draftProduct.description || '',
+        tags: draftProduct.tags || [],
+        countryOfOrigin: draftProduct.countryOfOrigin || 'India',
+        warranty: draftProduct.warranty || 'Standard Warranty',
+        isReturnable: draftProduct.isReturnable ?? true,
+        weight: draftProduct.weight || '0.250',
+        dimensions: draftProduct.dimensions || { length: '30', width: '20', height: '2' },
+        material: draftProduct.material || 'Cotton',
+        careInstructions: draftProduct.careInstructions || 'Standard care',
+        metaTitle: draftProduct.metaTitle || draftProduct.name,
+        metaDescription: draftProduct.metaDescription || draftProduct.description,
+      };
+    }
+
+    const existingIndex = products.findIndex((p) => p.id === finalizedProduct.id);
     let updatedList: ProductItem[];
     if (existingIndex >= 0) {
       updatedList = [...products];
@@ -480,7 +572,12 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
     } else {
       updatedList = [finalizedProduct, ...products];
     }
-    set({ products: updatedList, kpis: calculateKPIs(updatedList), activeView: 'list' });
+    set({
+      products: updatedList,
+      kpis: calculateKPIs(updatedList),
+      activeView: 'list',
+      draftProduct: initialDefaultDraft,
+    });
 
     return finalizedProduct;
   },
@@ -503,15 +600,46 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
       return { products: updatedList, kpis: calculateKPIs(updatedList) };
     }),
 
-  toggleProductStatus: (id) =>
+  toggleProductStatus: async (id) => {
+    const product = get().products.find((p) => p.id === id);
+    if (!product) return;
+    const newStatus = product.status === 'active' ? 'inactive' : 'active';
+    try {
+      if (/^[0-9a-fA-F]{24}$/.test(id)) {
+        await catalogApi.updateProduct(id, { isActive: newStatus === 'active' });
+      }
+    } catch (err) {
+      console.warn('Failed to toggle product status on server:', err);
+    }
     set((state) => {
       const updatedList = state.products.map((p) =>
-        p.id === id ? { ...p, status: (p.status === 'active' ? 'inactive' : 'active') as any } : p
+        p.id === id ? { ...p, status: newStatus as any } : p
       );
       return { products: updatedList, kpis: calculateKPIs(updatedList) };
-    }),
+    });
+  },
 
-  updateStock: (id, newStock, lowStockThreshold) =>
+  updateStock: async (id, newStock, lowStockThreshold) => {
+    try {
+      if (/^[0-9a-fA-F]{24}$/.test(id)) {
+        const product = get().products.find((p) => p.id === id);
+        if (product) {
+          const updatedVariants = [
+            {
+              sku: product.sku,
+              price: product.price,
+              mrp: product.mrp || product.price,
+              stock: newStock,
+              images: product.images,
+              isActive: product.status !== 'inactive',
+            },
+          ];
+          await catalogApi.updateProduct(id, { variants: updatedVariants });
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to update product stock on server:', err);
+    }
     set((state) => {
       const updatedList = state.products.map((p) =>
         p.id === id
@@ -525,9 +653,17 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
           : p
       );
       return { products: updatedList, kpis: calculateKPIs(updatedList) };
-    }),
+    });
+  },
 
-  deleteProduct: (id) =>
+  deleteProduct: async (id) => {
+    try {
+      if (/^[0-9a-fA-F]{24}$/.test(id)) {
+        await catalogApi.deleteProduct(id);
+      }
+    } catch (err) {
+      console.warn('Failed to delete product from server:', err);
+    }
     set((state) => {
       const updatedList = state.products.filter((p) => p.id !== id);
       return {
@@ -535,7 +671,8 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
         kpis: calculateKPIs(updatedList),
         selectedProductIds: state.selectedProductIds.filter((item) => item !== id),
       };
-    }),
+    });
+  },
 
   openStockModal: (product) =>
     set({ isStockModalOpen: true, selectedProductForStock: product }),

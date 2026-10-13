@@ -13,10 +13,14 @@ export const AddProductWizardPage: React.FC = () => {
     setActiveView('list');
   };
 
-  const handleSaveAsDraft = () => {
-    saveDraftAsProduct();
-    alert('Product saved as draft!');
-    setActiveView('list');
+  const handleSaveAsDraft = async () => {
+    try {
+      await saveDraftAsProduct();
+      alert('Product saved as draft!');
+      setActiveView('list');
+    } catch (err: any) {
+      alert(`Failed to save draft: ${err?.message || 'Unknown error'}`);
+    }
   };
 
   const getStepSubtitle = () => {

@@ -1,6 +1,6 @@
 # Viztore Platform — Implementation Checklist
 
-> **Overall Status:** Phase 1, Phase 2 (UI Refined), Phase 3, Phase 4/5/6 Backend Complete | 67/67 Unit & Integration Tests Passing | Full Monorepo Clean Build | Docker & Staging Blueprints Ready
+> **Overall Status:** Phase 1, Phase 2 (UI Refined), Phase 3, Phase 4/5/6 Backend Complete, Tier 2 In-House Retail Billing Complete | 94/94 Unit & Integration Tests Passing | Full Monorepo Clean Build | Docker & Staging Blueprints Ready
 
 ---
 
@@ -11,7 +11,7 @@
 | **Online Order & Checkout** | `[x]` Single-store cart, address book, checkout, `POST /orders` | `[ ]` Real-time live order tracking map & ETA | `[ ]` One-tap wallet checkout & saved cards |
 | **Merchant Order Processing**| `[x]` 7-tab pipeline: New Orders ➔ Ready to Ship (`PACKED`) ➔ Shipped ➔ Delivered | `[ ]` Socket.io real-time order sound alerts | `[ ]` Automated kitchen display / printer dispatch |
 | **Delivery Coordination** | `[x]` WhatsApp dispatch text + 1-click deep link + 4-digit OTP | `[ ]` On-ground pilot rider fleet execution (5–10 stores) | `[ ]` Automated pooled rider matching algorithm |
-| **Billing & Invoicing** | `[x]` **Online Purchase Tax Invoice** (`INV-ORD-xxxxx`), Customer "Download Bill", Merchant "Print Bill" | `[ ]` **Basic In-House Retail Billing**: Manual counter sales, basic tax invoices, estimates (`5.0`–`5.6`) | `[ ]` **Enterprise Zoho Books Accounting**: Credit/Debit notes, GSTR-1 ledgers, multi-series |
+| **Billing & Invoicing** | `[x]` **Online Purchase Tax Invoice** (`INV-ORD-xxxxx`), Customer "Download Bill", Merchant "Print Bill" | `[x]` **Basic In-House Retail Billing**: Manual counter sales, basic tax invoices, estimates (`5.0`–`5.6`), real-time stock sync | `[ ]` **Enterprise Zoho Books Accounting**: Credit/Debit notes, GSTR-1 ledgers, multi-series |
 | **Merchant Store Profile** | `[x]` Dedicated `register.<domain>` 6-step flow, Leaflet pin | `[ ]` Onboarding 5–10 pilot local shops (free beta) | `[ ]` Multi-outlet franchise management & advanced RBAC |
 | **Product & Inventory** | `[x]` Full catalog wizard, live inventory, adjust drawers | `[ ]` Live stock synchronization between store & online | `[ ]` Multi-warehouse inventory, supplier purchase orders |
 | **Client Platforms** | `[x]` Responsive Customer Web (`Next.js 14`) + Merchant Panel (`Vite`) | `[ ]` Desktop/Tablet POS counter mode | `[ ]` Customer Native Mobile App (`React Native / Expo`) |
@@ -147,6 +147,15 @@
   - [x] Operational Settings Hub (15.0) for store profiles, tax parameters, and notification policies
   - [x] ordersApi client wired for backend order synchronization
   - [x] Merchant auth and order lifecycle defect fixes: dynamic store hydration, clean logout redirect to login, dynamic tab badges, uppercase `OrderStatus` mapping, and persistent active tab across page refresh
+  - [x] Enterprise Catalog & Order Architecture Hardening (`enterprise_catalog_order_architecture_updated(1).md`):
+    - [x] Optimistic Concurrency Control (OCC) with indexed numeric `version` on Product & Order schemas
+    - [x] Authoritative product pricing & line-item snapshots via `catalogFacade` (client prices strictly ignored)
+    - [x] Deadlock-free atomic inventory deductions (deterministic SKU/ID sorting) and atomic stock restoration (`restoreStock`)
+    - [x] MongoDB ACID multi-document transactions (`withTransaction`) with snapshot read isolation and majority write concern
+    - [x] Transactional Outbox Pattern (`OutboxModel`, `appendOutboxEvent`, `processPendingOutboxEvents`) with event correlation IDs
+    - [x] Strongly-typed `AuthenticatedRequest` across Catalog and Order mutation controllers
+    - [x] Bounded MongoDB connection pool configuration (`maxPoolSize: 25`, `minPoolSize: 5`, waitQueue & socket timeouts)
+    - [x] 87/87 backend unit tests green, clean monorepo Turborepo build
 
 ---
 
@@ -158,8 +167,8 @@
 - [x] WhatsApp notification link constructor & Google Maps turn-by-turn routing URL generator
 - [x] Physical 4-digit Delivery OTP handshake & handoff verification
 - [x] Centralized `notifications/` modular backend architecture (`notification.module.ts`, `notification.service.ts`, `notification.repository.ts`, `notification.controller.ts`)
-- [x] Multi-recipient routing (`merchant`, `customer`, `admin`) and category segregation (`order`, `inventory`, `system`, `promo`)
 - [x] Real-time Socket.io push broadcasts (`NOTIFICATION_CREATED`) & Redis adapter integration
+- [x] Live Meta WhatsApp Cloud API outbound service (`whatsapp.service.ts`): Automated dispatches for Customer Order Placed (`#ORD-xxxxx`, OTP), Rider Dispatch (pickup, destination, navigation link, OTP collection), Out-For-Delivery OTP reminder, and Delivery Completed receipts with resilient Indian phone normalization (14 unit tests passing)
 - [ ] Merchant audio chime alerts for incoming orders (Frontend UI)
 - [ ] Live customer order tracking map with driver ETA (Frontend UI)
 
@@ -175,6 +184,7 @@
 - [x] E2E staging browser audit & defect remediation: Dynamic cart badge sync, hardcoded name/location purge, dynamic PDP brand/categories, merchant auth route guard
 - [x] Database Purge & Realistic Multi-City Production Seed Dataset: Atlas MongoDB collections cleanly purged and repopulated with 1 Super Admin, 2 Customers, 5 Indian Retail Stores, 24 polymorphic products with variants and barcodes, 5 active lifecycle orders; >1,800 lines of mock arrays purged across merchant orderStore, catalogStore, inventoryStore, and customer storefront OrdersClient, WishlistClient, FashionStores, and AccountClient; 100% wired to live REST APIs with graceful empty states; all builds green, 67/67 tests passing
 - [x] Zero Residual Static Fallback & Dynamic Dashboard Architecture: Purged all lingering static injectors and dummy arrays in customer NotificationsDropdown, WishlistFlyout, ExploreStoresGrid, addresses/page, and OrderDetailsClient; purged merchant LiveOrderAlerts, TopProducts, LowStockWarnings, OrderSummaryCard, SalesOverview, RevenueChart, and billingStore; verified live database connectivity and genuine empty states across empty and seeded collections
+- [x] Comprehensive Pre-Tier 2 Static Data Audit & Live API Wiring (Commit `1d442a8`): Audited recent pull requests across Customer Storefront (`apps/web`) and Merchant Panel (`apps/merchant`). Purged static hardcoded arrays, personal names, and client brand acronyms (`#VZT...`, `#VZP...`). Wired live API endpoints and hooks for Customer Addresses (`userApi.getAddresses`, `addAddress`, `deleteAddress`), Customer Orders (`ordersApi.getMyOrders`, `getOrderById`), Customer Stores (`fetchAllStores`), Customer Notifications (`notificationsApi.getNotifications`, `markAllAsRead`), and Merchant Marketing (`useCatalogStore.products`, dynamic categories and stock filters); converted Returns KPI metrics to pure dynamic calculations and wired `NewReturnView` to live `useOrderStore` records; verified 82/82 tests passing and 100% clean monorepo production build.
 - [ ] Customer platform NPS & experience feedback submission
 - [ ] Merchant marketing suite: discount voucher & banner campaign manager (standard non-AI)
 - [ ] Merchant revenue analytics & sales reports
@@ -182,9 +192,26 @@
 
 ---
 
-## ⚫ Phase 7: Tier 2 Enterprise Retail Operations & Mobile App (FUTURE ROADMAP / SUBSEQUENT PHASES)
+## 🟢 Phase 7: Tier 2 Enterprise Retail Operations & Mobile App (IN PROGRESS)
 
-- [ ] Merchant Point-of-Sale (POS) counter billing terminal mode & barcode scanner integration
+- [x] **In-House Retail Billing & Point-of-Sale (POS) Engine with Real-Time Catalog Inventory Synchronization**:
+  - [x] Optimistic Concurrency Control (OCC) with monotonically increasing numeric `version` & ABA prevention across invoices and quotes
+  - [x] Idempotency Key Middleware (`shared/middlewares/idempotency.middleware.ts`) caching responses via Redis/Memory with SHA-256 payload validation
+  - [x] GST Tax Computation Engine with intra-state (CGST/SGST 50/50 split), inter-state (IGST), inclusive/exclusive tax, and round-off
+  - [x] ACID Multi-Document Transactions with deterministic stock ordering and deadlock prevention
+  - [x] Real-time catalog inventory deduction and restoration via `catalogModule` facade
+  - [x] Redis Cache Invalidation (`catalog:store:*`) on billing mutations
+  - [x] Transactional Outbox domain event emission (`INVOICE_ISSUED`, `INVOICE_PAID`, `INVOICE_CANCELLED`)
+  - [x] Full REST API endpoints mounted under `/api/v1/billing` (`billing.routes.ts`, `billing.controller.ts`)
+  - [x] Client API integration in `apps/merchant/src/lib/api.ts` (`billingApi`)
+  - [x] Automated test suite with 94/94 backend tests passing across 15 suites
+  - [x] In-House Retail Billing Customer History Enforcement & Direct New Customer Entry Workflow (zero hardcoded customer presets, dynamic past customer lookup by name/phone, direct new customer registration, 36 Indian states & UTs directory with Chhattisgarh launch default)
+- [x] **Merchant Shell Controls & Storefront Merchandising Suite (PR #14, commit `eac4c32`)**:
+  - [x] Header Store Active / Inactive switch with live green/red indicator and `localStorage` persistence
+  - [x] `StoreInactiveConfirmModal` dialog with warning copy, plan notice, and action buttons (`1.0a(V1).png`)
+  - [x] Sticky Inactive Store Alert Banner with 1-click "Activate Store Now" trigger (`1.0b(V1).png`)
+  - [x] Canonical 15-module sidebar navigation sync with counter badges (`Orders 25`, `Wallet ₹32,450`, `Expenses`, `Asset Management`)
+  - [x] Real-time synchronized 2x2 product grid and iPhone chassis preview for store merchandising sections (`AddEditSectionView.tsx`, `13.1a.png`, `13.1b.png`)
 - [ ] Merchant wallet financial ledger, payout triggers & automated bank settlements
 - [ ] Automated returns, exchange, RMA reverse logistics & refund credit note settlement
 - [ ] Merchant staff management & role-based access control (Manager, Cashier, Inventory Clerk)
@@ -192,3 +219,4 @@
 - [ ] Customer Mobile App with React Native & Expo (iOS + Android)
 - [ ] Background GPS geolocation & mobile push notifications
 - [ ] Customer in-app returns/exchange request hub & digital wallet loyalty balance
+

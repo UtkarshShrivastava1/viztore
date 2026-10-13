@@ -56,3 +56,10 @@ export async function fetchStoreProducts(
     };
   }
 }
+
+export const catalogApi = {
+  fetchProducts,
+  fetchFeaturedProducts,
+  fetchProductBySlug,
+  fetchStoreProducts,
+};

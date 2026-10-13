@@ -132,16 +132,23 @@ export const productVariantSchema = z.object({
   price: z.number().min(0, 'Price must be non-negative'),
   mrp: z.number().min(0, 'MRP must be non-negative'),
   stock: z.number().int().min(0, 'Stock must be non-negative').default(0),
-  images: z.array(z.string().url('Each image must be a valid URL')).default([]),
+  images: z.array(z.string()).default([]),
   isActive: z.boolean().default(true),
 });
 
 export const createProductSchema = z.object({
+  storeId: z.string().optional(),
   name: z.string().min(2, 'Product name must be at least 2 characters').max(200),
   description: z.string().max(5000).default(''),
-  category: z.nativeEnum(ProductCategory),
+  category: z.preprocess(
+    (val) => (typeof val === 'string' ? val.toLowerCase().trim().replace(/[\s-]+/g, '_') : val),
+    z.nativeEnum(ProductCategory).or(z.string()),
+  ),
   subCategory: z.string().max(100).optional(),
-  subType: z.nativeEnum(ProductSubType).optional(),
+  subType: z.preprocess(
+    (val) => (typeof val === 'string' ? val.toLowerCase().trim().replace(/[\s-]+/g, '_') : val),
+    z.nativeEnum(ProductSubType).optional(),
+  ).optional(),
   brand: z.string().max(100).optional(),
   tags: z.array(z.string().max(50)).max(20).default([]),
   attributes: z.array(productAttributeSchema).max(30).default([]),

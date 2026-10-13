@@ -11,6 +11,7 @@ import { BestDealsGrid } from '@/features/home/components/BestDealsGrid';
 import { useLocationStore } from '@/stores/location.store';
 import { useFeaturedProducts } from '@/hooks/useFeaturedProducts';
 import HomeHeroBanner from '@/features/home/components/HomeHeroBanner';
+import { HeroBannerCarousel } from '@/features/home/components/HeroBannerCarousel';
 
 export default function HomePage() {
   const { address } = useLocationStore();
@@ -25,7 +26,7 @@ export default function HomePage() {
         {/* ── HERO SECTION (Carousel + TrustBar) ─────────────────────── */}
         <div className="max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-24 mt-4 md:mt-6 space-y-4 md:space-y-6">
         
-          <HomeHeroBanner/>
+          <HeroBannerCarousel/>
           <div className="lg:hidden">
             <TrustValuePropsBar />
           </div>

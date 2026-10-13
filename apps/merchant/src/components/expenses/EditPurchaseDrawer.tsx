@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Plus, Trash2, Calendar } from 'lucide-react';
+import { INDIAN_STATES } from '@repo/shared-types';
 
 interface EditPurchaseDrawerProps {
   isOpen: boolean;
@@ -211,9 +212,11 @@ export const EditPurchaseDrawer: React.FC<EditPurchaseDrawerProps> = ({
                   onChange={(e) => setPlaceOfSupply(e.target.value)}
                   className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-2xs"
                 >
-                  <option value="Chhattisgarh (22)">Chhattisgarh (22)</option>
-                  <option value="Madhya Pradesh (23)">Madhya Pradesh (23)</option>
-                  <option value="Maharashtra (27)">Maharashtra (27)</option>
+                  {INDIAN_STATES.map((st) => (
+                    <option key={st.code} value={st.label}>
+                      {st.label}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>

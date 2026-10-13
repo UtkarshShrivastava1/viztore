@@ -26,7 +26,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { useStoreManagementStore, StoreSection } from '../../stores/storeManagementStore.js';
-import { branding } from '../../lib/branding.js';
+import { branding } from '@repo/shared-types';
 
 interface AddEditSectionViewProps {
   sectionId?: string | null;
@@ -90,7 +90,7 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
       id: 'p1',
       name: 'Men Black Round Neck T-Shirt',
       details: 'Size: M • Color: Black',
-      sku: 'VZT-TSHIRT-BLK-M',
+      sku: 'PRD-TSHIRT-BLK-M',
       category: "Men's Fashion > T-Shirts",
       stock: 120,
       price: 599,
@@ -102,7 +102,7 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
       id: 'p2',
       name: 'Men White Round Neck T-Shirt',
       details: 'Size: M • Color: White',
-      sku: 'VZT-TSHIRT-WHT-M',
+      sku: 'PRD-TSHIRT-WHT-M',
       category: "Men's Fashion > T-Shirts",
       stock: 80,
       price: 599,
@@ -114,7 +114,7 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
       id: 'p3',
       name: 'Men Navy Blue Bound Neck T-Shirt',
       details: 'Size: L • Color: Navy Blue',
-      sku: 'VZT-TSHIRT-NVY-L',
+      sku: 'PRD-TSHIRT-NVY-L',
       category: "Men's Fashion > T-Shirts",
       stock: 60,
       price: 599,
@@ -126,7 +126,7 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
       id: 'p4',
       name: 'Men Grey Round Neck T-Shirt',
       details: 'Size: M • Color: Grey',
-      sku: 'VZT-TSHIRT-GRY-M',
+      sku: 'PRD-TSHIRT-GRY-M',
       category: "Men's Fashion > T-Shirts",
       stock: 45,
       price: 599,
@@ -138,7 +138,7 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
       id: 'p5',
       name: 'Men Black Polo T-Shirt',
       details: 'Size: M • Color: Black',
-      sku: 'VZT-POLO-BLK-M',
+      sku: 'PRD-POLO-BLK-M',
       category: "Men's Fashion > Polo T-Shirt",
       stock: 30,
       price: 649,
@@ -150,7 +150,7 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
       id: 'p6',
       name: 'Men Maroon Polo T-Shirt',
       details: 'Size: L • Color: Maroon',
-      sku: 'VZT-POLO-MRN-L',
+      sku: 'PRD-POLO-MRN-L',
       category: "Men's Fashion > Polo T-Shirt",
       stock: 25,
       price: 649,
@@ -162,7 +162,7 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
       id: 'p7',
       name: 'Men Blue Henley T-Shirt',
       details: 'Size: M • Color: Blue',
-      sku: 'VZT-HENLEY-BLU-M',
+      sku: 'PRD-HENLEY-BLU-M',
       category: "Men's Fashion > T-Shirts",
       stock: 20,
       price: 699,
@@ -174,7 +174,7 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
       id: 'p8',
       name: 'Men Striped Round Neck T-Shirt',
       details: 'Size: M • Color: White/Black',
-      sku: 'VZT-TSHIRT-STP-M',
+      sku: 'PRD-TSHIRT-STP-M',
       category: "Men's Fashion > T-Shirts",
       stock: 15,
       price: 599,
@@ -501,7 +501,7 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
               className="px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-semibold text-slate-700"
             >
               <option>All Brands</option>
-              <option>Viztore Brand</option>
+              <option>{branding.appName} In-House</option>
             </select>
           </div>
 
@@ -686,52 +686,44 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
               </div>
 
               {/* 2x2 Product Grid Preview - Real-Time Synchronized with Selected Products! */}
-              {selectedProductIds.length === 0 ? (
-                <div className="py-8 text-center text-slate-400 space-y-1 border border-dashed border-slate-200 rounded-lg">
-                  <Package className="w-5 h-5 mx-auto text-slate-300" />
-                  <p className="text-[9px] font-semibold text-slate-600">No products selected</p>
-                  <p className="text-[8px] text-slate-400">Select products on the left to see them live</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-1.5">
-                  {products
-                    .filter((p) => selectedProductIds.includes(p.id))
-                    .slice(0, 4)
-                    .map((p) => (
-                      <div
-                        key={p.id}
-                        className="border border-slate-200 rounded-lg p-1.5 flex flex-col justify-between space-y-1 bg-white shadow-2xs"
-                      >
-                        <div className="relative">
-                          <img
-                            src={p.image}
-                            alt={p.name}
-                            className="w-full h-16 object-cover rounded-md"
-                          />
-                          <div className="w-4 h-4 rounded-full bg-white/90 text-slate-400 flex items-center justify-center absolute top-1 right-1 shadow-2xs">
-                            <Heart className="w-2.5 h-2.5" />
-                          </div>
-                        </div>
-                        <div>
-                          <span className="text-[9px] font-bold text-slate-900 block truncate leading-tight">
-                            {p.name}
-                          </span>
-                          <span className="text-[9px] font-black text-slate-900">₹{p.price}</span>
-                          <div className="flex items-center gap-0.5 text-[8px] text-amber-500 font-bold">
-                            <Star className="w-2 h-2 fill-amber-500" />
-                            <span>{p.rating} ({p.reviews})</span>
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          className="w-full py-0.5 rounded border border-blue-600 text-blue-600 text-[8px] font-bold hover:bg-blue-50 transition-colors"
-                        >
-                          Add to Cart
-                        </button>
+              <div className="grid grid-cols-2 gap-1.5">
+                {(products.filter((p) => selectedProductIds.includes(p.id)).length > 0
+                  ? products.filter((p) => selectedProductIds.includes(p.id)).slice(0, 4)
+                  : products.slice(0, 4)
+                ).map((p) => (
+                  <div
+                    key={p.id}
+                    className="border border-slate-200 rounded-lg p-1.5 flex flex-col justify-between space-y-1 bg-white shadow-2xs"
+                  >
+                    <div className="relative">
+                      <img
+                        src={p.image}
+                        alt={p.name}
+                        className="w-full h-16 object-cover rounded-md"
+                      />
+                      <div className="w-4 h-4 rounded-full bg-white/90 text-slate-400 flex items-center justify-center absolute top-1 right-1 shadow-2xs">
+                        <Heart className="w-2.5 h-2.5" />
                       </div>
-                    ))}
-                </div>
-              )}
+                    </div>
+                    <div>
+                      <span className="text-[9px] font-bold text-slate-900 block truncate leading-tight">
+                        {p.name}
+                      </span>
+                      <span className="text-[9px] font-black text-slate-900">₹{p.price}</span>
+                      <div className="flex items-center gap-0.5 text-[8px] text-amber-500 font-bold">
+                        <Star className="w-2 h-2 fill-amber-500" />
+                        <span>{p.rating} ({p.reviews})</span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      className="w-full py-0.5 rounded border border-blue-600 text-blue-600 text-[8px] font-bold hover:bg-blue-50 transition-colors"
+                    >
+                      Add to Cart
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>

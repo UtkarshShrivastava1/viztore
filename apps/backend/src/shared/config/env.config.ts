@@ -2,8 +2,17 @@ import dotenv from 'dotenv';
 import { z } from 'zod';
 import { logger } from '../utils/logger.js';
 
-// Load .env
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Load .env with fallback paths for monorepo roots
 dotenv.config();
+try {
+  const currentDir = path.dirname(fileURLToPath(import.meta.url));
+  dotenv.config({ path: path.resolve(currentDir, '../../../../.env') });
+} catch {
+  // Ignore resolution errors in bundled environments
+}
 
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
@@ -12,6 +21,8 @@ const envSchema = z.object({
 
   // Database
   MONGODB_URI: z.string().min(1, 'MONGODB_URI is required'),
+  MONGO_MAX_POOL_SIZE: z.coerce.number().default(25),
+  MONGO_MIN_POOL_SIZE: z.coerce.number().default(5),
 
   // Redis
   ENABLE_REDIS: z
@@ -40,6 +51,12 @@ const envSchema = z.object({
   CLOUDINARY_CLOUD_NAME: z.string().optional(),
   CLOUDINARY_API_KEY: z.string().optional(),
   CLOUDINARY_API_SECRET: z.string().optional(),
+
+  // Meta WhatsApp Cloud API
+  WHATSAPP_PHONE_NUMBER_ID: z.string().optional().default(''),
+  WHATSAPP_ACCESS_TOKEN: z.string().optional().default(''),
+  WHATSAPP_BUSINESS_ACCOUNT_ID: z.string().optional().default(''),
+  WHATSAPP_API_VERSION: z.string().optional().default('v20.0'),
 });
 
 const isTestEnv = process.env.NODE_ENV === 'test';
@@ -58,6 +75,10 @@ const testDefaults = {
   CLIENT_WEB_URL: 'http://localhost:3000',
   CLIENT_MERCHANT_URL: 'http://localhost:3001',
   ADDITIONAL_ALLOWED_ORIGINS: '',
+  WHATSAPP_PHONE_NUMBER_ID: '',
+  WHATSAPP_ACCESS_TOKEN: '',
+  WHATSAPP_BUSINESS_ACCOUNT_ID: '',
+  WHATSAPP_API_VERSION: 'v20.0',
 };
 
 const rawEnv = isTestEnv ? { ...testDefaults, ...process.env } : process.env;
@@ -84,4 +105,8 @@ export const env = (parsedEnv.success ? parsedEnv.data : {
   CLIENT_WEB_URL: 'http://localhost:3000',
   CLIENT_MERCHANT_URL: 'http://localhost:3001',
   ADDITIONAL_ALLOWED_ORIGINS: '',
+  WHATSAPP_PHONE_NUMBER_ID: '',
+  WHATSAPP_ACCESS_TOKEN: '',
+  WHATSAPP_BUSINESS_ACCOUNT_ID: '',
+  WHATSAPP_API_VERSION: 'v20.0',
 }) as z.infer<typeof envSchema>;

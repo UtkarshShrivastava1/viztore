@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   FileText,
   ShoppingBag,
@@ -15,36 +15,6 @@ import {
 } from 'lucide-react';
 import { useBillingStore, IInvoice, InvoiceStatus } from '../../stores/billingStore.js';
 import { InvoiceRowActionMenu } from './InvoiceRowActionMenu.js';
-
-const InvoiceRowMoreAction: React.FC<{
-  invoice: IInvoice;
-  isOpen: boolean;
-  onToggle: () => void;
-  onClose: () => void;
-}> = ({ invoice, isOpen, onToggle, onClose }) => {
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  return (
-    <>
-      <button
-        ref={triggerRef}
-        type="button"
-        onClick={onToggle}
-        className={`px-2 py-1 rounded-lg text-xs font-semibold flex items-center gap-0.5 transition-colors ${
-          isOpen ? 'bg-slate-100 text-slate-900' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-        }`}
-      >
-        <span>More</span>
-        <ChevronDown className="w-3 h-3 text-slate-400" />
-      </button>
-      <InvoiceRowActionMenu
-        invoice={invoice}
-        isOpen={isOpen}
-        onClose={onClose}
-        triggerRef={triggerRef}
-      />
-    </>
-  );
-};
 
 export const InvoicesTableView: React.FC = () => {
   const {
@@ -65,16 +35,38 @@ export const InvoicesTableView: React.FC = () => {
   } = useBillingStore();
 
   const [activeMenuInvoiceId, setActiveMenuInvoiceId] = useState<string | null>(null);
+  const [activeMenuAnchorRect, setActiveMenuAnchorRect] = useState<DOMRect | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
-  // 5 KPI metrics matching 5.0.png
+  // Dynamic KPI calculations derived purely from live invoices array
+  const { totalSales, paidTotal, outstandingTotal, overdueTotal } = useMemo(() => {
+    let sales = 0;
+    let paid = 0;
+    let outstanding = 0;
+    let overdue = 0;
+    invoices.forEach((inv) => {
+      sales += inv.totalAmount || 0;
+      paid += inv.paidAmount || 0;
+      outstanding += inv.dueAmount || 0;
+      if (inv.status === 'overdue') {
+        overdue += inv.dueAmount || 0;
+      }
+    });
+    return {
+      totalSales: sales,
+      paidTotal: paid,
+      outstandingTotal: outstanding,
+      overdueTotal: overdue,
+    };
+  }, [invoices]);
+
   const kpiCards = [
     {
       id: 'total-invoices',
       title: 'Total Invoices',
-      value: '1,248',
-      change: '18%',
-      isPositive: true,
+      value: invoices.length.toLocaleString('en-IN'),
+      change: invoices.length > 0 ? '+100%' : '0%',
+      isPositive: invoices.length > 0,
       icon: FileText,
       iconColor: 'text-amber-500',
       iconBg: 'bg-amber-50',
@@ -82,9 +74,9 @@ export const InvoicesTableView: React.FC = () => {
     {
       id: 'total-sales',
       title: 'Total Sales',
-      value: '₹12,84,560',
-      change: '22%',
-      isPositive: true,
+      value: `₹${totalSales.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`,
+      change: totalSales > 0 ? '+100%' : '0%',
+      isPositive: totalSales > 0,
       icon: ShoppingBag,
       iconColor: 'text-indigo-600',
       iconBg: 'bg-indigo-50',
@@ -92,9 +84,9 @@ export const InvoicesTableView: React.FC = () => {
     {
       id: 'paid-amount',
       title: 'Paid Amount',
-      value: '₹9,85,420',
-      change: '16%',
-      isPositive: true,
+      value: `₹${paidTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`,
+      change: paidTotal > 0 ? '+100%' : '0%',
+      isPositive: paidTotal > 0,
       icon: CreditCard,
       iconColor: 'text-emerald-600',
       iconBg: 'bg-emerald-50',
@@ -102,9 +94,9 @@ export const InvoicesTableView: React.FC = () => {
     {
       id: 'outstanding-amount',
       title: 'Outstanding Amount',
-      value: '₹2,99,140',
-      change: '8%',
-      isPositive: false,
+      value: `₹${outstandingTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`,
+      change: outstandingTotal > 0 ? 'Active' : '0%',
+      isPositive: outstandingTotal === 0,
       icon: Clock,
       iconColor: 'text-amber-600',
       iconBg: 'bg-amber-50',
@@ -112,9 +104,9 @@ export const InvoicesTableView: React.FC = () => {
     {
       id: 'overdue-amount',
       title: 'Overdue Amount',
-      value: '₹75,230',
-      change: '12%',
-      isPositive: false,
+      value: `₹${overdueTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`,
+      change: overdueTotal > 0 ? 'Requires Action' : 'None',
+      isPositive: overdueTotal === 0,
       icon: AlertTriangle,
       iconColor: 'text-rose-600',
       iconBg: 'bg-rose-50',
@@ -221,27 +213,29 @@ export const InvoicesTableView: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* 5 Top KPI Cards Matching Purchases (Bills) Standard */}
+      {/* 5 Top KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
         {kpiCards.map((card) => {
           const Icon = card.icon;
           return (
             <div
               key={card.id}
-              className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-2xs hover:shadow-xs transition-shadow flex items-center gap-3.5"
+              className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-2xs flex flex-col justify-between hover:shadow-xs transition-shadow duration-200"
             >
-              <div
-                className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${card.iconBg} ${card.iconColor}`}
-              >
-                <Icon className="w-5 h-5" />
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-slate-600">{card.title}</span>
+                <div
+                  className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${card.iconBg} ${card.iconColor}`}
+                >
+                  <Icon className="w-4 h-4" />
+                </div>
               </div>
 
-              <div className="min-w-0 flex-1">
-                <span className="text-[11px] font-semibold text-slate-500 block truncate">{card.title}</span>
-                <span className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate block">
+              <div className="mt-3">
+                <div className="text-2xl font-bold text-slate-900 tracking-tight leading-none">
                   {card.value}
-                </span>
-                <div className="flex items-center gap-1 mt-0.5 text-[10px] truncate">
+                </div>
+                <div className="flex items-center gap-1.5 mt-2 text-xs">
                   {card.isPositive ? (
                     <span className="font-semibold text-emerald-600 flex items-center">
                       &uarr; {card.change}
@@ -251,7 +245,7 @@ export const InvoicesTableView: React.FC = () => {
                       &darr; {card.change}
                     </span>
                   )}
-                  <span className="text-slate-400">vs last mo</span>
+                  <span className="text-slate-400 font-normal">from last month</span>
                 </div>
               </div>
             </div>
@@ -418,8 +412,14 @@ export const InvoicesTableView: React.FC = () => {
             <tbody className="divide-y divide-slate-100 text-xs">
               {filteredInvoices.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-12 text-center text-slate-400">
-                    No invoices match your selected filters.
+                  <td colSpan={9} className="py-16 text-center text-slate-400">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <FileText className="w-10 h-10 text-slate-300 stroke-1" />
+                      <p className="text-sm font-semibold text-slate-700">No invoices yet</p>
+                      <p className="text-xs text-slate-400 max-w-sm">
+                        Create your first counter sale bill or tax invoice to begin tracking retail payments and inventory.
+                      </p>
+                    </div>
                   </td>
                 </tr>
               ) : (
@@ -484,16 +484,46 @@ export const InvoicesTableView: React.FC = () => {
                           <span>Print</span>
                         </button>
 
-                        <InvoiceRowMoreAction
-                          invoice={inv}
-                          isOpen={activeMenuInvoiceId === inv.id}
-                          onToggle={() =>
-                            setActiveMenuInvoiceId(
-                              activeMenuInvoiceId === inv.id ? null : inv.id
-                            )
-                          }
-                          onClose={() => setActiveMenuInvoiceId(null)}
-                        />
+                        <div className="relative">
+                          <button
+                            type="button"
+                            data-invoice-menu-trigger="true"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (activeMenuInvoiceId === inv.id) {
+                                setActiveMenuInvoiceId(null);
+                                setActiveMenuAnchorRect(null);
+                              } else {
+                                const rect = e.currentTarget.getBoundingClientRect();
+                                setActiveMenuAnchorRect(rect);
+                                setActiveMenuInvoiceId(inv.id);
+                              }
+                            }}
+                            className={`px-2 py-1 rounded-lg text-xs font-semibold flex items-center gap-0.5 transition-colors cursor-pointer ${
+                              activeMenuInvoiceId === inv.id
+                                ? 'bg-blue-50 text-blue-600 border border-blue-200'
+                                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                            }`}
+                          >
+                            <span>More</span>
+                            <ChevronDown
+                              className={`w-3 h-3 transition-transform duration-150 ${
+                                activeMenuInvoiceId === inv.id ? 'rotate-180 text-blue-600' : 'text-slate-400'
+                              }`}
+                            />
+                          </button>
+
+                          {/* 10-Action Dropdown Menu (5.1.png) */}
+                          <InvoiceRowActionMenu
+                            invoice={inv}
+                            isOpen={activeMenuInvoiceId === inv.id}
+                            anchorRect={activeMenuInvoiceId === inv.id ? activeMenuAnchorRect : null}
+                            onClose={() => {
+                              setActiveMenuInvoiceId(null);
+                              setActiveMenuAnchorRect(null);
+                            }}
+                          />
+                        </div>
                       </div>
                     </td>
                   </tr>

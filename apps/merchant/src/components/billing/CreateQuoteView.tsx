@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Calendar,
   Settings,
@@ -13,34 +13,103 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { useBillingStore, IInvoiceItem } from '../../stores/billingStore.js';
+import { useCustomerStore } from '../../stores/customerStore.js';
 import { useInventoryStore } from '../../stores/inventoryStore.js';
+import { INDIAN_STATES, DEFAULT_INDIAN_STATE } from '@repo/shared-types';
 
 interface CreateQuoteViewProps {
   onBack: () => void;
 }
 
 export const CreateQuoteView: React.FC<CreateQuoteViewProps> = ({ onBack }) => {
-  const { createQuote } = useBillingStore();
+  const { createQuote, quotes, invoices } = useBillingStore();
+  const { customers, addCustomer } = useCustomerStore();
   const { items: inventoryProducts } = useInventoryStore();
 
+  // Deduplicate and extract all customers who have actual history with this store
+  const customersWithHistory = useMemo(() => {
+    const map = new Map<string, {
+      key: string;
+      name: string;
+      phone: string;
+      email: string;
+      address: string;
+      state: string;
+      gstin: string;
+      orderCount: number;
+    }>();
+
+    // From invoices
+    invoices.forEach((inv) => {
+      const name = inv.customerName?.trim();
+      if (!name) return;
+      const key = (inv.customerPhone?.trim() || name).toLowerCase();
+      const existing = map.get(key);
+      if (existing) {
+        existing.orderCount += 1;
+      } else {
+        map.set(key, {
+          key,
+          name: inv.customerName,
+          phone: inv.customerPhone || '',
+          email: '',
+          address: inv.customerAddress || '',
+          state: inv.state || DEFAULT_INDIAN_STATE,
+          gstin: inv.customerGstin || '',
+          orderCount: 1,
+        });
+      }
+    });
+
+    // From registered customers
+    customers.forEach((c) => {
+      const name = c.name?.trim();
+      if (!name) return;
+      const key = (c.phone?.trim() || name).toLowerCase();
+      const existing = map.get(key);
+      if (existing) {
+        existing.orderCount = Math.max(existing.orderCount, c.totalOrders || 1);
+        if (!existing.address && c.billingAddress?.addressLine1) {
+          existing.address = `${c.billingAddress.addressLine1}, ${c.billingAddress.city}`;
+        }
+        if (!existing.email && c.email) existing.email = c.email;
+        if (!existing.gstin && c.gstin) existing.gstin = c.gstin;
+      } else if (c.totalOrders > 0 || (c.recentOrders && c.recentOrders.length > 0)) {
+        map.set(key, {
+          key,
+          name: c.name,
+          phone: c.phone || '',
+          email: c.email || '',
+          address: c.billingAddress ? `${c.billingAddress.addressLine1}, ${c.billingAddress.city}` : '',
+          state: c.billingAddress?.state || DEFAULT_INDIAN_STATE,
+          gstin: c.gstin || '',
+          orderCount: c.totalOrders || 1,
+        });
+      }
+    });
+
+    return Array.from(map.values());
+  }, [invoices, customers]);
+
   // Header & Customer State
-  const [customerName, setCustomerName] = useState('Ramesh Stores');
-  const [customerPhone, setCustomerPhone] = useState('9876543210');
-  const [customerEmail, setCustomerEmail] = useState('ramesh@stores.com');
-  const [customerGstin, setCustomerGstin] = useState('23ABCDE1234F1Z5');
-  const [customerAddress, setCustomerAddress] = useState(
-    '12, MG Road, Commercial Area, Indore, Madhya Pradesh - 452001, India'
-  );
-  const [placeOfSupply, setPlaceOfSupply] = useState('Madhya Pradesh (23)');
+  const [customerName, setCustomerName] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [customerEmail, setCustomerEmail] = useState('');
+  const [customerGstin, setCustomerGstin] = useState('');
+  const [customerAddress, setCustomerAddress] = useState('');
+  const [placeOfSupply, setPlaceOfSupply] = useState(DEFAULT_INDIAN_STATE);
+
+  const [isNewCustomerMode, setIsNewCustomerMode] = useState(() => customersWithHistory.length === 0);
+  const [selectedHistoryKey, setSelectedHistoryKey] = useState('');
 
   // Quote Metadata
-  const [quoteNo, setQuoteNo] = useState('Q-1025');
-  const [quoteDate, setQuoteDate] = useState('11 May 2024');
-  const [validUntil, setValidUntil] = useState('25 May 2024');
-  const [referenceNo, setReferenceNo] = useState('PO-4587');
+  const [quoteNo, setQuoteNo] = useState(() => 'Q-' + (1001 + (quotes?.length || 0)));
+  const [quoteDate, setQuoteDate] = useState(() => new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }));
+  const [validUntil, setValidUntil] = useState(() => { const d = new Date(); d.setDate(d.getDate() + 14); return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }); });
+  const [referenceNo, setReferenceNo] = useState('');
   const [currency, setCurrency] = useState('INR - Indian Rupee (₹)');
   const [paymentTerms, setPaymentTerms] = useState('30 Days');
-  const [salesPerson, setSalesPerson] = useState('Harish Kumar');
+  const [salesPerson, setSalesPerson] = useState('Store Staff');
   const [notes, setNotes] = useState('');
 
   // Barcode scanner modal simulation
@@ -50,42 +119,16 @@ export const CreateQuoteView: React.FC<CreateQuoteViewProps> = ({ onBack }) => {
   const [items, setItems] = useState<IInvoiceItem[]>([
     {
       id: 'qi-1',
-      productId: 'PRD-101',
-      name: 'Cotton T-Shirt (M)',
-      hsnSac: '61091000',
-      description: '100% Cotton T-Shirt Size: M, Color: Blue',
-      quantity: 50,
+      productId: '',
+      name: '',
+      hsnSac: '',
+      description: '',
+      quantity: 1,
       unit: 'Pcs',
-      rate: 450.0,
-      discountPercent: 5,
-      taxPercent: 18,
-      amount: 51975.0,
-    },
-    {
-      id: 'qi-2',
-      productId: 'PRD-102',
-      name: 'Denim Jeans (32)',
-      hsnSac: '62034200',
-      description: 'Denim Jeans Size: 32',
-      quantity: 20,
-      unit: 'Pcs',
-      rate: 850.0,
+      rate: 0,
       discountPercent: 0,
       taxPercent: 18,
-      amount: 20060.0,
-    },
-    {
-      id: 'qi-3',
-      productId: 'PRD-103',
-      name: 'Sneakers',
-      hsnSac: '64039990',
-      description: 'Sports Sneakers Size: 9',
-      quantity: 10,
-      unit: 'Pair',
-      rate: 1200.0,
-      discountPercent: 10,
-      taxPercent: 18,
-      amount: 10980.0,
+      amount: 0,
     },
   ]);
 
@@ -108,19 +151,18 @@ export const CreateQuoteView: React.FC<CreateQuoteViewProps> = ({ onBack }) => {
   const youSavePercent = totalBeforeDiscount > 0 ? (totalDiscount / totalBeforeDiscount) * 100 : 0;
 
   const handleAddItem = () => {
-    const defaultProd = inventoryProducts[0];
     const newItem: IInvoiceItem = {
       id: 'qi-' + Date.now(),
-      productId: defaultProd ? defaultProd.id : 'PRD-' + (100 + items.length + 1),
-      name: defaultProd ? defaultProd.name : 'Formal Shirt',
-      hsnSac: '62052000',
-      description: 'Standard product line',
-      quantity: 10,
+      productId: '',
+      name: '',
+      hsnSac: '',
+      description: '',
+      quantity: 1,
       unit: 'Pcs',
-      rate: 550.0,
+      rate: 0,
       discountPercent: 0,
       taxPercent: 18,
-      amount: 6490.0,
+      amount: 0,
     };
     setItems([...items, newItem]);
   };
@@ -203,6 +245,34 @@ export const CreateQuoteView: React.FC<CreateQuoteViewProps> = ({ onBack }) => {
       createdBy: salesPerson,
     });
 
+    if (customerName.trim()) {
+      const exists = customers.some(
+        (c) =>
+          c.name.trim().toLowerCase() === customerName.trim().toLowerCase() ||
+          (customerPhone && c.phone && c.phone.replace(/\D/g, '') === customerPhone.replace(/\D/g, ''))
+      );
+      if (!exists) {
+        addCustomer({
+          name: customerName,
+          customerType: 'Retailer',
+          status: 'active',
+          phone: customerPhone || '',
+          email: customerEmail || '',
+          gstin: customerGstin || undefined,
+          billingAddress: {
+            addressLine1: customerAddress || 'In-store retail',
+            city: 'Local',
+            state: placeOfSupply,
+            pincode: '',
+            country: 'India',
+            sameAsShipping: true,
+          },
+          paymentTerms,
+          creditPeriodDays: 30,
+        });
+      }
+    }
+
     if (print) {
       window.print();
     }
@@ -267,49 +337,169 @@ export const CreateQuoteView: React.FC<CreateQuoteViewProps> = ({ onBack }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         {/* Card 1: Customer Details */}
         <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-2xs space-y-3">
-          <span className="block text-[11px] font-bold text-slate-700">Customer Details</span>
-          <div>
-            <label className="block text-[11px] font-semibold text-slate-600 mb-1">
-              Customer <span className="text-rose-500">*</span>
-            </label>
-            <div className="flex gap-1.5">
-              <select
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                className="flex-1 px-2.5 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:border-blue-500"
-              >
-                <option value="Ramesh Stores">Ramesh Stores</option>
-                <option value="Sharma Garments">Sharma Garments</option>
-                <option value="Kiran Collection">Kiran Collection</option>
-              </select>
+          <div className="flex items-center justify-between">
+            <span className="block text-[11px] font-bold text-slate-700">Customer Details</span>
+            {customersWithHistory.length > 0 && (
               <button
                 type="button"
-                onClick={() => alert('Add customer dialog')}
-                className="p-1.5 border border-slate-300 rounded-xl text-blue-600 hover:bg-slate-50"
+                onClick={() => {
+                  if (isNewCustomerMode) {
+                    setIsNewCustomerMode(false);
+                  } else {
+                    setIsNewCustomerMode(true);
+                    setCustomerName('');
+                    setCustomerPhone('');
+                    setCustomerEmail('');
+                    setCustomerGstin('');
+                    setCustomerAddress('');
+                    setSelectedHistoryKey('');
+                  }
+                }}
+                className="text-[10px] font-semibold text-blue-600 hover:text-blue-700 hover:underline"
               >
-                <Plus className="w-4 h-4" />
+                {isNewCustomerMode
+                  ? `← History (${customersWithHistory.length})`
+                  : '+ Add New'}
               </button>
-            </div>
+            )}
           </div>
 
-          <div className="p-2.5 bg-slate-50/70 border border-slate-200/70 rounded-xl text-xs space-y-1">
-            <div className="flex items-center justify-between">
-              <span className="font-bold text-slate-800">{customerName}</span>
-              <span className="px-1.5 py-0.5 text-[10px] font-bold rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
-                GST Registered
-              </span>
+          {!isNewCustomerMode && customersWithHistory.length > 0 ? (
+            <div className="space-y-2">
+              <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                Customer <span className="text-rose-500">*</span>
+              </label>
+              <div className="flex gap-1.5">
+                <select
+                  value={selectedHistoryKey}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    const found = customersWithHistory.find((c) => c.key === val);
+                    if (found) {
+                      setSelectedHistoryKey(val);
+                      setCustomerName(found.name);
+                      setCustomerPhone(found.phone);
+                      setCustomerEmail(found.email);
+                      setCustomerGstin(found.gstin);
+                      setCustomerAddress(found.address);
+                      setPlaceOfSupply(found.state || DEFAULT_INDIAN_STATE);
+                    } else {
+                      setSelectedHistoryKey('');
+                      setCustomerName('');
+                      setCustomerPhone('');
+                    }
+                  }}
+                  className="flex-1 px-2.5 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:border-blue-500"
+                >
+                  <option value="">Select past customer...</option>
+                  {customersWithHistory.map((c) => (
+                    <option key={c.key} value={c.key}>
+                      {c.name} {c.phone ? `(${c.phone})` : ''} • {c.orderCount} past bills
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsNewCustomerMode(true);
+                    setCustomerName('');
+                    setCustomerPhone('');
+                    setCustomerEmail('');
+                    setCustomerGstin('');
+                    setCustomerAddress('');
+                    setSelectedHistoryKey('');
+                  }}
+                  className="p-1.5 border border-slate-300 rounded-xl text-blue-600 hover:bg-slate-50 transition-colors"
+                  title="Add new customer"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
+
+              {customerName ? (
+                <div className="p-2.5 bg-slate-50/70 border border-slate-200/70 rounded-xl text-xs space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-slate-800">{customerName}</span>
+                    <span className="px-1.5 py-0.5 text-[10px] font-bold rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      Verified History
+                    </span>
+                  </div>
+                  {customerGstin && (
+                    <div className="text-slate-500 font-mono text-[11px]">GSTIN: {customerGstin}</div>
+                  )}
+                  <div className="text-slate-500 text-[11px]">
+                    Phone: {customerPhone || 'N/A'} {customerEmail ? `• Email: ${customerEmail}` : ''}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-[10px] text-slate-400">
+                  Select a past customer or click + to enter a new name.
+                </p>
+              )}
             </div>
-            <div className="text-slate-500 font-mono text-[11px]">GSTIN: {customerGstin}</div>
-            <div className="text-slate-500 text-[11px]">
-              Phone: {customerPhone} &bull; Email: {customerEmail}
+          ) : (
+            <div className="space-y-2">
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                  Customer Name <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  placeholder="Enter new customer name *"
+                  className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:border-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value)}
+                  placeholder="Mobile number"
+                  className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:border-blue-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-[10px] font-semibold text-slate-500 mb-0.5">
+                    GSTIN
+                  </label>
+                  <input
+                    type="text"
+                    value={customerGstin}
+                    onChange={(e) => setCustomerGstin(e.target.value)}
+                    placeholder="GSTIN (optional)"
+                    className="w-full px-2 py-1 bg-white border border-slate-300 rounded-lg text-xs font-medium text-slate-800 focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-semibold text-slate-500 mb-0.5">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    value={customerEmail}
+                    onChange={(e) => setCustomerEmail(e.target.value)}
+                    placeholder="Email address"
+                    className="w-full px-2 py-1 bg-white border border-slate-300 rounded-lg text-xs font-medium text-slate-800 focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              <p className="text-[10px] text-slate-400">
+                {customersWithHistory.length === 0
+                  ? 'No prior customer history found. Enter new customer details.'
+                  : 'Customer has no prior history. Enter new customer details.'}
+              </p>
             </div>
-            <button
-              type="button"
-              className="text-[11px] font-semibold text-blue-600 hover:underline pt-1 inline-block"
-            >
-              View Full Details
-            </button>
-          </div>
+          )}
         </div>
 
         {/* Card 2: Billing Address */}
@@ -318,7 +508,7 @@ export const CreateQuoteView: React.FC<CreateQuoteViewProps> = ({ onBack }) => {
           <div className="text-xs text-slate-600 leading-relaxed bg-slate-50/50 p-2.5 rounded-xl border border-slate-200/60">
             <div className="font-semibold text-slate-800">{customerName}</div>
             <div>{customerAddress}</div>
-            <div className="mt-1 font-medium text-slate-700">State: Madhya Pradesh (23)</div>
+            <div className="mt-1 font-medium text-slate-700">State: {placeOfSupply || DEFAULT_INDIAN_STATE}</div>
           </div>
           <div>
             <div className="flex items-center gap-1 mb-1">
@@ -330,9 +520,11 @@ export const CreateQuoteView: React.FC<CreateQuoteViewProps> = ({ onBack }) => {
               onChange={(e) => setPlaceOfSupply(e.target.value)}
               className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:border-blue-500"
             >
-              <option value="Madhya Pradesh (23)">Madhya Pradesh (23)</option>
-              <option value="Maharashtra (27)">Maharashtra (27)</option>
-              <option value="Gujarat (24)">Gujarat (24)</option>
+              {INDIAN_STATES.map((st) => (
+                <option key={st.code} value={st.label}>
+                  {st.label}
+                </option>
+              ))}
             </select>
           </div>
         </div>
@@ -440,8 +632,8 @@ export const CreateQuoteView: React.FC<CreateQuoteViewProps> = ({ onBack }) => {
               onChange={(e) => setSalesPerson(e.target.value)}
               className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:border-blue-500"
             >
-              <option value="Harish Kumar">Harish Kumar</option>
-              <option value="Sujal Verma">Sujal Verma</option>
+              <option value="Store Staff (Lead)">Store Staff (Lead)</option>
+              <option value="Store Associate">Store Associate</option>
             </select>
           </div>
 

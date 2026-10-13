@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { useBillingStore } from '../stores/billingStore.js';
+import { billingApi } from '../lib/api.js';
 import { InvoicesTableView } from '../components/billing/InvoicesTableView.js';
 import { QuotesTableView } from '../components/billing/QuotesTableView.js';
 import { CreateQuoteView } from '../components/billing/CreateQuoteView.js';
@@ -18,7 +19,29 @@ export const BillingPage: React.FC = () => {
     activeInvoiceForModal,
     openCreateInvoiceModal,
     closeCreateInvoiceModal,
+    setInvoices,
+    setQuotes,
   } = useBillingStore();
+
+  useEffect(() => {
+    billingApi
+      .getInvoices()
+      .then((res: any) => {
+        if (res && res.data && Array.isArray(res.data.invoices)) {
+          setInvoices(res.data.invoices);
+        }
+      })
+      .catch(() => {});
+
+    billingApi
+      .getQuotes()
+      .then((res: any) => {
+        if (res && res.data && Array.isArray(res.data.quotes)) {
+          setQuotes(res.data.quotes);
+        }
+      })
+      .catch(() => {});
+  }, [setInvoices, setQuotes]);
 
   const getBreadcrumb = () => {
     if (activeSubTab === 'invoices' || activeView === 'settings') return null;

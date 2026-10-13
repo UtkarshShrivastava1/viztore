@@ -10,6 +10,7 @@ import {
   Lightbulb,
 } from 'lucide-react';
 import { useSettingsStore } from '../../stores/settingsStore.js';
+import { branding } from '@repo/shared-types';
 
 export const ShippingReturnsTab: React.FC = () => {
   const { shippingReturns, updateShippingReturns } = useSettingsStore();
@@ -67,7 +68,7 @@ export const ShippingReturnsTab: React.FC = () => {
                 onChange={(e) => setFormData({ ...formData, deliveryPartner: e.target.value })}
                 className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
               >
-                <option value="Viztore Delivery">Viztore Delivery</option>
+                <option value={`${branding.appName} Delivery`}>{branding.appName} Delivery</option>
                 <option value="Self / In-house Fleet">Self / In-house Fleet</option>
                 <option value="Dunzo / Porter">Dunzo / Porter</option>
               </select>
@@ -106,7 +107,7 @@ export const ShippingReturnsTab: React.FC = () => {
             <div>
               <p className="text-xs font-bold text-slate-900">Enable delivery for customer orders</p>
               <p className="text-[11px] text-slate-500">
-                Customers can place orders for delivery through the Viztore app.
+                Customers can place orders for delivery through the {branding.appName} app.
               </p>
             </div>
             <button
@@ -224,7 +225,7 @@ export const ShippingReturnsTab: React.FC = () => {
               </div>
               <div className="ml-4">
                 <h4 className="text-xs font-bold text-slate-900">Customer places order</h4>
-                <p className="text-[11px] text-slate-500 mt-0.5">Order received on Viztore app</p>
+                <p className="text-[11px] text-slate-500 mt-0.5">Order received on {branding.appName} app</p>
               </div>
             </div>
 

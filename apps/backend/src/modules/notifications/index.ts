@@ -28,4 +28,5 @@ export const notificationModule: INotificationFacade = {
 export { createNotificationModule };
 export * from './notification.types.js';
 export * from './notification.validator.js';
+export * from './whatsapp.service.js';
 export { NotificationModel } from './notification.model.js';

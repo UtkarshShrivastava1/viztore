@@ -10,6 +10,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { useSettingsStore } from '../../stores/settingsStore.js';
+import { branding } from '@repo/shared-types';
 
 export const BusinessInfoTab: React.FC = () => {
   const { businessInfo, updateBusinessInfo, setActiveSubTab } = useSettingsStore();
@@ -408,7 +409,7 @@ export const BusinessInfoTab: React.FC = () => {
             </li>
             <li className="flex items-start gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-slate-400 mt-1.5 shrink-0" />
-              <span>Verified businesses get higher trust and better visibility on Viztore.</span>
+              <span>Verified businesses get higher trust and better visibility on {branding.appName}.</span>
             </li>
           </ul>
         </div>

@@ -12,6 +12,7 @@ import {
   Lightbulb,
 } from 'lucide-react';
 import { useSettingsStore } from '../../stores/settingsStore.js';
+import { branding } from '@repo/shared-types';
 
 export const NotificationsTab: React.FC = () => {
   const { notifications, updateNotifications } = useSettingsStore();
@@ -269,7 +270,7 @@ export const NotificationsTab: React.FC = () => {
             <div>
               <h3 className="text-xs font-bold text-slate-900">Marketing & System Notifications</h3>
               <p className="text-xs text-slate-500">
-                Get important updates, offers and announcements from Viztore.
+                Get important updates, offers and announcements from {branding.appName}.
               </p>
             </div>
           </div>
@@ -321,7 +322,7 @@ export const NotificationsTab: React.FC = () => {
                 />
                 <div>
                   <h4 className="text-xs font-bold text-slate-900">Important Announcements</h4>
-                  <p className="text-[11px] text-slate-500">Get notified about important updates from Viztore.</p>
+                  <p className="text-[11px] text-slate-500">Get notified about important updates from {branding.appName}.</p>
                 </div>
               </label>
               <button
@@ -462,7 +463,7 @@ export const NotificationsTab: React.FC = () => {
             </li>
             <li className="flex items-start gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-slate-400 mt-1.5 shrink-0" />
-              <span>You will receive notifications in the Viztore app, email and (if enabled) via SMS or WhatsApp.</span>
+              <span>You will receive notifications in the {branding.appName} app, email and (if enabled) via SMS or WhatsApp.</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-slate-400 mt-1.5 shrink-0" />

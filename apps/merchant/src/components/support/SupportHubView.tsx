@@ -19,6 +19,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { useSupportStore } from '../../stores/supportStore.js';
+import { branding } from '@repo/shared-types';
 
 interface SupportHubViewProps {
   onNavigateToTopic?: (topicCategory: string) => void;
@@ -292,11 +293,11 @@ export const SupportHubView: React.FC<SupportHubViewProps> = ({ onNavigateToTopi
                   <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
                     <Mail className="w-3.5 h-3.5" />
                   </div>
-                  <span className="text-xs font-bold text-slate-900">support@viztore.com</span>
+                  <span className="text-xs font-bold text-slate-900">{branding.supportEmail}</span>
                 </div>
                 <button
                   type="button"
-                  onClick={() => copyToClipboard('support@viztore.com', 'email')}
+                  onClick={() => copyToClipboard(branding.supportEmail, 'email')}
                   className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-white rounded-lg transition-colors"
                   title="Copy Email"
                 >

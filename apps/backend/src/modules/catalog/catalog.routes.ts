@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { authGuard } from '../../shared/middlewares/authGuard.js';
 import { roleGuard } from '../../shared/middlewares/roleGuard.js';
 import { validateRequest } from '../../shared/middlewares/validateRequest.js';
+import { idempotencyMiddleware } from '../../shared/middlewares/idempotency.middleware.js';
 import { UserRole } from '@repo/shared-types';
 import { createProductSchema, updateProductSchema, productQuerySchema } from './catalog.validation.js';
 import * as catalogController from './catalog.controller.js';
@@ -33,6 +34,7 @@ catalogRouter.post(
   '/products',
   authGuard,
   roleGuard(UserRole.MERCHANT, UserRole.ADMIN),
+  idempotencyMiddleware({ ttlSeconds: 300 }),
   validateRequest({ body: createProductSchema }),
   catalogController.createProduct,
 );
@@ -42,6 +44,7 @@ catalogRouter.post(
   '/products/bulk',
   authGuard,
   roleGuard(UserRole.MERCHANT, UserRole.ADMIN),
+  idempotencyMiddleware({ ttlSeconds: 300 }),
   catalogController.bulkCreateProducts,
 );
 

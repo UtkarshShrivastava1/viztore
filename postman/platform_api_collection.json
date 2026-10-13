@@ -1,0 +1,798 @@
+{
+  "info": {
+    "_postman_id": "b7891234-5678-4321-9876-123456789abc",
+    "name": "Platform API Engine — Test Collection (v1.0)",
+    "description": "Production & Staging API Collection for Hyperlocal Multi-Vendor Commerce Monolith. Covers Authentication, 6-Step Onboarding, Catalog Management, Single-Store Orders Pipeline, WhatsApp Rider Dispatch, and Real-Time Notifications.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api/v1",
+      "type": "string",
+      "description": "Base API URL (Local: http://localhost:5000/api/v1 | Staging: https://viztore.onrender.com/api/v1)"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string",
+      "description": "Bearer JWT Access Token (Auto-populated upon successful login)"
+    },
+    {
+      "key": "refreshToken",
+      "value": "",
+      "type": "string",
+      "description": "JWT Refresh Token"
+    },
+    {
+      "key": "adminEmail",
+      "value": "admin@example.com",
+      "type": "string"
+    },
+    {
+      "key": "merchantEmail",
+      "value": "rahul.merchant@example.com",
+      "type": "string"
+    },
+    {
+      "key": "customerEmail",
+      "value": "arjun.customer@example.com",
+      "type": "string"
+    },
+    {
+      "key": "password",
+      "value": "Password@123",
+      "type": "string"
+    },
+    {
+      "key": "storeId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "productId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "orderId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{authToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "00. System Health & Probes",
+      "item": [
+        {
+          "name": "Liveness Probe (/health)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/../../health",
+              "host": ["{{baseUrl}}"],
+              "path": ["..", "..", "health"]
+            },
+            "description": "Basic liveness check verifying the Node.js process is active and responsive."
+          }
+        },
+        {
+          "name": "Readiness Probe (/readyz)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/../../readyz",
+              "host": ["{{baseUrl}}"],
+              "path": ["..", "..", "readyz"]
+            },
+            "description": "Deep readiness check verifying MongoDB Atlas connection, Redis health, and memory footprint."
+          }
+        }
+      ]
+    },
+    {
+      "name": "01. Authentication & Users",
+      "item": [
+        {
+          "name": "Login (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data && json.data.accessToken) {",
+                  "        pm.collectionVariables.set('authToken', json.data.accessToken);",
+                  "        pm.collectionVariables.set('refreshToken', json.data.refreshToken);",
+                  "        console.log('✅ Admin Auth Token saved to collection variables');",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Login (Merchant)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data && json.data.accessToken) {",
+                  "        pm.collectionVariables.set('authToken', json.data.accessToken);",
+                  "        pm.collectionVariables.set('refreshToken', json.data.refreshToken);",
+                  "        console.log('✅ Merchant Auth Token saved to collection variables');",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{merchantEmail}}\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Login (Customer)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data && json.data.accessToken) {",
+                  "        pm.collectionVariables.set('authToken', json.data.accessToken);",
+                  "        pm.collectionVariables.set('refreshToken', json.data.refreshToken);",
+                  "        console.log('✅ Customer Auth Token saved to collection variables');",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{customerEmail}}\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Register New Customer",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Karan Patel\",\n  \"email\": \"karan.patel@example.com\",\n  \"phone\": \"9876543111\",\n  \"password\": \"Password@123\",\n  \"role\": \"customer\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Refresh Access Token",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh-token",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "refresh-token"]
+            }
+          }
+        },
+        {
+          "name": "Get Profile (/me)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "me"]
+            }
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Arjun Mehta\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "profile"]
+            }
+          }
+        },
+        {
+          "name": "Get Delivery Addresses",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/addresses",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "addresses"]
+            }
+          }
+        },
+        {
+          "name": "Add Delivery Address",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"label\": \"home\",\n  \"fullName\": \"Arjun Mehta\",\n  \"phone\": \"9876543299\",\n  \"street\": \"Plot 14, Nehru Nagar West\",\n  \"city\": \"Bhilai\",\n  \"state\": \"Chhattisgarh\",\n  \"postalCode\": \"490020\",\n  \"coordinates\": [81.3410, 21.2180],\n  \"isDefault\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/addresses",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "addresses"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "02. Stores & Onboarding",
+      "item": [
+        {
+          "name": "Discover Nearby Stores (Proximity 2dsphere)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/stores/nearby?latitude=21.1960&longitude=81.3780&radiusKm=5",
+              "host": ["{{baseUrl}}"],
+              "path": ["stores", "nearby"],
+              "query": [
+                { "key": "latitude", "value": "21.1960" },
+                { "key": "longitude", "value": "81.3780" },
+                { "key": "radiusKm", "value": "5" }
+              ]
+            },
+            "description": "Performs MongoDB $near proximity query using 2dsphere index within local delivery radius."
+          }
+        },
+        {
+          "name": "List All Active Stores",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data && json.data.length > 0) {",
+                  "        pm.collectionVariables.set('storeId', json.data[0]._id || json.data[0].id);",
+                  "        console.log('✅ storeId set to:', json.data[0]._id || json.data[0].id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/stores",
+              "host": ["{{baseUrl}}"],
+              "path": ["stores"]
+            }
+          }
+        },
+        {
+          "name": "Get Store by Slug",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/stores/slug/urban-vogue-studio",
+              "host": ["{{baseUrl}}"],
+              "path": ["stores", "slug", "urban-vogue-studio"]
+            }
+          }
+        },
+        {
+          "name": "Get Store by ID",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/stores/{{storeId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["stores", "{{storeId}}"]
+            }
+          }
+        },
+        {
+          "name": "Merchant: Get My Store",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/stores/mine",
+              "host": ["{{baseUrl}}"],
+              "path": ["stores", "mine"]
+            }
+          }
+        },
+        {
+          "name": "Onboarding: Verify GSTIN",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"gstin\": \"22AABCS1429B1ZB\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/stores/onboarding/verify-gstin",
+              "host": ["{{baseUrl}}"],
+              "path": ["stores", "onboarding", "verify-gstin"]
+            }
+          }
+        },
+        {
+          "name": "Onboarding: Submit 6-Step Registration",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"storeName\": \"Bhilai Organic Market\",\n  \"category\": \"grocery\",\n  \"contactPhone\": \"9876543210\",\n  \"address\": {\n    \"street\": \"Shop 12, Civic Centre\",\n    \"city\": \"Bhilai\",\n    \"state\": \"Chhattisgarh\",\n    \"postalCode\": \"490006\",\n    \"coordinates\": [81.3780, 21.1960]\n  },\n  \"businessDetails\": {\n    \"gstin\": \"22AABCS1429B1ZB\",\n    \"panNumber\": \"AABCS1429B\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/stores/onboarding/submit",
+              "host": ["{{baseUrl}}"],
+              "path": ["stores", "onboarding", "submit"]
+            }
+          }
+        },
+        {
+          "name": "Admin: Get Pending Stores Queue",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/stores/admin/pending",
+              "host": ["{{baseUrl}}"],
+              "path": ["stores", "admin", "pending"]
+            }
+          }
+        },
+        {
+          "name": "Admin: Review & Approve Store",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"approved\",\n  \"notes\": \"All verification documents, GSTIN, and location verified.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/stores/admin/{{storeId}}/review",
+              "host": ["{{baseUrl}}"],
+              "path": ["stores", "admin", "{{storeId}}", "review"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "03. Catalog & Products",
+      "item": [
+        {
+          "name": "Faceted Product Listing (Public)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data && json.data.items && json.data.items.length > 0) {",
+                  "        pm.collectionVariables.set('productId', json.data.items[0]._id || json.data.items[0].id);",
+                  "        console.log('✅ productId set to:', json.data.items[0]._id || json.data.items[0].id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/catalog/products?category=fashion&page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["catalog", "products"],
+              "query": [
+                { "key": "category", "value": "fashion" },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Featured Products Feed (Public)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/catalog/products/featured",
+              "host": ["{{baseUrl}}"],
+              "path": ["catalog", "products", "featured"]
+            }
+          }
+        },
+        {
+          "name": "Get Product by ID or Slug",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/catalog/products/{{productId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["catalog", "products", "{{productId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Products by Store ID",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/catalog/stores/{{storeId}}/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["catalog", "stores", "{{storeId}}", "products"]
+            }
+          }
+        },
+        {
+          "name": "Merchant: Create Product",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"storeId\": \"{{storeId}}\",\n  \"name\": \"Classic Embroidered Linen Shirt\",\n  \"description\": \"100% pure breathable linen shirt handcrafted by local weavers.\",\n  \"category\": \"fashion\",\n  \"subCategory\": \"mens_wear\",\n  \"price\": 1299,\n  \"compareAtPrice\": 1899,\n  \"stock\": 25,\n  \"sku\": \"MENS-LINEN-001\",\n  \"images\": [\n    \"https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=600\"\n  ],\n  \"isPublished\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/catalog/products",
+              "host": ["{{baseUrl}}"],
+              "path": ["catalog", "products"]
+            }
+          }
+        },
+        {
+          "name": "Merchant: Update Product",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 1199,\n  \"stock\": 30\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/catalog/products/{{productId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["catalog", "products", "{{productId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "04. Orders (Single-Store Core Pipeline)",
+      "item": [
+        {
+          "name": "Create Order (Single-Store Cart Enforcement)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201 || pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data && (json.data.id || json.data._id)) {",
+                  "        pm.collectionVariables.set('orderId', json.data.id || json.data._id);",
+                  "        console.log('✅ orderId set to:', json.data.id || json.data._id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-idempotency-key", "value": "idem-key-{{$timestamp}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"storeId\": \"{{storeId}}\",\n  \"items\": [\n    {\n      \"productId\": \"{{productId}}\",\n      \"name\": \"Slim Fit Linen Shirt\",\n      \"quantity\": 1,\n      \"unitPrice\": 1299,\n      \"sku\": \"MENS-LINEN-001\"\n    }\n  ],\n  \"shippingAddress\": {\n    \"fullName\": \"Arjun Mehta\",\n    \"phone\": \"9876543299\",\n    \"street\": \"Plot 14, Nehru Nagar West\",\n    \"city\": \"Bhilai\",\n    \"state\": \"Chhattisgarh\",\n    \"postalCode\": \"490020\",\n    \"coordinates\": [81.3410, 21.2180]\n  },\n  \"paymentMethod\": \"upi\",\n  \"fulfillmentType\": \"delivery\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders"]
+            }
+          }
+        },
+        {
+          "name": "Get Customer Order History (/my-orders)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/orders/my-orders",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders", "my-orders"]
+            }
+          }
+        },
+        {
+          "name": "Merchant: Get Store Orders",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/orders/store/{{storeId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders", "store", "{{storeId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Order by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders", "{{orderId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Tax Invoice (INV-ORD-xxxxx)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}/invoice",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders", "{{orderId}}", "invoice"]
+            },
+            "description": "Generates structured compliant tax invoice with GST breakdowns, seller credentials, item lines, and OTP."
+          }
+        },
+        {
+          "name": "Merchant: Mark Order Ready to Ship (PACKED)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"PACKED\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders", "{{orderId}}", "status"]
+            },
+            "description": "Direct transition from PENDING to PACKED. Emits order.confirmed event initializing delivery dispatch."
+          }
+        },
+        {
+          "name": "Rider: Verify Delivery 4-Digit OTP",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"otp\": \"1234\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}/verify-otp",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders", "{{orderId}}", "verify-otp"]
+            }
+          }
+        },
+        {
+          "name": "Customer: Cancel Order",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}/cancel",
+              "host": ["{{baseUrl}}"],
+              "path": ["orders", "{{orderId}}", "cancel"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "05. Delivery & Rider Dispatch",
+      "item": [
+        {
+          "name": "Track Order Delivery Status",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/delivery/orders/{{orderId}}/track",
+              "host": ["{{baseUrl}}"],
+              "path": ["delivery", "orders", "{{orderId}}", "track"]
+            }
+          }
+        },
+        {
+          "name": "Merchant: Assign Rider Partner",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"riderName\": \"Ramesh Yadav\",\n  \"riderPhone\": \"9876543000\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/delivery/orders/{{orderId}}/assign",
+              "host": ["{{baseUrl}}"],
+              "path": ["delivery", "orders", "{{orderId}}", "assign"]
+            }
+          }
+        },
+        {
+          "name": "Rider: Complete Handshake with Customer OTP",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"otp\": \"1234\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/delivery/orders/{{orderId}}/verify-otp",
+              "host": ["{{baseUrl}}"],
+              "path": ["delivery", "orders", "{{orderId}}", "verify-otp"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "06. Notifications Hub",
+      "item": [
+        {
+          "name": "Get Unread Count Summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/unread-summary",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications", "unread-summary"]
+            }
+          }
+        },
+        {
+          "name": "List User Notifications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notifications",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications"]
+            }
+          }
+        },
+        {
+          "name": "Mark All Notifications Read",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/read-all",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications", "read-all"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

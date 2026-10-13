@@ -14,6 +14,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { useSettingsStore } from '../../stores/settingsStore.js';
+import { branding } from '@repo/shared-types';
 
 export const PaymentsWalletTab: React.FC = () => {
   const { paymentsWallet, updatePaymentsWallet } = useSettingsStore();
@@ -125,7 +126,7 @@ export const PaymentsWalletTab: React.FC = () => {
                 </div>
                 <div>
                   <h4 className="text-xs font-bold text-slate-900">Wallet Payments</h4>
-                  <p className="text-[11px] text-slate-500">Allow customers to pay using Viztore Wallet.</p>
+                  <p className="text-[11px] text-slate-500">Allow customers to pay using {branding.appName} Wallet.</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">

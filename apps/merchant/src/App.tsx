@@ -1,6 +1,26 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { useAuthStore } from './stores/authStore.js';
 import { useOnboardingStore } from './stores/onboardingStore.js';
+import { SellerLandingPage } from './pages/SellerLandingPage.js';
+import { SellerLoginPage } from './pages/SellerLoginPage.js';
+import { OnboardingPage } from './pages/OnboardingPage.js';
+import { DashboardOverviewPage } from './pages/DashboardOverviewPage.js';
+import { OrdersPage } from './pages/OrdersPage.js';
+import { CreateOrderPage } from './pages/CreateOrderPage.js';
+import { CatalogPage } from './pages/CatalogPage.js';
+import { InventoryPage } from './pages/InventoryPage.js';
+import { StoreManagementPage } from './pages/StoreManagementPage.js';
+import { SettingsPage } from './pages/SettingsPage.js';
+import { BillingPage } from './pages/BillingPage.js';
+import { CustomersPage } from './pages/CustomersPage.js';
+import { WalletPage } from './pages/WalletPage.js';
+import { ExpensesPage } from './pages/ExpensesPage.js';
+import { AssetsPage } from './pages/AssetsPage.js';
+import { ReturnsPage } from './pages/ReturnsPage.js';
+import { PayoutsPage } from './pages/PayoutsPage.js';
+import { AnalyticsPage } from './pages/AnalyticsPage.js';
+import { MarketingPage } from './pages/MarketingPage.js';
+import { SupportPage } from './pages/SupportPage.js';
 import { useBillingStore } from './stores/billingStore.js';
 import { Sidebar, DashboardTab } from './components/dashboard/Sidebar.js';
 import { Header } from './components/dashboard/Header.js';
@@ -86,7 +106,7 @@ export const App: React.FC = () => {
       const host = window.location.hostname.toLowerCase();
       const params = new URLSearchParams(window.location.search);
 
-      // Dedicated subdomain routing (e.g. register.viztore.com / register.localhost) or path (/register)
+      // Dedicated subdomain routing (e.g. register.<domain> / register.localhost) or path (/register)
       if (host.startsWith('register.') || path.startsWith('/register')) {
         return 'onboarding';
       }
@@ -232,64 +252,63 @@ export const App: React.FC = () => {
 
             {currentTab === 'billing' && <BillingPage />}
 
-            {currentTab === 'customers' && <CustomersPage />}
+          {currentTab === 'customers' && <CustomersPage />}
 
-            {currentTab === 'wallet' && (
-              <WalletPage onNavigateHome={() => setCurrentTab('overview')} />
-            )}
+          {currentTab === 'wallet' && (
+            <WalletPage onNavigateHome={() => setCurrentTab('overview')} />
+          )}
 
-            {currentTab === 'expenses' && (
-              <ExpensesPage onNavigateHome={() => setCurrentTab('overview')} />
-            )}
+          {currentTab === 'expenses' && (
+            <ExpensesPage onNavigateHome={() => setCurrentTab('overview')} />
+          )}
 
-            {currentTab === 'assets' && (
-              <AssetsPage onNavigateHome={() => setCurrentTab('overview')} />
-            )}
+          {currentTab === 'assets' && (
+            <AssetsPage onNavigateHome={() => setCurrentTab('overview')} />
+          )}
 
-            {currentTab === 'returns' && (
-              <ReturnsPage onNavigateHome={() => setCurrentTab('overview')} />
-            )}
+          {currentTab === 'returns' && (
+            <ReturnsPage onNavigateHome={() => setCurrentTab('overview')} />
+          )}
 
-            {currentTab === 'payouts' && (
-              <PayoutsPage onNavigateHome={() => setCurrentTab('overview')} />
-            )}
+          {currentTab === 'payouts' && (
+            <PayoutsPage onNavigateHome={() => setCurrentTab('overview')} />
+          )}
 
-            {currentTab === 'analytics' && (
-              <AnalyticsPage onNavigateHome={() => setCurrentTab('overview')} />
-            )}
+          {currentTab === 'analytics' && (
+            <AnalyticsPage onNavigateHome={() => setCurrentTab('overview')} />
+          )}
 
-            {currentTab === 'marketing' && (
-              <MarketingPage onNavigateHome={() => setCurrentTab('overview')} />
-            )}
+          {currentTab === 'marketing' && (
+            <MarketingPage onNavigateHome={() => setCurrentTab('overview')} />
+          )}
 
-            {currentTab === 'store' && <StoreManagementPage />}
+          {currentTab === 'store' && <StoreManagementPage />}
 
-            {currentTab === 'settings' && (
-              <SettingsPage
-                onNavigateToBillingSettings={() => {
-                  setCurrentTab('billing');
-                  useBillingStore.getState().setActiveView('settings');
-                }}
-                onNavigateToSupport={() => setCurrentTab('support')}
-              />
-            )}
+          {currentTab === 'settings' && (
+            <SettingsPage
+              onNavigateToBillingSettings={() => {
+                setCurrentTab('billing');
+                useBillingStore.getState().setActiveView('settings');
+              }}
+              onNavigateToSupport={() => setCurrentTab('support')}
+            />
+          )}
 
-            {currentTab === 'support' && (
-              <SupportPage onNavigateHome={() => setCurrentTab('overview')} />
-            )}
+          {currentTab === 'support' && (
+            <SupportPage onNavigateHome={() => setCurrentTab('overview')} />
+          )}
 
-            {/* Fallback placeholder for other modules */}
-            {!['overview', 'orders', 'catalog', 'inventory', 'billing', 'customers', 'wallet', 'expenses', 'assets', 'returns', 'payouts', 'analytics', 'marketing', 'store', 'settings', 'support'].includes(currentTab) && (
-              <div className="p-8 text-center bg-white rounded-2xl border border-slate-200/80 shadow-2xs max-w-xl mx-auto mt-8">
-                <h3 className="text-base font-bold text-slate-800 capitalize">
-                  {currentTab.replace(/_/g, ' ')} Module
-                </h3>
-                <p className="text-xs text-slate-500 mt-1">
-                  Operational analytics and live controls active for this merchant vertical.
-                </p>
-              </div>
-            )}
-          </Suspense>
+          {/* Fallback placeholder for other modules */}
+          {!['overview', 'orders', 'catalog', 'inventory', 'billing', 'customers', 'wallet', 'expenses', 'assets', 'returns', 'payouts', 'analytics', 'marketing', 'store', 'settings', 'support'].includes(currentTab) && (
+            <div className="p-8 text-center bg-white rounded-2xl border border-slate-200/80 shadow-2xs max-w-xl mx-auto mt-8">
+              <h3 className="text-base font-bold text-slate-800 capitalize">
+                {currentTab.replace(/_/g, ' ')} Module
+              </h3>
+              <p className="text-xs text-slate-500 mt-1">
+                Operational analytics and live controls active for this merchant vertical.
+              </p>
+            </div>
+          )}
         </main>
       </div>
 
