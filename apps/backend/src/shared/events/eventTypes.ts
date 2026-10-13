@@ -42,6 +42,7 @@ export interface OrderStatusChangedPayload {
   newStatus: string;
   actorUserId?: string;
   customerPhone?: string;
+  storeId?: string;
 }
 
 export interface PaymentSucceededPayload {

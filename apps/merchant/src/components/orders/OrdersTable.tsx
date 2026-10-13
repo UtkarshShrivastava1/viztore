@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Printer,
   Eye,
@@ -11,6 +11,7 @@ import {
   MerchantOrderRecord,
   useOrderStore,
 } from '../../stores/orderStore.js';
+import { VerifyOtpModal } from './VerifyOtpModal.js';
 
 interface OrdersTableProps {
   onViewOrder: (order: MerchantOrderRecord) => void;
@@ -76,6 +77,8 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
     dispatchOrder,
     deliverOrder,
   } = useOrderStore();
+
+  const [otpModalOrder, setOtpModalOrder] = useState<MerchantOrderRecord | null>(null);
 
   // Filter orders by tab and search
   const tabFilteredOrders = orders.filter((order) => {
@@ -489,17 +492,8 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
                         {activeTab === 'shipped' && (
                           <button
                             type="button"
-                            onClick={async () => {
-                              const enteredOtp = prompt(`Enter customer 4-digit OTP for order ${order.orderNumber} (Handshake OTP: ${order.otp}):`, order.otp);
-                              if (enteredOtp) {
-                                try {
-                                  await deliverOrder(order.id, enteredOtp.trim());
-                                } catch {
-                                  alert('Invalid OTP or delivery verification failed.');
-                                }
-                              }
-                            }}
-                            className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs transition-colors shadow-2xs whitespace-nowrap"
+                            onClick={() => setOtpModalOrder(order)}
+                            className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs transition-colors shadow-2xs whitespace-nowrap cursor-pointer"
                           >
                             Verify OTP & Deliver
                           </button>
@@ -557,6 +551,14 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
           <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
         </button>
       </div>
+
+      {/* Verify OTP Modal */}
+      <VerifyOtpModal
+        order={otpModalOrder}
+        isOpen={Boolean(otpModalOrder)}
+        onClose={() => setOtpModalOrder(null)}
+        onConfirm={deliverOrder}
+      />
     </div>
   );
 };

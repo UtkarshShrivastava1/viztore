@@ -352,6 +352,7 @@ export function createOrderService(
         previousStatus: current.status,
         newStatus: status,
         actorUserId,
+        storeId: updated.storeId,
       };
 
       if (status === OrderStatus.CONFIRMED || status === OrderStatus.PACKED) bus.emit(EVENTS.ORDER_CONFIRMED, payload);

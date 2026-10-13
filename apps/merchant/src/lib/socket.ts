@@ -77,14 +77,26 @@ class MerchantSocketClient {
         // 1. Play audible arrival chime
         playOrderAlertChime();
 
-        // 2. Refresh active orders in store
+        // 2. Trigger native desktop notification if permitted
+        if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+          try {
+            new Notification('New Order Received!', {
+              body: `${payload.orderNumber || 'Order'} • ₹${payload.grandTotal?.toLocaleString('en-IN') || '0'} (${payload.itemsCount || 1} items)`,
+              icon: '/logo.svg',
+            });
+          } catch {
+            // Fail gracefully if notifications fail
+          }
+        }
+
+        // 3. Refresh active orders in store
         if (this.currentStoreId) {
           useOrderStore.getState().fetchOrders(this.currentStoreId);
         } else {
           useOrderStore.getState().fetchOrders();
         }
 
-        // 3. Dispatch to all registered UI subscribers
+        // 4. Dispatch to all registered UI subscribers
         this.orderPlacedListeners.forEach((callback) => {
           try {
             callback(payload);
@@ -94,9 +106,26 @@ class MerchantSocketClient {
         });
       };
 
+      const handleOrderStatusChanged = () => {
+        if (this.currentStoreId) {
+          useOrderStore.getState().fetchOrders(this.currentStoreId);
+        } else {
+          useOrderStore.getState().fetchOrders();
+        }
+      };
+
       this.socket.on('order.placed', handleOrderPlaced);
       this.socket.on('order:placed', handleOrderPlaced);
       this.socket.on('ORDER_PLACED', handleOrderPlaced);
+
+      this.socket.on('order.confirmed', handleOrderStatusChanged);
+      this.socket.on('order:confirmed', handleOrderStatusChanged);
+      this.socket.on('order.cancelled', handleOrderStatusChanged);
+      this.socket.on('order:cancelled', handleOrderStatusChanged);
+      this.socket.on('order.delivered', handleOrderStatusChanged);
+      this.socket.on('order:delivered', handleOrderStatusChanged);
+      this.socket.on('order.status_changed', handleOrderStatusChanged);
+      this.socket.on('notification.created', handleOrderStatusChanged);
 
       return this.socket;
     } catch {

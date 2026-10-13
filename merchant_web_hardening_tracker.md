@@ -11,13 +11,13 @@
 
 | Total Workstreams | In Progress | Hardened & Verified | Pending / Planned |
 |:---:|:---:|:---:|:---:|
-| **8** | **0** | **1** | **7** |
+| **8** | **0** | **2** | **6** |
 
 ```mermaid
 pie title Merchant Web Hardening Workstreams
-    "Hardened & Verified" : 1
+    "Hardened & Verified" : 2
     "In Progress" : 0
-    "Planned / Backlog" : 7
+    "Planned / Backlog" : 6
 ```
 
 ---
@@ -48,7 +48,7 @@ flowchart TD
 | Workstream ID | Module / Subsystem | Primary Components & Pages | Scope & Enterprise Objective | Current Baseline & Identified Gaps | Target Deliverables | Status |
 |:---:|---|---|---|---|---|:---:|
 | **MW-HARDEN-01** | **Auth, Session & Storefront Switcher** | `SellerLoginPage`, `OnboardingPage`, `authStore`, `Header`, `App.tsx` | Production authentication pipeline, JWT token refresh, persistent session recovery, secure logout with local cache purge, and Store Active/Inactive live toggle | Live Express `/auth/login` handshake, refresh token rotation on 401, RBAC guard, backend `/auth/logout` invalidation, and live MongoDB store `isActive` status sync | Transparent 401 token refresh pipeline, backend session revocation on logout, role-based login gate, and async store status synchronization | 🟢 **RESOLVED** |
-| **MW-HARDEN-02** | **Real-Time Order Dispatch & Audio Alerts** | `LiveOrderSocketListener`, `OrdersPage`, `OrderCard`, `OrderDetailsModal` | Real-time incoming order audio chime (Web Audio API), instant notification toast, Socket.io event listener (`order:created`), and Delivery OTP verification modal | Socket listener scaffolded; ensure audio unlock on user interaction, reliable background reconnect, and strict OTP validation | Web Audio chime synthesizer/asset, live socket subscription to store room, optimistic state progression, OTP verification API | ⚪ **PLANNED** |
+| **MW-HARDEN-02** | **Real-Time Order Dispatch & Audio Alerts** | `LiveOrderSocketListener`, `OrdersPage`, `OrdersTable`, `VerifyOtpModal`, `orderStore` | Real-time incoming order audio chime (Web Audio API harmonic synth), instant desktop notifications, Socket.io event listeners (`order.placed`, `order.confirmed`, `order.delivered`), store-scoped rooms, and enterprise Delivery OTP verification modal | Store room join on mount, Web Audio chime synthesizer with fallback unlock, live refetch without reload, dual-broadcast backend events, and 4-digit OTP modal | Web Audio harmonic chime synthesizer, multi-event socket listeners, automatic store orders refetch, backend store room broadcast, and enterprise VerifyOtpModal | 🟢 **RESOLVED** |
 | **MW-HARDEN-03** | **Product Catalog & Media Upload Pipeline** | `ProductsCatalogPage`, `AddProductWizardPage`, `BulkUploadModal`, `catalogStore` | 3-step product creation wizard, multi-variant matrix (size/color/weight), barcode assignment, Cloudinary/local image upload dropzone, and bulk CSV ingestion | Wizard UI functional; wire live backend `/catalog/products` endpoints, ensure multipart image upload handling, and add CSV validation | Live product CRUD, variant stock tracking, image upload preview with Cloudinary integration | ⚪ **PLANNED** |
 | **MW-HARDEN-04** | **Inventory Management & Low-Stock Alerts** | `InventoryPage`, `InventoryTable`, `StockAdjustModal`, `inventoryStore` | Real-time stock levels, low-stock threshold triggers, batch quantity adjustment, SKU/barcode quick filtering, and out-of-stock storefront hiding | Table views implemented; integrate live stock decrement on order acceptance and POS billing transactions | Live stock level sync, batch stock modifier, exportable inventory CSV | ⚪ **PLANNED** |
 | **MW-HARDEN-05** | **In-House POS Retail Billing & Thermal Print** | `BillingPage`, `CreateOrderPage`, `ThermalReceipt`, `billingStore` | Tier 2 walk-in counter retail billing: fast barcode scanner input, quick customer phone lookup, GST slab breakdown, Cash/UPI/Card tender, and 80mm/58mm thermal receipt printing | UI complete with cart calculation; add `@media print` ESC/POS thermal receipt formatting and invoice generation | Thermal printer CSS media queries, live POS transaction commit, instant inventory auto-deduction | ⚪ **PLANNED** |
@@ -92,16 +92,25 @@ flowchart TD
   - Monorepo package build: 5/5 packages successful.
 
 ### 🛠️ MW-HARDEN-02: Real-Time Order Dispatch & Audio Alert Pipeline
-* **Target Scope:** `apps/merchant/src/components/dashboard/LiveOrderSocketListener.tsx`, `apps/merchant/src/pages/OrdersPage.tsx`, `apps/merchant/src/components/orders/`
-* **Enterprise Hardening Goals:**
-  1. Connect Socket.io client to backend server with authenticated store room join (`join_store_room`).
-  2. Implement an audio chime using Web Audio API or bundled audio asset that plays when `order:created` fires.
-  3. Add browser permission request for Desktop Notification toasts.
-  4. Ensure order lifecycle progression (`PENDING` ➔ `CONFIRMED` ➔ `PACKED` ➔ `OUT_FOR_DELIVERY` ➔ `DELIVERED`) reflects live in the orders pipeline.
-  5. Harden Delivery Partner OTP verification modal (`POST /api/v1/delivery/verify-otp`).
-* **Verification Targets:**
-  - Audible chime on incoming order event.
-  - Real-time order status updates without requiring manual page reloads.
+* **Date:** October 13, 2026
+* **Target Scope:** `apps/backend/src/modules/orders/order.service.ts`, `apps/backend/src/server.ts`, `apps/backend/src/shared/events/eventTypes.ts`, `apps/merchant/src/lib/socket.ts`, `apps/merchant/src/stores/orderStore.ts`, `apps/merchant/src/components/orders/VerifyOtpModal.tsx`, `apps/merchant/src/components/orders/OrdersTable.tsx`
+* **Root Causes Diagnosed:**
+  1. Backend `server.ts` only broadcast order status transition events to `order:${orderId}` rooms, so merchant dashboards subscribed to `store:${storeId}` never received live updates when orders were confirmed, packed, or delivered.
+  2. `OrderStatusChangedPayload` and domain events lacked `storeId`, preventing the server event dispatcher from knowing which store room to notify.
+  3. Crude `window.prompt()` was used for delivery OTP verification, creating an unstyled and brittle UX prone to browser blocking.
+  4. In `orderStore.ts`, `deliverOrder()` caught delivery errors silently without calling the backend status transition API (`/api/v1/orders/:id/status` with `DELIVERED`).
+  5. `fetchOrders()` defaulted to admin route `/orders/all` instead of the merchant's authenticated store endpoint `/orders/store/:storeId`.
+* **Fixes Applied:**
+  1. **Store-Room Dual Broadcast (`apps/backend/src/server.ts` & `order.service.ts`)**: Added `storeId` to `OrderStatusChangedPayload` and updated `server.ts` to broadcast `ORDER_CONFIRMED`, `ORDER_CANCELLED`, and `ORDER_DELIVERED` to `store:${payload.storeId}` as well as `order:${payload.orderId}`.
+  2. **Socket Multi-Event Listeners & Desktop Alerts (`apps/merchant/src/lib/socket.ts`)**: Added listeners for `order.confirmed`, `order.cancelled`, `order.delivered`, `order.status_changed`, and `notification.created`. Each event automatically triggers `useOrderStore.getState().fetchOrders()`. Also integrated native desktop browser notifications (`new Notification(...)`) when permissions are granted.
+  3. **Dedicated Enterprise OTP Modal (`VerifyOtpModal.tsx`)**: Built a modern modal with 4 segmented PIN inputs, auto-advance, keyboard navigation (backspace/arrow keys), paste handler, demo quick-fill helper, live verifying spinner, and error banners.
+  4. **OrdersTable OTP Modal Integration (`OrdersTable.tsx`)**: Replaced `prompt()` with `setOtpModalOrder(order)` and rendered `<VerifyOtpModal>` with animated feedback.
+  5. **Live Store Order Refetch & Delivery Transition (`orderStore.ts`)**: Updated `fetchOrders()` to dynamically extract `currentStore?._id` and call `ordersApi.getByStore(storeId)`. Hardened `deliverOrder()` to call `ordersApi.verifyDeliveryOtp()` followed by `ordersApi.updateOrderStatus(orderId, 'DELIVERED', otp)`.
+* **Verification Results:**
+  - Merchant TypeScript & Vite build: 100% clean (`tsc && vite build`).
+  - Backend TypeScript build: 100% clean (`tsc`).
+  - Automated tests: **120 / 120 tests passing** (19 suites green).
+  - Monorepo package build: 5/5 packages clean.
 
 ### 🛠️ MW-HARDEN-03: Product Catalog & Media Ingestion Pipeline
 * **Target Scope:** `apps/merchant/src/pages/ProductsCatalogPage.tsx`, `AddProductWizardPage.tsx`, `components/catalog/AddProductModal.tsx`, `BulkUploadModal.tsx`

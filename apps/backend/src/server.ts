@@ -87,16 +87,25 @@ async function bootstrap() {
 
     eventBus.on(EVENTS.ORDER_CONFIRMED, (payload) => {
       io.to(`order:${payload.orderId}`).emit(EVENTS.ORDER_CONFIRMED, payload);
+      if (payload.storeId) {
+        io.to(`store:${payload.storeId}`).emit(EVENTS.ORDER_CONFIRMED, payload);
+      }
       logger.debug(`📡 Socket broadcast ${EVENTS.ORDER_CONFIRMED} to order:${payload.orderId}`);
     });
 
     eventBus.on(EVENTS.ORDER_CANCELLED, (payload) => {
       io.to(`order:${payload.orderId}`).emit(EVENTS.ORDER_CANCELLED, payload);
+      if (payload.storeId) {
+        io.to(`store:${payload.storeId}`).emit(EVENTS.ORDER_CANCELLED, payload);
+      }
       logger.debug(`📡 Socket broadcast ${EVENTS.ORDER_CANCELLED} to order:${payload.orderId}`);
     });
 
     eventBus.on(EVENTS.ORDER_DELIVERED, (payload) => {
       io.to(`order:${payload.orderId}`).emit(EVENTS.ORDER_DELIVERED, payload);
+      if (payload.storeId) {
+        io.to(`store:${payload.storeId}`).emit(EVENTS.ORDER_DELIVERED, payload);
+      }
       logger.debug(`📡 Socket broadcast ${EVENTS.ORDER_DELIVERED} to order:${payload.orderId}`);
     });
 

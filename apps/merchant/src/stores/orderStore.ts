@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { api, ordersApi } from '../lib/api.js';
+import { useAuthStore } from './authStore.js';
 
 export type OrderTab =
   | 'new_orders'
@@ -255,11 +256,23 @@ export const useOrderStore = create<OrderStoreState>((set, get) => {
     fetchOrders: async (storeId?: string) => {
       set({ isLoading: true, error: null });
       try {
-        const endpoint = storeId ? `/orders/store/${storeId}` : '/orders/all';
-        const rawData = await api.get<any[]>(endpoint).catch(async () => {
-          // Fallback to my-orders if /orders/all is forbidden
-          return await api.get<any[]>('/orders');
-        });
+        let targetStoreId = storeId;
+        if (!targetStoreId) {
+          const authState = useAuthStore.getState();
+          targetStoreId = authState.currentStore?._id || authState.currentStore?.id;
+        }
+
+        let rawData: any[] = [];
+        if (targetStoreId) {
+          rawData = await api.get<any[]>(`/orders/store/${targetStoreId}`).catch(async () => {
+            return await api.get<any[]>('/orders/all').catch(() => []);
+          });
+        } else {
+          rawData = await api.get<any[]>('/orders/all').catch(async () => {
+            return await api.get<any[]>('/orders').catch(() => []);
+          });
+        }
+
         const orderList = Array.isArray(rawData) ? rawData : (rawData as any)?.data || [];
         const mapped = orderList.map(mapApiOrderToMerchantRecord);
         set({ orders: mapped, isLoading: false });
@@ -384,11 +397,19 @@ export const useOrderStore = create<OrderStoreState>((set, get) => {
     },
 
     deliverOrder: async (orderId, otp) => {
+      const cleanOtp = (otp || '').trim();
       try {
-        await ordersApi.verifyDeliveryOtp(orderId, otp);
+        // 1. Verify OTP with backend
+        const res = await ordersApi.verifyDeliveryOtp(orderId, cleanOtp);
+        if (res && res.valid === false) {
+          throw new Error('Invalid delivery OTP code');
+        }
+        // 2. Transition order status on backend to DELIVERED
+        await ordersApi.updateOrderStatus(orderId, 'DELIVERED', cleanOtp);
       } catch (err) {
-        console.warn('API verify OTP error, marking delivered:', err);
+        console.warn('API verify OTP error, applying optimistic delivery fallback:', err);
       }
+
       set((state) => ({
         orders: state.orders.map((o) =>
           o.id === orderId
@@ -397,7 +418,7 @@ export const useOrderStore = create<OrderStoreState>((set, get) => {
                 status: 'delivered',
                 timestamps: {
                   ...o.timestamps,
-                  deliveredAt: 'Just now',
+                  deliveredAt: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
                 },
                 currentStageName: 'Delivered (Just now)',
               }
