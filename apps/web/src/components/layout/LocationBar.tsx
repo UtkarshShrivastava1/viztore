@@ -19,6 +19,8 @@ export default function LocationBar({
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const authUser = useAuthStore((state) => state.user);
   const locationAddress = useLocationStore((state) => state.address);
+  const locationLocality = useLocationStore((state) => state.locality);
+  const locationFormatted = useLocationStore((state) => state.formattedAddress);
   const locationIsSet = useLocationStore((state) => state.isSet);
   const setStoreLocation = useLocationStore((state) => state.setLocation);
 
@@ -31,29 +33,37 @@ export default function LocationBar({
     }
   }, [authUser, locationIsSet, setStoreLocation]);
 
-  const name = mounted ? (propName || authUser?.fullName || "Customer") : "Customer";
   const address = mounted 
     ? (propAddress || (locationIsSet ? locationAddress : (authUser?.addresses?.[0] ? `${authUser.addresses[0].street}, ${authUser.addresses[0].city}` : locationAddress))) 
-    : "Bhilai, Chhattisgarh";
+    : "Sector 6, Central Avenue, Bhilai - 490006";
+  const locality = mounted ? (locationLocality || address.split(',')[0]) : "Sector 6";
+  const displayFullAddress = mounted ? (locationFormatted || address) : "Sector 6, Central Avenue, Bhilai - 490006";
 
   return (
     <div className="px-4 mb-3.5">
       <button
         type="button"
         onClick={() => setIsLocationModalOpen(true)}
-        className="w-full flex items-center gap-2.5 rounded-full bg-[#021d5c]/60 hover:bg-[#021d5c]/80 transition-colors border border-white/10 px-4 py-2.5 text-left backdrop-blur-md shadow-sm cursor-pointer"
+        className="w-full flex items-center gap-3 rounded-2xl bg-[#021d5c]/70 hover:bg-[#021d5c] transition-colors border border-white/10 px-4 py-2 text-left backdrop-blur-md shadow-sm cursor-pointer group"
       >
-        <MapPin
-          className="h-4 w-4 shrink-0 text-[#4C82FB]"
-          fill="#4C82FB"
-          strokeWidth={0}
-        />
-        <span className="flex-1 truncate text-[12px] text-white">
-          <span className="font-normal">Deliver to </span>
-          <span className="font-medium">{name}</span>
-          <span className="text-white/90"> - {address}</span>
-        </span>
-        <ChevronDown className="h-4 w-4 shrink-0 text-white" strokeWidth={2.2} />
+        <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#1668F6]/20 border border-[#4C82FB]/30 text-[#4C82FB] shrink-0">
+          <MapPin
+            className="h-4 w-4"
+            fill="#4C82FB"
+            strokeWidth={0}
+          />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 leading-tight">
+            <span className="text-[13px] font-bold text-white truncate">
+              {locality}
+            </span>
+            <ChevronDown className="h-3.5 w-3.5 text-white/80 shrink-0 group-hover:translate-y-0.5 transition-transform" strokeWidth={2.5} />
+          </div>
+          <p className="text-[11px] text-white/70 truncate mt-0.5 leading-snug">
+            {displayFullAddress}
+          </p>
+        </div>
       </button>
 
       <LocationModal

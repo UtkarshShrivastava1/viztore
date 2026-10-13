@@ -8,6 +8,7 @@ import {
   FileText,
   ChevronRight,
   Settings,
+  Zap,
 } from 'lucide-react';
 import { useBillingStore } from '../../stores/billingStore.js';
 
@@ -62,7 +63,17 @@ export const BillingHeaderActions: React.FC<BillingHeaderActionsProps> = ({
   };
 
   return (
-    <div className="flex items-center gap-3 relative">
+    <div className="flex items-center gap-2.5 relative flex-wrap sm:flex-nowrap">
+      {/* Quick Counter POS Register Launch Button */}
+      <button
+        type="button"
+        onClick={() => setActiveView('pos_counter')}
+        className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition-all active:scale-95"
+      >
+        <Zap className="w-3.5 h-3.5 fill-current text-emerald-200" />
+        <span>Counter POS</span>
+      </button>
+
       {/* Primary Action Button */}
       <button
         type="button"

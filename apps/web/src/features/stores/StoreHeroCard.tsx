@@ -1,5 +1,5 @@
 import React from 'react';
-import { Store, Heart, Share2, Star, MapPin, Clock, Truck, RotateCcw, ShieldCheck, Headset, CheckCircle2 } from 'lucide-react';
+import { Heart, Share2, Star, MapPin, Clock, Truck, RotateCcw, ShieldCheck, Headset, CheckCircle2 } from 'lucide-react';
 import { IStore } from '@repo/shared-types';
 
 export function StoreHeroCard({ store }: { store: IStore }) {

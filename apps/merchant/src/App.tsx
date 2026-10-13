@@ -24,74 +24,9 @@ import { SupportPage } from './pages/SupportPage.js';
 import { useBillingStore } from './stores/billingStore.js';
 import { Sidebar, DashboardTab } from './components/dashboard/Sidebar.js';
 import { Header } from './components/dashboard/Header.js';
-import { DashboardOverviewPage } from './pages/DashboardOverviewPage.js';
-
-// Lazy loaded page modules for optimal code splitting & performance
-const SellerLandingPage = lazy(() =>
-  import('./pages/SellerLandingPage.js').then((m) => ({ default: m.SellerLandingPage }))
-);
-const SellerLoginPage = lazy(() =>
-  import('./pages/SellerLoginPage.js').then((m) => ({ default: m.SellerLoginPage }))
-);
-const OnboardingPage = lazy(() =>
-  import('./pages/OnboardingPage.js').then((m) => ({ default: m.OnboardingPage }))
-);
-const OrdersPage = lazy(() =>
-  import('./pages/OrdersPage.js').then((m) => ({ default: m.OrdersPage }))
-);
-const CreateOrderPage = lazy(() =>
-  import('./pages/CreateOrderPage.js').then((m) => ({ default: m.CreateOrderPage }))
-);
-const CatalogPage = lazy(() =>
-  import('./pages/CatalogPage.js').then((m) => ({ default: m.CatalogPage }))
-);
-const InventoryPage = lazy(() =>
-  import('./pages/InventoryPage.js').then((m) => ({ default: m.InventoryPage }))
-);
-const StoreManagementPage = lazy(() =>
-  import('./pages/StoreManagementPage.js').then((m) => ({ default: m.StoreManagementPage }))
-);
-const SettingsPage = lazy(() =>
-  import('./pages/SettingsPage.js').then((m) => ({ default: m.SettingsPage }))
-);
-const BillingPage = lazy(() =>
-  import('./pages/BillingPage.js').then((m) => ({ default: m.BillingPage }))
-);
-const CustomersPage = lazy(() =>
-  import('./pages/CustomersPage.js').then((m) => ({ default: m.CustomersPage }))
-);
-const WalletPage = lazy(() =>
-  import('./pages/WalletPage.js').then((m) => ({ default: m.WalletPage }))
-);
-const ExpensesPage = lazy(() =>
-  import('./pages/ExpensesPage.js').then((m) => ({ default: m.ExpensesPage }))
-);
-const AssetsPage = lazy(() =>
-  import('./pages/AssetsPage.js').then((m) => ({ default: m.AssetsPage }))
-);
-const ReturnsPage = lazy(() =>
-  import('./pages/ReturnsPage.js').then((m) => ({ default: m.ReturnsPage }))
-);
-const PayoutsPage = lazy(() =>
-  import('./pages/PayoutsPage.js').then((m) => ({ default: m.PayoutsPage }))
-);
-const AnalyticsPage = lazy(() =>
-  import('./pages/AnalyticsPage.js').then((m) => ({ default: m.AnalyticsPage }))
-);
-const MarketingPage = lazy(() =>
-  import('./pages/MarketingPage.js').then((m) => ({ default: m.MarketingPage }))
-);
-const SupportPage = lazy(() =>
-  import('./pages/SupportPage.js').then((m) => ({ default: m.SupportPage }))
-);
-
-// Heavy Modals
-const AddProductModal = lazy(() =>
-  import('./components/catalog/AddProductModal.js').then((m) => ({ default: m.AddProductModal }))
-);
-const BulkUploadModal = lazy(() =>
-  import('./components/catalog/BulkUploadModal.js').then((m) => ({ default: m.BulkUploadModal }))
-);
+import { AddProductModal } from './components/catalog/AddProductModal.js';
+import { BulkUploadModal } from './components/catalog/BulkUploadModal.js';
+import { LiveOrderSocketListener } from './components/dashboard/LiveOrderSocketListener.js';
 
 export type AppView = 'landing' | 'login' | 'onboarding' | 'dashboard';
 
@@ -194,6 +129,14 @@ export const App: React.FC = () => {
   // Main Merchant Dashboard & Functional Modules
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-800 flex flex-col">
+      {/* Real-time Socket.io Incoming Order Alert & Melodic Chime Engine */}
+      <LiveOrderSocketListener
+        onNavigateToOrder={() => {
+          setCurrentTab('orders');
+          setIsCreateOrderView(false);
+        }}
+      />
+
       {/* Desktop & Mobile Sidebar */}
       <div className={`${isMobileMenuOpen ? 'block' : 'hidden sm:block'}`}>
         <Sidebar

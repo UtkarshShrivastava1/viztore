@@ -5,10 +5,10 @@ export async function fetchProducts(
   query: Partial<ProductQueryDto>,
 ): Promise<IProductListResponse> {
   try {
-    const res = await api.get<IProduct[]>('catalog/products', query as any);
+    const res = await api.get<IProduct[]>('catalog/products', query as Record<string, string | number | boolean | string[] | undefined>);
     return {
       products: res.data || [],
-      facets: (res as any).facets || { sizes: [], colors: [], brands: [], priceRange: { min: 0, max: 0 }, categories: [], totalCount: 0 },
+      facets: ((res as unknown as Record<string, unknown>).facets as IProductListResponse['facets']) || { sizes: [], colors: [], brands: [], priceRange: { min: 0, max: 0 }, categories: [], totalCount: 0 },
       meta: res.meta as IProductListResponse['meta'],
     };
   } catch (err) {
@@ -41,10 +41,10 @@ export async function fetchStoreProducts(
   query?: Partial<ProductQueryDto>,
 ): Promise<IProductListResponse> {
   try {
-    const res = await api.get<IProduct[]>(`catalog/stores/${storeId}/products`, query as any);
+    const res = await api.get<IProduct[]>(`catalog/stores/${storeId}/products`, query as Record<string, string | number | boolean | string[] | undefined>);
     return {
       products: res.data || [],
-      facets: (res as any).facets || { sizes: [], colors: [], brands: [], priceRange: { min: 0, max: 0 }, categories: [], totalCount: 0 },
+      facets: ((res as unknown as Record<string, unknown>).facets as IProductListResponse['facets']) || { sizes: [], colors: [], brands: [], priceRange: { min: 0, max: 0 }, categories: [], totalCount: 0 },
       meta: res.meta as IProductListResponse['meta'],
     };
   } catch (err) {

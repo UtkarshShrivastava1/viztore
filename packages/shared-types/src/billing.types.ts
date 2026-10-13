@@ -48,7 +48,7 @@ export const InvoiceItemSchema = z.object({
   title: z.string().min(1, 'Item title is required'),
   hsnCode: z.string().default('0000'),
   quantity: z.number().positive('Quantity must be greater than 0'),
-  unit: z.enum(['Pcs', 'Pair', 'Kg', 'Mtr', 'Box', 'Units']).default('Pcs'),
+  unit: z.enum(['Pcs', 'Pair', 'Kg', 'Mtr', 'Box', 'Units', 'Gms', 'Ltr', 'Pkt']).default('Pcs'),
   unitPrice: z.number().min(0, 'Unit price cannot be negative'),
   discountAmount: z.number().min(0).default(0),
   taxRate: z.number().min(0).max(100).default(0),
@@ -318,4 +318,91 @@ export const INDIAN_STATES: IIndianState[] = [
   { code: '19', name: 'West Bengal', label: 'West Bengal (19)' },
   { code: '97', name: 'Other Territory', label: 'Other Territory (97)' },
 ];
+
+// ── In-House Retail POS & Thermal Printing Types ───────────────────────
+
+export enum POSPrintPaperSize {
+  THERMAL_80MM = '80mm',
+  THERMAL_58MM = '58mm',
+  A4_PAGE = 'a4',
+}
+
+export const POSSaleItemSchema = z.object({
+  productId: z.string().optional(),
+  variantId: z.string().optional(),
+  barcode: z.string().optional(),
+  title: z.string().min(1, 'Item title is required'),
+  hsnCode: z.string().default('0000'),
+  quantity: z.number().positive('Quantity must be greater than 0'),
+  unit: z.enum(['Pcs', 'Pair', 'Kg', 'Mtr', 'Box', 'Units', 'Gms', 'Ltr', 'Pkt']).default('Pcs'),
+  unitPrice: z.number().min(0, 'Unit price cannot be negative'),
+  discountAmount: z.number().min(0).default(0),
+  taxRate: z.number().min(0).max(100).default(0),
+});
+
+export const CreatePOSSaleSchema = z.object({
+  customer: CustomerInfoSchema.partial().extend({
+    name: z.string().default('Walk-in Customer'),
+    phone: z.string().default('9999999999'),
+  }),
+  items: z.array(POSSaleItemSchema).min(1, 'At least one item is required for a POS counter sale'),
+  settlementMode: z.nativeEnum(SettlementMode).default(SettlementMode.CASH),
+  tenderedCashAmount: z.number().min(0).optional(),
+  changeReturnAmount: z.number().min(0).optional(),
+  paperSize: z.nativeEnum(POSPrintPaperSize).default(POSPrintPaperSize.THERMAL_80MM),
+  kickCashDrawer: z.boolean().default(true),
+  idempotencyKey: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+export type POSSaleItemDto = z.infer<typeof POSSaleItemSchema>;
+export type CreatePOSSaleDto = z.infer<typeof CreatePOSSaleSchema>;
+
+export interface IPOSReceiptItem {
+  title: string;
+  quantity: number;
+  unit: string;
+  unitPrice: number;
+  discountAmount: number;
+  taxableAmount: number;
+  taxRate: number;
+  totalAmount: number;
+  hsnCode?: string;
+  barcode?: string;
+}
+
+export interface IPOSReceiptData {
+  invoiceId: string;
+  invoiceNumber: string;
+  storeName: string;
+  storePhone: string;
+  storeAddress: string;
+  storeGstin?: string;
+  date: string;
+  time: string;
+  cashierName?: string;
+  customerName: string;
+  customerPhone?: string;
+  customerGstin?: string;
+  items: IPOSReceiptItem[];
+  pricing: IInvoicePricing;
+  settlementMode: SettlementMode;
+  tenderedCashAmount?: number;
+  changeReturnAmount?: number;
+  qrPayload?: string;
+  footerMessage?: string;
+  paperSize: POSPrintPaperSize;
+  grandTotal?: number;
+  subTotal?: number;
+  taxableAmount?: number;
+}
+
+export interface IPOSSaleResponse {
+  invoice: IInvoice;
+  invoiceNumber?: string;
+  paperSize?: POSPrintPaperSize;
+  receiptData: IPOSReceiptData;
+  escposBase64?: string;
+  escposBufferBase64?: string;
+}
 

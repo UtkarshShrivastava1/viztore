@@ -1,44 +1,29 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/stores/auth.store';
 import { 
-  User, Calendar, ShoppingBag, ShoppingBasket, Store, Heart, 
-  MapPin, Bell, Ticket, HelpCircle, FileText, Shield, LogOut,
+  User, Bell, LogOut,
   ArrowLeft, Lock, ShoppingCart, ShieldCheck
 } from 'lucide-react';
-import { branding } from '@repo/shared-types';
 import { AccountSidebar } from '@/components/account/AccountSidebar';
+import { authApi } from '@/lib/api/auth';
+import { useAuthStore } from '@/stores/auth.store';
 
 export function LogoutClient() {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuthStore();
+  const logout = useAuthStore((state) => state.logout);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-
-  const formData = {
-    firstName: user?.fullName?.split(' ')[0] || 'Guest',
-    lastName: user?.fullName?.split(' ')[1] || 'User',
-    email: user?.email || 'guest@example.com',
-    mobileNumber: user?.phone ? `+91 ${user.phone}` : 'Sign in to access',
-  };
 
   const handleLogout = async () => {
     try {
       setIsLoggingOut(true);
-      
-      // TODO: Connect to backend API for logout
-      // await authApi.logout();
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      // Navigate to home after successful logout
+      await authApi.logout();
+    } catch {
+      // Ignore network errors to guarantee local state purge
+    } finally {
+      logout();
       router.push('/account/logged-out');
-    } catch (error) {
-      console.error('Logout failed:', error);
-      setIsLoggingOut(false);
     }
   };
 

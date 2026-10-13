@@ -8,3 +8,4 @@ export * from './order.types.js';
 export * from './delivery.types.js';
 export * from './notification.types.js';
 export * from './billing.types.js';
+export * from './escpos.generator.js';

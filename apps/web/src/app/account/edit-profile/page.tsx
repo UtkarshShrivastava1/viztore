@@ -1,18 +1,23 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { User, Phone, Mail, Calendar, MapPin, ChevronDown, Camera, ShieldCheck, Navigation, Loader2, Check } from 'lucide-react';
+import { User, Phone, Mail, Calendar, MapPin, ChevronDown, Camera, ShieldCheck, Navigation, Check } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
 import { useLocationStore } from '@/stores/location.store';
 import { reverseGeocode } from '@/lib/location/geocoding';
 
 export default function EditProfilePage() {
-  const user = useAuthStore((state) => state.user);
+  const { user, isAuthenticated, openAuthModal } = useAuthStore();
   const locationAddress = useLocationStore((state) => state.address);
   const setStoreLocation = useLocationStore((state) => state.setLocation);
 
   const [isDetecting, setIsDetecting] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const initialLocation = 
     user?.addresses?.[0]
@@ -20,10 +25,10 @@ export default function EditProfilePage() {
       : locationAddress || 'Bhilai, Chhattisgarh';
 
   const [formData, setFormData] = useState({
-    fullName: user?.fullName || 'Customer Account',
-    mobileNumber: user?.phone ? `+91 ${user.phone}` : '+91 98765 43210',
-    email: user?.email || 'customer@example.com',
-    dob: '12 Apr 1998',
+    fullName: user?.fullName || '',
+    mobileNumber: user?.phone ? (user.phone.startsWith('+91') ? user.phone : `+91 ${user.phone}`) : '',
+    email: user?.email || '',
+    dob: '',
     gender: 'Male',
     location: initialLocation,
   });
@@ -74,6 +79,26 @@ export default function EditProfilePage() {
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
+
+  if (mounted && !isAuthenticated) {
+    return (
+      <main className="min-h-[70vh] bg-white font-sans flex flex-col items-center justify-center px-4 py-20">
+        <div className="w-16 h-16 bg-[#E8F0FE] rounded-full flex items-center justify-center text-[#1668F6] mb-4">
+          <User className="w-8 h-8" />
+        </div>
+        <h2 className="text-xl font-bold text-[#192168] mb-2">Sign in to edit your profile</h2>
+        <p className="text-sm text-surface-500 text-center max-w-sm mb-6">
+          Please sign in to view and update your personal information.
+        </p>
+        <button
+          onClick={() => openAuthModal('login')}
+          className="px-8 py-3 bg-[#1668F6] text-white text-sm font-bold rounded-xl shadow-sm hover:bg-blue-700 transition cursor-pointer"
+        >
+          Sign In / Create Account
+        </button>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-gray-50 pb-24 pt-4">

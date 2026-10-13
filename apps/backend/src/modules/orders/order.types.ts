@@ -108,6 +108,7 @@ export interface IOrderRepository {
     params: { orderId: string; expectedVersion?: number; expectedStatus?: OrderStatus; reason?: string; actorUserId?: string },
     session?: ClientSession,
   ): Promise<OrderResponse | null>;
+  findStalePendingOrders(olderThan: Date, limit?: number): Promise<OrderResponse[]>;
 }
 
 export interface OrderInvoiceData {
@@ -161,7 +162,8 @@ export interface IOrderService {
     expectedVersion?: number,
   ): Promise<OrderResponse | null>;
   verifyDeliveryOtp(id: string, otp: string): Promise<boolean>;
-  cancelOrder(id: string, userId: string, isAdmin: boolean, expectedVersion?: number): Promise<OrderResponse | null>;
+  cancelOrder(id: string, userId: string, isAdmin: boolean, expectedVersion?: number, reason?: string): Promise<OrderResponse | null>;
+  autoCancelStaleOrders(olderThanMinutes?: number, batchLimit?: number): Promise<{ processed: number; cancelled: number; failed: number }>;
 }
 
 export interface IOrderFacade {
@@ -169,4 +171,5 @@ export interface IOrderFacade {
   getOrdersByUserId(userId: string): Promise<Page<OrderResponse>>;
   markAsDelivered(orderId: string, otp: string): Promise<OrderResponse | null>;
   cancelOrder(orderId: string, reason: string): Promise<OrderResponse | null>;
+  autoCancelStaleOrders(olderThanMinutes?: number, batchLimit?: number): Promise<{ processed: number; cancelled: number; failed: number }>;
 }

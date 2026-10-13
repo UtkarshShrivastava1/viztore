@@ -18,6 +18,7 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { useCustomerStore, Customer } from '../../stores/customerStore.js';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock.js';
 
 interface CustomerDetailsDrawerProps {
   customer: Customer | null;
@@ -36,6 +37,8 @@ export const CustomerDetailsDrawer: React.FC<CustomerDetailsDrawerProps> = ({
   onEditCustomer,
   onOpenStatements,
 }) => {
+  useBodyScrollLock(isOpen, onClose);
+
   const [activeTab, setActiveTab] = useState<
     'overview' | 'orders' | 'invoices' | 'payments' | 'statements'
   >('overview');
@@ -62,7 +65,7 @@ export const CustomerDetailsDrawer: React.FC<CustomerDetailsDrawerProps> = ({
     <div className="fixed inset-0 z-[100] overflow-hidden animate-in fade-in duration-150">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs transition-opacity"
+        className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity"
         onClick={onClose}
       />
 
@@ -370,6 +373,45 @@ export const CustomerDetailsDrawer: React.FC<CustomerDetailsDrawerProps> = ({
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Sticky Bottom Action Bar */}
+          <div className="p-4 bg-white border-t border-slate-200 flex items-center justify-between gap-3 shrink-0">
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                if (onEditCustomer) onEditCustomer(customer);
+              }}
+              className="px-4 py-2 border border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold text-xs rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <Edit2 className="w-3.5 h-3.5" />
+              <span>Edit Customer</span>
+            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  if (onOpenCreditModal) onOpenCreditModal(customer);
+                }}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-xl flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
+              >
+                <CreditCard className="w-3.5 h-3.5" />
+                <span>Record Payment</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  if (onOpenStatements) onOpenStatements(customer);
+                }}
+                className="px-4 py-2 border border-blue-200 text-blue-600 hover:bg-blue-50 font-semibold text-xs rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
+              >
+                <FileText className="w-3.5 h-3.5" />
+                <span>Statement</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>

@@ -121,7 +121,8 @@ export const StoreQrLinkView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-150">
+    <>
+      <div className="space-y-6 animate-in fade-in duration-150 print:hidden">
       {/* Breadcrumb & Header (media_1791024769882.jpg) */}
       <div className="space-y-1">
         <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
@@ -280,7 +281,7 @@ export const StoreQrLinkView: React.FC = () => {
                       <rect x="69" y="69" width="62" height="62" rx="9" stroke="#1e293b" strokeWidth="1" />
                       <text
                         x="100"
-                        y="94"
+                        y="104"
                         fill="#ffffff"
                         fontSize="9.5"
                         fontWeight="900"
@@ -288,19 +289,7 @@ export const StoreQrLinkView: React.FC = () => {
                         textAnchor="middle"
                         fontFamily="system-ui, -apple-system, sans-serif"
                       >
-                        FASHION
-                      </text>
-                      <text
-                        x="100"
-                        y="110"
-                        fill="#ffffff"
-                        fontSize="9.5"
-                        fontWeight="900"
-                        letterSpacing="0.8"
-                        textAnchor="middle"
-                        fontFamily="system-ui, -apple-system, sans-serif"
-                      >
-                        HUB
+                        {branding.appName.toUpperCase().slice(0, 12)}
                       </text>
                     </svg>
                   </div>
@@ -759,5 +748,115 @@ export const StoreQrLinkView: React.FC = () => {
         </div>
       </div>
     </div>
+
+    {/* Print-Only QR Counter Standee (Clean A5 Counter-Card) */}
+    <div className="print-only hidden print-standee-container font-sans text-slate-900">
+      <div className="border-4 border-slate-900 rounded-3xl p-10 max-w-md mx-auto flex flex-col items-center justify-center text-center bg-white shadow-none">
+        {/* Brand Header */}
+        <div className="w-16 h-16 rounded-2xl bg-slate-900 text-white flex items-center justify-center mb-4">
+          <Store className="w-9 h-9" />
+        </div>
+        <h2 className="text-2xl font-black text-slate-900 tracking-tight uppercase">
+          {branding.appName}
+        </h2>
+        <p className="text-xs font-semibold text-slate-500 mt-1 uppercase tracking-widest">
+          Scan To Order Online
+        </p>
+
+        {/* QR Code Container */}
+        <div className="my-6 p-4 border-2 border-slate-900 rounded-2xl bg-white flex items-center justify-center">
+          <svg
+            viewBox="0 0 200 200"
+            className="w-56 h-56 select-none"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <rect width="200" height="200" fill="white" rx="10" />
+            <rect x="16" y="16" width="46" height="46" rx="8" stroke="#0f172a" strokeWidth="6" />
+            <rect x="25" y="25" width="28" height="28" rx="4" fill="#0f172a" />
+            <rect x="138" y="16" width="46" height="46" rx="8" stroke="#0f172a" strokeWidth="6" />
+            <rect x="147" y="25" width="28" height="28" rx="4" fill="#0f172a" />
+            <rect x="16" y="138" width="46" height="46" rx="8" stroke="#0f172a" strokeWidth="6" />
+            <rect x="25" y="147" width="28" height="28" rx="4" fill="#0f172a" />
+            <g fill="#0f172a">
+              <rect x="70" y="36" width="6" height="6" rx="1.5" />
+              <rect x="84" y="36" width="6" height="6" rx="1.5" />
+              <rect x="98" y="36" width="6" height="6" rx="1.5" />
+              <rect x="112" y="36" width="6" height="6" rx="1.5" />
+              <rect x="126" y="36" width="6" height="6" rx="1.5" />
+              <rect x="36" y="70" width="6" height="6" rx="1.5" />
+              <rect x="36" y="84" width="6" height="6" rx="1.5" />
+              <rect x="36" y="98" width="6" height="6" rx="1.5" />
+              <rect x="36" y="112" width="6" height="6" rx="1.5" />
+              <rect x="36" y="126" width="6" height="6" rx="1.5" />
+              <rect x="70" y="18" width="6" height="6" rx="1.5" />
+              <rect x="78" y="26" width="6" height="6" rx="1.5" />
+              <rect x="92" y="20" width="6" height="6" rx="1.5" />
+              <rect x="108" y="22" width="6" height="6" rx="1.5" />
+              <rect x="122" y="18" width="6" height="6" rx="1.5" />
+              <rect x="86" y="48" width="6" height="6" rx="1.5" />
+              <rect x="102" y="52" width="6" height="6" rx="1.5" />
+              <rect x="18" y="74" width="6" height="6" rx="1.5" />
+              <rect x="26" y="86" width="6" height="6" rx="1.5" />
+              <rect x="48" y="78" width="6" height="6" rx="1.5" />
+              <rect x="54" y="94" width="6" height="6" rx="1.5" />
+              <rect x="20" y="106" width="6" height="6" rx="1.5" />
+              <rect x="52" y="118" width="6" height="6" rx="1.5" />
+              <rect x="138" y="72" width="6" height="6" rx="1.5" />
+              <rect x="152" y="80" width="6" height="6" rx="1.5" />
+              <rect x="166" y="72" width="6" height="6" rx="1.5" />
+              <rect x="178" y="84" width="6" height="6" rx="1.5" />
+              <rect x="142" y="96" width="6" height="6" rx="1.5" />
+              <rect x="160" y="98" width="6" height="6" rx="1.5" />
+              <rect x="174" y="106" width="6" height="6" rx="1.5" />
+              <rect x="146" y="116" width="6" height="6" rx="1.5" />
+              <rect x="168" y="122" width="6" height="6" rx="1.5" />
+              <rect x="180" y="132" width="6" height="6" rx="1.5" />
+              <rect x="138" y="144" width="6" height="6" rx="1.5" />
+              <rect x="150" y="152" width="6" height="6" rx="1.5" />
+              <rect x="166" y="146" width="6" height="6" rx="1.5" />
+              <rect x="176" y="158" width="6" height="6" rx="1.5" />
+              <rect x="142" y="168" width="6" height="6" rx="1.5" />
+              <rect x="156" y="174" width="6" height="6" rx="1.5" />
+              <rect x="172" y="172" width="6" height="6" rx="1.5" />
+              <rect x="74" y="144" width="6" height="6" rx="1.5" />
+              <rect x="90" y="148" width="6" height="6" rx="1.5" />
+              <rect x="108" y="146" width="6" height="6" rx="1.5" />
+              <rect x="80" y="162" width="6" height="6" rx="1.5" />
+              <rect x="96" y="168" width="6" height="6" rx="1.5" />
+              <rect x="114" y="166" width="6" height="6" rx="1.5" />
+              <rect x="86" y="180" width="6" height="6" rx="1.5" />
+              <rect x="104" y="180" width="6" height="6" rx="1.5" />
+            </g>
+            <rect x="68" y="68" width="64" height="64" rx="10" fill="#0f172a" />
+            <text
+              x="100"
+              y="104"
+              fill="#ffffff"
+              fontSize="10"
+              fontWeight="900"
+              letterSpacing="0.8"
+              textAnchor="middle"
+              fontFamily="system-ui, -apple-system, sans-serif"
+            >
+              {branding.appName.toUpperCase().slice(0, 10)}
+            </text>
+          </svg>
+        </div>
+
+        {/* Store URL */}
+        <div className="bg-slate-100 border border-slate-300 rounded-xl px-4 py-2 text-xs font-mono font-bold text-slate-800 break-all mb-4">
+          {storeUrl}
+        </div>
+
+        <div className="text-[11px] text-slate-500 font-medium">
+          Browse our full catalog &amp; order directly from your mobile phone.
+        </div>
+        <div className="mt-4 pt-3 border-t border-slate-200 text-[10px] text-slate-400 font-semibold tracking-wider uppercase">
+          Powered by {branding.appName} • Fast Local Delivery
+        </div>
+      </div>
+    </div>
+    </>
   );
 };

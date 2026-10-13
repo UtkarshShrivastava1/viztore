@@ -41,11 +41,13 @@ export const useAuthStore = create<AuthState>()(
       logout: () => {
         if (typeof window !== 'undefined') {
           localStorage.removeItem('token');
+          localStorage.removeItem('customer-auth-storage');
         }
         set({
           user: null,
           token: null,
           isAuthenticated: false,
+          isAuthModalOpen: false,
         });
       },
 

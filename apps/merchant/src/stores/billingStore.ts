@@ -6,8 +6,8 @@ export type InvoiceStatus = 'draft' | 'issued' | 'paid' | 'partially_paid' | 'ov
 export type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'declined' | 'expired' | 'converted' | 'cancelled';
 export type NoteStatus = 'draft' | 'issued' | 'used' | 'partially_used' | 'expired' | 'cancelled';
 
-export type BillingSubTab = 'invoices' | 'quotes';
-export type BillingViewMode = 'list' | 'create_quote' | 'settings';
+export type BillingSubTab = 'invoices' | 'quotes' | 'pos';
+export type BillingViewMode = 'list' | 'create_quote' | 'settings' | 'pos_counter';
 
 export interface BillingSettings {
   defaultCurrency: string;

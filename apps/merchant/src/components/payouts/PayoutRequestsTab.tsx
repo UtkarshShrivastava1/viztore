@@ -12,8 +12,10 @@ import {
   Eye,
   Pencil,
   Trash2,
+  Download,
 } from 'lucide-react';
 import { usePayoutsStore, PayoutRequest } from '../../stores/payoutsStore.js';
+import { downloadCSV } from '../../utils/csvExport.js';
 import { RequestDetailsDrawer } from './RequestDetailsDrawer.js';
 import { NewPayoutRequestModal } from './NewPayoutRequestModal.js';
 
@@ -88,102 +90,82 @@ export const PayoutRequestsTab: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* 5 KPI Cards Matching 11.4.png */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      {/* 5 KPI Cards Matching Purchases (Bills) unified layout */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
         {/* Card 1: Available for Payout */}
-        <div className="p-5 bg-white rounded-2xl border border-slate-200/80 shadow-2xs">
-          <div className="flex items-start justify-between">
-            <div>
-              <span className="text-xs font-semibold text-slate-500">
-                Available for Payout
-              </span>
-              <h4 className="text-xl font-black text-slate-900 mt-1">
-                ₹ {availableForPayout.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-              </h4>
-            </div>
-            <div className="p-2.5 rounded-xl bg-emerald-50 text-emerald-600">
-              <Wallet className="w-5 h-5" />
-            </div>
+        <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-xs transition-shadow flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+            <Wallet className="w-5 h-5" />
           </div>
-          <p className="text-xs text-slate-400 mt-3">Next payout on 22 May 2024</p>
+          <div className="min-w-0 flex-1">
+            <span className="text-[11px] font-semibold text-slate-500 block truncate">Available for Payout</span>
+            <div className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate">
+              ₹ {availableForPayout.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+            </div>
+            <span className="text-[10px] text-slate-400 mt-0.5 block truncate">Next payout on 22 May 2024</span>
+          </div>
         </div>
 
         {/* Card 2: Pending Requests */}
-        <div className="p-5 bg-white rounded-2xl border border-slate-200/80 shadow-2xs">
-          <div className="flex items-start justify-between">
-            <div>
-              <span className="text-xs font-semibold text-slate-500">
-                Pending Requests
-              </span>
-              <h4 className="text-xl font-black text-slate-900 mt-1">
-                ₹ {pendingRequestsTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-              </h4>
-            </div>
-            <div className="p-2.5 rounded-xl bg-amber-50 text-amber-600">
-              <Clock className="w-5 h-5" />
-            </div>
+        <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-xs transition-shadow flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+            <Clock className="w-5 h-5" />
           </div>
-          <p className="text-xs text-slate-400 mt-3">
-            {requests.filter((r) => r.status === 'Pending').length} Requests
-          </p>
+          <div className="min-w-0 flex-1">
+            <span className="text-[11px] font-semibold text-slate-500 block truncate">Pending Requests</span>
+            <div className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate">
+              ₹ {pendingRequestsTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+            </div>
+            <span className="text-[10px] text-slate-400 mt-0.5 block truncate">
+              {requests.filter((r) => r.status === 'Pending').length} Requests
+            </span>
+          </div>
         </div>
 
         {/* Card 3: Approved Requests */}
-        <div className="p-5 bg-white rounded-2xl border border-slate-200/80 shadow-2xs">
-          <div className="flex items-start justify-between">
-            <div>
-              <span className="text-xs font-semibold text-slate-500">
-                Approved Requests
-              </span>
-              <h4 className="text-xl font-black text-slate-900 mt-1">
-                ₹ {approvedRequestsTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-              </h4>
-            </div>
-            <div className="p-2.5 rounded-xl bg-emerald-50 text-emerald-600">
-              <CheckCircle2 className="w-5 h-5" />
-            </div>
+        <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-xs transition-shadow flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+            <CheckCircle2 className="w-5 h-5" />
           </div>
-          <p className="text-xs text-slate-400 mt-3">
-            {requests.filter((r) => r.status === 'Approved').length} Requests
-          </p>
+          <div className="min-w-0 flex-1">
+            <span className="text-[11px] font-semibold text-slate-500 block truncate">Approved Requests</span>
+            <div className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate">
+              ₹ {approvedRequestsTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+            </div>
+            <span className="text-[10px] text-slate-400 mt-0.5 block truncate">
+              {requests.filter((r) => r.status === 'Approved').length} Requests
+            </span>
+          </div>
         </div>
 
         {/* Card 4: Rejected Requests */}
-        <div className="p-5 bg-white rounded-2xl border border-slate-200/80 shadow-2xs">
-          <div className="flex items-start justify-between">
-            <div>
-              <span className="text-xs font-semibold text-slate-500">
-                Rejected Requests
-              </span>
-              <h4 className="text-xl font-black text-slate-900 mt-1">
-                ₹ {rejectedRequestsTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-              </h4>
-            </div>
-            <div className="p-2.5 rounded-xl bg-rose-50 text-rose-600">
-              <XCircle className="w-5 h-5" />
-            </div>
+        <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-xs transition-shadow flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+            <XCircle className="w-5 h-5" />
           </div>
-          <p className="text-xs text-slate-400 mt-3">
-            {requests.filter((r) => r.status === 'Rejected').length} Requests
-          </p>
+          <div className="min-w-0 flex-1">
+            <span className="text-[11px] font-semibold text-slate-500 block truncate">Rejected Requests</span>
+            <div className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate">
+              ₹ {rejectedRequestsTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+            </div>
+            <span className="text-[10px] text-slate-400 mt-0.5 block truncate">
+              {requests.filter((r) => r.status === 'Rejected').length} Requests
+            </span>
+          </div>
         </div>
 
         {/* Card 5: Total Requested */}
-        <div className="p-5 bg-white rounded-2xl border border-slate-200/80 shadow-2xs">
-          <div className="flex items-start justify-between">
-            <div>
-              <span className="text-xs font-semibold text-slate-500">
-                Total Requested
-              </span>
-              <h4 className="text-xl font-black text-slate-900 mt-1">
-                ₹ {totalRequestedAllTime.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-              </h4>
-            </div>
-            <div className="p-2.5 rounded-xl bg-purple-50 text-purple-600">
-              <Receipt className="w-5 h-5" />
-            </div>
+        <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-xs transition-shadow flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+            <Receipt className="w-5 h-5" />
           </div>
-          <p className="text-xs text-slate-400 mt-3">All Time</p>
+          <div className="min-w-0 flex-1">
+            <span className="text-[11px] font-semibold text-slate-500 block truncate">Total Requested</span>
+            <div className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate">
+              ₹ {totalRequestedAllTime.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+            </div>
+            <span className="text-[10px] text-slate-400 mt-0.5 block truncate">All Time</span>
+          </div>
         </div>
       </div>
 
@@ -246,6 +228,27 @@ export const PayoutRequestsTab: React.FC = () => {
             className="text-xs font-semibold text-blue-600 hover:text-blue-700 px-3 py-2"
           >
             Clear All
+          </button>
+          <button
+            onClick={() => {
+              downloadCSV(
+                `payout_requests_${new Date().toISOString().slice(0, 10)}.csv`,
+                ['Request ID', 'Date & Time', 'Payout Account', 'Requested Amount', 'Approved Amount', 'Status', 'Remarks'],
+                filteredRequests.map((r) => [
+                  r.id,
+                  r.requestDateTime,
+                  r.payoutAccount,
+                  r.requestedAmount,
+                  r.approvedAmount || '-',
+                  r.status,
+                  r.remarks || '',
+                ])
+              );
+            }}
+            className="px-3.5 py-2 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-colors shadow-2xs flex items-center gap-1.5"
+          >
+            <Download className="w-3.5 h-3.5 text-slate-500" />
+            <span>Export CSV</span>
           </button>
           <button className="px-3.5 py-2 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-colors shadow-2xs flex items-center gap-1.5">
             <Filter className="w-3.5 h-3.5 text-slate-500" />

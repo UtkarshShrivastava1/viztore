@@ -141,46 +141,46 @@ export const StoreOverviewView: React.FC = () => {
       {/* 3 Top KPI Cards (New 13.0.png) */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
         {/* Card 1: Total Sections */}
-        <div className="bg-white rounded-xl border border-slate-200/90 p-4 shadow-2xs flex items-center gap-3.5">
+        <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-xs transition-shadow flex items-center gap-3.5">
           <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
             <Layers className="w-5 h-5" />
           </div>
-          <div>
-            <span className="text-[11px] font-semibold text-slate-500 block">Total Sections</span>
-            <div className="text-xl font-black text-slate-900 leading-tight">
+          <div className="min-w-0 flex-1">
+            <span className="text-[11px] font-semibold text-slate-500 block truncate">Total Sections</span>
+            <div className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate">
               {kpis.totalSections}
             </div>
-            <span className="text-[11px] text-slate-400 font-medium">Active</span>
+            <span className="text-[10px] text-slate-400 mt-0.5 block truncate">Active</span>
           </div>
         </div>
 
         {/* Card 2: Active Sections */}
-        <div className="bg-white rounded-xl border border-slate-200/90 p-4 shadow-2xs flex items-center gap-3.5">
+        <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-xs transition-shadow flex items-center gap-3.5">
           <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
             <CheckCircle2 className="w-5 h-5" />
           </div>
-          <div>
-            <span className="text-[11px] font-semibold text-slate-500 block">Active Sections</span>
-            <div className="text-xl font-black text-slate-900 leading-tight">
+          <div className="min-w-0 flex-1">
+            <span className="text-[11px] font-semibold text-slate-500 block truncate">Active Sections</span>
+            <div className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate">
               {kpis.activeSections}
             </div>
-            <span className="text-[11px] text-emerald-600 font-bold">83% of total</span>
+            <span className="text-[10px] text-emerald-600 font-bold mt-0.5 block truncate">83% of total</span>
           </div>
         </div>
 
         {/* Card 3: Total Products in Sections */}
-        <div className="bg-white rounded-xl border border-slate-200/90 p-4 shadow-2xs flex items-center gap-3.5">
+        <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-xs transition-shadow flex items-center gap-3.5">
           <div className="w-11 h-11 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
             <Boxes className="w-5 h-5" />
           </div>
-          <div>
-            <span className="text-[11px] font-semibold text-slate-500 block">
+          <div className="min-w-0 flex-1">
+            <span className="text-[11px] font-semibold text-slate-500 block truncate">
               Total Products in Sections
             </span>
-            <div className="text-xl font-black text-slate-900 leading-tight">
+            <div className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate">
               {kpis.totalProducts}
             </div>
-            <span className="text-[11px] text-slate-400 font-medium">Across all sections</span>
+            <span className="text-[10px] text-slate-400 mt-0.5 block truncate">Across all sections</span>
           </div>
         </div>
       </div>

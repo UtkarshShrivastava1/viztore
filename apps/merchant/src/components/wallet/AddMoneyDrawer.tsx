@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, ShieldCheck, CreditCard, Building2 } from 'lucide-react';
 import { useWalletStore } from '../../stores/walletStore.js';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock.js';
 
 interface AddMoneyDrawerProps {
   isOpen: boolean;
@@ -9,6 +10,8 @@ interface AddMoneyDrawerProps {
 }
 
 export const AddMoneyDrawer: React.FC<AddMoneyDrawerProps> = ({ isOpen, onClose }) => {
+  useBodyScrollLock(isOpen, onClose);
+
   const { addMoney } = useWalletStore();
   const [amount, setAmount] = useState('10000');
   const [selectedMethod, setSelectedMethod] = useState<'razorpay' | 'upi' | 'card' | 'bank'>('razorpay');
@@ -75,7 +78,8 @@ export const AddMoneyDrawer: React.FC<AddMoneyDrawerProps> = ({ isOpen, onClose 
         </div>
 
         {/* Content Area */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 space-y-4">
+        <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {/* Amount input block */}
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1.5">
@@ -229,23 +233,27 @@ export const AddMoneyDrawer: React.FC<AddMoneyDrawerProps> = ({ isOpen, onClose 
                 />
               </label>
             </div>
+            </div>
           </div>
 
-          {/* Secure transaction notice */}
-          <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/80 flex items-center gap-2.5">
-            <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-            <p className="text-[11px] text-slate-600 leading-tight">
-              256-bit SSL encrypted. Funds reflect immediately in your wallet.
-            </p>
-          </div>
+          {/* Sticky Bottom Footer Bar */}
+          <div className="p-4 border-t border-slate-100 bg-white space-y-2.5 shrink-0">
+            {/* Secure transaction notice */}
+            <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-200/80 flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+              <p className="text-[11px] text-slate-600 leading-tight">
+                256-bit SSL encrypted. Funds reflect immediately in your wallet.
+              </p>
+            </div>
 
-          {/* Submit button */}
-          <button
-            type="submit"
-            className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition-colors"
-          >
-            Add ₹ {numAmount.toLocaleString('en-IN')} Now
-          </button>
+            {/* Submit button */}
+            <button
+              type="submit"
+              className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
+            >
+              Add ₹ {numAmount.toLocaleString('en-IN')} Now
+            </button>
+          </div>
         </form>
       </div>
     </div>,

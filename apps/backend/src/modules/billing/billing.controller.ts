@@ -5,6 +5,8 @@ import {
   RecordPaymentDto,
   CreateQuoteDto,
   UpdateBillingSettingsDto,
+  CreatePOSSaleDto,
+  POSPrintPaperSize,
 } from '@repo/shared-types';
 import { billingService } from './billing.service.js';
 import { AppError } from '../../shared/utils/AppError.js';
@@ -153,5 +155,29 @@ export const billingController = {
     );
 
     return ApiResponse.success(res, updated, 'Billing settings updated successfully');
+  }),
+
+  // ── POS Fast Counter Sale & Thermal Print ──────────────────────────
+
+  createPOSSale: catchAsync(async (req: Request, res: Response) => {
+    const storeId = extractStoreId(req);
+    const authReq = req as AuthenticatedRequest;
+    const result = await billingService.createPOSSale(
+      storeId,
+      req.body as CreatePOSSaleDto,
+      authReq.correlationId,
+    );
+    return ApiResponse.created(
+      res,
+      result,
+      `POS Sale #${result.invoice.invoiceNumber} completed`,
+    );
+  }),
+
+  getLastReceipt: catchAsync(async (req: Request, res: Response) => {
+    const storeId = extractStoreId(req);
+    const paperSize = (req.query.paperSize as POSPrintPaperSize) || POSPrintPaperSize.THERMAL_80MM;
+    const result = await billingService.getLastReceipt(storeId, paperSize);
+    return ApiResponse.success(res, result);
   }),
 };

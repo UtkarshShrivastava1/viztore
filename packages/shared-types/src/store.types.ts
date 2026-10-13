@@ -74,6 +74,7 @@ export interface IStore {
   slug: string;
   description?: string;
   category: StoreCategory;
+  phone?: string;
   logoUrl?: string;
   bannerUrl?: string;
   location: IGeoPoint;

@@ -44,10 +44,17 @@ export async function fetchAllStores(params?: {
   };
 }> {
   try {
-    const res = await api.get<IStore[]>('stores', params as any);
+    const res = await api.get<IStore[]>('stores', params as Record<string, string | number | boolean | string[] | undefined>);
     return {
       stores: res.data,
-      meta: res.meta as any,
+      meta: (res.meta || { page: 1, limit: 20, total: 0, totalPages: 1, hasNextPage: false, hasPrevPage: false }) as {
+        page: number;
+        limit: number;
+        total: number;
+        totalPages: number;
+        hasNextPage: boolean;
+        hasPrevPage: boolean;
+      },
     };
   } catch (err) {
     return {

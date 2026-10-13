@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Plus, Trash2, Calendar, Search } from 'lucide-react';
 import { useExpenseStore } from '../../stores/expenseStore.js';
+import { useBodyScrollLock } from '../../hooks/useBodyScrollLock.js';
 
 interface LineItem {
   id: string;
@@ -14,6 +15,8 @@ interface LineItem {
 
 export const CreatePurchaseOrderModal: React.FC = () => {
   const { isCreatePOModalOpen, setIsCreatePOModalOpen, setIsAddVendorOpen } = useExpenseStore();
+
+  useBodyScrollLock(isCreatePOModalOpen, () => setIsCreatePOModalOpen(false));
 
   const [vendor, setVendor] = useState('Sharma Enterprises');
   const [poNumber, setPoNumber] = useState('PO-2024-000126');
@@ -70,7 +73,7 @@ export const CreatePurchaseOrderModal: React.FC = () => {
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-[100] bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">

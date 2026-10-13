@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { 
-  ShoppingBag, Calendar, CheckCircle2, Truck, XCircle, ChevronRight, Share2, Loader2, ArrowLeft 
+  ShoppingBag, CheckCircle2, Truck, XCircle, ChevronRight, Loader2, ArrowLeft 
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
 import { AccountSidebar } from '@/components/account/AccountSidebar';
@@ -30,7 +30,7 @@ interface DisplayOrder {
 
 export function OrdersClient() {
   const router = useRouter();
-  const { user, isAuthenticated, openAuthModal } = useAuthStore();
+  const { isAuthenticated, openAuthModal } = useAuthStore();
   const [activeTab, setActiveTab] = useState('All Orders');
   const [orders, setOrders] = useState<DisplayOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);

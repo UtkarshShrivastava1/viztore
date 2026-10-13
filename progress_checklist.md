@@ -1,6 +1,6 @@
 # Viztore Platform — Implementation Checklist
 
-> **Overall Status:** Phase 1, Phase 2 (UI Refined), Phase 3, Phase 4/5/6 Backend Complete, Tier 2 In-House Retail Billing Complete | 94/94 Unit & Integration Tests Passing | Full Monorepo Clean Build | Docker & Staging Blueprints Ready
+> **Overall Status:** Phase 1, Phase 2, Phase 3, Phase 4/5/6 Backend Complete, Tier 2 In-House Retail Billing, Stale Order Auto-Reclaim, OpenAPI Docs & Brute-Force Rate Limiting Complete | 120/120 Unit & Integration Tests Passing | Full Monorepo Clean Build | Docker & Staging Blueprints Ready
 
 ---
 
@@ -9,11 +9,11 @@
 | Functional Flow | Tier 1 (Core Launch — Target: Sept 22) | Tier 2 (Pilot Operations — Mid-to-Late Oct) | Tier 3 (Enterprise Accounting & Native App — Nov) |
 |---|---|---|---|
 | **Online Order & Checkout** | `[x]` Single-store cart, address book, checkout, `POST /orders` | `[ ]` Real-time live order tracking map & ETA | `[ ]` One-tap wallet checkout & saved cards |
-| **Merchant Order Processing**| `[x]` 7-tab pipeline: New Orders ➔ Ready to Ship (`PACKED`) ➔ Shipped ➔ Delivered | `[ ]` Socket.io real-time order sound alerts | `[ ]` Automated kitchen display / printer dispatch |
+| **Merchant Order Processing**| `[x]` 7-tab pipeline: New Orders ➔ Ready to Ship (`PACKED`) ➔ Shipped ➔ Delivered | `[x]` Socket.io real-time order sound alerts & melodic chime | `[ ]` Automated kitchen display / printer dispatch |
 | **Delivery Coordination** | `[x]` WhatsApp dispatch text + 1-click deep link + 4-digit OTP | `[ ]` On-ground pilot rider fleet execution (5–10 stores) | `[ ]` Automated pooled rider matching algorithm |
 | **Billing & Invoicing** | `[x]` **Online Purchase Tax Invoice** (`INV-ORD-xxxxx`), Customer "Download Bill", Merchant "Print Bill" | `[x]` **Basic In-House Retail Billing**: Manual counter sales, basic tax invoices, estimates (`5.0`–`5.6`), real-time stock sync | `[ ]` **Enterprise Zoho Books Accounting**: Credit/Debit notes, GSTR-1 ledgers, multi-series |
 | **Merchant Store Profile** | `[x]` Dedicated `register.<domain>` 6-step flow, Leaflet pin | `[ ]` Onboarding 5–10 pilot local shops (free beta) | `[ ]` Multi-outlet franchise management & advanced RBAC |
-| **Product & Inventory** | `[x]` Full catalog wizard, live inventory, adjust drawers | `[ ]` Live stock synchronization between store & online | `[ ]` Multi-warehouse inventory, supplier purchase orders |
+| **Product & Inventory** | `[x]` Full catalog wizard, live inventory, adjust drawers | `[x]` Live stock synchronization between store & online | `[ ]` Multi-warehouse inventory, supplier purchase orders |
 | **Client Platforms** | `[x]` Responsive Customer Web (`Next.js 14`) + Merchant Panel (`Vite`) | `[ ]` Desktop/Tablet POS counter mode | `[ ]` Customer Native Mobile App (`React Native / Expo`) |
 | **Financial Settlements** | `[x]` Order breakdown, delivery fee, payment mode (UPI/COD) | `[ ]` Basic store cash drawer reconciliation | `[ ]` Automated T+1 bank payouts & TDS 194-O ledger |
 
@@ -31,6 +31,8 @@
   - [x] Generic Zod validation middleware for body/query/params
   - [x] White-label `branding.config.ts` system with `NEXT_PUBLIC_*` fallback
   - [x] Dynamic CORS origin validator supporting `*.vercel.app` preview URLs and `ADDITIONAL_ALLOWED_ORIGINS`
+  - [x] Interactive OpenAPI 3.0 / Swagger UI documentation at `/api-docs` & `/docs`, with raw JSON schema at `/api-docs.json` (Task B-03)
+  - [x] High-Security Brute-Force Rate Limiting: `authRateLimiter` on `/auth/login`, `deliveryOtpRateLimiter` on `/orders/:id/verify-otp` (Task B-04)
 - [x] **Containerization & Staging Cloud Blueprints**
   - [x] Multi-stage root `Dockerfile` and `apps/backend/Dockerfile` (`node:20-alpine`, non-root user, curl healthcheck)
   - [x] Root `.dockerignore` ignoring node_modules, .git, .env, and large assets
@@ -211,7 +213,16 @@
   - [x] `StoreInactiveConfirmModal` dialog with warning copy, plan notice, and action buttons (`1.0a(V1).png`)
   - [x] Sticky Inactive Store Alert Banner with 1-click "Activate Store Now" trigger (`1.0b(V1).png`)
   - [x] Canonical 15-module sidebar navigation sync with counter badges (`Orders 25`, `Wallet ₹32,450`, `Expenses`, `Asset Management`)
-  - [x] Real-time synchronized 2x2 product grid and iPhone chassis preview for store merchandising sections (`AddEditSectionView.tsx`, `13.1a.png`, `13.1b.png`)
+- [x] **Merchant Front-End Enterprise Hardening & Polish Suite (PR #17, commit `39add09`)**:
+  - [x] Portal-rendered `TableActionPopover.tsx` with dynamic viewport boundary clamping and outside-click dismissal
+  - [x] Fixed table action dropdown clipping across Invoices (`InvoiceRowMoreAction`), Customers, Expenses, Returns, and Orders tables
+  - [x] Indian GSTIN (15 chars), PAN (10 chars), Phone (10 digits), and PIN code (6 digits) regex validation utilities (`validation.ts`)
+  - [x] Universal client-side CSV export generator (`csvExport.ts`) with UTF-8 BOM encoding and auto-download triggering
+  - [x] Clean `@media print` stylesheets in `index.css` for tax invoices, quotes, and customer statements
+  - [x] Standardized horizontal KPI stats cards across Catalog, Inventory, Customers, Expenses, Returns, and Payouts
+  - [x] Vite production bundle code-splitting (`vite.config.ts` manualChunks for `leaflet` and `lucide-react`)
+  - [x] Enforced strict white-label compliance and preserved thermal (80mm) and A4 invoice printing workflows
+- [ ] **Merchant Portal End-to-End Operational Lifecycle & Cross-Platform Simulation Suite (TASK-ABH-11)** (Assigned 🟡): 4-track manual operational test covering registration, store setup, cataloging, cross-platform customer checkout on `:3000`, real-time alert chime, OTP delivery completion, walk-in counter POS sale, and thermal print audit
 - [ ] Merchant wallet financial ledger, payout triggers & automated bank settlements
 - [ ] Automated returns, exchange, RMA reverse logistics & refund credit note settlement
 - [ ] Merchant staff management & role-based access control (Manager, Cashier, Inventory Clerk)

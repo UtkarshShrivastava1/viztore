@@ -53,7 +53,7 @@ export function PaymentMethodPicker() {
   );
 }
 
-function PaymentCard({ icon, title, desc, selected, onClick }: any) {
+function PaymentCard({ icon, title, desc, selected, onClick }: { icon: React.ReactNode; title: string; desc: string; selected?: boolean; onClick?: () => void }) {
   return (
     <div 
       onClick={onClick}

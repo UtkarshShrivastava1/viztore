@@ -82,6 +82,7 @@ export interface InvoiceEventPayload {
   invoiceId: string;
   invoiceNumber: string;
   amount?: number;
+  storeId?: string;
   correlationId?: string;
 }
 

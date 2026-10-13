@@ -4,6 +4,7 @@ import {
   CreateQuoteSchema,
   UpdateQuoteStatusSchema,
   UpdateBillingSettingsSchema,
+  CreatePOSSaleSchema,
 } from '@repo/shared-types';
 import { validateBody, validateQuery, validateParams } from '../../shared/middlewares/validateRequest.js';
 import { z } from 'zod';
@@ -13,6 +14,7 @@ export const validateRecordPayment = validateBody(RecordPaymentSchema);
 export const validateCreateQuote = validateBody(CreateQuoteSchema);
 export const validateUpdateQuoteStatus = validateBody(UpdateQuoteStatusSchema);
 export const validateUpdateBillingSettings = validateBody(UpdateBillingSettingsSchema);
+export const validateCreatePOSSale = validateBody(CreatePOSSaleSchema);
 
 export const InvoiceQuerySchema = z.object({
   page: z.string().optional().transform((val) => (val ? parseInt(val, 10) : 1)),

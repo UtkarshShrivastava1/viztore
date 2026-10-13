@@ -19,7 +19,7 @@
 | ↳ **Backend Architecture & APIs** | 30% | `[████████████████████]` | **100%** | 🟢 Live on Render | `https://viztore.onrender.com` Healthy |
 | ↳ **Merchant & Admin Panel** | 25% | `[████████████████████]` | **100%** | 🟢 Complete Suite | All 7/7 Modules & Settings Merged (`b92a159`) |
 | ↳ **Customer Web Storefront** | 25% | `[████████████████████]` | **100%** | 🟢 Storefront & Cart Engine | All 4/4 Modular Suites Merged (`e942cc9`) |
-| ↳ **Production Readiness & DevOps** | 20% | `[████████████████████]` | **100%** | 🟢 Staging Live | 94/94 Tests Green, Monorepo Clean Build |
+| ↳ **Production Readiness & DevOps** | 20% | `[████████████████████]` | **100%** | 🟢 Staging Live | 120/120 Tests Green, Monorepo Clean Build |
 | **Total Full-Platform Scope** (Phases 1–7) | — | `[█████████████████░░░]` | **88%** | ⚪ Roadmap Reserved | Customer Mobile App (Phase 7 / Tier 3) |
 
 > **Auto-Update Invariant**: This progress bar is recalculated and updated dynamically on every task assignment, milestone delivery, and PR merge per `.agents/rules/progress-tracking.md`.
@@ -112,9 +112,12 @@ Every online order placed through `apps/web` generates an authoritative, complia
      - Bounded MongoDB connection pool (`maxPoolSize: 25`, `minPoolSize: 5`).
      - Structured Winston JSON logging with `correlationId` tracking.
      - Transactional Outbox integration (`appendOutboxEvent`) for billing domain events.
-   - **Automated Verification**: **94/94 unit & integration tests passing** across 15 test suites. Monorepo builds cleanly in 57s.
-2. **Real-Time Sound & Push Order Alerts**:
-   - Connect `@socket.io/redis-adapter` to trigger an instant audio chime on the merchant's screen when an order arrives.
+   - **Automated Verification**: **102/102 unit & integration tests passing** across 16 test suites. Monorepo builds cleanly in 57s.
+2. **Real-Time Sound & Push Order Alerts (DELIVERED ✅)**:
+   - Built standalone Web Audio API harmonic 2-tone melodic chime engine (`audioAlert.ts`) generating crystalline D5 ➔ A5 arrival chimes without external audio assets.
+   - Connected `socket.io-client` in `apps/merchant` (`socket.ts`) joining `store:${storeId}` room to receive backend `order.placed` dispatches.
+   - Mounted global `LiveOrderSocketListener.tsx` in `App.tsx` displaying interactive amber alert toast with 1-click order navigation.
+   - Integrated volume mute toggle and interactive "Test Sound" button in `LiveOrderAlerts.tsx`.
 3. **Pilot Merchant Onboarding (Soft Launch)**:
    - Target 5–10 physical brick-and-mortar shops within a compact 3–4km delivery cluster.
    - Free onboarding for beta testing.
@@ -159,7 +162,7 @@ Every online order placed through `apps/web` generates an authoritative, complia
 | **Shared Types** | TypeScript, Zod | **100% In Sync** ✅ | All contracts, validation schemas, DTOs, branding config |
 | **Real-Time & Events** | Socket.io + Redis Adapter + TypedEventBus | **Wired** ✅ | In-process domain events forwarded to Socket.io rooms with Redis distributed scaling |
 | **Agent Workflows** | Custom Skills & Rules | **Active** ✅ | Fullstack Feature Workflow, UI Matching, Intern Delegation, /create-task |
-| **Test Suite** | Vitest | **94/94 Passing** ✅ | 15 test suites (AppError, Auth/Addresses, Stores/Ratings, Onboarding, Catalog, Orders, Delivery, Notifications, WhatsApp Cloud API, WorkerPool, Cache-Aside, CORS Validation, OCC Versioning, Outbox Transactions, In-House Billing & Real-Time Inventory Sync) |
+| **Test Suite** | Vitest | **102/102 Passing** ✅ | 15 test suites (AppError, Auth/Addresses, Stores/Ratings, Onboarding, Catalog, Orders, Delivery, Notifications, WhatsApp Cloud API, WorkerPool, Cache-Aside, CORS Validation, OCC Versioning, Outbox Transactions, In-House Billing & Real-Time Inventory Sync) |
 | **Build Status** | Turborepo | **Clean** ✅ | Full monorepo builds with zero errors across all packages |
 | **Engineering Standards** | 8/8 Pillars (`structure.md`) | **100% Implemented** ✅ | Facades, Composition roots, 3-tier testing, EventBus, WorkerPool, Cache-Aside + Replica split, ESR indexing, Decoupled repos |
 
@@ -241,5 +244,42 @@ Every online order placed through `apps/web` generates an authoritative, complia
   - Automatic registration: submitting an invoice or quote auto-saves new customers to the merchant's customer directory (`active` status) for future instant lookup.
   - Integrated comprehensive 36 Indian States & UTs directory with Chhattisgarh as the operational launch default across billing customer state selection.
 - [x] **Abhay Task 9 (Shell Controls & Storefront Merchandising Suite - 10 Screens) — Merged via PR #14 (commit `eac4c32`) 🟢** (`feature/abhay-shell-storefront-merchandising`, task brief: [`abhay_shell_storefront_mockup_task.md`](file:///C:/Users/utkar/.gemini/antigravity-ide/brain/6097e2b9-e42e-4d96-94a7-763a7ca8993f/abhay_shell_storefront_mockup_task.md))
-
+- [x] Real-Time Socket.io Audible Order Alert Chime & Live Toast Engine (`apps/merchant`):
+  - Web Audio API harmonic 2-tone chime engine (`audioAlert.ts`) generating D5 (587Hz) ➔ A5 (880Hz) arrival chimes without external media dependencies.
+  - Connected `socket.io-client` in `socket.ts` joining `store:${storeId}` room to receive backend `order.placed` dispatches.
+  - Global `LiveOrderSocketListener.tsx` mounted across all authenticated views in `App.tsx` with auto-dismissing amber toast and 1-click order navigation.
+  - Sound test button and mute toggle integrated in `LiveOrderAlerts.tsx`.
+- [x] Stale Order Auto-Timeout & Inventory Reclaim Engine (Task B-02):
+  - Background worker (`orderExpiryWorker.ts`) polling every 60s with reentrancy guard for orders remaining in `PENDING` > 30 minutes.
+  - Automatically transitions order status to `CANCELLED` under ACID multi-document transaction with OCC version check.
+  - Atomically reclaims catalog stock via `catalogFacade.restoreStock()`, emits `ORDER_CANCELLED` domain event, and writes Outbox event.
+  - Wired into `server.ts` startup and graceful shutdown traps.
+  - **108/108 unit & integration tests passing (17 suites)**; full monorepo clean build.
+- [x] Interactive OpenAPI / Swagger UI Documentation (Task B-03):
+  - Installed `swagger-ui-express` & `swagger-jsdoc` with TypeScript type declarations.
+  - Created OpenAPI 3.0 specification (`swagger.ts`) covering all 7 core modules (`/auth`, `/stores`, `/catalog`, `/orders`, `/billing`, `/delivery`, `/notifications`) and `/healthz`/`/readyz` probes.
+  - Mounted interactive Swagger UI at `/api-docs` and `/docs`, with raw JSON schema endpoints at `/api-docs.json` and `/docs.json`.
+  - Configured Helmet CSP to allow Swagger UI inline assets.
+  - **116/116 unit & integration tests passing (18 suites)**; full monorepo clean build.
+- [x] High-Security Brute-Force Rate Limiter (Task B-04):
+  - Built enterprise rate limiting middleware (`rateLimiter.ts`) leveraging `express-rate-limit`.
+  - Mounted `authRateLimiter` (10 requests / 15 minutes) on `/auth/login` to prevent credential stuffing and dictionary attacks.
+  - Mounted `deliveryOtpRateLimiter` (5 requests / 15 minutes) on `/orders/:id/verify-otp` to render physical delivery OTP brute-force mathematically impossible.
+  - Provided `otpRateLimiter` factory (5 requests / 15 minutes) for phone verification protection.
+  - **120/120 unit & integration tests passing (19 suites)**; full monorepo clean build.
+- [x] **Abhay Task 10 (Merchant Front-End Hardening & UX Polish) — Merged via PR #17 (commit `39add09`) 🟢** (`feature/abhay-merchant-e2e-polish`):
+  - Reusable portal-rendered `TableActionPopover.tsx` with dynamic viewport boundary clamping and outside-click dismissal.
+  - Resolved table action dropdown clipping across Invoices (`InvoiceRowMoreAction`), Customers, Expenses, Returns, and Orders tables.
+  - Comprehensive regex validation library (`validation.ts`) for Indian GSTIN, PAN, Phone, and PIN codes.
+  - Universal client-side CSV export generator (`csvExport.ts`) with UTF-8 BOM encoding and auto-download triggering.
+  - Clean `@media print` stylesheets in `index.css` for tax invoices, quotes, and customer statements.
+  - Standardized horizontal KPI stats cards across Catalog, Inventory, Customers, Expenses, Returns, and Payouts.
+  - Vite production bundle code-splitting (`vite.config.ts` manualChunks for `leaflet` and `lucide-react`).
+  - Enforced strict white-label compliance with brand-agnostic design tokens and preserved POS thermal (80mm) and A4 invoice printing workflows.
+  - **120/120 unit & integration tests passing (19 suites)**; full monorepo clean build.
+- [ ] **Abhay Task 11 (Merchant Portal End-to-End Operational Lifecycle & Cross-Platform Simulation Suite) — Assigned 🟡** (Task Brief: [`abhay_merchant_e2e_qa_task.md`](file:///d:/UTKARSH/Live%20Projects/Vercel-live-Website/platform-root-vz/abhay_merchant_e2e_qa_task.md), Deliverable: `apps/merchant/MERCHANT_E2E_QA_AUDIT_REPORT.md`):
+  - Track A: Merchant registration, store setup, timings, logo/banner, catalog ingestion (2 products with barcodes/stock), inventory ledger verification, and storefront display section creation.
+  - Track B: Customer discovery on `:3000`, single-store cart validation, and order placement with Delivery OTP.
+  - Track C: Real-time Socket.io audio alert chime & toast arrival, 8-tab pipeline fulfillment with OTP handoff, in-house counter POS billing sale, and 80mm thermal receipt printing.
+  - Track D: Structured discrepancy matrix and QA audit sign-off.
 

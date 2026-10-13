@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Store, Tag, Grid, Heart, ShieldCheck, Check } from 'lucide-react';
 import { branding } from '@repo/shared-types';
@@ -10,6 +10,13 @@ import { useAuthStore } from '@/stores/auth.store';
 export default function LoggedOutPage() {
   const router = useRouter();
   const openAuthModal = useAuthStore((state) => state.openAuthModal);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace('/');
+    }
+  }, [isAuthenticated, router]);
 
   return (
     <main className="min-h-screen bg-[#ffffff] pb-24 pt-10 flex flex-col items-center font-sans">
@@ -63,24 +70,28 @@ export default function LoggedOutPage() {
               bg="bg-emerald-50"
               title="Local Stores"
               desc="Find and explore trusted local stores"
+              onClick={() => router.push('/stores')}
             />
             <ExploreCard 
               icon={<Tag className="h-5 w-5 text-orange-500" />}
               bg="bg-orange-50"
               title="Best Deals"
               desc="Discover amazing offers and discounts"
+              onClick={() => router.push('/')}
             />
             <ExploreCard 
               icon={<Grid className="h-5 w-5 text-purple-500" />}
               bg="bg-purple-50"
               title="Categories"
               desc="Browse products across categories"
+              onClick={() => router.push('/category')}
             />
             <ExploreCard 
               icon={<Heart className="h-5 w-5 text-rose-500" />}
               bg="bg-rose-50"
               title="Wishlist"
               desc="Save your favorite products"
+              onClick={() => router.push('/account/wishlist')}
             />
           </div>
         </div>
@@ -101,14 +112,18 @@ export default function LoggedOutPage() {
   );
 }
 
-function ExploreCard({ icon, bg, title, desc }: any) {
+function ExploreCard({ icon, bg, title, desc, onClick }: { icon: React.ReactNode; bg: string; title: string; desc: string; onClick?: () => void }) {
   return (
-    <div className="flex flex-col items-center text-center rounded-2xl border border-surface-200 bg-white p-4 shadow-[0_2px_8px_rgb(0,0,0,0.04)] hover:border-[#1668F6] transition-all cursor-pointer w-[140px] shrink-0">
+    <button 
+      type="button"
+      onClick={onClick}
+      className="flex flex-col items-center text-center rounded-2xl border border-surface-200 bg-white p-4 shadow-[0_2px_8px_rgb(0,0,0,0.04)] hover:border-[#1668F6] hover:shadow-md transition-all cursor-pointer w-[140px] shrink-0"
+    >
       <div className={`mb-3 flex h-10 w-10 items-center justify-center rounded-full ${bg}`}>
         {icon}
       </div>
       <h4 className="text-[12px] font-extrabold text-[#192168] mb-1 leading-tight">{title}</h4>
       <p className="text-[10px] text-surface-500 leading-snug">{desc}</p>
-    </div>
+    </button>
   );
 }

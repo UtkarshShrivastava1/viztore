@@ -13,7 +13,7 @@ import {
 import { ProductModel } from './product.model.js';
 import { AppError } from '../../shared/utils/AppError.js';
 import { findStoreById, getMerchantStores } from '../stores/store.service.js';
-import { invalidateCache } from '../../shared/redis/cache.js';
+import { cacheAside, invalidateCache } from '../../shared/redis/cache.js';
 
 // ── Helpers ────────────────────────────────────────────────────────────
 
@@ -248,25 +248,29 @@ export async function deleteProduct(
 // ── Read Operations ────────────────────────────────────────────────────
 
 /**
- * Get a single product by ID
+ * Get a single product by ID (Redis cache-aside with 5-minute TTL)
  */
 export async function getProductById(id: string): Promise<IProduct> {
-  const product = await ProductModel.findOne({ _id: id, isActive: true }).lean();
-  if (!product) {
-    throw AppError.notFound('Product not found', 'PRODUCT_NOT_FOUND');
-  }
-  return product as unknown as IProduct;
+  return cacheAside(`catalog:product:${id}`, 300, async () => {
+    const product = await ProductModel.findOne({ _id: id, isActive: true }).lean();
+    if (!product) {
+      throw AppError.notFound('Product not found', 'PRODUCT_NOT_FOUND');
+    }
+    return product as unknown as IProduct;
+  });
 }
 
 /**
- * Get a single product by slug
+ * Get a single product by slug (Redis cache-aside with 5-minute TTL)
  */
 export async function getProductBySlug(slug: string): Promise<IProduct> {
-  const product = await ProductModel.findOne({ slug, isActive: true }).lean();
-  if (!product) {
-    throw AppError.notFound('Product not found', 'PRODUCT_NOT_FOUND');
-  }
-  return product as unknown as IProduct;
+  return cacheAside(`catalog:slug:${slug}`, 300, async () => {
+    const product = await ProductModel.findOne({ slug, isActive: true }).lean();
+    if (!product) {
+      throw AppError.notFound('Product not found', 'PRODUCT_NOT_FOUND');
+    }
+    return product as unknown as IProduct;
+  });
 }
 
 /**
@@ -454,31 +458,33 @@ export async function getStoreProducts(
 }
 
 /**
- * Featured products for the home feed
+ * Featured products for the home feed (Redis cache-aside with 3-minute TTL)
  */
 export async function getFeaturedProducts(limit = 12): Promise<IProduct[]> {
-  const products = await ProductModel.find({
-    isActive: true,
-    isFeatured: true,
-  })
-    .sort({ rating: -1, maxDiscount: -1, createdAt: -1 })
-    .limit(limit)
-    .lean();
-
-  // If not enough featured, fill with top-rated
-  if (products.length < limit) {
-    const existingIds = products.map((p) => p._id);
-    const filler = await ProductModel.find({
+  return cacheAside(`catalog:featured:${limit}`, 180, async () => {
+    const products = await ProductModel.find({
       isActive: true,
-      _id: { $nin: existingIds },
+      isFeatured: true,
     })
-      .sort({ rating: -1, reviewCount: -1 })
-      .limit(limit - products.length)
+      .sort({ rating: -1, maxDiscount: -1, createdAt: -1 })
+      .limit(limit)
       .lean();
-    products.push(...filler);
-  }
 
-  return products as unknown as IProduct[];
+    // If not enough featured, fill with top-rated
+    if (products.length < limit) {
+      const existingIds = products.map((p) => p._id);
+      const filler = await ProductModel.find({
+        isActive: true,
+        _id: { $nin: existingIds },
+      })
+        .sort({ rating: -1, reviewCount: -1 })
+        .limit(limit - products.length)
+        .lean();
+      products.push(...filler);
+    }
+
+    return products as unknown as IProduct[];
+  });
 }
 
 // ── Inter-Module Contract Functions ────────────────────────────────────

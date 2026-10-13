@@ -39,4 +39,11 @@ export interface IStoreFacade {
   } | null>;
   isStoreActive(id: string): Promise<boolean>;
   verifyStoreExists(id: string): Promise<boolean>;
+  getStoreProfile(id: string): Promise<{
+    id: string;
+    name: string;
+    phone: string;
+    address: string;
+    gstin?: string;
+  } | null>;
 }

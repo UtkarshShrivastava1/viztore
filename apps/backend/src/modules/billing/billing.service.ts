@@ -14,6 +14,13 @@ import {
   IInvoiceItemComputed,
   IInvoicePricing,
   DEFAULT_INDIAN_STATE,
+  CreatePOSSaleDto,
+  IPOSSaleResponse,
+  IPOSReceiptData,
+  IPOSReceiptItem,
+  POSPrintPaperSize,
+  IInvoice,
+  generateEscposReceiptBuffer,
 } from '@repo/shared-types';
 import {
   InvoiceModel,
@@ -24,6 +31,7 @@ import {
   IBillingSettingsDocument,
 } from './billing.model.js';
 import { catalogModule } from '../catalog/index.js';
+import { storeModule } from '../stores/index.js';
 import { withTransaction } from '../../shared/database/transaction.js';
 import { appendOutboxEvent, processPendingOutboxEvents } from '../../shared/database/outbox.service.js';
 import { eventBus } from '../../shared/events/eventBus.js';
@@ -44,7 +52,7 @@ export function normalizeStateIdentifier(stateStr: string): string {
 }
 
 export function computeItemTaxesAndPricing(
-  rawItems: CreateInvoiceDto['items'],
+  rawItems: Array<CreateInvoiceDto['items'][number] | CreatePOSSaleDto['items'][number]>,
   storeState = DEFAULT_INDIAN_STATE,
   placeOfSupply = DEFAULT_INDIAN_STATE,
   taxCalcType = TaxCalculationType.EXCLUSIVE,
@@ -964,6 +972,312 @@ export class BillingService {
     }
 
     return updated;
+  }
+
+  /**
+   * High-Speed In-House Counter POS Sale & ESC/POS Receipt Generation
+   * Optimized for barcode laser guns, fast cash tender, and thermal slip printing
+   */
+  async createPOSSale(
+    storeId: string,
+    dto: CreatePOSSaleDto,
+    correlationId?: string,
+  ): Promise<IPOSSaleResponse> {
+    // 1. Fetch Store Profile & Settings
+    const [settings, storeProfile] = await Promise.all([
+      this.getOrCreateSettings(storeId),
+      storeModule.getStoreProfile(storeId),
+    ]);
+
+    // 2. Idempotency Check
+    if (dto.idempotencyKey) {
+      const existing = await InvoiceModel.findOne({
+        storeId: new mongoose.Types.ObjectId(storeId),
+        idempotencyKey: dto.idempotencyKey,
+      });
+      if (existing) {
+        return this.buildPOSResponseFromInvoice(
+          existing,
+          storeProfile,
+          settings,
+          dto.paperSize,
+          dto.kickCashDrawer,
+          dto.tenderedCashAmount,
+          dto.changeReturnAmount,
+        );
+      }
+    }
+
+    const placeOfSupply = dto.customer?.state || settings.state || DEFAULT_INDIAN_STATE;
+    const storeState = settings.state || DEFAULT_INDIAN_STATE;
+
+    // 3. Tax and Line Item Math
+    const { computedItems, pricing } = computeItemTaxesAndPricing(
+      dto.items,
+      placeOfSupply,
+      storeState,
+      settings.taxCalculationType,
+    );
+
+    // 4. Payment & Cash Tender Breakdown
+    const status = InvoiceStatus.PAID;
+    const paidAmount = pricing.grandTotal;
+    const dueAmount = 0;
+    const settlementMode = dto.settlementMode;
+
+    const tenderedCashAmount =
+      settlementMode === SettlementMode.CASH
+        ? (dto.tenderedCashAmount ?? pricing.grandTotal)
+        : undefined;
+
+    const changeReturnAmount =
+      settlementMode === SettlementMode.CASH
+        ? (dto.changeReturnAmount ?? Math.max(0, (tenderedCashAmount ?? 0) - pricing.grandTotal))
+        : undefined;
+
+    const paymentHistory = [
+      {
+        amount: paidAmount,
+        mode: settlementMode,
+        date: new Date(),
+        reference: dto.settlementMode === SettlementMode.CASH ? 'CASH-COUNTER' : 'POS-TERMINAL',
+        recordedBy: 'POS Terminal Cashier',
+      },
+    ];
+
+    // 5. Atomic Stock Deduction & OCC Versioning
+    const stockItems = dto.items
+      .filter((i) => i.productId)
+      .map((i) => ({
+        productId: i.productId!,
+        sku: i.variantId,
+        quantity: i.quantity,
+      }));
+
+    stockItems.sort((a, b) =>
+      (a.sku ?? a.productId).localeCompare(b.sku ?? b.productId),
+    );
+
+    const invoice = await withTransaction(async (session) => {
+      if (stockItems.length > 0) {
+        await catalogModule.deductStock(stockItems, session);
+      }
+
+      const invoiceNumber = await this.getNextInvoiceNumber(storeId, session);
+
+      const createdList = await InvoiceModel.create(
+        [
+          {
+            storeId: new mongoose.Types.ObjectId(storeId),
+            invoiceNumber,
+            type: InvoiceType.RETAIL_BILL,
+            idempotencyKey: dto.idempotencyKey,
+            customer: {
+              name: dto.customer?.name || 'Walk-in Customer',
+              phone: dto.customer?.phone || '9999999999',
+              email: dto.customer?.email,
+              billingAddress: dto.customer?.billingAddress,
+              state: placeOfSupply,
+              gstin: dto.customer?.gstin,
+            },
+            items: computedItems,
+            pricing,
+            payment: {
+              status,
+              paidAmount,
+              dueAmount,
+              settlementMode,
+              paymentDate: new Date(),
+              paymentHistory,
+            },
+            dates: {
+              invoiceDate: new Date(),
+              dueDate: new Date(),
+            },
+            placeOfSupply,
+            paymentTerms: 'Immediate POS Counter Settlement',
+            notes: dto.notes || 'In-House POS Counter Sale',
+            isInventoryDeducted: stockItems.length > 0,
+            version: 1,
+          },
+        ],
+        { session },
+      );
+
+      const created = createdList[0];
+      if (!created) {
+        throw AppError.internal('Failed to persist POS invoice document');
+      }
+
+      // Append Outbox Event
+      await appendOutboxEvent(
+        {
+          eventType: EVENTS.INVOICE_ISSUED,
+          schemaVersion: 1,
+          aggregateType: 'Invoice',
+          aggregateId: created.id,
+          correlationId,
+          payload: {
+            invoiceId: created.id,
+            invoiceNumber: created.invoiceNumber,
+            storeId,
+            grandTotal: pricing.grandTotal,
+            status,
+            itemsCount: computedItems.length,
+            channel: 'POS_COUNTER',
+          },
+        },
+        session,
+      );
+
+      return created;
+    });
+
+    // 6. Post-transaction operations: cache invalidation & async dispatch
+    if (stockItems.length > 0) {
+      await invalidateCache(`catalog:store:${storeId}*`);
+      for (const item of stockItems) {
+        await invalidateCache(`catalog:product:${item.productId}`);
+      }
+    }
+
+    void processPendingOutboxEvents().catch((err) => {
+      logger.warn(`Outbox dispatch failed for POS invoice ${invoice.id}:`, err);
+    });
+
+    eventBus.emit(EVENTS.INVOICE_ISSUED, {
+      invoiceId: invoice.id,
+      storeId,
+      invoiceNumber: invoice.invoiceNumber,
+      amount: pricing.grandTotal,
+    });
+
+    return this.buildPOSResponseFromInvoice(
+      invoice,
+      storeProfile,
+      settings,
+      dto.paperSize,
+      dto.kickCashDrawer,
+      tenderedCashAmount,
+      changeReturnAmount,
+    );
+  }
+
+  /**
+   * Fetch the last printed receipt for re-print or thermal slip preview
+   */
+  async getLastReceipt(
+    storeId: string,
+    paperSize: POSPrintPaperSize = POSPrintPaperSize.THERMAL_80MM,
+  ): Promise<IPOSSaleResponse> {
+    const lastInvoice = await InvoiceModel.findOne({
+      storeId: new mongoose.Types.ObjectId(storeId),
+      'payment.status': { $ne: InvoiceStatus.CANCELLED },
+    }).sort({ createdAt: -1 });
+
+    if (!lastInvoice) {
+      throw AppError.notFound('No previous sales found for this store', 'NO_PREVIOUS_SALE');
+    }
+
+    const [settings, storeProfile] = await Promise.all([
+      this.getOrCreateSettings(storeId),
+      storeModule.getStoreProfile(storeId),
+    ]);
+
+    return this.buildPOSResponseFromInvoice(
+      lastInvoice,
+      storeProfile,
+      settings,
+      paperSize,
+      false,
+    );
+  }
+
+  private buildPOSResponseFromInvoice(
+    invoiceDoc: IInvoiceDocument,
+    storeProfile: any,
+    settings: IBillingSettingsDocument,
+    paperSize: POSPrintPaperSize = POSPrintPaperSize.THERMAL_80MM,
+    kickCashDrawer = true,
+    tenderedCashAmount?: number,
+    changeReturnAmount?: number,
+  ): IPOSSaleResponse {
+    const invoiceObj = invoiceDoc.toObject();
+    const invoice: IInvoice = {
+      ...invoiceObj,
+      id: invoiceDoc.id,
+      storeId: invoiceDoc.storeId.toString(),
+      createdAt: (invoiceDoc.get('createdAt') as Date)?.toISOString?.() || new Date().toISOString(),
+      updatedAt: (invoiceDoc.get('updatedAt') as Date)?.toISOString?.() || new Date().toISOString(),
+    } as unknown as IInvoice;
+
+    const storeName = storeProfile?.name || 'Local Retailer';
+    const storePhone = storeProfile?.phone || '';
+    const storeAddress = storeProfile?.address || '';
+    const storeGstin = settings.gstin || storeProfile?.gstin;
+
+    const dateStr = new Date(invoiceDoc.dates.invoiceDate).toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
+    const timeStr = new Date((invoiceDoc.get('createdAt') as Date) || new Date()).toLocaleTimeString('en-IN', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+
+    const receiptItems: IPOSReceiptItem[] = invoiceDoc.items.map((it) => ({
+      title: it.title,
+      quantity: it.quantity,
+      unit: it.unit || 'Pcs',
+      unitPrice: it.unitPrice,
+      discountAmount: it.discountAmount,
+      taxableAmount: it.taxableAmount,
+      taxRate: it.taxRate,
+      totalAmount: it.totalAmount,
+      hsnCode: it.hsnCode,
+    }));
+
+    const upiPayload = `upi://pay?pa=merchant@upi&pn=${encodeURIComponent(storeName)}&am=${invoiceDoc.pricing.grandTotal}&cu=INR`;
+
+    const receiptData: IPOSReceiptData = {
+      invoiceId: invoiceDoc.id,
+      invoiceNumber: invoiceDoc.invoiceNumber,
+      storeName,
+      storePhone,
+      storeAddress,
+      storeGstin,
+      date: dateStr,
+      time: timeStr,
+      cashierName: 'POS Counter',
+      customerName: invoiceDoc.customer.name,
+      customerPhone: invoiceDoc.customer.phone,
+      customerGstin: invoiceDoc.customer.gstin,
+      items: receiptItems,
+      pricing: invoiceDoc.pricing,
+      grandTotal: invoiceDoc.pricing.grandTotal,
+      subTotal: invoiceDoc.pricing.subTotal,
+      taxableAmount: invoiceDoc.pricing.taxableAmount,
+      settlementMode: invoiceDoc.payment.settlementMode,
+      tenderedCashAmount,
+      changeReturnAmount,
+      qrPayload: upiPayload,
+      footerMessage: settings.termsAndConditions?.[0] || 'Thank you for shopping local!',
+      paperSize,
+    };
+
+    const escposBytes = generateEscposReceiptBuffer(receiptData, kickCashDrawer);
+    const escposBase64 = Buffer.from(escposBytes).toString('base64');
+
+    return {
+      invoice,
+      invoiceNumber: invoiceDoc.invoiceNumber,
+      paperSize,
+      receiptData,
+      escposBase64,
+      escposBufferBase64: escposBase64,
+    };
   }
 }
 

@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { 
-  ShoppingBag, MapPin, Heart, Ticket, Store, MessageSquare,
+  MapPin, Heart, Ticket, Store, MessageSquare,
   HeadphonesIcon, Shield, FileText, LogOut, User, Bell,
   Calendar, ShoppingBasket, Pencil, CalendarDays, CheckCircle2,
   Settings, ChevronRight, Briefcase, Truck, RotateCcw, Star
@@ -15,6 +15,31 @@ import { useAuthStore } from '@/stores/auth.store';
 export function AccountClient() {
   const { user, isAuthenticated, openAuthModal } = useAuthStore();
   const [isEditingMobile, setIsEditingMobile] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (mounted && !isAuthenticated) {
+    return (
+      <div className="min-h-[70vh] bg-white font-sans flex flex-col items-center justify-center px-4 py-20">
+        <div className="w-16 h-16 bg-[#E8F0FE] rounded-full flex items-center justify-center text-[#1668F6] mb-4">
+          <User className="w-8 h-8" />
+        </div>
+        <h2 className="text-xl font-bold text-[#192168] mb-2">Sign in to access your account</h2>
+        <p className="text-sm text-surface-500 text-center max-w-sm mb-6">
+          Manage your orders, profile details, delivery addresses, and saved stores.
+        </p>
+        <button
+          onClick={() => openAuthModal('login')}
+          className="px-8 py-3 bg-[#1668F6] text-white text-sm font-bold rounded-xl shadow-sm hover:bg-blue-700 transition cursor-pointer"
+        >
+          Sign In / Create Account
+        </button>
+      </div>
+    );
+  }
 
   const formData = {
     fullName: user?.fullName || (isAuthenticated ? 'Customer User' : 'Guest User'),
@@ -241,10 +266,10 @@ export function AccountClient() {
               </Link>
             </div>
             <div className="flex overflow-x-auto gap-3 pb-2 -mx-1 px-1 hide-scrollbar">
-              <StoreCard name="Fashion Hub" category="Clothing, Accessories" rating="4.5" reviews="1.2K" color="bg-black text-white" />
-              <StoreCard name="Tech World" category="Electronics" rating="4.3" reviews="856" color="bg-emerald-900 text-yellow-400" />
-              <StoreCard name="Home Delight" category="Home & Kitchen" rating="4.6" reviews="1.1K" color="bg-rose-900 text-white" />
-              <StoreCard name="Beauty Glow" category="Beauty & Personal Care" rating="4.2" reviews="732" color="bg-pink-100 text-pink-600" />
+              <StoreCard name="Fashion Hub" category="Clothing, Accessories" rating={4.5} reviews="1.2K" color="bg-black text-white" />
+              <StoreCard name="Tech World" category="Electronics" rating={4.3} reviews="856" color="bg-emerald-900 text-yellow-400" />
+              <StoreCard name="Home Delight" category="Home & Kitchen" rating={4.6} reviews="1.1K" color="bg-rose-900 text-white" />
+              <StoreCard name="Beauty Glow" category="Beauty & Personal Care" rating={4.2} reviews="732" color="bg-pink-100 text-pink-600" />
             </div>
           </div>
 
@@ -369,7 +394,7 @@ export function AccountClient() {
 }
 
 // Subcomponents for mobile dashboard
-function OrderStat({ icon, bg, count, label }: any) {
+function OrderStat({ icon, bg, count, label }: { icon: React.ReactNode; bg: string; count: string | number; label: string }) {
   return (
     <div className="flex flex-col items-center">
       <div className={`w-12 h-12 rounded-2xl ${bg} flex items-center justify-center mb-2 shadow-[0_2px_10px_rgba(0,0,0,0.03)]`}>
@@ -381,7 +406,7 @@ function OrderStat({ icon, bg, count, label }: any) {
   );
 }
 
-function StoreCard({ name, category, rating, reviews, color }: any) {
+function StoreCard({ name, category, rating, reviews, color }: { name: string; category: string; rating: number; reviews: string | number; color: string }) {
   return (
     <div className="min-w-[140px] border border-surface-100 rounded-xl p-3 flex flex-col items-center text-center bg-white shadow-sm shrink-0">
       <div className="w-full flex justify-end mb-1">
@@ -401,7 +426,7 @@ function StoreCard({ name, category, rating, reviews, color }: any) {
   );
 }
 
-function MobileNav({ icon, bg, title, desc, href, badge }: any) {
+function MobileNav({ icon, bg, title, desc, href, badge }: { icon: React.ReactNode; bg: string; title: string; desc: string; href: string; badge?: string }) {
   return (
     <Link href={href} className="flex items-center justify-between p-4 bg-white hover:bg-surface-50 transition-colors">
       <div className="flex items-center gap-3">

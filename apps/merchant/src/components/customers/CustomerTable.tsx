@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Search,
   Filter,
@@ -16,6 +16,8 @@ import {
   Trash2,
 } from 'lucide-react';
 import { useCustomerStore, Customer } from '../../stores/customerStore.js';
+import { TableActionPopover } from '../ui/TableActionPopover.js';
+import { downloadCSV } from '../../utils/csvExport.js';
 
 interface CustomerTableProps {
   onSelectCustomer: (customer: Customer) => void;
@@ -23,6 +25,140 @@ interface CustomerTableProps {
   onOpenStatements: (customer: Customer, tab?: 'history' | 'aging') => void;
   onOpenCreditModal?: (customer: Customer) => void;
 }
+
+const CustomerRowMoreAction: React.FC<{
+  customer: Customer;
+  isOpen: boolean;
+  onToggle: () => void;
+  onClose: () => void;
+  onSelectCustomer: (customer: Customer) => void;
+  onEditCustomer: (customer: Customer) => void;
+  onOpenCreditModal?: (customer: Customer) => void;
+  onOpenStatements: (customer: Customer, tab?: 'history' | 'aging') => void;
+  deleteCustomer: (id: string) => void;
+}> = ({
+  customer,
+  isOpen,
+  onToggle,
+  onClose,
+  onSelectCustomer,
+  onEditCustomer,
+  onOpenCreditModal,
+  onOpenStatements,
+  deleteCustomer,
+}) => {
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  return (
+    <>
+      <button
+        ref={triggerRef}
+        type="button"
+        onClick={onToggle}
+        className={`p-1 rounded-lg transition-colors cursor-pointer ${
+          isOpen ? 'bg-slate-100 text-slate-800' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
+        }`}
+        title="More Actions"
+      >
+        <MoreVertical className="w-3.5 h-3.5" />
+      </button>
+
+      <TableActionPopover
+        isOpen={isOpen}
+        onClose={onClose}
+        triggerRef={triggerRef}
+        className="w-52 rounded-2xl py-2 text-left"
+      >
+        <button
+          type="button"
+          onClick={() => {
+            onClose();
+            onSelectCustomer(customer);
+          }}
+          className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5 transition-colors cursor-pointer"
+        >
+          <Eye className="w-4 h-4 text-blue-600" />
+          <span>View Details</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            onClose();
+            onEditCustomer(customer);
+          }}
+          className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5 transition-colors cursor-pointer"
+        >
+          <Edit2 className="w-4 h-4 text-blue-600" />
+          <span>Edit Customer</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            onClose();
+            alert(`Creating invoice for ${customer.name}...`);
+          }}
+          className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5 transition-colors cursor-pointer"
+        >
+          <FileText className="w-4 h-4 text-blue-600" />
+          <span>Create Invoice</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            onClose();
+            if (onOpenCreditModal) onOpenCreditModal(customer);
+          }}
+          className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5 transition-colors cursor-pointer"
+        >
+          <CreditCard className="w-4 h-4 text-blue-600" />
+          <span>Record Payment</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            onClose();
+            onOpenStatements(customer, 'history');
+          }}
+          className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5 transition-colors cursor-pointer"
+        >
+          <BarChart2 className="w-4 h-4 text-blue-600" />
+          <span>View Statements</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            onClose();
+            alert(`Downloading statement for ${customer.name}...`);
+          }}
+          className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5 transition-colors cursor-pointer"
+        >
+          <Download className="w-4 h-4 text-blue-600" />
+          <span>Download Statement</span>
+        </button>
+
+        <div className="my-1 border-t border-slate-100" />
+
+        <button
+          type="button"
+          onClick={() => {
+            onClose();
+            if (confirm(`Are you sure you want to delete customer ${customer.name}?`)) {
+              deleteCustomer(customer.id);
+            }
+          }}
+          className="w-full px-3.5 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 flex items-center gap-2.5 transition-colors cursor-pointer"
+        >
+          <Trash2 className="w-4 h-4 text-rose-500" />
+          <span>Delete Customer</span>
+        </button>
+      </TableActionPopover>
+    </>
+  );
+};
 
 export const CustomerTable: React.FC<CustomerTableProps> = ({
   onSelectCustomer,
@@ -119,22 +255,23 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
   };
 
   const handleExport = () => {
-    const csvContent =
-      'data:text/csv;charset=utf-8,' +
-      [
-        'Customer ID,Name,Phone,Email,GSTIN,Type,Location,Outstanding,Total Sales,Last Order,Status',
-        ...filteredCustomers.map(
-          (c) =>
-            `"${c.id}","${c.name}","${c.phone}","${c.email}","${c.gstin || ''}","${c.customerType}","${c.location}",${c.outstandingAmount},${c.totalSales},"${c.lastOrderDate}","${c.status}"`
-        ),
-      ].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `customers_${new Date().toISOString().slice(0, 10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    downloadCSV(
+      `customers_${new Date().toISOString().slice(0, 10)}.csv`,
+      ['Customer ID', 'Name', 'Phone', 'Email', 'GSTIN', 'Type', 'Location', 'Outstanding', 'Total Sales', 'Last Order', 'Status'],
+      filteredCustomers.map((c) => [
+        c.id,
+        c.name,
+        c.phone,
+        c.email,
+        c.gstin || '',
+        c.customerType,
+        c.location,
+        c.outstandingAmount,
+        c.totalSales,
+        c.lastOrderDate,
+        c.status,
+      ])
+    );
   };
 
   return (
@@ -415,114 +552,20 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
                             <Edit2 className="w-3.5 h-3.5" />
                           </button>
 
-                          {/* More Options ⋮ Button (6.1.png) */}
-                          <button
-                            type="button"
-                            onClick={() =>
+                          {/* More Options ⋮ Popover Menu */}
+                          <CustomerRowMoreAction
+                            customer={customer}
+                            isOpen={isMenuOpen}
+                            onToggle={() =>
                               setActiveMenuId(isMenuOpen ? null : customer.id)
                             }
-                            className={`p-1 rounded-lg transition-colors ${isMenuOpen
-                                ? 'bg-slate-100 text-slate-800'
-                                : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
-                              }`}
-                            title="More Actions"
-                          >
-                            <MoreVertical className="w-3.5 h-3.5" />
-                          </button>
-
-
-                          {/* Row Actions Floating Menu (6.1.png) */}
-                          {isMenuOpen && (
-                            <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-2xl border border-slate-200 shadow-xl py-2 z-40 animate-in fade-in duration-100 text-left">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setActiveMenuId(null);
-                                  onSelectCustomer(customer);
-                                }}
-                                className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5"
-                              >
-                                <Eye className="w-4 h-4 text-blue-600" />
-                                <span>View Details</span>
-                              </button>
-
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setActiveMenuId(null);
-                                  onEditCustomer(customer);
-                                }}
-                                className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5"
-                              >
-                                <Edit2 className="w-4 h-4 text-blue-600" />
-                                <span>Edit Customer</span>
-                              </button>
-
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setActiveMenuId(null);
-                                  alert(`Creating invoice for ${customer.name}...`);
-                                }}
-                                className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5"
-                              >
-                                <FileText className="w-4 h-4 text-blue-600" />
-                                <span>Create Invoice</span>
-                              </button>
-
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setActiveMenuId(null);
-                                  if (onOpenCreditModal) onOpenCreditModal(customer);
-                                }}
-                                className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5"
-                              >
-                                <CreditCard className="w-4 h-4 text-blue-600" />
-                                <span>Record Payment</span>
-                              </button>
-
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setActiveMenuId(null);
-                                  onOpenStatements(customer, 'history');
-                                }}
-                                className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5"
-                              >
-                                <BarChart2 className="w-4 h-4 text-blue-600" />
-                                <span>View Statements</span>
-                              </button>
-
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setActiveMenuId(null);
-                                  alert(`Downloading statement for ${customer.name}...`);
-                                }}
-                                className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5"
-                              >
-                                <Download className="w-4 h-4 text-blue-600" />
-                                <span>Download Statement</span>
-                              </button>
-
-                              <div className="my-1 border-t border-slate-100" />
-
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setActiveMenuId(null);
-                                  if (confirm(`Are you sure you want to delete customer ${customer.name}?`)) {
-                                    deleteCustomer(customer.id);
-                                  }
-                                }}
-                                className="w-full px-3.5 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 flex items-center gap-2.5"
-                              >
-                                <Trash2 className="w-4 h-4 text-rose-500" />
-                                <span>Delete Customer</span>
-                              </button>
-                            </div>
-                          )}
+                            onClose={() => setActiveMenuId(null)}
+                            onSelectCustomer={onSelectCustomer}
+                            onEditCustomer={onEditCustomer}
+                            onOpenCreditModal={onOpenCreditModal}
+                            onOpenStatements={onOpenStatements}
+                            deleteCustomer={deleteCustomer}
+                          />
                         </div>
                       </td>
                     </tr>

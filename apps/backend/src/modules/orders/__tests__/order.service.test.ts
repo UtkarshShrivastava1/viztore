@@ -12,6 +12,9 @@ function buildFakeRepository(): IOrderRepository {
     findByStoreId: vi.fn(),
     findAll: vi.fn(),
     updateStatus: vi.fn(),
+    updateStatusWithVersion: vi.fn(),
+    cancelIfVersionMatches: vi.fn(),
+    findStalePendingOrders: vi.fn(),
   };
 }
 
@@ -274,5 +277,53 @@ describe('OrderService (Enterprise Clean Architecture Unit Tests)', () => {
     await expect(
       service.updateOrderStatus('order-123', OrderStatus.CONFIRMED, 'merchant-1', undefined, 1),
     ).rejects.toThrow(/Order was concurrently updated by another transaction/);
+  });
+
+  it('autoCancelStaleOrders finds stale orders, cancels them with OCC, and restores catalog stock', async () => {
+    const repo = buildFakeRepository();
+    const staleOrder: OrderResponse = {
+      ...mockOrder,
+      id: 'stale-order-1',
+      status: OrderStatus.PENDING,
+      version: 1,
+    };
+
+    vi.mocked(repo.findStalePendingOrders).mockResolvedValue([staleOrder]);
+    vi.mocked(repo.findById).mockResolvedValue(staleOrder);
+    repo.cancelIfVersionMatches = vi.fn().mockResolvedValue({
+      ...staleOrder,
+      status: OrderStatus.CANCELLED,
+      version: 2,
+    });
+
+    const catalogFacade = {
+      getProductById: vi.fn(),
+      checkStock: vi.fn(),
+      deductStock: vi.fn(),
+      restoreStock: vi.fn().mockResolvedValue(undefined),
+    };
+
+    const service = createOrderService(repo, undefined, undefined, catalogFacade);
+    const summary = await service.autoCancelStaleOrders(30, 25);
+
+    expect(repo.findStalePendingOrders).toHaveBeenCalledWith(expect.any(Date), 25);
+    expect(repo.cancelIfVersionMatches).toHaveBeenCalledWith(
+      expect.objectContaining({
+        orderId: 'stale-order-1',
+        expectedVersion: 1,
+        expectedStatus: OrderStatus.PENDING,
+        actorUserId: 'SYSTEM_AUTO_TIMEOUT',
+      }),
+      undefined,
+    );
+    expect(catalogFacade.restoreStock).toHaveBeenCalledWith(
+      [{ productId: 'p1', sku: 'S1', quantity: 2 }],
+      undefined,
+    );
+    expect(summary).toEqual({
+      processed: 1,
+      cancelled: 1,
+      failed: 0,
+    });
   });
 });

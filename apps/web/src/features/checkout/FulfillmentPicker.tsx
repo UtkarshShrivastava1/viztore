@@ -56,7 +56,7 @@ export function FulfillmentPicker() {
   );
 }
 
-function OptionCard({ icon, title, desc, selected, onClick, iconColor, iconBg }: any) {
+function OptionCard({ icon, title, desc, selected, onClick, iconColor, iconBg }: { icon: React.ReactNode; title: string; desc: string; selected?: boolean; onClick?: () => void; iconColor?: string; iconBg?: string }) {
   return (
     <div 
       onClick={onClick}

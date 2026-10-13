@@ -1,14 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/stores/auth.store';
 import { 
-  User, ShoppingBag, Calendar, ShoppingBasket, Store, Heart, 
-  MapPin, Bell, Ticket, HelpCircle, FileText, Shield, LogOut,
-  MessageSquare, HeadphonesIcon, ChevronLeft, Frown, Meh, Smile, 
-  Star, MessageCircle, Package, Truck, Smartphone, Camera, ArrowRight,
+  ShoppingBag, Frown, Meh, Smile, Store,
+  Star, Package, Truck, Smartphone, Camera, ArrowRight,
   Annoyed, Laugh, ArrowLeft
 } from 'lucide-react';
 import { branding } from '@repo/shared-types';
@@ -16,7 +12,6 @@ import { AccountSidebar } from '@/components/account/AccountSidebar';
 
 export function FeedbackClient() {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuthStore();
   
   // Form State
   const [experience, setExperience] = useState<number | null>(null);
@@ -24,13 +19,6 @@ export function FeedbackClient() {
   const [text, setText] = useState<string>('');
   const [nps, setNps] = useState<number | null>(10);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const formData = {
-    firstName: user?.fullName?.split(' ')[0] || 'Guest',
-    lastName: user?.fullName?.split(' ')[1] || 'User',
-    email: user?.email || 'guest@example.com',
-    mobileNumber: user?.phone ? `+91 ${user.phone}` : 'Sign in to access',
-  };
 
   const EXPERIENCES = [
     { value: 1, label: 'Very Poor', icon: <Annoyed className="w-8 h-8 sm:w-10 sm:h-10 stroke-[1.5]" /> },

@@ -8,20 +8,20 @@ export default function TermsConditionsScreen() {
   const router = useRouter();
 
   const highlights = [
-    { id: 1, title: 'User Agreement', desc: 'By using {branding.appName}, you agree to these terms.', icon: Users, color: '#3b82f6' },
+    { id: 1, title: 'User Agreement', desc: `By using ${branding.appName}, you agree to these terms.`, icon: Users, color: '#3b82f6' },
     { id: 2, title: 'Use of Services', desc: 'Use our app and services only for lawful purposes.', icon: ShoppingBag, color: '#10b981' },
     { id: 3, title: 'Your Responsibilities', desc: 'Provide accurate information and keep your account secure.', icon: ShieldAlert, color: '#8b5cf6' },
     { id: 4, title: 'Policy Updates', desc: 'We may update these terms. Continued use means you accept the changes.', icon: RefreshCcw, color: '#f59e0b' },
   ];
 
   const termsList = [
-    { id: 1, title: '1. Acceptance of Terms', desc: 'By accessing or using {branding.appName}, you agree to be bound by these Terms and Conditions.', icon: FileText },
-    { id: 2, title: '2. About {branding.appName}', desc: 'Learn about {branding.appName}, our platform and the services we provide.', icon: ShieldCheck },
+    { id: 1, title: '1. Acceptance of Terms', desc: `By accessing or using ${branding.appName}, you agree to be bound by these Terms and Conditions.`, icon: FileText },
+    { id: 2, title: `2. About ${branding.appName}`, desc: `Learn about ${branding.appName}, our platform and the services we provide.`, icon: ShieldCheck },
     { id: 3, title: '3. User Accounts', desc: 'Rules and responsibilities related to creating and managing your account.', icon: Users },
-    { id: 4, title: '4. Use of Services', desc: 'Guidelines for using {branding.appName} and what you can expect from our services.', icon: ShoppingBag },
+    { id: 4, title: '4. Use of Services', desc: `Guidelines for using ${branding.appName} and what you can expect from our services.`, icon: ShoppingBag },
     { id: 5, title: '5. Orders and Payments', desc: 'Information about placing orders, pricing and payment methods.', icon: CreditCard },
     { id: 6, title: '6. Returns and Refunds', desc: 'Our policy on returns, refunds and cancellations.', icon: RefreshCcw },
-    { id: 7, title: '7. Prohibited Activities', desc: 'Activities that are not allowed on {branding.appName}.', icon: XCircle },
+    { id: 7, title: '7. Prohibited Activities', desc: `Activities that are not allowed on ${branding.appName}.`, icon: XCircle },
     { id: 8, title: '8. Limitation of Liability', desc: 'Limitations of our liability to the fullest extent permitted by law.', icon: AlertTriangle },
     { id: 9, title: '9. Governing Law', desc: 'These terms are governed by the laws of India.', icon: Scale },
     { id: 10, title: '10. Contact Us', desc: 'How to reach us for any questions about these terms.', icon: HeadphonesIcon },

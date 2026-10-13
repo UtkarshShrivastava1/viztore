@@ -1,29 +1,40 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/stores/auth.store';
 import { 
-  User, Shield, LogOut, ArrowLeft, HeadphonesIcon,
-  ShieldCheck, Lock, EyeOff, CheckCircle2, ChevronRight
+  User, Shield, ArrowLeft,
+  ShieldCheck, Lock, EyeOff, CheckCircle2, ChevronRight, Search
 } from 'lucide-react';
 import { branding } from '@repo/shared-types';
 import { AccountSidebar } from '@/components/account/AccountSidebar';
 
+const SECTIONS = [
+  '1. Information We Collect',
+  '2. How We Use Your Information',
+  '3. Information Sharing',
+  '4. Data Security',
+  '5. Your Rights',
+  '6. Changes to This Policy',
+];
+
+const HIGHLIGHTS = [
+  { icon: <ShieldCheck className="w-5 h-5 text-emerald-500" />, title: 'Secure', desc: 'Bank-grade encryption' },
+  { icon: <Lock className="w-5 h-5 text-blue-500" />, title: 'Your Data', desc: 'Never sold to 3rd parties' },
+  { icon: <EyeOff className="w-5 h-5 text-purple-500" />, title: 'No Spam', desc: 'You control emails' },
+  { icon: <User className="w-5 h-5 text-rose-500" />, title: 'Your Control', desc: 'Delete data anytime' },
+];
+
 export function PrivacyClient() {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuthStore();
   
-  const [policyData, setPolicyData] = useState<any>(null);
+  const [policyData, setPolicyData] = useState<Record<string, unknown> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const formData = {
-    firstName: user?.fullName?.split(' ')[0] || 'Guest',
-    lastName: user?.fullName?.split(' ')[1] || 'User',
-    email: user?.email || 'guest@example.com',
-    mobileNumber: user?.phone ? `+91 ${user.phone}` : 'Sign in to access',
-  };
+  const filteredSections = SECTIONS.filter(section => 
+    section.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   useEffect(() => {
     // TODO: Connect to backend API for fetching privacy policy dynamically
@@ -44,21 +55,6 @@ export function PrivacyClient() {
     fetchPrivacyPolicy();
   }, []);
 
-  const HIGHLIGHTS = [
-    { icon: <ShieldCheck className="w-5 h-5 text-emerald-500" />, title: 'Secure', desc: 'Bank-grade encryption' },
-    { icon: <Lock className="w-5 h-5 text-blue-500" />, title: 'Your Data', desc: 'Never sold to 3rd parties' },
-    { icon: <EyeOff className="w-5 h-5 text-purple-500" />, title: 'No Spam', desc: 'You control emails' },
-    { icon: <User className="w-5 h-5 text-rose-500" />, title: 'Your Control', desc: 'Delete data anytime' },
-  ];
-
-  const SECTIONS = [
-    '1. Information We Collect',
-    '2. How We Use Your Information',
-    '3. Information Sharing',
-    '4. Data Security',
-    '5. Your Rights',
-    '6. Changes to This Policy',
-  ];
 
   return (
     <div className="min-h-screen bg-[#ffffff] font-sans relative pb-24">
@@ -119,14 +115,37 @@ export function PrivacyClient() {
 
             {/* Policy Contents */}
             <div className="mt-4">
-              <h3 className="text-[14px] font-extrabold text-[#192168] mb-3">Policy Contents</h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-[14px] font-extrabold text-[#192168]">Policy Contents</h3>
+              </div>
+
+              {/* Search Input */}
+              <div className="relative mb-4">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Search className="h-4 w-4 text-surface-400" />
+                </div>
+                <input 
+                  type="text" 
+                  placeholder="Search policies..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-white border border-surface-200 rounded-xl pl-10 pr-4 py-2.5 text-[13px] text-[#192168] focus:outline-none focus:border-[#1668F6] focus:ring-1 focus:ring-[#1668F6]/20 transition-all placeholder:text-surface-400 shadow-sm"
+                />
+              </div>
+
               <div className="bg-white rounded-2xl border border-surface-200 shadow-[0_2px_8px_rgb(0,0,0,0.04)] overflow-hidden flex flex-col">
-                {SECTIONS.map((section, idx) => (
-                  <button key={idx} className={`flex items-center justify-between p-4 hover:bg-surface-50 transition-colors text-left ${idx !== SECTIONS.length - 1 ? 'border-b border-surface-100' : ''}`}>
-                    <span className="text-[12px] font-semibold text-[#192168]">{section}</span>
-                    <ChevronRight className="w-4 h-4 text-surface-400" />
-                  </button>
-                ))}
+                {filteredSections.length > 0 ? (
+                  filteredSections.map((section, idx) => (
+                    <button key={idx} className={`flex items-center justify-between p-4 hover:bg-surface-50 transition-colors text-left ${idx !== filteredSections.length - 1 ? 'border-b border-surface-100' : ''}`}>
+                      <span className="text-[12px] font-semibold text-[#192168]">{section}</span>
+                      <ChevronRight className="w-4 h-4 text-surface-400" />
+                    </button>
+                  ))
+                ) : (
+                  <div className="p-8 text-center text-surface-500 text-[12px]">
+                    No policies found matching "{searchQuery}"
+                  </div>
+                )}
               </div>
             </div>
 
@@ -144,7 +163,7 @@ export function PrivacyClient() {
             {/* Last Updated */}
             <div className="flex items-center justify-center gap-1.5 mt-2">
                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-               <span className="text-[10px] text-surface-500">Last updated: {isLoading ? '...' : policyData?.lastUpdated}</span>
+               <span className="text-[10px] text-surface-500">Last updated: {isLoading ? '...' : String(policyData?.lastUpdated || '')}</span>
             </div>
 
           </div>

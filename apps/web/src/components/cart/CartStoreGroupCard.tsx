@@ -3,7 +3,7 @@ import { useRouter } from 'next/navigation';
 import { CartItem, useCartStore } from '@/stores/cart.store';
 import { fetchStoreById } from '@/lib/api/stores';
 import { IStore } from '@repo/shared-types';
-import { MapPin, Clock, ArrowRight, Loader2, ChevronRight, MoreHorizontal } from 'lucide-react';
+import { MapPin, ArrowRight, ChevronRight, MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
 
 interface CartStoreGroupCardProps {
@@ -125,7 +125,7 @@ export const CartStoreGroupCard: React.FC<CartStoreGroupCardProps> = ({
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         {/* Images Preview & Item Count */}
         <div className="flex items-center gap-2">
-          {previewItems.map((item, idx) => (
+          {previewItems.map((item) => (
             <div key={item.productId} className="h-16 w-16 sm:h-20 sm:w-20 rounded-lg border border-gray-100 bg-gray-50 flex items-center justify-center p-1.5 overflow-hidden">
                {item.imageUrl ? (
                   <img src={item.imageUrl} alt={item.name} className="h-full w-full object-contain" />

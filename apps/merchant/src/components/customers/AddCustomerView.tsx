@@ -8,7 +8,12 @@ import {
   Info,
 } from 'lucide-react';
 import { useCustomerStore, Customer, CustomerType } from '../../stores/customerStore.js';
-import { INDIAN_STATES } from '@repo/shared-types';
+import {
+  validateGSTIN,
+  validatePAN,
+  validatePhone,
+  validatePIN,
+} from '../../utils/validation.js';
 
 interface AddCustomerViewProps {
   onBack: () => void;
@@ -32,7 +37,7 @@ export const AddCustomerView: React.FC<AddCustomerViewProps> = ({
   const [addressLine1, setAddressLine1] = useState('');
   const [addressLine2, setAddressLine2] = useState('');
   const [city, setCity] = useState('');
-  const [state, setState] = useState('Chhattisgarh');
+  const [state, setState] = useState('Madhya Pradesh');
   const [pincode, setPincode] = useState('');
   const [country, setCountry] = useState('India');
 
@@ -40,6 +45,12 @@ export const AddCustomerView: React.FC<AddCustomerViewProps> = ({
   const [gstin, setGstin] = useState('');
   const [pan, setPan] = useState('');
   const [creditLimit, setCreditLimit] = useState('');
+
+  // Field validation errors
+  const [mobileError, setMobileError] = useState('');
+  const [pincodeError, setPincodeError] = useState('');
+  const [gstinError, setGstinError] = useState('');
+  const [panError, setPanError] = useState('');
 
   // Notes
   const [notes, setNotes] = useState('');
@@ -57,7 +68,7 @@ export const AddCustomerView: React.FC<AddCustomerViewProps> = ({
       setAddressLine1(editingCustomer.billingAddress?.addressLine1 || '');
       setAddressLine2(editingCustomer.billingAddress?.addressLine2 || '');
       setCity(editingCustomer.billingAddress?.city || '');
-      setState(editingCustomer.billingAddress?.state || 'Chhattisgarh');
+      setState(editingCustomer.billingAddress?.state || 'Madhya Pradesh');
       setPincode(editingCustomer.billingAddress?.pincode || '');
       setCountry(editingCustomer.billingAddress?.country || 'India');
       setGstin(editingCustomer.gstin || '');
@@ -67,11 +78,62 @@ export const AddCustomerView: React.FC<AddCustomerViewProps> = ({
     }
   }, [editingCustomer]);
 
+  const indianStates = [
+    'Madhya Pradesh',
+    'Maharashtra',
+    'Chhattisgarh',
+    'Gujarat',
+    'Rajasthan',
+    'Delhi',
+    'Uttar Pradesh',
+    'Karnataka',
+    'Tamil Nadu',
+    'Telangana',
+    'West Bengal',
+    'Jharkhand',
+  ];
+
   const handleSave = () => {
+    let hasError = false;
+
     if (!customerName.trim()) {
       setErrorMsg('Customer name is required.');
       return;
     }
+
+    if (mobileNumber.trim() && !validatePhone(mobileNumber.trim())) {
+      setMobileError('Please enter a valid 10-digit Indian mobile number (e.g. 9876543210).');
+      hasError = true;
+    } else {
+      setMobileError('');
+    }
+
+    if (pincode.trim() && !validatePIN(pincode.trim())) {
+      setPincodeError('Please enter a valid 6-digit Indian PIN code (e.g. 452001).');
+      hasError = true;
+    } else {
+      setPincodeError('');
+    }
+
+    if (gstin.trim() && !validateGSTIN(gstin.trim())) {
+      setGstinError('Invalid GSTIN format (15 characters alphanumeric, e.g. 23AAAAA0000A1Z5).');
+      hasError = true;
+    } else {
+      setGstinError('');
+    }
+
+    if (pan.trim() && !validatePAN(pan.trim())) {
+      setPanError('Invalid PAN format (10 characters alphanumeric, e.g. ABCDE1234F).');
+      hasError = true;
+    } else {
+      setPanError('');
+    }
+
+    if (hasError) {
+      setErrorMsg('Please resolve all validation errors before proceeding.');
+      return;
+    }
+    setErrorMsg('');
 
     if (isEditMode && editingCustomer) {
       updateCustomer(editingCustomer.id, {
@@ -286,12 +348,29 @@ export const AddCustomerView: React.FC<AddCustomerViewProps> = ({
               </div>
               <input
                 type="tel"
-                placeholder="Enter mobile number"
+                placeholder="Enter mobile number (e.g. 9876543210)"
                 value={mobileNumber}
-                onChange={(e) => setMobileNumber(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-2xs"
+                onChange={(e) => {
+                  setMobileNumber(e.target.value);
+                  if (mobileError) setMobileError('');
+                }}
+                onBlur={() => {
+                  if (mobileNumber.trim() && !validatePhone(mobileNumber.trim())) {
+                    setMobileError('Please enter a valid 10-digit Indian mobile number.');
+                  } else {
+                    setMobileError('');
+                  }
+                }}
+                className={`w-full px-3.5 py-2.5 bg-white border rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 shadow-2xs transition-colors ${
+                  mobileError
+                    ? 'border-rose-400 focus:ring-rose-400'
+                    : 'border-slate-200 focus:ring-blue-500'
+                }`}
               />
             </div>
+            {mobileError && (
+              <p className="text-[11px] text-rose-500 mt-1 font-medium">{mobileError}</p>
+            )}
           </div>
 
           {/* Email Address */}
@@ -396,9 +475,9 @@ export const AddCustomerView: React.FC<AddCustomerViewProps> = ({
                   onChange={(e) => setState(e.target.value)}
                   className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none shadow-2xs cursor-pointer"
                 >
-                  {INDIAN_STATES.map((st) => (
-                    <option key={st.code} value={st.name}>
-                      {st.name}
+                  {indianStates.map((st) => (
+                    <option key={st} value={st}>
+                      {st}
                     </option>
                   ))}
                 </select>
@@ -412,11 +491,29 @@ export const AddCustomerView: React.FC<AddCustomerViewProps> = ({
               </label>
               <input
                 type="text"
-                placeholder="Enter pincode"
+                placeholder="Enter 6-digit pincode"
                 value={pincode}
-                onChange={(e) => setPincode(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-2xs"
+                maxLength={6}
+                onChange={(e) => {
+                  setPincode(e.target.value);
+                  if (pincodeError) setPincodeError('');
+                }}
+                onBlur={() => {
+                  if (pincode.trim() && !validatePIN(pincode.trim())) {
+                    setPincodeError('Please enter a valid 6-digit Indian PIN code.');
+                  } else {
+                    setPincodeError('');
+                  }
+                }}
+                className={`w-full px-3.5 py-2.5 bg-white border rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 shadow-2xs transition-colors ${
+                  pincodeError
+                    ? 'border-rose-400 focus:ring-rose-400'
+                    : 'border-slate-200 focus:ring-blue-500'
+                }`}
               />
+              {pincodeError && (
+                <p className="text-[11px] text-rose-500 mt-1 font-medium">{pincodeError}</p>
+              )}
             </div>
           </div>
 
@@ -448,24 +545,62 @@ export const AddCustomerView: React.FC<AddCustomerViewProps> = ({
             <label className="text-xs font-bold text-slate-700 block mb-1.5">GSTIN</label>
             <input
               type="text"
-              placeholder="Enter GSTIN (optional)"
+              placeholder="e.g. 23AAAAA0000A1Z5 (optional)"
               value={gstin}
-              onChange={(e) => setGstin(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 font-mono uppercase focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-2xs"
+              maxLength={15}
+              onChange={(e) => {
+                setGstin(e.target.value.toUpperCase());
+                if (gstinError) setGstinError('');
+              }}
+              onBlur={() => {
+                if (gstin.trim() && !validateGSTIN(gstin.trim())) {
+                  setGstinError('Invalid GSTIN format (15 characters, e.g. 23AAAAA0000A1Z5).');
+                } else {
+                  setGstinError('');
+                }
+              }}
+              className={`w-full px-3.5 py-2.5 bg-white border rounded-xl text-xs text-slate-800 font-mono uppercase focus:outline-none focus:ring-2 shadow-2xs transition-colors ${
+                gstinError
+                  ? 'border-rose-400 focus:ring-rose-400'
+                  : 'border-slate-200 focus:ring-blue-500'
+              }`}
             />
-            <span className="text-[10px] text-slate-400 mt-1 block">15 characters GSTIN number</span>
+            {gstinError ? (
+              <p className="text-[11px] text-rose-500 mt-1 font-medium">{gstinError}</p>
+            ) : (
+              <span className="text-[10px] text-slate-400 mt-1 block">15 characters GSTIN number</span>
+            )}
           </div>
 
           <div>
             <label className="text-xs font-bold text-slate-700 block mb-1.5">PAN Number</label>
             <input
               type="text"
-              placeholder="Enter PAN (optional)"
+              placeholder="e.g. ABCDE1234F (optional)"
               value={pan}
-              onChange={(e) => setPan(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 font-mono uppercase focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-2xs"
+              maxLength={10}
+              onChange={(e) => {
+                setPan(e.target.value.toUpperCase());
+                if (panError) setPanError('');
+              }}
+              onBlur={() => {
+                if (pan.trim() && !validatePAN(pan.trim())) {
+                  setPanError('Invalid PAN format (10 characters, e.g. ABCDE1234F).');
+                } else {
+                  setPanError('');
+                }
+              }}
+              className={`w-full px-3.5 py-2.5 bg-white border rounded-xl text-xs text-slate-800 font-mono uppercase focus:outline-none focus:ring-2 shadow-2xs transition-colors ${
+                panError
+                  ? 'border-rose-400 focus:ring-rose-400'
+                  : 'border-slate-200 focus:ring-blue-500'
+              }`}
             />
-            <span className="text-[10px] text-slate-400 mt-1 block">10 characters PAN number</span>
+            {panError ? (
+              <p className="text-[11px] text-rose-500 mt-1 font-medium">{panError}</p>
+            ) : (
+              <span className="text-[10px] text-slate-400 mt-1 block">10 characters PAN number</span>
+            )}
           </div>
 
           <div>

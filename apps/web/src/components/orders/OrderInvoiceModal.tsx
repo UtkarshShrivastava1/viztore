@@ -72,7 +72,7 @@ export const OrderInvoiceModal: React.FC<OrderInvoiceModalProps> = ({
           setLoading(true);
           const data = await ordersApi.getOrderInvoice(orderId);
           if (active && data) {
-            setInvoice(data);
+            setInvoice(data as unknown as InvoiceData);
           }
         } catch (err) {
           console.warn('Could not fetch invoice from API, building fallback invoice:', err);
