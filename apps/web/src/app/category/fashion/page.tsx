@@ -16,7 +16,7 @@ export default function FashionLandingPage() {
         <Breadcrumbs items={[{ label: 'Home', href: '/' }, { label: 'Fashion' }]} />
 
         {/* Title and Top Badges Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6 p-8" >
           <div>
             <h1 className="text-3xl font-extrabold text-[#061842] mb-1">Fashion</h1>
             <p className="text-[14px] font-bold text-[#061842]">Style for Every You</p>
