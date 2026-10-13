@@ -374,6 +374,7 @@ export function createOrderService(
     userId: string,
     isAdmin: boolean,
     expectedVersion?: number,
+    reason?: string,
   ): Promise<OrderResponse | null> {
     const current = await getOrderById(id, userId, isAdmin);
     if (!current) return null;
@@ -394,16 +395,18 @@ export function createOrderService(
             orderId: id,
             expectedVersion: expectedVersion ?? current.version,
             expectedStatus: current.status,
-            reason: 'Cancelled by customer or store manager',
+            reason: reason ?? 'Cancelled by customer or store manager',
             actorUserId: userId,
           },
           session,
         );
-      } else {
+      }
+      if (!updated && typeof repo.updateStatus === 'function') {
         updated = session
           ? await repo.updateStatus(id, OrderStatus.CANCELLED, { session })
           : await repo.updateStatus(id, OrderStatus.CANCELLED);
       }
+
 
       if (!updated) {
         throw AppError.conflict(
@@ -458,6 +461,47 @@ export function createOrderService(
     return cancelled;
   }
 
+  async function autoCancelStaleOrders(
+    olderThanMinutes = 30,
+    batchLimit = 50,
+  ): Promise<{ processed: number; cancelled: number; failed: number }> {
+    const thresholdDate = new Date(Date.now() - olderThanMinutes * 60 * 1000);
+    const staleOrders = await repo.findStalePendingOrders(thresholdDate, batchLimit);
+
+    let cancelled = 0;
+    let failed = 0;
+
+    for (const order of staleOrders) {
+      try {
+        await cancelOrder(
+          order.id,
+          'SYSTEM_AUTO_TIMEOUT',
+          true,
+          order.version,
+          `Auto-cancelled: Merchant confirmation timeout (${olderThanMinutes}m)`,
+        );
+        cancelled++;
+        logger.info(`⏰ [OrderExpiry] Auto-cancelled stale pending order ${order.orderNumber || order.id} and restored inventory`, {
+          orderId: order.id,
+          storeId: order.storeId,
+          itemsCount: order.items.length,
+        });
+      } catch (err: unknown) {
+        failed++;
+        logger.warn('Failed to auto-cancel stale pending order', {
+          orderId: order.id,
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }
+
+    return {
+      processed: staleOrders.length,
+      cancelled,
+      failed,
+    };
+  }
+
   return {
     createOrder,
     getOrderById,
@@ -468,5 +512,6 @@ export function createOrderService(
     updateOrderStatus,
     verifyDeliveryOtp,
     cancelOrder,
+    autoCancelStaleOrders,
   };
 }

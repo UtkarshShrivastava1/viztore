@@ -65,30 +65,26 @@ export const InventoryKPICards: React.FC = () => {
         return (
           <div
             key={card.id}
-            className="bg-white rounded-xl border border-slate-200/80 p-4 shadow-2xs flex flex-col justify-between hover:shadow-xs transition-shadow duration-200"
+            className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-2xs flex items-center gap-3.5 hover:shadow-xs transition-shadow duration-200"
           >
-            {/* Header: Title on Left, Icon Container on Right */}
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-slate-600">
-                {card.title}
-              </span>
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${card.iconBg}`}>
-                <Icon className="w-4 h-4" />
-              </div>
+            <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${card.iconBg}`}>
+              <Icon className="w-5 h-5" />
             </div>
 
-            {/* Value & Trend */}
-            <div className="mt-2.5">
-              <div className="text-2xl font-bold text-slate-900 tracking-tight leading-none">
+            <div className="min-w-0">
+              <span className="text-[11px] font-semibold text-slate-500 block truncate">
+                {card.title}
+              </span>
+              <div className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate">
                 {card.value}
               </div>
-              <div className="flex items-center gap-1.5 mt-2 text-xs">
+              <div className="flex items-center gap-1.5 mt-0.5 text-[10px] truncate">
                 {card.isPositive ? (
-                  <span className="font-semibold text-[#16a34a] flex items-center">
+                  <span className="font-semibold text-emerald-600 flex items-center">
                     &uarr; {card.change}
                   </span>
                 ) : (
-                  <span className="font-semibold text-[#dc2626] flex items-center">
+                  <span className="font-semibold text-rose-600 flex items-center">
                     &darr; {card.change}
                   </span>
                 )}

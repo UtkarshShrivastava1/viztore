@@ -272,6 +272,19 @@ export function createOrderRepository(
     return updated ? toResponse(updated) : null;
   }
 
+  async function findStalePendingOrders(olderThan: Date, limit = 50): Promise<OrderResponse[]> {
+    const docs = await model
+      .find({
+        status: OrderStatus.PENDING,
+        createdAt: { $lte: olderThan },
+      })
+      .sort({ createdAt: 1 })
+      .limit(limit)
+      .exec();
+
+    return docs.map(toResponse);
+  }
+
   return {
     create,
     findById,
@@ -282,5 +295,6 @@ export function createOrderRepository(
     updateStatus,
     updateStatusWithVersion,
     cancelIfVersionMatches,
+    findStalePendingOrders,
   };
 }

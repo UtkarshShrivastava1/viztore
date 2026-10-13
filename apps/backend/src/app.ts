@@ -12,6 +12,8 @@ import { logger } from './shared/utils/logger.js';
 import { isOriginAllowed } from './shared/utils/cors.js';
 
 import mongoose from 'mongoose';
+import swaggerUi from 'swagger-ui-express';
+import { swaggerSpec } from './shared/config/swagger.js';
 import { checkRedisHealth } from './shared/redis/client.js';
 
 // Import domain module routes
@@ -23,13 +25,15 @@ import { deliveryRouter } from './modules/delivery/index.js';
 import { notificationRouter } from './modules/notifications/index.js';
 import { billingRouter } from './modules/billing/index.js';
 
-
-
 export function createApp(): Express {
   const app: Express = express();
 
-  // Security Headers
-  app.use(helmet());
+  // Security Headers (CSP disabled to allow Swagger UI inline assets)
+  app.use(
+    helmet({
+      contentSecurityPolicy: false,
+    }),
+  );
 
   // CORS Configuration
   app.use(
@@ -140,6 +144,23 @@ export function createApp(): Express {
 
 
   app.use(`/api/${env.API_VERSION}`, apiV1);
+
+  // OpenAPI / Swagger Interactive Documentation
+  app.get(['/api-docs.json', '/docs.json', `/api/${env.API_VERSION}/docs.json`], (_req: Request, res: Response) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.send(swaggerSpec);
+  });
+  app.use(
+    ['/api-docs', '/docs', `/api/${env.API_VERSION}/docs`],
+    swaggerUi.serve,
+    swaggerUi.setup(swaggerSpec, {
+      customSiteTitle: 'Platform API Documentation',
+      customCss: '.swagger-ui .topbar { display: none }',
+      swaggerOptions: {
+        persistAuthorization: true,
+      },
+    }),
+  );
 
   // 404 Route Handler
   app.use((req: Request, _res: Response, next: NextFunction) => {

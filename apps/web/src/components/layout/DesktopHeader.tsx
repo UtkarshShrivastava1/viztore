@@ -47,6 +47,8 @@ export function DesktopHeader({
   const authIsAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const authOpenModal = useAuthStore((state) => state.openAuthModal);
   const locationAddress = useLocationStore((state) => state.address);
+  const locationLocality = useLocationStore((state) => state.locality);
+  const locationFormatted = useLocationStore((state) => state.formattedAddress);
   const locationIsSet = useLocationStore((state) => state.isSet);
   const setStoreLocation = useLocationStore((state) => state.setLocation);
   const rawCartCount = useCartStore((state) => state.items.reduce((sum, item) => sum + item.quantity, 0));
@@ -68,7 +70,13 @@ export function DesktopHeader({
   const userName = mounted ? (propUserName || authUser?.fullName || "Customer") : "Customer";
   const address = mounted 
     ? (propAddress || (locationIsSet ? locationAddress : (authUser?.addresses?.[0] ? `${authUser.addresses[0].street}, ${authUser.addresses[0].city}` : locationAddress))) 
-    : "Bhilai, Chhattisgarh";
+    : "Sector 6, Central Avenue, Bhilai - 490006";
+  const locality = mounted
+    ? (locationLocality || address.split(',')[0])
+    : "Sector 6";
+  const displayFullAddress = mounted
+    ? (locationFormatted || address)
+    : "Sector 6, Central Avenue, Bhilai - 490006";
 
   const handleAuthClick = () => {
     if (isAuthenticated) {
@@ -141,18 +149,24 @@ export function DesktopHeader({
               </button>
             </form>
 
-            {/* Location Selector */}
+            {/* Location Selector (Blinkit / Zomato Two-Tier Layout) */}
             <button
               type="button"
               onClick={() => setIsLocationModalOpen(true)}
-              className="flex items-center gap-2.5 rounded-full bg-[#022b82]/80 hover:bg-[#022b82] transition-colors border border-white/10 px-4 py-2.5 backdrop-blur-md shadow-sm max-w-[280px] cursor-pointer"
+              className="flex items-center gap-2.5 rounded-2xl bg-[#022b82]/80 hover:bg-[#022b82] transition-colors border border-white/10 px-3.5 py-1.5 backdrop-blur-md shadow-sm max-w-[300px] cursor-pointer text-left group"
             >
-              <MapPin className="h-4 w-4 shrink-0 text-[#4C82FB]" fill="#4C82FB" strokeWidth={0} />
-              <span className="flex-1 truncate text-[12px] text-white text-left">
-                <span className="font-normal text-white/80">Deliver to </span>
-                <span className="font-medium text-white">{userName} - {address.split(',')[0]}</span>
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#1668F6]/20 border border-[#4C82FB]/30 text-[#4C82FB] shrink-0 group-hover:scale-105 transition-transform">
+                <MapPin className="h-4 w-4" fill="#4C82FB" strokeWidth={0} />
+              </div>
+              <span className="flex-1 min-w-0">
+                <span className="flex items-center gap-1 text-[12px] font-bold text-white leading-tight truncate">
+                  <span className="truncate">{isAuthenticated ? `${userName} - ` : ''}{locality}</span>
+                  <ChevronDown className="h-3 w-3 shrink-0 text-white/80 group-hover:translate-y-0.5 transition-transform" strokeWidth={2.5} />
+                </span>
+                <span className="block text-[10px] text-white/75 truncate leading-tight mt-0.5 max-w-[210px]">
+                  {displayFullAddress}
+                </span>
               </span>
-              <ChevronDown className="h-4 w-4 shrink-0 text-white" strokeWidth={2.2} />
             </button>
 
             {/* Action Icons */}

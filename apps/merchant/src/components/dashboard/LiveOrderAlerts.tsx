@@ -1,6 +1,8 @@
-import React from 'react';
-import { ChevronRight, ArrowRight } from 'lucide-react';
+import React, { useState } from 'react';
+import { ChevronRight, ArrowRight, Volume2, VolumeX, Sparkles } from 'lucide-react';
 import { useOrderStore } from '../../stores/orderStore.js';
+import { playOrderAlertChime, isAudioAlertMuted, toggleAudioAlertMuted } from '../../lib/audioAlert.js';
+import { merchantSocket } from '../../lib/socket.js';
 
 interface LiveOrderAlertsProps {
   onNavigateOrders?: () => void;
@@ -11,10 +13,27 @@ export const LiveOrderAlerts: React.FC<LiveOrderAlertsProps> = ({ onNavigateOrde
   const recentOrders = orders.slice(0, 5);
   const newOrdersCount = orders.filter((o) => o.status === 'new').length;
 
+  const [isMuted, setIsMuted] = useState<boolean>(isAudioAlertMuted());
+  const [isPlayingTest, setIsPlayingTest] = useState<boolean>(false);
+
+  const handleToggleMute = () => {
+    const next = toggleAudioAlertMuted();
+    setIsMuted(next);
+    if (!next) {
+      playOrderAlertChime();
+    }
+  };
+
+  const handleTestChime = () => {
+    setIsPlayingTest(true);
+    merchantSocket.triggerTestArrival();
+    setTimeout(() => setIsPlayingTest(false), 1200);
+  };
+
   return (
     <div className="p-3.5 sm:p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs flex flex-col justify-between h-full">
       <div>
-        {/* Header with Fire & 3D Basket Graphic */}
+        {/* Header with Fire, Sound Controls & 3D Basket Graphic */}
         <div className="flex items-center justify-between pb-2 border-b border-slate-100">
           <div className="flex items-center gap-2">
             <h3 className="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-1.5">
@@ -26,8 +45,34 @@ export const LiveOrderAlerts: React.FC<LiveOrderAlertsProps> = ({ onNavigateOrde
             </span>
           </div>
 
-          {/* 3D Basket Graphic */}
-          <div className="w-8 h-8 relative flex items-center justify-center">
+          <div className="flex items-center gap-1.5">
+            {/* Audio Alert Controls */}
+            <button
+              type="button"
+              onClick={handleTestChime}
+              disabled={isPlayingTest}
+              className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border border-slate-200 hover:border-amber-300 bg-slate-50 hover:bg-amber-50 text-[10px] font-semibold text-slate-600 hover:text-amber-800 transition-all cursor-pointer shadow-2xs"
+              title="Test real-time incoming order sound"
+            >
+              <Sparkles className="w-2.5 h-2.5 text-amber-500" />
+              <span>{isPlayingTest ? 'Chiming...' : 'Test Sound'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleToggleMute}
+              className={`p-1 rounded-lg border text-xs transition-colors cursor-pointer ${
+                isMuted
+                  ? 'border-slate-200 text-slate-400 hover:bg-slate-50'
+                  : 'border-blue-200 text-blue-600 bg-blue-50/50 hover:bg-blue-100/60'
+              }`}
+              title={isMuted ? 'Order chime muted (Click to unmute)' : 'Order chime active (Click to mute)'}
+            >
+              {isMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+            </button>
+
+            {/* 3D Basket Graphic */}
+            <div className="w-8 h-8 relative flex items-center justify-center">
             <svg viewBox="0 0 64 64" className="w-7 h-7 drop-shadow-sm" fill="none" xmlns="http://www.w3.org/2000/svg">
               <rect x="18" y="12" width="16" height="14" rx="2" fill="#3B82F6" />
               <rect x="24" y="12" width="4" height="14" fill="#60A5FA" />
@@ -38,6 +83,7 @@ export const LiveOrderAlerts: React.FC<LiveOrderAlertsProps> = ({ onNavigateOrde
               <path d="M22 28L24 49M32 28V49M42 28L40 49" stroke="#C2410C" strokeWidth="2" strokeLinecap="round" />
               <path d="M14 36H50M16 43H48" stroke="#C2410C" strokeWidth="1.5" />
             </svg>
+          </div>
           </div>
         </div>
 

@@ -35,15 +35,19 @@ export const orderModule: IOrderFacade = {
       throw err;
     }
   },
-  cancelOrder: async (orderId: string, _reason: string): Promise<OrderResponse | null> => {
+  cancelOrder: async (orderId: string, reason: string): Promise<OrderResponse | null> => {
     try {
-      return await orderService.cancelOrder(orderId, '__internal__', true);
+      return await orderService.cancelOrder(orderId, '__internal__', true, undefined, reason);
     } catch (err: any) {
       logger.error('OrderFacade cancelOrder failed', { error: err, orderId });
       throw err;
     }
   },
+  autoCancelStaleOrders: async (olderThanMinutes = 30, batchLimit = 50) => {
+    return orderService.autoCancelStaleOrders(olderThanMinutes, batchLimit);
+  },
 };
+
 
 export { createOrderModule };
 export type {
@@ -56,4 +60,17 @@ export type {
   CreateOrderDTO,
   UpdateOrderStatusDTO,
 } from './order.types.js';
+
+export {
+  orderExpiryWorker,
+  startOrderExpiryWorker,
+  stopOrderExpiryWorker,
+  getOrderExpiryWorkerStatus,
+} from './orderExpiryWorker.js';
+export type {
+  OrderExpiryWorkerOptions,
+  OrderExpiryWorkerStatus,
+} from './orderExpiryWorker.js';
 export { OrderStatus } from './order.types.js';
+
+

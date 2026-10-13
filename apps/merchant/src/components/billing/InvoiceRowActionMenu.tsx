@@ -1,5 +1,4 @@
-import React, { useEffect, useRef, useState, useLayoutEffect } from 'react';
-import { createPortal } from 'react-dom';
+import React, { useRef } from 'react';
 import {
   Download,
   ExternalLink,
@@ -11,122 +10,61 @@ import {
   StickyNote,
   SlidersHorizontal,
   XCircle,
+  Printer,
 } from 'lucide-react';
 import { IInvoice, useBillingStore } from '../../stores/billingStore.js';
+import { TableActionPopover } from '../ui/TableActionPopover.js';
 
 interface InvoiceRowActionMenuProps {
   invoice: IInvoice;
   isOpen: boolean;
   onClose: () => void;
+  triggerRef?: React.RefObject<HTMLElement | null>;
   anchorRect?: DOMRect | null;
   anchorPosition?: { top: number; right: number };
   onRecordPayment?: (invoice: IInvoice) => void;
+  onPrintThermal?: (invoice: IInvoice) => void;
+  onPrintA4?: (invoice: IInvoice) => void;
 }
 
 export const InvoiceRowActionMenu: React.FC<InvoiceRowActionMenuProps> = ({
   invoice,
   isOpen,
   onClose,
-  anchorRect,
-  anchorPosition,
+  triggerRef,
   onRecordPayment,
+  onPrintThermal,
+  onPrintA4,
 }) => {
-  const menuRef = useRef<HTMLDivElement>(null);
+  const fallbackRef = useRef<HTMLDivElement>(null);
+  const effectiveTriggerRef = triggerRef || fallbackRef;
   const { duplicateInvoice, updateInvoiceStatus } = useBillingStore();
-  const [coords, setCoords] = useState<{ top: number; left?: number; right?: number }>({
-    top: 0,
-    right: 16,
-  });
 
-  // Calculate fixed positioning relative to viewport
-  useLayoutEffect(() => {
-    if (!isOpen) return;
-
-    if (anchorRect) {
-      const menuWidth = 208; // w-52
-      const menuHeight = menuRef.current?.offsetHeight || 380;
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
-
-      // Vertical placement: prefer opening downwards
-      let top = anchorRect.bottom + 6;
-      if (top + menuHeight > viewportHeight - 12) {
-        if (anchorRect.top - menuHeight > 12) {
-          // Open upwards if enough space above
-          top = anchorRect.top - menuHeight - 6;
-        } else {
-          // Clamp inside viewport
-          top = Math.max(12, viewportHeight - menuHeight - 12);
-        }
-      }
-
-      // Horizontal placement: align right edge with trigger button
-      let right: number | undefined = Math.max(12, viewportWidth - anchorRect.right);
-      let left: number | undefined = undefined;
-
-      // If aligning to right causes overflow on the left edge
-      if (viewportWidth - right < menuWidth + 12) {
-        right = undefined;
-        left = Math.max(12, anchorRect.left);
-      }
-
-      setCoords({ top, right, left });
-    } else if (anchorPosition) {
-      setCoords({ top: anchorPosition.top, right: anchorPosition.right });
-    }
-  }, [isOpen, anchorRect, anchorPosition]);
-
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleClickOutside = (e: MouseEvent) => {
-      const target = e.target as HTMLElement | null;
-      // Allow trigger button to manage its own toggling
-      if (target?.closest?.('[data-invoice-menu-trigger]')) {
-        return;
-      }
-      if (menuRef.current && !menuRef.current.contains(target as Node)) {
-        onClose();
-      }
-    };
-
-    const handleScrollOrResize = (e: Event) => {
-      // If scroll happens inside the menu itself, ignore
-      if (menuRef.current && e.target instanceof Node && menuRef.current.contains(e.target)) {
-        return;
-      }
-      onClose();
-    };
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    window.addEventListener('scroll', handleScrollOrResize, true);
-    window.addEventListener('resize', handleScrollOrResize);
-    document.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      window.removeEventListener('scroll', handleScrollOrResize, true);
-      window.removeEventListener('resize', handleScrollOrResize);
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [isOpen, onClose]);
-
-  if (!isOpen || typeof document === 'undefined') return null;
+  if (!isOpen) return null;
 
   const handleAction = (action: string) => {
     onClose();
     switch (action) {
       case 'download':
-        window.print();
+        if (onPrintA4) {
+          onPrintA4(invoice);
+        } else {
+          window.print();
+        }
+        break;
+      case 'print_thermal':
+        if (onPrintThermal) {
+          onPrintThermal(invoice);
+        } else {
+          window.print();
+        }
         break;
       case 'open':
-        alert(`Opening ${invoice.invoiceNo} preview.`);
+        if (onPrintA4) {
+          onPrintA4(invoice);
+        } else {
+          alert(`Opening ${invoice.invoiceNo} preview.`);
+        }
         break;
       case 'share':
         navigator.clipboard?.writeText?.(window.location.href);
@@ -175,16 +113,12 @@ export const InvoiceRowActionMenu: React.FC<InvoiceRowActionMenuProps> = ({
     }
   };
 
-  const menuElement = (
-    <div
-      ref={menuRef}
-      style={{
-        position: 'fixed',
-        top: `${coords.top}px`,
-        ...(coords.left !== undefined ? { left: `${coords.left}px` } : {}),
-        ...(coords.right !== undefined ? { right: `${coords.right}px` } : {}),
-      }}
-      className="w-52 max-h-[calc(100vh-24px)] overflow-y-auto bg-white rounded-xl shadow-2xl border border-slate-200/90 py-1.5 z-[9999] animate-in fade-in zoom-in-95 duration-150 text-slate-700"
+  return (
+    <TableActionPopover
+      isOpen={isOpen}
+      onClose={onClose}
+      triggerRef={effectiveTriggerRef}
+      className="w-52 text-slate-700"
     >
       <button
         onClick={() => handleAction('download')}
@@ -194,12 +128,32 @@ export const InvoiceRowActionMenu: React.FC<InvoiceRowActionMenuProps> = ({
         <span>Download PDF</span>
       </button>
 
+      {onPrintThermal && (
+        <button
+          onClick={() => handleAction('print_thermal')}
+          className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium hover:bg-slate-50 transition-colors text-slate-700 text-left cursor-pointer"
+        >
+          <Receipt className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+          <span>Print Thermal (80mm)</span>
+        </button>
+      )}
+
+      {onPrintA4 && (
+        <button
+          onClick={() => handleAction('open')}
+          className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium hover:bg-slate-50 transition-colors text-slate-700 text-left cursor-pointer"
+        >
+          <Printer className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+          <span>Print A4 Invoice</span>
+        </button>
+      )}
+
       <button
         onClick={() => handleAction('open')}
         className="w-full flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium hover:bg-slate-50 transition-colors text-slate-700 text-left cursor-pointer"
       >
         <ExternalLink className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-        <span>Open</span>
+        <span>Open Preview</span>
       </button>
 
       <button
@@ -267,8 +221,6 @@ export const InvoiceRowActionMenu: React.FC<InvoiceRowActionMenuProps> = ({
         <XCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
         <span>Cancel Invoice</span>
       </button>
-    </div>
+    </TableActionPopover>
   );
-
-  return createPortal(menuElement, document.body);
 };

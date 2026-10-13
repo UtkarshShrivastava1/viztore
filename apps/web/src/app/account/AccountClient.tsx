@@ -15,6 +15,31 @@ import { useAuthStore } from '@/stores/auth.store';
 export function AccountClient() {
   const { user, isAuthenticated } = useAuthStore();
   const [isEditingMobile, setIsEditingMobile] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (mounted && !isAuthenticated) {
+    return (
+      <div className="min-h-[70vh] bg-white font-sans flex flex-col items-center justify-center px-4 py-20">
+        <div className="w-16 h-16 bg-[#E8F0FE] rounded-full flex items-center justify-center text-[#1668F6] mb-4">
+          <User className="w-8 h-8" />
+        </div>
+        <h2 className="text-xl font-bold text-[#192168] mb-2">Sign in to access your account</h2>
+        <p className="text-sm text-surface-500 text-center max-w-sm mb-6">
+          Manage your orders, profile details, delivery addresses, and saved stores.
+        </p>
+        <button
+          onClick={() => openAuthModal('login')}
+          className="px-8 py-3 bg-[#1668F6] text-white text-sm font-bold rounded-xl shadow-sm hover:bg-blue-700 transition cursor-pointer"
+        >
+          Sign In / Create Account
+        </button>
+      </div>
+    );
+  }
 
   const formData = {
     fullName: user?.fullName || (isAuthenticated ? 'Customer User' : 'Guest User'),

@@ -9,6 +9,7 @@ import {
 } from '@repo/shared-types';
 import { validateRequest } from '../../shared/middlewares/validateRequest.js';
 import { authGuard } from '../../shared/middlewares/authGuard.js';
+import { authRateLimiter } from '../../shared/middlewares/rateLimiter.js';
 import * as authController from './auth.controller.js';
 
 const router = Router();
@@ -22,6 +23,7 @@ router.post(
 
 router.post(
   '/login',
+  authRateLimiter,
   validateRequest({ body: loginUserSchema }),
   authController.login,
 );

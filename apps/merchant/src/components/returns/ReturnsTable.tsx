@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Search,
   Calendar,
@@ -13,10 +13,54 @@ import {
   ReturnRecord,
   ReturnFilterTab,
 } from '../../stores/returnsStore.js';
+import { TableActionPopover } from '../ui/TableActionPopover.js';
 
 interface ReturnsTableProps {
   onViewReturn: (ret: ReturnRecord) => void;
 }
+
+const ReturnRowActionMenu: React.FC<{
+  ret: ReturnRecord;
+  isOpen: boolean;
+  onToggle: () => void;
+  onClose: () => void;
+  onOpenRaiseModal: (ret: ReturnRecord) => void;
+}> = ({ ret, isOpen, onToggle, onClose, onOpenRaiseModal }) => {
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  return (
+    <>
+      <button
+        ref={triggerRef}
+        onClick={onToggle}
+        className={`p-1 rounded-lg border border-slate-200 hover:bg-slate-100 transition-colors cursor-pointer ${
+          isOpen ? 'bg-slate-100' : ''
+        }`}
+        aria-label="More Actions"
+      >
+        <MoreVertical className="w-3.5 h-3.5 text-slate-600" />
+      </button>
+
+      <TableActionPopover
+        isOpen={isOpen}
+        onClose={onClose}
+        triggerRef={triggerRef}
+        className="w-44 rounded-xl py-1.5 text-left text-xs shadow-xl"
+      >
+        <button
+          onClick={() => {
+            onClose();
+            onOpenRaiseModal(ret);
+          }}
+          className="w-full px-3.5 py-2 flex items-center gap-2 text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+        >
+          <MessageSquare className="w-4 h-4 text-blue-600" />
+          <span className="font-semibold">Raise Request</span>
+        </button>
+      </TableActionPopover>
+    </>
+  );
+};
 
 export const ReturnsTable: React.FC<ReturnsTableProps> = ({ onViewReturn }) => {
   const {
@@ -347,42 +391,14 @@ export const ReturnsTable: React.FC<ReturnsTableProps> = ({ onViewReturn }) => {
                           <span>View</span>
                         </button>
 
-                        {/* More Action ⋮ Button */}
-                        <div className="relative">
-                          <button
-                            onClick={() =>
-                              setActiveMenuId(isMenuOpen ? null : ret.id)
-                            }
-                            className={`p-1 rounded-lg border border-slate-200 hover:bg-slate-100 transition-colors ${
-                              isMenuOpen ? 'bg-slate-100' : ''
-                            }`}
-                            aria-label="More Actions"
-                          >
-                            <MoreVertical className="w-3.5 h-3.5 text-slate-600" />
-                          </button>
-
-                          {/* Row Menu matching 9.2.png with Raise Request */}
-                          {isMenuOpen && (
-                            <>
-                              <div
-                                className="fixed inset-0 z-40"
-                                onClick={() => setActiveMenuId(null)}
-                              />
-                              <div className="absolute right-0 mt-1 w-44 bg-white rounded-xl shadow-xl border border-slate-200 py-1.5 z-50 text-left text-xs animate-in fade-in zoom-in-95 duration-100">
-                                <button
-                                  onClick={() => {
-                                    setActiveMenuId(null);
-                                    openRaiseModal(ret);
-                                  }}
-                                  className="w-full px-3.5 py-2 flex items-center gap-2 text-slate-700 hover:bg-slate-50 transition-colors"
-                                >
-                                  <MessageSquare className="w-4 h-4 text-blue-600" />
-                                  <span className="font-semibold">Raise Request</span>
-                                </button>
-                              </div>
-                            </>
-                          )}
-                        </div>
+                        {/* More Action ⋮ Popover Menu */}
+                        <ReturnRowActionMenu
+                          ret={ret}
+                          isOpen={isMenuOpen}
+                          onToggle={() => setActiveMenuId(isMenuOpen ? null : ret.id)}
+                          onClose={() => setActiveMenuId(null)}
+                          onOpenRaiseModal={openRaiseModal}
+                        />
                       </div>
                     </td>
                   </tr>

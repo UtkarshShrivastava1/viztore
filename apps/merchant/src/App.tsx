@@ -26,6 +26,7 @@ import { Sidebar, DashboardTab } from './components/dashboard/Sidebar.js';
 import { Header } from './components/dashboard/Header.js';
 import { AddProductModal } from './components/catalog/AddProductModal.js';
 import { BulkUploadModal } from './components/catalog/BulkUploadModal.js';
+import { LiveOrderSocketListener } from './components/dashboard/LiveOrderSocketListener.js';
 
 export type AppView = 'landing' | 'login' | 'onboarding' | 'dashboard';
 
@@ -122,6 +123,14 @@ export const App: React.FC = () => {
   // Main Merchant Dashboard & Functional Modules
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-800 flex flex-col">
+      {/* Real-time Socket.io Incoming Order Alert & Melodic Chime Engine */}
+      <LiveOrderSocketListener
+        onNavigateToOrder={() => {
+          setCurrentTab('orders');
+          setIsCreateOrderView(false);
+        }}
+      />
+
       {/* Desktop & Mobile Sidebar */}
       <div className={`${isMobileMenuOpen ? 'block' : 'hidden sm:block'}`}>
         <Sidebar
