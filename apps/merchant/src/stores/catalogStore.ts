@@ -129,6 +129,7 @@ interface CatalogStoreState {
   loadProductIntoDraft: (product: ProductItem) => void;
 
   saveDraftAsProduct: () => Promise<ProductItem>;
+  bulkImportProducts: (productsData: any[]) => Promise<{ created: number; errors: any[] }>;
   duplicateProduct: (id: string) => void;
   toggleProductStatus: (id: string) => Promise<void>;
   updateStock: (id: string, newStock: number, lowStockThreshold?: number) => Promise<void>;
@@ -466,17 +467,37 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
         ? draftProduct.images
         : [defaultImage];
 
-    // 4. Construct variant
-    const variant = {
-      sku: (draftProduct.sku || `PRD-${Date.now()}`).toUpperCase(),
-      size: draftProduct.attributes?.size || 'Standard',
-      color: draftProduct.attributes?.color || 'Standard',
-      price: Number(draftProduct.price ?? 599),
-      mrp: Number(draftProduct.mrp ?? draftProduct.price ?? 699),
-      stock: Number(draftProduct.stock ?? 10),
-      images,
-      isActive: draftProduct.status !== 'inactive',
-    };
+    // 4. Construct variants (single or multi-variant matrix)
+    const baseSku = (draftProduct.sku || `PRD-${Date.now()}`).toUpperCase();
+    const hasVariants = draftProduct.attributes?.hasVariants === 'true';
+    let variants = [];
+
+    if (hasVariants) {
+      const sizes = ['S', 'M', 'L', 'XL'];
+      variants = sizes.map((sz) => ({
+        sku: `${baseSku}-${sz}`,
+        size: sz,
+        color: draftProduct.attributes?.color || 'Standard',
+        price: Number(draftProduct.price ?? 599),
+        mrp: Number(draftProduct.mrp ?? draftProduct.price ?? 699),
+        stock: Math.max(1, Math.floor(Number(draftProduct.stock ?? 10) / sizes.length)),
+        images,
+        isActive: draftProduct.status !== 'inactive',
+      }));
+    } else {
+      variants = [
+        {
+          sku: baseSku,
+          size: draftProduct.attributes?.size || 'Standard',
+          color: draftProduct.attributes?.color || 'Standard',
+          price: Number(draftProduct.price ?? 599),
+          mrp: Number(draftProduct.mrp ?? draftProduct.price ?? 699),
+          stock: Number(draftProduct.stock ?? 10),
+          images,
+          isActive: draftProduct.status !== 'inactive',
+        },
+      ];
+    }
 
     const payload = {
       storeId,
@@ -490,7 +511,7 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
       brand: draftProduct.brand || 'Generic',
       tags: draftProduct.tags || [],
       attributes: attributesArray,
-      variants: [variant],
+      variants,
       isFeatured: false,
     };
 
@@ -580,6 +601,77 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
     });
 
     return finalizedProduct;
+  },
+
+  bulkImportProducts: async (productsData: any[]) => {
+    let storeId =
+      useAuthStore.getState().currentStore?._id ||
+      useAuthStore.getState().currentStore?.id;
+
+    if (!storeId) {
+      try {
+        const stores = await api.get<any[]>('/stores/mine');
+        if (Array.isArray(stores) && stores.length > 0) {
+          storeId = stores[0]._id || stores[0].id;
+          useAuthStore.getState().setCurrentStore(stores[0]);
+        }
+      } catch (e) {
+        console.warn('Could not resolve store for bulk import:', e);
+      }
+    }
+
+    if (!storeId) {
+      throw new Error('No active merchant store found for bulk product import');
+    }
+
+    const defaultImage =
+      'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=600&q=80';
+
+    const formattedPayloads = productsData.map((item, idx) => {
+      const price = Number(item.price || 499);
+      const mrp = Number(item.mrp || item.price || 699);
+      const stock = Number(item.stock || 20);
+      const sku = (item.sku || `PRD-BLK-${Date.now()}-${idx + 1}`).toUpperCase();
+      const cat = (item.category || 'fashion').toLowerCase().trim().replace(/[\s-]+/g, '_');
+      const images = Array.isArray(item.images) && item.images.length > 0
+        ? item.images
+        : [item.image || defaultImage];
+
+      return {
+        storeId,
+        name: item.name || `Imported Product ${idx + 1}`,
+        description: item.description || '',
+        category: cat,
+        subCategory: item.subCategory || 'General',
+        brand: item.brand || 'Generic',
+        tags: Array.isArray(item.tags)
+          ? item.tags
+          : item.tags
+            ? String(item.tags).split(',').map((t: string) => t.trim())
+            : [],
+        attributes: [
+          { key: 'Source', value: 'Bulk CSV Import' },
+          ...(item.size ? [{ key: 'Size', value: String(item.size) }] : []),
+        ],
+        variants: [
+          {
+            sku,
+            size: item.size || 'Standard',
+            color: item.color || 'Standard',
+            price,
+            mrp,
+            stock,
+            images,
+            isActive: true,
+          },
+        ],
+        isFeatured: false,
+      };
+    });
+
+    const result = await catalogApi.bulkCreateProducts(storeId, formattedPayloads);
+    await get().fetchProducts(storeId);
+    return result;
   },
 
   duplicateProduct: (id) =>

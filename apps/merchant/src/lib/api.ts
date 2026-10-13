@@ -184,10 +184,13 @@ export const ordersApi = {
 
 export const catalogApi = {
   getStoreCatalog: (storeId: string) =>
-    api.get<any>(`/catalog/store/${storeId}`),
+    api.get<any>(`/catalog/stores/${storeId}/products`),
 
   createProduct: (productData: unknown) =>
     api.post<any>('/catalog/products', productData),
+
+  bulkCreateProducts: (storeId: string, products: unknown[]) =>
+    api.post<{ created: number; errors: any[] }>('/catalog/products/bulk', { storeId, products }),
 
   updateProduct: (productId: string, updates: unknown) =>
     api.patch<any>(`/catalog/products/${productId}`, updates),

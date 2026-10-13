@@ -35,12 +35,23 @@ export const ProductsCatalogPage: React.FC<ProductsCatalogPageProps> = ({
   };
 
   const handleExportCsv = () => {
-    const csvContent =
-      'data:text/csv;charset=utf-8,SKU,Name,Category,Price,Stock,Status\n' +
-      'PRD-TSHIRT-RD-BLK-M,Men Black Round Neck T-Shirt,Men,599,120,Active\n';
-    const encodedUri = encodeURI(csvContent);
+    if (products.length === 0) {
+      alert('No products available to export.');
+      return;
+    }
+    const header = 'SKU,Name,Category,SubCategory,Price,MRP,Stock,Status\n';
+    const rows = products
+      .map((p) => {
+        const cleanName = `"${p.name.replace(/"/g, '""')}"`;
+        const cleanCat = `"${p.category}"`;
+        const cleanSub = `"${p.subCategory}"`;
+        return `${p.sku},${cleanName},${cleanCat},${cleanSub},${p.price},${p.mrp || p.price},${p.stock},${p.status}`;
+      })
+      .join('\n');
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + encodeURIComponent(header + rows);
     const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
+    link.setAttribute('href', csvContent);
     link.setAttribute('download', `catalog_export_${Date.now()}.csv`);
     document.body.appendChild(link);
     link.click();

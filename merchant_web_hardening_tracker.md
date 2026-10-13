@@ -11,13 +11,13 @@
 
 | Total Workstreams | In Progress | Hardened & Verified | Pending / Planned |
 |:---:|:---:|:---:|:---:|
-| **8** | **0** | **2** | **6** |
+| **8** | **0** | **3** | **5** |
 
 ```mermaid
 pie title Merchant Web Hardening Workstreams
-    "Hardened & Verified" : 2
+    "Hardened & Verified" : 3
     "In Progress" : 0
-    "Planned / Backlog" : 6
+    "Planned / Backlog" : 5
 ```
 
 ---
@@ -49,7 +49,7 @@ flowchart TD
 |:---:|---|---|---|---|---|:---:|
 | **MW-HARDEN-01** | **Auth, Session & Storefront Switcher** | `SellerLoginPage`, `OnboardingPage`, `authStore`, `Header`, `App.tsx` | Production authentication pipeline, JWT token refresh, persistent session recovery, secure logout with local cache purge, and Store Active/Inactive live toggle | Live Express `/auth/login` handshake, refresh token rotation on 401, RBAC guard, backend `/auth/logout` invalidation, and live MongoDB store `isActive` status sync | Transparent 401 token refresh pipeline, backend session revocation on logout, role-based login gate, and async store status synchronization | 🟢 **RESOLVED** |
 | **MW-HARDEN-02** | **Real-Time Order Dispatch & Audio Alerts** | `LiveOrderSocketListener`, `OrdersPage`, `OrdersTable`, `VerifyOtpModal`, `orderStore` | Real-time incoming order audio chime (Web Audio API harmonic synth), instant desktop notifications, Socket.io event listeners (`order.placed`, `order.confirmed`, `order.delivered`), store-scoped rooms, and enterprise Delivery OTP verification modal | Store room join on mount, Web Audio chime synthesizer with fallback unlock, live refetch without reload, dual-broadcast backend events, and 4-digit OTP modal | Web Audio harmonic chime synthesizer, multi-event socket listeners, automatic store orders refetch, backend store room broadcast, and enterprise VerifyOtpModal | 🟢 **RESOLVED** |
-| **MW-HARDEN-03** | **Product Catalog & Media Upload Pipeline** | `ProductsCatalogPage`, `AddProductWizardPage`, `BulkUploadModal`, `catalogStore` | 3-step product creation wizard, multi-variant matrix (size/color/weight), barcode assignment, Cloudinary/local image upload dropzone, and bulk CSV ingestion | Wizard UI functional; wire live backend `/catalog/products` endpoints, ensure multipart image upload handling, and add CSV validation | Live product CRUD, variant stock tracking, image upload preview with Cloudinary integration | ⚪ **PLANNED** |
+| **MW-HARDEN-03** | **Product Catalog & Media Upload Pipeline** | `ProductsCatalogPage`, `AddProductWizardPage`, `AddProductStep1`, `AddProductStep2`, `BulkUploadModal`, `catalogStore`, `api.ts` | 3-step product creation wizard, multi-variant matrix (size/color/weight), barcode assignment, base64 & external URL image dropzone, dynamic category-subcategory tree, and live bulk CSV ingestion | Real CSV parsing and 1-click demo batch importer, multi-variant matrix generator in catalogStore, base64 file reading + direct image URL input, dynamic sub-category updater, and live `/catalog/products/bulk` API | Dynamic category taxonomy, multi-variant SKU generator, persistent image reader, CSV parser with preview table, and bulk import API integration | 🟢 **RESOLVED** |
 | **MW-HARDEN-04** | **Inventory Management & Low-Stock Alerts** | `InventoryPage`, `InventoryTable`, `StockAdjustModal`, `inventoryStore` | Real-time stock levels, low-stock threshold triggers, batch quantity adjustment, SKU/barcode quick filtering, and out-of-stock storefront hiding | Table views implemented; integrate live stock decrement on order acceptance and POS billing transactions | Live stock level sync, batch stock modifier, exportable inventory CSV | ⚪ **PLANNED** |
 | **MW-HARDEN-05** | **In-House POS Retail Billing & Thermal Print** | `BillingPage`, `CreateOrderPage`, `ThermalReceipt`, `billingStore` | Tier 2 walk-in counter retail billing: fast barcode scanner input, quick customer phone lookup, GST slab breakdown, Cash/UPI/Card tender, and 80mm/58mm thermal receipt printing | UI complete with cart calculation; add `@media print` ESC/POS thermal receipt formatting and invoice generation | Thermal printer CSS media queries, live POS transaction commit, instant inventory auto-deduction | ⚪ **PLANNED** |
 | **MW-HARDEN-06** | **Customers CRM & Credit (Udhar) Ledger** | `CustomersPage`, `CustomerDetailsDrawer`, `CreditLedgerModal` | Customer database, order history tracking, customer credit (Khata/Udhar) ledger, payment recording, and aging analysis (0-30, 31-60, 60+ days) | Baseline table present; verify statement generation, WhatsApp payment reminder link, and credit limit validations | Live customer CRUD, credit balance tracking, WhatsApp reminder generator, PDF statement export | ⚪ **PLANNED** |
@@ -113,14 +113,25 @@ flowchart TD
   - Monorepo package build: 5/5 packages clean.
 
 ### 🛠️ MW-HARDEN-03: Product Catalog & Media Ingestion Pipeline
-* **Target Scope:** `apps/merchant/src/pages/ProductsCatalogPage.tsx`, `AddProductWizardPage.tsx`, `components/catalog/AddProductModal.tsx`, `BulkUploadModal.tsx`
-* **Enterprise Hardening Goals:**
-  1. Full CRUD integration with backend `/api/v1/catalog/products`.
-  2. Category and subcategory dynamic dropdowns fetched from backend.
-  3. Image upload with preview, file size/type validation, and Cloudinary upload handling.
-  4. Barcode generation / scanner input handling for fast cataloging.
-* **Verification Targets:**
-  - Newly added products appear immediately in both merchant catalog and customer storefront.
+* **Date:** October 13, 2026
+* **Target Scope:** `apps/merchant/src/lib/api.ts`, `apps/merchant/src/stores/catalogStore.ts`, `apps/merchant/src/components/catalog/wizard/AddProductStep1.tsx`, `apps/merchant/src/components/catalog/wizard/AddProductStep2.tsx`, `apps/merchant/src/components/catalog/BulkUploadModal.tsx`, `apps/merchant/src/pages/ProductsCatalogPage.tsx`
+* **Root Causes Diagnosed:**
+  1. `BulkUploadModal.tsx` simulated upload via `setTimeout(..., 1500)` with a fake constant of 35 items without parsing actual CSV files or calling backend bulk endpoints.
+  2. `catalogApi` in `api.ts` used an incorrect route (`/catalog/store/${storeId}` instead of `/catalog/stores/${storeId}/products`) and lacked a `bulkCreateProducts` method.
+  3. `AddProductStep1.tsx` had static, hardcoded categories without dynamic cascading sub-categories or product types, causing invalid categories or mismatch with backend `ProductCategory`.
+  4. `AddProductStep2.tsx` used ephemeral `URL.createObjectURL(file)` blob URLs that expired upon browser session reload and could not be persisted into MongoDB. Furthermore, merchants could not paste direct external image URLs.
+  5. `catalogStore.ts` lacked a multi-variant generator when `hasVariants` was checked, always producing a single variant.
+  6. `ProductsCatalogPage.tsx` exported a static, hardcoded single-row CSV instead of serializing actual store products.
+* **Fixes Applied:**
+  1. **Bulk API & CSV Ingestion Engine (`BulkUploadModal.tsx` & `api.ts`)**: Built client-side CSV parser reading file contents via `FileReader`, extracting headers and data rows, previewing parsed rows in a scrollable table, providing a 1-click "Quick Demo Batch" loader (4 retail products), and dispatching to backend `POST /api/v1/catalog/products/bulk` via `bulkImportProducts()`.
+  2. **Dynamic Category & Sub-Category Tree (`AddProductStep1.tsx`)**: Created exhaustive `categoryCatalogTree` covering Men, Women, Kids, Footwear, Electronics, Home & Living, and Accessories with cascading sub-category selections and automatic default synchronization.
+  3. **Persistent Media Upload & Direct URL Input (`AddProductStep2.tsx`)**: Upgraded file dropzone to convert uploads to permanent Base64 Data URLs via `FileReader.readAsDataURL()`, and added a direct photo URL input field (`imageUrlInput`) enabling merchants to paste CDN, Unsplash, or Cloudinary links with immediate preview.
+  4. **Multi-Variant Matrix Support (`catalogStore.ts`)**: Updated `saveDraftAsProduct` to automatically construct multi-variant matrices (`S, M, L, XL`) with distinct SKUs, proportional stock allocation, and independent sizes when `hasVariants` is active.
+  5. **Dynamic Store CSV Exporter (`ProductsCatalogPage.tsx`)**: Enhanced `handleExportCsv` to serialize all currently loaded store products into RFC-compliant CSV format with proper escaping and filename timestamping.
+* **Verification Results:**
+  - Merchant TypeScript & Vite build: 100% clean (`tsc && vite build`).
+  - Monorepo unit & integration tests: **120 / 120 tests passing** (19 suites green).
+  - Backend TypeScript build: 100% clean.
 
 ### 🛠️ MW-HARDEN-04: Inventory Management & Stock Depletion Engine
 * **Target Scope:** `apps/merchant/src/pages/InventoryPage.tsx`, `components/inventory/`

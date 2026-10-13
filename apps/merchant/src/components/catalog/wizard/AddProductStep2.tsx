@@ -46,22 +46,33 @@ export const AddProductStep2: React.FC = () => {
   const hsnCode = draftProduct.hsnCode || '61091000';
   const description = draftProduct.description || '';
 
+  const [imageUrlInput, setImageUrlInput] = useState('');
+
   const handleFilesSelected = (files: FileList | null) => {
     if (!files) return;
-    const newImgs: string[] = [];
     const maxAllowed = 10 - images.length;
     const limit = Math.min(files.length, maxAllowed);
 
-    for (let i = 0; i < limit; i++) {
-      const file = files[i];
-      if (file) {
-        const url = URL.createObjectURL(file);
-        newImgs.push(url);
-      }
-    }
-    if (newImgs.length > 0) {
-      updateDraftProduct({ images: [...images, ...newImgs] });
-    }
+    Array.from(files).slice(0, limit).forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        if (result) {
+          const current = useCatalogStore.getState().draftProduct.images || [];
+          if (current.length < 10) {
+            updateDraftProduct({ images: [...current, result] });
+          }
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleAddImageUrl = () => {
+    const trimmed = imageUrlInput.trim();
+    if (!trimmed || images.length >= 10) return;
+    updateDraftProduct({ images: [...images, trimmed] });
+    setImageUrlInput('');
   };
 
   const handleRemoveImage = (index: number) => {
@@ -178,6 +189,31 @@ export const AddProductStep2: React.FC = () => {
                   ))}
                 </div>
               </div>
+            </div>
+
+            {/* Direct Image URL input option */}
+            <div className="mt-3.5 pt-3.5 border-t border-slate-100 flex flex-col sm:flex-row items-center gap-2">
+              <input
+                type="url"
+                value={imageUrlInput}
+                onChange={(e) => setImageUrlInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddImageUrl();
+                  }
+                }}
+                placeholder="Or paste external photo URL (https://...)"
+                className="w-full sm:flex-1 px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              />
+              <button
+                type="button"
+                onClick={handleAddImageUrl}
+                disabled={!imageUrlInput.trim() || images.length >= 10}
+                className="w-full sm:w-auto px-3.5 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition-colors cursor-pointer shrink-0"
+              >
+                Add URL
+              </button>
             </div>
 
             {/* Uploaded Thumbnails Preview Gallery */}

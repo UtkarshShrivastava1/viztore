@@ -3,15 +3,114 @@ import { Shirt, ListFilter, LayoutGrid, Info, ArrowRight, Search } from 'lucide-
 import { useCatalogStore } from '../../../stores/catalogStore.js';
 import { WizardHelpSidebar } from './WizardHelpSidebar.js';
 
+interface CategoryDefinition {
+  subCategories: string[];
+  productTypes: Record<string, string[]>;
+}
+
+const defaultCategoryData: CategoryDefinition = {
+  subCategories: ['T-Shirts', 'Shirts', 'Jeans', 'Trousers', 'Ethnic Wear'],
+  productTypes: {
+    'T-Shirts': ['Round Neck T-Shirt', 'Polo T-Shirt', 'Oversized T-Shirt', 'V-Neck T-Shirt'],
+    'Shirts': ['Formal Shirt', 'Casual Shirt', 'Flannel Shirt', 'Linen Shirt'],
+    'Jeans': ['Slim Fit Jeans', 'Relaxed Jeans', 'Skinny Jeans', 'Ripped Jeans'],
+    'Trousers': ['Chinos', 'Formal Trousers', 'Cargo Pants'],
+    'Ethnic Wear': ['Kurta Pajama', 'Nehru Jacket', 'Sherwani'],
+  },
+};
+
+const categoryCatalogTree: Record<string, CategoryDefinition> = {
+  Men: defaultCategoryData,
+  Women: {
+    subCategories: ['Sarees', 'Kurtis & Suits', 'Dresses', 'Western Tops', 'Jeans & Jeggings'],
+    productTypes: {
+      'Sarees': ['Silk Saree', 'Cotton Saree', 'Georgette Saree', 'Chiffon Saree'],
+      'Kurtis & Suits': ['Straight Kurti', 'Anarkali Suit', 'Palazzo Set'],
+      'Dresses': ['Maxi Dress', 'A-Line Dress', 'Bodycon Dress', 'Floral Sundress'],
+      'Western Tops': ['Crop Top', 'Button-Down Shirt', 'Peplum Top'],
+      'Jeans & Jeggings': ['High-Waist Jeans', 'Skinny Jeggings', 'Bootcut Jeans'],
+    },
+  },
+  Kids: {
+    subCategories: ['Boys Clothing', 'Girls Clothing', 'Baby Care', 'Footwear'],
+    productTypes: {
+      'Boys Clothing': ['Graphic T-Shirt', 'Shorts Set', 'Party Wear Suit'],
+      'Girls Clothing': ['Frock Dress', 'Top & Skirt Set', 'Ethnic Lehenga'],
+      'Baby Care': ['Romper Onesie', 'Cotton Bodysuit', 'Swaddle Blanket'],
+      'Footwear': ['Light-up Sneakers', 'Soft Booties', 'Sandals'],
+    },
+  },
+  Footwear: {
+    subCategories: ['Sneakers', 'Formal Shoes', 'Sandals & Slides', 'Sports Shoes'],
+    productTypes: {
+      'Sneakers': ['Low-top Canvas', 'Chunky Sneakers', 'Slip-on Shoes'],
+      'Formal Shoes': ['Oxford Shoes', 'Derby Shoes', 'Loafers'],
+      'Sandals & Slides': ['Leather Sandals', 'Casual Slides', 'Flip-Flops'],
+      'Sports Shoes': ['Running Shoes', 'Training Shoes', 'Football Cleats'],
+    },
+  },
+  Electronics: {
+    subCategories: ['Audio', 'Mobile Accessories', 'Wearables', 'Cables & Power'],
+    productTypes: {
+      'Audio': ['Wireless Earbuds', 'Over-ear Headphones', 'Bluetooth Speaker'],
+      'Mobile Accessories': ['Shockproof Case', 'Tempered Glass', 'Phone Stand'],
+      'Wearables': ['Fitness Tracker', 'Smartwatch with AMOLED', 'Sports Band'],
+      'Cables & Power': ['Fast Charger Adapter', 'Type-C Braided Cable', 'Power Bank 20000mAh'],
+    },
+  },
+  'Home & Living': {
+    subCategories: ['Bedding', 'Home Decor', 'Kitchen & Dining', 'Bath & Towels'],
+    productTypes: {
+      'Bedding': ['Bedsheet Set (Double)', 'Microfiber Pillows', 'Comforter Quilt'],
+      'Home Decor': ['Wall Clock', 'Scented Candle', 'Indoor Planter Ceramic'],
+      'Kitchen & Dining': ['Insulated Water Bottle', 'Stainless Steel Cookware', 'Coffee Mug Set'],
+      'Bath & Towels': ['Cotton Bath Towel', 'Hand Towels Set', 'Anti-skid Bath Mat'],
+    },
+  },
+  Accessories: {
+    subCategories: ['Bags & Backpacks', 'Watches', 'Sunglasses', 'Belts & Wallets'],
+    productTypes: {
+      'Bags & Backpacks': ['Laptop Backpack', 'Travel Duffel', 'Crossbody Sling'],
+      'Watches': ['Chronograph Watch', 'Minimalist Leather Watch', 'Digital Sport Watch'],
+      'Sunglasses': ['Aviator Sunglasses', 'Wayfarer Shades', 'Polarized Sport'],
+      'Belts & Wallets': ['Genuine Leather Belt', 'Bi-fold RFID Wallet', 'Card Holder'],
+    },
+  },
+};
+
 export const AddProductStep1: React.FC = () => {
   const { draftProduct, updateDraftProduct, setWizardStep } = useCatalogStore();
 
   const category = draftProduct.category || 'Men';
-  const subCategory = draftProduct.subCategory || 'T-Shirts';
-  const productType = draftProduct.productType || 'Round Neck T-Shirt';
+  const currentCategoryData = categoryCatalogTree[category] || defaultCategoryData;
+  const subCategory = draftProduct.subCategory || currentCategoryData.subCategories[0] || 'T-Shirts';
+  const availableProductTypes =
+    (subCategory && currentCategoryData.productTypes[subCategory]) ||
+    currentCategoryData.productTypes[currentCategoryData.subCategories[0] || ''] ||
+    ['Standard'];
+  const productType = draftProduct.productType || availableProductTypes[0] || 'Standard';
   const productIdentification = draftProduct.productIdentification || 'new';
-  const brand = draftProduct.brand || 'PUMA';
+  const brand = draftProduct.brand || 'Generic';
   const hsnCode = draftProduct.hsnCode || '61091000';
+
+  const handleCategoryChange = (newCat: string) => {
+    const nextCatData = categoryCatalogTree[newCat] || defaultCategoryData;
+    const nextSub = nextCatData.subCategories[0] || 'T-Shirts';
+    const nextTypes = nextCatData.productTypes[nextSub] || ['Standard'];
+    updateDraftProduct({
+      category: newCat,
+      subCategory: nextSub,
+      productType: nextTypes[0] || 'Standard',
+    });
+  };
+
+  const handleSubCategoryChange = (newSub: string) => {
+    const nextTypes = currentCategoryData.productTypes[newSub] || ['Standard'];
+    updateDraftProduct({
+      subCategory: newSub,
+      productType: nextTypes[0] || 'Standard',
+    });
+  };
 
   const handleContinue = (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,14 +148,14 @@ export const AddProductStep1: React.FC = () => {
                   </div>
                   <select
                     value={category}
-                    onChange={(e) => updateDraftProduct({ category: e.target.value })}
+                    onChange={(e) => handleCategoryChange(e.target.value)}
                     className="w-full pl-9 pr-8 py-2 text-xs font-medium text-slate-800 bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer"
                   >
-                    <option value="Men">Men</option>
-                    <option value="Women">Women</option>
-                    <option value="Kids">Kids</option>
-                    <option value="Footwear">Footwear</option>
-                    <option value="Accessories">Accessories</option>
+                    {Object.keys(categoryCatalogTree).map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -72,14 +171,14 @@ export const AddProductStep1: React.FC = () => {
                   </div>
                   <select
                     value={subCategory}
-                    onChange={(e) => updateDraftProduct({ subCategory: e.target.value })}
+                    onChange={(e) => handleSubCategoryChange(e.target.value)}
                     className="w-full pl-9 pr-8 py-2 text-xs font-medium text-slate-800 bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer"
                   >
-                    <option value="T-Shirts">T-Shirts</option>
-                    <option value="Shirts">Shirts</option>
-                    <option value="Jeans">Jeans</option>
-                    <option value="Trousers">Trousers</option>
-                    <option value="Shorts">Shorts</option>
+                    {currentCategoryData.subCategories.map((sub) => (
+                      <option key={sub} value={sub}>
+                        {sub}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -98,10 +197,11 @@ export const AddProductStep1: React.FC = () => {
                     onChange={(e) => updateDraftProduct({ productType: e.target.value })}
                     className="w-full pl-9 pr-8 py-2 text-xs font-medium text-slate-800 bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer"
                   >
-                    <option value="Round Neck T-Shirt">Round Neck T-Shirt</option>
-                    <option value="Polo T-Shirt">Polo T-Shirt</option>
-                    <option value="Henley T-Shirt">Henley T-Shirt</option>
-                    <option value="V-Neck T-Shirt">V-Neck T-Shirt</option>
+                    {availableProductTypes.map((pt: string) => (
+                      <option key={pt} value={pt}>
+                        {pt}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
