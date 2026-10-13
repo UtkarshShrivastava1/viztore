@@ -1,31 +1,47 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/stores/auth.store';
 import { 
-  User, Calendar, ShoppingBag, ShoppingBasket, Store, Heart, 
-  MapPin, Bell, Ticket, HelpCircle, FileText, Shield, LogOut,
+  User, Calendar, ShoppingBag, 
+  Ticket, HelpCircle, FileText, Shield, 
   ChevronRight, ArrowLeft, Users, ShieldCheck, CheckCircle2,
-  AlertCircle
+  AlertCircle, Search, HeadphonesIcon
 } from 'lucide-react';
 import { branding } from '@repo/shared-types';
 import { AccountSidebar } from '@/components/account/AccountSidebar';
 
+const HIGHLIGHTS = [
+  { icon: <Users className="w-5 h-5 text-blue-500" />, title: 'User Agreement', desc: `By using ${branding.appName}, you agree to these terms.` },
+  { icon: <ShoppingBag className="w-5 h-5 text-emerald-500" />, title: 'Use of Services', desc: 'Use our app and services only for lawful purposes.' },
+  { icon: <ShieldCheck className="w-5 h-5 text-purple-500" />, title: 'Your Responsibilities', desc: 'Provide accurate information and keep your account secure.' },
+  { icon: <FileText className="w-5 h-5 text-orange-500" />, title: 'Policy Updates', desc: 'We may update these terms. Continued use means you accept the changes.' },
+];
+
+const SECTIONS = [
+  { id: 1, title: '1. Acceptance of Terms', desc: `By accessing or using ${branding.appName}, you agree to be bound by these Terms and Conditions.`, icon: <FileText className="w-4 h-4 text-blue-500" /> },
+  { id: 2, title: `2. About ${branding.appName}`, desc: `Learn about ${branding.appName}, our platform and the services we provide.`, icon: <AlertCircle className="w-4 h-4 text-blue-500" /> },
+  { id: 3, title: '3. User Accounts', desc: 'Rules and responsibilities related to creating and managing your account.', icon: <User className="w-4 h-4 text-blue-500" /> },
+  { id: 4, title: '4. Use of Services', desc: `Guidelines for using ${branding.appName} and what you can expect from our services.`, icon: <ShoppingBag className="w-4 h-4 text-blue-500" /> },
+  { id: 5, title: '5. Orders and Payments', desc: 'Information about placing orders, pricing and payment methods.', icon: <Ticket className="w-4 h-4 text-blue-500" /> },
+  { id: 6, title: '6. Returns and Refunds', desc: 'Our policy on returns, refunds and cancellations.', icon: <HelpCircle className="w-4 h-4 text-blue-500" /> },
+  { id: 7, title: '7. Prohibited Activities', desc: `Activities that are not allowed on ${branding.appName}.`, icon: <Shield className="w-4 h-4 text-blue-500" /> },
+  { id: 8, title: '8. Limitation of Liability', desc: 'Limitations of our liability to the fullest extent permitted by law.', icon: <ShieldCheck className="w-4 h-4 text-blue-500" /> },
+  { id: 9, title: '9. Governing Law', desc: 'These terms are governed by the laws of India.', icon: <AlertCircle className="w-4 h-4 text-blue-500" /> },
+  { id: 10, title: '10. Contact Us', desc: 'How to reach us for any questions about these terms.', icon: <HeadphonesIcon className="w-4 h-4 text-blue-500" /> },
+];
+
 export function TermsClient() {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuthStore();
-  
-  const [termsData, setTermsData] = useState<any>(null);
+  const [termsData, setTermsData] = useState<Record<string, unknown> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const formData = {
-    firstName: user?.fullName?.split(' ')[0] || 'Guest',
-    lastName: user?.fullName?.split(' ')[1] || 'User',
-    email: user?.email || 'guest@example.com',
-    mobileNumber: user?.phone ? `+91 ${user.phone}` : 'Sign in to access',
-  };
+  const filteredSections = SECTIONS.filter(section => 
+    section.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    section.desc.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
 
   useEffect(() => {
     // TODO: Connect to backend API for fetching terms dynamically
@@ -45,26 +61,6 @@ export function TermsClient() {
     };
     fetchTerms();
   }, []);
-
-  const HIGHLIGHTS = [
-    { icon: <Users className="w-5 h-5 text-blue-500" />, title: 'User Agreement', desc: `By using ${branding.appName}, you agree to these terms.` },
-    { icon: <ShoppingBag className="w-5 h-5 text-emerald-500" />, title: 'Use of Services', desc: 'Use our app and services only for lawful purposes.' },
-    { icon: <ShieldCheck className="w-5 h-5 text-purple-500" />, title: 'Your Responsibilities', desc: 'Provide accurate information and keep your account secure.' },
-    { icon: <FileText className="w-5 h-5 text-orange-500" />, title: 'Policy Updates', desc: 'We may update these terms. Continued use means you accept the changes.' },
-  ];
-
-  const SECTIONS = [
-    { id: 1, title: '1. Acceptance of Terms', desc: `By accessing or using ${branding.appName}, you agree to be bound by these Terms and Conditions.`, icon: <FileText className="w-4 h-4 text-blue-500" /> },
-    { id: 2, title: `2. About ${branding.appName}`, desc: `Learn about ${branding.appName}, our platform and the services we provide.`, icon: <AlertCircle className="w-4 h-4 text-blue-500" /> },
-    { id: 3, title: '3. User Accounts', desc: 'Rules and responsibilities related to creating and managing your account.', icon: <User className="w-4 h-4 text-blue-500" /> },
-    { id: 4, title: '4. Use of Services', desc: `Guidelines for using ${branding.appName} and what you can expect from our services.`, icon: <ShoppingBag className="w-4 h-4 text-blue-500" /> },
-    { id: 5, title: '5. Orders and Payments', desc: 'Information about placing orders, pricing and payment methods.', icon: <Ticket className="w-4 h-4 text-blue-500" /> },
-    { id: 6, title: '6. Returns and Refunds', desc: 'Our policy on returns, refunds and cancellations.', icon: <HelpCircle className="w-4 h-4 text-blue-500" /> },
-    { id: 7, title: '7. Prohibited Activities', desc: `Activities that are not allowed on ${branding.appName}.`, icon: <Shield className="w-4 h-4 text-blue-500" /> },
-    { id: 8, title: '8. Limitation of Liability', desc: 'Limitations of our liability to the fullest extent permitted by law.', icon: <ShieldCheck className="w-4 h-4 text-blue-500" /> },
-    { id: 9, title: '9. Governing Law', desc: 'These terms are governed by the laws of India.', icon: <FileText className="w-4 h-4 text-blue-500" /> },
-    { id: 10, title: '10. Contact Us', desc: 'How to reach us for any questions about these terms.', icon: <HelpCircle className="w-4 h-4 text-blue-500" /> },
-  ];
 
   return (
     <div className="min-h-screen bg-[#ffffff] font-sans relative pb-24">
@@ -92,7 +88,7 @@ export function TermsClient() {
                 </p>
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-[#192168]" />
-                  <span className="text-[11px] text-surface-600 font-medium">Last updated: {isLoading ? '...' : termsData?.lastUpdated}</span>
+                  <span className="text-[11px] text-surface-600 font-medium">Last updated: {isLoading ? '...' : (termsData?.lastUpdated as string)}</span>
                 </div>
               </div>
 
@@ -134,20 +130,43 @@ export function TermsClient() {
 
             {/* Terms Contents */}
             <div className="mt-4">
-              <h3 className="text-[14px] font-extrabold text-[#192168] mb-3">Terms & Conditions</h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-[14px] font-extrabold text-[#192168]">Terms & Conditions</h3>
+              </div>
+
+              {/* Search Input */}
+              <div className="relative mb-4">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Search className="h-4 w-4 text-surface-400" />
+                </div>
+                <input 
+                  type="text" 
+                  placeholder="Search terms..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-white border border-surface-200 rounded-xl pl-10 pr-4 py-2.5 text-[13px] text-[#192168] focus:outline-none focus:border-[#1668F6] focus:ring-1 focus:ring-[#1668F6]/20 transition-all placeholder:text-surface-400 shadow-sm"
+                />
+              </div>
+
               <div className="bg-white rounded-2xl border border-surface-200 shadow-[0_2px_8px_rgb(0,0,0,0.04)] overflow-hidden flex flex-col">
-                {SECTIONS.map((section, idx) => (
-                  <button key={idx} className={`flex items-start gap-3 p-4 hover:bg-surface-50 transition-colors text-left ${idx !== SECTIONS.length - 1 ? 'border-b border-surface-100' : ''}`}>
-                    <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center shrink-0 mt-0.5">
-                      {section.icon}
-                    </div>
-                    <div className="flex-1 min-w-0 pr-2">
-                      <h4 className="text-[12px] font-bold text-[#192168] mb-1">{section.title}</h4>
-                      <p className="text-[10px] text-surface-500 leading-tight">{section.desc}</p>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-surface-400 shrink-0 mt-2" />
-                  </button>
-                ))}
+                {filteredSections.length > 0 ? (
+                  filteredSections.map((section, idx) => (
+                    <button key={idx} className={`flex items-start gap-3 p-4 hover:bg-surface-50 transition-colors text-left ${idx !== filteredSections.length - 1 ? 'border-b border-surface-100' : ''}`}>
+                      <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center shrink-0 mt-0.5">
+                        {section.icon}
+                      </div>
+                      <div className="flex-1 min-w-0 pr-2">
+                        <h4 className="text-[12px] font-bold text-[#192168] mb-1">{section.title}</h4>
+                        <p className="text-[10px] text-surface-500 leading-tight">{section.desc}</p>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-surface-400 shrink-0 mt-2" />
+                    </button>
+                  ))
+                ) : (
+                  <div className="p-8 text-center text-surface-500 text-[12px]">
+                    No terms found matching "{searchQuery}"
+                  </div>
+                )}
               </div>
             </div>
 

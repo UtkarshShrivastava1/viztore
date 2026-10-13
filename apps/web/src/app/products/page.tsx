@@ -1,42 +1,21 @@
 'use client';
 
-import React, { useState, useCallback, useMemo, Suspense } from 'react';
+import React, { useCallback, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { ProductCard } from '@/features/products/components/ProductCard';
 import { ProductGridSkeleton } from '@/components/ui/Skeleton';
 import { useProducts } from '@/hooks/useProducts';
-import { useLocationStore } from '@/stores/location.store';
 import { ProductCategory, ProductSortOption, type ProductQueryDto } from '@repo/shared-types';
-import { SlidersHorizontal, X, ChevronDown, ChevronLeft, ChevronRight, LayoutGrid, List } from 'lucide-react';
-import { SubcategoryBubbleFilter } from '@/features/catalog/SubcategoryBubbleFilter';
+import { SlidersHorizontal, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { FilterSortBar } from '@/features/catalog/FilterSortBar';
 
-const sortOptions = [
-  { label: 'Relevance', value: ProductSortOption.RELEVANCE },
-  { label: 'Price: Low → High', value: ProductSortOption.PRICE_ASC },
-  { label: 'Price: High → Low', value: ProductSortOption.PRICE_DESC },
-  { label: 'Highest Rated', value: ProductSortOption.RATING },
-  { label: 'Newest First', value: ProductSortOption.NEWEST },
-  { label: 'Best Discounts', value: ProductSortOption.DISCOUNT },
-  { label: 'Most Popular', value: ProductSortOption.POPULARITY },
-];
 
-const categoryOptions = [
-  { label: 'All', value: '' },
-  ...Object.values(ProductCategory).map((cat) => ({
-    label: cat.replace('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
-    value: cat,
-  })),
-];
 
 function ProductsContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { address } = useLocationStore();
-  const [showFilters, setShowFilters] = useState(false);
-
   // Read filters from URL
   const query: Partial<ProductQueryDto> = useMemo(() => ({
     search: searchParams.get('search') || undefined,

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { User, Phone, Mail, Calendar, MapPin, ChevronDown, Camera, ShieldCheck, Navigation, Loader2, Check } from 'lucide-react';
+import { User, Phone, Mail, Calendar, MapPin, ChevronDown, Camera, ShieldCheck, Navigation, Check } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
 import { useLocationStore } from '@/stores/location.store';
 import { reverseGeocode } from '@/lib/location/geocoding';

@@ -32,8 +32,8 @@ export const ordersApi = {
   /**
    * Fetch full tax invoice details for an order
    */
-  getOrderInvoice: async (orderId: string): Promise<any> => {
-    const res = await api.get<any>(`/orders/${orderId}/invoice`);
+  getOrderInvoice: async (orderId: string): Promise<Record<string, unknown>> => {
+    const res = await api.get<Record<string, unknown>>(`/orders/${orderId}/invoice`);
     return res.data;
   },
 };

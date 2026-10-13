@@ -11,7 +11,7 @@ import {
 import { branding } from '@repo/shared-types';
 import { useAuthStore } from '@/stores/auth.store';
 
-function MenuLink({ icon, title, href = "#", isActive = false }: any) {
+function MenuLink({ icon, title, href = "#", isActive = false }: { icon: React.ReactNode; title: string; href?: string; isActive?: boolean }) {
   return (
     <Link 
       href={href} 

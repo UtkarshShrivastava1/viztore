@@ -1,28 +1,16 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/stores/auth.store';
 import { 
-  User, ShoppingBag, Calendar, ShoppingBasket, Store, Heart, 
-  MapPin, Bell, Ticket, HelpCircle, FileText, Shield, LogOut,
-  MessageSquare, HeadphonesIcon, Rocket, ArrowRight, ArrowLeft,
-  Users, TrendingUp, Tag, PieChart, ClipboardList, Wallet, ChevronRight
+  HeadphonesIcon, Rocket, ArrowLeft,
+  Users, TrendingUp, Tag, PieChart, Wallet, ChevronRight, Shield, Calendar
 } from 'lucide-react';
 import { branding } from '@repo/shared-types';
 import { AccountSidebar } from '@/components/account/AccountSidebar';
 
 export function SellClient() {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuthStore();
-
-  const formData = {
-    firstName: user?.fullName?.split(' ')[0] || 'Guest',
-    lastName: user?.fullName?.split(' ')[1] || 'User',
-    email: user?.email || 'guest@example.com',
-    mobileNumber: user?.phone ? `+91 ${user.phone}` : 'Sign in to access',
-  };
 
   return (
     <div className="min-h-screen bg-[#ffffff] font-sans relative pb-24">

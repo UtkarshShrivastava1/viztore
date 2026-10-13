@@ -173,25 +173,24 @@ export const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose })
           </button>
         </div>
 
-        {/* Modal Scrollable Body */}
-        <div className="p-6 space-y-5 overflow-y-auto flex-1">
-          {/* Current Active Location Card */}
-          <div className="rounded-2xl border border-blue-100 bg-[#E8F0FE]/50 p-3.5 flex items-start gap-3">
-            <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-[#1668F6] text-white shrink-0 mt-0.5">
-              <MapPin className="w-4 h-4" />
+        <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
+          {/* Map Pin-Drop Preview */}
+          <div className="relative w-full h-32 rounded-2xl overflow-hidden border border-surface-200 cursor-pointer group" onClick={handleDetectGPS}>
+            <div className="absolute inset-0 bg-blue-50/50">
+              <svg viewBox="0 0 700 220" preserveAspectRatio="xMidYMid slice" className="h-full w-full opacity-60">
+                <path d="M-10 160 C 120 120, 220 190, 340 140 S 560 90, 710 130" stroke="#C7DCF7" strokeWidth="10" fill="none" />
+                <g stroke="#FFFFFF" strokeWidth="2.2" opacity="0.85">
+                  <path d="M0 20 L700 35" /><path d="M0 55 L700 45" /><path d="M40 0 L60 220" /><path d="M120 0 L100 220" />
+                </g>
+              </svg>
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#1668F6] bg-blue-100 px-2 py-0.5 rounded-full">
-                  Currently Delivering To
-                </span>
-              </div>
-              <h4 className="text-xs font-bold text-[#192168] mt-1 truncate">
-                {currentLocality || currentAddress.split(',')[0]}
-              </h4>
-              <p className="text-[11px] text-slate-600 line-clamp-2 mt-0.5 leading-snug">
-                {currentFormatted || currentAddress}
-              </p>
+            <div className="absolute inset-0 flex items-center justify-center">
+               <div className="w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center group-hover:-translate-y-1 transition-transform">
+                  <MapPin className="w-5 h-5 text-[#1668F6]" fill="#1668F6" fillOpacity={0.2} />
+               </div>
+            </div>
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-white/90 px-3 py-1 rounded-full shadow-sm">
+               <span className="text-[10px] font-bold text-[#192168]">Click to pin drop</span>
             </div>
           </div>
 
