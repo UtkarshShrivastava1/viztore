@@ -11,6 +11,7 @@ import { branding } from '@repo/shared-types/branding.config';
 interface HelpSupportDrawerProps {
   isOpen: boolean;
   onClose: () => void;
+  onNavigateToSupport?: () => void;
 }
 
 interface FaqItem {
@@ -67,7 +68,11 @@ const faqItems: FaqItem[] = [
   },
 ];
 
-export const HelpSupportDrawer: React.FC<HelpSupportDrawerProps> = ({ isOpen, onClose }) => {
+export const HelpSupportDrawer: React.FC<HelpSupportDrawerProps> = ({
+  isOpen,
+  onClose,
+  onNavigateToSupport,
+}) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -135,7 +140,7 @@ export const HelpSupportDrawer: React.FC<HelpSupportDrawerProps> = ({ isOpen, on
                   <button
                     type="button"
                     onClick={() => setExpandedId(isExpanded ? null : faq.id)}
-                    className="w-full px-3.5 py-3 flex items-center justify-between text-left hover:bg-slate-50/50 transition-colors"
+                    className="w-full px-3.5 py-3 flex items-center justify-between text-left hover:bg-slate-50/50 transition-colors cursor-pointer"
                   >
                     <span className="text-xs font-semibold text-slate-800 leading-snug">{faq.question}</span>
                     {isExpanded ? (
@@ -161,8 +166,15 @@ export const HelpSupportDrawer: React.FC<HelpSupportDrawerProps> = ({ isOpen, on
 
             <button
               type="button"
-              onClick={() => alert(`Contacting ${branding.appName} support...`)}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 bg-white text-blue-600 text-xs font-semibold shadow-2xs transition-all"
+              onClick={() => {
+                if (onNavigateToSupport) {
+                  onClose();
+                  onNavigateToSupport();
+                } else {
+                  window.open(`mailto:${branding.supportEmail}?subject=Merchant%20Support%20Request`, '_blank');
+                }
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 bg-white text-blue-600 text-xs font-semibold shadow-2xs transition-all cursor-pointer"
             >
               <Headphones className="w-4 h-4 text-blue-600" />
               <span>Contact Support</span>

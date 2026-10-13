@@ -77,17 +77,24 @@ export const DashboardOverviewPage: React.FC<DashboardOverviewPageProps> = ({
         {/* Right Section (approx 25% width) */}
         <div className="lg:col-span-3 space-y-3.5 flex flex-col justify-between">
           <CreateNewBillCard onOpenCreateInvoice={() => onNavigate('billing')} />
-          <OrderSummaryCard onNavigateStatus={() => onNavigate('orders')} />
+          <OrderSummaryCard
+            onNavigateStatus={(statusTab) => {
+              onNavigate('orders');
+            }}
+          />
         </div>
       </div>
 
       {/* 3. Middle 3-Column Grid: Top Selling Products | Low Stock Alert | Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3.5 items-stretch">
         <div className="flex flex-col">
-          <TopProducts />
+          <TopProducts onViewAll={() => onNavigate('catalog')} />
         </div>
         <div className="flex flex-col">
-          <LowStockWarnings onAddStock={onOpenAddProduct} />
+          <LowStockWarnings
+            onAddStock={onOpenAddProduct}
+            onViewAll={() => onNavigate('inventory')}
+          />
         </div>
         <div className="flex flex-col">
           <QuickAccessPanel

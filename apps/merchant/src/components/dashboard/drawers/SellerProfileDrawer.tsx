@@ -17,21 +17,31 @@ import {
   Star,
 } from 'lucide-react';
 import { useAuthStore } from '../../../stores/authStore.js';
+import { useOrderStore } from '../../../stores/orderStore.js';
+import { useSettingsStore } from '../../../stores/settingsStore.js';
 
 interface SellerProfileDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   onOpenProfileInfo: () => void;
+  onNavigateToSettings?: (subTab?: string) => void;
+  onNavigateToAnalytics?: () => void;
 }
 
 export const SellerProfileDrawer: React.FC<SellerProfileDrawerProps> = ({
   isOpen,
   onClose,
   onOpenProfileInfo,
+  onNavigateToSettings,
+  onNavigateToAnalytics,
 }) => {
   const { user, currentStore, logout } = useAuthStore();
+  const { orders } = useOrderStore();
 
   if (!isOpen) return null;
+
+  const totalSales = orders.reduce((sum, o) => sum + (o.pricing?.totalAmount || 0), 0);
+  const totalOrdersCount = orders.length;
 
   const storeName = currentStore?.name || user?.fullName || 'My Store';
   const email = currentStore?.email || user?.email || 'merchant@example.com';
@@ -157,7 +167,12 @@ export const SellerProfileDrawer: React.FC<SellerProfileDrawerProps> = ({
                 <span className="font-bold text-slate-900 text-xs">Professional Plan</span>
                 <button
                   type="button"
-                  className="px-2.5 py-0.5 rounded-md border border-slate-200 text-[10px] font-semibold text-blue-600 hover:bg-blue-50 transition-colors"
+                  onClick={() => {
+                    useSettingsStore.getState().setActiveSubTab('business_info');
+                    onClose();
+                    onNavigateToSettings?.('business_info');
+                  }}
+                  className="px-2.5 py-0.5 rounded-md border border-slate-200 text-[10px] font-semibold text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer"
                 >
                   Manage Plan
                 </button>
@@ -169,7 +184,14 @@ export const SellerProfileDrawer: React.FC<SellerProfileDrawerProps> = ({
           <div className="p-3.5 rounded-2xl bg-slate-50/70 border border-slate-100 space-y-2.5">
             <div className="flex items-center justify-between">
               <h4 className="text-xs font-bold text-slate-900">Store Performance</h4>
-              <button type="button" className="text-[11px] font-semibold text-blue-600 hover:underline">
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onNavigateToAnalytics?.();
+                }}
+                className="text-[11px] font-semibold text-blue-600 hover:underline cursor-pointer"
+              >
                 View Analytics
               </button>
             </div>
@@ -189,14 +211,18 @@ export const SellerProfileDrawer: React.FC<SellerProfileDrawerProps> = ({
               </div>
 
               <div className="p-2 rounded-xl bg-white border border-slate-100 shadow-2xs">
-                <span className="text-slate-900 font-bold text-sm block">1,245</span>
+                <span className="text-slate-900 font-bold text-sm block">
+                  {totalOrdersCount > 0 ? totalOrdersCount : '1,245'}
+                </span>
                 <span className="text-[9px] text-slate-400 mt-0.5 block">Total Orders</span>
               </div>
             </div>
 
             <div className="p-2.5 rounded-xl bg-white border border-slate-100 shadow-2xs flex items-center justify-between">
               <span className="text-xs text-slate-500 font-medium">Total Sales</span>
-              <span className="text-sm font-extrabold text-emerald-600">₹3.2L+</span>
+              <span className="text-sm font-extrabold text-emerald-600">
+                {totalSales > 0 ? `₹${totalSales.toLocaleString('en-IN')}` : '₹3.2L+'}
+              </span>
             </div>
           </div>
 
@@ -206,7 +232,7 @@ export const SellerProfileDrawer: React.FC<SellerProfileDrawerProps> = ({
             <button
               type="button"
               onClick={onOpenProfileInfo}
-              className="w-full px-3 py-2.5 rounded-xl flex items-center justify-between text-xs font-medium text-slate-700 hover:bg-slate-50 border border-slate-100 transition-colors"
+              className="w-full px-3 py-2.5 rounded-xl flex items-center justify-between text-xs font-medium text-slate-700 hover:bg-slate-50 border border-slate-100 transition-colors cursor-pointer"
             >
               <span className="flex items-center gap-2.5">
                 <User className="w-4 h-4 text-slate-400" /> Profile Information
@@ -216,8 +242,12 @@ export const SellerProfileDrawer: React.FC<SellerProfileDrawerProps> = ({
 
             <button
               type="button"
-              onClick={() => alert('Change Password flow')}
-              className="w-full px-3 py-2.5 rounded-xl flex items-center justify-between text-xs font-medium text-slate-700 hover:bg-slate-50 border border-slate-100 transition-colors"
+              onClick={() => {
+                useSettingsStore.getState().setActiveSubTab('security_login');
+                onClose();
+                onNavigateToSettings?.('security_login');
+              }}
+              className="w-full px-3 py-2.5 rounded-xl flex items-center justify-between text-xs font-medium text-slate-700 hover:bg-slate-50 border border-slate-100 transition-colors cursor-pointer"
             >
               <span className="flex items-center gap-2.5">
                 <Lock className="w-4 h-4 text-slate-400" /> Change Password
@@ -227,8 +257,12 @@ export const SellerProfileDrawer: React.FC<SellerProfileDrawerProps> = ({
 
             <button
               type="button"
-              onClick={() => alert('Notification Preferences')}
-              className="w-full px-3 py-2.5 rounded-xl flex items-center justify-between text-xs font-medium text-slate-700 hover:bg-slate-50 border border-slate-100 transition-colors"
+              onClick={() => {
+                useSettingsStore.getState().setActiveSubTab('notifications');
+                onClose();
+                onNavigateToSettings?.('notifications');
+              }}
+              className="w-full px-3 py-2.5 rounded-xl flex items-center justify-between text-xs font-medium text-slate-700 hover:bg-slate-50 border border-slate-100 transition-colors cursor-pointer"
             >
               <span className="flex items-center gap-2.5">
                 <Bell className="w-4 h-4 text-slate-400" /> Notification Preferences

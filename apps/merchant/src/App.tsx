@@ -22,6 +22,8 @@ import { AnalyticsPage } from './pages/AnalyticsPage.js';
 import { MarketingPage } from './pages/MarketingPage.js';
 import { SupportPage } from './pages/SupportPage.js';
 import { useBillingStore } from './stores/billingStore.js';
+import { useSettingsStore } from './stores/settingsStore.js';
+import { useCatalogStore } from './stores/catalogStore.js';
 import { Sidebar, DashboardTab } from './components/dashboard/Sidebar.js';
 import { Header } from './components/dashboard/Header.js';
 import { AddProductModal } from './components/catalog/AddProductModal.js';
@@ -151,6 +153,13 @@ export const App: React.FC = () => {
           isCollapsed={isSidebarCollapsed}
           onToggleMobileMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           onNavigateToWallet={() => setCurrentTab('wallet')}
+          onNavigateToSettings={(subTab) => {
+            if (subTab) {
+              useSettingsStore.getState().setActiveSubTab(subTab as any);
+            }
+            setCurrentTab('settings');
+          }}
+          onNavigateToSupport={() => setCurrentTab('support')}
         />
 
         <main
@@ -247,7 +256,16 @@ export const App: React.FC = () => {
         isOpen={isGlobalAddOpen}
         onClose={() => setIsGlobalAddOpen(false)}
         onAddProduct={(p) => {
-          alert(`Product '${p.name}' created with SKU ${p.sku}`);
+          useCatalogStore.getState().updateDraftProduct({
+            name: p.name,
+            category: p.category,
+            sku: p.sku,
+            price: p.price,
+            mrp: p.mrp,
+            stock: p.stock,
+            images: p.imageUrl ? [p.imageUrl] : [],
+          });
+          useCatalogStore.getState().saveDraftAsProduct().catch(() => {});
           setIsGlobalAddOpen(false);
         }}
       />
@@ -255,7 +273,10 @@ export const App: React.FC = () => {
       <BulkUploadModal
         isOpen={isGlobalBulkOpen}
         onClose={() => setIsGlobalBulkOpen(false)}
-        onBulkSuccess={(c) => alert(`Imported ${c} items successfully`)}
+        onBulkSuccess={(_c) => {
+          setIsGlobalBulkOpen(false);
+          useCatalogStore.getState().fetchProducts().catch(() => {});
+        }}
       />
     </div>
   );

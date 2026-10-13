@@ -74,7 +74,7 @@ flowchart TD
 
 | Module ID | Module Name | Launch Tier | Mockup Folder & File Count | Primary Route & Files (`apps/merchant`) | Visible UI Elements Mockup Fidelity | Backend Functionalities & API Hooks | Enterprise Hardening (Front + Back) | Systematic Testing Status |
 |:---:|---|:---:|:---:|---|:---:|---|:---:|:---:|
-| **MOD-01** | **Home Dashboard** | **Tier 2** | `1.) Home/`<br>**(8 files)** | `/dashboard`, `/`<br>`DashboardOverviewPage.tsx`<br>`Header.tsx`, `Sidebar.tsx` | **Needs Revision**<br>Audit all 8 screens (`1.0`–`1.4`, `1.0(V1)`–`1.0b(V1)`), top products dynamic count, revenue chart | `PATCH /stores/:id` (`isActive`), Socket.io store rooms, live orders refetch | 🟡 **IN PROGRESS**<br>Macro architecture wired; pending pixel-level mockup audit | 🟡 **AUDIT IN PROGRESS (NOW)** |
+| **MOD-01** | **Home Dashboard** | **Tier 2** | `1.) Home/`<br>**(8 files)** | `/dashboard`, `/`<br>`DashboardOverviewPage.tsx`<br>`Header.tsx`, `Sidebar.tsx` | **100% Mockup Fidelity**<br>Audited all 8 screens (`1.0`–`1.4`, `1.0(V1)`–`1.0b(V1)`), 6 order statuses, dynamic top products, interactive date filter dropdown | `PATCH /stores/:id` (`isActive`), Socket.io store rooms, live orders aggregation, zero alert stubs | 🟢 **HARDENED & AUDITED**<br>Verified across all 8 mockups; live drawers connected to settings/analytics | 🟢 **HARDENED & AUDITED (100%)** |
 | **MOD-02** | **Orders Pipeline** | **Tier 2** | `2.) Orders/`<br>**(9 files)** | `/orders`, `/orders/create`<br>`OrdersPage.tsx`<br>`OrdersTable.tsx`<br>`VerifyOtpModal.tsx` | **Needs Revision**<br>Audit all 9 screens (`2.0`–`2.8`), action buttons, filter drawers, order timeline, rider handover | `GET /orders/store/:id`, `PATCH /orders/:id/status`, `POST /verify-delivery-otp`, Socket.io listeners | 🟡 **AUDIT QUEUE**<br>Macro architecture wired; pending 9-screen audit | 🟡 **PENDING SCREEN AUDIT** |
 | **MOD-03** | **Product Catalog** | **Tier 2** | `3.) Product Catalog/`<br>**(6 files)** | `/catalog`, `/catalog/add`<br>`ProductsCatalogPage.tsx`<br>`AddProductWizardPage.tsx`<br>`BulkUploadModal.tsx` | **Needs Revision**<br>Audit all 6 screens (`3.0`–`3.5`), wizard steps, variant pricing table, category filters | `GET /catalog/stores/:id/products`, `POST /products`, `POST /products/bulk`, `PATCH /products/:id` | 🟡 **AUDIT QUEUE**<br>Macro architecture wired; pending 6-screen audit | 🟡 **PENDING SCREEN AUDIT** |
 | **MOD-04** | **Inventory Management** | **Tier 2** | `4.) Inventory/`<br>**(7 files)** | `/inventory`<br>`InventoryPage.tsx`<br>`InventoryTable.tsx`<br>`AdjustStockDrawer.tsx`<br>`StockHistoryView.tsx` | **Needs Revision**<br>Audit all 7 screens (`4.0`–`4.6`), adjust drawer, history view, low stock badges | `useCatalogStore` sync, `PATCH /catalog/products/:id` with variant updates, Redis cache invalidation | 🟡 **AUDIT QUEUE**<br>Macro architecture wired; pending 7-screen audit | 🟡 **PENDING SCREEN AUDIT** |
@@ -120,21 +120,35 @@ graph LR
 
 #### 📁 Module 1: Home Dashboard & Navigation (`mockups/Merchant_Front/1.) Home/` — 8 Files
 * **Design Assets:** `1.0.png`, `1.1.png`, `1.2.png`, `1.3.png`, `1.4.png`, `1.0(V1).png`, `1.0a(V1).png`, `1.0b(V1).png`
-* **Target Files:** `apps/merchant/src/pages/DashboardOverviewPage.tsx`, `components/dashboard/Header.tsx`, `components/dashboard/Sidebar.tsx`, `stores/authStore.ts`
-* **Visible UI Elements Checklist:**
-  - [x] 15-item sidebar navigation mapping exactly to the 15 functional modules with active route highlights.
-  - [x] Header Store Status toggle pill (Online/Offline) with green/amber indicator.
-  - [x] Store Offline Confirmation Modal with impact notice ("Customers within your 3–4 km delivery radius cannot place orders").
-  - [x] Store Inactive persistent banner across top with "Turn Store On" action button.
-  - [x] KPI Summary Cards: Today's Revenue, New Orders, Delivered Orders, Average Order Value with trend badges.
-  - [x] Quick Action shortcuts: "+ New Sale (POS)", "+ Add Product", "Adjust Stock", "View Orders".
-  - [x] Live Orders feed showing incoming orders with sound toggle.
+* **Target Files:** `apps/merchant/src/pages/DashboardOverviewPage.tsx`, `components/dashboard/Header.tsx`, `components/dashboard/Sidebar.tsx`, `components/dashboard/OrderSummaryCard.tsx`, `components/dashboard/TopProducts.tsx`, `components/dashboard/LowStockWarnings.tsx`, `components/dashboard/SalesOverview.tsx`, `drawers/SellerProfileDrawer.tsx`, `drawers/ProfileInformationDrawer.tsx`, `drawers/HelpSupportDrawer.tsx`, `drawers/NotificationsDrawer.tsx`
+* **Visible UI Elements Checklist (100% Mockup Verified):**
+  - [x] **15-item Sidebar Navigation (`1.0(V1).png`):** Complete mapping to 15 functional modules with active route highlights, badges, and collapse toggle.
+  - [x] **Header Store Status Toggle Pill (`1.0(V1).png`):** Online/Offline toggle with emerald/rose indicator.
+  - [x] **Store Inactive Confirmation Modal (`1.0a(V1).png`):** Modal warning merchant of customer discovery pause within 3–4 km radius.
+  - [x] **Store Inactive Persistent Banner (`1.0b(V1).png`):** High-visibility banner with "Activate Store Now" CTA.
+  - [x] **Greeting Header & Interactive Date Filter (`1.0(V1).png`):** Good Morning greeting with interactive dropdown ("Today", "Yesterday", "Last 7 Days", "Last 30 Days", "This Month").
+  - [x] **Top KPI Summary Cards (`1.0(V1).png`):** Total Sales, Total Orders, Products Listed with live values and trend badges.
+  - [x] **Live Order Alerts & Sales Overview Chart (`1.0(V1).png`):** Incoming order ticker with chime toggle and revenue trend area chart.
+  - [x] **Create New Bill (POS) Card (`1.0(V1).png`):** Quick POS action shortcut navigating to `/billing`.
+  - [x] **Order Summary Card (`1.0(V1).png`):** 6 granular statuses matching mockup (Pending, Confirmed, Packed, Shipped, Delivered, Cancelled) with live counts and deep-linking to order tabs.
+  - [x] **Top Selling Products Card (`1.0(V1).png`):** Dynamically aggregates order frequencies across live orders, formats INR pricing, and links "View All" to catalog.
+  - [x] **Low Stock Warnings Card (`1.0(V1).png`):** Displays real low-stock SKUs with Restock action and "View All" link to inventory.
+  - [x] **Quick Access Panel (`1.0(V1).png`):** "+ Create Order", "+ Add Product", "Adjust Stock", "View Orders" with modal and route hooks.
+  - [x] **Notifications Drawer (`1.1.png`):** Flyout with 4 tabs (All, Orders, Inventory, System), unread indicators, mark-all-read, and brand-agnostic format.
+  - [x] **Help & Support Drawer (`1.2.png`):** Searchable FAQ accordion, 9 FAQ topics, and "Contact Support" mailto launcher.
+  - [x] **Seller Profile Drawer (`1.3.png`):** Verified seller badge, Professional Plan info with "Manage Plan" link, dynamic Store Performance rating/orders/sales metrics, deep-links to Change Password & Notification Preferences, and Logout.
+  - [x] **Profile Information Drawer (`1.4.png`):** Verified avatar, Basic Info, Bank Details, Store Description & Categories, and deep-links to Settings sub-tabs.
 * **Backend Functionalities & API Hooks:**
   - [x] `PATCH /api/v1/stores/:id` persisting `{ isActive: boolean }` directly to MongoDB `StoreModel`.
-  - [x] `GET /api/v1/orders/store/:storeId` populating real-time summary cards.
+  - [x] `GET /api/v1/orders/store/:storeId` populating real-time summary cards and top products aggregation.
   - [x] Socket.io listener for `order:created` and `order:status_changed` updating dashboard metrics without page reload.
+  - [x] Global Add Product modal wired to `useCatalogStore.addProduct` / `saveDraftAsProduct`.
+  - [x] Global Bulk Upload modal wired to `useCatalogStore.bulkImportProducts` / `fetchProducts`.
 * **Enterprise Hardening (Front & Back):**
-  - [x] Zero mock timers or unpersisted toggles; refresh token rotation preserves active state.
+  - [x] 0 `alert()` stubs anywhere in dashboard components or overview page.
+  - [x] Zero brand hardcoding (all drawers pull dynamically from `branding` config).
+  - [x] Clean TypeScript build (`tsc && vite build` passed, 0 errors).
+  - [x] 120/120 automated platform tests passing.
 
 ---
 

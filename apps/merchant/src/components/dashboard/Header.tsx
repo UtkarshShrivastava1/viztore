@@ -19,12 +19,16 @@ interface HeaderProps {
   isCollapsed: boolean;
   onToggleMobileMenu: () => void;
   onNavigateToWallet?: () => void;
+  onNavigateToSettings?: (subTab?: string) => void;
+  onNavigateToSupport?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   isCollapsed,
   onToggleMobileMenu,
   onNavigateToWallet,
+  onNavigateToSettings,
+  onNavigateToSupport,
 }) => {
   const { user, currentStore, isStoreActive, setStoreActive } = useAuthStore();
 
@@ -82,8 +86,8 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Wallet Button matching mockups 6.0, 6.1, 7.0 */}
           <button
             type="button"
-            onClick={() => (onNavigateToWallet ? onNavigateToWallet() : alert('Wallet: ₹32,450'))}
-            className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl border border-blue-200/80 bg-white hover:bg-blue-50/50 text-slate-800 text-xs font-semibold transition-all shadow-2xs"
+            onClick={() => onNavigateToWallet?.()}
+            className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl border border-blue-200/80 bg-white hover:bg-blue-50/50 text-slate-800 text-xs font-semibold transition-all shadow-2xs cursor-pointer"
           >
             <Wallet className="w-3.5 h-3.5 text-blue-600" />
             <span>Wallet</span>
@@ -188,6 +192,7 @@ export const Header: React.FC<HeaderProps> = ({
       <HelpSupportDrawer
         isOpen={isHelpOpen}
         onClose={() => setIsHelpOpen(false)}
+        onNavigateToSupport={onNavigateToSupport}
       />
 
       <SellerProfileDrawer
@@ -197,11 +202,13 @@ export const Header: React.FC<HeaderProps> = ({
           setIsProfileOpen(false);
           setIsProfileInfoOpen(true);
         }}
+        onNavigateToSettings={onNavigateToSettings}
       />
 
       <ProfileInformationDrawer
         isOpen={isProfileInfoOpen}
         onClose={() => setIsProfileInfoOpen(false)}
+        onNavigateToSettings={onNavigateToSettings}
       />
     </>
   );

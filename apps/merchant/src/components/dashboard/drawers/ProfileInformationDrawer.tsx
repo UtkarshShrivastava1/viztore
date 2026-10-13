@@ -1,15 +1,18 @@
 import React from 'react';
 import { X, Edit2, CheckCircle2 } from 'lucide-react';
 import { useAuthStore } from '../../../stores/authStore.js';
+import { useSettingsStore } from '../../../stores/settingsStore.js';
 
 interface ProfileInformationDrawerProps {
   isOpen: boolean;
   onClose: () => void;
+  onNavigateToSettings?: (subTab?: string) => void;
 }
 
 export const ProfileInformationDrawer: React.FC<ProfileInformationDrawerProps> = ({
   isOpen,
   onClose,
+  onNavigateToSettings,
 }) => {
   const { user, currentStore } = useAuthStore();
 
@@ -77,8 +80,12 @@ export const ProfileInformationDrawer: React.FC<ProfileInformationDrawerProps> =
               <h3 className="text-xs font-bold text-slate-900">Basic Information</h3>
               <button
                 type="button"
-                onClick={() => alert('Edit Basic Info')}
-                className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700"
+                onClick={() => {
+                  useSettingsStore.getState().setActiveSubTab('store_profile');
+                  onClose();
+                  onNavigateToSettings?.('store_profile');
+                }}
+                className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700 cursor-pointer"
               >
                 <Edit2 className="w-3 h-3" />
                 <span>Edit</span>
@@ -127,8 +134,12 @@ export const ProfileInformationDrawer: React.FC<ProfileInformationDrawerProps> =
               <h3 className="text-xs font-bold text-slate-900">Bank Details</h3>
               <button
                 type="button"
-                onClick={() => alert('Edit Bank Details')}
-                className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700"
+                onClick={() => {
+                  useSettingsStore.getState().setActiveSubTab('payments_wallet');
+                  onClose();
+                  onNavigateToSettings?.('payments_wallet');
+                }}
+                className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700 cursor-pointer"
               >
                 <Edit2 className="w-3 h-3" />
                 <span>Edit</span>
@@ -163,8 +174,12 @@ export const ProfileInformationDrawer: React.FC<ProfileInformationDrawerProps> =
               <h3 className="text-xs font-bold text-slate-900">Store Details</h3>
               <button
                 type="button"
-                onClick={() => alert('Edit Store Details')}
-                className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700"
+                onClick={() => {
+                  useSettingsStore.getState().setActiveSubTab('store_profile');
+                  onClose();
+                  onNavigateToSettings?.('store_profile');
+                }}
+                className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700 cursor-pointer"
               >
                 <Edit2 className="w-3 h-3" />
                 <span>Edit</span>
@@ -207,8 +222,12 @@ export const ProfileInformationDrawer: React.FC<ProfileInformationDrawerProps> =
                     <span className="text-xs font-semibold text-slate-800 block leading-tight">{storeName}</span>
                     <button
                       type="button"
-                      onClick={() => alert('Change Logo')}
-                      className="text-[11px] font-medium text-blue-600 hover:underline mt-0.5 block"
+                      onClick={() => {
+                        useSettingsStore.getState().setActiveSubTab('store_profile');
+                        onClose();
+                        onNavigateToSettings?.('store_profile');
+                      }}
+                      className="text-[11px] font-medium text-blue-600 hover:underline mt-0.5 block cursor-pointer"
                     >
                       View / Change
                     </button>

@@ -1,5 +1,5 @@
-import React from 'react';
-import { ShoppingBag, ClipboardList, Users, ArrowUpRight, Calendar } from 'lucide-react';
+import React, { useState } from 'react';
+import { ShoppingBag, ClipboardList, Users, ArrowUpRight, Calendar, ChevronDown, Check } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore.js';
 import { useOrderStore } from '../../stores/orderStore.js';
 import { useCatalogStore } from '../../stores/catalogStore.js';
@@ -7,6 +7,16 @@ import { useCatalogStore } from '../../stores/catalogStore.js';
 export const GreetingHeader: React.FC = () => {
   const { user } = useAuthStore();
   const storeName = user?.fullName || 'Merchant Partner';
+  const [selectedRange, setSelectedRange] = useState('Last 7 Days');
+  const [isOpen, setIsOpen] = useState(false);
+
+  const dateRanges = [
+    'Today',
+    'Yesterday',
+    'Last 7 Days',
+    'Last 30 Days',
+    'This Month',
+  ];
 
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -20,15 +30,41 @@ export const GreetingHeader: React.FC = () => {
         </p>
       </div>
 
-      {/* Date Filter Button */}
-      <div className="flex items-center gap-2">
+      {/* Date Filter Dropdown */}
+      <div className="relative">
         <button
           type="button"
-          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-2xs transition-colors"
+          onClick={() => setIsOpen(!isOpen)}
+          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 shadow-2xs transition-colors cursor-pointer"
         >
-          <span>Last 7 Days</span>
           <Calendar className="w-3.5 h-3.5 text-slate-400" />
+          <span>{selectedRange}</span>
+          <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
         </button>
+
+        {isOpen && (
+          <>
+            <div className="fixed inset-0 z-20" onClick={() => setIsOpen(false)} />
+            <div className="absolute right-0 mt-1 w-40 bg-white rounded-xl shadow-lg border border-slate-200 py-1 z-30 animate-in fade-in zoom-in-95 duration-100">
+              {dateRanges.map((range) => (
+                <button
+                  key={range}
+                  type="button"
+                  onClick={() => {
+                    setSelectedRange(range);
+                    setIsOpen(false);
+                  }}
+                  className={`w-full px-3 py-1.5 text-left text-xs flex items-center justify-between hover:bg-slate-50 transition-colors cursor-pointer ${
+                    selectedRange === range ? 'font-bold text-blue-600 bg-blue-50/50' : 'text-slate-700'
+                  }`}
+                >
+                  <span>{range}</span>
+                  {selectedRange === range && <Check className="w-3 h-3 text-blue-600" />}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

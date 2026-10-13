@@ -17,23 +17,36 @@ interface OrderSummaryCardProps {
 export const OrderSummaryCard: React.FC<OrderSummaryCardProps> = ({ onNavigateStatus }) => {
   const { orders } = useOrderStore();
 
-  const getStatusCount = (label: string) => {
-    const l = label.toLowerCase();
-    if (l === 'new orders' || l === 'pending') return orders.filter((o) => o.status === 'new').length;
-    if (l === 'ready to ship' || l === 'packed' || l === 'confirmed') return orders.filter((o) => o.status === 'ready_to_ship').length;
-    if (l === 'shipped') return orders.filter((o) => o.status === 'shipped').length;
-    if (l === 'delivered') return orders.filter((o) => o.status === 'delivered').length;
-    if (l === 'cancelled') return orders.filter((o) => o.status === 'cancelled').length;
+  const statuses = [
+    { label: 'Pending', key: 'pending', tab: 'new_orders', icon: Clock, color: 'text-amber-500', bg: 'bg-amber-50/80 border border-amber-100' },
+    { label: 'Confirmed', key: 'confirmed', tab: 'ready_to_ship', icon: CheckCircle2, color: 'text-teal-600', bg: 'bg-teal-50/80 border border-teal-100' },
+    { label: 'Packed', key: 'packed', tab: 'ready_to_ship', icon: Package, color: 'text-blue-500', bg: 'bg-blue-50/80 border border-blue-100' },
+    { label: 'Shipped', key: 'shipped', tab: 'shipped', icon: Truck, color: 'text-purple-500', bg: 'bg-purple-50/80 border border-purple-100' },
+    { label: 'Delivered', key: 'delivered', tab: 'delivered', icon: CheckCheck, color: 'text-emerald-500', bg: 'bg-emerald-50/80 border border-emerald-100' },
+    { label: 'Cancelled', key: 'cancelled', tab: 'cancelled', icon: XCircle, color: 'text-rose-500', bg: 'bg-rose-50/80 border border-rose-100' },
+  ];
+
+  const getStatusCount = (key: string) => {
+    if (key === 'pending') {
+      return orders.filter((o) => o.status === 'new' || (o as any).status === 'pending').length;
+    }
+    if (key === 'confirmed') {
+      return orders.filter((o) => (o as any).status === 'confirmed').length;
+    }
+    if (key === 'packed') {
+      return orders.filter((o) => o.status === 'ready_to_ship' || (o as any).status === 'packed').length;
+    }
+    if (key === 'shipped') {
+      return orders.filter((o) => o.status === 'shipped' || (o as any).status === 'out_for_delivery').length;
+    }
+    if (key === 'delivered') {
+      return orders.filter((o) => o.status === 'delivered').length;
+    }
+    if (key === 'cancelled') {
+      return orders.filter((o) => o.status === 'cancelled').length;
+    }
     return 0;
   };
-
-  const statuses = [
-    { label: 'New Orders', icon: Clock, color: 'text-amber-500', bg: 'bg-amber-50/80 border border-amber-100' },
-    { label: 'Ready to Ship', icon: Package, color: 'text-blue-500', bg: 'bg-blue-50/80 border border-blue-100' },
-    { label: 'Shipped', icon: Truck, color: 'text-cyan-500', bg: 'bg-cyan-50/80 border border-cyan-100' },
-    { label: 'Delivered', icon: CheckCheck, color: 'text-emerald-500', bg: 'bg-emerald-50/80 border border-emerald-100' },
-    { label: 'Cancelled', icon: XCircle, color: 'text-rose-500', bg: 'bg-rose-50/80 border border-rose-100' },
-  ];
 
   return (
     <div className="p-3.5 sm:p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs space-y-1.5">
@@ -44,15 +57,11 @@ export const OrderSummaryCard: React.FC<OrderSummaryCardProps> = ({ onNavigateSt
       <div className="space-y-0.5 text-xs">
         {statuses.map((s) => {
           const Icon = s.icon;
-          const count = getStatusCount(s.label);
+          const count = getStatusCount(s.key);
           return (
             <div
               key={s.label}
-              onClick={() => {
-                const l = s.label.toLowerCase();
-                const targetTab = l === 'new orders' ? 'new_orders' : l === 'ready to ship' ? 'ready_to_ship' : l;
-                onNavigateStatus?.(targetTab);
-              }}
+              onClick={() => onNavigateStatus?.(s.tab)}
               className="flex items-center justify-between py-1 px-1.5 hover:bg-slate-50/80 rounded-lg cursor-pointer transition-colors group"
             >
               <div className="flex items-center gap-2">

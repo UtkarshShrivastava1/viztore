@@ -3,9 +3,10 @@ import { useCatalogStore } from '../../stores/catalogStore.js';
 
 interface LowStockWarningsProps {
   onAddStock?: () => void;
+  onViewAll?: () => void;
 }
 
-export const LowStockWarnings: React.FC<LowStockWarningsProps> = ({ onAddStock }) => {
+export const LowStockWarnings: React.FC<LowStockWarningsProps> = ({ onAddStock, onViewAll }) => {
   const { products } = useCatalogStore();
   const lowStockItems = products.filter((p) => p.stock <= (p.lowStockThreshold || 10)).slice(0, 5);
 
@@ -14,7 +15,11 @@ export const LowStockWarnings: React.FC<LowStockWarningsProps> = ({ onAddStock }
       {/* Header */}
       <div className="flex items-center justify-between pb-1.5 border-b border-slate-100">
         <h3 className="text-xs sm:text-sm font-bold text-slate-900">Low Stock Alert</h3>
-        <button type="button" className="text-[11px] font-semibold text-blue-600 hover:text-blue-700">
+        <button
+          type="button"
+          onClick={onViewAll}
+          className="text-[11px] font-semibold text-blue-600 hover:text-blue-700 cursor-pointer"
+        >
           View All
         </button>
       </div>
