@@ -34,7 +34,7 @@ export function Header(props: HeaderProps) {
 
   return (
     <header className={`w-full select-none ${className}`}>
-      <MobileHeader 
+      <MobileHeader
         {...restProps}
         displayTitle={displayTitle}
         isSimpleHeader={isSimpleHeader}

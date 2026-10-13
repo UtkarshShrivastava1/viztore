@@ -9,7 +9,6 @@ import {
   MapPin, 
   Store, 
   Plus, 
-  Pencil, 
   Trash2, 
   CheckCircle2, 
   Circle, 
@@ -35,7 +34,7 @@ interface AddressData {
 
 export function AddressesClient() {
   const router = useRouter();
-  const { user, isAuthenticated, openAuthModal } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
   const [addresses, setAddresses] = useState<AddressData[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);

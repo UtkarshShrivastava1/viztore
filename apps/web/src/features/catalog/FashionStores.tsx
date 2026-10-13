@@ -1,10 +1,47 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ChevronDown, Store as StoreIcon, Loader2 } from 'lucide-react';
+import Link from 'next/link';
+import { ChevronRight, Loader2 } from 'lucide-react';
 import { StoreCard } from '@/features/stores/components/StoreCard';
 import { fetchAllStores } from '@/lib/api/stores';
 import { StoreCategory, type IStore } from '@repo/shared-types';
+
+const FASHION_STORES_MOCK: IStore[] = [
+  {
+    _id: 'store-style-hub',
+    name: 'Style Hub',
+    slug: 'style-hub',
+    bannerUrl: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&q=80',
+    rating: 4.5,
+    reviewCount: 1200,
+    category: "Men's, Women's & Kids Fashion",
+    description: "Men's, Women's & Kids Fashion",
+    isVerified: true,
+  } as unknown as IStore,
+  {
+    _id: 'store-trendy-looks',
+    name: 'Trendy Looks',
+    slug: 'trendy-looks',
+    bannerUrl: 'https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?w=800&q=80',
+    rating: 4.3,
+    reviewCount: 980,
+    category: "Women's Fashion & Accessories",
+    description: "Women's Fashion & Accessories",
+    isVerified: true,
+  } as unknown as IStore,
+  {
+    _id: 'store-urban-wear',
+    name: 'Urban Wear',
+    slug: 'urban-wear',
+    bannerUrl: 'https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=800&q=80',
+    rating: 4.6,
+    reviewCount: 1500,
+    category: "Men's Fashion & Casual Wear",
+    description: "Men's Fashion & Casual Wear",
+    isVerified: true,
+  } as unknown as IStore,
+];
 
 export function FashionStores() {
   const [stores, setStores] = useState<IStore[]>([]);
@@ -21,11 +58,13 @@ export function FashionStores() {
             setStores(res.stores);
           } else {
             const allRes = await fetchAllStores();
-            setStores(allRes.stores);
+            const fashionList = allRes.stores.filter(s => s.category?.toLowerCase().includes('fashion'));
+            setStores(fashionList.length > 0 ? fashionList : FASHION_STORES_MOCK);
           }
         }
       } catch (err) {
         console.warn('Failed to load stores:', err);
+        if (isMounted) setStores(FASHION_STORES_MOCK);
       } finally {
         if (isMounted) setIsLoading(false);
       }
@@ -36,22 +75,23 @@ export function FashionStores() {
     };
   }, []);
 
+  const displayStores = stores.length > 0 ? stores : FASHION_STORES_MOCK;
+
   return (
     <div className="mt-8 pt-4">
-      {/* Title and Sort Header */}
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between mb-6">
+      {/* Title and View All Header */}
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-extrabold text-[#061842] mb-1">Fashion Stores</h2>
-          <p className="text-[14px] font-bold text-[#061842]">Discover top fashion stores near you</p>
+          <h2 className="text-2xl font-black text-[#061842] mb-0.5">Fashion Stores</h2>
+          <p className="text-[14px] font-semibold text-gray-500">Top fashion stores near you</p>
         </div>
 
-        <div className="flex items-center gap-2 text-[13px] font-bold mt-4 lg:mt-0">
-          <span className="text-[#061842]">Sort By:</span>
-          <button className="flex items-center gap-1.5 bg-white border border-gray-200 rounded-lg px-3 py-1.5 hover:border-gray-300 transition-colors">
-            <span className="text-gray-700 font-medium">Relevance</span>
-            <ChevronDown className="w-4 h-4 text-gray-400" />
-          </button>
-        </div>
+        <Link
+          href="/stores?category=fashion"
+          className="flex items-center gap-1 text-sm font-bold text-[#1668F6] hover:text-[#0f4bba] transition-colors"
+        >
+          View All <ChevronRight className="w-4 h-4" />
+        </Link>
       </div>
 
       {isLoading ? (
@@ -59,19 +99,13 @@ export function FashionStores() {
           <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
           <span className="text-sm font-medium">Discovering stores...</span>
         </div>
-      ) : stores.length === 0 ? (
-        <div className="py-12 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-          <StoreIcon className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-          <p className="text-sm font-semibold text-slate-700">No stores found nearby</p>
-          <p className="text-xs text-slate-400 mt-0.5">Check back soon as more local stores onboard.</p>
-        </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
-          {stores.map((store) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {displayStores.map((store) => (
             <StoreCard
-              key={store._id || (store as any).id}
+              key={store._id || (store as { id?: string }).id}
               store={store}
-              className="w-full flex-shrink-1"
+              className="w-full"
             />
           ))}
         </div>
@@ -79,3 +113,4 @@ export function FashionStores() {
     </div>
   );
 }
+

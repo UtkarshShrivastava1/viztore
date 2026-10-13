@@ -8,7 +8,7 @@ export default function TermsConditionsScreen() {
   const router = useRouter();
 
   const highlights = [
-    { id: 1, title: 'User Agreement', desc: 'By using {branding.appName}, you agree to these terms.', icon: Users, color: '#3b82f6' },
+    { id: 1, title: 'User Agreement', desc: `By using ${branding.appName}, you agree to these terms.`, icon: Users, color: '#3b82f6' },
     { id: 2, title: 'Use of Services', desc: 'Use our app and services only for lawful purposes.', icon: ShoppingBag, color: '#10b981' },
     { id: 3, title: 'Your Responsibilities', desc: 'Provide accurate information and keep your account secure.', icon: ShieldAlert, color: '#8b5cf6' },
     { id: 4, title: 'Policy Updates', desc: 'We may update these terms. Continued use means you accept the changes.', icon: RefreshCcw, color: '#f59e0b' },

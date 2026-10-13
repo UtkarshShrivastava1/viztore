@@ -54,7 +54,7 @@ export function MobileHeader({
     <div className="md:hidden max-w-2xl mx-auto w-full relative pt-1.5 pb-2">
       {/* Background Gradient for Mobile */}
       {!isSimpleHeader && (
-        <div 
+        <div
           className="absolute inset-0 z-0 block"
           style={{
             background: "linear-gradient(180deg, #011A5D 0%, #011B62 25%, #002070 45%, #01267F 55%, #04318C 62%, #1A49A2 68%, #3A6AC0 73%, #6894D8 78%, #9EBEEC 84%, #D4E3FA 91%, #EEF4FE 96%, #F5F9FE 100%)"
@@ -65,7 +65,7 @@ export function MobileHeader({
       {isSimpleHeader && (
         <div className="absolute inset-0 z-0 bg-white" />
       )}
-      
+
       {/* Soft misty fog / glow behind the categories */}
       {!isAccountPage && !isSimpleHeader && (
         <div
@@ -92,7 +92,7 @@ export function MobileHeader({
         ) : (
           <div className="flex items-center justify-between px-4 py-1 pb-2">
             <button onClick={() => router.push('/account')} className="p-1 -ml-1 text-[#192168]">
-               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
             </button>
             <div className={displayTitle ? "flex-1 flex justify-center text-[#192168] font-bold text-lg" : "scale-90"}>
               {displayTitle ? displayTitle : <Logo theme="dark" />}
@@ -113,7 +113,7 @@ export function MobileHeader({
           </div>
         )}
       </div>
-      
+
       {/* Category Icons under the gradient for Mobile */}
       {!isAccountPage && !isSimpleHeader && (
         <div className="relative z-10 bg-gradient-to-b from-[#F5F9FE] to-white pt-2 pb-1">

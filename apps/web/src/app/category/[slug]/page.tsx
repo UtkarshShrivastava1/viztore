@@ -1,9 +1,9 @@
 import React from 'react';
-import Link from 'next/link';
 import { ShieldCheck, RotateCcw, Award } from 'lucide-react';
 import { CategoryHeroBanner } from '@/features/catalog/CategoryHeroBanner';
 import { ShopByCategoryGrid } from '@/features/catalog/ShopByCategoryGrid';
 import { ShopForLovedOnes } from '@/features/catalog/ShopForLovedOnes';
+import { FashionStores } from '@/features/catalog/FashionStores';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 import { branding } from '@repo/shared-types';
 
@@ -59,6 +59,7 @@ export default function FashionLandingPage() {
           <CategoryHeroBanner />
           <ShopByCategoryGrid />
           <ShopForLovedOnes />
+          <FashionStores />
         </div>
       </main>
     </div>

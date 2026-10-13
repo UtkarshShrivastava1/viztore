@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { IStore } from '@repo/shared-types';
-import { Star, MapPin, Heart, ChevronRight } from 'lucide-react';
+import { Star, Heart } from 'lucide-react';
 
 export function StoreDirectoryCard({ store }: { store: IStore }) {
   return (

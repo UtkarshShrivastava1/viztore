@@ -4,14 +4,75 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { Footer } from '@/components/layout/Footer';
 import { DealProductCard } from '@/features/deals/components/DealProductCard';
-import { DealsFilterSidebar } from '@/features/deals/components/DealsFilterSidebar';
+import { DealsFilterSidebar, PRICE_RANGES_LIST } from '@/features/deals/components/DealsFilterSidebar';
 import { useFeaturedProducts } from '@/hooks/useFeaturedProducts';
 import { ProductGridSkeleton } from '@/components/ui/Skeleton';
-import { ChevronDown, SlidersHorizontal, Percent, ShieldCheck, RefreshCw, Shield } from 'lucide-react';
+import { ChevronDown, SlidersHorizontal, Percent, ShieldCheck, RefreshCw, Shield, ArrowUpDown } from 'lucide-react';
 
 export default function DealsPage() {
   const { data: featuredProducts, isLoading } = useFeaturedProducts(20);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedPriceRanges, setSelectedPriceRanges] = useState<string[]>([]);
+  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
+  const [sortBy, setSortBy] = useState('relevance');
+
+  const filteredProducts = React.useMemo(() => {
+    if (!featuredProducts) return [];
+
+    return featuredProducts
+      .filter((product) => {
+        // Category filter
+        if (selectedCategories.length > 0) {
+          const matchesCategory = selectedCategories.some((cat) => {
+            const catLower = cat.toLowerCase().replace(/[^a-z0-9]/g, '');
+            const prodCat = String(product.category || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+            const prodSub = String(product.subCategory || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+            const prodName = product.name.toLowerCase();
+            return (
+              prodCat.includes(catLower) ||
+              catLower.includes(prodCat) ||
+              prodSub.includes(catLower) ||
+              prodName.includes(cat.toLowerCase())
+            );
+          });
+          if (!matchesCategory) return false;
+        }
+
+        // Price range filter
+        if (selectedPriceRanges.length > 0) {
+          const matchesPrice = selectedPriceRanges.some((rangeId) => {
+            const range = PRICE_RANGES_LIST.find((r) => r.id === rangeId);
+            if (!range) return false;
+            return product.basePrice >= range.min && product.basePrice <= range.max;
+          });
+          if (!matchesPrice) return false;
+        }
+
+        // Brand filter
+        if (selectedBrands.length > 0) {
+          const matchesBrand = selectedBrands.some((b) => {
+            const bLower = b.toLowerCase();
+            const prodBrand = (product.brand || '').toLowerCase();
+            const prodName = product.name.toLowerCase();
+            return prodBrand.includes(bLower) || prodName.includes(bLower);
+          });
+          if (!matchesBrand) return false;
+        }
+
+        return true;
+      })
+      .sort((a, b) => {
+        if (sortBy === 'price-low') return a.basePrice - b.basePrice;
+        if (sortBy === 'price-high') return b.basePrice - a.basePrice;
+        if (sortBy === 'discount') {
+          const discA = a.baseMrp > 0 ? (a.baseMrp - a.basePrice) / a.baseMrp : 0;
+          const discB = b.baseMrp > 0 ? (b.baseMrp - b.basePrice) / b.baseMrp : 0;
+          return discB - discA;
+        }
+        return 0; // relevance
+      });
+  }, [featuredProducts, selectedCategories, selectedPriceRanges, selectedBrands, sortBy]);
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] pt-5 pb-20 md:pb-0">
@@ -21,7 +82,7 @@ export default function DealsPage() {
         <div className="flex items-center gap-1.5 text-[13px] font-medium text-surface-500 mb-4">
           <Link href="/" className="hover:text-[#1668F6] transition-colors">Home</Link>
           <span className="text-surface-300">›</span>
-          <span className="text-surface-500">Best Deals</span>
+          <span className="text-surface-500">Best Deals for You</span>
         </div>
 
         {/* Hero Banner */}
@@ -122,25 +183,54 @@ export default function DealsPage() {
           </button>
 
           {/* Sidebar */}
-          <div className={`${isMobileFilterOpen ? 'block' : 'hidden'} lg:block w-full lg:w-64 flex-shrink-0`}>
-             <DealsFilterSidebar />
+          <div className={`${isMobileFilterOpen ? 'block' : 'hidden'} lg:block w-full lg:w-[260px] flex-shrink-0`}>
+             <DealsFilterSidebar
+               selectedCategories={selectedCategories}
+               selectedPriceRanges={selectedPriceRanges}
+               selectedBrands={selectedBrands}
+               onCategoryToggle={(cat) => {
+                 setSelectedCategories((prev) =>
+                   prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]
+                 );
+               }}
+               onPriceRangeToggle={(rangeId) => {
+                 setSelectedPriceRanges((prev) =>
+                   prev.includes(rangeId) ? prev.filter((r) => r !== rangeId) : [...prev, rangeId]
+                 );
+               }}
+               onBrandToggle={(brand) => {
+                 setSelectedBrands((prev) =>
+                   prev.includes(brand) ? prev.filter((b) => b !== brand) : [...prev, brand]
+                 );
+               }}
+               onClearFilters={() => {
+                 setSelectedCategories([]);
+                 setSelectedPriceRanges([]);
+                 setSelectedBrands([]);
+               }}
+             />
           </div>
 
           {/* Main Content */}
           <div className="flex-1">
             {/* Top Bar */}
-            <div className="flex items-center justify-between mb-6 bg-white border border-surface-200 p-3 px-5 rounded-xl">
-              <span className="text-sm font-bold text-[#192168]">
-                {isLoading ? 'Loading...' : `${featuredProducts?.length || 0} Deals`} <span className="text-surface-500 font-medium">Found</span>
+            <div className="flex items-center justify-between mb-5">
+              <span className="text-[15px] font-bold text-[#09153D]">
+                {isLoading ? 'Loading...' : `${filteredProducts.length} Products`}
               </span>
               
-              <div className="flex items-center gap-2 text-sm font-semibold text-[#192168]">
-                Sort by:
-                <select className="bg-surface-50 border border-surface-200 rounded-lg px-3 py-1.5 focus:outline-none focus:border-[#1668F6]">
-                  <option>Biggest Discount</option>
-                  <option>Price: Low to High</option>
-                  <option>Price: High to Low</option>
-                  <option>Newest Arrivals</option>
+              <div className="flex items-center gap-1.5 bg-white border border-surface-200 rounded-lg px-3 py-1.5 shadow-2xs hover:border-surface-300 transition-colors">
+                <ArrowUpDown className="w-3.5 h-3.5 text-surface-500" />
+                <span className="text-xs font-medium text-surface-500">Sort By:</span>
+                <select 
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="bg-transparent text-xs font-semibold text-[#09153D] focus:outline-none cursor-pointer pr-1"
+                >
+                  <option value="relevance">Relevance</option>
+                  <option value="discount">Biggest Discount</option>
+                  <option value="price-low">Price: Low to High</option>
+                  <option value="price-high">Price: High to Low</option>
                 </select>
               </div>
             </div>
@@ -148,9 +238,9 @@ export default function DealsPage() {
             {/* Grid */}
             {isLoading ? (
               <ProductGridSkeleton count={10} />
-            ) : featuredProducts && featuredProducts.length > 0 ? (
+            ) : filteredProducts && filteredProducts.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 md:gap-5">
-                {featuredProducts.map((product) => (
+                {filteredProducts.map((product) => (
                   <DealProductCard key={product._id} product={product} />
                 ))}
               </div>

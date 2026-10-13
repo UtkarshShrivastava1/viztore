@@ -12,7 +12,7 @@ export default function HelpSupportScreen() {
     { id: 2, title: 'Returns & Refunds', icon: RotateCcw, color: '#f59e0b' },
     { id: 3, title: 'Payments & Offers', icon: CreditCard, color: '#10b981' },
     { id: 4, title: 'Account & Profile', icon: User, color: '#8b5cf6' },
-    { id: 5, title: 'Selling on {branding.appName}', icon: Store, color: '#ec4899' },
+    { id: 5, title: `Selling on ${branding.appName}`, icon: Store, color: '#ec4899' },
   ];
 
   const topTopics = [
