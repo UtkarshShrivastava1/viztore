@@ -14,17 +14,18 @@
 |:---:|:---:|:---:|:---:|:---:|
 | **8** | **0** | **6** | **2** | **75.0%** |
 
-### 15-Module Enterprise Frontend & Backend Mockup Coverage
-| Total Modules | Mockup Subfolders | Total Mockup Screens | Fully Hardened & Verified | In Systematic Testing / Planned | Screen Audit Coverage |
-|:---:|:---:|:---:|:---:|:---:|:---:|
-| **15** | **15** | **126** | **44 screens (Modules 1–6)** | **82 screens (Modules 7–15)** | **34.9% (Screen-Level)** / **40.0% (Module-Level)** |
+### 15-Module Enterprise Frontend & Backend Tiering & Mockup Coverage
+| Release Tier | Total Modules Included | Total Mockup Screens | Hardened & Verified | In Systematic Testing / Next Up | Status |
+|---|:---:|:---:|:---:|:---:|:---:|
+| **Tier 2 Launch Scope (Active Core)** | **13 Modules** | **100 screens** | **44 screens (Modules 1–6)** | **56 screens (Modules 8, 9, 10, 11, 13, 14, 15)** | 🟡 **Active Hardening Sprint (44.0% Screen / 46.2% Mod)** |
+| **Tier 3 Scope (Deferred Expansion)** | **2 Modules** | **26 screens** | **0 screens** | **26 screens (Modules 7: Wallet & 12: Marketing)** | 🟣 **Deferred to Tier 3** |
+| **Total Merchant Platform** | **15 Modules** | **126 screens** | **44 screens** | **82 screens** | **100% Mockup Asset Inventory Mapped** |
 
 ```mermaid
-pie title Merchant Portal 15-Module Screen Coverage (126 Mockups)
-    "Modules 1–6: Operations & Core Commerce (Hardened)" : 44
-    "Modules 7–10: Financial & Settlements (Planned)" : 32
-    "Modules 11–12: Analytics & Marketing (Planned)" : 32
-    "Modules 13–15: Storefront, Settings & Support (Planned)" : 18
+pie title Merchant Portal Scope by Launch Tier (126 Mockups)
+    "Tier 2 Verified (Modules 1–6: 44 screens)" : 44
+    "Tier 2 Active Queue (Modules 8,9,10,11,13,14,15: 56 screens)" : 56
+    "Tier 3 Deferred (Modules 7 & 12: 26 screens)" : 26
 ```
 
 ---
@@ -71,23 +72,23 @@ flowchart TD
 
 ### 📊 Master 15-Module Testing Matrix
 
-| Module ID | Module Name | Mockup Folder & File Count | Primary Route & Files (`apps/merchant`) | Visible UI Elements Mockup Fidelity | Backend Functionalities & API Hooks | Enterprise Hardening (Front + Back) | Systematic Testing Status |
-|:---:|---|:---:|---|:---:|---|:---:|:---:|
-| **MOD-01** | **Home Dashboard** | `1.) Home/`<br>**(8 files)** | `/dashboard`, `/`<br>`DashboardOverviewPage.tsx`<br>`Header.tsx`, `Sidebar.tsx` | **100%**<br>15-item sidebar, live Store Active toggle, Store Inactive modal & paused banner, KPI cards, quick actions | `PATCH /stores/:id` (`isActive`), Socket.io store rooms, live orders refetch | 🟢 **HARDENED**<br>Zero fake switches, persistent MongoDB toggle, audio alerts | 🟢 **HARDENED & VERIFIED** |
-| **MOD-02** | **Orders Pipeline** | `2.) Orders/`<br>**(9 files)** | `/orders`, `/orders/create`<br>`OrdersPage.tsx`<br>`OrdersTable.tsx`<br>`VerifyOtpModal.tsx` | **100%**<br>Status tabs (All, New, Accepted, Packed, Out for Delivery, Delivered), manual order modal, OTP modal | `GET /orders/store/:id`, `PATCH /orders/:id/status`, `POST /verify-delivery-otp`, Socket.io listeners | 🟢 **HARDENED**<br>Web Audio harmonic chime, dual store broadcast, no `window.prompt` | 🟢 **HARDENED & VERIFIED** |
-| **MOD-03** | **Product Catalog** | `3.) Product Catalog/`<br>**(6 files)** | `/catalog`, `/catalog/add`<br>`ProductsCatalogPage.tsx`<br>`AddProductWizardPage.tsx`<br>`BulkUploadModal.tsx` | **100%**<br>Catalog table, 3-step wizard, category tree, Base64 image dropzone, direct URL, bulk CSV parser | `GET /catalog/stores/:id/products`, `POST /products`, `POST /products/bulk`, `PATCH /products/:id` | 🟢 **HARDENED**<br>Real CSV parser + demo batch, multi-variant S/M/L/XL matrix, CSV export | 🟢 **HARDENED & VERIFIED** |
-| **MOD-04** | **Inventory Management** | `4.) Inventory/`<br>**(7 files)** | `/inventory`<br>`InventoryPage.tsx`<br>`InventoryTable.tsx`<br>`AdjustStockDrawer.tsx`<br>`StockHistoryView.tsx` | **100%**<br>Inventory register, dynamic pagination (no 125 hardcode), adjust drawer, bulk view, stock history | `useCatalogStore` sync, `PATCH /catalog/products/:id` with variant updates, Redis cache invalidation | 🟢 **HARDENED**<br>Real backend persistence, dynamic KPI calculation, complete inventory CSV export | 🟢 **HARDENED & VERIFIED** |
-| **MOD-05** | **Billing & Invoicing (POS)** | `5.) Billing & Invoicing/`<br>**(7 files)** | `/billing`, `/pos`<br>`BillingPage.tsx`<br>`CounterPOSView.tsx`<br>`PrintReceiptModal.tsx`<br>`InvoicesTableView.tsx` | **100%**<br>Walk-in POS, fast Enter-key barcode scanner, multi-tender panel (Cash, UPI QR, Card, Khata), thermal slip | `POST /billing/pos/sale` (Tier 2 atomic OCC stock deduction), `GET /billing/invoices`, `GET /billing/quotes` | 🟢 **HARDENED**<br>80mm/58mm `@media print` ESC/POS thermal CSS, live invoice sync, scan chimes | 🟢 **HARDENED & VERIFIED** |
-| **MOD-06** | **Customers CRM & Khata** | `6.) Customers/`<br>**(7 files)** | `/customers`<br>`CustomersPage.tsx`<br>`CustomerTable.tsx`<br>`CustomerStatementDrawer.tsx`<br>`AddStoreCreditModal.tsx` | **100%**<br>Customer table, loyalty tiers, details drawer (5 tabs), statements drawer, aging summary, debt payment modal | Synced dynamically from POS billing invoices & online orders, live balance recalculation | 🟢 **HARDENED**<br>Real CSV import/export, WhatsApp reminder link, dual debt/credit settlement | 🟢 **HARDENED & VERIFIED** |
-| **MOD-07** | **Wallet Hub** | `7.) Wallet/`<br>**(4 files)** | `/wallet`<br>`WalletPage.tsx`<br>`stores/payoutStore.ts` | **Baseline (85%)**<br>Available balance, pending settlement, transaction history drawer (`7.3`), add money drawer (`7.2`) | Real wallet balance queries, payout request mutations, transaction ledger hooks | 🟡 **AUDIT QUEUE**<br>Wire live transaction details drawer (`7.1`), Razorpay/UPI add money flow | 🟡 **TESTING IN PROGRESS** |
-| **MOD-08** | **Purchase & Expense** | `8.) Purchase Expense/`<br>**(20 files)** | `/expenses`<br>`ExpensesPage.tsx`<br>`components/expenses/` | **Baseline (70%)**<br>Expense table, vendor tab (`8.10`–`8.13`), 4 Add Purchase modals (`8.14a`–`8.14d`), E-Way bill (`8.6`) | Operating expense ledger, vendor management APIs, purchase order lifecycle | ⚪ **PLANNED**<br>Massive 20-screen audit: credit notes, PO drawers, payment recording | ⚪ **PLANNED AUDIT** |
-| **MOD-09** | **Returns & Refunds** | `9.) Returns & Refunds/`<br>**(4 files)** | `/returns`<br>`ReturnsPage.tsx`<br>`components/returns/` | **Baseline (85%)**<br>Returns table, status pills, action menu (`9.2`), `+ Raise Return Request` modal with dropzone (`9.3`) | Order return transitions, customer wallet refund credits, inspection state hooks | ⚪ **PLANNED**<br>Verify photo evidence dropzone & print return slip integration | ⚪ **PLANNED AUDIT** |
-| **MOD-10** | **Payout & Settlements** | `10.) Payout & Settlements/`<br>**(4 files)** | `/payouts`<br>`PayoutsPage.tsx`<br>`components/payouts/` | **Baseline (90%)**<br>Overview cards, settlement schedule, bank accounts, All-Transactions ledger (`10.3`) with UTR numbers | Payout settlement query, bank UTR tracking, platform fee deductions | ⚪ **PLANNED**<br>Verify net calculation math, UTR search, and ledger CSV export | ⚪ **PLANNED AUDIT** |
-| **MOD-11** | **Reports & Analytics** | `11.) Reports & Analytics/`<br>**(10 files)** | `/analytics`<br>`AnalyticsPage.tsx`<br>`components/analytics/` | **Baseline (85%)**<br>Sales charts, orders velocity, GST liability (`11.4`–`11.6`), settlements report (`11.7`), reversals (`11.9`) | Time-series aggregations, revenue bucketing, category breakdown pipelines | ⚪ **PLANNED**<br>Verify settlement trends chart, reversals report, and PDF/Excel export | ⚪ **PLANNED AUDIT** |
-| **MOD-12** | **Marketing & Ads** | `12.) Marketing/`<br>**(22 files)** | `/marketing`<br>`MarketingPage.tsx`<br>`components/marketing/` | **Baseline (75%)**<br>Campaigns table, 4-step Ad Wizard (`12.2`–`12.4b`), coupons table, 2-step Coupon Wizard with ticket preview (`12.7a`–`d`) | Ad campaign state machine, daily budget caps, coupon validation rules | ⚪ **PLANNED**<br>Verify live voucher ticket preview, ROAS analytics, and multi-ad variants | ⚪ **PLANNED AUDIT** |
-| **MOD-13** | **Store Management** | `13.) Store Management/`<br>**(7 files)** | `/store-management`<br>`StoreSectionsList.tsx`<br>`StoreViewSettings.tsx` | **Baseline (85%)**<br>Storefront hub, sections table, Add Section with live phone chassis preview (`13.1a`), My Store QR (`13.3`) | `PATCH /stores/:id` with layout sections, banner media uploads, QR code generator | ⚪ **PLANNED**<br>Verify mobile preview responsiveness, dual banners, and WhatsApp share | ⚪ **PLANNED AUDIT** |
-| **MOD-14** | **Settings Suite** | `14.) Settings/`<br>**(9 files)** | `/settings`<br>`SettingsPage.tsx`<br>`StoreSettingsPage.tsx` | **Baseline (80%)**<br>Full 9-tab suite: Profile with 80% bar (`14.0`), Tax (`14.1`), Timings (`14.2`), Billing (`14.3`), Staff (`14.8`) | Store settings persistence, timings validation, GST slabs, staff RBAC accounts | ⚪ **PLANNED**<br>Verify all 9 tabs save to backend, delivery radius circle, security tab | ⚪ **PLANNED AUDIT** |
-| **MOD-15** | **Support Desk** | `15.) Support/`<br>**(2 files)** | `/support`<br>`SupportPage.tsx`<br>`components/support/` | **Baseline (90%)**<br>Support hub (`15.0`), FAQ accordion, contact channels, `+ Create Ticket` modal with priority & upload (`15.1`) | Support ticket submission endpoint, status tracking, attachment ingestion | ⚪ **PLANNED**<br>Verify ticket creation modal, attachment upload, and status history | ⚪ **PLANNED AUDIT** |
+| Module ID | Module Name | Launch Tier | Mockup Folder & File Count | Primary Route & Files (`apps/merchant`) | Visible UI Elements Mockup Fidelity | Backend Functionalities & API Hooks | Enterprise Hardening (Front + Back) | Systematic Testing Status |
+|:---:|---|:---:|:---:|---|:---:|---|:---:|:---:|
+| **MOD-01** | **Home Dashboard** | **Tier 2** | `1.) Home/`<br>**(8 files)** | `/dashboard`, `/`<br>`DashboardOverviewPage.tsx`<br>`Header.tsx`, `Sidebar.tsx` | **100%**<br>15-item sidebar, live Store Active toggle, Store Inactive modal & paused banner, KPI cards, quick actions | `PATCH /stores/:id` (`isActive`), Socket.io store rooms, live orders refetch | 🟢 **HARDENED**<br>Zero fake switches, persistent MongoDB toggle, audio alerts | 🟢 **HARDENED & VERIFIED** |
+| **MOD-02** | **Orders Pipeline** | **Tier 2** | `2.) Orders/`<br>**(9 files)** | `/orders`, `/orders/create`<br>`OrdersPage.tsx`<br>`OrdersTable.tsx`<br>`VerifyOtpModal.tsx` | **100%**<br>Status tabs (All, New, Accepted, Packed, Out for Delivery, Delivered), manual order modal, OTP modal | `GET /orders/store/:id`, `PATCH /orders/:id/status`, `POST /verify-delivery-otp`, Socket.io listeners | 🟢 **HARDENED**<br>Web Audio harmonic chime, dual store broadcast, no `window.prompt` | 🟢 **HARDENED & VERIFIED** |
+| **MOD-03** | **Product Catalog** | **Tier 2** | `3.) Product Catalog/`<br>**(6 files)** | `/catalog`, `/catalog/add`<br>`ProductsCatalogPage.tsx`<br>`AddProductWizardPage.tsx`<br>`BulkUploadModal.tsx` | **100%**<br>Catalog table, 3-step wizard, category tree, Base64 image dropzone, direct URL, bulk CSV parser | `GET /catalog/stores/:id/products`, `POST /products`, `POST /products/bulk`, `PATCH /products/:id` | 🟢 **HARDENED**<br>Real CSV parser + demo batch, multi-variant S/M/L/XL matrix, CSV export | 🟢 **HARDENED & VERIFIED** |
+| **MOD-04** | **Inventory Management** | **Tier 2** | `4.) Inventory/`<br>**(7 files)** | `/inventory`<br>`InventoryPage.tsx`<br>`InventoryTable.tsx`<br>`AdjustStockDrawer.tsx`<br>`StockHistoryView.tsx` | **100%**<br>Inventory register, dynamic pagination (no 125 hardcode), adjust drawer, bulk view, stock history | `useCatalogStore` sync, `PATCH /catalog/products/:id` with variant updates, Redis cache invalidation | 🟢 **HARDENED**<br>Real backend persistence, dynamic KPI calculation, complete inventory CSV export | 🟢 **HARDENED & VERIFIED** |
+| **MOD-05** | **Billing & Invoicing (POS)** | **Tier 2** | `5.) Billing & Invoicing/`<br>**(7 files)** | `/billing`, `/pos`<br>`BillingPage.tsx`<br>`CounterPOSView.tsx`<br>`PrintReceiptModal.tsx`<br>`InvoicesTableView.tsx` | **100%**<br>Walk-in POS, fast Enter-key barcode scanner, multi-tender panel (Cash, UPI QR, Card, Khata), thermal slip | `POST /billing/pos/sale` (Tier 2 atomic OCC stock deduction), `GET /billing/invoices`, `GET /billing/quotes` | 🟢 **HARDENED**<br>80mm/58mm `@media print` ESC/POS thermal CSS, live invoice sync, scan chimes | 🟢 **HARDENED & VERIFIED** |
+| **MOD-06** | **Customers CRM & Khata** | **Tier 2** | `6.) Customers/`<br>**(7 files)** | `/customers`<br>`CustomersPage.tsx`<br>`CustomerTable.tsx`<br>`CustomerStatementDrawer.tsx`<br>`AddStoreCreditModal.tsx` | **100%**<br>Customer table, loyalty tiers, details drawer (5 tabs), statements drawer, aging summary, debt payment modal | Synced dynamically from POS billing invoices & online orders, live balance recalculation | 🟢 **HARDENED**<br>Real CSV import/export, WhatsApp reminder link, dual debt/credit settlement | 🟢 **HARDENED & VERIFIED** |
+| **MOD-07** | **Wallet Hub** | **Tier 3** | `7.) Wallet/`<br>**(4 files)** | `/wallet`<br>`WalletPage.tsx`<br>`stores/payoutStore.ts` | **Baseline (85%)**<br>Available balance, pending settlement, transaction history drawer (`7.3`), add money drawer (`7.2`) | Wallet top-up gateway, in-app merchant balance, peer transfers | 🟣 **TIER 3 DEFERRED**<br>Non-critical for Tier 2 hyperlocal launch; direct bank settlements used | 🟣 **DEFERRED TO TIER 3** |
+| **MOD-08** | **Purchase & Expense** | **Tier 2** | `8.) Purchase Expense/`<br>**(20 files)** | `/expenses`<br>`ExpensesPage.tsx`<br>`components/expenses/` | **Baseline (70%)**<br>Expense table, vendor tab (`8.10`–`8.13`), 4 Add Purchase modals (`8.14a`–`8.14d`), E-Way bill (`8.6`) | Operating expense ledger, vendor management APIs, purchase order lifecycle | ⚪ **NEXT UP (TIER 2)**<br>Massive 20-screen audit: vendors, POs, bills, cash expenses, credit notes | ⚪ **READY FOR TESTING** |
+| **MOD-09** | **Returns & Refunds** | **Tier 2** | `9.) Returns & Refunds/`<br>**(4 files)** | `/returns`<br>`ReturnsPage.tsx`<br>`components/returns/` | **Baseline (85%)**<br>Returns table, status pills, action menu (`9.2`), `+ Raise Return Request` modal with dropzone (`9.3`) | Order return transitions, customer wallet refund credits, inspection state hooks | ⚪ **TIER 2 SCOPE**<br>Verify photo evidence dropzone & print return slip integration | ⚪ **PLANNED AUDIT** |
+| **MOD-10** | **Payout & Settlements** | **Tier 2** | `10.) Payout & Settlements/`<br>**(4 files)** | `/payouts`<br>`PayoutsPage.tsx`<br>`components/payouts/` | **Baseline (90%)**<br>Overview cards, settlement schedule, bank accounts, All-Transactions ledger (`10.3`) with UTR numbers | Payout settlement query, bank UTR tracking, platform fee deductions | ⚪ **TIER 2 SCOPE**<br>Verify net calculation math, UTR search, and ledger CSV export | ⚪ **PLANNED AUDIT** |
+| **MOD-11** | **Reports & Analytics** | **Tier 2** | `11.) Reports & Analytics/`<br>**(10 files)** | `/analytics`<br>`AnalyticsPage.tsx`<br>`components/analytics/` | **Baseline (85%)**<br>Sales charts, orders velocity, GST liability (`11.4`–`11.6`), settlements report (`11.7`), reversals (`11.9`) | Time-series aggregations, revenue bucketing, category breakdown pipelines | ⚪ **TIER 2 SCOPE**<br>Verify settlement trends chart, reversals report, and PDF/Excel export | ⚪ **PLANNED AUDIT** |
+| **MOD-12** | **Marketing & Ads** | **Tier 3** | `12.) Marketing/`<br>**(22 files)** | `/marketing`<br>`MarketingPage.tsx`<br>`components/marketing/` | **Baseline (75%)**<br>Campaigns table, 4-step Ad Wizard (`12.2`–`12.4b`), coupons table, 2-step Coupon Wizard with ticket preview (`12.7a`–`d`) | Ad campaign bidding engine, sponsored search, daily budget management | 🟣 **TIER 3 DEFERRED**<br>Non-critical for Tier 2 retail launch; basic discount coupons retained | 🟣 **DEFERRED TO TIER 3** |
+| **MOD-13** | **Store Management** | **Tier 2** | `13.) Store Management/`<br>**(7 files)** | `/store-management`<br>`StoreSectionsList.tsx`<br>`StoreViewSettings.tsx` | **Baseline (85%)**<br>Storefront hub, sections table, Add Section with live phone chassis preview (`13.1a`), My Store QR (`13.3`) | `PATCH /stores/:id` with layout sections, banner media uploads, QR code generator | ⚪ **TIER 2 SCOPE**<br>Verify mobile preview responsiveness, dual banners, and WhatsApp share | ⚪ **PLANNED AUDIT** |
+| **MOD-14** | **Settings Suite** | **Tier 2** | `14.) Settings/`<br>**(9 files)** | `/settings`<br>`SettingsPage.tsx`<br>`StoreSettingsPage.tsx` | **Baseline (80%)**<br>Full 9-tab suite: Profile with 80% bar (`14.0`), Tax (`14.1`), Timings (`14.2`), Billing (`14.3`), Staff (`14.8`) | Store settings persistence, timings validation, GST slabs, staff RBAC accounts | ⚪ **TIER 2 SCOPE**<br>Verify all 9 tabs save to backend, delivery radius circle, security tab | ⚪ **PLANNED AUDIT** |
+| **MOD-15** | **Support Desk** | **Tier 2** | `15.) Support/`<br>**(2 files)** | `/support`<br>`SupportPage.tsx`<br>`components/support/` | **Baseline (90%)**<br>Support hub (`15.0`), FAQ accordion, contact channels, `+ Create Ticket` modal with priority & upload (`15.1`) | Support ticket submission endpoint, status tracking, attachment ingestion | ⚪ **TIER 2 SCOPE**<br>Verify ticket creation modal, attachment upload, and status history | ⚪ **PLANNED AUDIT** |
 
 ---
 
@@ -95,24 +96,26 @@ flowchart TD
 
 ```mermaid
 graph LR
-    subgraph CoreCommerce ["Phase A: Core Commerce (Modules 1–6) — 44 Screens"]
+    subgraph CoreCommerce ["Tier 2 Phase A: Core Commerce (Modules 1–6) — 44 Screens"]
         M1["1. Home (8)"] --> M2["2. Orders (9)"]
         M2 --> M3["3. Catalog (6)"]
         M3 --> M4["4. Inventory (7)"]
         M4 --> M5["5. POS Billing (7)"]
         M5 --> M6["6. Customers (7)"]
     end
-    subgraph Financials ["Phase B: Financial & Ledgers (Modules 7–10) — 32 Screens"]
-        M7["7. Wallet (4)"] --> M8["8. Purchase & Expense (20)"]
-        M8 --> M9["9. Returns & Refunds (4)"]
-        M9 --> M10["10. Payouts (4)"]
-    end
-    subgraph GrowthAdmin ["Phase C: Growth & Governance (Modules 11–15) — 50 Screens"]
-        M11["11. Analytics (10)"] --> M12["12. Marketing (22)"]
-        M12 --> M13["13. Storefront (7)"]
+    subgraph Tier2Active ["Tier 2 Phase B: Operations, Ledgers & Admin (56 Screens)"]
+        M8["8. Purchase & Expense (20)"] --> M9["9. Returns & Refunds (4)"]
+        M9 --> M10["10. Payouts & Settlements (4)"]
+        M10 --> M11["11. Reports & Analytics (10)"]
+        M11 --> M13["13. Storefront (7)"]
         M13 --> M14["14. Settings (9)"]
-        M14 --> M15["15. Support (2)"]
+        M14 --> M15["15. Support Desk (2)"]
     end
+    subgraph Tier3Deferred ["Tier 3 Scope: Deferred (26 Screens)"]
+        M7["7. Wallet Hub (4)"]
+        M12["12. Marketing & Ads (22)"]
+    end
+```
 ```
 
 #### 📁 Module 1: Home Dashboard & Navigation (`mockups/Merchant_Front/1.) Home/` — 8 Files
