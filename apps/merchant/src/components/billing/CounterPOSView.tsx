@@ -34,7 +34,7 @@ interface CounterPOSViewProps {
 export const CounterPOSView: React.FC<CounterPOSViewProps> = ({ onBack }) => {
   const { products: catalogProducts } = useCatalogStore();
   const { items: inventoryItems } = useInventoryStore();
-  const { createInvoice } = useBillingStore();
+  const { completePOSSale, createInvoice } = useBillingStore();
   const { customers } = useCustomerStore();
 
   // Unified available POS items (prefers catalog products with pricing, merges inventory)
@@ -286,78 +286,31 @@ export const CounterPOSView: React.FC<CounterPOSViewProps> = ({ onBack }) => {
 
     setIsSubmitting(true);
     try {
-      const today = new Date().toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      });
-
       const customerFinalName = isWalkIn ? 'Walk-in Retail Customer' : customerName.trim() || 'Retail Customer';
 
-      // 1. Local Store sync
-      const createdInvoice = createInvoice({
-        invoiceNo: '',
-        date: today,
-        dueDate: today,
+      const result = await completePOSSale({
         customerName: customerFinalName,
         customerPhone: isWalkIn ? '' : customerPhone,
         customerGstin: customerGstin || undefined,
-        customerAddress: 'Counter Sale',
-        state: DEFAULT_INDIAN_STATE,
-        placeOfSupply: DEFAULT_INDIAN_STATE,
-        paymentTerms: 'Immediate',
-        type: 'Tax Invoice',
         items: cartItems,
-        subTotal,
-        discountTotal: discountAmount,
-        taxTotal,
-        totalAmount: netPayable,
-        paidAmount: netPayable,
-        dueAmount: 0,
-        status: 'paid',
         settlementMode,
+        tenderedCashAmount: settlementMode === 'cash' ? (cashTendered || netPayable) : undefined,
+        changeReturnAmount: changeDue,
+        paperSize: '80mm',
+        discountPercent,
       });
 
-      // 2. Persist to backend database via API
-      try {
-        await billingApi.createInvoice({
-          type: 'tax_invoice',
-          customer: {
-            name: customerFinalName,
-            phone: customerPhone.replace(/\D/g, '') || '9876543210',
-            state: DEFAULT_INDIAN_STATE,
-            gstin: customerGstin || undefined,
-          },
-          items: cartItems.map((it) => ({
-            productId: it.productId,
-            title: it.name,
-            quantity: it.quantity,
-            unitPrice: it.rate,
-            hsnCode: it.hsnSac || '9983',
-            taxRate: 18,
-          })),
-          payment: {
-            status: 'paid',
-            settlementMode,
-            paidAmount: netPayable,
-          },
-        });
-      } catch (apiErr) {
-        // Backend offline or non-blocking in staging
-        console.warn('Backend billing persistence synced via client store:', apiErr);
-      }
-
       playScanChime(1318, 0.15); // Celebration E beep
-      showNotification(`Invoice ${createdInvoice.invoiceNo} Charged Successfully!`, 'success');
+      showNotification(`Invoice ${result.invoice.invoiceNo} Charged Successfully!`, 'success');
 
-      // 3. Reset Bill
+      // Reset Bill
       setCartItems([]);
       setCashTendered(0);
       setDiscountPercent(0);
 
-      // 4. Open Thermal Slip Print Dialog
+      // Open Thermal Slip Print Dialog
       if (openPrint) {
-        setLastInvoiceForPrint(createdInvoice);
+        setLastInvoiceForPrint(result.invoice);
         setIsPrintModalOpen(true);
       }
     } catch (err: any) {
@@ -432,7 +385,33 @@ export const CounterPOSView: React.FC<CounterPOSViewProps> = ({ onBack }) => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search products by title, SKU, or type barcode... (Press F3 or Ctrl+K)"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  const q = searchQuery.trim().toLowerCase();
+                  if (!q) return;
+                  const matched = posProducts.find(
+                    (p) =>
+                      (p.barcode && p.barcode.toLowerCase() === q) ||
+                      (p.sku && p.sku.toLowerCase() === q) ||
+                      p.id.toLowerCase() === q ||
+                      p.name.toLowerCase().includes(q)
+                  );
+                  if (matched && matched.stock > 0) {
+                    playScanChime(1046, 0.1);
+                    addToCart(matched);
+                    showNotification(`Added: ${matched.name}`, 'success');
+                    setSearchQuery('');
+                  } else if (matched && matched.stock <= 0) {
+                    playScanChime(300, 0.2);
+                    showNotification(`${matched.name} is out of stock`, 'error');
+                  } else {
+                    playScanChime(300, 0.2);
+                    showNotification(`No product matched "${searchQuery}"`, 'error');
+                  }
+                }
+              }}
+              placeholder="Search products by title, SKU, or type barcode... (Press Enter to add, F3 / Ctrl+K)"
               className="w-full pl-10 pr-20 py-2.5 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
             />
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-mono font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
@@ -767,6 +746,77 @@ export const CounterPOSView: React.FC<CounterPOSViewProps> = ({ onBack }) => {
                   <span className="font-mono text-sm">₹{changeDue.toFixed(2)}</span>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Dynamic Counter UPI QR */}
+          {settlementMode === 'upi' && (
+            <div className="p-3 rounded-xl bg-blue-50/70 border border-blue-200/80 space-y-2">
+              <div className="flex items-center justify-between text-xs font-bold text-blue-900">
+                <span className="flex items-center gap-1.5">
+                  <QrCode className="w-4 h-4 text-blue-600" />
+                  <span>Dynamic Counter UPI QR</span>
+                </span>
+                <span className="font-mono text-xs px-2 py-0.5 rounded bg-blue-100 text-blue-700 font-bold">
+                  ₹{netPayable.toFixed(2)}
+                </span>
+              </div>
+              <div className="bg-white p-2.5 rounded-lg border border-blue-100 flex items-center gap-3">
+                <div className="w-16 h-16 bg-slate-900 rounded p-1 flex items-center justify-center shrink-0">
+                  <svg viewBox="0 0 100 100" className="w-full h-full text-white fill-current">
+                    <rect x="5" y="5" width="28" height="28" fill="white" />
+                    <rect x="9" y="9" width="20" height="20" fill="black" />
+                    <rect x="13" y="13" width="12" height="12" fill="white" />
+                    <rect x="67" y="5" width="28" height="28" fill="white" />
+                    <rect x="71" y="9" width="20" height="20" fill="black" />
+                    <rect x="75" y="13" width="12" height="12" fill="white" />
+                    <rect x="5" y="67" width="28" height="28" fill="white" />
+                    <rect x="9" y="71" width="20" height="20" fill="black" />
+                    <rect x="13" y="75" width="12" height="12" fill="white" />
+                    <rect x="42" y="10" width="16" height="8" fill="white" />
+                    <rect x="40" y="40" width="20" height="20" fill="white" />
+                    <rect x="46" y="46" width="8" height="8" fill="black" />
+                    <rect x="15" y="42" width="15" height="10" fill="white" />
+                    <rect x="72" y="42" width="18" height="15" fill="white" />
+                    <rect x="42" y="75" width="15" height="15" fill="white" />
+                    <rect x="70" y="70" width="22" height="22" fill="white" />
+                    <rect x="76" y="76" width="10" height="10" fill="black" />
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0 text-[10px] text-slate-600 space-y-0.5">
+                  <p className="font-bold text-slate-800">Scan & Pay Any UPI App</p>
+                  <p className="text-slate-500">GPay • PhonePe • Paytm • BHIM</p>
+                  <span className="inline-flex items-center gap-1 font-semibold text-emerald-700 bg-emerald-50 px-1 py-0.5 rounded">
+                    <CheckCircle2 className="w-2.5 h-2.5" /> Reconciled automatically on charge
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Card Swipe Machine Prompt */}
+          {settlementMode === 'card' && (
+            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-1">
+              <div className="flex items-center gap-2 font-bold text-slate-800">
+                <CreditCard className="w-4 h-4 text-blue-600" />
+                <span>Swipe / Tap POS Terminal</span>
+              </div>
+              <p className="text-[11px] text-slate-500">
+                Collect ₹{netPayable.toFixed(2)} on swipe machine, then click Charge & Print.
+              </p>
+            </div>
+          )}
+
+          {/* Khata Credit Memo Prompt */}
+          {settlementMode === 'bank_transfer' && (
+            <div className="p-3 rounded-xl bg-amber-50/70 border border-amber-200 text-xs space-y-1">
+              <div className="flex items-center gap-2 font-bold text-amber-900">
+                <User className="w-4 h-4 text-amber-600" />
+                <span>Store Credit / Khata Memo</span>
+              </div>
+              <p className="text-[11px] text-amber-700">
+                Bill of ₹{netPayable.toFixed(2)} will be recorded in customer Khata ledger.
+              </p>
             </div>
           )}
 

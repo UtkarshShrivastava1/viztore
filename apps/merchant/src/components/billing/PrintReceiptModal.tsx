@@ -54,9 +54,13 @@ export const PrintReceiptModal: React.FC<PrintReceiptModalProps> = ({
   if (!isOpen || !invoice) return null;
 
   const storeName = currentStore?.name || (user as any)?.storeName || `${branding.appName} Retail Store`;
-  const storePhone = user?.phone || '+91 98765 43210';
-  const storeGstin = '22AAAAA0000A1Z5'; // Standard GST format
-  const storeAddress = 'Civic Centre Market, Bhilai, Chhattisgarh 490006';
+  const storePhone = currentStore?.phone || user?.phone || '+91 98765 43210';
+  const storeGstin = currentStore?.gstin || '22AAAAA0000A1Z5';
+  const storeAddress = currentStore?.address
+    ? (typeof currentStore.address === 'string'
+        ? currentStore.address
+        : `${currentStore.address.street || ''}, ${currentStore.address.city || ''}, ${currentStore.address.state || 'Chhattisgarh'} ${currentStore.address.pincode || ''}`.replace(/^,\s*|,\s*$/g, '').trim())
+    : 'Civic Centre Market, Bhilai, Chhattisgarh 490006';
 
   const handlePrint = () => {
     // Inject page size dynamically before print
@@ -71,7 +75,8 @@ export const PrintReceiptModal: React.FC<PrintReceiptModalProps> = ({
     if (printFormat === 'thermal-80mm') {
       styleTag.innerHTML = `
         @media print {
-          @page { size: 80mm auto; margin: 3mm 2mm; }
+          @page { size: 80mm auto; margin: 0; }
+          html, body { margin: 0 !important; padding: 0 !important; background: white !important; }
           body * { visibility: hidden !important; }
           #printable-thermal-slip, #printable-thermal-slip * { visibility: visible !important; }
           #printable-thermal-slip {
@@ -79,17 +84,20 @@ export const PrintReceiptModal: React.FC<PrintReceiptModalProps> = ({
             left: 0 !important;
             top: 0 !important;
             width: 76mm !important;
-            margin: 0 auto !important;
-            padding: 0 !important;
+            margin: 0 !important;
+            padding: 3mm 2mm !important;
             background: white !important;
             color: black !important;
+            box-shadow: none !important;
+            border: none !important;
           }
         }
       `;
     } else if (printFormat === 'thermal-58mm') {
       styleTag.innerHTML = `
         @media print {
-          @page { size: 58mm auto; margin: 2mm 1mm; }
+          @page { size: 58mm auto; margin: 0; }
+          html, body { margin: 0 !important; padding: 0 !important; background: white !important; }
           body * { visibility: hidden !important; }
           #printable-thermal-slip, #printable-thermal-slip * { visibility: visible !important; }
           #printable-thermal-slip {
@@ -97,17 +105,20 @@ export const PrintReceiptModal: React.FC<PrintReceiptModalProps> = ({
             left: 0 !important;
             top: 0 !important;
             width: 54mm !important;
-            margin: 0 auto !important;
-            padding: 0 !important;
+            margin: 0 !important;
+            padding: 2mm 1mm !important;
             background: white !important;
             color: black !important;
+            box-shadow: none !important;
+            border: none !important;
           }
         }
       `;
     } else {
       styleTag.innerHTML = `
         @media print {
-          @page { size: A4 portrait; margin: 10mm; }
+          @page { size: A4 portrait; margin: 8mm; }
+          html, body { margin: 0 !important; padding: 0 !important; background: white !important; }
           body * { visibility: hidden !important; }
           #printable-a4-invoice, #printable-a4-invoice * { visibility: visible !important; }
           #printable-a4-invoice {
@@ -119,6 +130,8 @@ export const PrintReceiptModal: React.FC<PrintReceiptModalProps> = ({
             padding: 0 !important;
             background: white !important;
             color: black !important;
+            box-shadow: none !important;
+            border: none !important;
           }
         }
       `;

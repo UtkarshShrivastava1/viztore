@@ -269,4 +269,14 @@ export const billingApi = {
     const qs = expectedVersion ? `?expectedVersion=${expectedVersion}` : '';
     return api.put<any>(`/billing/settings${qs}`, data);
   },
+
+  createPOSSale: (data: unknown, idempotencyKey?: string) =>
+    api.post<any>('/billing/pos/sale', data, {
+      headers: idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : undefined,
+    }),
+
+  getLastReceipt: (paperSize?: string) => {
+    const qs = paperSize ? `?paperSize=${paperSize}` : '';
+    return api.get<any>(`/billing/pos/last-receipt${qs}`);
+  },
 };

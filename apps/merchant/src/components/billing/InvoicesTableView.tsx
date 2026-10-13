@@ -12,6 +12,7 @@ import {
   ChevronDown,
   ArrowUpDown,
   ChevronsUpDown,
+  RefreshCw,
 } from 'lucide-react';
 import { useBillingStore, IInvoice, InvoiceStatus } from '../../stores/billingStore.js';
 import { InvoiceRowActionMenu } from './InvoiceRowActionMenu.js';
@@ -67,6 +68,8 @@ export const InvoicesTableView: React.FC = () => {
     invoiceCurrentTab,
     setInvoiceCurrentTab,
     clearInvoiceFilters,
+    fetchInvoices,
+    isLoadingInvoices,
   } = useBillingStore();
 
   const [activeMenuInvoiceId, setActiveMenuInvoiceId] = useState<string | null>(null);
@@ -382,11 +385,13 @@ export const InvoicesTableView: React.FC = () => {
           <div className="flex items-center gap-2 pt-3 sm:pt-4">
             <button
               type="button"
-              onClick={() => alert('Custom filter panel opened')}
-              className="px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 flex items-center gap-1.5 transition-colors shadow-3xs"
+              onClick={() => fetchInvoices()}
+              disabled={isLoadingInvoices}
+              className="px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 flex items-center gap-1.5 transition-colors shadow-3xs disabled:opacity-50"
+              title="Refresh invoices from server"
             >
-              <Filter className="w-3.5 h-3.5 text-blue-600" />
-              Filters
+              <RefreshCw className={`w-3.5 h-3.5 text-blue-600 ${isLoadingInvoices ? 'animate-spin' : ''}`} />
+              <span>Refresh</span>
             </button>
             <button
               type="button"

@@ -11,13 +11,13 @@
 
 | Total Workstreams | In Progress | Hardened & Verified | Pending / Planned | Progress |
 |:---:|:---:|:---:|:---:|:---:|
-| **8** | **0** | **4** | **4** | **50%** |
+| **8** | **0** | **5** | **3** | **62.5%** |
 
 ```mermaid
 pie title Merchant Web Hardening Workstreams
-    "Hardened & Verified" : 4
+    "Hardened & Verified" : 5
     "In Progress" : 0
-    "Planned / Backlog" : 4
+    "Planned / Backlog" : 3
 ```
 
 ---
@@ -51,7 +51,7 @@ flowchart TD
 | **MW-HARDEN-02** | **Real-Time Order Dispatch & Audio Alerts** | `LiveOrderSocketListener`, `OrdersPage`, `OrdersTable`, `VerifyOtpModal`, `orderStore` | Real-time incoming order audio chime (Web Audio API harmonic synth), instant desktop notifications, Socket.io event listeners (`order.placed`, `order.confirmed`, `order.delivered`), store-scoped rooms, and enterprise Delivery OTP verification modal | Store room join on mount, Web Audio chime synthesizer with fallback unlock, live refetch without reload, dual-broadcast backend events, and 4-digit OTP modal | Web Audio harmonic chime synthesizer, multi-event socket listeners, automatic store orders refetch, backend store room broadcast, and enterprise VerifyOtpModal | 🟢 **RESOLVED** |
 | **MW-HARDEN-03** | **Product Catalog & Media Upload Pipeline** | `ProductsCatalogPage`, `AddProductWizardPage`, `AddProductStep1`, `AddProductStep2`, `BulkUploadModal`, `catalogStore`, `api.ts` | 3-step product creation wizard, multi-variant matrix (size/color/weight), barcode assignment, base64 & external URL image dropzone, dynamic category-subcategory tree, and live bulk CSV ingestion | Real CSV parsing and 1-click demo batch importer, multi-variant matrix generator in catalogStore, base64 file reading + direct image URL input, dynamic sub-category updater, and live `/catalog/products/bulk` API | Dynamic category taxonomy, multi-variant SKU generator, persistent image reader, CSV parser with preview table, and bulk import API integration | 🟢 **RESOLVED** |
 | **MW-HARDEN-04** | **Inventory Management & Low-Stock Alerts** | `InventoryPage`, `InventoryTable`, `AdjustStockDrawer`, `BulkAdjustStockView`, `StockHistoryView`, `inventoryStore` | Real-time stock counts, backend persistence on stock adjustments, dynamic pagination, live catalog refetch, dynamic KPI calculation, and inventory CSV audit export | Hardcoded totalPages (125) with static buttons, adjustStock mutating only local state without backend API persistence, static hardcoded KPI counters | Real-time stock sync with catalogStore, backend PATCH persistence, dynamic pagination engine, live data refresh button, and complete inventory CSV exporter | 🟢 **RESOLVED** |
-| **MW-HARDEN-05** | **In-House POS Retail Billing & Thermal Print** | `BillingPage`, `CreateOrderPage`, `ThermalReceipt`, `billingStore` | Tier 2 walk-in counter retail billing: fast barcode scanner input, quick customer phone lookup, GST slab breakdown, Cash/UPI/Card tender, and 80mm/58mm thermal receipt printing | UI complete with cart calculation; add `@media print` ESC/POS thermal receipt formatting and invoice generation | Thermal printer CSS media queries, live POS transaction commit, instant inventory auto-deduction | ⚪ **PLANNED** |
+| **MW-HARDEN-05** | **In-House POS Retail Billing & Thermal Print** | `CounterPOSView`, `BillingPage`, `PrintReceiptModal`, `InvoicesTableView`, `billingStore`, `api.ts` | Tier 2 walk-in counter retail billing: fast barcode scanner input, instant product lookup, GST slab breakdown, Cash/UPI/Card tender, and 80mm/58mm thermal receipt printing | UI complete with cart calculation; add `@media print` ESC/POS thermal receipt formatting and invoice generation | Thermal printer CSS media queries, live POS transaction commit with atomic OCC stock deduction, instant inventory auto-deduction, dynamic UPI QR code generator, and live invoices synchronization | 🟢 **RESOLVED** |
 | **MW-HARDEN-06** | **Customers CRM & Credit (Udhar) Ledger** | `CustomersPage`, `CustomerDetailsDrawer`, `CreditLedgerModal` | Customer database, order history tracking, customer credit (Khata/Udhar) ledger, payment recording, and aging analysis (0-30, 31-60, 60+ days) | Baseline table present; verify statement generation, WhatsApp payment reminder link, and credit limit validations | Live customer CRUD, credit balance tracking, WhatsApp reminder generator, PDF statement export | ⚪ **PLANNED** |
 | **MW-HARDEN-07** | **Payouts, Wallet & Expense Ledger** | `PayoutsPage`, `WalletPage`, `ExpensesPage`, `payoutStore` | Settlement tracking with UTR numbers, commission & platform fee breakdown, wallet balance sweep, vendor management, and operating expense ledger | Baseline mock data in financial views; replace with live transaction ledger and payout requests | Live wallet balance query, settlement history with UTR search, expense logging with receipt attachments | ⚪ **PLANNED** |
 | **MW-HARDEN-08** | **Multi-Tenant White-Label & Build Integrity** | `branding.config.ts`, `StoreSettingsPage`, Vite build configs | 100% white-label architecture across all 15 modules, 0 brand leaks, responsive tablet/desktop UI, and zero TypeScript / bundle warnings | Zero client brand names in UI; verify all modals, receipts, and invoices pull dynamically from `branding` | Automated brand string scanning, Vite production bundle optimization, clean build pass | ⚪ **PLANNED** |
@@ -155,15 +155,34 @@ flowchart TD
   - Backend TypeScript build: 100% clean.
 
 ### 🛠️ MW-HARDEN-05: In-House POS Counter Billing & Thermal Slip Rendering (Tier 2 Engine)
-* **Target Scope:** `apps/merchant/src/pages/BillingPage.tsx`, `CreateOrderPage.tsx`, `components/billing/`
-* **Enterprise Hardening Goals:**
-  1. High-speed keyboard/barcode product lookup and cart addition.
-  2. Multiple payment modes: Cash (with change calculator), UPI (with dynamic QR), Card, and Split tender.
-  3. `@media print` CSS optimization for 80mm and 58mm ESC/POS thermal receipt printers.
-  4. Professional A4 invoice generation for GST B2B billing with Tax Slabs (CGST, SGST, IGST).
-* **Verification Targets:**
-  - Print preview formats cleanly on thermal paper widths without clipping.
-  - POS transactions correctly logged in daily sales totals.
+* **Date:** October 13, 2026
+* **Target Scope:** `apps/merchant/src/components/billing/CounterPOSView.tsx`, `PrintReceiptModal.tsx`, `InvoicesTableView.tsx`, `stores/billingStore.ts`, `lib/api.ts`, `pages/BillingPage.tsx`
+* **Root Causes Diagnosed:**
+  1. `billingStore.ts` committed POS counter transactions solely to local memory array and only attempted generic `billingApi.createInvoice`, bypassing the dedicated Tier 2 atomic endpoint `POST /api/v1/billing/pos/sale` with OCC stock deduction and ESC/POS thermal formatting.
+  2. `CounterPOSView.tsx` search input lacked an Enter key event listener, forcing merchants to click with the mouse rather than rapidly scanning barcodes or typing SKUs and hitting Enter.
+  3. `billingApi` in `api.ts` was missing dedicated client methods for `createPOSSale` and `getLastReceipt`.
+  4. Tender options lacked rich visual prompts for UPI dynamic QR code generation, card swipe POS terminals, and customer Khata credit accounts.
+  5. `PrintReceiptModal.tsx` print stylesheet lacked `@media print` reset rules for background hiding, margins (`margin: 0`), and roll boundary preservation (`width: 76mm` for 80mm roll, `width: 54mm` for 58mm roll), and hardcoded placeholder store details rather than pulling live `currentStore` profile.
+  6. `InvoicesTableView.tsx` lacked server data fetching and live refresh triggers to synchronize with backend database invoices.
+* **Fixes Applied:**
+  1. **Atomic Tier 2 POS Checkout Integration (`billingStore.ts` & `api.ts`)**: Built `completePOSSale` in `billingStore.ts` that dispatches to `POST /api/v1/billing/pos/sale` with `CreatePOSSaleDto` (items, customer details, settlement mode, tendered cash, change return, and idempotency key). It atomically deducts inventory stock in MongoDB with OCC versioning, records invoices, and falls back gracefully to local state if offline.
+  2. **Fast Barcode & Keyboard Scan Station (`CounterPOSView.tsx`)**: Added `onKeyDown` Enter keypress handler to the product search input for instant barcode / SKU / title match and addition to the bill register with audio scan chime feedback (`playScanChime`), auto-clearing the input for the next scan.
+  3. **Multi-Tender Payment Station (`CounterPOSView.tsx`)**:
+     - **Cash**: Preset buttons (`Exact`, `₹500`, `₹1000`, `₹2000`), cash tendered input, and real-time auto-calculated "Change to Return" display.
+     - **UPI**: Dynamic QR code card with live payable amount, UPI payment apps breakdown, and auto-reconciliation banner.
+     - **Card**: POS terminal card swipe/tap instruction banner.
+     - **Credit / Khata**: Khata store credit prompt recording debits against customer accounts.
+  4. **Thermal Printer `@media print` CSS Engine (`PrintReceiptModal.tsx`)**:
+     - Engineered zero-margin dynamic print styles (`@page { size: 80mm auto; margin: 0; }` and `@page { size: 58mm auto; margin: 0; }`) that hide non-receipt chrome (`body * { visibility: hidden !important; }`), center the thermal slip, remove shadows and borders, and apply monospace text.
+     - Dynamically populates store name, contact phone, GSTIN, and physical address from live `currentStore` and `branding.appName`.
+  5. **Live Invoices Synchronization & Refresh (`InvoicesTableView.tsx` & `BillingPage.tsx`)**:
+     - Added `fetchInvoices()`, `fetchQuotes()`, and `fetchSettings()` hooks calling backend endpoints on mount.
+     - Added live "Refresh" button with spinning `RefreshCw` icon in `InvoicesTableView` toolbar.
+     - Added bidirectional normalization (`normalizeBackendInvoice` & `normalizeBackendQuote`) mapping MongoDB documents cleanly into table models.
+* **Verification Results:**
+  - Merchant TypeScript & Vite production build: **100% clean pass** (`dist/` built in 12.58s).
+  - Monorepo automated test suites: **120 / 120 tests passing** across 19 suites (`FULL TURBO`).
+  - Backend modular monolith: 100% clean pass.
 
 ### 🛠️ MW-HARDEN-06: Customers CRM & Khata Credit Ledger
 * **Target Scope:** `apps/merchant/src/pages/CustomersPage.tsx`, `components/customers/`

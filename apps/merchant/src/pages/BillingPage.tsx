@@ -20,29 +20,16 @@ export const BillingPage: React.FC = () => {
     activeInvoiceForModal,
     openCreateInvoiceModal,
     closeCreateInvoiceModal,
-    setInvoices,
-    setQuotes,
+    fetchInvoices,
+    fetchQuotes,
+    fetchSettings,
   } = useBillingStore();
 
   useEffect(() => {
-    billingApi
-      .getInvoices()
-      .then((res: any) => {
-        if (res && res.data && Array.isArray(res.data.invoices)) {
-          setInvoices(res.data.invoices);
-        }
-      })
-      .catch(() => {});
-
-    billingApi
-      .getQuotes()
-      .then((res: any) => {
-        if (res && res.data && Array.isArray(res.data.quotes)) {
-          setQuotes(res.data.quotes);
-        }
-      })
-      .catch(() => {});
-  }, [setInvoices, setQuotes]);
+    fetchInvoices();
+    fetchQuotes();
+    fetchSettings();
+  }, [fetchInvoices, fetchQuotes, fetchSettings]);
 
   const getBreadcrumb = () => {
     if (activeSubTab === 'invoices' || activeView === 'settings') return null;
