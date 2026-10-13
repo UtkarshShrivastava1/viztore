@@ -22,11 +22,15 @@ export const OrdersPage: React.FC<OrdersPageProps> = ({ onOpenCreateOrder }) => 
   const [selectedOrder, setSelectedOrder] = useState<MerchantOrderRecord | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
+  const [isMoreActionsOpen, setIsMoreActionsOpen] = useState(false);
+
   // Context-sensitive subtitles based on active tab matching mockups
   const getSubtitle = (tab: OrderTab) => {
     switch (tab) {
       case 'new_orders':
         return 'Orders that are waiting for packing and processing';
+      case 'accepted':
+        return 'Orders verified and waiting to be packed into shipping parcels';
       case 'ready_to_ship':
         return 'Orders packed and ready for runner pickup';
       case 'shipped':
@@ -41,6 +45,67 @@ export const OrdersPage: React.FC<OrdersPageProps> = ({ onOpenCreateOrder }) => 
         return 'Customer return requests and status';
       default:
         return 'Orders that are waiting for your processing';
+    }
+  };
+
+  const handleExportCsv = () => {
+    const headers = ['Order Number', 'Order Type', 'Status', 'Customer', 'Phone', 'Items', 'Total Amount', 'Payment', 'OTP', 'Date'];
+    const rows = orders.map((o) => [
+      o.orderNumber,
+      o.orderType,
+      o.status,
+      `"${o.customer.name}"`,
+      o.customer.phone,
+      `"${o.itemsSummary.title} (${o.itemsSummary.count})"`,
+      o.pricing.totalAmount,
+      `${o.payment.status} - ${o.payment.mode}`,
+      o.otp,
+      `"${o.timestamps.createdAt}"`,
+    ]);
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `merchant_orders_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleBulkPrint = () => {
+    if (orders.length === 0) return;
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Batch Shipping Labels</title>
+            <style>
+              body { font-family: sans-serif; padding: 20px; color: #1e293b; }
+              .label-card { border: 2px dashed #94a3b8; padding: 16px; margin-bottom: 24px; page-break-after: always; }
+              .otp { font-size: 18px; font-weight: bold; background: #fef3c7; padding: 6px 10px; border-radius: 4px; display: inline-block; }
+            </style>
+          </head>
+          <body>
+            <h2>Batch Shipping Manifest — ${orders.length} Orders</h2>
+            ${orders
+              .map(
+                (o) => `
+              <div class="label-card">
+                <h3>${o.orderNumber} (${o.orderType})</h3>
+                <div class="otp">Delivery Runner OTP: ${o.otp}</div>
+                <p><strong>Customer:</strong> ${o.customer.name} (${o.customer.phone})</p>
+                <p><strong>Address:</strong> ${o.deliveryAddress.fullText}</p>
+                <p><strong>Total:</strong> ₹${o.pricing.totalAmount} | ${o.payment.status} via ${o.payment.mode}</p>
+              </div>`
+              )
+              .join('')}
+            <script>window.print();</script>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
     }
   };
 
@@ -119,7 +184,7 @@ export const OrdersPage: React.FC<OrdersPageProps> = ({ onOpenCreateOrder }) => 
           {/* Export Button */}
           <button
             type="button"
-            onClick={() => alert('Exporting orders as CSV / Excel...')}
+            onClick={handleExportCsv}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-2xs cursor-pointer"
           >
             <Download className="w-3.5 h-3.5 text-slate-500" />
@@ -127,14 +192,51 @@ export const OrdersPage: React.FC<OrdersPageProps> = ({ onOpenCreateOrder }) => 
           </button>
 
           {/* More Actions Dropdown */}
-          <button
-            type="button"
-            onClick={() => alert('Bulk Print Labels | Assign Runners | Batch CSV')}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-2xs cursor-pointer"
-          >
-            <span>More Actions</span>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-          </button>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setIsMoreActionsOpen(!isMoreActionsOpen)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all shadow-2xs cursor-pointer"
+            >
+              <span>More Actions</span>
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+            </button>
+
+            {isMoreActionsOpen && (
+              <div className="absolute right-0 mt-1.5 w-56 rounded-xl bg-white border border-slate-200 shadow-xl py-1 z-30 animate-in fade-in-50 duration-150">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMoreActionsOpen(false);
+                    handleBulkPrint();
+                  }}
+                  className="w-full text-left px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                >
+                  Bulk Print Shipping Labels
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMoreActionsOpen(false);
+                    handleExportCsv();
+                  }}
+                  className="w-full text-left px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors border-t border-slate-100"
+                >
+                  Download Orders CSV
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMoreActionsOpen(false);
+                    fetchOrders();
+                  }}
+                  className="w-full text-left px-3.5 py-2 text-xs font-semibold text-blue-600 hover:bg-blue-50/50 transition-colors border-t border-slate-100"
+                >
+                  Refresh Live Pipeline
+                </button>
+              </div>
+            )}
+          </div>
 
           {/* Create Order Button */}
           <button

@@ -30,6 +30,26 @@ export const OrderStepper: React.FC<OrderStepperProps> = ({ activeTab = 'new_ord
     },
     {
       id: '02',
+      name: 'Accept Order',
+      icon: CheckCircle2,
+      color: 'blue',
+      tabKey: 'accepted' as OrderTab,
+      circleStyle: activeTab === 'accepted'
+        ? 'border-blue-500 bg-blue-50 text-blue-600 ring-2 ring-blue-100'
+        : 'border-blue-200 bg-blue-50/30 text-blue-500',
+      labelStyle: activeTab === 'accepted' ? 'text-blue-600 font-bold' : 'text-slate-800 font-semibold',
+    },
+    {
+      id: '03',
+      name: 'Print Label',
+      icon: Package,
+      color: 'indigo',
+      tabKey: 'ready_to_ship' as OrderTab,
+      circleStyle: 'border-indigo-200 bg-indigo-50/30 text-indigo-500',
+      labelStyle: 'text-slate-800 font-semibold',
+    },
+    {
+      id: '04',
       name: 'Ready to Ship',
       icon: Package,
       color: 'orange',
@@ -40,7 +60,7 @@ export const OrderStepper: React.FC<OrderStepperProps> = ({ activeTab = 'new_ord
       labelStyle: activeTab === 'ready_to_ship' ? 'text-orange-600 font-bold' : 'text-slate-800 font-semibold',
     },
     {
-      id: '03',
+      id: '05',
       name: 'Shipped',
       icon: Truck,
       color: 'green',
@@ -51,7 +71,7 @@ export const OrderStepper: React.FC<OrderStepperProps> = ({ activeTab = 'new_ord
       labelStyle: activeTab === 'shipped' ? 'text-emerald-600 font-bold' : 'text-slate-800 font-semibold',
     },
     {
-      id: '04',
+      id: '06',
       name: isReturns ? 'Returns' : 'Delivered',
       icon: isReturns ? RotateCcw : CheckCircle2,
       color: isReturns ? 'red' : 'teal',

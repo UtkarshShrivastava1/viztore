@@ -5,6 +5,12 @@ import {
   MessageSquare,
   ChevronDown,
   ExternalLink,
+  Phone,
+  Mail,
+  Truck,
+  CheckCircle2,
+  X,
+  Clock,
 } from 'lucide-react';
 import {
   OrderTab,
@@ -79,6 +85,8 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
   } = useOrderStore();
 
   const [otpModalOrder, setOtpModalOrder] = useState<MerchantOrderRecord | null>(null);
+  const [trackingOrder, setTrackingOrder] = useState<MerchantOrderRecord | null>(null);
+  const [contactOrder, setContactOrder] = useState<MerchantOrderRecord | null>(null);
 
   // Filter orders by tab and search
   const tabFilteredOrders = orders.filter((order) => {
@@ -87,6 +95,9 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
     switch (activeTab) {
       case 'new_orders':
         matchesTab = order.status === 'new';
+        break;
+      case 'accepted':
+        matchesTab = order.status === 'accepted';
         break;
       case 'ready_to_ship':
         matchesTab = order.status === 'ready_to_ship';
@@ -184,7 +195,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
               )}
 
               {/* Tab-Specific Columns */}
-              {activeTab === 'ready_to_ship' && (
+              {['accepted', 'ready_to_ship'].includes(activeTab) && (
                 <th className="py-3 px-3 min-w-[90px]">OTP</th>
               )}
 
@@ -225,8 +236,8 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
                 </>
               )}
 
-              {/* Order Time (for new_orders, ready_to_ship) */}
-              {['new_orders', 'ready_to_ship'].includes(activeTab) && (
+              {/* Order Time (for new_orders, accepted, ready_to_ship) */}
+              {['new_orders', 'accepted', 'ready_to_ship'].includes(activeTab) && (
                 <th className="py-3 px-3 min-w-[110px]">Order Time</th>
               )}
 
@@ -282,6 +293,9 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
                       <div className="text-[10px] mt-0.5 font-medium">
                         {activeTab === 'new_orders' && (
                           <span className="text-slate-400">{order.orderType}</span>
+                        )}
+                        {activeTab === 'accepted' && (
+                          <span className="text-blue-600 font-semibold">Accepted</span>
                         )}
                         {activeTab === 'ready_to_ship' && (
                           <span className="text-amber-600 font-semibold">Ready to Ship</span>
@@ -355,8 +369,8 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
 
                     {/* TAB SPECIFIC DATA CELLS */}
 
-                    {/* OTP Column for Ready to Ship */}
-                    {activeTab === 'ready_to_ship' && (
+                    {/* OTP Column for Accepted & Ready to Ship */}
+                    {['accepted', 'ready_to_ship'].includes(activeTab) && (
                       <td className="py-3.5 px-3">
                         <span className="font-extrabold text-slate-900 text-sm tracking-wide font-mono">
                           {order.otp}
@@ -372,17 +386,18 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
                         </td>
                         <td className="py-3.5 px-3">
                           <div className="font-bold text-slate-900 text-xs">
-                            {order.courier?.partner || 'Delhivery'}
+                            {order.courier?.partner || 'Local Express'}
                           </div>
-                          <div className="text-[10px] text-slate-500 mt-0.5">
-                            Tracking ID: {order.courier?.trackingId || '1234567890123'}
+                          <div className="text-[10px] text-slate-500 mt-0.5 font-mono">
+                            Tracking ID: {order.courier?.trackingId || 'TRK-849201'}
                           </div>
                           <button
                             type="button"
-                            onClick={() => alert(`Tracking parcel #${order.courier?.trackingId} on ${order.courier?.partner}`)}
-                            className="text-blue-600 hover:underline font-semibold text-[11px] block mt-0.5 cursor-pointer"
+                            onClick={() => setTrackingOrder(order)}
+                            className="text-blue-600 hover:underline font-semibold text-[11px] inline-flex items-center gap-1 mt-0.5 cursor-pointer"
                           >
-                            Track Order
+                            <Truck className="w-3 h-3" />
+                            <span>Track Order</span>
                           </button>
                         </td>
                       </>
@@ -456,18 +471,38 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
                       </>
                     )}
 
-                    {/* Order Time (for new_orders, ready_to_ship) */}
-                    {['new_orders', 'ready_to_ship'].includes(activeTab) && (
+                    {/* Order Time (for new_orders, accepted, ready_to_ship) */}
+                    {['new_orders', 'accepted', 'ready_to_ship'].includes(activeTab) && (
                       <td className="py-3.5 px-3 text-slate-700 whitespace-pre-line text-[11px]">
                         {order.timestamps.createdAt}
                       </td>
                     )}
 
-                    {/* Actions Column */}
+                    {/* Actions Column matching 2.0.png through 2.7.png */}
                     <td className="py-3.5 px-3.5 text-right">
                       <div className="flex items-center justify-end gap-1.5">
-                        {/* New Orders: Ready to Ship */}
+                        {/* New Orders: Accept Order (blue) + Reject (red text) */}
                         {activeTab === 'new_orders' && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => acceptOrder(order.id)}
+                              className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition-colors shadow-2xs whitespace-nowrap cursor-pointer"
+                            >
+                              Accept Order
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => rejectOrder(order.id)}
+                              className="px-2.5 py-1.5 rounded-lg text-rose-600 hover:bg-rose-50 font-semibold text-xs transition-colors whitespace-nowrap cursor-pointer"
+                            >
+                              Reject
+                            </button>
+                          </>
+                        )}
+
+                        {/* Accepted: Ready to Ship */}
+                        {activeTab === 'accepted' && (
                           <button
                             type="button"
                             onClick={() => markReadyToShip(order.id)}
@@ -482,7 +517,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
                           <button
                             type="button"
                             onClick={() => dispatchOrder(order.id)}
-                            className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition-colors shadow-2xs whitespace-nowrap"
+                            className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition-colors shadow-2xs whitespace-nowrap cursor-pointer"
                           >
                             Mark Shipped
                           </button>
@@ -503,7 +538,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
                         <button
                           type="button"
                           onClick={() => onPrintOrder(order)}
-                          className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-blue-600 transition-colors"
+                          className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-blue-600 transition-colors cursor-pointer"
                           title="Print Shipping Label / Invoice"
                         >
                           <Printer className="w-4 h-4" />
@@ -513,19 +548,19 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
                         <button
                           type="button"
                           onClick={() => onViewOrder(order)}
-                          className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-blue-600 transition-colors"
+                          className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-blue-600 transition-colors cursor-pointer"
                           title="View Order Details"
                         >
                           <Eye className="w-4 h-4" />
                         </button>
 
-                        {/* Direct Chat icon for Returns tab */}
+                        {/* Customer Chat/Contact for Returns tab */}
                         {activeTab === 'returns' && (
                           <button
                             type="button"
-                            onClick={() => alert(`Opening merchant chat with customer ${order.customer.name}`)}
-                            className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-blue-600 transition-colors"
-                            title="Chat with Customer"
+                            onClick={() => setContactOrder(order)}
+                            className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-blue-600 transition-colors cursor-pointer"
+                            title="Contact Customer"
                           >
                             <MessageSquare className="w-4 h-4" />
                           </button>
@@ -540,16 +575,14 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
         </table>
       </div>
 
-      {/* Footer: Scroll down to load more orders */}
-      <div className="py-3 border-t border-slate-100 text-center bg-white">
-        <button
-          type="button"
-          onClick={() => alert('All active orders loaded')}
-          className="text-xs text-slate-500 hover:text-slate-800 font-medium inline-flex items-center gap-1 transition-colors"
-        >
-          <span>Scroll down to load more orders</span>
-          <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-        </button>
+      {/* Footer: Showing all active orders */}
+      <div className="py-3 px-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 bg-[#fbfcfd]">
+        <span className="font-medium">
+          Showing {tabFilteredOrders.length} order{tabFilteredOrders.length === 1 ? '' : 's'} in this stage
+        </span>
+        <span className="text-[11px] text-slate-400">
+          Hyperlocal delivery radius: 3–4 km
+        </span>
       </div>
 
       {/* Verify OTP Modal */}
@@ -559,6 +592,146 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
         onClose={() => setOtpModalOrder(null)}
         onConfirm={deliverOrder}
       />
+
+      {/* Parcel Tracking Modal */}
+      {trackingOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+              <div className="flex items-center gap-2">
+                <Truck className="w-5 h-5 text-blue-600" />
+                <h3 className="text-sm font-bold text-slate-900">Live Parcel Tracking</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setTrackingOrder(null)}
+                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3.5">
+              <div className="bg-slate-50 rounded-xl p-3 border border-slate-100 flex justify-between items-center text-xs">
+                <div>
+                  <div className="text-[11px] text-slate-400">Tracking Number</div>
+                  <div className="font-bold text-slate-800 font-mono mt-0.5">
+                    {trackingOrder.courier?.trackingId || 'TRK-849201'}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-[11px] text-slate-400">Courier Partner</div>
+                  <div className="font-bold text-blue-600 mt-0.5">
+                    {trackingOrder.courier?.partner || 'Local Express'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Status Timeline */}
+              <div className="space-y-3 pt-2 text-xs">
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                  </div>
+                  <div>
+                    <div className="font-bold text-slate-800">Out for Local Delivery</div>
+                    <div className="text-[11px] text-slate-400 mt-0.5">Assigned to local delivery runner</div>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                  </div>
+                  <div>
+                    <div className="font-bold text-slate-800">Dispatched from Store</div>
+                    <div className="text-[11px] text-slate-400 mt-0.5">{trackingOrder.timestamps.shippedAt || '18 May 2024 04:30 PM'}</div>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0 mt-0.5">
+                    <Clock className="w-3.5 h-3.5" />
+                  </div>
+                  <div>
+                    <div className="font-bold text-slate-800">Packed & Label Generated</div>
+                    <div className="text-[11px] text-slate-400 mt-0.5">{trackingOrder.timestamps.createdAt}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setTrackingOrder(null)}
+                  className="px-4 py-2 rounded-xl bg-blue-600 text-white font-semibold text-xs hover:bg-blue-700 cursor-pointer"
+                >
+                  Close Tracking
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Customer Contact Modal */}
+      {contactOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-2xl border border-slate-200 animate-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+              <h3 className="text-sm font-bold text-slate-900">Customer Communication</h3>
+              <button
+                type="button"
+                onClick={() => setContactOrder(null)}
+                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <span className="text-[11px] text-slate-400 block">Customer Name</span>
+                <span className="font-bold text-slate-900 text-sm">{contactOrder.customer.name}</span>
+              </div>
+
+              <div className="flex flex-col gap-2 pt-2">
+                <a
+                  href={`tel:${contactOrder.customer.phone}`}
+                  className="flex items-center justify-between p-2.5 rounded-xl border border-slate-200 hover:bg-blue-50/50 hover:border-blue-200 text-slate-700 transition-colors"
+                >
+                  <span className="flex items-center gap-2 font-medium">
+                    <Phone className="w-4 h-4 text-emerald-600" />
+                    Call: {contactOrder.customer.phone}
+                  </span>
+                  <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
+                </a>
+
+                <a
+                  href={`mailto:${contactOrder.customer.email}?subject=Regarding Order ${contactOrder.orderNumber}`}
+                  className="flex items-center justify-between p-2.5 rounded-xl border border-slate-200 hover:bg-blue-50/50 hover:border-blue-200 text-slate-700 transition-colors"
+                >
+                  <span className="flex items-center gap-2 font-medium">
+                    <Mail className="w-4 h-4 text-blue-600" />
+                    Email: {contactOrder.customer.email}
+                  </span>
+                  <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
+                </a>
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setContactOrder(null)}
+                  className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs cursor-pointer"
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

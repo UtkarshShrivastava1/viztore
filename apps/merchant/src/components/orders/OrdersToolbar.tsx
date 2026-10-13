@@ -26,9 +26,20 @@ export const OrdersToolbar: React.FC<OrdersToolbarProps> = ({ activeTab }) => {
     dateRange,
     setDateRange,
     packAllNewOrders,
+    acceptAllNewOrders,
   } = useOrderStore();
 
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isDateOpen, setIsDateOpen] = useState(false);
+
+  const dateOptions = [
+    '13 May 2024 - 19 May 2024',
+    'Today',
+    'Yesterday',
+    'Last 7 Days',
+    'This Month',
+    'All Time',
+  ];
 
   const handleRefresh = () => {
     setIsRefreshing(true);
@@ -84,6 +95,7 @@ export const OrdersToolbar: React.FC<OrdersToolbarProps> = ({ activeTab }) => {
           >
             <option value="all">Order Status</option>
             <option value="new">New Order</option>
+            <option value="accepted">Accepted</option>
             <option value="ready_to_ship">Ready to Ship</option>
             <option value="shipped">Shipped</option>
             <option value="delivered">Delivered</option>
@@ -105,40 +117,70 @@ export const OrdersToolbar: React.FC<OrdersToolbarProps> = ({ activeTab }) => {
           <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
         </div>
 
-        {/* Date Range Picker */}
-        <button
-          type="button"
-          onClick={() => {
-            const next = prompt('Enter date range:', dateRange);
-            if (next) setDateRange(next);
-          }}
-          className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-2xs whitespace-nowrap"
-        >
-          <Calendar className="w-3.5 h-3.5 text-slate-400" />
-          <span>{dateRange}</span>
-          <Calendar className="w-3.5 h-3.5 text-slate-400" />
-        </button>
+        {/* Date Range Picker Dropdown */}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setIsDateOpen(!isDateOpen)}
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-2xs whitespace-nowrap cursor-pointer"
+          >
+            <Calendar className="w-3.5 h-3.5 text-slate-400" />
+            <span>{dateRange}</span>
+            <ChevronDown className="w-3 h-3 text-slate-400 ml-1" />
+          </button>
+
+          {isDateOpen && (
+            <div className="absolute left-0 mt-1.5 w-56 rounded-xl bg-white border border-slate-200 shadow-lg py-1 z-30 animate-in fade-in-50 duration-150">
+              <div className="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
+                Select Date Window
+              </div>
+              {dateOptions.map((opt) => (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => {
+                    setDateRange(opt);
+                    setIsDateOpen(false);
+                  }}
+                  className={`w-full text-left px-3 py-2 text-xs font-medium transition-colors hover:bg-slate-50 ${
+                    dateRange === opt ? 'text-blue-600 font-bold bg-blue-50/50' : 'text-slate-700'
+                  }`}
+                >
+                  {opt}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Refresh Icon */}
         <button
           type="button"
           onClick={handleRefresh}
-          className="p-2 rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors shadow-2xs shrink-0"
+          className="p-2 rounded-xl bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors shadow-2xs shrink-0 cursor-pointer"
           title="Refresh orders"
         >
           <RotateCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-blue-600' : ''}`} />
         </button>
       </div>
 
-      {/* Right Action: Ready to Ship All button specifically on New Orders tab */}
+      {/* Right Action: Accept All button matching 2.0.png */}
       {activeTab === 'new_orders' && (
         <button
           type="button"
-          onClick={() => {
-            if (confirm('Pack and mark all new orders as Ready to Ship?')) {
-              packAllNewOrders();
-            }
-          }}
+          onClick={acceptAllNewOrders}
+          className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-xs shrink-0 cursor-pointer"
+        >
+          <CheckCheck className="w-3.5 h-3.5" />
+          <span>Accept All</span>
+        </button>
+      )}
+
+      {/* Right Action: Ready to Ship All on Accepted Tab */}
+      {activeTab === 'accepted' && (
+        <button
+          type="button"
+          onClick={packAllNewOrders}
           className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-xs shrink-0 cursor-pointer"
         >
           <CheckCheck className="w-3.5 h-3.5" />

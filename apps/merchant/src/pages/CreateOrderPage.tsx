@@ -36,8 +36,20 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
 
   // State
   const [customerType, setCustomerType] = useState<'existing' | 'new'>('existing');
+  const [customerName, setCustomerName] = useState('Rohan Verma');
+  const [customerEmail, setCustomerEmail] = useState('rohanverma@gmail.com');
+  const [customerPhone, setCustomerPhone] = useState('+91 98765 43210');
+  const [isEditingCustomer, setIsEditingCustomer] = useState(false);
+
   const [deliveryType, setDeliveryType] = useState<'delivery' | 'pickup'>('delivery');
+  const [addressList, setAddressList] = useState<string[]>([
+    '123, Green Park, Lajpat Nagar, New Delhi - 110024',
+    'Flat 4B, Shanti Apartments, Andheri West, Mumbai - 400058',
+  ]);
   const [deliveryAddress, setDeliveryAddress] = useState('123, Green Park, Lajpat Nagar, New Delhi - 110024');
+  const [isAddingAddress, setIsAddingAddress] = useState(false);
+  const [newAddressInput, setNewAddressInput] = useState('');
+
   const [deliveryDate, setDeliveryDate] = useState('14 May 2024');
   const [deliveryTimeSlot, setDeliveryTimeSlot] = useState('');
   const [deliveryPartner, setDeliveryPartner] = useState('');
@@ -45,6 +57,8 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
   const [orderNotes, setOrderNotes] = useState('');
   const [internalNotes, setInternalNotes] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   // Items in Order matching Orders_09_Create_Order.png
   const [items, setItems] = useState<OrderItem[]>([
@@ -83,32 +97,41 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
     } else {
       setItems((prev) => [...prev, { ...prod, quantity: 1 }]);
     }
+    setErrorMessage(null);
     setIsAddModalOpen(false);
   };
 
   // Submit
   const handleCreateOrder = () => {
     if (items.length === 0) {
-      alert('Please add at least one item.');
+      setErrorMessage('Please add at least one item to generate this order.');
       return;
     }
+
+    setErrorMessage(null);
+    const initials = customerName
+      .split(' ')
+      .map((w) => w[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase();
 
     addManualOrder({
       orderType: deliveryType === 'delivery' ? 'Online Order' : 'Manual In-Store',
       status: 'new',
       customer: {
-        name: 'Rohan Verma',
-        email: 'rohanverma@gmail.com',
-        phone: '+91 98765 43210',
-        avatarInitials: 'RV',
+        name: customerName,
+        email: customerEmail,
+        phone: customerPhone,
+        avatarInitials: initials || 'CU',
       },
       deliveryAddress: {
         street: deliveryAddress,
-        locality: 'Lajpat Nagar',
-        city: 'New Delhi',
-        state: 'Delhi',
+        locality: 'Local Delivery Area',
+        city: 'Local City',
+        state: 'Local State',
         pincode: '110024',
-        fullText: `Rohan Verma\n${deliveryAddress}`,
+        fullText: `${customerName}\n${deliveryAddress}`,
       },
       items: items.map((i) => ({
         id: i.id,
@@ -140,8 +163,10 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
       },
     });
 
-    alert('Order created successfully! Redirecting to orders pipeline...');
-    onBack?.();
+    setIsSuccess(true);
+    setTimeout(() => {
+      onBack?.();
+    }, 600);
   };
 
   return (
@@ -186,6 +211,26 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
         </div>
       </div>
 
+      {/* Inline Feedback Banners */}
+      {errorMessage && (
+        <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center justify-between animate-in fade-in-50 duration-150">
+          <span>{errorMessage}</span>
+          <button
+            type="button"
+            onClick={() => setErrorMessage(null)}
+            className="text-rose-500 hover:text-rose-700 text-xs font-bold cursor-pointer"
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+
+      {isSuccess && (
+        <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold animate-in fade-in-50 duration-150">
+          Order created successfully! Redirecting to orders pipeline...
+        </div>
+      )}
+
       {/* 2. Top Row: 3 Columns matching reference proportions: [33.5% | 38% | 28.5%] */}
       <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1.35fr_1fr] gap-4 items-stretch">
         {/* Card 1: Customer Details */}
@@ -228,45 +273,92 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
               <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
 
-            {/* Verified Customer Card */}
+            {/* Verified / Editable Customer Card */}
             <div className="p-3.5 rounded-xl border border-slate-200/90 bg-white relative shadow-2xs">
-              <div className="flex items-start gap-3">
-                {/* Avatar */}
-                <div className="w-9 h-9 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs">
-                  RV
+              {isEditingCustomer ? (
+                <div className="space-y-2.5">
+                  <div className="text-xs font-bold text-slate-900">Edit Customer Information</div>
+                  <div>
+                    <label className="text-[11px] text-slate-500 font-semibold block mb-1">Customer Name</label>
+                    <input
+                      type="text"
+                      value={customerName}
+                      onChange={(e) => setCustomerName(e.target.value)}
+                      className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] text-slate-500 font-semibold block mb-1">Phone Number</label>
+                    <input
+                      type="text"
+                      value={customerPhone}
+                      onChange={(e) => setCustomerPhone(e.target.value)}
+                      className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] text-slate-500 font-semibold block mb-1">Email Address</label>
+                    <input
+                      type="email"
+                      value={customerEmail}
+                      onChange={(e) => setCustomerEmail(e.target.value)}
+                      className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs"
+                    />
+                  </div>
+                  <div className="flex justify-end pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setIsEditingCustomer(false)}
+                      className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold cursor-pointer"
+                    >
+                      Save Details
+                    </button>
+                  </div>
                 </div>
-
-                {/* Details */}
-                <div className="space-y-1 min-w-0 pr-12 text-xs">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-slate-900 text-xs">Rohan Verma</span>
-                    <span className="text-[10px] font-semibold px-2 py-0.2 rounded bg-emerald-50 text-emerald-700 border border-emerald-200/60 leading-tight">
-                      Verified
-                    </span>
+              ) : (
+                <div className="flex items-start gap-3">
+                  {/* Avatar */}
+                  <div className="w-9 h-9 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs">
+                    {customerName
+                      .split(' ')
+                      .map((w) => w[0])
+                      .join('')
+                      .slice(0, 2)
+                      .toUpperCase() || 'CU'}
                   </div>
 
-                  <div className="text-slate-700 font-semibold text-[11px]">+91 98765 43210</div>
+                  {/* Details */}
+                  <div className="space-y-1 min-w-0 pr-12 text-xs">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-slate-900 text-xs">{customerName}</span>
+                      <span className="text-[10px] font-semibold px-2 py-0.2 rounded bg-emerald-50 text-emerald-700 border border-emerald-200/60 leading-tight">
+                        Verified
+                      </span>
+                    </div>
 
-                  <div className="text-slate-500 text-[11px] flex items-center gap-1.5">
-                    <Mail className="w-3 h-3 text-slate-400" />
-                    <span>rohanverma@gmail.com</span>
+                    <div className="text-slate-700 font-semibold text-[11px]">{customerPhone}</div>
+
+                    <div className="text-slate-500 text-[11px] flex items-center gap-1.5">
+                      <Mail className="w-3 h-3 text-slate-400" />
+                      <span>{customerEmail}</span>
+                    </div>
+
+                    <div className="text-slate-500 text-[11px] leading-tight pt-0.5">
+                      {deliveryAddress}
+                    </div>
                   </div>
 
-                  <div className="text-slate-500 text-[11px] leading-tight pt-0.5">
-                    123, Green Park, Lajpat Nagar<br />New Delhi - 110024
-                  </div>
+                  {/* Edit Button */}
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingCustomer(true)}
+                    className="absolute top-3.5 right-3.5 inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-slate-200 text-blue-600 text-xs font-semibold hover:bg-slate-50 bg-white shadow-2xs transition-colors cursor-pointer"
+                  >
+                    <Edit2 className="w-3 h-3" />
+                    <span>Edit</span>
+                  </button>
                 </div>
-              </div>
-
-              {/* Edit Button */}
-              <button
-                type="button"
-                onClick={() => alert('Edit Customer')}
-                className="absolute top-3.5 right-3.5 inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-slate-200 text-blue-600 text-xs font-semibold hover:bg-slate-50 bg-white shadow-2xs transition-colors"
-              >
-                <Edit2 className="w-3 h-3" />
-                <span>Edit</span>
-              </button>
+              )}
             </div>
           </div>
         </div>
@@ -468,25 +560,53 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
                     <label className="text-xs font-bold text-slate-800">Delivery Address</label>
                     <button
                       type="button"
-                      onClick={() => alert('Add New Address')}
+                      onClick={() => setIsAddingAddress(!isAddingAddress)}
                       className="text-blue-600 text-[11px] font-semibold hover:underline inline-flex items-center gap-1 cursor-pointer"
                     >
                       <Plus className="w-3 h-3" />
-                      <span>Add New Address</span>
+                      <span>{isAddingAddress ? 'Cancel' : 'Add New Address'}</span>
                     </button>
                   </div>
+
+                  {isAddingAddress && (
+                    <div className="mb-2 p-2.5 rounded-xl border border-blue-200 bg-blue-50/40 space-y-2">
+                      <input
+                        type="text"
+                        placeholder="Enter street, area, city, pincode..."
+                        value={newAddressInput}
+                        onChange={(e) => setNewAddressInput(e.target.value)}
+                        className="w-full px-3 py-1.5 rounded-lg border border-slate-200 text-xs bg-white text-slate-800"
+                      />
+                      <div className="flex justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (newAddressInput.trim()) {
+                              setAddressList((prev) => [newAddressInput.trim(), ...prev]);
+                              setDeliveryAddress(newAddressInput.trim());
+                              setNewAddressInput('');
+                              setIsAddingAddress(false);
+                            }
+                          }}
+                          className="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold cursor-pointer"
+                        >
+                          Save Address
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="relative">
                     <select
                       value={deliveryAddress}
                       onChange={(e) => setDeliveryAddress(e.target.value)}
                       className="w-full border border-slate-200 rounded-xl pl-3 pr-8 py-2 text-xs font-medium text-slate-900 outline-none appearance-none bg-white focus:ring-1 focus:ring-blue-500 shadow-2xs cursor-pointer"
                     >
-                      <option value="123, Green Park, Lajpat Nagar, New Delhi - 110024">
-                        123, Green Park, Lajpat Nagar, New Delhi - 110024
-                      </option>
-                      <option value="Flat 4B, Shanti Apartments, Andheri West, Mumbai - 400058">
-                        Flat 4B, Shanti Apartments, Andheri West, Mumbai - 400058
-                      </option>
+                      {addressList.map((addr) => (
+                        <option key={addr} value={addr}>
+                          {addr}
+                        </option>
+                      ))}
                     </select>
                     <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                   </div>
