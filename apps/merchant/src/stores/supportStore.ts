@@ -199,7 +199,7 @@ interface SupportState {
 export const useSupportStore = create<SupportState>((set) => ({
   activeView: 'hub',
   activeTab: 'overview',
-  tickets: initialTickets,
+  tickets: [],
   helpTopics: initialHelpTopics,
   selectedTicketId: null,
   selectedHelpTopicId: null,

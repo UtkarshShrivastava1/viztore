@@ -684,7 +684,7 @@ export const useOrderStore = create<OrderStoreState>((set, get) => {
   };
 
   return {
-    orders: initialSeedOrders,
+    orders: [],
     isLoading: false,
     error: null,
     activeTab: getInitialTab(),
@@ -692,7 +692,7 @@ export const useOrderStore = create<OrderStoreState>((set, get) => {
     paymentStatusFilter: 'all',
     orderStatusFilter: 'all',
     fulfillmentTypeFilter: 'all',
-    dateRange: '13 May 2024 - 19 May 2024',
+    dateRange: 'This Month',
     selectedOrderIds: [],
 
     fetchOrders: async (storeId?: string) => {
@@ -718,13 +718,13 @@ export const useOrderStore = create<OrderStoreState>((set, get) => {
         const orderList = Array.isArray(rawData) ? rawData : (rawData as any)?.data || [];
         const mapped = orderList.map(mapApiOrderToMerchantRecord);
         set({
-          orders: mapped.length > 0 ? mapped : initialSeedOrders,
+          orders: mapped,
           isLoading: false,
         });
       } catch (err: any) {
         console.warn('Could not fetch orders from API:', err?.message || err);
         set({
-          orders: initialSeedOrders,
+          orders: [],
           isLoading: false,
           error: err?.message || 'Failed to fetch orders',
         });

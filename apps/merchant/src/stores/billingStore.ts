@@ -902,7 +902,7 @@ export const useBillingStore = create<BillingStoreState>((set, get) => ({
     })),
 
   // Invoices State
-  invoices: initialInvoices,
+  invoices: [],
   isLoadingInvoices: false,
   invoiceSearchQuery: '',
   invoiceDateRange: 'This Month',
@@ -914,7 +914,7 @@ export const useBillingStore = create<BillingStoreState>((set, get) => ({
   activeInvoiceForModal: null,
 
   // Quotes State
-  quotes: initialQuotes,
+  quotes: [],
   isLoadingQuotes: false,
   quoteSearchQuery: '',
   quoteDateRange: 'This Month',
@@ -942,8 +942,10 @@ export const useBillingStore = create<BillingStoreState>((set, get) => ({
     set({ isLoadingInvoices: true });
     try {
       const res = await billingApi.getInvoices();
-      if (res && res.data && Array.isArray(res.data.invoices) && res.data.invoices.length > 0) {
+      if (res && res.data && Array.isArray(res.data.invoices)) {
         set({ invoices: res.data.invoices.map(normalizeBackendInvoice) });
+      } else {
+        set({ invoices: [] });
       }
     } catch (err) {
       console.warn('Live invoices fetch error (using cache/local):', err);
@@ -956,8 +958,10 @@ export const useBillingStore = create<BillingStoreState>((set, get) => ({
     set({ isLoadingQuotes: true });
     try {
       const res = await billingApi.getQuotes();
-      if (res && res.data && Array.isArray(res.data.quotes) && res.data.quotes.length > 0) {
+      if (res && res.data && Array.isArray(res.data.quotes)) {
         set({ quotes: res.data.quotes.map(normalizeBackendQuote) });
+      } else {
+        set({ quotes: [] });
       }
     } catch (err) {
       console.warn('Live quotes fetch error (using cache/local):', err);

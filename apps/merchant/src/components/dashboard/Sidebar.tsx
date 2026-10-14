@@ -105,7 +105,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       id: 'orders',
       label: 'Orders',
       icon: ShoppingBag,
-      badge: 25,
+      badge: newOrdersCount > 0 ? newOrdersCount : undefined,
       badgeColor: 'blue',
     },
     { id: 'catalog', label: 'Products / Catalog', icon: Package },
@@ -142,14 +142,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className="flex items-center gap-3 overflow-hidden">
             {/* Stylized Logo Icon */}
             <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-400 via-rose-500 to-blue-600 flex items-center justify-center text-white font-black text-lg shadow-md shrink-0">
-              V
+              {branding.appName.charAt(0).toUpperCase()}
             </div>
             <div className="truncate">
               <h1 className="font-extrabold text-base tracking-tight text-white leading-none capitalize">
                 {branding.appName}
               </h1>
               <span className="text-[9px] text-slate-400 font-medium block mt-1 tracking-tight">
-                Making Local Stores Viable.
+                {branding.tagline}
               </span>
             </div>
           </div>
@@ -157,7 +157,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {isCollapsed && (
           <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-400 via-rose-500 to-blue-600 flex items-center justify-center text-white font-black text-lg shadow-md mx-auto">
-            V
+            {branding.appName.charAt(0).toUpperCase()}
           </div>
         )}
 

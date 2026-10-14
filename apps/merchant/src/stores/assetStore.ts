@@ -271,14 +271,14 @@ const initialAssets: Asset[] = [
 ];
 
 export const useAssetStore = create<AssetState>((set) => ({
-  assets: initialAssets,
+  assets: [],
   kpis: {
-    totalAssets: 48,
-    totalAssetValue: 1248500.0,
-    depreciableAssets: 32,
-    depreciablePercent: 67,
-    fullyDepreciated: 3,
-    underMaintenance: 2,
+    totalAssets: 0,
+    totalAssetValue: 0.0,
+    depreciableAssets: 0,
+    depreciablePercent: 0,
+    fullyDepreciated: 0,
+    underMaintenance: 0,
   },
   viewMode: 'list',
 

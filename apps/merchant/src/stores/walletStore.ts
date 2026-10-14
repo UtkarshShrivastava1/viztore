@@ -240,13 +240,13 @@ const initialBankAccounts: BankAccount[] = [
 ];
 
 export const useWalletStore = create<WalletState>((set) => ({
-  currentBalance: 32450.0,
-  usedThisMonth: 153150.0,
-  usedChangePercent: -8,
-  totalAdded: 185600.0,
-  totalUsed: 153150.0,
-  transactions: initialTransactions,
-  bankAccounts: initialBankAccounts,
+  currentBalance: 0.0,
+  usedThisMonth: 0.0,
+  usedChangePercent: 0,
+  totalAdded: 0.0,
+  totalUsed: 0.0,
+  transactions: [],
+  bankAccounts: [],
 
   activeTab: 'all',
   searchQuery: '',

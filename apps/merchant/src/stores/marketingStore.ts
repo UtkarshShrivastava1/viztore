@@ -433,8 +433,8 @@ export const useMarketingStore = create<MarketingState>((set, get) => ({
   activeSubTab: 'overview',
   setActiveSubTab: (tab) => set({ activeSubTab: tab, adView: 'list', couponView: 'list', isCreateAdWizardOpen: false, isCreateCouponWizardOpen: false }),
 
-  ads: initialAds,
-  advertisements: initialAds,
+  ads: [],
+  advertisements: [],
   adView: 'list',
   setAdView: (view) => set({ adView: view, isCreateAdWizardOpen: view === 'create', adWizardStep: 1 }),
   isCreateAdWizardOpen: false,
@@ -481,7 +481,7 @@ export const useMarketingStore = create<MarketingState>((set, get) => ({
     });
   },
 
-  coupons: initialCoupons,
+  coupons: [],
   couponView: 'list',
   setCouponView: (view) => set({ couponView: view, isCreateCouponWizardOpen: view === 'create', couponWizardStep: 1 }),
   isCreateCouponWizardOpen: false,

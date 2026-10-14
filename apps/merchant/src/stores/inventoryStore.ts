@@ -315,7 +315,7 @@ const defaultReservedBySku: Record<string, number> = {
 
 export const useInventoryStore = create<InventoryStoreState>((set, get) => ({
   items: [],
-  transactions: initialMockupTransactions,
+  transactions: [],
   viewMode: 'overview',
 
   selectedIds: [],
@@ -329,7 +329,7 @@ export const useInventoryStore = create<InventoryStoreState>((set, get) => ({
 
   currentPage: 1,
   pageSize: 10,
-  totalProductCount: 1248,
+  totalProductCount: 0,
 
   historyDateRange: 'Last 30 Days',
   historyProductFilter: 'All Products',
@@ -373,14 +373,10 @@ export const useInventoryStore = create<InventoryStoreState>((set, get) => ({
       };
     });
 
-    const currentTxs = get().transactions;
-    const initialTxs: StockTransaction[] =
-      currentTxs.length > 0 ? currentTxs : initialMockupTransactions;
-
     set({
       items,
-      totalProductCount: Math.max(items.length, 1248),
-      transactions: initialTxs,
+      totalProductCount: items.length,
+      transactions: get().transactions,
     });
   },
 

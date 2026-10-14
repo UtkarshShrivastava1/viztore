@@ -328,14 +328,14 @@ export const useStoreManagementStore = create<StoreManagementState>((set, get) =
   activeSubTab: 'overview',
   selectedPlacementSectionId: 'sec-1',
   sections: initialSections,
-  curatedProducts: initialCuratedProducts,
+  curatedProducts: [],
   isAddSectionModalOpen: false,
 
   // Store Appearance
-  storeLogo: 'https://images.unsplash.com/photo-1544441893-675973e31985?w=512&auto=format&fit=crop&q=80',
-  storeBanner: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1200&auto=format&fit=crop&q=80',
-  storeDescription: 'Trendy fashion for everyday style. Explore our latest collection of apparel, footwear, accessories and more.',
-  storeSlug: 'fashionhub',
+  storeLogo: '',
+  storeBanner: '',
+  storeDescription: '',
+  storeSlug: '',
 
   setStoreLogo: (url) => set({ storeLogo: url }),
   setStoreBanner: (url) => set({ storeBanner: url }),
@@ -345,13 +345,13 @@ export const useStoreManagementStore = create<StoreManagementState>((set, get) =
   reorderSections: (newSections) => set({ sections: newSections }),
 
   kpis: {
-    totalSections: 6,
-    activeSections: 5,
-    totalProducts: 110,
-    impressions: 45230,
-    impressionsGrowth: '↑ 18.6% vs last 30 days',
-    clicks: 8450,
-    clicksGrowth: '↑ 22.1% vs last 30 days',
+    totalSections: 0,
+    activeSections: 0,
+    totalProducts: 0,
+    impressions: 0,
+    impressionsGrowth: '0%',
+    clicks: 0,
+    clicksGrowth: '0%',
   },
 
   setActiveSubTab: (tab) => set({ activeSubTab: tab }),

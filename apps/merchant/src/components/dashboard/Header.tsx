@@ -9,6 +9,7 @@ import {
   Store,
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore.js';
+import { useWalletStore } from '../../stores/walletStore.js';
 import { NotificationsDrawer } from './drawers/NotificationsDrawer.js';
 import { HelpSupportDrawer } from './drawers/HelpSupportDrawer.js';
 import { SellerProfileDrawer } from './drawers/SellerProfileDrawer.js';
@@ -37,6 +38,8 @@ export const Header: React.FC<HeaderProps> = ({
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isProfileInfoOpen, setIsProfileInfoOpen] = useState(false);
   const [isInactiveModalOpen, setIsInactiveModalOpen] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const walletBalance = useWalletStore((s) => s.currentBalance);
 
   const storeName = currentStore?.name || user?.fullName || 'Fashion Hub';
   const avatarInitials = storeName.slice(0, 2).toUpperCase();
@@ -91,7 +94,9 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <Wallet className="w-3.5 h-3.5 text-blue-600" />
             <span>Wallet</span>
-            <span className="text-[11px] font-bold text-slate-600 font-mono">₹ 32,450</span>
+            <span className="text-[11px] font-bold text-slate-600 font-mono">
+              ₹ {walletBalance.toLocaleString('en-IN')}
+            </span>
           </button>
 
           {/* Notifications Bell with Badge */}
@@ -106,9 +111,11 @@ export const Header: React.FC<HeaderProps> = ({
             title="Notifications"
           >
             <Bell className="w-5 h-5" />
-            <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center border-2 border-white">
-              8
-            </span>
+            {unreadNotifications > 0 && (
+              <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center border-2 border-white">
+                {unreadNotifications}
+              </span>
+            )}
           </button>
 
           {/* Help & Support Button */}
@@ -187,6 +194,7 @@ export const Header: React.FC<HeaderProps> = ({
       <NotificationsDrawer
         isOpen={isNotificationsOpen}
         onClose={() => setIsNotificationsOpen(false)}
+        onUnreadCountChange={setUnreadNotifications}
       />
 
       <HelpSupportDrawer

@@ -673,19 +673,19 @@ export const initialCatalogMockupProducts: ProductItem[] = [
 ];
 
 const initialDefaultKpis: CatalogKPIs = {
-  totalProducts: 1248,
-  activeProducts: 1132,
-  lowStock: 78,
-  outOfStock: 38,
-  draft: 12,
-  totalChangePct: 12,
-  activeChangePct: 8,
-  lowStockChangePct: -5,
-  outOfStockChangePct: -3,
+  totalProducts: 0,
+  activeProducts: 0,
+  lowStock: 0,
+  outOfStock: 0,
+  draft: 0,
+  totalChangePct: 0,
+  activeChangePct: 0,
+  lowStockChangePct: 0,
+  outOfStockChangePct: 0,
 };
 
 export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
-  products: initialCatalogMockupProducts,
+  products: [],
   kpis: initialDefaultKpis,
   isLoading: false,
   error: null,
@@ -742,17 +742,12 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
 
       const rawData = await api.get<any>(endpoint);
       const productList = Array.isArray(rawData) ? rawData : rawData?.products || rawData?.data || [];
-      if (productList.length > 0) {
-        const mapped = productList.map(mapApiProductToProductItem);
-        const computedKpis = calculateKPIs(mapped);
-        set({ products: mapped, kpis: computedKpis, isLoading: false });
-      } else {
-        // Retain seed data for rich development & testing experience
-        set({ products: initialCatalogMockupProducts, kpis: initialDefaultKpis, isLoading: false });
-      }
+      const mapped = productList.map(mapApiProductToProductItem);
+      const computedKpis = calculateKPIs(mapped);
+      set({ products: mapped, kpis: computedKpis, isLoading: false });
     } catch (err: any) {
-      console.warn('Could not fetch products from API, using fallback data:', err?.message || err);
-      set({ products: initialCatalogMockupProducts, kpis: initialDefaultKpis, isLoading: false, error: null });
+      console.warn('Could not fetch products from API:', err?.message || err);
+      set({ products: [], kpis: initialDefaultKpis, isLoading: false, error: null });
     }
   },
 

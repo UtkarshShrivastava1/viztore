@@ -367,7 +367,7 @@ interface ReturnsState {
 }
 
 export const useReturnsStore = create<ReturnsState>((set, get) => ({
-  returns: mockReturnsList,
+  returns: [],
   activeTab: 'All Returns',
   searchQuery: '',
   statusFilter: 'All Statuses',

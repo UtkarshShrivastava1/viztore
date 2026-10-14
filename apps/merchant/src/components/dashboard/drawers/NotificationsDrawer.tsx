@@ -9,6 +9,7 @@ import {
   RotateCcw,
   Store,
   ArrowRight,
+  Bell,
 } from 'lucide-react';
 import { branding } from '@repo/shared-types/branding.config';
 
@@ -32,108 +33,7 @@ export interface NotificationItem {
   iconBg: string;
 }
 
-const initialNotifications: NotificationItem[] = [
-  {
-    id: '1',
-    category: 'orders',
-    title: 'New order received',
-    description: (
-      <>
-        Order <strong className="font-semibold text-slate-800">#ORD-10325</strong> has been placed by Rohan Verma for ₹2,799
-      </>
-    ),
-    time: 'Just now',
-    isUnread: true,
-    icon: ShoppingBag,
-    iconColor: 'text-blue-600',
-    iconBg: 'bg-blue-50 border border-blue-100/60',
-  },
-  {
-    id: '2',
-    category: 'orders',
-    title: 'New order received',
-    description: (
-      <>
-        Order <strong className="font-semibold text-slate-800">#ORD-10324</strong> has been placed by Sneha Kapoor for ₹1,649
-      </>
-    ),
-    time: '5m ago',
-    isUnread: true,
-    icon: ShoppingBag,
-    iconColor: 'text-blue-600',
-    iconBg: 'bg-blue-50 border border-blue-100/60',
-  },
-  {
-    id: '3',
-    category: 'inventory',
-    title: 'Low stock alert',
-    description: 'Men Solid Cotton Shirt (Blue, M) is running low. Only 5 left in stock.',
-    time: '15m ago',
-    isUnread: true,
-    icon: Boxes,
-    iconColor: 'text-amber-600',
-    iconBg: 'bg-amber-50 border border-amber-100/60',
-  },
-  {
-    id: '4',
-    category: 'system',
-    title: 'Payout initiated',
-    description: 'Your payout of ₹24,860 has been initiated and will be processed soon.',
-    time: '1h ago',
-    isUnread: true,
-    icon: ClipboardCheck,
-    iconColor: 'text-emerald-600',
-    iconBg: 'bg-emerald-50 border border-emerald-100/60',
-  },
-  {
-    id: '5',
-    category: 'system',
-    title: 'System update',
-    description: 'We have updated our Returns & Refund policy. Please review the changes.',
-    time: '2h ago',
-    isUnread: true,
-    icon: ShieldCheck,
-    iconColor: 'text-purple-600',
-    iconBg: 'bg-purple-50 border border-purple-100/60',
-  },
-  {
-    id: '6',
-    category: 'orders',
-    title: 'Order shipped',
-    description: (
-      <>
-        Order <strong className="font-semibold text-slate-800">#ORD-10318</strong> has been shipped via Delhivery.
-      </>
-    ),
-    time: '3h ago',
-    isUnread: false,
-    icon: Truck,
-    iconColor: 'text-blue-600',
-    iconBg: 'bg-blue-50 border border-blue-100/60',
-  },
-  {
-    id: '7',
-    category: 'inventory',
-    title: 'Stock updated',
-    description: 'Men Graphic Print T-shirt (Olive Green, L) stock has been updated.',
-    time: '5h ago',
-    isUnread: false,
-    icon: RotateCcw,
-    iconColor: 'text-emerald-600',
-    iconBg: 'bg-emerald-50 border border-emerald-100/60',
-  },
-  {
-    id: '8',
-    category: 'system',
-    title: `Welcome to ${branding.appName}!`,
-    description: 'Complete your store setup and start selling to grow your business.',
-    time: '1d ago',
-    isUnread: false,
-    icon: Store,
-    iconColor: 'text-blue-600',
-    iconBg: 'bg-blue-50 border border-blue-100/60',
-  },
-];
+const initialNotifications: NotificationItem[] = [];
 
 export const NotificationsDrawer: React.FC<NotificationsDrawerProps> = ({
   isOpen,
@@ -225,7 +125,18 @@ export const NotificationsDrawer: React.FC<NotificationsDrawerProps> = ({
 
         {/* Notification List */}
         <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
-          {filtered.map((n) => {
+          {filtered.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-64 p-6 text-center">
+              <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 mb-3">
+                <Bell className="w-6 h-6" />
+              </div>
+              <h4 className="text-xs font-bold text-slate-700">No notifications</h4>
+              <p className="text-[11px] text-slate-400 mt-1 max-w-[200px]">
+                You're all caught up! New alerts and order updates will appear here.
+              </p>
+            </div>
+          ) : (
+            filtered.map((n) => {
             const Icon = n.icon;
             return (
               <div
@@ -252,7 +163,7 @@ export const NotificationsDrawer: React.FC<NotificationsDrawerProps> = ({
                 )}
               </div>
             );
-          })}
+          }))}
         </div>
 
         {/* Footer */}
