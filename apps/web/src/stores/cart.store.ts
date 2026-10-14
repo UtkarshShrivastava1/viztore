@@ -12,14 +12,26 @@ export interface CartItem {
   storeName: string;
 }
 
+export interface StoreConflict {
+  pendingItem: Omit<CartItem, 'quantity'>;
+  pendingQuantity: number;
+  existingStoreName: string;
+  newStoreName: string;
+}
+
 interface CartStore {
   items: CartItem[];
   isOpen: boolean;
+  storeConflict: StoreConflict | null;
 
   // Drawer Controls
   openCart: () => void;
   closeCart: () => void;
   toggleCart: () => void;
+
+  // Single-Store Conflict Resolution
+  resolveStoreConflict: (confirmClear: boolean) => void;
+  clearStoreConflict: () => void;
 
   // Cart Operations
   addItem: (item: Omit<CartItem, 'quantity'>, quantity?: number) => boolean;
@@ -45,13 +57,47 @@ export const useCartStore = create<CartStore>()(
     (set, get) => ({
       items: [],
       isOpen: false,
+      storeConflict: null,
 
       openCart: () => set({ isOpen: true }),
       closeCart: () => set({ isOpen: false }),
       toggleCart: () => set((state) => ({ isOpen: !state.isOpen })),
 
+      resolveStoreConflict: (confirmClear: boolean) => {
+        const { storeConflict } = get();
+        if (!storeConflict) return;
+
+        if (confirmClear) {
+          // Replace cart with the new store's item
+          set({
+            items: [{ ...storeConflict.pendingItem, quantity: storeConflict.pendingQuantity }],
+            storeConflict: null,
+            isOpen: true,
+          });
+        } else {
+          // Retain existing cart
+          set({ storeConflict: null });
+        }
+      },
+
+      clearStoreConflict: () => set({ storeConflict: null }),
+
       addItem: (item, quantity = 1) => {
         const { items } = get();
+
+        // Enforce Single-Store Cart Invariant:
+        // A customer's cart may contain items from exactly one store at a time.
+        if (items.length > 0 && items[0].storeId !== item.storeId) {
+          set({
+            storeConflict: {
+              pendingItem: item,
+              pendingQuantity: quantity,
+              existingStoreName: items[0].storeName || 'another store',
+              newStoreName: item.storeName || 'this store',
+            },
+          });
+          return false;
+        }
 
         // Existing item in cart -> increment quantity
         const existingIndex = items.findIndex((i) => i.productId === item.productId);
@@ -64,11 +110,12 @@ export const useCartStore = create<CartStore>()(
               quantity: currentItem.quantity + quantity,
             };
           }
-          set({ items: updated });
+          set({ items: updated, storeConflict: null });
         } else {
-          // New item
+          // New item from the same store
           set({
             items: [...items, { ...item, quantity }],
+            storeConflict: null,
           });
         }
 

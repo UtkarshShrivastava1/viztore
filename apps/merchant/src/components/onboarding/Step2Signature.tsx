@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowRight, ArrowLeft, RefreshCw, Check } from 'lucide-react';
+import { ArrowRight, ArrowLeft, RefreshCw, Check, Undo2 } from 'lucide-react';
 import { useOnboardingStore } from '../../stores/onboardingStore.js';
 
 interface Step2SignatureProps {
@@ -22,6 +22,7 @@ export const Step2Signature: React.FC<Step2SignatureProps> = ({ onContinue, onBa
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
+  const [strokeHistory, setStrokeHistory] = useState<ImageData[]>([]);
 
   useEffect(() => {
     if (activeTab === 'draw' && canvasRef.current) {
@@ -72,7 +73,33 @@ export const Step2Signature: React.FC<Step2SignatureProps> = ({ onContinue, onBa
   };
 
   const stopDrawing = () => {
+    if (isDrawing && canvasRef.current) {
+      const ctx = canvasRef.current.getContext('2d');
+      if (ctx) {
+        const snap = ctx.getImageData(0, 0, canvasRef.current.width, canvasRef.current.height);
+        setStrokeHistory((prev) => [...prev, snap]);
+      }
+    }
     setIsDrawing(false);
+  };
+
+  const handleUndo = () => {
+    const canvas = canvasRef.current;
+    if (!canvas || strokeHistory.length === 0) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const nextHistory = strokeHistory.slice(0, -1);
+    if (nextHistory.length > 0) {
+      const prevSnapshot = nextHistory[nextHistory.length - 1]!;
+      ctx.putImageData(prevSnapshot, 0, 0);
+      setHasDrawn(true);
+    } else {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      setHasDrawn(false);
+    }
+    setStrokeHistory(nextHistory);
+    setSignatureAdded(false);
   };
 
   const handleClear = () => {
@@ -82,6 +109,7 @@ export const Step2Signature: React.FC<Step2SignatureProps> = ({ onContinue, onBa
     if (ctx) {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
+    setStrokeHistory([]);
     setHasDrawn(false);
     setSignatureAdded(false);
   };
@@ -193,14 +221,24 @@ export const Step2Signature: React.FC<Step2SignatureProps> = ({ onContinue, onBa
           {/* Draw Tab Content (Screen 2.png) */}
           {activeTab === 'draw' && (
             <div className="relative border border-slate-200 rounded-lg p-3 bg-slate-50/40">
-              <div className="flex justify-end mb-1">
+              <div className="flex items-center justify-end gap-3 mb-1.5">
+                <button
+                  type="button"
+                  disabled={strokeHistory.length === 0}
+                  onClick={handleUndo}
+                  className="text-xs font-semibold text-slate-500 hover:text-slate-800 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 cursor-pointer transition-colors"
+                  title="Undo last stroke"
+                >
+                  <Undo2 className="w-3 h-3" />
+                  <span>Undo</span>
+                </button>
                 <button
                   type="button"
                   onClick={handleClear}
-                  className="text-xs font-semibold text-[#0038ed] hover:text-[#002fcf] flex items-center gap-1 cursor-pointer"
+                  className="text-xs font-semibold text-[#0038ed] hover:text-[#002fcf] flex items-center gap-1 cursor-pointer transition-colors"
                 >
                   <RefreshCw className="w-3 h-3" />
-                  <span>Clear</span>
+                  <span>Clear All</span>
                 </button>
               </div>
 

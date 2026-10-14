@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import { branding } from '@repo/shared-types';
 import { Providers } from './providers';
 import { CartDrawer } from '../components/cart/CartDrawer';
+import { StoreConflictModal } from '../components/cart/StoreConflictModal';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { Header } from '@/components/layout/Header';
 import { AuthModal } from '@/components/auth/AuthModal';
@@ -53,6 +54,7 @@ export default function RootLayout({
             <Header />
             {children}
             <CartDrawer />
+            <StoreConflictModal />
             <BottomNav />
             <AuthModal />
           </Providers>
