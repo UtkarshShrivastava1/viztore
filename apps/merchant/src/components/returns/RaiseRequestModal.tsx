@@ -61,7 +61,6 @@ export const RaiseRequestModal: React.FC<RaiseRequestModalProps> = ({
       description,
       files: files.map((f) => f.name),
     });
-    alert(`Request submitted successfully for ${returnRecord.returnNumber}!`);
     onClose();
   };
 

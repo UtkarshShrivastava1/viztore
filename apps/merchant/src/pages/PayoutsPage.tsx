@@ -293,11 +293,11 @@ export const PayoutsPage: React.FC<PayoutsPageProps> = ({ onNavigateHome }) => {
 
         {/* Filter Button */}
         <button
-          onClick={() => alert('Filter applied')}
-          className="px-3.5 py-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-colors shadow-2xs flex items-center gap-1.5"
+          type="button"
+          className="px-3.5 py-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-colors shadow-2xs flex items-center gap-1.5 cursor-pointer"
         >
           <Filter className="w-3.5 h-3.5 text-blue-600" />
-          <span>Filter</span>
+          <span>Apply Filter</span>
         </button>
       </div>
 

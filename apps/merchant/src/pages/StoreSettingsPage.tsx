@@ -1,13 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card } from '../components/ui/Card.js';
 import { Input } from '../components/ui/Input.js';
 import { Button } from '../components/ui/Button.js';
 import { Badge } from '../components/ui/Badge.js';
-import { Store, ShieldCheck, MapPin, Landmark, Clock, Save } from 'lucide-react';
+import { Store, ShieldCheck, MapPin, Landmark, Clock, Save, CheckCircle } from 'lucide-react';
 import { useOnboardingStore } from '../stores/onboardingStore.js';
 
 export const StoreSettingsPage: React.FC = () => {
   const { draft } = useOnboardingStore();
+  const [saved, setSaved] = useState(false);
 
   const storeName = draft.step4?.storeDisplayName || 'Royal Footwear & Accessories';
   const category = draft.step5?.primaryCategory || 'Fashion & Footwear';
@@ -88,8 +89,19 @@ export const StoreSettingsPage: React.FC = () => {
         </div>
       </Card>
 
-      <div className="flex justify-end pt-2">
-        <Button onClick={() => alert('Store profile updated successfully')}>
+      <div className="flex items-center justify-between pt-2">
+        {saved ? (
+          <div className="flex items-center gap-2 text-xs font-semibold text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200 animate-in fade-in">
+            <CheckCircle className="w-4 h-4" />
+            <span>Store profile updated successfully!</span>
+          </div>
+        ) : <div />}
+        <Button
+          onClick={() => {
+            setSaved(true);
+            setTimeout(() => setSaved(false), 3000);
+          }}
+        >
           <Save className="w-4 h-4 mr-2" />
           <span>Save Changes</span>
         </Button>

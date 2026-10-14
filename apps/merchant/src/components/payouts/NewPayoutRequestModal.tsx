@@ -13,16 +13,17 @@ export const NewPayoutRequestModal: React.FC = () => {
 
   const [amount, setAmount] = useState<number>(availableForPayout);
   const [remarks, setRemarks] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   if (!isNewRequestModalOpen) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (amount <= 0 || amount > availableForPayout) {
-      alert(`Please enter an amount between ₹1 and ₹${availableForPayout.toLocaleString('en-IN')}`);
+      setError(`Please enter an amount between ₹1 and ₹${availableForPayout.toLocaleString('en-IN')}`);
       return;
     }
-
+    setError(null);
     createPayoutRequest(amount, remarks);
   };
 
@@ -74,6 +75,12 @@ export const NewPayoutRequestModal: React.FC = () => {
               </span>
             </div>
           </div>
+
+          {error && (
+            <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold animate-in fade-in">
+              {error}
+            </div>
+          )}
 
           <div>
             <label className="block font-semibold text-slate-700 mb-1.5">

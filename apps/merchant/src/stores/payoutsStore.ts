@@ -680,11 +680,46 @@ export const usePayoutsStore = create<PayoutsState>((set, get) => ({
     set((state) => ({ settings: { ...state.settings, ...newSettings } })),
 
   createPayoutRequest: (amount, remarks) => {
-    alert(`Payout request for ₹ ${amount} submitted successfully!`);
+    const newReq: PayoutRequest = {
+      id: `req-${Date.now()}`,
+      requestId: `#REQ-${Math.floor(1000 + Math.random() * 9000)}`,
+      requestDateTime: 'Just now',
+      payoutAccount: get().settings.bankName + ' ••••' + (get().settings.accountNumber.slice(-4) || '5678'),
+      requestedAmount: amount,
+      status: 'Pending',
+      requestedOn: new Date().toISOString().slice(0, 10),
+      remarks: remarks || 'Merchant settlement withdrawal',
+      bankDetails: {
+        accountHolderName: get().settings.accountName,
+        accountNumber: get().settings.accountNumber,
+        ifscCode: get().settings.ifscCode,
+        bankName: get().settings.bankName,
+        accountType: get().settings.accountType,
+      },
+      timeline: {
+        created: 'Just now',
+      },
+    };
+    set((state) => ({
+      requests: [newReq, ...state.requests],
+      availableForPayout: Math.max(0, state.availableForPayout - amount),
+      pendingBalance: state.pendingBalance + amount,
+      isNewRequestModalOpen: false,
+    }));
   },
 
   cancelPayoutRequest: (id) => {
-    alert(`Payout request cancelled.`);
+    set((state) => {
+      const target = state.requests.find((r) => r.id === id);
+      const refundedAmt = target ? target.requestedAmount : 0;
+      return {
+        requests: state.requests.map((r) =>
+          r.id === id ? { ...r, status: 'Rejected' as const } : r
+        ),
+        availableForPayout: state.availableForPayout + refundedAmt,
+        pendingBalance: Math.max(0, state.pendingBalance - refundedAmt),
+      };
+    });
   },
 
   downloadStatement: (format) => {

@@ -10,6 +10,8 @@ export const CreateTicketModal: React.FC = () => {
   const [priority, setPriority] = useState<TicketPriority>('medium');
   const [orderRef, setOrderRef] = useState('');
   const [message, setMessage] = useState('');
+  const [attachmentName, setAttachmentName] = useState<string | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   if (!isCreateTicketModalOpen) return null;
 
@@ -124,14 +126,37 @@ export const CreateTicketModal: React.FC = () => {
           </div>
 
           <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-            <button
-              type="button"
-              onClick={() => alert('Attachments can be added after ticket creation or via direct drag & drop.')}
-              className="inline-flex items-center gap-1.5 text-slate-500 hover:text-slate-700 font-semibold"
-            >
-              <Paperclip className="w-4 h-4" />
-              <span>Attach File</span>
-            </button>
+            <input
+              type="file"
+              ref={fileInputRef}
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) setAttachmentName(f.name);
+              }}
+            />
+            {attachmentName ? (
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg text-xs font-medium">
+                <Paperclip className="w-3.5 h-3.5 text-blue-600" />
+                <span className="truncate max-w-[150px]">{attachmentName}</span>
+                <button
+                  type="button"
+                  onClick={() => setAttachmentName(null)}
+                  className="text-slate-400 hover:text-slate-600 ml-1"
+                >
+                  ×
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="inline-flex items-center gap-1.5 text-slate-500 hover:text-slate-700 font-semibold cursor-pointer"
+              >
+                <Paperclip className="w-4 h-4" />
+                <span>Attach File</span>
+              </button>
+            )}
 
             <div className="flex items-center gap-2">
               <button

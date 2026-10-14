@@ -278,9 +278,14 @@ Every online order placed through `apps/web` generates an authoritative, complia
   - Vite production bundle code-splitting (`vite.config.ts` manualChunks for `leaflet` and `lucide-react`).
   - Enforced strict white-label compliance with brand-agnostic design tokens and preserved POS thermal (80mm) and A4 invoice printing workflows.
   - **120/120 unit & integration tests passing (19 suites)**; full monorepo clean build.
-- [ ] **Abhay Task 11 (Merchant Portal End-to-End Operational Lifecycle & Cross-Platform Simulation Suite) — Assigned 🟡** (Task Brief: [`abhay_merchant_e2e_qa_task.md`](file:///d:/UTKARSH/Live%20Projects/Vercel-live-Website/platform-root-vz/abhay_merchant_e2e_qa_task.md), Deliverable: `apps/merchant/MERCHANT_E2E_QA_AUDIT_REPORT.md`):
-  - Track A: Merchant registration, store setup, timings, logo/banner, catalog ingestion (2 products with barcodes/stock), inventory ledger verification, and storefront display section creation.
-  - Track B: Customer discovery on `:3000`, single-store cart validation, and order placement with Delivery OTP.
-  - Track C: Real-time Socket.io audio alert chime & toast arrival, 8-tab pipeline fulfillment with OTP handoff, in-house counter POS billing sale, and 80mm thermal receipt printing.
-  - Track D: Structured discrepancy matrix and QA audit sign-off.
+- [x] **Pre-Launch Must-Have Modules Hardening (Modules 6, 9, 10, 14, 15) 🟢**:
+  - `MOD-06 (Customers CRM & Khata Ledger)`: Purged browser confirm() stub, built in-app DeleteCustomerModal, wired live balance calculation, statement CSV exports, WhatsApp payment reminder links, and debt settlement.
+  - `MOD-10 (Payout & Settlements)`: Purged browser alert() stubs, built live in-app Manage Payout Bank Account modal with IFSC verification, reactive payout request creation and cancellation state machine.
+  - `MOD-14 (Store Settings)`: Full 9-tab suite verified, in-app saved notification feedback, store timing and peripheral printer setup.
+  - `MOD-09 (Returns & Refunds)`: Full 4-screen suite verified, photo evidence dropzone, return-to-order deep linking, return slip print preview.
+  - `MOD-15 (Support & Help Desk)`: Full 2-screen suite verified, interactive file attachment input with file name pills, and direct WhatsApp support trigger.
+  - **120/120 automated tests passing across 19 suites**; full monorepo clean build.
+- [ ] **Core Platforms Manual E2E Testing (System 1: Online Store & System 2: In-House POS) — NEXT UP 🟡**:
+  - Track A: Customer Web order placement (`:3000`) ➔ Merchant Order Pipeline acceptance (`:3001`) ➔ Ready to Ship ➔ OTP handoff.
+  - Track B: In-House Counter POS Barcode Scan ➔ Multi-tender settlement (Cash / UPI / Khata) ➔ Thermal Receipt Print ➔ Atomic Stock Decrement reflected on Storefront.
 

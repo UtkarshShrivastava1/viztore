@@ -350,12 +350,12 @@ export const PayoutRequestsTab: React.FC = () => {
                             <button
                               onClick={() => {
                                 setActiveMenuId(null);
-                                alert(`Editing request ${req.requestId}`);
+                                handleOpenDetails(req);
                               }}
                               className="w-full px-3.5 py-2 flex items-center gap-2 text-slate-700 hover:bg-slate-50 transition-colors"
                             >
                               <Pencil className="w-4 h-4 text-slate-500" />
-                              <span>Edit Request</span>
+                              <span>Edit / View Request</span>
                             </button>
                             {req.status === 'Pending' && (
                               <button

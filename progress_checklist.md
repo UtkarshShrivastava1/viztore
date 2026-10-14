@@ -231,11 +231,18 @@
   - [x] Standardized horizontal KPI stats cards across Catalog, Inventory, Customers, Expenses, Returns, and Payouts
   - [x] Vite production bundle code-splitting (`vite.config.ts` manualChunks for `leaflet` and `lucide-react`)
   - [x] Enforced strict white-label compliance and preserved thermal (80mm) and A4 invoice printing workflows
-- [ ] **Merchant Portal End-to-End Operational Lifecycle & Cross-Platform Simulation Suite (TASK-ABH-11)** (Assigned 🟡): 4-track manual operational test covering registration, store setup, cataloging, cross-platform customer checkout on `:3000`, real-time alert chime, OTP delivery completion, walk-in counter POS sale, and thermal print audit
-- [ ] Merchant wallet financial ledger, payout triggers & automated bank settlements
-- [ ] Automated returns, exchange, RMA reverse logistics & refund credit note settlement
+- [x] **Pre-Launch Must-Have Modules Hardening & Audit (Modules 6, 9, 10, 14, 15)**:
+  - [x] `MOD-06: Customers CRM & Khata Ledger` (7 mockups, zero alerts, in-app Delete modal, WhatsApp payment reminders, aging analysis, statements CSV)
+  - [x] `MOD-10: Payout & Settlements` (4 mockups, zero alerts, in-app Manage Bank Account modal, settlement requests state machine, UTR search)
+  - [x] `MOD-14: Settings` (9 mockups, full 9 tabs functional, profile, business GSTIN, timings, toast feedback)
+  - [x] `MOD-09: Returns & Refunds` (4 mockups, zero alerts, photo dropzone, return-to-order navigation, return slip modal)
+  - [x] `MOD-15: Support & Help Desk` (2 mockups, zero alerts, ticket attachment input, WhatsApp support integration)
+- [ ] **Core Platforms Manual E2E Pilot Testing (System 1: Online Store & System 2: In-House POS) — NEXT UP 🟡**:
+  - [ ] Customer web order placement (`:3000`) ➔ Merchant Order Pipeline acceptance (`:3001`) ➔ Ready to Ship ➔ OTP handoff
+  - [ ] In-House Counter POS Barcode Scan ➔ Multi-tender settlement (Cash / UPI / Khata) ➔ Thermal Receipt Print ➔ Atomic Stock Decrement reflected on Storefront
 - [ ] Merchant staff management & role-based access control (Manager, Cashier, Inventory Clerk)
-- [ ] Merchant marketing suite: promotional store banner manager & coupon builder
+- [ ] Merchant marketing suite: promotional store banner manager & coupon builder (Post-Launch Phase 2)
+- [ ] Merchant purchase expense ERP (Post-Launch Phase 2)
 - [ ] Customer Mobile App with React Native & Expo (iOS + Android)
 - [ ] Background GPS geolocation & mobile push notifications
 - [ ] Customer in-app returns/exchange request hub & digital wallet loyalty balance

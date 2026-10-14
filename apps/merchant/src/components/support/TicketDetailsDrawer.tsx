@@ -22,6 +22,8 @@ export const TicketDetailsDrawer: React.FC = () => {
   } = useSupportStore();
 
   const [replyText, setReplyText] = useState('');
+  const [replyAttachment, setReplyAttachment] = useState<string | null>(null);
+  const replyFileRef = React.useRef<HTMLInputElement>(null);
 
   if (!selectedTicketId) return null;
 
@@ -204,14 +206,37 @@ export const TicketDetailsDrawer: React.FC = () => {
             </div>
 
             <div className="flex items-center justify-between">
-              <button
-                type="button"
-                onClick={() => alert('Attachments supported: PNG, JPG, PDF up to 5MB')}
-                className="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors"
-                title="Attach file"
-              >
-                <Paperclip className="w-4 h-4" />
-              </button>
+              <input
+                type="file"
+                ref={replyFileRef}
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) setReplyAttachment(f.name);
+                }}
+              />
+              {replyAttachment ? (
+                <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-slate-100 text-slate-700 rounded-lg text-xs font-medium">
+                  <Paperclip className="w-3.5 h-3.5 text-blue-600" />
+                  <span className="truncate max-w-[140px]">{replyAttachment}</span>
+                  <button
+                    type="button"
+                    onClick={() => setReplyAttachment(null)}
+                    className="text-slate-400 hover:text-slate-600 ml-1"
+                  >
+                    ×
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => replyFileRef.current?.click()}
+                  className="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer"
+                  title="Attach file"
+                >
+                  <Paperclip className="w-4 h-4" />
+                </button>
+              )}
 
               <button
                 type="submit"

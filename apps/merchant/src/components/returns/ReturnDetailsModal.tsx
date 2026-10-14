@@ -7,12 +7,14 @@ interface ReturnDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   returnRecord: ReturnRecord | null;
+  onNavigateToOrder?: (orderId: string) => void;
 }
 
 export const ReturnDetailsModal: React.FC<ReturnDetailsModalProps> = ({
   isOpen,
   onClose,
   returnRecord,
+  onNavigateToOrder,
 }) => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -133,8 +135,12 @@ export const ReturnDetailsModal: React.FC<ReturnDetailsModalProps> = ({
                 {returnRecord.orderNumber}
               </p>
               <button
-                onClick={() => alert(`Navigating to order ${returnRecord.orderNumber}`)}
-                className="text-[11px] font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-0.5 mt-0.5"
+                type="button"
+                onClick={() => {
+                  onClose();
+                  if (onNavigateToOrder) onNavigateToOrder(returnRecord.orderNumber);
+                }}
+                className="text-[11px] font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-0.5 mt-0.5 cursor-pointer"
               >
                 <span>View Order</span>
                 <span className="text-xs">&rarr;</span>

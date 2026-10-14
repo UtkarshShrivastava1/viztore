@@ -36,7 +36,7 @@ const CustomerRowMoreAction: React.FC<{
   onEditCustomer: (customer: Customer) => void;
   onOpenCreditModal?: (customer: Customer) => void;
   onOpenStatements: (customer: Customer, tab?: 'history' | 'aging') => void;
-  deleteCustomer: (id: string) => void;
+  onRequestDelete: (customer: Customer) => void;
 }> = ({
   customer,
   isOpen,
@@ -46,7 +46,7 @@ const CustomerRowMoreAction: React.FC<{
   onEditCustomer,
   onOpenCreditModal,
   onOpenStatements,
-  deleteCustomer,
+  onRequestDelete,
 }) => {
   const triggerRef = useRef<HTMLButtonElement>(null);
   return (
@@ -160,9 +160,7 @@ const CustomerRowMoreAction: React.FC<{
           type="button"
           onClick={() => {
             onClose();
-            if (confirm(`Are you sure you want to delete customer ${customer.name}?`)) {
-              deleteCustomer(customer.id);
-            }
+            onRequestDelete(customer);
           }}
           className="w-full px-3.5 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 flex items-center gap-2.5 transition-colors cursor-pointer"
         >
@@ -199,6 +197,7 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
   const [showMoreFilters, setShowMoreFilters] = useState(false);
   const [tierFilter, setTierFilter] = useState<'All' | 'VIP' | 'Regular' | 'New'>('All');
   const [hasKhataDueFilter, setHasKhataDueFilter] = useState(false);
+  const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
 
   // Filter logic
   const filteredCustomers = customers.filter((c) => {
@@ -646,7 +645,7 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
                             onEditCustomer={onEditCustomer}
                             onOpenCreditModal={onOpenCreditModal}
                             onOpenStatements={onOpenStatements}
-                            deleteCustomer={deleteCustomer}
+                            onRequestDelete={setCustomerToDelete}
                           />
                         </div>
                       </td>
@@ -703,6 +702,46 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
           </div>
         </div>
       </div>
+
+      {/* In-App Delete Confirmation Modal */}
+      {customerToDelete && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 max-w-md w-full p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600 shrink-0">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900">Delete Customer</h3>
+                <p className="text-xs text-slate-500">This action cannot be undone.</p>
+              </div>
+            </div>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Are you sure you want to delete <span className="font-bold text-slate-900">{customerToDelete.name}</span> ({customerToDelete.phone})? 
+              All associated records and credit history will be removed.
+            </p>
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setCustomerToDelete(null)}
+                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  deleteCustomer(customerToDelete.id);
+                  setCustomerToDelete(null);
+                }}
+                className="px-4 py-2 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-colors shadow-sm cursor-pointer"
+              >
+                Confirm Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
