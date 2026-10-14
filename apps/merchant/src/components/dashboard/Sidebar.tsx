@@ -22,7 +22,7 @@ import {
   ChevronLeft,
   LogOut,
   Sparkles,
-  Archive,
+  FlaskConical,
 } from 'lucide-react';
 import { branding } from '../../lib/branding.js';
 import { useAuthStore } from '../../stores/authStore.js';
@@ -100,14 +100,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const newOrdersCount = orders.filter((o) => o.status === 'new').length;
   const returnsCount = orders.filter((o) => o.status === 'return_requested' || o.status === 'returned').length;
 
-  const [isLabsOpen, setIsLabsOpen] = React.useState(currentTab === 'assets');
+  const labsTabIds: DashboardTab[] = [
+    'wallet',
+    'expenses',
+    'assets',
+    'analytics',
+    'marketing',
+    'store',
+  ];
+
+  const [isLabsOpen, setIsLabsOpen] = React.useState(labsTabIds.includes(currentTab));
 
   React.useEffect(() => {
-    if (currentTab === 'assets') {
+    if (labsTabIds.includes(currentTab)) {
       setIsLabsOpen(true);
     }
   }, [currentTab]);
 
+  // Only fully functional, production-audited modules
   const menuItems: MenuItem[] = [
     { id: 'overview', label: 'Dashboard', icon: LayoutDashboard },
     {
@@ -121,8 +131,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'inventory', label: 'Inventory', icon: Boxes },
     { id: 'billing', label: 'Billing & Invoicing', icon: Receipt },
     { id: 'customers', label: 'Customers', icon: Users },
-    { id: 'wallet', label: 'Wallet', icon: Wallet },
-    { id: 'expenses', label: 'Purchase / Expense', icon: ReceiptText },
     {
       id: 'returns',
       label: 'Returns & Refunds',
@@ -131,11 +139,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
       badgeColor: 'blue',
     },
     { id: 'payouts', label: 'Payouts / Settlements', icon: Landmark },
-    { id: 'analytics', label: 'Reports & Analytics', icon: BarChart3 },
-    { id: 'marketing', label: 'Marketing', icon: Megaphone, hasChevron: true },
-    { id: 'store', label: 'Store Management', icon: Store, hasChevron: true },
     { id: 'settings', label: 'Settings', icon: Settings },
     { id: 'support', label: 'Support', icon: Headphones },
+  ];
+
+  // In-progress / future modules grouped in Production Labs
+  const productionLabsItems: MenuItem[] = [
+    { id: 'wallet', label: 'Wallet Hub', icon: Wallet },
+    { id: 'expenses', label: 'Purchase / Expense', icon: ReceiptText },
+    { id: 'assets', label: 'Asset Management', icon: HardDrive },
+    { id: 'analytics', label: 'Reports & Analytics', icon: BarChart3 },
+    { id: 'marketing', label: 'Marketing & Ads', icon: Megaphone },
+    { id: 'store', label: 'Store Management', icon: Store },
   ];
 
   return (
@@ -346,22 +361,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
           );
         })}
 
-        {/* Later-Thought Store Room / Labs Section */}
+        {/* Production Labs (Coming Soon Modules) */}
         <div className="pt-2 mt-2 border-t border-[#152348]/80">
           <button
             type="button"
             onClick={() => setIsLabsOpen((prev) => !prev)}
-            title={isCollapsed ? 'Store Room (Labs)' : undefined}
-            className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-[12px] font-medium text-slate-400 hover:text-slate-200 hover:bg-[#101d42] transition-colors ${
-              isCollapsed ? 'justify-center px-2' : ''
-            }`}
+            title={isCollapsed ? 'Production Labs (Coming Soon)' : undefined}
+            className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-[12px] font-medium transition-colors ${
+              labsTabIds.includes(currentTab)
+                ? 'bg-[#101d42] text-amber-300 font-semibold border border-amber-500/20'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-[#101d42]'
+            } ${isCollapsed ? 'justify-center px-2' : ''}`}
           >
-            <Archive className="w-4 h-4 shrink-0 text-slate-400" />
+            <FlaskConical className="w-4 h-4 shrink-0 text-amber-400" />
             {!isCollapsed && (
               <>
-                <span className="truncate flex-1 text-left">Store Room (Labs)</span>
-                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-[#152348] text-slate-400 border border-[#1d2d5a]">
-                  1
+                <span className="truncate flex-1 text-left font-semibold">Production Labs</span>
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-400 border border-amber-500/30">
+                  {productionLabsItems.length}
                 </span>
                 <ChevronRight
                   className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-200 ${
@@ -372,29 +389,40 @@ export const Sidebar: React.FC<SidebarProps> = ({
             )}
           </button>
 
-          {/* Collapsible Store Room content */}
+          {/* Collapsible Production Labs items */}
           {isLabsOpen && (
-            <div className={`space-y-0.5 mt-0.5 ${!isCollapsed ? 'pl-3' : ''}`}>
-              <button
-                type="button"
-                onClick={() => onSelectTab('assets')}
-                title={isCollapsed ? 'Asset Management' : undefined}
-                className={`w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all duration-150 ${
-                  currentTab === 'assets'
-                    ? 'bg-[#1a56db] text-white font-semibold shadow-xs'
-                    : 'text-slate-400 hover:text-white hover:bg-[#101d42]'
-                } ${isCollapsed ? 'justify-center px-2' : ''}`}
-              >
-                <HardDrive className="w-3.5 h-3.5 shrink-0" />
-                {!isCollapsed && (
-                  <>
-                    <span className="truncate flex-1 text-left">Asset Management</span>
-                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30">
-                      Deferred
-                    </span>
-                  </>
-                )}
-              </button>
+            <div className={`space-y-0.5 mt-1 ${!isCollapsed ? 'pl-2' : ''}`}>
+              {productionLabsItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = currentTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => {
+                      onSelectTab(item.id);
+                      if (item.id === 'store') setActiveStoreSubTab('overview');
+                      if (item.id === 'marketing') setActiveMarketingSubTab('overview');
+                    }}
+                    title={isCollapsed ? `${item.label} (Coming Soon)` : undefined}
+                    className={`w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all duration-150 ${
+                      isActive
+                        ? 'bg-[#1a56db] text-white font-semibold shadow-xs'
+                        : 'text-slate-400 hover:text-white hover:bg-[#101d42]'
+                    } ${isCollapsed ? 'justify-center px-2' : ''}`}
+                  >
+                    <Icon className="w-3.5 h-3.5 shrink-0" />
+                    {!isCollapsed && (
+                      <>
+                        <span className="truncate flex-1 text-left">{item.label}</span>
+                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30 whitespace-nowrap">
+                          Coming Soon
+                        </span>
+                      </>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>
