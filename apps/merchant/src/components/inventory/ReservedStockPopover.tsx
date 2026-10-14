@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Info, ExternalLink } from 'lucide-react';
+import { useOrderStore } from '../../stores/orderStore.js';
 
 interface ReservedStockPopoverProps {
   count?: number;
@@ -104,7 +105,10 @@ export const ReservedStockPopover: React.FC<ReservedStockPopoverProps> = ({
             <span className="text-[10px] text-slate-400">Order Allocation</span>
             <button
               type="button"
-              onClick={() => alert('Navigate to Orders tab to view allocated order reserves.')}
+              onClick={() => {
+                useOrderStore.getState().setActiveTab('new_orders');
+                setIsOpen(false);
+              }}
               className="inline-flex items-center gap-1 text-[11px] text-blue-400 hover:text-blue-300 font-semibold cursor-pointer"
             >
               <span>View Orders</span>

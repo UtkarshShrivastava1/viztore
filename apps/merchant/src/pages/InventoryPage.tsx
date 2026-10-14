@@ -19,6 +19,7 @@ import { StockHistoryDrawer } from '../components/inventory/StockHistoryDrawer.j
 import { BulkAdjustStockView } from '../components/inventory/BulkAdjustStockView.js';
 import { StockHistoryView } from '../components/inventory/StockHistoryView.js';
 import { BulkUploadModal } from '../components/catalog/BulkUploadModal.js';
+import { ProductLabelPrintModal } from '../components/catalog/ProductLabelPrintModal.js';
 
 export const InventoryPage: React.FC = () => {
   const { fetchProducts, products } = useCatalogStore();
@@ -35,10 +36,16 @@ export const InventoryPage: React.FC = () => {
   } = useInventoryStore();
 
   const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
+
+  const showToast = (text: string, type: 'success' | 'error' | 'info' = 'success') => {
+    setToastMessage({ text, type });
+    setTimeout(() => setToastMessage(null), 3500);
+  };
 
   const handleExportInventoryCsv = () => {
     if (items.length === 0) {
-      alert('No inventory items to export.');
+      showToast('No inventory items to export.', 'error');
       return;
     }
     const headers = [
@@ -82,6 +89,7 @@ export const InventoryPage: React.FC = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    showToast('Inventory exported to CSV successfully!', 'success');
   };
 
   React.useEffect(() => {
@@ -97,7 +105,22 @@ export const InventoryPage: React.FC = () => {
   }, [products, setItemsFromProducts]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 relative">
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div
+          className={`fixed top-5 right-5 z-50 px-4 py-2.5 rounded-xl shadow-lg border text-xs font-bold flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-200 ${
+            toastMessage.type === 'success'
+              ? 'bg-emerald-600 text-white border-emerald-500'
+              : toastMessage.type === 'error'
+              ? 'bg-rose-600 text-white border-rose-500'
+              : 'bg-slate-900 text-white border-slate-700'
+          }`}
+        >
+          <span>{toastMessage.text}</span>
+        </div>
+      )}
+
       {/* ─── View 1: Main Inventory Overview (Screen 4.0 & 4.3) ─── */}
       {viewMode === 'overview' && (
         <div className="space-y-4">
@@ -294,6 +317,9 @@ export const InventoryPage: React.FC = () => {
           fetchProducts();
         }}
       />
+
+      {/* ─── Thermal Barcode Label Print Modal ─── */}
+      <ProductLabelPrintModal />
     </div>
   );
 };

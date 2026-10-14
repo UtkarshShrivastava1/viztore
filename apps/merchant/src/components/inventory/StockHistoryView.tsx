@@ -151,8 +151,13 @@ export const StockHistoryView: React.FC = () => {
 
           <button
             type="button"
-            onClick={() => alert('History advanced filter presets')}
+            onClick={() => {
+              if (historyProductFilter !== 'All Products' || historyTypeFilter !== 'All Types' || historyRefTypeFilter !== 'All Reference Types') {
+                clearHistoryFilters();
+              }
+            }}
             className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-semibold text-blue-600 shadow-2xs transition-colors cursor-pointer"
+            title="Filter stock movements by transaction type or date"
           >
             <SlidersHorizontal className="w-4 h-4" />
             <span>Filters</span>

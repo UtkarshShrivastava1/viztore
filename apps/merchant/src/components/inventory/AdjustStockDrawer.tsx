@@ -11,6 +11,7 @@ export const AdjustStockDrawer: React.FC = () => {
   const [reference, setReference] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (adjustDrawerItem) {
@@ -20,6 +21,7 @@ export const AdjustStockDrawer: React.FC = () => {
       setReference('');
       setNotes('');
       setIsSubmitting(false);
+      setErrorMessage(null);
     }
   }, [adjustDrawerItem]);
 
@@ -46,8 +48,9 @@ export const AdjustStockDrawer: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage(null);
     if (!reason) {
-      alert('Please select a reason for stock adjustment');
+      setErrorMessage('Please select a reason for stock adjustment');
       return;
     }
     setIsSubmitting(true);
@@ -62,7 +65,7 @@ export const AdjustStockDrawer: React.FC = () => {
       );
     } catch (err) {
       console.error('Failed to adjust stock:', err);
-      alert('Failed to adjust stock. Please try again.');
+      setErrorMessage('Failed to adjust stock. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -91,6 +94,19 @@ export const AdjustStockDrawer: React.FC = () => {
 
         {/* Drawer Scrollable Body */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-5 text-xs">
+          {errorMessage && (
+            <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center justify-between">
+              <span>{errorMessage}</span>
+              <button
+                type="button"
+                onClick={() => setErrorMessage(null)}
+                className="text-rose-500 hover:text-rose-700 font-bold ml-2 cursor-pointer"
+              >
+                &times;
+              </button>
+            </div>
+          )}
+
           {/* Product Header Card */}
           <div className="flex items-start gap-3.5 p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl">
             <img

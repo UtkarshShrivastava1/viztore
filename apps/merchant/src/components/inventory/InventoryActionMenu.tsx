@@ -10,6 +10,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { InventoryItem, useInventoryStore } from '../../stores/inventoryStore.js';
+import { useCatalogStore } from '../../stores/catalogStore.js';
 import { TableActionPopover } from '../ui/TableActionPopover.js';
 
 interface InventoryActionMenuProps {
@@ -70,7 +71,7 @@ export const InventoryActionMenu: React.FC<InventoryActionMenuProps> = ({ item }
             type="button"
             onClick={() => {
               setIsOpen(false);
-              alert(`Edit product: ${item.name}`);
+              openDetailModal(item);
             }}
             className="w-full px-3 py-1.5 flex items-center gap-2.5 hover:bg-slate-50 hover:text-blue-600 transition-colors text-left cursor-pointer"
           >
@@ -122,7 +123,13 @@ export const InventoryActionMenu: React.FC<InventoryActionMenuProps> = ({ item }
             type="button"
             onClick={() => {
               setIsOpen(false);
-              window.print();
+              const catalogProducts = useCatalogStore.getState().products;
+              const matched = catalogProducts.find((p) => p.id === item.id || p.sku === item.sku);
+              if (matched) {
+                useCatalogStore.getState().openPrintLabelModal(matched);
+              } else {
+                window.print();
+              }
             }}
             className="w-full px-3 py-1.5 flex items-center gap-2.5 hover:bg-slate-50 hover:text-blue-600 transition-colors text-left cursor-pointer"
           >

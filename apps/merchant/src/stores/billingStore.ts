@@ -550,26 +550,19 @@ export const useBillingStore = create<BillingStoreState>((set, get) => ({
       console.warn('Backend POS API non-blocking fallback to local state:', apiErr);
     }
 
-    // 2. Synchronize inventory store: decrement stock for purchased items
+    // 2. Synchronize inventory store: decrement stock for purchased items & record audit transaction
     try {
       const inventoryStore = useInventoryStore.getState();
-      posData.items.forEach((item) => {
-        if (item.productId && item.quantity > 0) {
-          const invItem = inventoryStore.items.find(
-            (i) => i.id === item.productId || i.sku === item.productId
-          );
-          if (invItem) {
-            inventoryStore.adjustStock(
-              invItem.id,
-              'decrease',
-              item.quantity,
-              `POS Counter Sale`,
-              responseInvoice?.invoiceNo || `POS-${Date.now()}`,
-              `Point of Sale deduction`
-            );
-          }
-        }
-      });
+      inventoryStore.recordSaleDeduction(
+        posData.items.map((it) => ({
+          productId: it.productId,
+          sku: it.productId,
+          quantity: it.quantity,
+        })),
+        responseInvoice?.invoiceNo || `POS-${Date.now()}`,
+        'pos',
+        'In-store counter checkout'
+      );
     } catch (e) {
       console.warn('POS Inventory stock decrement notice:', e);
     }

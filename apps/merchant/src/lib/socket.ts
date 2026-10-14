@@ -1,6 +1,8 @@
 import { io, Socket } from 'socket.io-client';
 import { playOrderAlertChime } from './audioAlert.js';
 import { useOrderStore } from '../stores/orderStore.js';
+import { useCatalogStore } from '../stores/catalogStore.js';
+import { useInventoryStore } from '../stores/inventoryStore.js';
 
 export interface OrderPlacedSocketPayload {
   orderId: string;
@@ -89,11 +91,19 @@ class MerchantSocketClient {
           }
         }
 
-        // 3. Refresh active orders in store
+        // 3. Refresh active orders and synchronise catalog/inventory stock
         if (this.currentStoreId) {
           useOrderStore.getState().fetchOrders(this.currentStoreId);
+          useCatalogStore.getState().fetchProducts(this.currentStoreId);
         } else {
           useOrderStore.getState().fetchOrders();
+          useCatalogStore.getState().fetchProducts();
+        }
+
+        try {
+          useInventoryStore.getState().recordOrderOnlineNotification(payload);
+        } catch (invErr) {
+          console.warn('Socket inventory sync notice:', invErr);
         }
 
         // 4. Dispatch to all registered UI subscribers

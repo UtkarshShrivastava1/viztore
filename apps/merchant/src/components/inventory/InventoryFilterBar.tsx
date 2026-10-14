@@ -166,11 +166,18 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({ showProd
       <div className="flex items-center gap-3 ml-auto self-end h-[38px]">
         <button
           type="button"
-          onClick={() => alert('Filter settings')}
-          className="h-[38px] px-3.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+          onClick={() => {
+            if (isFiltered) clearFilters();
+          }}
+          className={`h-[38px] px-3.5 rounded-lg border text-xs font-semibold flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer ${
+            isFiltered
+              ? 'border-blue-300 bg-blue-50/70 text-blue-700'
+              : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
+          }`}
+          title={isFiltered ? 'Active filters applied - click to reset' : 'Filter by category, brand, and stock status'}
         >
           <SlidersHorizontal className="w-3.5 h-3.5 text-blue-600" />
-          <span>Filters</span>
+          <span>Filters {isFiltered ? '(Active)' : ''}</span>
         </button>
 
         {isFiltered && (

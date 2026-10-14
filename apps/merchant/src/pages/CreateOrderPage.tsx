@@ -10,6 +10,7 @@ import {
   X,
 } from 'lucide-react';
 import { useOrderStore } from '../stores/orderStore.js';
+import { useInventoryStore } from '../stores/inventoryStore.js';
 
 interface CreateOrderPageProps {
   onBack?: () => void;
@@ -116,7 +117,11 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
       .slice(0, 2)
       .toUpperCase();
 
+    const nextNum = Math.floor(10330 + Math.random() * 900);
+    const assignedOrderNumber = `#ORD-${nextNum}`;
+
     addManualOrder({
+      orderNumber: assignedOrderNumber,
       orderType: deliveryType === 'delivery' ? 'Online Order' : 'Manual In-Store',
       status: 'new',
       customer: {
@@ -162,6 +167,22 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
         merchantNotes: internalNotes,
       },
     });
+
+    // Synchronize inventory store: decrement stock and log audit transaction
+    try {
+      useInventoryStore.getState().recordSaleDeduction(
+        items.map((i) => ({
+          productId: i.id,
+          sku: i.id,
+          quantity: i.quantity,
+        })),
+        assignedOrderNumber.replace('#', ''),
+        'manual_order',
+        'Manual order created'
+      );
+    } catch (invErr) {
+      console.warn('Inventory sync error on order creation:', invErr);
+    }
 
     setIsSuccess(true);
     setTimeout(() => {

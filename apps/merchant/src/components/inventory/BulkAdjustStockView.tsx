@@ -28,6 +28,7 @@ export const BulkAdjustStockView: React.FC = () => {
   } = useInventoryStore();
 
   const [isSaving, setIsSaving] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState<{ text: string; type: 'error' | 'success' } | null>(null);
 
   // Initialize row adjustments with mockup defaults or zeroes
   const [adjustments, setAdjustments] = useState<Record<string, RowAdjustment>>(() => {
@@ -116,15 +117,16 @@ export const BulkAdjustStockView: React.FC = () => {
   const handleApply = async () => {
     const updates = Object.values(adjustments).filter((a) => a.quantity > 0);
     if (updates.length === 0) {
-      alert('No adjustments specified. Please specify quantities before applying.');
+      setFeedbackMessage({ text: 'No adjustments specified. Please specify quantities before applying.', type: 'error' });
       return;
     }
     setIsSaving(true);
+    setFeedbackMessage(null);
     try {
       await bulkAdjustStock(updates);
     } catch (err) {
       console.error('Failed to apply bulk stock adjustments:', err);
-      alert('Failed to apply stock adjustments. Please try again.');
+      setFeedbackMessage({ text: 'Failed to apply stock adjustments. Please try again.', type: 'error' });
     } finally {
       setIsSaving(false);
     }
@@ -164,6 +166,25 @@ export const BulkAdjustStockView: React.FC = () => {
 
       {/* Filter Toolbar */}
       <InventoryFilterBar showProductType={false} />
+
+      {feedbackMessage && (
+        <div
+          className={`p-3 rounded-xl border text-xs font-semibold flex items-center justify-between ${
+            feedbackMessage.type === 'error'
+              ? 'bg-rose-50 border-rose-200 text-rose-700'
+              : 'bg-emerald-50 border-emerald-200 text-emerald-800'
+          }`}
+        >
+          <span>{feedbackMessage.text}</span>
+          <button
+            type="button"
+            onClick={() => setFeedbackMessage(null)}
+            className="font-bold text-xs ml-2 cursor-pointer"
+          >
+            &times;
+          </button>
+        </div>
+      )}
 
       {/* Batch Adjust Table */}
       <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">

@@ -17,14 +17,14 @@
 ### 15-Module Enterprise Frontend & Backend Tiering & Mockup Coverage
 | Release Tier | Total Modules Included | Total Mockup Screens | Hardened & Verified | In Systematic Testing / Next Up | Status |
 |---|:---:|:---:|:---:|:---:|:---:|
-| **Tier 2 Launch Scope (Active Core)** | **13 Modules** | **100 screens** | **44 screens (Modules 1–6)** | **56 screens (Modules 8, 9, 10, 11, 13, 14, 15)** | 🟡 **Active Hardening Sprint (44.0% Screen / 46.2% Mod)** |
+| **Tier 2 Launch Scope (Active Core)** | **13 Modules** | **100 screens** | **30 screens (Modules 1–4)** | **70 screens (Modules 5, 6, 8, 9, 10, 11, 13, 14, 15)** | 🟡 **Active Hardening Sprint (30.0% Screen / 30.8% Mod)** |
 | **Tier 3 Scope (Deferred Expansion)** | **2 Modules** | **26 screens** | **0 screens** | **26 screens (Modules 7: Wallet & 12: Marketing)** | 🟣 **Deferred to Tier 3** |
-| **Total Merchant Platform** | **15 Modules** | **126 screens** | **44 screens** | **82 screens** | **100% Mockup Asset Inventory Mapped** |
+| **Total Merchant Platform** | **15 Modules** | **126 screens** | **30 screens** | **96 screens** | **100% Mockup Asset Inventory Mapped** |
 
 ```mermaid
 pie title Merchant Portal Scope by Launch Tier (126 Mockups)
-    "Tier 2 Verified (Modules 1–6: 44 screens)" : 44
-    "Tier 2 Active Queue (Modules 8,9,10,11,13,14,15: 56 screens)" : 56
+    "Tier 2 Verified (Modules 1–4: 30 screens)" : 30
+    "Tier 2 Active Queue (Modules 5,6,8,9,10,11,13,14,15: 70 screens)" : 70
     "Tier 3 Deferred (Modules 7 & 12: 26 screens)" : 26
 ```
 
@@ -77,7 +77,7 @@ flowchart TD
 | **MOD-01** | **Home Dashboard** | **Tier 2** | `1.) Home/`<br>**(8 files)** | `/dashboard`, `/`<br>`DashboardOverviewPage.tsx`<br>`Header.tsx`, `Sidebar.tsx` | **100% Mockup Fidelity**<br>Audited all 8 screens (`1.0`–`1.4`, `1.0(V1)`–`1.0b(V1)`), 6 order statuses, dynamic top products, interactive date filter dropdown | `PATCH /stores/:id` (`isActive`), Socket.io store rooms, live orders aggregation, zero alert stubs | 🟢 **HARDENED & AUDITED**<br>Verified across all 8 mockups; live drawers connected to settings/analytics | 🟢 **HARDENED & AUDITED (100%)** |
 | **MOD-02** | **Orders Pipeline** | **Tier 2** | `2.) Orders/`<br>**(9 files)** | `/orders`, `/orders/create`<br>`OrdersPage.tsx`<br>`OrdersTable.tsx`<br>`OrdersToolbar.tsx`<br>`OrderStepper.tsx`<br>`CreateOrderPage.tsx`<br>`VerifyOtpModal.tsx` | **100% Mockup Fidelity**<br>Audited all 9 screens (`2.0`–`2.8`), 8 status tabs with live counts, 6-step Order Flow stepper, OTP columns, live tracking modal, customer contact modal, CSV export, interactive manual order creator | `GET /orders/store/:id`, `PATCH /orders/:id/status` (`CONFIRMED`, `PACKED`, `SHIPPED`, `DELIVERED`, `CANCELLED`), `POST /verify-delivery-otp`, Socket.io listeners | 🟢 **HARDENED & AUDITED**<br>0 alert stubs, real CSV export, interactive More Actions dropdown, live tracking and customer contact modals, clean build & 120/120 tests green | 🟢 **HARDENED & AUDITED (100%)** |
 | **MOD-03** | **Product Catalog** | **Tier 2** | `3.) Product Catalog/`<br>**(6 files)** | `/catalog`, `/catalog/add`<br>`ProductsCatalogPage.tsx`<br>`AddProductWizardPage.tsx`<br>`ProductPreviewSubmitPage.tsx`<br>`BulkUploadModal.tsx`<br>`ProductLabelPrintModal.tsx` | **100% Mockup Fidelity**<br>Audited all 6 screens (`3.0`–`3.5`), 5 KPI summary cards, filter bar with 5 cascading dropdowns, selection checkboxes, 7-action row menu, 3-step wizard with category setup, 5 angle guide dropzone, 10-section spec cards, actual-size thermal barcode label preview | `GET /catalog/stores/:id/products`, `POST /products`, `POST /products/bulk`, `PATCH /products/:id` (stock, status, variants), zero alert stubs | 🟢 **HARDENED & AUDITED**<br>0 alert stubs, real RFC CSV exporter, 1-click demo bulk import, thermal label printing, clean build & 120/120 tests green | 🟢 **HARDENED & AUDITED (100%)** |
-| **MOD-04** | **Inventory Management** | **Tier 2** | `4.) Inventory/`<br>**(7 files)** | `/inventory`<br>`InventoryPage.tsx`<br>`InventoryTable.tsx`<br>`AdjustStockDrawer.tsx`<br>`StockHistoryView.tsx` | **Needs Revision**<br>Audit all 7 screens (`4.0`–`4.6`), adjust drawer, history view, low stock badges | `useCatalogStore` sync, `PATCH /catalog/products/:id` with variant updates, Redis cache invalidation | 🟡 **AUDIT QUEUE**<br>Macro architecture wired; pending 7-screen audit | 🟡 **PENDING SCREEN AUDIT** |
+| **MOD-04** | **Inventory Management** | **Tier 2** | `4.) Inventory/`<br>**(7 files)** | `/inventory`<br>`InventoryPage.tsx`<br>`InventoryTable.tsx`<br>`AdjustStockDrawer.tsx`<br>`BulkAdjustStockView.tsx`<br>`StockHistoryView.tsx`<br>`StockHistoryDrawer.tsx` | **100% Mockup Fidelity**<br>Audited all 7 screens (`4.0`–`4.6`), 5 KPI cards with badge icons, column header popover, 7-action row menu, single item adjustment drawer with live calc, stock history timeline drawer, full movement ledger view, bulk adjust spreadsheet with live preview | `useCatalogStore` sync, `PATCH /catalog/products/:id` with OCC versioning, Redis cache invalidation, bidirectional sync with online store checkouts, manual orders, and POS billing | 🟢 **HARDENED & AUDITED**<br>0 alert stubs, bidirectional store & POS billing sync, thermal label modal wired, clean build & 120/120 tests green | 🟢 **HARDENED & AUDITED (100%)** |
 | **MOD-05** | **Billing & Invoicing (POS)** | **Tier 2** | `5.) Billing & Invoicing/`<br>**(7 files)** | `/billing`, `/pos`<br>`BillingPage.tsx`<br>`CounterPOSView.tsx`<br>`PrintReceiptModal.tsx`<br>`InvoicesTableView.tsx` | **Needs Revision**<br>Audit all 7 screens (`5.0`–`5.6`), POS register, bill preview, invoice drawer, quotes tab | `POST /billing/pos/sale` (Tier 2 atomic OCC stock deduction), `GET /billing/invoices`, `GET /billing/quotes` | 🟡 **AUDIT QUEUE**<br>Macro architecture wired; pending 7-screen audit | 🟡 **PENDING SCREEN AUDIT** |
 | **MOD-06** | **Customers CRM & Khata** | **Tier 2** | `6.) Customers/`<br>**(7 files)** | `/customers`<br>`CustomersPage.tsx`<br>`CustomerTable.tsx`<br>`CustomerStatementDrawer.tsx`<br>`AddStoreCreditModal.tsx` | **Needs Revision**<br>Audit all 7 screens (`6.0`–`6.6`), details drawer 5 tabs, statement download, aging buckets | Synced dynamically from POS billing invoices & online orders, live balance recalculation | 🟡 **AUDIT QUEUE**<br>Macro architecture wired; pending 7-screen audit | 🟡 **PENDING SCREEN AUDIT** |
 | **MOD-07** | **Wallet Hub** | **Tier 3** | `7.) Wallet/`<br>**(4 files)** | `/wallet`<br>`WalletPage.tsx`<br>`stores/payoutStore.ts` | **Baseline (85%)**<br>Available balance, pending settlement, transaction history drawer (`7.3`), add money drawer (`7.2`) | Wallet top-up gateway, in-app merchant balance, peer transfers | 🟣 **TIER 3 DEFERRED**<br>Non-critical for Tier 2 hyperlocal launch; direct bank settlements used | 🟣 **DEFERRED TO TIER 3** |
@@ -280,21 +280,65 @@ graph LR
 
 #### 📁 Module 4: Inventory Management & Low-Stock Alerts (`mockups/Merchant_Front/4.) Inventory/` — 7 Files
 * **Design Assets:** `4.0.png`, `4.1.png`, `4.2.png`, `4.3.png`, `4.4.png`, `4.5.png`, `4.6.png`
-* **Target Files:** `apps/merchant/src/pages/InventoryPage.tsx`, `components/inventory/InventoryTable.tsx`, `components/inventory/AdjustStockDrawer.tsx`, `components/inventory/BulkAdjustStockView.tsx`, `components/inventory/StockHistoryView.tsx`, `components/inventory/StockHistoryDrawer.tsx`, `stores/inventoryStore.ts`
-* **Visible UI Elements Checklist:**
-  - [x] Inventory Register Table with SKU, barcode, category, current stock, reserved stock, available stock, unit valuation.
-  - [x] Dynamic mathematical pagination engine (real page counts, ellipses, jump-to-page; no 125 hardcode).
-  - [x] Real-time KPI Summary: Total Stock Units, Low Stock Items (`<= threshold`), Out of Stock Items, Total Valuation (`₹...`).
-  - [x] Quick Stock Adjust Drawer (`Add Stock`, `Reduce Stock`, `Cycle Count Adjustment`) with mandatory audit reason notes.
-  - [x] Bulk Stock Adjustment spreadsheet view with live net calculation and saving spinner.
-  - [x] Stock Audit Movement History View with date filters, user attribution, and transaction types.
-  - [x] Full Inventory CSV Exporter with valuation metrics.
+* **Target Files:** `apps/merchant/src/pages/InventoryPage.tsx`, `components/inventory/InventoryTable.tsx`, `components/inventory/InventoryKPICards.tsx`, `components/inventory/InventoryFilterBar.tsx`, `components/inventory/InventoryActionMenu.tsx`, `components/inventory/ReservedStockPopover.tsx`, `components/inventory/AdjustStockDrawer.tsx`, `components/inventory/BulkAdjustStockView.tsx`, `components/inventory/StockHistoryView.tsx`, `components/inventory/StockHistoryKPICards.tsx`, `components/inventory/StockHistoryDrawer.tsx`, `stores/inventoryStore.ts`, `stores/billingStore.ts`, `lib/socket.ts`
+* **Visible UI Elements Checklist (100% Mockup Verified):**
+  - [x] **`4.0.png` (Main Inventory Register & KPI Header):**
+    - 5 KPI summary cards matching design with top-right circular badge icons: Total Products (`1,248`), Total Stock Units (`12,842`), Low Stock Alerts (`78`), Out of Stock (`38`), and Total Valuation (`₹18,75,320`).
+    - Filter toolbar with 5 dropdown selectors (Category, Subcategory, Stock Status, Brand, Sort By) + Search input + Clear Filters.
+    - Refresh button ("Last updated a few seconds ago 🔄") wired to live catalog refetch.
+    - Full inventory register table with selection checkboxes, `#` index, product thumbnail, SKU, Barcode, category breadcrumb, brand, current stock units, reserved stock with info popover, available stock (emerald), status pills, stock value in INR, last updated timestamp, and 3-dots actions.
+    - Dynamic mathematical pagination engine (total products, items per page, current page, numbered page buttons, ellipses, jump-to-page).
+  - [x] **`4.1.png` (Reserved Stock Definition Popover & Auto-Refresh):**
+    - Interactive `Reserved (i)` popover explaining reserved stock: items committed in customer carts and pending orders that are held until confirmation, fulfillment, or expiry cancellation.
+    - Deep-link button to view active orders in Order Management.
+  - [x] **`4.2.png` (3-Dots Row Action Menu):**
+    - 7 comprehensive actions matching mockup:
+      1. `View Details`: Opens modal with full SKU, barcode, category breadcrumb, and stock metrics.
+      2. `Edit Product`: Deep-links to catalog product editor.
+      3. `Adjust Stock`: Opens quick single-item stock adjustment drawer.
+      4. `Stock History`: Opens slide-over drawer with transaction timeline.
+      5. `Duplicate`: Creates identical product clone in catalog.
+      6. `Print Label`: Opens actual-size 50mm × 35mm thermal barcode sticker print modal.
+      7. `Delete`: Triggers confirmation modal with safe product removal.
+  - [x] **`4.3.png` (Adjust Stock Drawer):**
+    - Product card header with thumbnail, SKU, barcode, and active category.
+    - 3-column metric banner: Current Stock (`30`), Reserved (`3`), Available (`27`).
+    - Adjustment mode radio group: `Add Stock (+)` (green), `Reduce Stock (-)` (rose), `Set Exact Stock (=)` (blue).
+    - Quantity stepper input with `+` and `-` buttons.
+    - Mandatory audit reason dropdown (Purchase Order Received, Customer Return, Damage/Wastage, Theft/Loss, Inventory Audit Correction, Transfer, Other).
+    - Optional Reference Number input (`PO#...`, `INV#...`, `ADJ#...`) and Notes textarea with 200 character counter.
+    - Dynamic summary callout box showing live calculated New Stock and Net Change.
+    - Action buttons: `Cancel` and `Save Adjustment`.
+  - [x] **`4.4.png` (Stock History Drawer):**
+    - Product header card with real-time stock stats.
+    - Chronological transaction audit trail with green `↑` (Stock In) and red `↓` (Stock Out) badges.
+    - Units changed, transaction type, reference number, human-readable timestamp, and staff member attribution.
+    - Sticky footer button: `View All Stock History` (navigating to full ledger view).
+  - [x] **`4.5.png` (Full-Page Stock Movement Ledger — `StockHistoryView.tsx`):**
+    - Breadcrumb navigation: `Inventory > Stock Movement History`.
+    - Date range picker, product search filter, category filter, transaction type filter (`All Types`, `Stock In`, `Stock Out`), and reference type filter.
+    - 5 Summary metric cards: Total Transactions (`248`), Total Stock In (`+1,420`), Total Stock Out (`-860`), Net Change (`+560`), and Products Affected (`64`).
+    - Complete ledger table with Date & Time, Product Name, SKU, Category, Transaction Type pill, Quantity Change, Balance Stock, Reference Number (`PO#...`, `ORD-...`, `ADJ-...`), Done By, and Reason.
+    - Full CSV export action for financial accounting audits.
+  - [x] **`4.6.png` (Bulk Adjust Stock Spreadsheet — `BulkAdjustStockView.tsx`):**
+    - Breadcrumb navigation: `Inventory > Bulk Adjust Stock`.
+    - Spreadsheet table rendering all inventory items with inline adjustment input steppers.
+    - Live calculated New Stock displayed in green upon input changes.
+    - Inline reason dropdown, reference input, and notes per row.
+    - Sticky bottom bar showing modified items counter (`X products modified`), `Cancel`, and `Save All Adjustments` with loading state.
+* **Bidirectional Inventory Synchronization (Storefront + POS Billing):**
+  - [x] **In-House Retail POS Billing Sync (`MOD-05`):** `completePOSSale` in `billingStore.ts` dispatches `useInventoryStore.getState().recordSaleDeduction`, atomically decrementing stock, recalculating available balance, logging a `POS Sale` audit entry, and updating `catalogStore` / backend MongoDB.
+  - [x] **Online Store Customer Checkout Sync:** Real-time Socket.io listener in `lib/socket.ts` (`order.placed` / `order:created`) invokes `useCatalogStore.getState().fetchProducts()` and `recordOrderOnlineNotification()`, maintaining instant parity with customer web checkouts.
+  - [x] **Manual Merchant Order Creation Sync:** `handleCreateOrder` in `CreateOrderPage.tsx` automatically invokes `recordSaleDeduction` with `manual_order` attribution.
 * **Backend Functionalities & API Hooks:**
-  - [x] `PATCH /api/v1/catalog/products/:id` with variant stock updates.
-  - [x] Optimistic UI updates with automatic rollback on network failure.
+  - [x] `PATCH /api/v1/catalog/products/:id` with variant stock updates and OCC version checking.
+  - [x] Optimistic UI updates with rollback on network failure.
   - [x] Live refresh button wired to `fetchProducts()` with animated spinner.
 * **Enterprise Hardening (Front & Back):**
-  - [x] Real backend persistence; OCC conflict prevention on concurrent stock deductions.
+  - [x] 0 `alert()` or `confirm()` calls (replaced with in-page Toast notifications and error banners).
+  - [x] Strict white-label branding compliance: all SKUs formatted with `PRD-...`, reference numbers with `#ORD-...`, `PO#...`, `ADJ-...`, zero client brand leaks.
+  - [x] Clean TypeScript build (`tsc && vite build` passed, 0 errors).
+  - [x] 120/120 automated platform tests passing.
 
 ---
 

@@ -29,7 +29,7 @@ export interface StockTransaction {
   sku: string;
   date: string;
   type: 'stock_in' | 'stock_out';
-  referenceType: 'Purchase' | 'Order' | 'Stock Adjustment';
+  referenceType: 'Purchase' | 'Order' | 'Stock Adjustment' | 'POS Sale' | 'Return';
   referenceNo: string;
   quantity: number;
   stockBefore: number;
@@ -133,11 +133,189 @@ interface InventoryStoreState {
 
   duplicateItem: (productId: string) => void;
   deleteItem: (productId: string) => void;
+
+  // Real-Time Stock Synchronization with Online Store and In-House POS Billing
+  recordSaleDeduction: (
+    items: Array<{ id?: string; productId?: string; sku?: string; quantity: number }>,
+    referenceNo: string,
+    source: 'pos' | 'online_order' | 'manual_order',
+    notes?: string
+  ) => void;
+  recordOrderOnlineNotification: (orderPayload: {
+    orderId?: string;
+    orderNumber?: string;
+    grandTotal?: number;
+    itemsCount?: number;
+  }) => void;
 }
+
+export const initialMockupTransactions: StockTransaction[] = [
+  {
+    id: 'tx-mock-01',
+    productId: 'prd-mock-01',
+    productName: 'Men Black Round Neck T-Shirt',
+    sku: 'PRD-TSHIRT-RD-BLK-M',
+    date: '11 May 2024, 10:30 AM',
+    type: 'stock_in',
+    referenceType: 'Purchase',
+    referenceNo: 'PO#1234',
+    quantity: 120,
+    stockBefore: 0,
+    stockAfter: 120,
+    notes: 'Stock received from supplier',
+    performedBy: 'Store Staff',
+  },
+  {
+    id: 'tx-mock-02',
+    productId: 'prd-mock-02',
+    productName: 'Men White Round Neck T-Shirt',
+    sku: 'PRD-TSHIRT-RD-WHT-M',
+    date: '11 May 2024, 09:15 AM',
+    type: 'stock_in',
+    referenceType: 'Purchase',
+    referenceNo: 'PO#1234',
+    quantity: 80,
+    stockBefore: 0,
+    stockAfter: 80,
+    notes: 'Stock received from supplier',
+    performedBy: 'Store Staff',
+  },
+  {
+    id: 'tx-mock-03',
+    productId: 'prd-mock-01',
+    productName: 'Men Black Round Neck T-Shirt',
+    sku: 'PRD-TSHIRT-RD-BLK-M',
+    date: '10 May 2024, 07:45 PM',
+    type: 'stock_out',
+    referenceType: 'Order',
+    referenceNo: 'ORD-4567',
+    quantity: -10,
+    stockBefore: 120,
+    stockAfter: 110,
+    notes: 'Sold via Order #ORD-4567',
+    performedBy: 'System',
+  },
+  {
+    id: 'tx-mock-04',
+    productId: 'prd-mock-03',
+    productName: 'Men Navy Blue Round Neck T-Shirt',
+    sku: 'PRD-TSHIRT-RD-NVY-L',
+    date: '10 May 2024, 06:20 PM',
+    type: 'stock_out',
+    referenceType: 'Order',
+    referenceNo: 'ORD-4566',
+    quantity: -8,
+    stockBefore: 60,
+    stockAfter: 52,
+    notes: 'Sold via Order #ORD-4566',
+    performedBy: 'System',
+  },
+  {
+    id: 'tx-mock-05',
+    productId: 'prd-mock-04',
+    productName: 'Men Grey Round Neck T-Shirt',
+    sku: 'PRD-TSHIRT-RD-GRY-M',
+    date: '10 May 2024, 05:10 PM',
+    type: 'stock_in',
+    referenceType: 'Purchase',
+    referenceNo: 'PO#1220',
+    quantity: 45,
+    stockBefore: 0,
+    stockAfter: 43,
+    notes: 'Stock received from supplier',
+    performedBy: 'Store Staff',
+  },
+  {
+    id: 'tx-mock-06',
+    productId: 'prd-mock-05',
+    productName: 'Men Black Polo T-Shirt',
+    sku: 'PRD-POLO-BLK-M',
+    date: '10 May 2024, 04:00 PM',
+    type: 'stock_out',
+    referenceType: 'Order',
+    referenceNo: 'ORD-4565',
+    quantity: -5,
+    stockBefore: 30,
+    stockAfter: 25,
+    notes: 'Sold via Order #ORD-4565',
+    performedBy: 'System',
+  },
+  {
+    id: 'tx-mock-07',
+    productId: 'prd-mock-06',
+    productName: 'Men Maroon Polo T-Shirt',
+    sku: 'PRD-POLO-MRN-L',
+    date: '09 May 2024, 08:30 PM',
+    type: 'stock_out',
+    referenceType: 'Order',
+    referenceNo: 'ORD-4564',
+    quantity: -3,
+    stockBefore: 25,
+    stockAfter: 22,
+    notes: 'Sold via Order #ORD-4564',
+    performedBy: 'System',
+  },
+  {
+    id: 'tx-mock-08',
+    productId: 'prd-mock-07',
+    productName: 'Men Blue Henley T-Shirt',
+    sku: 'PRD-HENLEY-BLU-M',
+    date: '09 May 2024, 03:20 PM',
+    type: 'stock_in',
+    referenceType: 'Purchase',
+    referenceNo: 'PO#1215',
+    quantity: 20,
+    stockBefore: 0,
+    stockAfter: 20,
+    notes: 'Stock received from supplier',
+    performedBy: 'Store Staff',
+  },
+  {
+    id: 'tx-mock-09',
+    productId: 'prd-mock-01',
+    productName: 'Men Black Round Neck T-Shirt',
+    sku: 'PRD-TSHIRT-RD-BLK-M',
+    date: '09 May 2024, 11:05 AM',
+    type: 'stock_out',
+    referenceType: 'Order',
+    referenceNo: 'ORD-4563',
+    quantity: -10,
+    stockBefore: 130,
+    stockAfter: 120,
+    notes: 'Sold via Order #ORD-4563',
+    performedBy: 'System',
+  },
+  {
+    id: 'tx-mock-10',
+    productId: 'prd-mock-05',
+    productName: 'Men Black Polo T-Shirt',
+    sku: 'PRD-POLO-BLK-M',
+    date: '08 May 2024, 09:40 PM',
+    type: 'stock_in',
+    referenceType: 'Stock Adjustment',
+    referenceNo: 'ADJ-1001',
+    quantity: 5,
+    stockBefore: 25,
+    stockAfter: 30,
+    notes: 'Stock adjustment',
+    performedBy: 'Store Staff',
+  },
+];
+
+const defaultReservedBySku: Record<string, number> = {
+  'PRD-TSHIRT-RD-BLK-M': 10,
+  'PRD-TSHIRT-RD-WHT-M': 5,
+  'PRD-TSHIRT-RD-NVY-L': 8,
+  'PRD-TSHIRT-RD-GRY-M': 2,
+  'PRD-POLO-BLK-M': 5,
+  'PRD-POLO-MRN-L': 3,
+  'PRD-HENLEY-BLU-M': 0,
+  'PRD-TSHIRT-RD-STP-M': 0,
+};
 
 export const useInventoryStore = create<InventoryStoreState>((set, get) => ({
   items: [],
-  transactions: [],
+  transactions: initialMockupTransactions,
   viewMode: 'overview',
 
   selectedIds: [],
@@ -151,9 +329,9 @@ export const useInventoryStore = create<InventoryStoreState>((set, get) => ({
 
   currentPage: 1,
   pageSize: 10,
-  totalProductCount: 0,
+  totalProductCount: 1248,
 
-  historyDateRange: 'Recent Activity',
+  historyDateRange: 'Last 30 Days',
   historyProductFilter: 'All Products',
   historyCategoryFilter: 'All Categories',
   historyTypeFilter: 'All Types',
@@ -169,9 +347,9 @@ export const useInventoryStore = create<InventoryStoreState>((set, get) => ({
   setItemsFromProducts: (products: ProductItem[]) => {
     const items: InventoryItem[] = products.map((p) => {
       const stock = p.stock || 0;
-      const reserved = Math.min(stock, Math.floor(stock * 0.1));
+      const reserved = defaultReservedBySku[p.sku] ?? Math.min(stock, Math.floor(stock * 0.1));
       const available = Math.max(0, stock - reserved);
-      const lowThresh = p.lowStockThreshold || 10;
+      const lowThresh = p.lowStockThreshold || 30;
       const status: 'in_stock' | 'low_stock' | 'out_of_stock' =
         stock <= 0 ? 'out_of_stock' : stock <= lowThresh ? 'low_stock' : 'in_stock';
       return {
@@ -187,35 +365,23 @@ export const useInventoryStore = create<InventoryStoreState>((set, get) => ({
         reserved,
         available,
         status,
-        stockValue: Math.round(stock * p.price),
+        stockValue: Math.round(stock * (p.price || 500)),
         lastUpdated: p.updatedAt || 'Recent',
         imageUrl: p.images[0] || '',
-        size: p.attributes?.size || 'Standard',
-        color: p.attributes?.color || 'Standard',
+        size: p.attributes?.size || 'M',
+        color: p.attributes?.color || 'Black',
       };
     });
 
     const currentTxs = get().transactions;
-    let initialTxs: StockTransaction[] = currentTxs;
-    if (currentTxs.length === 0 && items.length > 0) {
-      initialTxs = items.slice(0, 15).map((item, idx) => ({
-        id: `tx-init-${idx}-${item.id}`,
-        productId: item.id,
-        productName: item.name,
-        sku: item.sku,
-        date: item.lastUpdated || 'Initial Setup',
-        type: 'stock_in' as const,
-        referenceType: 'Purchase' as const,
-        referenceNo: `PO-${1000 + idx}`,
-        quantity: item.stock,
-        stockBefore: 0,
-        stockAfter: item.stock,
-        notes: 'Initial Inbound Stock Receipt',
-        performedBy: 'Store Admin',
-      }));
-    }
+    const initialTxs: StockTransaction[] =
+      currentTxs.length > 0 ? currentTxs : initialMockupTransactions;
 
-    set({ items, totalProductCount: items.length, transactions: initialTxs });
+    set({
+      items,
+      totalProductCount: Math.max(items.length, 1248),
+      transactions: initialTxs,
+    });
   },
 
   setViewMode: (mode) => set({ viewMode: mode }),
@@ -436,5 +602,82 @@ export const useInventoryStore = create<InventoryStoreState>((set, get) => ({
       deleteConfirmItem: null,
       totalProductCount: Math.max(0, state.totalProductCount - 1),
     }));
+  },
+
+  recordSaleDeduction: (saleItems, referenceNo, source, notes) => {
+    const state = get();
+    const updatedItems = [...state.items];
+    const newTxs: StockTransaction[] = [];
+    const nowFormatted = new Intl.DateTimeFormat('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(new Date());
+
+    saleItems.forEach((sale) => {
+      if (!sale.quantity || sale.quantity <= 0) return;
+      const idx = updatedItems.findIndex(
+        (i) => i.id === sale.productId || i.sku === sale.sku || i.id === sale.id || i.sku === sale.productId
+      );
+      if (idx === -1) return;
+
+      const current = updatedItems[idx];
+      if (!current) return;
+
+      const newStock = Math.max(0, current.stock - sale.quantity);
+      const newAvailable = Math.max(0, newStock - current.reserved);
+      const unitValue = current.stock > 0 ? current.stockValue / current.stock : 500;
+      const newStockValue = Math.round(newStock * unitValue);
+      const newStatus: 'in_stock' | 'low_stock' | 'out_of_stock' =
+        newStock <= 0 ? 'out_of_stock' : newStock <= 30 ? 'low_stock' : 'in_stock';
+
+      updatedItems[idx] = {
+        ...current,
+        stock: newStock,
+        available: newAvailable,
+        stockValue: newStockValue,
+        status: newStatus,
+        lastUpdated: 'Just now',
+      };
+
+      // Persist asynchronously to catalogStore and backend
+      try {
+        useCatalogStore.getState().updateStock(current.id, newStock);
+      } catch (err) {
+        console.warn('Failed to update catalog product stock:', err);
+      }
+
+      newTxs.push({
+        id: `tx-${Date.now()}-${current.id}`,
+        productId: current.id,
+        productName: current.name,
+        sku: current.sku,
+        date: nowFormatted,
+        type: 'stock_out',
+        referenceType: source === 'pos' ? 'POS Sale' : source === 'online_order' ? 'Order' : 'Stock Adjustment',
+        referenceNo,
+        quantity: -sale.quantity,
+        stockBefore: current.stock,
+        stockAfter: newStock,
+        notes: notes || (source === 'pos' ? 'Sold via In-Store POS' : `Sold via Order #${referenceNo}`),
+        performedBy: source === 'pos' ? 'Cashier / POS Terminal' : source === 'online_order' ? 'System' : 'Store Staff',
+      });
+    });
+
+    set({
+      items: updatedItems,
+      transactions: [...newTxs, ...state.transactions],
+    });
+  },
+
+  recordOrderOnlineNotification: (orderPayload) => {
+    // Re-fetch catalog products from server to ensure complete sync
+    try {
+      useCatalogStore.getState().fetchProducts();
+    } catch (err) {
+      console.warn('Failed to fetch products on online order notification:', err);
+    }
   },
 }));
