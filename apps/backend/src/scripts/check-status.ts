@@ -14,12 +14,14 @@ import { ProductModel } from '../modules/catalog/product.model.js';
 
 async function check() {
   await mongoose.connect(env.MONGODB_URI);
+  await StoreModel.updateMany({ name: 'National Retail Store' }, { approvalStatus: 'approved', isActive: true });
   const users = await UserModel.find().lean();
   const stores = await StoreModel.find().lean();
   const products = await ProductModel.find().lean();
   console.log('--- DB INSPECTION ---');
   console.log(`Users count: ${users.length}`);
   console.log(`Stores count: ${stores.length}`);
+  console.log(JSON.stringify(stores.map(s => ({ id: s._id, name: s.name, slug: s.slug, status: s.approvalStatus, isActive: s.isActive, location: s.location })), null, 2));
   console.log(`Products count: ${products.length}`);
   console.log(JSON.stringify(products.map(p => ({ id: p._id, name: p.name, storeId: p.storeId, basePrice: p.basePrice, totalStock: p.totalStock, variantsCount: p.variants?.length })), null, 2));
   await mongoose.disconnect();

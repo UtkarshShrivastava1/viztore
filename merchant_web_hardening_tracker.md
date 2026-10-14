@@ -935,6 +935,42 @@ graph LR
   - **Dashboard Overview**: Products Listed = `3`, Top Selling Products list populated.
   - **Backend Synchronization**: All 3 items are linked to store ID `6acf505183256911d14c43cc` in MongoDB Atlas with complete variant arrays, SKU barcodes, and photo perspective galleries.
 
+---
+
+### 🏁 Step 4: Customer Registration, Login, Store Discovery & Catalog Exploration
+* **Date & Timestamp:** October 14, 2026
+* **Test Scope:**
+  1. Signup as a new customer in the customer web app (`apps/web` on `http://localhost:3000`).
+  2. Authenticate / Login with the newly registered customer account.
+  3. Discover "National Retail Store" in the customer discovery view.
+  4. Explore the store storefront and inspect its complete live catalog (all 3 live products).
+  5. Inspect product detail page (pricing, variants, description, add to cart CTAs).
+* **Status:** 🟢 **PASSED & VERIFIED (100% DISCOVERABLE & ACCESSIBLE)**
+* **Automated Subagent Session Recordings:**
+  - `customer_signup_and_explore_store_1791979608670.webp`
+  - `customer_explore_store_1791979778719.webp`
+* **Execution Details & Verification:**
+  1. **Customer Registration & Authentication**:
+     - Name: `Pooja Sharma`
+     - Email: `pooja.customer@example.com`
+     - Phone: `9876501234`
+     - Password: `Password@123`
+     - Created customer account via `POST /api/v1/auth/register`, verified session creation and JWT tokens.
+     - Customer storefront header persistently displayed authenticated state: `Pooja Sharma - Sector 6`.
+  2. **Store Discovery (`http://localhost:3000/stores`)**:
+     - Navigated to nearby store discovery.
+     - Successfully discovered `National Retail Store` (`national-retail-store-oqrk`) listed as an approved, active local retailer with verified badge, category tags, and rating.
+  3. **Storefront & Catalog Exploration (`/stores/national-retail-store-oqrk`)**:
+     - Verified store banner, address, verified badge, operating timings, and fashion category pill.
+     - Confirmed all 3 published products appear in the storefront catalog grid with accurate pricing, MRP discounts, and live images:
+       1. **Classic Cotton Polo T-Shirt**: `₹799` (MRP `₹1,299`, 38% OFF)
+       2. **Slim Fit Stretch Denim Jeans**: `₹499` (MRP `₹999`, 50% OFF)
+       3. **Casual Linen Full Sleeve Shirt**: `₹1,199` (MRP `₹1,899`, 37% OFF)
+  4. **Product Detail Page Exploration (`/products/classic-cotton-polo-t-shirt-yas6y`)**:
+     - Opened product page directly from the store catalog.
+     - Verified brand (`Polo Club`), inclusive of taxes pricing (`₹799`), color/size selectors, 7-day return guarantee, customer reviews, and responsive "Add to Cart" / "Buy Now" interactive actions.
+
+
 
 
 
