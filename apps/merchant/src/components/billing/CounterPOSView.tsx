@@ -85,6 +85,7 @@ export const CounterPOSView: React.FC<CounterPOSViewProps> = ({ onBack }) => {
   // Print Dialog State
   const [lastInvoiceForPrint, setLastInvoiceForPrint] = useState<IInvoice | null>(null);
   const [isPrintModalOpen, setIsPrintModalOpen] = useState<boolean>(false);
+  const [isClearRegisterConfirmOpen, setIsClearRegisterConfirmOpen] = useState<boolean>(false);
 
   // Search input ref
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -206,7 +207,7 @@ export const CounterPOSView: React.FC<CounterPOSViewProps> = ({ onBack }) => {
           id: 'pos-it-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
           productId: product.id,
           name: product.name,
-          hsnSac: '9983',
+          hsnSac: '6205',
           quantity: 1,
           rate: unitRate,
           discountPercent: 0,
@@ -236,11 +237,15 @@ export const CounterPOSView: React.FC<CounterPOSViewProps> = ({ onBack }) => {
 
   const clearRegister = () => {
     if (cartItems.length === 0) return;
-    if (confirm('Clear the current bill register?')) {
-      setCartItems([]);
-      setCashTendered(0);
-      setDiscountPercent(0);
-    }
+    setIsClearRegisterConfirmOpen(true);
+  };
+
+  const confirmClearRegister = () => {
+    setCartItems([]);
+    setCashTendered(0);
+    setDiscountPercent(0);
+    setIsClearRegisterConfirmOpen(false);
+    showNotification('Bill register cleared', 'info');
   };
 
   // Filter Categories
@@ -266,13 +271,17 @@ export const CounterPOSView: React.FC<CounterPOSViewProps> = ({ onBack }) => {
     });
   }, [posProducts, searchQuery, selectedCategory]);
 
-  // Calculation Math
+  // Indian GST Calculation Math
   const subTotal = cartItems.reduce((sum, it) => sum + it.quantity * it.rate, 0);
   const discountAmount = Math.round(((subTotal * discountPercent) / 100) * 100) / 100;
   const taxableAmount = Math.max(0, subTotal - discountAmount);
-  // Standard 18% GST (9% CGST + 9% SGST)
-  const taxTotal = Math.round(taxableAmount * 0.18 * 100) / 100;
-  const netPayable = Math.round((taxableAmount + taxTotal) * 100) / 100;
+  // Standard Indian GST (intra-state: 9% CGST + 9% SGST)
+  const cgstAmount = Math.round(taxableAmount * 0.09 * 100) / 100;
+  const sgstAmount = Math.round(taxableAmount * 0.09 * 100) / 100;
+  const taxTotal = Math.round((cgstAmount + sgstAmount) * 100) / 100;
+  const exactGrandTotal = taxableAmount + taxTotal;
+  const netPayable = Math.round(exactGrandTotal);
+  const roundOff = Number((netPayable - exactGrandTotal).toFixed(2));
 
   // Change Return Calculation
   const changeDue = settlementMode === 'cash' && cashTendered > netPayable ? cashTendered - netPayable : 0;
@@ -668,10 +677,20 @@ export const CounterPOSView: React.FC<CounterPOSViewProps> = ({ onBack }) => {
               </div>
             )}
             <div className="flex justify-between text-slate-500 text-[11px]">
-              <span>Taxes (CGST 9% + SGST 9%):</span>
-              <span className="font-mono">₹{taxTotal.toFixed(2)}</span>
+              <span>CGST (9%):</span>
+              <span className="font-mono">₹{cgstAmount.toFixed(2)}</span>
             </div>
-            <div className="flex justify-between text-base font-black text-slate-900 pt-1">
+            <div className="flex justify-between text-slate-500 text-[11px]">
+              <span>SGST (9%):</span>
+              <span className="font-mono">₹{sgstAmount.toFixed(2)}</span>
+            </div>
+            {roundOff !== 0 && (
+              <div className="flex justify-between text-slate-400 text-[10px]">
+                <span>Round Off:</span>
+                <span className="font-mono">{roundOff > 0 ? `+₹${roundOff.toFixed(2)}` : `-₹${Math.abs(roundOff).toFixed(2)}`}</span>
+              </div>
+            )}
+            <div className="flex justify-between text-base font-black text-slate-900 pt-1 border-t border-slate-200">
               <span>Net Payable:</span>
               <span className="font-mono text-blue-700">₹{netPayable.toFixed(2)}</span>
             </div>
@@ -851,6 +870,39 @@ export const CounterPOSView: React.FC<CounterPOSViewProps> = ({ onBack }) => {
         invoice={lastInvoiceForPrint}
         defaultMode="thermal-80mm"
       />
+
+      {/* Clear Register In-App Confirmation Modal */}
+      {isClearRegisterConfirmOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-2xs p-4 animate-in fade-in duration-150">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-sm w-full p-5 space-y-4">
+            <div className="flex items-center gap-3 text-rose-600">
+              <div className="w-10 h-10 rounded-full bg-rose-50 flex items-center justify-center shrink-0">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="font-bold text-slate-900 text-sm">Clear Active Register?</h4>
+                <p className="text-xs text-slate-500">All current line items in the active bill will be removed.</p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setIsClearRegisterConfirmOpen(false)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer"
+              >
+                Keep Items
+              </button>
+              <button
+                type="button"
+                onClick={confirmClearRegister}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 shadow-xs cursor-pointer"
+              >
+                Clear All
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -187,6 +187,15 @@ export const CreateQuoteView: React.FC<CreateQuoteViewProps> = ({ onBack }) => {
     );
   };
 
+  const [toastNotification, setToastNotification] = useState<{ message: string; type: 'success' | 'info' | 'error' } | null>(null);
+
+  useEffect(() => {
+    if (toastNotification) {
+      const timer = setTimeout(() => setToastNotification(null), 3500);
+      return () => clearTimeout(timer);
+    }
+  }, [toastNotification]);
+
   // Barcode scanner simulator
   const handleBarcodeScan = () => {
     setIsBarcodeScanning(true);
@@ -213,7 +222,10 @@ export const CreateQuoteView: React.FC<CreateQuoteViewProps> = ({ onBack }) => {
         scannedItem.amount = Math.round((gross - disc + tax) * 100) / 100;
 
         setItems((prev) => [...prev, scannedItem]);
-        alert(`Barcode scanned: Added "${randomProduct.name}" (Barcode: ${randomProduct.barcode || '8901234567890'})`);
+        setToastNotification({
+          message: `Barcode Scanned: Added "${randomProduct.name}" (Barcode: ${randomProduct.barcode || '8901234567890'})`,
+          type: 'success',
+        });
       }
     }, 900);
   };
@@ -281,6 +293,28 @@ export const CreateQuoteView: React.FC<CreateQuoteViewProps> = ({ onBack }) => {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
+      {/* Toast Notification Banner */}
+      {toastNotification && (
+        <div
+          className={`p-3 rounded-xl border flex items-center justify-between text-xs font-semibold animate-in fade-in slide-in-from-top-2 duration-150 ${
+            toastNotification.type === 'success'
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+              : toastNotification.type === 'error'
+              ? 'bg-rose-50 border-rose-200 text-rose-800'
+              : 'bg-blue-50 border-blue-200 text-blue-800'
+          }`}
+        >
+          <span>{toastNotification.message}</span>
+          <button
+            type="button"
+            onClick={() => setToastNotification(null)}
+            className="text-slate-400 hover:text-slate-700 ml-4 font-bold text-sm"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* Top Header & Actions Bar */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
@@ -666,7 +700,12 @@ export const CreateQuoteView: React.FC<CreateQuoteViewProps> = ({ onBack }) => {
             </button>
             <button
               type="button"
-              onClick={() => alert('Opening product price list catalog')}
+              onClick={() =>
+                setToastNotification({
+                  message: 'Active Price List: Standard Retail Catalog (18% GST slab active)',
+                  type: 'info',
+                })
+              }
               className="px-3 py-1.5 border border-blue-600 text-blue-600 hover:bg-blue-50 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors"
             >
               <BadgePercent className="w-4 h-4" />

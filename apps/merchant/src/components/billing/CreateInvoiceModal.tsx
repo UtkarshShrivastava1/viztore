@@ -227,11 +227,14 @@ export const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
     );
   };
 
+  const [customerNameError, setCustomerNameError] = useState<string | null>(null);
+
   const handleSubmit = (withPrint: boolean = false) => {
     if (!customerName.trim()) {
-      alert('Please enter a customer name.');
+      setCustomerNameError('Please enter a customer name before proceeding.');
       return;
     }
+    setCustomerNameError(null);
 
     let status: any = 'issued';
     if (saveAsDraft) {
@@ -430,9 +433,16 @@ export const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
                       <input
                         type="text"
                         value={customerName}
-                        onChange={(e) => setCustomerName(e.target.value)}
+                        onChange={(e) => {
+                          setCustomerName(e.target.value);
+                          if (customerNameError) setCustomerNameError(null);
+                        }}
                         placeholder="Enter customer name *"
-                        className="flex-1 px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+                        className={`flex-1 px-3 py-2 bg-white border rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 ${
+                          customerNameError
+                            ? 'border-rose-400 focus:ring-rose-500/20 focus:border-rose-500 bg-rose-50/20'
+                            : 'border-slate-300 focus:ring-blue-500/20 focus:border-blue-600'
+                        }`}
                         required
                       />
                       {customersWithHistory.length > 0 && (
@@ -445,6 +455,9 @@ export const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
                         </button>
                       )}
                     </div>
+                    {customerNameError && (
+                      <p className="text-[11px] font-semibold text-rose-500 mt-0.5">{customerNameError}</p>
+                    )}
 
                     <div>
                       <label className="block text-[11px] font-semibold text-slate-600 mb-1">

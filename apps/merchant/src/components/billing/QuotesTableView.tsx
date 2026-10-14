@@ -14,6 +14,9 @@ import {
   ChevronDown,
   ArrowUpDown,
   RotateCcw,
+  X,
+  Copy,
+  Check,
 } from 'lucide-react';
 import { useBillingStore, IQuote, QuoteStatus } from '../../stores/billingStore.js';
 
@@ -44,7 +47,36 @@ export const QuotesTableView: React.FC<QuotesTableViewProps> = ({
   } = useBillingStore();
 
   const [activeStatusMenuQuoteId, setActiveStatusMenuQuoteId] = useState<string | null>(null);
+  const [selectedQuoteForView, setSelectedQuoteForView] = useState<IQuote | null>(null);
+  const [activeMoreMenuQuoteId, setActiveMoreMenuQuoteId] = useState<string | null>(null);
+  const [copiedQuoteId, setCopiedQuoteId] = useState<string | null>(null);
   const statusMenuRef = useRef<HTMLDivElement>(null);
+
+  const handleExportQuotesCsv = () => {
+    if (quotes.length === 0) return;
+    const headers = ['Quote No', 'Date', 'Valid Until', 'Customer Name', 'Phone', 'GSTIN', 'Total Amount', 'Status', 'Sales Person'];
+    const rows = quotes.map((q) => [
+      q.quoteNo,
+      q.date,
+      q.validUntil,
+      `"${q.customerName.replace(/"/g, '""')}"`,
+      q.customerPhone || '',
+      q.customerGstin || '',
+      q.totalAmount.toFixed(2),
+      q.status,
+      `"${(q.createdBy || '').replace(/"/g, '""')}"`,
+    ]);
+    const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Estimates_Quotes_Register_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -440,7 +472,7 @@ export const QuotesTableView: React.FC<QuotesTableViewProps> = ({
           <div className="flex items-center gap-2 shrink-0">
             <button
               type="button"
-              onClick={() => alert('Exporting Quotes to CSV/Excel...')}
+              onClick={handleExportQuotesCsv}
               className="px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 flex items-center gap-1.5 shadow-3xs transition-colors"
             >
               <Download className="w-3.5 h-3.5 text-blue-600" />
@@ -534,10 +566,10 @@ export const QuotesTableView: React.FC<QuotesTableViewProps> = ({
                       {q.createdBy}
                     </td>
                     <td className="py-3 px-4 text-center">
-                      <div className="inline-flex items-center gap-1.5">
+                      <div className="inline-flex items-center gap-1.5 relative">
                         <button
                           type="button"
-                          onClick={() => alert(`Viewing details for quote ${q.quoteNo}`)}
+                          onClick={() => setSelectedQuoteForView(q)}
                           className="px-2 py-1 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors"
                           title="View Quote"
                         >
@@ -558,13 +590,79 @@ export const QuotesTableView: React.FC<QuotesTableViewProps> = ({
                           </button>
                         )}
 
-                        <button
-                          type="button"
-                          onClick={() => alert(`More options for quote ${q.quoteNo}`)}
-                          className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
-                        >
-                          <MoreHorizontal className="w-4 h-4" />
-                        </button>
+                        <div className="relative">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setActiveMoreMenuQuoteId(
+                                activeMoreMenuQuoteId === q.id ? null : q.id
+                              )
+                            }
+                            className={`p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors ${
+                              activeMoreMenuQuoteId === q.id ? 'bg-slate-100 text-slate-700' : ''
+                            }`}
+                          >
+                            <MoreHorizontal className="w-4 h-4" />
+                          </button>
+
+                          {activeMoreMenuQuoteId === q.id && (
+                            <div className="absolute right-0 top-full mt-1 w-44 bg-white rounded-xl shadow-xl border border-slate-200 py-1 z-40 text-left text-xs font-medium animate-in fade-in zoom-in-95 duration-100">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(q.quoteNo);
+                                  setCopiedQuoteId(q.id);
+                                  setTimeout(() => setCopiedQuoteId(null), 2000);
+                                  setActiveMoreMenuQuoteId(null);
+                                }}
+                                className="w-full px-3 py-2 text-slate-700 hover:bg-slate-50 flex items-center justify-between"
+                              >
+                                <span>Copy Quote #</span>
+                                {copiedQuoteId === q.id ? (
+                                  <Check className="w-3.5 h-3.5 text-emerald-600" />
+                                ) : (
+                                  <Copy className="w-3.5 h-3.5 text-slate-400" />
+                                )}
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setActiveMoreMenuQuoteId(null);
+                                  convertQuoteToInvoice(q.id);
+                                }}
+                                className="w-full px-3 py-2 text-blue-600 hover:bg-blue-50 flex items-center gap-1.5 font-semibold"
+                              >
+                                <Plus className="w-3.5 h-3.5" />
+                                <span>Convert to Invoice</span>
+                              </button>
+
+                              <div className="border-t border-slate-100 my-1" />
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  updateQuoteStatus(q.id, 'accepted');
+                                  setActiveMoreMenuQuoteId(null);
+                                }}
+                                className="w-full px-3 py-1.5 text-emerald-700 hover:bg-emerald-50 text-left"
+                              >
+                                Mark as Accepted
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  updateQuoteStatus(q.id, 'declined');
+                                  setActiveMoreMenuQuoteId(null);
+                                }}
+                                className="w-full px-3 py-1.5 text-rose-600 hover:bg-rose-50 text-left"
+                              >
+                                Mark as Declined
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </td>
                   </tr>
@@ -577,7 +675,7 @@ export const QuotesTableView: React.FC<QuotesTableViewProps> = ({
         {/* Footer info */}
         <div className="p-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
           <span>
-            Showing 1 to {Math.min(filteredQuotes.length, 8)} of 356 quotes
+            Showing 1 to {Math.min(filteredQuotes.length, 8)} of {quotes.length} quotes
           </span>
           <button
             type="button"
@@ -587,6 +685,139 @@ export const QuotesTableView: React.FC<QuotesTableViewProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Quote Details Modal */}
+      {selectedQuoteForView && (
+        <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-bold text-slate-900">
+                    Estimate / Quote {selectedQuoteForView.quoteNo}
+                  </h3>
+                  <span className="px-2 py-0.5 text-[11px] font-semibold rounded-md bg-blue-100 text-blue-800">
+                    {selectedQuoteForView.status.toUpperCase()}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Created on {selectedQuoteForView.date} • Valid until {selectedQuoteForView.validUntil}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedQuoteForView(null)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto space-y-5 text-xs text-slate-700">
+              {/* Customer summary */}
+              <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 grid grid-cols-2 gap-3">
+                <div>
+                  <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Customer</p>
+                  <p className="font-bold text-slate-900 text-sm mt-0.5">{selectedQuoteForView.customerName}</p>
+                  <p className="text-slate-600">{selectedQuoteForView.customerPhone || 'No phone recorded'}</p>
+                  {selectedQuoteForView.customerGstin && (
+                    <p className="font-mono text-[11px] text-blue-700 mt-0.5">
+                      GSTIN: {selectedQuoteForView.customerGstin}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Terms & Supply</p>
+                  <p className="font-medium text-slate-800 mt-0.5">
+                    Place of Supply: {selectedQuoteForView.placeOfSupply || 'State Retail'}
+                  </p>
+                  <p className="text-slate-600">Sales Person: {selectedQuoteForView.createdBy}</p>
+                </div>
+              </div>
+
+              {/* Items List */}
+              <div>
+                <p className="text-xs font-bold text-slate-900 mb-2 uppercase tracking-wider">Items Breakdown</p>
+                <div className="border border-slate-200 rounded-xl overflow-hidden">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-100 text-[11px] font-bold text-slate-700 uppercase">
+                      <tr>
+                        <th className="py-2.5 px-3">Item</th>
+                        <th className="py-2.5 px-3 text-center">HSN/SAC</th>
+                        <th className="py-2.5 px-3 text-right">Qty</th>
+                        <th className="py-2.5 px-3 text-right">Rate</th>
+                        <th className="py-2.5 px-3 text-right">Tax %</th>
+                        <th className="py-2.5 px-3 text-right">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {selectedQuoteForView.items && selectedQuoteForView.items.length > 0 ? (
+                        selectedQuoteForView.items.map((it, idx) => (
+                          <tr key={it.id || idx}>
+                            <td className="py-2.5 px-3 font-semibold text-slate-900">{it.name}</td>
+                            <td className="py-2.5 px-3 text-center font-mono text-slate-500">{it.hsnSac || '6205'}</td>
+                            <td className="py-2.5 px-3 text-right font-medium">{it.quantity} {it.unit || 'Pcs'}</td>
+                            <td className="py-2.5 px-3 text-right font-medium">₹{it.rate.toFixed(2)}</td>
+                            <td className="py-2.5 px-3 text-right font-medium">{it.taxPercent || 18}%</td>
+                            <td className="py-2.5 px-3 text-right font-bold text-slate-900">₹{it.amount.toFixed(2)}</td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={6} className="py-4 text-center text-slate-400">
+                            Custom quoted package summary
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Total Calculation breakdown */}
+              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5 max-w-xs ml-auto text-right">
+                <div className="flex justify-between text-slate-600">
+                  <span>Subtotal:</span>
+                  <span className="font-semibold tabular-nums">₹{selectedQuoteForView.subTotal.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-slate-600">
+                  <span>GST (CGST 9% + SGST 9%):</span>
+                  <span className="font-semibold tabular-nums">₹{selectedQuoteForView.taxTotal.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-slate-900 font-bold border-t border-slate-200 pt-1.5 text-sm">
+                  <span>Total Amount:</span>
+                  <span className="text-blue-700 tabular-nums">₹{selectedQuoteForView.totalAmount.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="px-6 py-3.5 border-t border-slate-200 bg-white flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => setSelectedQuoteForView(null)}
+                className="px-4 py-2 border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-xl text-xs font-semibold transition-colors"
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const q = selectedQuoteForView;
+                  setSelectedQuoteForView(null);
+                  convertQuoteToInvoice(q.id);
+                }}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Convert to Tax Invoice</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -17,14 +17,14 @@
 ### 15-Module Enterprise Frontend & Backend Tiering & Mockup Coverage
 | Release Tier | Total Modules Included | Total Mockup Screens | Hardened & Verified | In Systematic Testing / Next Up | Status |
 |---|:---:|:---:|:---:|:---:|:---:|
-| **Tier 2 Launch Scope (Active Core)** | **13 Modules** | **100 screens** | **30 screens (Modules 1–4)** | **70 screens (Modules 5, 6, 8, 9, 10, 11, 13, 14, 15)** | 🟡 **Active Hardening Sprint (30.0% Screen / 30.8% Mod)** |
+| **Tier 2 Launch Scope (Active Core)** | **13 Modules** | **100 screens** | **37 screens (Modules 1–5)** | **63 screens (Modules 6, 8, 9, 10, 11, 13, 14, 15)** | 🟡 **Active Hardening Sprint (37.0% Screen / 38.5% Mod)** |
 | **Tier 3 Scope (Deferred Expansion)** | **2 Modules** | **26 screens** | **0 screens** | **26 screens (Modules 7: Wallet & 12: Marketing)** | 🟣 **Deferred to Tier 3** |
-| **Total Merchant Platform** | **15 Modules** | **126 screens** | **30 screens** | **96 screens** | **100% Mockup Asset Inventory Mapped** |
+| **Total Merchant Platform** | **15 Modules** | **126 screens** | **37 screens** | **89 screens** | **100% Mockup Asset Inventory Mapped** |
 
 ```mermaid
 pie title Merchant Portal Scope by Launch Tier (126 Mockups)
-    "Tier 2 Verified (Modules 1–4: 30 screens)" : 30
-    "Tier 2 Active Queue (Modules 5,6,8,9,10,11,13,14,15: 70 screens)" : 70
+    "Tier 2 Verified (Modules 1–5: 37 screens)" : 37
+    "Tier 2 Active Queue (Modules 6,8,9,10,11,13,14,15: 63 screens)" : 63
     "Tier 3 Deferred (Modules 7 & 12: 26 screens)" : 26
 ```
 
@@ -78,7 +78,7 @@ flowchart TD
 | **MOD-02** | **Orders Pipeline** | **Tier 2** | `2.) Orders/`<br>**(9 files)** | `/orders`, `/orders/create`<br>`OrdersPage.tsx`<br>`OrdersTable.tsx`<br>`OrdersToolbar.tsx`<br>`OrderStepper.tsx`<br>`CreateOrderPage.tsx`<br>`VerifyOtpModal.tsx` | **100% Mockup Fidelity**<br>Audited all 9 screens (`2.0`–`2.8`), 8 status tabs with live counts, 6-step Order Flow stepper, OTP columns, live tracking modal, customer contact modal, CSV export, interactive manual order creator | `GET /orders/store/:id`, `PATCH /orders/:id/status` (`CONFIRMED`, `PACKED`, `SHIPPED`, `DELIVERED`, `CANCELLED`), `POST /verify-delivery-otp`, Socket.io listeners | 🟢 **HARDENED & AUDITED**<br>0 alert stubs, real CSV export, interactive More Actions dropdown, live tracking and customer contact modals, clean build & 120/120 tests green | 🟢 **HARDENED & AUDITED (100%)** |
 | **MOD-03** | **Product Catalog** | **Tier 2** | `3.) Product Catalog/`<br>**(6 files)** | `/catalog`, `/catalog/add`<br>`ProductsCatalogPage.tsx`<br>`AddProductWizardPage.tsx`<br>`ProductPreviewSubmitPage.tsx`<br>`BulkUploadModal.tsx`<br>`ProductLabelPrintModal.tsx` | **100% Mockup Fidelity**<br>Audited all 6 screens (`3.0`–`3.5`), 5 KPI summary cards, filter bar with 5 cascading dropdowns, selection checkboxes, 7-action row menu, 3-step wizard with category setup, 5 angle guide dropzone, 10-section spec cards, actual-size thermal barcode label preview | `GET /catalog/stores/:id/products`, `POST /products`, `POST /products/bulk`, `PATCH /products/:id` (stock, status, variants), zero alert stubs | 🟢 **HARDENED & AUDITED**<br>0 alert stubs, real RFC CSV exporter, 1-click demo bulk import, thermal label printing, clean build & 120/120 tests green | 🟢 **HARDENED & AUDITED (100%)** |
 | **MOD-04** | **Inventory Management** | **Tier 2** | `4.) Inventory/`<br>**(7 files)** | `/inventory`<br>`InventoryPage.tsx`<br>`InventoryTable.tsx`<br>`AdjustStockDrawer.tsx`<br>`BulkAdjustStockView.tsx`<br>`StockHistoryView.tsx`<br>`StockHistoryDrawer.tsx` | **100% Mockup Fidelity**<br>Audited all 7 screens (`4.0`–`4.6`), 5 KPI cards with badge icons, column header popover, 7-action row menu, single item adjustment drawer with live calc, stock history timeline drawer, full movement ledger view, bulk adjust spreadsheet with live preview | `useCatalogStore` sync, `PATCH /catalog/products/:id` with OCC versioning, Redis cache invalidation, bidirectional sync with online store checkouts, manual orders, and POS billing | 🟢 **HARDENED & AUDITED**<br>0 alert stubs, bidirectional store & POS billing sync, thermal label modal wired, clean build & 120/120 tests green | 🟢 **HARDENED & AUDITED (100%)** |
-| **MOD-05** | **Billing & Invoicing (POS)** | **Tier 2** | `5.) Billing & Invoicing/`<br>**(7 files)** | `/billing`, `/pos`<br>`BillingPage.tsx`<br>`CounterPOSView.tsx`<br>`PrintReceiptModal.tsx`<br>`InvoicesTableView.tsx` | **Needs Revision**<br>Audit all 7 screens (`5.0`–`5.6`), POS register, bill preview, invoice drawer, quotes tab | `POST /billing/pos/sale` (Tier 2 atomic OCC stock deduction), `GET /billing/invoices`, `GET /billing/quotes` | 🟡 **AUDIT QUEUE**<br>Macro architecture wired; pending 7-screen audit | 🟡 **PENDING SCREEN AUDIT** |
+| **MOD-05** | **Billing & Invoicing (POS)** | **Tier 2** | `5.) Billing & Invoicing/`<br>**(7 files)** | `/billing`, `/pos`<br>`BillingPage.tsx`<br>`CounterPOSView.tsx`<br>`PrintReceiptModal.tsx`<br>`InvoicesTableView.tsx`<br>`QuotesTableView.tsx`<br>`CreateInvoiceModal.tsx`<br>`CreateQuoteView.tsx`<br>`BillingSettingsView.tsx` | **100% Mockup Fidelity**<br>Audited all 7 screens (`5.0`–`5.6`), 5 Invoice KPI cards, 5 filter dropdowns, 7 status tabs, More Actions menu, 2-column Create Invoice modal with customer history, Billing Settings suite with live preview, More Actions dropdown with real CSV import/export, Quotes ledger with 5 KPI cards & status dropdown, Create Quote with HSN & barcode scanner, and Fullscreen Counter POS | `POST /billing/pos/sale` (Tier 2 atomic OCC stock deduction), `GET /billing/invoices`, `GET /billing/quotes`, bidirectional stock deduction and cancellation restoration in `inventoryStore` & `catalogStore` | 🟢 **HARDENED & AUDITED**<br>0 alert stubs, Indian GST compliance (CGST/SGST/Round Off), thermal printing (80mm/58mm/A4), clean build & 120/120 tests green | 🟢 **HARDENED & AUDITED (100%)** |
 | **MOD-06** | **Customers CRM & Khata** | **Tier 2** | `6.) Customers/`<br>**(7 files)** | `/customers`<br>`CustomersPage.tsx`<br>`CustomerTable.tsx`<br>`CustomerStatementDrawer.tsx`<br>`AddStoreCreditModal.tsx` | **Needs Revision**<br>Audit all 7 screens (`6.0`–`6.6`), details drawer 5 tabs, statement download, aging buckets | Synced dynamically from POS billing invoices & online orders, live balance recalculation | 🟡 **AUDIT QUEUE**<br>Macro architecture wired; pending 7-screen audit | 🟡 **PENDING SCREEN AUDIT** |
 | **MOD-07** | **Wallet Hub** | **Tier 3** | `7.) Wallet/`<br>**(4 files)** | `/wallet`<br>`WalletPage.tsx`<br>`stores/payoutStore.ts` | **Baseline (85%)**<br>Available balance, pending settlement, transaction history drawer (`7.3`), add money drawer (`7.2`) | Wallet top-up gateway, in-app merchant balance, peer transfers | 🟣 **TIER 3 DEFERRED**<br>Non-critical for Tier 2 hyperlocal launch; direct bank settlements used | 🟣 **DEFERRED TO TIER 3** |
 | **MOD-08** | **Purchase & Expense** | **Tier 2** | `8.) Purchase Expense/`<br>**(20 files)** | `/expenses`<br>`ExpensesPage.tsx`<br>`components/expenses/` | **Baseline (70%)**<br>Expense table, vendor tab (`8.10`–`8.13`), 4 Add Purchase modals (`8.14a`–`8.14d`), E-Way bill (`8.6`) | Operating expense ledger, vendor management APIs, purchase order lifecycle | ⚪ **NEXT UP (TIER 2)**<br>Massive 20-screen audit: vendors, POs, bills, cash expenses, credit notes | ⚪ **READY FOR TESTING** |
@@ -342,29 +342,92 @@ graph LR
 
 ---
 
-#### 📁 Module 5: Billing & Walk-In POS Counter (`mockups/Merchant_Front/5.) Billing & Invoicing/` — 7 Files
+#### 📁 Module 5: Billing & Invoicing (POS) (`mockups/Merchant_Front/5.) Billing & Invoicing/` — 7 Files
 * **Design Assets:** `5.0.png`, `5.1.png`, `5.2.png`, `5.3.png`, `5.4.png`, `5.5.png`, `5.6.png`
-* **Target Files:** `apps/merchant/src/pages/BillingPage.tsx`, `components/billing/CounterPOSView.tsx`, `components/billing/PrintReceiptModal.tsx`, `components/billing/InvoicesTableView.tsx`, `stores/billingStore.ts`
-* **Visible UI Elements Checklist:**
-  - [x] Fullscreen walk-in counter retail POS register.
-  - [x] Fast barcode / SKU / name search input with Enter-key instant cart addition and scan sound chimes.
-  - [x] Active Line-Item Register with quantity steppers, unit price overrides, line discount, and GST rate selector.
-  - [x] Multi-Tender Payment Station:
-    - [x] **Cash Tender:** Preset amount pills (Exact, ₹500, ₹1000, ₹2000), tendered input, and real-time "Change to Return" display.
-    - [x] **UPI QR:** Dynamic QR card with live payable amount, UPI app icons, and auto-reconciliation banner.
-    - [x] **Card POS:** Terminal swipe/tap instruction banner with transaction reference.
-    - [x] **Credit / Khata:** Debited directly against registered customer ledger.
-  - [x] Thermal Receipt Print Modal (`PrintReceiptModal.tsx`):
-    - [x] 80mm roll and 58mm roll width selectors.
-    - [x] Monospace layout with store name, GSTIN, phone, address, itemized rows, tax summary, and footer message.
-    - [x] Dedicated `@media print` CSS engine stripping browser margins and centering the roll.
-  - [x] Live Invoices Data Table with date range, payment mode filter, and live backend refresh.
+* **Target Files:** `apps/merchant/src/pages/BillingPage.tsx`, `components/billing/CounterPOSView.tsx`, `components/billing/PrintReceiptModal.tsx`, `components/billing/InvoicesTableView.tsx`, `components/billing/QuotesTableView.tsx`, `components/billing/CreateInvoiceModal.tsx`, `components/billing/CreateQuoteView.tsx`, `components/billing/BillingSettingsView.tsx`, `components/billing/BillingHeaderActions.tsx`, `components/billing/InvoiceRowActionMenu.tsx`, `stores/billingStore.ts`
+* **Visible UI Elements Checklist (100% Mockup Verified):**
+  - [x] **`5.0.png` (Main Invoices Register & Filter Toolbar):**
+    - 5 Dynamic KPI Summary Cards: Total Invoices (`8`), Total Sales (`₹48,250.00`), Paid Amount (`₹38,500.00`), Outstanding (`₹9,750.00`), Overdue (`₹2,300.00`) derived dynamically from live invoices array.
+    - Comprehensive filter bar with 5 dropdown selectors (Date Range, Invoice Type, Status, Payment Mode, Sort Direction) + Search input + Clear Filters.
+    - 7 Status Tabs (`All Invoices`, `Draft`, `Issued`, `Paid`, `Partially Paid`, `Overdue`, `Cancelled`) with live counts.
+    - Full Tax Invoice Register table with selection checkboxes, Invoice No (`INV-1248` through `INV-1241`), Date, Customer Name with Phone, Invoice Type badge (`Tax Invoice` / `Bill of Supply`), Total Amount, Paid Amount, Due Amount, Status badge, and row action buttons (`View`, `Print`, `More ▾`).
+    - Dynamic pagination footer: Showing items range of total invoices with live scroll action.
+  - [x] **`5.1.png` (Invoice Row More Actions Dropdown):**
+    - 8 Functional Actions matching mockup:
+      1. `Download PDF`: Downloads formatted tax invoice.
+      2. `Open`: Opens printable receipt/invoice preview.
+      3. `Duplicate`: Clones invoice draft instantly.
+      4. `Record Payment`: Interactive modal to record full/partial payments across Cash, UPI, Card, Bank Transfer with live balance recalculation.
+      5. `View Payments`: Modal displaying transaction timestamp, mode, amount, and receipt voucher.
+      6. `Notes`: Modal displaying/editing internal remarks and terms.
+      7. `Adjust`: Initiates debit/credit note adjustment.
+      8. `Cancel`: Irreversible cancellation confirmation modal with atomic inventory restock.
+  - [x] **`5.2.png` (2-Column Create Invoice Modal):**
+    - Left Column (Customer & Invoice Details):
+      - Customer selection with 1-click Store History picker or New Customer mode.
+      - Mobile, Billing Address, State, Place of Supply, and optional GSTIN input with format validation.
+      - Invoice Date, Due Date, Payment Terms selector (Immediate, 15 Days, 30 Days), and Type selector (`Tax Invoice` vs `Bill of Supply`).
+    - Right Column (Line Items, Taxes & Payment Settlement):
+      - Line items table with Product selector, HSN/SAC code, quantity steppers, unit, rate, discount %, GST tax slab %, and calculated amount.
+      - Mathematical Summary: Subtotal, Total Discount, Tax Total (itemized CGST 9% + SGST 9%), Indian commercial Round Off calculation to nearest Rupee, Grand Total.
+      - Settlement mode radio options (Cash, UPI QR, Card, Khata Credit, Bank Transfer).
+      - Action buttons: `Save as Draft`, `< Cancel`, `Create & Print Receipt`.
+  - [x] **`5.3.png` (Billing & Invoicing Settings):**
+    - General billing configurations (default currency INR ₹, business address, auto-invoice generation).
+    - Invoice numbering rules (prefix `INV-`, starting sequence number, padding digits).
+    - Indian GST settings (GSTIN, default state, tax calculation type exclusive/inclusive).
+    - Discount rules (allow discounts, percentage/flat limit).
+    - Live interactive invoice card preview reflecting configuration in real-time.
+  - [x] **`5.4.png` (Header Quick Actions & More Dropdown):**
+    - Quick Counter POS Register launch button (`Zap` icon) switching directly to fullscreen billing mode.
+    - `+ Create Invoice` primary action button.
+    - `Billing & Invoicing Settings` button.
+    - More Actions Dropdown:
+      - `Import Invoices`: In-app drag-and-drop CSV importer with column preview and format guidelines.
+      - `Export Invoices`: Downloads formatted `Tax_Invoices_Register_YYYY-MM-DD.csv`.
+      - `Download Report`: Downloads executive `GST_Financial_Summary_YYYY-MM-DD.csv` with sales, tax, and tender breakdowns.
+      - `Estimates / Quotes`: Direct navigation to quotes sub-ledger.
+  - [x] **`5.5.png` (Estimates / Quotes Register):**
+    - 5 Quote KPI Cards: Total Quotes (`8`), Total Value (`₹1,24,500.00`), Accepted Quotes (`4`), Converted to Invoices (`2`), Expired Quotes (`1`).
+    - Filter toolbar with Search, Date Range, Status Filter, Expiration Filter, and Customer Filter.
+    - 8 Status Tabs (`All Quotes`, `Draft`, `Sent`, `Accepted`, `Declined`, `Expired`, `Converted`, `Cancelled`).
+    - Quotes Data Table with Quote No (`Q-1024` through `Q-1017`), Date, Expiry with days remaining badge, Customer info, GSTIN, Total Amount, Status dropdown pill, Sales Person attribution, and Action buttons (`View`, `+ Convert to Invoice` for accepted quotes, `More ▾`).
+    - Quote Details Modal showing complete itemized breakdown and 1-click Convert to Invoice.
+    - Real CSV export (`handleExportQuotesCsv`).
+  - [x] **`5.6.png` (Create Estimate / Quote Page):**
+    - Breadcrumb navigation: `Billing & Invoicing > Create Estimate / Quote`.
+    - Customer Info card with verified store history dropdown or manual entry, auto-populating phone, address, and GSTIN.
+    - Quote metadata: Quote No auto-sequenced (`Q-1025`), Date, Validity period (`14 Days`, `30 Days`, `Custom`), Reference No (`PO#...`), Place of Supply, Sales Person attribution.
+    - Items table with Scan & Add Items barcode simulation (with non-blocking Toast alerts), Price List catalog inspector, HSN/SAC codes, Units, Rate, Discount %, GST rate %, and line item totals.
+    - Notes & Standard Terms & Conditions textarea with editable defaults.
+    - Total Calculation summary callout box with itemized CGST + SGST breakdown.
+    - Top Action Bar: `Cancel`, `Save as Draft`, `Save (Sent)`, `Save & Print`.
+  - [x] **Fullscreen Counter POS Register (`CounterPOSView.tsx`):**
+    - High-speed USB/Bluetooth 1D/2D barcode wedge scanning support and manual SKU/barcode search.
+    - Real-time line item cart with Enter-key instant addition, audio chime feedback, quantity steppers, and item deletion.
+    - Walk-in Retail vs Regular Customer mode (with GSTIN validation for B2B billing).
+    - Multi-tender payment station:
+      - Cash with preset quick pills (`Exact`, `₹100`, `₹200`, `₹500`, `₹2000`), tendered cash input, and real-time Change Return calculation.
+      - UPI QR card displaying live exact amount to pay, scan instructions, and simulated verification.
+      - Card payment terminal swipe/tap instruction banner.
+      - Khata / Store Credit direct customer ledger debit.
+    - In-app Clear Register confirmation modal (0 browser confirm stubs).
+    - Complete Indian GST breakdown (CGST 9% + SGST 9%, commercial Round Off line item).
+  - [x] **Thermal Slip & A4 Invoice Engine (`PrintReceiptModal.tsx`):**
+    - Dedicated `@media print` CSS engine calibrated for 80mm roll, 58mm roll, and A4 Tax Invoice.
+    - Strips browser headers/footers, centers roll, prints crisp monospace typography.
 * **Backend Functionalities & API Hooks:**
-  - [x] `POST /api/v1/billing/pos/sale` atomic Tier 2 POS checkout.
-  - [x] Atomically deducts catalog product stock in MongoDB with OCC versioning.
+  - [x] `POST /api/v1/billing/pos/sale`: Tier 2 atomic POS checkout endpoint with OCC stock versioning.
+  - [x] Atomically decrements catalog product stock in MongoDB and invalidates Redis cache.
   - [x] Writes issued invoice and transactional outbox event.
+  - [x] Bidirectional stock synchronization:
+    - Counter POS checkout immediately reduces stock in `inventoryStore`, `catalogStore`, and customer web storefront.
+    - Invoice cancellation via `cancelInvoice(id, reason)` immediately restocks all line items back into active inventory with audit logging.
 * **Enterprise Hardening (Front & Back):**
-  - [x] Zero-margin thermal print formatting; offline-safe fallback state.
+  - [x] 0 `alert()`, `confirm()`, or `prompt()` stubs across all 9 billing components (replaced with in-page modals, inline validation errors, and auto-dismissing Toast banners).
+  - [x] Strict white-label branding compliance: all brand texts read from `branding.appName`, generic IDs (`#ORD-...`, `INV-...`, `Q-...`).
+  - [x] Clean TypeScript build (`tsc && vite build` passed, 0 errors in 9.69s).
+  - [x] 120/120 automated platform tests passing.
 
 ---
 

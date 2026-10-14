@@ -25,6 +25,11 @@ interface InvoiceRowActionMenuProps {
   onRecordPayment?: (invoice: IInvoice) => void;
   onPrintThermal?: (invoice: IInvoice) => void;
   onPrintA4?: (invoice: IInvoice) => void;
+  onViewPayments?: (invoice: IInvoice) => void;
+  onViewNotes?: (invoice: IInvoice) => void;
+  onAdjustInvoice?: (invoice: IInvoice) => void;
+  onCancelInvoice?: (invoice: IInvoice) => void;
+  onShowToast?: (text: string, type?: 'success' | 'info' | 'error') => void;
 }
 
 export const InvoiceRowActionMenu: React.FC<InvoiceRowActionMenuProps> = ({
@@ -35,6 +40,11 @@ export const InvoiceRowActionMenu: React.FC<InvoiceRowActionMenuProps> = ({
   onRecordPayment,
   onPrintThermal,
   onPrintA4,
+  onViewPayments,
+  onViewNotes,
+  onAdjustInvoice,
+  onCancelInvoice,
+  onShowToast,
 }) => {
   const fallbackRef = useRef<HTMLDivElement>(null);
   const effectiveTriggerRef = triggerRef || fallbackRef;
@@ -62,50 +72,43 @@ export const InvoiceRowActionMenu: React.FC<InvoiceRowActionMenuProps> = ({
       case 'open':
         if (onPrintA4) {
           onPrintA4(invoice);
-        } else {
-          alert(`Opening ${invoice.invoiceNo} preview.`);
         }
         break;
       case 'share':
         navigator.clipboard?.writeText?.(window.location.href);
-        alert(`Link to ${invoice.invoiceNo} copied to clipboard!`);
+        onShowToast?.(`Link to ${invoice.invoiceNo} copied to clipboard!`, 'success');
         break;
       case 'duplicate':
         duplicateInvoice(invoice.id);
-        alert(`Invoice ${invoice.invoiceNo} duplicated successfully!`);
+        onShowToast?.(`Invoice ${invoice.invoiceNo} duplicated successfully!`, 'success');
         break;
       case 'mark_sent':
         updateInvoiceStatus(invoice.id, 'issued');
-        alert(`Invoice ${invoice.invoiceNo} marked as sent.`);
+        onShowToast?.(`Invoice ${invoice.invoiceNo} marked as sent.`, 'info');
         break;
       case 'record_payment':
         if (onRecordPayment) {
           onRecordPayment(invoice);
-        } else {
-          const amtStr = prompt(
-            `Enter payment amount for ${invoice.invoiceNo} (Due: ₹${invoice.dueAmount.toLocaleString()}):`,
-            String(invoice.dueAmount)
-          );
-          if (amtStr && !isNaN(Number(amtStr))) {
-            useBillingStore.getState().recordPayment(invoice.id, Number(amtStr), 'upi');
-            alert(`Payment of ₹${amtStr} recorded for ${invoice.invoiceNo}!`);
-          }
         }
         break;
       case 'view_payments':
-        alert(
-          `Payment history for ${invoice.invoiceNo}:\nPaid: ₹${invoice.paidAmount.toLocaleString()}\nDue: ₹${invoice.dueAmount.toLocaleString()}\nMode: ${invoice.settlementMode || 'N/A'}`
-        );
+        if (onViewPayments) {
+          onViewPayments(invoice);
+        }
         break;
       case 'notes':
-        alert(`Notes on ${invoice.invoiceNo}:\n${invoice.notes || 'No internal notes on this invoice.'}`);
+        if (onViewNotes) {
+          onViewNotes(invoice);
+        }
         break;
       case 'adjust':
-        alert(`Open invoice adjustment view for ${invoice.invoiceNo}.`);
+        if (onAdjustInvoice) {
+          onAdjustInvoice(invoice);
+        }
         break;
       case 'cancel':
-        if (confirm(`Are you sure you want to cancel invoice ${invoice.invoiceNo}?`)) {
-          updateInvoiceStatus(invoice.id, 'cancelled');
+        if (onCancelInvoice) {
+          onCancelInvoice(invoice);
         }
         break;
       default:

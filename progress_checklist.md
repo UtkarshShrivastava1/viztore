@@ -208,6 +208,15 @@
   - [x] Client API integration in `apps/merchant/src/lib/api.ts` (`billingApi`)
   - [x] Automated test suite with 94/94 backend tests passing across 15 suites
   - [x] In-House Retail Billing Customer History Enforcement & Direct New Customer Entry Workflow (zero hardcoded customer presets, dynamic past customer lookup by name/phone, direct new customer registration, 36 Indian states & UTs directory with Chhattisgarh launch default)
+  - [x] **MOD-05: Billing & Invoicing (POS) 100% Mockup Hardening & Audit**:
+    - [x] Audited all 7 screens (`5.0`–`5.6`), zero browser `alert()`, `confirm()`, or `prompt()` stubs
+    - [x] High-speed USB/Bluetooth 1D/2D barcode wedge scanning with audio chime feedback & manual typing fallback
+    - [x] Strict Indian GST Law compliance (intra-state CGST 9% + SGST 9%, HSN/SAC codes, commercial round-off standard to nearest Rupee)
+    - [x] Multi-tender payment station (Cash with preset pills & change return, dynamic UPI QR, Card terminal, Khata ledger debit)
+    - [x] Calibrated ESC/POS thermal printing (`@media print` for 80mm roll, 58mm roll, and A4 Tax Invoice)
+    - [x] Real-time CSV export for invoices register, quotes ledger, and financial GST summary reports
+    - [x] Full interactive modals for Record Payment, Payment History, Internal Notes, and Cancel Invoice with atomic stock restoration
+    - [x] 120/120 automated platform unit & integration tests passing with clean monorepo build
 - [x] **Merchant Shell Controls & Storefront Merchandising Suite (PR #14, commit `eac4c32`)**:
   - [x] Header Store Active / Inactive switch with live green/red indicator and `localStorage` persistence
   - [x] `StoreInactiveConfirmModal` dialog with warning copy, plan notice, and action buttons (`1.0a(V1).png`)

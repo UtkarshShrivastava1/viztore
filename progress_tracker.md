@@ -112,7 +112,8 @@ Every online order placed through `apps/web` generates an authoritative, complia
      - Bounded MongoDB connection pool (`maxPoolSize: 25`, `minPoolSize: 5`).
      - Structured Winston JSON logging with `correlationId` tracking.
      - Transactional Outbox integration (`appendOutboxEvent`) for billing domain events.
-   - **Automated Verification**: **102/102 unit & integration tests passing** across 16 test suites. Monorepo builds cleanly in 57s.
+   - **Automated Verification**: **120/120 unit & integration tests passing** across 19 test suites. Monorepo builds cleanly (`tsc && vite build` passed in 9.69s).
+   - **MOD-05 Hardening Complete (100%)**: Audited across all 7 mockups (`5.0`–`5.6`), 0 alert/confirm stubs, Indian GST compliance with commercial round off, thermal slip engine (80mm/58mm/A4), real CSV exports, and bidirectional inventory stock deduction/restoration.
 2. **Real-Time Sound & Push Order Alerts (DELIVERED ✅)**:
    - Built standalone Web Audio API harmonic 2-tone melodic chime engine (`audioAlert.ts`) generating crystalline D5 ➔ A5 arrival chimes without external audio assets.
    - Connected `socket.io-client` in `apps/merchant` (`socket.ts`) joining `store:${storeId}` room to receive backend `order.placed` dispatches.

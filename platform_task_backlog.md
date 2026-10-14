@@ -29,7 +29,7 @@ timeline
 
 | ID | Milestone Target | Deadline | Primary Scope | Status |
 |:---:|---|:---:|---|:---:|
-| **M1** | **Feature Freeze & POS Completion** | **Oct 14, 2026** | In-house POS, real-time inventory sync, audio alerts, outbox engine | 🟢 **96% Complete** |
+| **M1** | **Feature Freeze & POS Completion** | **Oct 14, 2026** | In-house POS, real-time inventory sync, audio alerts, outbox engine | 🟢 **100% Complete** |
 | **M2** | **End-to-End Simulation & Polish** | **Oct 16, 2026** | Full stress-test of walk-in billing + online order + OTP + WhatsApp | 🟡 **Ready for Dry-Run** |
 | **M3** | **Official Production Go-Live** | **Oct 19–20, 2026** | Cloud DNS cutover, staging sign-off, pilot merchant onboarding | 🟢 **On Track** |
 

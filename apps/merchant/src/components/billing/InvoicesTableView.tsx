@@ -13,6 +13,8 @@ import {
   ArrowUpDown,
   ChevronsUpDown,
   RefreshCw,
+  X,
+  CheckCircle,
 } from 'lucide-react';
 import { useBillingStore, IInvoice, InvoiceStatus } from '../../stores/billingStore.js';
 import { InvoiceRowActionMenu } from './InvoiceRowActionMenu.js';
@@ -25,7 +27,26 @@ const InvoiceRowMoreAction: React.FC<{
   onClose: () => void;
   onPrintThermal: (invoice: IInvoice) => void;
   onPrintA4: (invoice: IInvoice) => void;
-}> = ({ invoice, isOpen, onToggle, onClose, onPrintThermal, onPrintA4 }) => {
+  onRecordPayment: (invoice: IInvoice) => void;
+  onViewPayments: (invoice: IInvoice) => void;
+  onViewNotes: (invoice: IInvoice) => void;
+  onAdjustInvoice: (invoice: IInvoice) => void;
+  onCancelInvoice: (invoice: IInvoice) => void;
+  onShowToast: (message: string, type?: 'success' | 'info' | 'error') => void;
+}> = ({
+  invoice,
+  isOpen,
+  onToggle,
+  onClose,
+  onPrintThermal,
+  onPrintA4,
+  onRecordPayment,
+  onViewPayments,
+  onViewNotes,
+  onAdjustInvoice,
+  onCancelInvoice,
+  onShowToast,
+}) => {
   const triggerRef = useRef<HTMLButtonElement>(null);
   return (
     <>
@@ -47,6 +68,12 @@ const InvoiceRowMoreAction: React.FC<{
         triggerRef={triggerRef}
         onPrintThermal={onPrintThermal}
         onPrintA4={onPrintA4}
+        onRecordPayment={onRecordPayment}
+        onViewPayments={onViewPayments}
+        onViewNotes={onViewNotes}
+        onAdjustInvoice={onAdjustInvoice}
+        onCancelInvoice={onCancelInvoice}
+        onShowToast={onShowToast}
       />
     </>
   );
@@ -70,12 +97,36 @@ export const InvoicesTableView: React.FC = () => {
     clearInvoiceFilters,
     fetchInvoices,
     isLoadingInvoices,
+    recordPayment,
+    cancelInvoice,
   } = useBillingStore();
 
   const [activeMenuInvoiceId, setActiveMenuInvoiceId] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [printModalInvoice, setPrintModalInvoice] = useState<IInvoice | null>(null);
   const [printModalMode, setPrintModalMode] = useState<'thermal-80mm' | 'a4-tax-invoice'>('thermal-80mm');
+
+  // Modal and toast state
+  const [recordPaymentInvoice, setRecordPaymentInvoice] = useState<IInvoice | null>(null);
+  const [paymentAmount, setPaymentAmount] = useState<number>(0);
+  const [paymentMode, setPaymentMode] = useState<'upi' | 'cash' | 'card' | 'bank_transfer'>('upi');
+  const [paymentNotes, setPaymentNotes] = useState<string>('');
+
+  const [viewPaymentsInvoice, setViewPaymentsInvoice] = useState<IInvoice | null>(null);
+  const [viewNotesInvoice, setViewNotesInvoice] = useState<IInvoice | null>(null);
+  const [notesDraft, setNotesDraft] = useState<string>('');
+
+  const [cancelInvoiceTarget, setCancelInvoiceTarget] = useState<IInvoice | null>(null);
+  const [cancelReason, setCancelReason] = useState<string>('Customer returned goods / Counter mistake');
+
+  const [toastNotification, setToastNotification] = useState<{ message: string; type: 'success' | 'info' | 'error' } | null>(null);
+
+  React.useEffect(() => {
+    if (toastNotification) {
+      const timer = setTimeout(() => setToastNotification(null), 3500);
+      return () => clearTimeout(timer);
+    }
+  }, [toastNotification]);
 
   // Dynamic KPI calculations derived purely from live invoices array
   const { totalSales, paidTotal, outstandingTotal, overdueTotal } = useMemo(() => {
@@ -252,6 +303,31 @@ export const InvoicesTableView: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Toast Notification Banner */}
+      {toastNotification && (
+        <div
+          className={`p-3.5 rounded-xl border flex items-center justify-between text-xs font-semibold animate-in fade-in slide-in-from-top-2 duration-150 ${
+            toastNotification.type === 'success'
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+              : toastNotification.type === 'error'
+              ? 'bg-rose-50 border-rose-200 text-rose-800'
+              : 'bg-blue-50 border-blue-200 text-blue-800'
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>{toastNotification.message}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setToastNotification(null)}
+            className="text-slate-400 hover:text-slate-700 ml-4 font-bold text-sm"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* 5 Top KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
         {kpiCards.map((card) => {
@@ -542,6 +618,30 @@ export const InvoicesTableView: React.FC = () => {
                             setPrintModalInvoice(invoice);
                             setPrintModalMode('a4-tax-invoice');
                           }}
+                          onRecordPayment={(invoice) => {
+                            setRecordPaymentInvoice(invoice);
+                            setPaymentAmount(invoice.dueAmount);
+                            setPaymentMode((invoice.settlementMode as any) || 'upi');
+                            setPaymentNotes('');
+                          }}
+                          onViewPayments={(invoice) => setViewPaymentsInvoice(invoice)}
+                          onViewNotes={(invoice) => {
+                            setViewNotesInvoice(invoice);
+                            setNotesDraft(invoice.notes || '');
+                          }}
+                          onAdjustInvoice={(invoice) => {
+                            setToastNotification({
+                              message: `Credit/Debit adjustment note initiated for ${invoice.invoiceNo}`,
+                              type: 'info',
+                            });
+                          }}
+                          onCancelInvoice={(invoice) => {
+                            setCancelInvoiceTarget(invoice);
+                            setCancelReason('Customer returned goods / Counter mistake');
+                          }}
+                          onShowToast={(message, type) =>
+                            setToastNotification({ message, type: type || 'info' })
+                          }
                         />
                       </div>
                     </td>
@@ -573,6 +673,327 @@ export const InvoicesTableView: React.FC = () => {
         invoice={printModalInvoice}
         defaultMode={printModalMode}
       />
+
+      {/* 1. Record Payment Modal */}
+      {recordPaymentInvoice && (
+        <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
+            <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+              <div>
+                <h3 className="text-base font-bold text-slate-900">
+                  Record Payment — {recordPaymentInvoice.invoiceNo}
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {recordPaymentInvoice.customerName} ({recordPaymentInvoice.customerPhone || 'Counter Walk-in'})
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setRecordPaymentInvoice(null)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4 text-xs text-slate-700">
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl grid grid-cols-3 gap-2 text-center">
+                <div>
+                  <span className="text-[10px] text-slate-400 block uppercase font-bold">Total Bill</span>
+                  <span className="font-bold text-slate-800 text-sm">₹{recordPaymentInvoice.totalAmount.toFixed(2)}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 block uppercase font-bold">Paid</span>
+                  <span className="font-bold text-emerald-600 text-sm">₹{recordPaymentInvoice.paidAmount.toFixed(2)}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 block uppercase font-bold">Balance Due</span>
+                  <span className="font-bold text-rose-600 text-sm">₹{recordPaymentInvoice.dueAmount.toFixed(2)}</span>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Payment Mode</label>
+                <div className="grid grid-cols-4 gap-2">
+                  {(['upi', 'cash', 'card', 'bank_transfer'] as const).map((mode) => (
+                    <button
+                      key={mode}
+                      type="button"
+                      onClick={() => setPaymentMode(mode)}
+                      className={`py-2 px-1 text-center rounded-xl text-xs font-semibold border transition-all ${
+                        paymentMode === mode
+                          ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                          : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'
+                      }`}
+                    >
+                      {mode === 'bank_transfer' ? 'Bank' : mode.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-semibold text-slate-700">Amount Received (₹)</label>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentAmount(recordPaymentInvoice.dueAmount)}
+                    className="text-[11px] font-semibold text-blue-600 hover:underline"
+                  >
+                    Set Full Due (₹{recordPaymentInvoice.dueAmount.toFixed(2)})
+                  </button>
+                </div>
+                <input
+                  type="number"
+                  min="1"
+                  max={recordPaymentInvoice.dueAmount}
+                  step="0.01"
+                  value={paymentAmount}
+                  onChange={(e) => setPaymentAmount(parseFloat(e.target.value) || 0)}
+                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Notes / Transaction Reference</label>
+                <input
+                  type="text"
+                  placeholder="e.g. UPI Ref / Cash register counter / Cheque #"
+                  value={paymentNotes}
+                  onChange={(e) => setPaymentNotes(e.target.value)}
+                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+                />
+              </div>
+            </div>
+
+            <div className="px-6 py-3.5 border-t border-slate-200 bg-white flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => setRecordPaymentInvoice(null)}
+                className="px-4 py-2 border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-xl text-xs font-semibold transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={paymentAmount <= 0}
+                onClick={() => {
+                  recordPayment(recordPaymentInvoice.id, paymentAmount, paymentMode);
+                  setToastNotification({
+                    message: `Payment of ₹${paymentAmount.toFixed(2)} (${paymentMode.toUpperCase()}) recorded for ${recordPaymentInvoice.invoiceNo}`,
+                    type: 'success',
+                  });
+                  setRecordPaymentInvoice(null);
+                }}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold disabled:opacity-50 transition-colors shadow-xs"
+              >
+                Confirm Payment
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 2. View Payments Modal */}
+      {viewPaymentsInvoice && (
+        <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
+            <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+              <div>
+                <h3 className="text-base font-bold text-slate-900">
+                  Payment History — {viewPaymentsInvoice.invoiceNo}
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">{viewPaymentsInvoice.customerName}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setViewPaymentsInvoice(null)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4 text-xs text-slate-700">
+              <div className="border border-slate-200 rounded-xl overflow-hidden">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-100 text-[11px] font-bold text-slate-700 uppercase">
+                    <tr>
+                      <th className="py-2.5 px-3">Date</th>
+                      <th className="py-2.5 px-3">Mode</th>
+                      <th className="py-2.5 px-3 text-right">Amount</th>
+                      <th className="py-2.5 px-3 text-center">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    <tr>
+                      <td className="py-2.5 px-3 font-medium text-slate-800">{viewPaymentsInvoice.date}</td>
+                      <td className="py-2.5 px-3 font-semibold text-slate-900 uppercase">
+                        {viewPaymentsInvoice.settlementMode || 'CASH'}
+                      </td>
+                      <td className="py-2.5 px-3 text-right font-bold text-emerald-700">
+                        ₹{viewPaymentsInvoice.paidAmount.toFixed(2)}
+                      </td>
+                      <td className="py-2.5 px-3 text-center">
+                        <span className="px-2 py-0.5 text-[10px] font-semibold rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          SUCCESS
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between text-xs">
+                <span className="text-slate-600 font-medium">Balance Due on this Invoice:</span>
+                <span className="font-bold text-rose-600 text-sm">₹{viewPaymentsInvoice.dueAmount.toFixed(2)}</span>
+              </div>
+            </div>
+
+            <div className="px-6 py-3.5 border-t border-slate-200 bg-white flex justify-end">
+              <button
+                type="button"
+                onClick={() => setViewPaymentsInvoice(null)}
+                className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-semibold transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 3. View Notes Modal */}
+      {viewNotesInvoice && (
+        <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
+            <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+              <div>
+                <h3 className="text-base font-bold text-slate-900">
+                  Notes & Remarks — {viewNotesInvoice.invoiceNo}
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">{viewNotesInvoice.customerName}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setViewNotesInvoice(null)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-3 text-xs">
+              <label className="block font-semibold text-slate-700">Internal Remarks / Terms:</label>
+              <textarea
+                rows={4}
+                value={notesDraft}
+                onChange={(e) => setNotesDraft(e.target.value)}
+                placeholder="Add special instructions, warranty terms, or customer remarks..."
+                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+              />
+            </div>
+
+            <div className="px-6 py-3.5 border-t border-slate-200 bg-white flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => setViewNotesInvoice(null)}
+                className="px-4 py-2 border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-xl text-xs font-semibold transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  viewNotesInvoice.notes = notesDraft;
+                  setToastNotification({
+                    message: `Notes updated for ${viewNotesInvoice.invoiceNo}`,
+                    type: 'success',
+                  });
+                  setViewNotesInvoice(null);
+                }}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-colors shadow-xs"
+              >
+                Save Notes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 4. Cancel Invoice Confirmation Modal */}
+      {cancelInvoiceTarget && (
+        <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
+            <div className="px-6 py-4 border-b border-rose-100 flex items-center justify-between bg-rose-50">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0" />
+                <div>
+                  <h3 className="text-base font-bold text-rose-900">
+                    Cancel Invoice {cancelInvoiceTarget.invoiceNo}
+                  </h3>
+                  <p className="text-xs text-rose-600 mt-0.5">This action cannot be undone.</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setCancelInvoiceTarget(null)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-rose-100 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4 text-xs text-slate-700">
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 text-xs">
+                <p className="font-semibold mb-1">Automatic Inventory Restock:</p>
+                <p>
+                  All {cancelInvoiceTarget.items.length} items billed in this invoice will be automatically restocked
+                  into your active live inventory ledger.
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Reason for Cancellation <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={cancelReason}
+                  onChange={(e) => setCancelReason(e.target.value)}
+                  placeholder="Enter reason for audit record..."
+                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-600"
+                />
+              </div>
+            </div>
+
+            <div className="px-6 py-3.5 border-t border-slate-200 bg-white flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => setCancelInvoiceTarget(null)}
+                className="px-4 py-2 border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-xl text-xs font-semibold transition-colors"
+              >
+                Go Back
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  const target = cancelInvoiceTarget;
+                  setCancelInvoiceTarget(null);
+                  await cancelInvoice(target.id, cancelReason);
+                  setToastNotification({
+                    message: `Invoice ${target.invoiceNo} cancelled. Line items restocked back to inventory.`,
+                    type: 'success',
+                  });
+                }}
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-colors shadow-xs"
+              >
+                Confirm Cancellation
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
