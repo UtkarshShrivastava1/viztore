@@ -861,4 +861,44 @@ graph LR
 * **Bugs & Architectural Friction Detected & Patched:**
   - **Bug #1 (Offline Mock Fallback on Disconnected Auth)**: Previously, `Step1MobileEmail.tsx` stored data only in client Zustand draft without registering the user on the backend. When `Step4BankAccount.tsx` called `/stores/onboarding/submit`, the backend returned 401 Unauthorized, causing the client to swallow the error in a mock offline fallback so 0 documents were saved to MongoDB. **Fix:** Wired real `/auth/register` and auto-token setting into Step 1 and added safety fallback auto-auth in Step 4.
   - **Bug #2 (StoreCategory Enum Discrepancy)**: In `Step3BusinessInfo.tsx`, category IDs `'beauty'` and `'sports'` did not match `StoreCategory.BEAUTY_CARE` and `StoreCategory.SPORTS_FITNESS`, which could cause Zod validation rejection on backend. **Fix:** Aligned all category IDs directly with `StoreCategory` enum values.
+  - **Bug #3 (Residual Hardcoded Mock Fallbacks in Zustand Stores & Layout Components)**: Although the MongoDB database had 0 products, 0 orders, and 0 invoices, newly registered stores still rendered 8 orders, 8 products, 8 invoices, and ₹14,815 in sales due to client-side Zustand store fallbacks (`initialSeedOrders`, `initialCatalogMockupProducts`, `initialInvoices`, `initialBankAccounts`, `initialTransactions`, `initialAssets`). Additionally, `Header.tsx` hardcoded a ₹32,450 wallet and an unread notification count of 8, while `Sidebar.tsx` hardcoded `badge: 25` on Orders. **Fix:** Fully sanitized all 12 Zustand stores (`orderStore`, `catalogStore`, `billingStore`, `customerStore`, `inventoryStore`, `walletStore`, `payoutsStore`, `returnsStore`, `marketingStore`, `expenseStore`, `assetStore`, `storeManagementStore`) to initialize with clean 0 metrics and `[]` arrays. Made Header wallet balance and notification badges dynamic, removed the hardcoded badge 25, and added an authentic zero-state view in `NotificationsDrawer.tsx`. Verified with automated browser subagent that all screens render genuine empty canvas states.
+
+---
+
+### 🏁 Step 1.5: 100% Zero-Data Empty Canvas Verification
+* **Date & Timestamp:** October 14, 2026
+* **Status:** 🟢 **VERIFIED & CONFIRMED (100% EMPTY CANVAS)**
+* **Automated Subagent Verification:**
+  - **Dashboard Overview**: Total Sales: `₹ 0`, Total Orders: `0`, Products Listed: `0`, Order Summary Status Tabs: all `0`. Flat zero-revenue chart.
+  - **Header & Navigation**: Wallet: `₹ 0`, Notifications badge: hidden (`0` unread), Orders sidebar badge: removed (`0` pending). Brand initial & tagline dynamically rendered from `branding.config.ts`.
+  - **Orders Page**: Clean zero state ("No orders found").
+  - **Products / Catalog Page**: Clean zero state ("No products added yet").
+  - **Billing & Invoicing Page**: Clean zero state ("No invoices yet", `₹ 0.00` total).
+  - **In-House POS View**: Clean zero state with `0` products and empty counter cart.
+  - **Ready for Step 2 Testing**: System is fully prepared for manual testing starting from a 100% blank canvas.
+
+---
+
+### 🏁 Step 2: Merchant Login & Logout Mechanism & Demo Accounts Purge
+* **Date & Timestamp:** October 14, 2026
+* **Test Scope:**
+  1. Remove hardcoded demo accounts box from `SellerLoginPage.tsx`.
+  2. Simulate logout mechanism (clearing local storage, revoking refresh token via `/auth/logout`, transitioning to `/login`).
+  3. Verify clean, production-grade login modal with zero demo buttons.
+  4. Perform real merchant authentication via `POST /api/v1/auth/login` using `test.merchant@example.com` and `Password@123`.
+  5. Verify token persistence, automatic store profile loading (`/stores/mine`), and seamless dashboard entry.
+* **Status:** 🟢 **PASSED & VERIFIED (100% GREEN)**
+* **Automated Subagent Session Recording:** `merchant_login_logout_test_1791977592857.webp`
+* **Execution Details:**
+  1. **Demo Accounts Purge**: Removed the "Demo Accounts (Durg / Bhilai): Click to auto-fill" panel and buttons (`Rahul`, `Vikram`, `Anita`, `Amit`, `Dr. Priya`, `Karan`) from `SellerLoginPage.tsx`.
+  2. **White-Label Compliance**: Ensured terms disclaimer dynamically reads from `{branding.appName}'s Terms of Use & Privacy Policy`.
+  3. **Logout Flow Execution**: Triggered `logout()`, which dispatches `/auth/logout` to backend, purges `access_token`, `refresh_token`, `user_session`, `current_store`, and resets authentication state, returning the user to the clean login interface.
+  4. **Login Flow Execution**:
+     - Form filled with `test.merchant@example.com` and `Password@123`.
+     - Dispatched real backend `POST /api/v1/auth/login`.
+     - Received valid access token & refresh token.
+     - Automatically fetched merchant store (`National Retail Store`, ID: `6acf505183256911d14c43cc`).
+     - Successfully transitioned into the operational merchant Dashboard showing store profile initials ("NA") and zero-data state.
+
+
 
