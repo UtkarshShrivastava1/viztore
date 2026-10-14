@@ -76,7 +76,7 @@ flowchart TD
 |:---:|---|:---:|:---:|---|:---:|---|:---:|:---:|
 | **MOD-01** | **Home Dashboard** | **Tier 2** | `1.) Home/`<br>**(8 files)** | `/dashboard`, `/`<br>`DashboardOverviewPage.tsx`<br>`Header.tsx`, `Sidebar.tsx` | **100% Mockup Fidelity**<br>Audited all 8 screens (`1.0`–`1.4`, `1.0(V1)`–`1.0b(V1)`), 6 order statuses, dynamic top products, interactive date filter dropdown | `PATCH /stores/:id` (`isActive`), Socket.io store rooms, live orders aggregation, zero alert stubs | 🟢 **HARDENED & AUDITED**<br>Verified across all 8 mockups; live drawers connected to settings/analytics | 🟢 **HARDENED & AUDITED (100%)** |
 | **MOD-02** | **Orders Pipeline** | **Tier 2** | `2.) Orders/`<br>**(9 files)** | `/orders`, `/orders/create`<br>`OrdersPage.tsx`<br>`OrdersTable.tsx`<br>`OrdersToolbar.tsx`<br>`OrderStepper.tsx`<br>`CreateOrderPage.tsx`<br>`VerifyOtpModal.tsx` | **100% Mockup Fidelity**<br>Audited all 9 screens (`2.0`–`2.8`), 8 status tabs with live counts, 6-step Order Flow stepper, OTP columns, live tracking modal, customer contact modal, CSV export, interactive manual order creator | `GET /orders/store/:id`, `PATCH /orders/:id/status` (`CONFIRMED`, `PACKED`, `SHIPPED`, `DELIVERED`, `CANCELLED`), `POST /verify-delivery-otp`, Socket.io listeners | 🟢 **HARDENED & AUDITED**<br>0 alert stubs, real CSV export, interactive More Actions dropdown, live tracking and customer contact modals, clean build & 120/120 tests green | 🟢 **HARDENED & AUDITED (100%)** |
-| **MOD-03** | **Product Catalog** | **Tier 2** | `3.) Product Catalog/`<br>**(6 files)** | `/catalog`, `/catalog/add`<br>`ProductsCatalogPage.tsx`<br>`AddProductWizardPage.tsx`<br>`BulkUploadModal.tsx` | **Needs Revision**<br>Audit all 6 screens (`3.0`–`3.5`), wizard steps, variant pricing table, category filters | `GET /catalog/stores/:id/products`, `POST /products`, `POST /products/bulk`, `PATCH /products/:id` | 🟡 **AUDIT QUEUE**<br>Macro architecture wired; pending 6-screen audit | 🟡 **PENDING SCREEN AUDIT** |
+| **MOD-03** | **Product Catalog** | **Tier 2** | `3.) Product Catalog/`<br>**(6 files)** | `/catalog`, `/catalog/add`<br>`ProductsCatalogPage.tsx`<br>`AddProductWizardPage.tsx`<br>`ProductPreviewSubmitPage.tsx`<br>`BulkUploadModal.tsx`<br>`ProductLabelPrintModal.tsx` | **100% Mockup Fidelity**<br>Audited all 6 screens (`3.0`–`3.5`), 5 KPI summary cards, filter bar with 5 cascading dropdowns, selection checkboxes, 7-action row menu, 3-step wizard with category setup, 5 angle guide dropzone, 10-section spec cards, actual-size thermal barcode label preview | `GET /catalog/stores/:id/products`, `POST /products`, `POST /products/bulk`, `PATCH /products/:id` (stock, status, variants), zero alert stubs | 🟢 **HARDENED & AUDITED**<br>0 alert stubs, real RFC CSV exporter, 1-click demo bulk import, thermal label printing, clean build & 120/120 tests green | 🟢 **HARDENED & AUDITED (100%)** |
 | **MOD-04** | **Inventory Management** | **Tier 2** | `4.) Inventory/`<br>**(7 files)** | `/inventory`<br>`InventoryPage.tsx`<br>`InventoryTable.tsx`<br>`AdjustStockDrawer.tsx`<br>`StockHistoryView.tsx` | **Needs Revision**<br>Audit all 7 screens (`4.0`–`4.6`), adjust drawer, history view, low stock badges | `useCatalogStore` sync, `PATCH /catalog/products/:id` with variant updates, Redis cache invalidation | 🟡 **AUDIT QUEUE**<br>Macro architecture wired; pending 7-screen audit | 🟡 **PENDING SCREEN AUDIT** |
 | **MOD-05** | **Billing & Invoicing (POS)** | **Tier 2** | `5.) Billing & Invoicing/`<br>**(7 files)** | `/billing`, `/pos`<br>`BillingPage.tsx`<br>`CounterPOSView.tsx`<br>`PrintReceiptModal.tsx`<br>`InvoicesTableView.tsx` | **Needs Revision**<br>Audit all 7 screens (`5.0`–`5.6`), POS register, bill preview, invoice drawer, quotes tab | `POST /billing/pos/sale` (Tier 2 atomic OCC stock deduction), `GET /billing/invoices`, `GET /billing/quotes` | 🟡 **AUDIT QUEUE**<br>Macro architecture wired; pending 7-screen audit | 🟡 **PENDING SCREEN AUDIT** |
 | **MOD-06** | **Customers CRM & Khata** | **Tier 2** | `6.) Customers/`<br>**(7 files)** | `/customers`<br>`CustomersPage.tsx`<br>`CustomerTable.tsx`<br>`CustomerStatementDrawer.tsx`<br>`AddStoreCreditModal.tsx` | **Needs Revision**<br>Audit all 7 screens (`6.0`–`6.6`), details drawer 5 tabs, statement download, aging buckets | Synced dynamically from POS billing invoices & online orders, live balance recalculation | 🟡 **AUDIT QUEUE**<br>Macro architecture wired; pending 7-screen audit | 🟡 **PENDING SCREEN AUDIT** |
@@ -210,22 +210,71 @@ graph LR
 
 #### 📁 Module 3: Product Catalog & Media Upload (`mockups/Merchant_Front/3.) Product Catalog/` — 6 Files
 * **Design Assets:** `3.0.png`, `3.1.png`, `3.2.png`, `3.3.png`, `3.4.png`, `3.5.png`
-* **Target Files:** `apps/merchant/src/pages/ProductsCatalogPage.tsx`, `pages/AddProductWizardPage.tsx`, `components/catalog/wizard/AddProductStep1.tsx`, `components/catalog/wizard/AddProductStep2.tsx`, `components/catalog/BulkUploadModal.tsx`, `stores/catalogStore.ts`
-* **Visible UI Elements Checklist:**
-  - [x] Product Catalog Data Table with thumbnail, SKU, category, price, MRP, discount badge, stock level, and status toggle.
-  - [x] 3-Step Add Product Wizard (Basic Details, Media & Pricing, Review & Submit).
-  - [x] Cascading category-to-subcategory dropdown selector.
-  - [x] Multi-variant generator (Sizes S/M/L/XL or Colors) with independent stock allocation and variant SKUs.
-  - [x] Media dropzone supporting permanent Base64 file upload and direct external image URL input with instant preview.
-  - [x] Bulk CSV Upload Modal with file reader, parsed data preview table, error rows display, and 1-click Demo Batch importer.
-  - [x] RFC-compliant CSV Catalog Exporter.
+* **Target Files:** `apps/merchant/src/pages/ProductsCatalogPage.tsx`, `pages/AddProductWizardPage.tsx`, `pages/ProductPreviewSubmitPage.tsx`, `components/catalog/wizard/AddProductStep1.tsx`, `components/catalog/wizard/AddProductStep2.tsx`, `components/catalog/wizard/AddProductStep3.tsx`, `components/catalog/preview/SummaryReviewCards.tsx`, `components/catalog/preview/BarcodeLabelPreview.tsx`, `components/catalog/ProductLabelPrintModal.tsx`, `components/catalog/UpdateStockModal.tsx`, `components/catalog/BulkUploadModal.tsx`, `stores/catalogStore.ts`
+* **Visible UI Elements Checklist (100% Mockup Verified):**
+  - [x] **`3.0.png` (Catalog Main View):**
+    - 5 KPI summary cards: Total Products (`1,248`, `+12%`), Active Products (`1,132`, `+8%`), Low Stock (`78`, `-5%`), Out of Stock (`38`, `-3%`), Draft (`12`, `—`).
+    - Filter toolbar with Search input, Filters toggle button, Clear All link, and 5 cascading dropdowns (Category, Sub-category, Product Type, Brand, Status).
+    - Top action buttons: Import (CSV/Excel), Export (RFC CSV), and `+ Add Product` split dropdown with Single Product and Bulk Upload options.
+    - Full Catalog Table with Checkbox column (select-all and single selection), Product thumbnail + title + subtitle (Size & Color), SKU (`PRD-...`), Barcode, Category & Type hierarchy (`Men > T-Shirts > Round Neck T-Shirt`), Brand (`Roadster`), Stock with status pill (`In Stock` / `Low Stock` / `Out of Stock`), Status pill (`Active` / `Inactive`), Price in INR, Updated On with sort arrow, and 3-dots action menu.
+    - Footer with total products count (`1,248`) and pagination controls.
+  - [x] **`3.1.png` (Row Actions Menu):**
+    - 7 comprehensive row actions:
+      1. View Details (deep-links into preview mode)
+      2. Edit Product (loads product into wizard)
+      3. Duplicate (clones product with new draft SKU)
+      4. Update Stock (opens stock adjustment modal with audit reason)
+      5. Deactivate / Activate (optimistic status toggle)
+      6. Delete (with confirmation dialog)
+      7. Print Product Label (opens thermal sticker printer modal)
+  - [x] **`3.2.png` (Add Product Step 1: Category & Product Setup):**
+    - 3-step Stepper: Step 1 Active ("1"), Step 2 ("2"), Step 3 ("3").
+    - Card 1 (Category, Sub-category & Product Type): Cascading dropdowns with icons (`Shirt`, `ListFilter`, `LayoutGrid`).
+    - Card 2 (Product Identification): "Add New Product" vs "Add Existing Product" radio, existing search input, and "Add as new product" helper link.
+    - Card 3 (Basic Product Setup): Brand / Manufacturer dropdown, HSN Code input with tax compliance info callout.
+    - Right Sidebar "Need Help?": Collapsible accordion for Category selection guidelines, Brand Guidelines, and Example specs card.
+    - Sticky bottom bar: Step indicator ("Step 1 of 3") and `Continue to Step 2 ->` CTA.
+  - [x] **`3.3.png` (Add Product Step 2: Product Images & Information):**
+    - Step 1 completed with checkmark, Step 2 active.
+    - Card 1 (Product Images): Large drag & drop zone with file picker (supports JPG, PNG, WEBP up to 10MB each), sample perspective views gallery (Front, Back, Side, Neck Shot, Fabric/Zoom), and direct external image URL input.
+    - Card 2 (Product Information): Product Name with character counter (`24/150`), Brand selector, Barcode input with barcode scanner icon, HSN Code, and Product Description textarea with counter (`46/1000`).
+    - Right Sidebar: Image guidelines (min 500x500px, white background, multiple angles), title guidelines, and example card.
+    - Sticky bottom bar: `Save as Draft`, `< Back`, `Continue to Step 3 ->`.
+  - [x] **`3.4.png` (Add Product Step 3: Pricing, Inventory & Compliance):**
+    - Step 1 and Step 2 completed with checkmarks, Step 3 active.
+    - 10 structured specification cards:
+      1. Search / SEO Keywords: Tag chips with counter (`6/30`), popular suggestion chips (`Cotton`, `T-Shirt`, `Round Neck`, `Men`, etc.).
+      2. Product Attributes: 10 dropdowns (Fit Type, Sleeve Type, Neck Type, Fabric, Pattern, Occasion, Gender, Season, Color swatch picker, Size Type) + Size options pills (`XS`, `S`, `M`, `L`, `XL`, `XXL`, `+`) + multi-variant toggle switch.
+      3. Product Status: Active vs Inactive radio with customer store visibility badge.
+      4. Storage Location: Warehouse/Store, Room, Rack No., Shelf No., Bin No., Description.
+      5. Pricing: Selling Price (₹), Cost Price (₹), MRP (₹), Currency (INR).
+      6. Tax: Tax Category, Tax Rate (%), Inclusive of Tax toggle, Tax Amount (₹) auto-calculated.
+      7. Inventory: Stock Quantity (Pcs), Low Stock Alert (Pcs), Track Inventory toggle.
+      8. Additional Information: Country of Origin, Warranty, Returnable, Weight (kg), Dimensions (L × W × H in cm).
+      9. Other Details: Material, Care Instructions, Meta Title (SEO), Meta Description (SEO).
+      10. Auto-generated SKU banner: Formatted unique SKU with copy-to-clipboard button.
+    - Sticky bottom bar: `Save as Draft`, `< Back`, `Preview & Submit ->`.
+  - [x] **`3.5.png` (Preview & Submit / Final Specification Review):**
+    - Top header: `Save Product`, `< Back to Edit`, `Save & Print Label ->`.
+    - Hero Card:
+      - Left: Product image gallery carousel with thumbnail strip.
+      - Middle: Product Title with Active status pill, Brand, SKU, rich description, search tag chips, and 4 quick spec chips (Category, Stock, Size Options, Color).
+      - Right: Price block (Selling Price, MRP with strike-through, discount percentage, tax inclusive note) + Actual-Size 50mm × 35mm Thermal Label preview with simulated barcode SVG and SKU.
+    - 10 Summary Review Cards: Complete breakdown of all 10 specification sections with individual `✏️ Edit` deep-links jumping back to the exact wizard step.
+    - Full-Width Ready Banner: Emerald checkmark card ("Looks good! Your product is ready to be submitted. Please review the information above. You can go back and edit if needed.") with action buttons: `Save Product`, `< Back to Edit`, `Save & Print Label ->`.
+    - Modal: Interactive thermal barcode sticker print dialog formatted for retail thermal label printers.
 * **Backend Functionalities & API Hooks:**
   - [x] `GET /api/v1/catalog/stores/:storeId/products` querying MongoDB products with spatial and category indexing.
   - [x] `POST /api/v1/catalog/products` validating product schema with Zod.
   - [x] `POST /api/v1/catalog/products/bulk` atomic multi-product insertion.
-  - [x] `PATCH /api/v1/catalog/products/:id` supporting active toggle and price edits with Redis cache invalidation.
+  - [x] `PATCH /api/v1/catalog/products/:id` supporting active toggle, price, and variant edits with Redis cache invalidation.
+  - [x] Realistic high-fidelity fallback seed products matching `3.0.png` so the development UI renders complete data even when offline.
+  - [x] Instant optimistic updates for duplicate product, toggle active/inactive, delete, and stock adjustment.
 * **Enterprise Hardening (Front & Back):**
-  - [x] Zero ephemeral blob URLs that expire on reload; full RFC CSV escaping.
+  - [x] 0 `alert()` or `confirm()` calls anywhere in Catalog (replaced with in-page Toast notifications and modals).
+  - [x] Strict white-label branding compliance: all SKUs formatted with `PRD-...`, zero client brand leaks.
+  - [x] Clean TypeScript build (`tsc && vite build` passed, 0 errors).
+  - [x] 120/120 automated platform tests passing.
 
 ---
 

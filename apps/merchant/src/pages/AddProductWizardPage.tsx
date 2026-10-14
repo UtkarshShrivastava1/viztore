@@ -8,6 +8,7 @@ import { AddProductStep3 } from '../components/catalog/wizard/AddProductStep3.js
 
 export const AddProductWizardPage: React.FC = () => {
   const { wizardStep, setWizardStep, setActiveView, saveDraftAsProduct } = useCatalogStore();
+  const [toastMessage, setToastMessage] = React.useState<string | null>(null);
 
   const handleCancel = () => {
     setActiveView('list');
@@ -16,10 +17,13 @@ export const AddProductWizardPage: React.FC = () => {
   const handleSaveAsDraft = async () => {
     try {
       await saveDraftAsProduct();
-      alert('Product saved as draft!');
-      setActiveView('list');
+      setToastMessage('Product saved as draft!');
+      setTimeout(() => {
+        setActiveView('list');
+      }, 900);
     } catch (err: any) {
-      alert(`Failed to save draft: ${err?.message || 'Unknown error'}`);
+      setToastMessage(`Failed to save draft: ${err?.message || 'Unknown error'}`);
+      setTimeout(() => setToastMessage(null), 3500);
     }
   };
 
@@ -35,7 +39,15 @@ export const AddProductWizardPage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-4 max-w-7xl mx-auto">
+    <div className="space-y-4 max-w-7xl mx-auto relative">
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed top-5 right-5 z-50 bg-slate-900 text-white text-xs px-4 py-2.5 rounded-xl shadow-xl flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-150">
+          <Bookmark className="w-4 h-4 text-blue-400" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
+
       {/* Top Breadcrumb & Actions Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>

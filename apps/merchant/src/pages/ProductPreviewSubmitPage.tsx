@@ -25,6 +25,12 @@ export const ProductPreviewSubmitPage: React.FC = () => {
   } = useCatalogStore();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  const showToast = (type: 'success' | 'error', message: string) => {
+    setToast({ type, message });
+    setTimeout(() => setToast(null), 3500);
+  };
 
   const handleBackToEdit = () => {
     setWizardStep(3);
@@ -35,10 +41,12 @@ export const ProductPreviewSubmitPage: React.FC = () => {
     setIsSubmitting(true);
     try {
       const saved = await saveDraftAsProduct();
-      alert(`Product "${saved.name}" published successfully!`);
-      setActiveView('list');
+      showToast('success', `Product "${saved.name}" published successfully!`);
+      setTimeout(() => {
+        setActiveView('list');
+      }, 1000);
     } catch (err: any) {
-      alert(`Failed to publish product: ${err?.message || 'Unknown error'}`);
+      showToast('error', `Failed to publish product: ${err?.message || 'Unknown error'}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -48,9 +56,10 @@ export const ProductPreviewSubmitPage: React.FC = () => {
     setIsSubmitting(true);
     try {
       const saved = await saveDraftAsProduct();
+      showToast('success', `Product "${saved.name}" published! Opening barcode label printer...`);
       openPrintLabelModal(saved);
     } catch (err: any) {
-      alert(`Failed to publish product: ${err?.message || 'Unknown error'}`);
+      showToast('error', `Failed to publish product: ${err?.message || 'Unknown error'}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -60,10 +69,12 @@ export const ProductPreviewSubmitPage: React.FC = () => {
     setIsSubmitting(true);
     try {
       await saveDraftAsProduct();
-      alert('Product saved as draft!');
-      setActiveView('list');
+      showToast('success', 'Product saved as draft!');
+      setTimeout(() => {
+        setActiveView('list');
+      }, 1000);
     } catch (err: any) {
-      alert(`Failed to save draft: ${err?.message || 'Unknown error'}`);
+      showToast('error', `Failed to save draft: ${err?.message || 'Unknown error'}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -120,33 +131,58 @@ export const ProductPreviewSubmitPage: React.FC = () => {
         <div className="flex items-center gap-2.5">
           <button
             type="button"
-            onClick={handleBackToEdit}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer"
+            onClick={handleSaveProduct}
+            disabled={isSubmitting}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 shadow-2xs transition-colors cursor-pointer"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
+            <Bookmark className="w-3.5 h-3.5 text-slate-500" />
+            <span>Save Product</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleBackToEdit}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 shadow-2xs transition-colors cursor-pointer"
+          >
+            <ArrowLeft className="w-3.5 h-3.5 text-slate-500" />
             <span>Back to Edit</span>
           </button>
 
           <button
             type="button"
-            onClick={handleSaveAsDraft}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer"
-          >
-            <Bookmark className="w-3.5 h-3.5 text-slate-400" />
-            <span>Save as Draft</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={handleSaveProduct}
+            onClick={handleSaveAndPrint}
             disabled={isSubmitting}
-            className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs transition-colors cursor-pointer"
           >
-            <Send className="w-3.5 h-3.5" />
-            <span>{isSubmitting ? 'Publishing...' : 'Save & Publish'}</span>
+            <Printer className="w-3.5 h-3.5" />
+            <span>Save &amp; Print Label</span>
+            <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
           </button>
         </div>
       </div>
+
+      {/* Toast Alert */}
+      {toast && (
+        <div
+          className={`p-3 rounded-xl border text-xs flex items-center justify-between shadow-xs ${
+            toast.type === 'success'
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+              : 'bg-rose-50 border-rose-200 text-rose-800'
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <CheckCircle className="w-4 h-4 shrink-0" />
+            <span className="font-medium">{toast.message}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setToast(null)}
+            className="text-slate-400 hover:text-slate-600 cursor-pointer"
+          >
+            ×
+          </button>
+        </div>
+      )}
 
       {/* Hero Preview Card */}
       <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-xs">
@@ -161,7 +197,7 @@ export const ProductPreviewSubmitPage: React.FC = () => {
             <div>
               <div className="flex items-center gap-2 mb-1.5">
                 <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                  {draftProduct.status === 'active' ? 'Active Listing' : 'Draft / Inactive'}
+                  {draftProduct.status === 'active' ? 'Active' : 'Draft / Inactive'}
                 </span>
                 <span className="text-xs text-slate-400">•</span>
                 <span className="text-xs font-semibold text-slate-500">
@@ -287,45 +323,51 @@ export const ProductPreviewSubmitPage: React.FC = () => {
         <SummaryReviewCards product={draftProduct} />
       </div>
 
-      {/* Sticky Bottom Submission Footer */}
-      <div className="fixed bottom-0 inset-x-0 z-30 px-6 py-3.5 bg-white/95 backdrop-blur-md border-t border-slate-200/90 shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
-            <CheckCircle className="w-3.5 h-3.5" />
+      {/* Full-Width Ready Banner matching 3.5.png */}
+      <div className="p-4 rounded-xl bg-emerald-50/80 border border-emerald-200/90 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+            <CheckCircle className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-xs font-bold text-slate-800">Ready for Listing</span>
-            <span className="text-slate-400 mx-1.5">•</span>
-            <span className="text-xs text-slate-500">10 of 10 specification sections complete</span>
+            <h4 className="text-xs font-bold text-slate-900">
+              Looks good! Your product is ready to be submitted.
+            </h4>
+            <p className="text-[11px] text-slate-500 mt-0.5">
+              Please review the information above. You can go back and edit if needed.
+            </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2.5 shrink-0">
+          <button
+            type="button"
+            onClick={handleSaveProduct}
+            disabled={isSubmitting}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 shadow-2xs transition-colors cursor-pointer"
+          >
+            <Bookmark className="w-3.5 h-3.5 text-slate-500" />
+            <span>Save Product</span>
+          </button>
+
           <button
             type="button"
             onClick={handleBackToEdit}
-            className="px-3.5 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 shadow-2xs transition-colors cursor-pointer"
           >
-            Back to Edit
+            <ArrowLeft className="w-3.5 h-3.5 text-slate-500" />
+            <span>Back to Edit</span>
           </button>
 
           <button
             type="button"
             onClick={handleSaveAndPrint}
-            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-slate-800 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg transition-colors cursor-pointer"
-          >
-            <Printer className="w-3.5 h-3.5 text-blue-600" />
-            <span>Save &amp; Print Label</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={handleSaveProduct}
             disabled={isSubmitting}
-            className="inline-flex items-center gap-1.5 px-5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs transition-colors cursor-pointer"
           >
-            <CheckCircle className="w-3.5 h-3.5" />
-            <span>{isSubmitting ? 'Publishing...' : 'Save Product'}</span>
+            <Printer className="w-3.5 h-3.5" />
+            <span>Save &amp; Print Label</span>
+            <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
           </button>
         </div>
       </div>

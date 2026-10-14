@@ -116,6 +116,15 @@ export const ProductsTable: React.FC = () => {
         <table className="w-full text-left border-collapse table-auto">
           <thead>
             <tr className="border-b border-slate-200/80 bg-slate-50/60 text-[11px] font-semibold text-slate-500 uppercase tracking-wider select-none">
+              <th className="py-2.5 px-3 w-8 text-center">
+                <input
+                  type="checkbox"
+                  checked={paginatedProducts.length > 0 && paginatedProducts.every((p) => (useCatalogStore.getState().selectedProductIds || []).includes(p.id))}
+                  onChange={() => useCatalogStore.getState().toggleSelectAll()}
+                  className="rounded-sm border-slate-300 text-blue-600 focus:ring-blue-500/20 cursor-pointer"
+                  title="Select All"
+                />
+              </th>
               <th className="py-2.5 px-3 font-semibold text-slate-600">Product</th>
               <th className="py-2.5 px-2 font-semibold text-slate-600 whitespace-nowrap">SKU</th>
               <th className="py-2.5 px-2 font-semibold text-slate-600 whitespace-nowrap">Barcode</th>
@@ -138,7 +147,7 @@ export const ProductsTable: React.FC = () => {
           <tbody className="divide-y divide-slate-100 text-xs">
             {paginatedProducts.length === 0 ? (
               <tr>
-                <td colSpan={10} className="py-12 text-center text-slate-400">
+                <td colSpan={11} className="py-12 text-center text-slate-400">
                   <div className="max-w-xs mx-auto space-y-1">
                     <p className="font-semibold text-slate-600 text-sm">No products found</p>
                     <p className="text-xs text-slate-400">
@@ -154,12 +163,23 @@ export const ProductsTable: React.FC = () => {
                 const mainImg =
                   product.images?.[0] ||
                   'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=150&q=80';
+                const isSelected = (useCatalogStore.getState().selectedProductIds || []).includes(product.id);
 
                 return (
                   <tr
                     key={product.id}
-                    className="hover:bg-slate-50/70 transition-colors"
+                    className={`hover:bg-slate-50/70 transition-colors ${isSelected ? 'bg-blue-50/30' : ''}`}
                   >
+                    {/* Checkbox */}
+                    <td className="py-2.5 px-3 w-8 text-center">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => useCatalogStore.getState().toggleSelectProduct(product.id)}
+                        className="rounded-sm border-slate-300 text-blue-600 focus:ring-blue-500/20 cursor-pointer"
+                      />
+                    </td>
+
                     {/* Product */}
                     <td className="py-2.5 px-3">
                       <div className="flex items-center gap-2.5">

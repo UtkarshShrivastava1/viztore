@@ -34,9 +34,16 @@ export const ProductsCatalogPage: React.FC<ProductsCatalogPageProps> = ({
     }
   };
 
+  const [toastMessage, setToastMessage] = React.useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
   const handleExportCsv = () => {
     if (products.length === 0) {
-      alert('No products available to export.');
+      showToast('No products available to export.');
       return;
     }
     const header = 'SKU,Name,Category,SubCategory,Price,MRP,Stock,Status\n';
@@ -56,10 +63,19 @@ export const ProductsCatalogPage: React.FC<ProductsCatalogPageProps> = ({
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    showToast(`Exported ${products.length} products to CSV.`);
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 relative">
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed top-5 right-5 z-50 bg-slate-900 text-white text-xs px-4 py-2.5 rounded-xl shadow-xl flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-150">
+          <AlertCircle className="w-4 h-4 text-blue-400" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
+
       {/* 5 Top KPI Cards */}
       <CatalogKpiCards />
 

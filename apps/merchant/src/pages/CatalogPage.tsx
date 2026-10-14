@@ -22,8 +22,7 @@ export const CatalogPage: React.FC = () => {
       <BulkUploadModal
         isOpen={isBulkOpen}
         onClose={() => setIsBulkOpen(false)}
-        onBulkSuccess={(count) => {
-          alert(`Successfully imported ${count} items into catalog!`);
+        onBulkSuccess={(_count) => {
           setIsBulkOpen(false);
         }}
       />
