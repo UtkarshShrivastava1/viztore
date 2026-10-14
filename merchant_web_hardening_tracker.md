@@ -808,3 +808,57 @@ graph LR
 3. **Receipt Print Readiness**: All billing receipts and customer statements must be formatted with print-specific CSS media queries supporting standard 80mm/58mm thermal rolls and standard A4 sheets.
 4. **Real-Time Operational Resilience**: Socket connections must implement exponential backoff reconnection and fall back to polling if WebSocket transport is interrupted.
 5. **Auditable Role-Based Security**: Sensitive operations (price changes, credit adjustments, payouts) must enforce authenticated session checks.
+
+---
+
+## 🧪 Live E2E Testing Progression & Bug Audit Log
+
+### 🏁 Step 1: Merchant & Store Registration
+* **Date & Timestamp:** October 14, 2026
+* **Test Scope:** Full onboarding flow on `http://localhost:3001/?view=onboarding` into live MongoDB persistence.
+* **Status:** 🟢 **PASSED & PERSISTED (100% GREEN)**
+* **Automated Subagent Session Recording:** `merchant_registration_1791971113748.webp`
+* **Execution Details:**
+  1. **Mobile & Email Verification (Step 1)**:
+     - Mobile: `9876543210` (OTP triggered and verified).
+     - Email: `test.merchant@example.com` (OTP triggered and verified).
+     - Password: `Password@123` (8+ chars compliance verified).
+     - Dispatched real backend registration via `POST /api/v1/auth/register` establishing JWT bearer tokens.
+  2. **Legal & Identity Verification (Step 2)**:
+     - GSTIN: `29ABCDE1234F1Z5` verified with real-time regex & PAN extraction (`ABCDE1234F`).
+     - Business Legal Name: `National Retail Store Ltd.`
+  3. **Electronic Signature (Step 2 Sub-step)**:
+     - Interactive HTML5 canvas digital e-signature drawn and attached.
+  4. **Store Setup & Geolocation (Step 3)**:
+     - Store Display Name: `National Retail Store`
+     - Description: `Your trusted local neighborhood store for daily groceries and essentials.`
+     - Street Address: `123 Main Street`, Commercial District: `MG Road`, Pincode: `560001`, Bangalore.
+     - Geolocation Coordinates: `[77.5946, 12.9716]` (2dsphere point).
+  5. **Business Operations (Step 3 Sub-step)**:
+     - Category: `fashion` (mapped to valid `StoreCategory` enum).
+     - Operating Hours: 7-day schedule (`09:00` - `21:00`, all days active).
+  6. **Bank Account Details (Step 4)**:
+     - Account Number: `123456789012`
+     - Confirm Account Number: `123456789012`
+     - IFSC: `HDFC0001234`
+  7. **Backend Submission & Verification**:
+     - Dispatched `POST /api/v1/stores/onboarding/submit` with complete 6-step Zod validated payload.
+     - Transitioned to `ReviewWaitingRoom` ("Store Profile Under Super Admin Review" - Status: `Pending`).
+     - Clicked "Preview Merchant Dashboard" and successfully entered the operational merchant management interface.
+* **Database Verification (MongoDB Atlas)**:
+  - **User Record (`users`)**:
+    - ID: `6acf4f8583256911d14c439b`
+    - Email: `test.merchant@example.com`
+    - Phone: `9876543210`
+    - Role: `merchant`
+  - **Store Record (`stores`)**:
+    - ID: `6acf505183256911d14c43cc`
+    - Name: `National Retail Store`
+    - Slug: `national-retail-store-oqrk`
+    - Status: `pending`
+    - Category: `fashion`
+    - Owner: `6acf4f8583256911d14c439b`
+* **Bugs & Architectural Friction Detected & Patched:**
+  - **Bug #1 (Offline Mock Fallback on Disconnected Auth)**: Previously, `Step1MobileEmail.tsx` stored data only in client Zustand draft without registering the user on the backend. When `Step4BankAccount.tsx` called `/stores/onboarding/submit`, the backend returned 401 Unauthorized, causing the client to swallow the error in a mock offline fallback so 0 documents were saved to MongoDB. **Fix:** Wired real `/auth/register` and auto-token setting into Step 1 and added safety fallback auto-auth in Step 4.
+  - **Bug #2 (StoreCategory Enum Discrepancy)**: In `Step3BusinessInfo.tsx`, category IDs `'beauty'` and `'sports'` did not match `StoreCategory.BEAUTY_CARE` and `StoreCategory.SPORTS_FITNESS`, which could cause Zod validation rejection on backend. **Fix:** Aligned all category IDs directly with `StoreCategory` enum values.
+

@@ -32,9 +32,9 @@ export const Step3BusinessInfo: React.FC<Step3BusinessInfoProps> = ({
     { id: 'jewellery', label: 'Jewellery', icon: Gem },
     { id: 'electronics', label: 'Electronics', icon: Cpu },
     { id: 'home_living', label: 'Home & Living', icon: Armchair },
-    { id: 'beauty', label: 'Beauty & Personal Care', icon: Sparkles },
+    { id: 'beauty_care', label: 'Beauty & Personal Care', icon: Sparkles },
     { id: 'gifts', label: 'Gifts & Lifestyle', icon: Gift },
-    { id: 'sports', label: 'Sports & Fitness', icon: Dumbbell },
+    { id: 'sports_fitness', label: 'Sports & Fitness', icon: Dumbbell },
   ];
 
   const [selectedCategories, setSelectedCategories] = useState<string[]>(

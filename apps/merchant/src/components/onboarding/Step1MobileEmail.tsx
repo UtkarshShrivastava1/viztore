@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Phone, Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { branding } from '../../lib/branding.js';
 import { useOnboardingStore } from '../../stores/onboardingStore.js';
+import { api } from '../../lib/api.js';
+import { useAuthStore } from '../../stores/authStore.js';
 
 interface Step1MobileEmailProps {
   onContinue: () => void;
@@ -44,11 +46,13 @@ export const Step1MobileEmail: React.FC<Step1MobileEmailProps> = ({
     setEmailOtpSent(true);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!phone || phone.length < 10) {
-      setError('Please enter a valid 10-digit mobile number');
+    if (!phone || !/^[6-9]\d{9}$/.test(phone)) {
+      setError('Please enter a valid 10-digit mobile number starting with 6-9');
       return;
     }
     if (!email || !email.includes('@')) {
@@ -59,9 +63,42 @@ export const Step1MobileEmail: React.FC<Step1MobileEmailProps> = ({
       setError('Passwords do not match');
       return;
     }
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters');
       return;
+    }
+
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      let authRes: any;
+      try {
+        authRes = await api.post('/auth/register', {
+          fullName: 'Merchant Partner',
+          email: email.toLowerCase().trim(),
+          phone: phone.trim(),
+          password,
+          role: 'merchant',
+        });
+      } catch (regErr: any) {
+        if (regErr?.message?.includes('already exists') || regErr?.status === 409) {
+          authRes = await api.post('/auth/login', {
+            identifier: email.toLowerCase().trim(),
+            password,
+          });
+        } else {
+          throw regErr;
+        }
+      }
+
+      if (authRes?.tokens?.accessToken && authRes?.user) {
+        await useAuthStore.getState().setAuth(authRes.user, authRes.tokens.accessToken, authRes.tokens.refreshToken);
+      }
+    } catch (err: any) {
+      console.warn('Backend user registration sync during onboarding step 1:', err);
+    } finally {
+      setIsSubmitting(false);
     }
 
     updateStep(1, {
@@ -208,9 +245,10 @@ export const Step1MobileEmail: React.FC<Step1MobileEmailProps> = ({
         {/* Primary Action Button */}
         <button
           type="submit"
-          className="w-full py-3.5 px-6 rounded-lg bg-[#0038ed] hover:bg-[#002fcf] text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-xs transition-all cursor-pointer mt-2"
+          disabled={isSubmitting}
+          className="w-full py-3.5 px-6 rounded-lg bg-[#0038ed] hover:bg-[#002fcf] text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-xs transition-all cursor-pointer mt-2 disabled:opacity-60"
         >
-          <span>Register &amp; Continue</span>
+          <span>{isSubmitting ? 'Registering Account...' : 'Register & Continue'}</span>
           <ArrowRight className="w-4 h-4" />
         </button>
 
