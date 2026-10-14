@@ -65,6 +65,27 @@ export const App: React.FC = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  // Dynamic Resizable Sidebar state
+  const DEFAULT_SIDEBAR_WIDTH = 256;
+  const MIN_SIDEBAR_WIDTH = 200;
+  const MAX_SIDEBAR_WIDTH = 420;
+
+  const [sidebarWidth, setSidebarWidth] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('merchant_sidebar_width');
+      if (saved) {
+        const parsed = parseInt(saved, 10);
+        if (!isNaN(parsed) && parsed >= MIN_SIDEBAR_WIDTH && parsed <= MAX_SIDEBAR_WIDTH) {
+          return parsed;
+        }
+      }
+    } catch {
+      // fallback
+    }
+    return DEFAULT_SIDEBAR_WIDTH;
+  });
+  const [isResizingSidebar, setIsResizingSidebar] = useState(false);
+
   // Global modals
   const [isGlobalAddOpen, setIsGlobalAddOpen] = useState(false);
   const [isGlobalBulkOpen, setIsGlobalBulkOpen] = useState(false);
@@ -124,7 +145,14 @@ export const App: React.FC = () => {
 
   // Main Merchant Dashboard & Functional Modules
   return (
-    <div className="min-h-screen bg-[#f8fafc] text-slate-800 flex flex-col">
+    <div
+      style={
+        {
+          '--sidebar-width': isSidebarCollapsed ? '80px' : `${sidebarWidth}px`,
+        } as React.CSSProperties
+      }
+      className="min-h-screen bg-[#f8fafc] text-slate-800 flex flex-col"
+    >
       {/* Real-time Socket.io Incoming Order Alert & Melodic Chime Engine */}
       <LiveOrderSocketListener
         onNavigateToOrder={() => {
@@ -144,6 +172,17 @@ export const App: React.FC = () => {
           }}
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+          sidebarWidth={sidebarWidth}
+          onWidthChange={(w) => {
+            setSidebarWidth(w);
+            try {
+              localStorage.setItem('merchant_sidebar_width', String(w));
+            } catch {
+              // ignore
+            }
+          }}
+          isResizing={isResizingSidebar}
+          onResizingChange={setIsResizingSidebar}
         />
       </div>
 
@@ -151,6 +190,7 @@ export const App: React.FC = () => {
       <div className="flex-1 flex flex-col">
         <Header
           isCollapsed={isSidebarCollapsed}
+          isResizing={isResizingSidebar}
           onToggleMobileMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           onNavigateToWallet={() => setCurrentTab('wallet')}
           onNavigateToSettings={(subTab) => {
@@ -163,8 +203,8 @@ export const App: React.FC = () => {
         />
 
         <main
-          className={`flex-1 p-3.5 sm:px-6 sm:py-4 transition-[margin] duration-300 ${
-            isSidebarCollapsed ? 'sm:ml-20' : 'sm:ml-64'
+          className={`flex-1 p-3.5 sm:px-6 sm:py-4 sm:ml-[var(--sidebar-width)] ${
+            isResizingSidebar ? '' : 'transition-[margin] duration-300'
           }`}
         >
           {currentTab === 'overview' && (

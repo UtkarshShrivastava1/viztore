@@ -344,7 +344,7 @@ export const BulkAdjustStockView: React.FC = () => {
       </div>
 
       {/* Sticky Bottom Action Bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200/80 p-4 shadow-xl z-20 flex items-center justify-between sm:ml-64 transition-all">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200/80 p-4 shadow-xl z-20 flex items-center justify-between sm:ml-[var(--sidebar-width,16rem)] transition-all">
         <div className="flex items-center gap-2 font-bold text-slate-900 text-xs sm:text-sm">
           <Boxes className="w-5 h-5 text-blue-600" />
           <span>Total Products: {totalProductCount.toLocaleString()}</span>

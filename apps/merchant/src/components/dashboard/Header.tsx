@@ -18,6 +18,7 @@ import { StoreInactiveConfirmModal } from './StoreInactiveConfirmModal.js';
 
 interface HeaderProps {
   isCollapsed: boolean;
+  isResizing?: boolean;
   onToggleMobileMenu: () => void;
   onNavigateToWallet?: () => void;
   onNavigateToSettings?: (subTab?: string) => void;
@@ -26,6 +27,7 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({
   isCollapsed,
+  isResizing = false,
   onToggleMobileMenu,
   onNavigateToWallet,
   onNavigateToSettings,
@@ -55,8 +57,8 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <>
       <header
-        className={`h-16 bg-white border-b border-slate-200/80 sticky top-0 z-20 px-4 sm:px-6 flex items-center justify-between transition-all duration-300 ${
-          isCollapsed ? 'sm:ml-20' : 'sm:ml-64'
+        className={`h-16 bg-white border-b border-slate-200/80 sticky top-0 z-20 px-4 sm:px-6 flex items-center justify-between sm:ml-[var(--sidebar-width)] ${
+          isResizing ? '' : 'transition-[margin] duration-300'
         }`}
       >
         {/* Left Side: Mobile Menu Toggle & Search Bar */}

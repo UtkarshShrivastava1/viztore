@@ -54,6 +54,10 @@ interface SidebarProps {
   onSelectTab: (tab: DashboardTab) => void;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
+  sidebarWidth?: number;
+  onWidthChange?: (width: number) => void;
+  isResizing?: boolean;
+  onResizingChange?: (resizing: boolean) => void;
 }
 
 interface MenuItem {
@@ -88,6 +92,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onSelectTab,
   isCollapsed,
   onToggleCollapse,
+  sidebarWidth = 256,
+  onWidthChange,
+  isResizing = false,
+  onResizingChange,
 }) => {
   const { logout } = useAuthStore();
   const { orders } = useOrderStore();
@@ -116,6 +124,60 @@ export const Sidebar: React.FC<SidebarProps> = ({
       setIsLabsOpen(true);
     }
   }, [currentTab]);
+
+  // Handle Drag-to-Resize on the Sidebar Edge
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!onWidthChange || !onResizingChange) return;
+
+    onResizingChange(true);
+    const startX = e.clientX;
+    const startWidth = isCollapsed ? 80 : sidebarWidth;
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      const deltaX = moveEvent.clientX - startX;
+      const rawWidth = startWidth + deltaX;
+
+      // Dragging out from collapsed mode past 130px
+      if (isCollapsed) {
+        if (moveEvent.clientX > 130) {
+          onToggleCollapse();
+          const targetWidth = Math.min(Math.max(moveEvent.clientX, 200), 420);
+          onWidthChange(targetWidth);
+        }
+        return;
+      }
+
+      // Dragging inwards to collapse
+      if (rawWidth < 140) {
+        onToggleCollapse();
+        return;
+      }
+
+      // Normal resize between 200px and 420px
+      const clampedWidth = Math.min(Math.max(rawWidth, 200), 420);
+      onWidthChange(clampedWidth);
+    };
+
+    const handleMouseUp = () => {
+      onResizingChange(false);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+  };
+
+  const handleResetWidth = () => {
+    if (onWidthChange) {
+      onWidthChange(256);
+    }
+  };
 
   // Only fully functional, production-audited modules
   const menuItems: MenuItem[] = [
@@ -155,8 +217,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <aside
-      className={`fixed top-0 left-0 h-full bg-[#081028] text-white border-r border-[#152348] z-30 flex flex-col transition-all duration-300 ${
-        isCollapsed ? 'w-20' : 'w-64'
+      style={{ width: 'var(--sidebar-width)' }}
+      className={`fixed top-0 left-0 h-full bg-[#081028] text-white border-r border-[#152348] z-30 flex flex-col ${
+        isResizing ? '' : 'transition-[width] duration-300'
       }`}
     >
       {/* Brand Header */}
@@ -464,6 +527,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <LogOut className="w-4 h-4 shrink-0" />
           {!isCollapsed && <span>Logout</span>}
         </button>
+      </div>
+
+      {/* Interactive Resizable Border Edge Handle */}
+      <div
+        onMouseDown={handleMouseDown}
+        onDoubleClick={handleResetWidth}
+        title="Click and drag to resize sidebar (Double-click to reset to default)"
+        className="hidden sm:block absolute top-0 right-0 w-2 h-full cursor-col-resize z-40 group hover:bg-blue-500/20 active:bg-blue-500/40 transition-colors select-none"
+      >
+        <div className="absolute top-1/2 -translate-y-1/2 right-0.5 w-1 h-12 rounded-full bg-slate-600/40 group-hover:bg-blue-400 group-hover:h-20 group-active:bg-blue-400 transition-all opacity-0 group-hover:opacity-100" />
       </div>
     </aside>
   );
