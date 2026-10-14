@@ -900,5 +900,41 @@ graph LR
      - Automatically fetched merchant store (`National Retail Store`, ID: `6acf505183256911d14c43cc`).
      - Successfully transitioned into the operational merchant Dashboard showing store profile initials ("NA") and zero-data state.
 
+---
+
+### 🏁 Step 3: Product Cataloging & Inventory Population (3 Items)
+* **Date & Timestamp:** October 14, 2026
+* **Test Scope:**
+  1. Add 3 distinct catalog products under the newly registered `National Retail Store` (`6acf505183256911d14c43cc`).
+  2. Verify 3-step wizard workflow (Categories, Media/Perspective photos, Pricing, MRP, Inventory stock, SEO metadata).
+  3. Validate real persistence in MongoDB Atlas (`products` collection).
+  4. Verify UI Catalog table rendering (titles, SKUs, prices, MRP, stock levels, active badges) and live KPI updates.
+* **Status:** 🟢 **PASSED & VERIFIED (3/3 PRODUCTS LIVE IN DB & UI)**
+* **Automated Subagent Session Recording:** `catalog_3_products_verification_1791979050047.webp`
+* **Persisted Products in MongoDB Atlas:**
+  1. **Item 1: Classic Cotton Polo T-Shirt**
+     - Product ID: `6acf6c0583256911d14c4a07`
+     - Brand: `Polo Club` | Category: `fashion` (T-Shirts / Polo)
+     - Selling Price: `₹ 799` | MRP: `₹ 1,299` (38% OFF)
+     - Stock Quantity: `45 units`
+     - Status: `Active` 🟢
+  2. **Item 2: Slim Fit Stretch Denim Jeans**
+     - Product ID: `6acf6d8ab68b9e323a4c0693`
+     - Brand: `HRX / Denim Co` | Category: `fashion` (Jeans / Slim Fit)
+     - Selling Price: `₹ 499` | MRP: `₹ 999` (50% OFF)
+     - Stock Quantity: `10 units`
+     - Status: `Active` 🟢
+  3. **Item 3: Casual Linen Full Sleeve Shirt**
+     - Product ID: `6acf6e16b68b9e323a4c06bd`
+     - Brand: `Urban Linen` | Category: `fashion` (Shirts / Casual)
+     - Selling Price: `₹ 1,199` | MRP: `₹ 1,899` (37% OFF)
+     - Stock Quantity: `45 units` (Variants: M & L)
+     - Status: `Active` 🟢
+* **UI & Dashboard Metrics Confirmed**:
+  - **Catalog KPI Cards**: Total Products = `3`, Active Products = `3`, Out of Stock = `0`.
+  - **Dashboard Overview**: Products Listed = `3`, Top Selling Products list populated.
+  - **Backend Synchronization**: All 3 items are linked to store ID `6acf505183256911d14c43cc` in MongoDB Atlas with complete variant arrays, SKU barcodes, and photo perspective galleries.
+
+
 
 

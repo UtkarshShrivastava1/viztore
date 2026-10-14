@@ -145,10 +145,23 @@ export const createProductSchema = z.object({
     z.nativeEnum(ProductCategory).or(z.string()),
   ),
   subCategory: z.string().max(100).optional(),
-  subType: z.preprocess(
-    (val) => (typeof val === 'string' ? val.toLowerCase().trim().replace(/[\s-]+/g, '_') : val),
-    z.nativeEnum(ProductSubType).optional(),
-  ).optional(),
+  subType: z.preprocess((val) => {
+    if (!val || typeof val !== 'string') return undefined;
+    const clean = val.toLowerCase().trim().replace(/[\s-]+/g, '_');
+    if (clean.includes('polo')) return ProductSubType.POLO;
+    if (clean.includes('round')) return ProductSubType.ROUND_NECK;
+    if (clean.includes('v_neck') || clean.includes('vneck')) return ProductSubType.V_NECK;
+    if (clean.includes('formal')) return ProductSubType.FORMAL;
+    if (clean.includes('casual')) return ProductSubType.CASUAL;
+    if (clean.includes('ethnic')) return ProductSubType.ETHNIC;
+    if (clean.includes('sport')) return ProductSubType.SPORTS;
+    if (clean.includes('printed')) return ProductSubType.PRINTED;
+    if (clean.includes('striped')) return ProductSubType.STRIPED;
+    if (clean.includes('full')) return ProductSubType.FULL_SLEEVE;
+    if (clean.includes('half')) return ProductSubType.HALF_SLEEVE;
+    const valid = Object.values(ProductSubType) as string[];
+    return valid.includes(clean) ? clean : undefined;
+  }, z.nativeEnum(ProductSubType).optional()).optional(),
   brand: z.string().max(100).optional(),
   tags: z.array(z.string().max(50)).max(20).default([]),
   attributes: z.array(productAttributeSchema).max(30).default([]),
