@@ -165,6 +165,8 @@ export const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
     }
   }, [initialData, isOpen, customersWithHistory.length]);
 
+  const [customerNameError, setCustomerNameError] = useState<string | null>(null);
+
   if (!isOpen) return null;
 
   // Recalculate totals
@@ -227,7 +229,6 @@ export const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
     );
   };
 
-  const [customerNameError, setCustomerNameError] = useState<string | null>(null);
 
   const handleSubmit = (withPrint: boolean = false) => {
     if (!customerName.trim()) {
