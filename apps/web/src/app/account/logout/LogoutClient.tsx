@@ -6,9 +6,9 @@ import {
   User, Bell, LogOut,
   ArrowLeft, Lock, ShoppingCart, ShieldCheck
 } from 'lucide-react';
+import { AccountSidebar } from '@/components/account/AccountSidebar';
 import { authApi } from '@/lib/api/auth';
 import { useAuthStore } from '@/stores/auth.store';
-import { AccountSidebar } from '@/components/account/AccountSidebar';
 
 export function LogoutClient() {
   const router = useRouter();
@@ -173,4 +173,3 @@ export function LogoutClient() {
     </div>
   );
 }
-
