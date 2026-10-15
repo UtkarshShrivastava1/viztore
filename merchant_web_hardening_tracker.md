@@ -968,9 +968,32 @@ graph LR
        3. **Casual Linen Full Sleeve Shirt**: `₹1,199` (MRP `₹1,899`, 37% OFF)
   4. **Product Detail Page Exploration (`/products/classic-cotton-polo-t-shirt-yas6y`)**:
      - Opened product page directly from the store catalog.
-     - Verified brand (`Polo Club`), inclusive of taxes pricing (`₹799`), color/size selectors, 7-day return guarantee, customer reviews, and responsive "Add to Cart" / "Buy Now" interactive actions.
+     - Verified brand (`Polo Club`), inclusive of taxes pricing (`₹799`), color/size selectors, 7-day return guarantee, and responsive "Add to Cart" / "Buy Now" interactive actions.
 
+---
 
-
-
+### 🏁 Step 5: Customer Cart & Checkout Pipeline (Single-Store Enforcement & Order Placement)
+* **Date & Timestamp:** October 15, 2026
+* **Test Scope:**
+  1. Add catalog items from `National Retail Store` (`6acf505183256911d14c43cc`) to customer cart.
+  2. Validate single-store cart enforcement.
+  3. Proceed to checkout (`/checkout`) with authenticated customer (`Pooja Sharma`).
+  4. Submit delivery address in Bhilai (`Plot 14, Nehru Nagar West, Bhilai, Chhattisgarh - 490020`, Phone: `9876501234`).
+  5. Select payment method (Cash on Delivery).
+  6. Place order and verify backend order creation (`POST /api/v1/orders`), atomic stock reservation, and Order Confirmation (`/checkout/success`).
+* **Status:** 🟢 **PASSED & VERIFIED (ORDER GENERATED & ACTIVE IN DB)**
+* **Automated Subagent Session Recording:** `step5_cart_checkout_1792059336667.webp`
+* **Generated Live Order Details:**
+  - **Order ID:** `6ad0a8b4d65997f40bbbe1f1`
+  - **Order Number:** `ORD-20261015-CABA79`
+  - **Customer:** `Pooja Sharma` (`6acf70ddb68b9e323a4c0775`)
+  - **Store:** `National Retail Store` (`6acf505183256911d14c43cc`)
+  - **Item:** `Classic Cotton Polo T-Shirt` (`POLO-WHT-M`, Qty: 1, Price: ₹799)
+  - **Financials:** Subtotal: ₹799.00 | Tax (5% GST): ₹39.95 | Shipping: ₹0 | **Grand Total: ₹838.95**
+  - **Initial Status:** `PENDING`
+  - **Assigned Delivery OTP:** `5575`
+* **Backend & Database Synchronization:**
+  - Order document persisted in MongoDB Atlas `orders` collection with OCC versioning (`version: 1`).
+  - Order is actively queried and returned by Merchant Orders endpoint (`GET /api/v1/orders/store/6acf505183256911d14c43cc`).
+  - Next.js API client hardened to dynamically retrieve tokens from persisted `customer-auth-storage`.
 

@@ -1,6 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   transpilePackages: ['@repo/shared-types'],
+  distDir: process.env.NEXT_DIST_DIR || '.next',
+  // Disable aggressive client router cache so code edits and data updates render immediately without stale pages
+  experimental: {
+    staleTimes: {
+      dynamic: 0,
+      static: 0,
+    },
+  },
   webpack: (config, { dev }) => {
     config.resolve.extensionAlias = {
       '.js': ['.ts', '.tsx', '.js', '.jsx'],
@@ -10,8 +18,8 @@ const nextConfig = {
 
     if (dev) {
       config.watchOptions = {
-        poll: 800,
-        aggregateTimeout: 300,
+        poll: 300,
+        aggregateTimeout: 100,
       };
     }
 

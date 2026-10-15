@@ -40,7 +40,18 @@ export async function apiClient<T>(
 
   const url = buildUrl(path, params);
 
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  let token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  if (!token && typeof window !== 'undefined') {
+    try {
+      const persisted = localStorage.getItem('customer-auth-storage');
+      if (persisted) {
+        const parsed = JSON.parse(persisted);
+        token = parsed?.state?.token || null;
+      }
+    } catch {
+      // ignore JSON parse errors
+    }
+  }
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
