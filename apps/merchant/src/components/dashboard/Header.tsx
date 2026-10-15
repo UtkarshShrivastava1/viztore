@@ -4,12 +4,10 @@ import {
   Search,
   Bell,
   HelpCircle,
-  Wallet,
   ChevronDown,
   Store,
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore.js';
-import { useWalletStore } from '../../stores/walletStore.js';
 import { NotificationsDrawer } from './drawers/NotificationsDrawer.js';
 import { HelpSupportDrawer } from './drawers/HelpSupportDrawer.js';
 import { SellerProfileDrawer } from './drawers/SellerProfileDrawer.js';
@@ -41,7 +39,6 @@ export const Header: React.FC<HeaderProps> = ({
   const [isProfileInfoOpen, setIsProfileInfoOpen] = useState(false);
   const [isInactiveModalOpen, setIsInactiveModalOpen] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
-  const walletBalance = useWalletStore((s) => s.currentBalance);
 
   const storeName = currentStore?.name || user?.fullName || 'Fashion Hub';
   const avatarInitials = storeName.slice(0, 2).toUpperCase();
@@ -88,18 +85,7 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Right Action Icons */}
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Wallet Button matching mockups 6.0, 6.1, 7.0 */}
-          <button
-            type="button"
-            onClick={() => onNavigateToWallet?.()}
-            className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl border border-blue-200/80 bg-white hover:bg-blue-50/50 text-slate-800 text-xs font-semibold transition-all shadow-2xs cursor-pointer"
-          >
-            <Wallet className="w-3.5 h-3.5 text-blue-600" />
-            <span>Wallet</span>
-            <span className="text-[11px] font-bold text-slate-600 font-mono">
-              ₹ {walletBalance.toLocaleString('en-IN')}
-            </span>
-          </button>
+
 
           {/* Notifications Bell with Badge */}
           <button
