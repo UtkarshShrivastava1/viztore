@@ -285,7 +285,8 @@ Every online order placed through `apps/web` generates an authoritative, complia
   - `MOD-09 (Returns & Refunds)`: Full 4-screen suite verified, photo evidence dropzone, return-to-order deep linking, return slip print preview.
   - `MOD-15 (Support & Help Desk)`: Full 2-screen suite verified, interactive file attachment input with file name pills, and direct WhatsApp support trigger.
   - **120/120 automated tests passing across 19 suites**; full monorepo clean build.
-- [ ] **Core Platforms Manual E2E Testing (System 1: Online Store & System 2: In-House POS) — NEXT UP 🟡**:
-  - Track A: Customer Web order placement (`:3000`) ➔ Merchant Order Pipeline acceptance (`:3001`) ➔ Ready to Ship ➔ OTP handoff.
-  - Track B: In-House Counter POS Barcode Scan ➔ Multi-tender settlement (Cash / UPI / Khata) ➔ Thermal Receipt Print ➔ Atomic Stock Decrement reflected on Storefront.
+- [x] **Core Platforms Live E2E Testing (System 1: Online Storefront & Fulfillment Triangle) 🟢**:
+  - **Track A (Completed)**: Customer discovery & store catalog exploration (`:3000`) ➔ Single-store cart checkout (`Pooja Sharma`, Nehru Nagar West, Bhilai) ➔ Real order generation (`ORD-20261015-CABA79`) ➔ Merchant Order Pipeline live receipt (`:3001`) ➔ Step-by-step state machine fulfillment (`PENDING` ➔ `CONFIRMED` ➔ `PACKED` ➔ `OUT_FOR_DELIVERY`) ➔ Runner delivery handshake OTP verification (`5575`) ➔ Final `DELIVERED` status ➔ GST compliant thermal tax invoice (`INV-ORD-20261015-CABA79`) ➔ Verified atomic inventory decrement in MongoDB Atlas (`Classic Cotton Polo T-Shirt` decremented 45 ➔ 44 units).
+- [ ] **Core Platforms Live E2E Testing (System 2: In-House POS Billing & Barcode Counter) — NEXT UP 🟡**:
+  - **Track B**: In-House Counter POS Barcode Scan (`/billing`) ➔ Multi-tender settlement (Cash / UPI / Khata) ➔ Thermal 80mm Receipt Print ➔ Atomic Stock Decrement reflected instantly on Customer Storefront.
 

@@ -237,8 +237,9 @@
   - [x] `MOD-14: Settings` (9 mockups, full 9 tabs functional, profile, business GSTIN, timings, toast feedback)
   - [x] `MOD-09: Returns & Refunds` (4 mockups, zero alerts, photo dropzone, return-to-order navigation, return slip modal)
   - [x] `MOD-15: Support & Help Desk` (2 mockups, zero alerts, ticket attachment input, WhatsApp support integration)
-- [ ] **Core Platforms Manual E2E Pilot Testing (System 1: Online Store & System 2: In-House POS) — NEXT UP 🟡**:
-  - [ ] Customer web order placement (`:3000`) ➔ Merchant Order Pipeline acceptance (`:3001`) ➔ Ready to Ship ➔ OTP handoff
+- [x] **Core Platforms Live E2E Pilot Testing — System 1: Online Storefront & Fulfillment Triangle (Completed 🟢)**:
+  - [x] Customer web discovery & cart checkout (`:3000`) ➔ Merchant Order Pipeline acceptance (`:3001`) ➔ Ready to Ship ➔ Runner OTP verification (`5575`) ➔ Delivered & Invoiced (`INV-ORD-20261015-CABA79`) ➔ Verified atomic stock decrement (45 ➔ 44 units)
+- [ ] **Core Platforms Live E2E Pilot Testing — System 2: In-House POS Billing & Barcode Counter (NEXT UP 🟡)**:
   - [ ] In-House Counter POS Barcode Scan ➔ Multi-tender settlement (Cash / UPI / Khata) ➔ Thermal Receipt Print ➔ Atomic Stock Decrement reflected on Storefront
 - [ ] Merchant staff management & role-based access control (Manager, Cashier, Inventory Clerk)
 - [ ] Merchant marketing suite: promotional store banner manager & coupon builder (Post-Launch Phase 2)

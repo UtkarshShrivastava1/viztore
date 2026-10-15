@@ -997,3 +997,39 @@ graph LR
   - Order is actively queried and returned by Merchant Orders endpoint (`GET /api/v1/orders/store/6acf505183256911d14c43cc`).
   - Next.js API client hardened to dynamically retrieve tokens from persisted `customer-auth-storage`.
 
+---
+
+### 🏁 Step 6: Merchant Order Fulfillment & Delivery OTP Lifecycle
+* **Date & Timestamp:** October 15, 2026
+* **Test Scope:**
+  1. Inspect the incoming live order created in Step 5 (`ORD-20261015-CABA79`, ID: `6ad0a8b4d65997f40bbbe1f1`) in the Merchant Panel (`http://localhost:3001/orders`) under `National Retail Store`.
+  2. Inspect Order Detail Modal (`OrderDetailModal.tsx`) showing customer, line items, address, and delivery code.
+  3. Advance order through fulfillment state machine: `PENDING` ➔ `CONFIRMED` (`Accepted`) ➔ `PACKED` (`Ready to Ship`) ➔ `OUT_FOR_DELIVERY` (`Shipped`).
+  4. Perform delivery verification using customer handshake OTP **`5575`** via `VerifyOtpModal` (`POST /api/v1/orders/:id/verify-otp` and `PATCH /api/v1/orders/:id/status`).
+  5. Verify that order transitions to `DELIVERED` status in MongoDB Atlas.
+  6. Verify GST tax breakdown and thermal invoice generation (`INV-ORD-20261015-CABA79`).
+  7. Verify atomic stock deduction in MongoDB Atlas: `Classic Cotton Polo T-Shirt` (`6acf6c0583256911d14c4a07`) decremented from 45 down to 44 units.
+* **Status:** 🟢 **PASSED & VERIFIED (100% COMPLETE LIFECYCLE)**
+* **Automated Subagent Session Recording:** `merchant_order_fulfillment_otp_1792060200759.webp`
+* **Execution & Verification Details:**
+  1. **Order Discovery & Inspection (`/orders`)**:
+     - Logged into Merchant Management Portal as `test.merchant@example.com` (`National Retail Store`).
+     - Order `ORD-20261015-CABA79` displayed under **New Orders** with total `₹838.95` and customer `Pooja Sharma`.
+     - Clicked "View Order Details" (Eye icon); verified full itemized breakdown, Nehru Nagar West delivery address, and delivery OTP `5575`.
+  2. **Pipeline Progression**:
+     - **Accept Order**: Transitioned `PENDING` ➔ `CONFIRMED`. Moved to "Accepted" tab.
+     - **Ready to Ship**: Transitioned `CONFIRMED` ➔ `PACKED`. Moved to "Ready to Ship" tab.
+     - **Mark Shipped**: Transitioned `PACKED` ➔ `OUT_FOR_DELIVERY`. Generated local tracking ID `TRK-650493` with Local Express courier partner. Moved to "Shipped" tab.
+  3. **Delivery OTP Handshake & Final Settlement**:
+     - Opened `VerifyOtpModal` from Shipped tab.
+     - Verified customer OTP `5575` against backend (`POST /api/v1/orders/6ad0a8b4d65997f40bbbe1f1/verify-otp` returned `{ valid: true }`).
+     - Dispatched status transition to `DELIVERED`.
+     - Verified order successfully displayed in "Delivered" tab with green Delivered badge.
+  4. **Invoice & Tax Compliance (`GET /orders/:id/invoice`)**:
+     - Invoice Number: `INV-ORD-20261015-CABA79`
+     - Status: `DELIVERED`
+     - Seller: `National Retail Store`, Commercial Center, Bhilai - 452001 (GSTIN: `23AAAAA0000A1Z5`)
+     - Tax breakdown: Taxable amount ₹760.95 | CGST (2.5%) ₹19.98 | SGST (2.5%) ₹19.97 | Total Tax ₹39.95 | Grand Total ₹838.95.
+  5. **Atomic Inventory Verification**:
+     - Queried product `Classic Cotton Polo T-Shirt` (`6acf6c0583256911d14c4a07`) directly in MongoDB Atlas.
+     - Confirmed total stock = `44` units (decremented atomically from 45 units). Variant `POLO-WHT-M` stock = `44`.
