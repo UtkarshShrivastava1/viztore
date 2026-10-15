@@ -9,12 +9,14 @@ export class ApiResponse {
     message?: string,
     statusCode: number = StatusCodes.OK,
     meta?: ApiSuccessResponse<T>['meta'],
+    facets?: unknown,
   ): Response<ApiSuccessResponse<T>> {
-    const payload: ApiSuccessResponse<T> = {
+    const payload: ApiSuccessResponse<T> & { facets?: unknown } = {
       success: true,
       data,
       ...(message ? { message } : {}),
       ...(meta ? { meta } : {}),
+      ...(facets ? { facets } : {}),
     };
     return res.status(statusCode).json(payload);
   }

@@ -73,7 +73,7 @@ export const deleteProduct: RequestHandler = catchAsync(async (req: Request, res
 export const listProducts: RequestHandler = catchAsync(async (req: Request, res: Response) => {
   const query = req.query as unknown as ProductQueryDto;
   const result = await catalogService.listProducts(query);
-  return ApiResponse.success(res, result.products, undefined, undefined, result.meta);
+  return ApiResponse.success(res, result.products, undefined, undefined, result.meta, result.facets);
 });
 
 /**
@@ -105,5 +105,5 @@ export const getStoreProducts: RequestHandler = catchAsync(async (req: Request, 
 
   const query = req.query as unknown as Partial<ProductQueryDto>;
   const result = await catalogService.getStoreProducts(storeId, query);
-  return ApiResponse.success(res, result.products, undefined, undefined, result.meta);
+  return ApiResponse.success(res, result.products, undefined, undefined, result.meta, result.facets);
 });
