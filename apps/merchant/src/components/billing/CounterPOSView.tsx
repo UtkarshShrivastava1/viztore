@@ -206,6 +206,7 @@ export const CounterPOSView: React.FC<CounterPOSViewProps> = ({ onBack }) => {
         {
           id: 'pos-it-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
           productId: product.id,
+          sku: product.sku,
           name: product.name,
           hsnSac: '6205',
           quantity: 1,

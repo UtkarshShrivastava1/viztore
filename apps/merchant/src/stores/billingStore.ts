@@ -1016,6 +1016,7 @@ export const useBillingStore = create<BillingStoreState>((set, get) => ({
         },
         items: posData.items.map((it) => ({
           productId: it.productId,
+          variantId: (it as any).sku || (it as any).variantId || undefined,
           title: it.name,
           quantity: it.quantity,
           unit: (it.unit as any) || 'Pcs',

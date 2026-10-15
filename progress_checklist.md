@@ -239,8 +239,13 @@
   - [x] `MOD-15: Support & Help Desk` (2 mockups, zero alerts, ticket attachment input, WhatsApp support integration)
 - [x] **Core Platforms Live E2E Pilot Testing — System 1: Online Storefront & Fulfillment Triangle (Completed 🟢)**:
   - [x] Customer web discovery & cart checkout (`:3000`) ➔ Merchant Order Pipeline acceptance (`:3001`) ➔ Ready to Ship ➔ Runner OTP verification (`5575`) ➔ Delivered & Invoiced (`INV-ORD-20261015-CABA79`) ➔ Verified atomic stock decrement (45 ➔ 44 units)
-- [ ] **Core Platforms Live E2E Pilot Testing — System 2: In-House POS Billing & Barcode Counter (NEXT UP 🟡)**:
-  - [ ] In-House Counter POS Barcode Scan ➔ Multi-tender settlement (Cash / UPI / Khata) ➔ Thermal Receipt Print ➔ Atomic Stock Decrement reflected on Storefront
+- [x] **Core Platforms Live E2E Pilot Testing — System 2: In-House POS Billing & Barcode Counter (Completed 🟢)**:
+  - [x] In-House Counter POS Barcode Scan ➔ Multi-tender settlement (Cash / UPI / Khata) ➔ Thermal Receipt Print (`INV-1001` & `INV-1002`) ➔ Atomic Stock Decrement reflected on Storefront (43 ➔ 42 units)
+- [ ] **Rider Fleet Open-Pool Broadcast & Atomic Mutex Claim Engine (Phase 2 Delivery Dispatch) — PLANNED 🟡**:
+  - [ ] Multi-rider open pool broadcast via WhatsApp Cloud API / Webhook
+  - [ ] Atomic Mutex claim locking in MongoDB (`status: SEARCHING_PARTNER` ➔ `ASSIGNED`)
+  - [ ] Turn-by-turn navigation link generation & customer OTP verification
+
 - [ ] Merchant staff management & role-based access control (Manager, Cashier, Inventory Clerk)
 - [ ] Merchant marketing suite: promotional store banner manager & coupon builder (Post-Launch Phase 2)
 - [ ] Merchant purchase expense ERP (Post-Launch Phase 2)

@@ -287,6 +287,9 @@ Every online order placed through `apps/web` generates an authoritative, complia
   - **120/120 automated tests passing across 19 suites**; full monorepo clean build.
 - [x] **Core Platforms Live E2E Testing (System 1: Online Storefront & Fulfillment Triangle) 🟢**:
   - **Track A (Completed)**: Customer discovery & store catalog exploration (`:3000`) ➔ Single-store cart checkout (`Pooja Sharma`, Nehru Nagar West, Bhilai) ➔ Real order generation (`ORD-20261015-CABA79`) ➔ Merchant Order Pipeline live receipt (`:3001`) ➔ Step-by-step state machine fulfillment (`PENDING` ➔ `CONFIRMED` ➔ `PACKED` ➔ `OUT_FOR_DELIVERY`) ➔ Runner delivery handshake OTP verification (`5575`) ➔ Final `DELIVERED` status ➔ GST compliant thermal tax invoice (`INV-ORD-20261015-CABA79`) ➔ Verified atomic inventory decrement in MongoDB Atlas (`Classic Cotton Polo T-Shirt` decremented 45 ➔ 44 units).
-- [ ] **Core Platforms Live E2E Testing (System 2: In-House POS Billing & Barcode Counter) — NEXT UP 🟡**:
-  - **Track B**: In-House Counter POS Barcode Scan (`/billing`) ➔ Multi-tender settlement (Cash / UPI / Khata) ➔ Thermal 80mm Receipt Print ➔ Atomic Stock Decrement reflected instantly on Customer Storefront.
+- [x] **Core Platforms Live E2E Testing (System 2: In-House POS Billing & Barcode Counter) 🟢**:
+  - **Track B (Completed)**: In-House Counter POS Barcode Scan (`/billing`) ➔ Multi-tender settlement (Cash with ₹1,000 note, change return ₹57.18) ➔ Thermal 80mm Receipt Print (`INV-1001` & `INV-1002`) ➔ Atomic Stock Decrement (`POLO-WHT-M` 44 ➔ 43 units, total 43 ➔ 42 units) reflected instantly on Customer Storefront API.
+- [ ] **Rider Fleet Open-Pool Broadcast & Atomic Mutex Claim Engine (Phase 2 Delivery Dispatch) — PLANNED 🟡**:
+  - Implementation plan ready: WhatsApp open-pool teaser broadcasts, MongoDB atomic mutex claim (`findOneAndUpdate({ orderId, status: 'SEARCHING_PARTNER', rider: null })`), rider PWA assignment dashboard, turn-by-turn navigation, and delivery OTP handshake.
+
 

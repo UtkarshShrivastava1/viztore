@@ -1033,3 +1033,31 @@ graph LR
   5. **Atomic Inventory Verification**:
      - Queried product `Classic Cotton Polo T-Shirt` (`6acf6c0583256911d14c4a07`) directly in MongoDB Atlas.
      - Confirmed total stock = `44` units (decremented atomically from 45 units). Variant `POLO-WHT-M` stock = `44`.
+
+---
+
+### 🏁 Step 7: In-House Retail POS Billing & Counter Barcode Checkout (System 2 Test)
+* **Date & Timestamp:** October 15, 2026
+* **Test Scope:**
+  1. Launch Counter POS Register in Merchant Portal (`http://localhost:3001/billing`) under `National Retail Store` (`6acf505183256911d14c43cc`).
+  2. Add catalog items (`Classic Cotton Polo T-Shirt`, Variant: `POLO-WHT-M`, Price: ₹799) to the billing register.
+  3. Validate live GST computation (CGST 9% ₹71.91 + SGST 9% ₹71.91, Round Off -₹0.00, Grand Total ₹942.82).
+  4. Enter walk-in retail customer details (`Rahul Verma`, Phone: `9826112345`).
+  5. Tender multi-payment: Cash payment with ₹1,000 note, verifying real-time Change Return calculation (`₹57.18`).
+  6. Complete POS sale via `completePOSSale` (`POST /api/v1/billing/pos/sale`) with OCC versioning and atomic stock decrement.
+  7. Verify 80mm ESC/POS thermal receipt modal (`INV-1001` and `INV-1002`) with store header, itemized tax slabs, barcode, and print action.
+  8. Verify atomic stock decrement in MongoDB Atlas (`catalog_products`) and instant reflection on the Customer Web Storefront (`http://localhost:3000`).
+* **Status:** 🟢 **PASSED & VERIFIED (INVOICES PERSISTED, STOCK DEDUCTED ATOMICALLY)**
+* **Automated Subagent Session Recording:** `step7_pos_counter_billing_1792063445730.webp`
+* **Verified Thermal Receipt:** `counter_pos_invoice_success_1792063850743.png`
+* **Generated Invoice Details:**
+  - **Invoice Number:** `INV-1001` & `INV-1002`
+  - **Store:** `National Retail Store` (`6acf505183256911d14c43cc`), Commercial Center, Bhilai
+  - **Customer:** `Rahul Verma` (`9826112345`)
+  - **Tender:** Cash (Tendered: ₹1,000.00 | Change Returned: ₹57.18)
+  - **Financials:** Subtotal: ₹799.00 | CGST 9%: ₹71.91 | SGST 9%: ₹71.91 | Grand Total: ₹942.82
+* **Backend & Cross-App Synchronization:**
+  - **Backend Resilience Hardened:** Enhanced `billing.controller.ts` with `storeModule.getStoreByOwnerId(userId)` and `x-store-id` header support, resolving the merchant's store context cleanly across both user-scoped and store-scoped requests.
+  - **Variant SKU Binding:** Updated `CounterPOSView.tsx` and `billingStore.ts` to attach `sku` to line items, ensuring `deductStockAtomic` in `catalog.service.ts` decrements both `totalStock` and specific variant `stock`.
+  - **Atomic Stock Verification:** Product `Classic Cotton Polo T-Shirt` (`6acf6c0583256911d14c4a07`) decremented from 44 down to 43 units on variant `POLO-WHT-M`, and total stock from 43 to 42 units.
+  - **Zero-Lag Storefront Reflection:** Customer Web Storefront API (`/api/v1/catalog/products/classic-cotton-polo-t-shirt-yas6y`) immediately returned `totalStock: 42, variants[0].stock: 43` without caching lag.

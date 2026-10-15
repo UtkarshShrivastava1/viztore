@@ -46,4 +46,11 @@ export interface IStoreFacade {
     address: string;
     gstin?: string;
   } | null>;
+  getStoreByOwnerId(ownerId: string): Promise<{
+    id: string;
+    name: string;
+    isActive: boolean;
+    ownerId: string;
+    city: string;
+  } | null>;
 }

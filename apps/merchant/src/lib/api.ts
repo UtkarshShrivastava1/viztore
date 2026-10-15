@@ -62,11 +62,20 @@ export async function request<T>(
   options: RequestInit = {},
 ): Promise<T> {
   const token = localStorage.getItem('access_token');
+  const storedStoreRaw = localStorage.getItem('current_store');
+  let storeIdHeader: string | undefined;
+  if (storedStoreRaw) {
+    try {
+      const parsed = JSON.parse(storedStoreRaw);
+      storeIdHeader = parsed._id || parsed.id;
+    } catch {}
+  }
 
-  const headers: HeadersInit = {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...options.headers,
+    ...(storeIdHeader ? { 'x-store-id': storeIdHeader } : {}),
+    ...(options.headers as Record<string, string>),
   };
 
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;

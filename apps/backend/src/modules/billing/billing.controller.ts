@@ -9,16 +9,29 @@ import {
   POSPrintPaperSize,
 } from '@repo/shared-types';
 import { billingService } from './billing.service.js';
+import { storeModule } from '../stores/index.js';
 import { AppError } from '../../shared/utils/AppError.js';
 import { catchAsync } from '../../shared/utils/catchAsync.js';
 import { ApiResponse } from '../../shared/utils/ApiResponse.js';
 
-function extractStoreId(req: Request): string {
+async function extractStoreId(req: Request): Promise<string> {
   const authReq = req as AuthenticatedRequest;
-  const storeId =
+  let storeId =
     authReq.user?.storeId ||
     req.params.storeId ||
-    (req.query.storeId as string);
+    (req.query.storeId as string) ||
+    (req.headers['x-store-id'] as string) ||
+    (req.body as any)?.storeId;
+
+  if (!storeId && authReq.user) {
+    const userId = (authReq.user as any)._id || authReq.user.id || (authReq.user as any).sub;
+    if (userId) {
+      const store = await storeModule.getStoreByOwnerId(userId);
+      if (store) {
+        storeId = store.id;
+      }
+    }
+  }
 
   if (!storeId) {
     throw AppError.badRequest('Store context is required for billing operations', 'STORE_ID_REQUIRED');
@@ -31,13 +44,13 @@ export const billingController = {
   // ── Invoices ──────────────────────────────────────────────────────────
 
   getInvoices: catchAsync(async (req: Request, res: Response) => {
-    const storeId = extractStoreId(req);
+    const storeId = await extractStoreId(req);
     const result = await billingService.getInvoicesWithKPIs(storeId, req.query);
     return ApiResponse.success(res, result);
   }),
 
   createInvoice: catchAsync(async (req: Request, res: Response) => {
-    const storeId = extractStoreId(req);
+    const storeId = await extractStoreId(req);
     const authReq = req as AuthenticatedRequest;
     const invoice = await billingService.createInvoice(
       storeId,
@@ -52,7 +65,7 @@ export const billingController = {
   }),
 
   getInvoiceById: catchAsync(async (req: Request, res: Response) => {
-    const storeId = extractStoreId(req);
+    const storeId = await extractStoreId(req);
     const id = req.params.id as string;
     const result = await billingService.getInvoicesWithKPIs(storeId, { search: id });
     const match = result.invoices.find((i) => i.id === id);
@@ -63,7 +76,7 @@ export const billingController = {
   }),
 
   recordPayment: catchAsync(async (req: Request, res: Response) => {
-    const storeId = extractStoreId(req);
+    const storeId = await extractStoreId(req);
     const id = req.params.id as string;
     const authReq = req as AuthenticatedRequest;
     const expectedVersion = req.query.expectedVersion
@@ -82,7 +95,7 @@ export const billingController = {
   }),
 
   cancelInvoice: catchAsync(async (req: Request, res: Response) => {
-    const storeId = extractStoreId(req);
+    const storeId = await extractStoreId(req);
     const id = req.params.id as string;
     const authReq = req as AuthenticatedRequest;
     const expectedVersion = req.query.expectedVersion
@@ -106,19 +119,19 @@ export const billingController = {
   // ── Quotes / Estimates ────────────────────────────────────────────────
 
   getQuotes: catchAsync(async (req: Request, res: Response) => {
-    const storeId = extractStoreId(req);
+    const storeId = await extractStoreId(req);
     const result = await billingService.getQuotesWithKPIs(storeId, req.query);
     return ApiResponse.success(res, result);
   }),
 
   createQuote: catchAsync(async (req: Request, res: Response) => {
-    const storeId = extractStoreId(req);
+    const storeId = await extractStoreId(req);
     const quote = await billingService.createQuote(storeId, req.body as CreateQuoteDto);
     return ApiResponse.created(res, quote, `Quote ${quote.quoteNumber} created successfully`);
   }),
 
   convertQuoteToInvoice: catchAsync(async (req: Request, res: Response) => {
-    const storeId = extractStoreId(req);
+    const storeId = await extractStoreId(req);
     const id = req.params.id as string;
     const authReq = req as AuthenticatedRequest;
     const invoice = await billingService.convertQuoteToInvoice(
@@ -137,13 +150,13 @@ export const billingController = {
   // ── Settings ──────────────────────────────────────────────────────────
 
   getSettings: catchAsync(async (req: Request, res: Response) => {
-    const storeId = extractStoreId(req);
+    const storeId = await extractStoreId(req);
     const settings = await billingService.getOrCreateSettings(storeId);
     return ApiResponse.success(res, settings);
   }),
 
   updateSettings: catchAsync(async (req: Request, res: Response) => {
-    const storeId = extractStoreId(req);
+    const storeId = await extractStoreId(req);
     const expectedVersion = req.query.expectedVersion
       ? parseInt(req.query.expectedVersion as string, 10)
       : undefined;
@@ -160,7 +173,7 @@ export const billingController = {
   // ── POS Fast Counter Sale & Thermal Print ──────────────────────────
 
   createPOSSale: catchAsync(async (req: Request, res: Response) => {
-    const storeId = extractStoreId(req);
+    const storeId = await extractStoreId(req);
     const authReq = req as AuthenticatedRequest;
     const result = await billingService.createPOSSale(
       storeId,
@@ -175,7 +188,7 @@ export const billingController = {
   }),
 
   getLastReceipt: catchAsync(async (req: Request, res: Response) => {
-    const storeId = extractStoreId(req);
+    const storeId = await extractStoreId(req);
     const paperSize = (req.query.paperSize as POSPrintPaperSize) || POSPrintPaperSize.THERMAL_80MM;
     const result = await billingService.getLastReceipt(storeId, paperSize);
     return ApiResponse.success(res, result);
