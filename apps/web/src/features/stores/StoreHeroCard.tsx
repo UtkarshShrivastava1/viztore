@@ -1,5 +1,4 @@
-import React from 'react';
-import { Heart, Share2, Star, MapPin, Clock, Truck, RotateCcw, ShieldCheck, Headset, CheckCircle2 } from 'lucide-react';
+import { Heart, Share2, MapPin, Clock, Truck, RotateCcw, ShieldCheck, Headset, CheckCircle2 } from 'lucide-react';
 import { IStore } from '@repo/shared-types';
 import { useLocationStore } from '@/stores/location.store';
 import { calculateHaversineDistanceKm, formatDistance, isWithinDeliveryZone } from '@/lib/location/distance';
@@ -60,11 +59,6 @@ export function StoreHeroCard({ store }: { store: IStore }) {
           </div>
 
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-[#192168] font-medium mb-3">
-            <div className="flex items-center gap-1">
-              <span className="font-bold text-[15px]">{store.rating.toFixed(1)}</span>
-              <Star className="w-4 h-4 text-[#06B95F] fill-[#06B95F]" />
-              <span className="text-surface-500">({store.reviewCount || '1.2K'} ratings)</span>
-            </div>
             <div className="flex items-center gap-1.5 flex-wrap">
               <MapPin className={`w-4 h-4 ${inZone ? 'text-[#1668F6]' : 'text-amber-500'}`} />
               <span className={inZone ? 'font-medium' : 'text-amber-700 font-semibold'}>

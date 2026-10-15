@@ -716,11 +716,7 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
                           <span className="text-[9px] font-bold text-slate-900 block truncate leading-tight">
                             {p.name}
                           </span>
-                          <span className="text-[9px] font-black text-slate-900">₹{p.price}</span>
-                          <div className="flex items-center gap-0.5 text-[8px] text-amber-500 font-bold">
-                            <Star className="w-2 h-2 fill-amber-500" />
-                            <span>{p.rating} ({p.reviews})</span>
-                          </div>
+                          <span className="text-[9px] font-black text-slate-900 block mt-0.5">₹{p.price}</span>
                         </div>
                         <button
                           type="button"

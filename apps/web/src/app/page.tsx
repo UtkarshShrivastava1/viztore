@@ -48,7 +48,7 @@ export default function HomePage() {
               Explore All Local Stores
             </h2>
             <p className="text-white/80 text-sm max-w-lg">
-              Discover amazing products from verified local retailers near you. Filter by category, sort by rating, and find your new favourite shop.
+              Discover amazing products from verified local retailers near you. Filter by category, browse trending deals, and find your new favourite shop.
             </p>
             <Link
               href="/stores"

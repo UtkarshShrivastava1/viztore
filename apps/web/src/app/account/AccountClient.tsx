@@ -6,7 +6,7 @@ import {
   MapPin, Heart, Ticket, Store, MessageSquare,
   HeadphonesIcon, Shield, FileText, LogOut, User, Bell,
   Calendar, ShoppingBasket, Pencil, CalendarDays, CheckCircle2,
-  Settings, ChevronRight, Briefcase, Truck, RotateCcw, Star
+  Settings, ChevronRight, Briefcase, Truck, RotateCcw
 } from 'lucide-react';
 import { branding } from '@repo/shared-types';
 import { AccountSidebar } from '@/components/account/AccountSidebar';
@@ -266,10 +266,10 @@ export function AccountClient() {
               </Link>
             </div>
             <div className="flex overflow-x-auto gap-3 pb-2 -mx-1 px-1 hide-scrollbar">
-              <StoreCard name="Fashion Hub" category="Clothing, Accessories" rating={4.5} reviews="1.2K" color="bg-black text-white" />
-              <StoreCard name="Tech World" category="Electronics" rating={4.3} reviews="856" color="bg-emerald-900 text-yellow-400" />
-              <StoreCard name="Home Delight" category="Home & Kitchen" rating={4.6} reviews="1.1K" color="bg-rose-900 text-white" />
-              <StoreCard name="Beauty Glow" category="Beauty & Personal Care" rating={4.2} reviews="732" color="bg-pink-100 text-pink-600" />
+              <StoreCard name="Fashion Hub" category="Clothing, Accessories" color="bg-black text-white" />
+              <StoreCard name="Tech World" category="Electronics" color="bg-emerald-900 text-yellow-400" />
+              <StoreCard name="Home Delight" category="Home & Kitchen" color="bg-rose-900 text-white" />
+              <StoreCard name="Beauty Glow" category="Beauty & Personal Care" color="bg-pink-100 text-pink-600" />
             </div>
           </div>
 
@@ -406,7 +406,7 @@ function OrderStat({ icon, bg, count, label }: { icon: React.ReactNode; bg: stri
   );
 }
 
-function StoreCard({ name, category, rating, reviews, color }: { name: string; category: string; rating: number; reviews: string | number; color: string }) {
+function StoreCard({ name, category, color }: { name: string; category: string; color: string }) {
   return (
     <div className="min-w-[140px] border border-surface-100 rounded-xl p-3 flex flex-col items-center text-center bg-white shadow-sm shrink-0">
       <div className="w-full flex justify-end mb-1">
@@ -416,12 +416,7 @@ function StoreCard({ name, category, rating, reviews, color }: { name: string; c
         {name.split(' ').map((n: string) => n[0]).join('') !== name ? name.split(' ').join('\n') : name}
       </div>
       <h4 className="text-[13px] font-bold text-[#192168] mb-0.5 line-clamp-1">{name}</h4>
-      <p className="text-[10px] text-surface-500 mb-1.5">{category}</p>
-      <div className="flex items-center gap-1 text-[10px] font-bold text-surface-600">
-        <Star className="w-3 h-3 text-emerald-500 fill-emerald-500" />
-        <span className="text-emerald-600">{rating}</span>
-        <span className="font-normal text-surface-400">({reviews})</span>
-      </div>
+      <p className="text-[10px] text-surface-500 line-clamp-1">{category}</p>
     </div>
   );
 }

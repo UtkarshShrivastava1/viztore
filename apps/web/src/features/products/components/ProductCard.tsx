@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Heart, Star, Store, Plus, Check } from 'lucide-react';
+import { Heart, Store, Plus, Check } from 'lucide-react';
 import type { IProduct } from '@repo/shared-types';
 import { useCartStore } from '@/stores/cart.store';
 
@@ -119,16 +119,11 @@ export function ProductCard({ product, badge }: ProductCardProps) {
           )}
         </div>
 
-        {/* Rating + Store + Quick Add Button */}
+        {/* Store + Quick Add Button */}
         <div className="flex items-center justify-between mt-auto pt-2">
-          <div className="flex items-center gap-1.5 min-w-0">
-            {product.rating > 0 && (
-              <div className="flex items-center gap-0.5 shrink-0">
-                <Star className="w-3 h-3 text-[#06B95F] fill-[#06B95F]" />
-                <span className="text-[10px] font-extrabold text-[#192168]">{product.rating.toFixed(1)}</span>
-              </div>
-            )}
-            <span className="text-[10px] font-medium text-surface-400 truncate max-w-[70px]">
+          <div className="flex items-center gap-1 min-w-0">
+            <Store className="w-3 h-3 text-surface-400 shrink-0" />
+            <span className="text-[10px] font-medium text-surface-400 truncate max-w-[85px]">
               {product.storeName}
             </span>
           </div>

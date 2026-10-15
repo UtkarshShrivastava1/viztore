@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Heart, Star, Store, ShoppingCart, Zap, Check } from 'lucide-react';
+import { Heart, Store, ShoppingCart, Zap, Check } from 'lucide-react';
 import { useFeaturedProducts } from '@/hooks/useFeaturedProducts';
 import { useCartStore } from '@/stores/cart.store';
 
@@ -225,14 +225,6 @@ export function TrendingDeals() {
                 )}
               </div>
 
-              {/* Rating Row */}
-              <div className="flex items-center gap-1.5 text-xs text-gray-600 mb-2.5">
-                <div className="flex items-center gap-0.5 font-bold text-gray-900">
-                  <span>{deal.rating}</span>
-                  <Star className="w-3.5 h-3.5 fill-emerald-600 text-emerald-600" />
-                </div>
-                <span className="text-gray-400 font-medium">({deal.reviews})</span>
-              </div>
 
               {/* Footer Row: Store & Cart Button */}
               <div className="flex items-center justify-between pt-1 border-t border-gray-50 mt-auto">

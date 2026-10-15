@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { IStore } from '@repo/shared-types';
-import { Star, Heart } from 'lucide-react';
+import { Heart } from 'lucide-react';
 import { useLocationStore } from '@/stores/location.store';
 import { calculateHaversineDistanceKm, formatDistance, isWithinDeliveryZone } from '@/lib/location/distance';
 
@@ -53,10 +53,6 @@ export function StoreDirectoryCard({ store }: { store: IStore }) {
               <span className={`text-xs font-bold ${inZone ? 'text-[#192168]' : 'text-amber-700'}`}>
                 {formattedDistance}
               </span>
-              <div className="flex items-center gap-0.5 text-emerald-600 bg-emerald-50 px-1 rounded">
-                <span className="text-[10px] font-extrabold">{store.rating.toFixed(1)}</span>
-                <Star className="w-3 h-3 fill-emerald-600" />
-              </div>
             </div>
 
             <p className="text-[11px] font-medium text-surface-500 mt-1 line-clamp-1">

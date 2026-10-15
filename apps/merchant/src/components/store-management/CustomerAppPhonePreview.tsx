@@ -266,9 +266,6 @@ export const CustomerAppPhonePreview: React.FC<CustomerAppPhonePreviewProps> = (
                     <p className="text-[9px] text-slate-200 drop-shadow-xs leading-none">
                       {storeInfo.tagline}
                     </p>
-                    <p className="text-[9px] text-amber-300 drop-shadow-xs font-semibold mt-0.5">
-                      ★ {storeInfo.rating} ({storeInfo.reviewCount})
-                    </p>
                   </div>
                 </div>
               </div>

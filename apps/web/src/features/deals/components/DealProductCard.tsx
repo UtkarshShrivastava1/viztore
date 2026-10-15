@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Heart, Star, ShoppingCart, Store } from 'lucide-react';
+import { Heart, ShoppingCart, Store } from 'lucide-react';
 import type { IProduct } from '@repo/shared-types';
 import { useCartStore } from '@/stores/cart.store';
 
@@ -102,18 +102,6 @@ export function DealProductCard({ product }: DealProductCardProps) {
           )}
         </div>
 
-        {/* Rating and Reviews */}
-        <div className="flex items-center gap-1.5 mb-3">
-          {product.rating > 0 && (
-            <div className="flex items-center gap-1">
-              <span className="text-xs font-extrabold text-[#192168]">{product.rating.toFixed(1)}</span>
-              <Star className="w-3.5 h-3.5 text-[#06B95F] fill-[#06B95F]" />
-            </div>
-          )}
-          {product.reviewCount > 0 && (
-            <span className="text-xs font-medium text-surface-500">({product.reviewCount})</span>
-          )}
-        </div>
 
         {/* Store Attribution */}
         <div className="flex items-center gap-1.5 mt-auto mb-3 text-xs text-surface-500 font-medium bg-surface-50 w-fit px-2 py-1 rounded-md">

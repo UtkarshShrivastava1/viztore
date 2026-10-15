@@ -16,7 +16,6 @@ import {
   CreditCard,
   QrCode,
   Shield,
-  Star,
   ExternalLink,
   Edit2,
   Rocket,
@@ -728,12 +727,8 @@ export const CreateAdvertisementWizard: React.FC<CreateAdvertisementWizardProps>
                 />
                 <div>
                   <h4 className="text-xs font-bold text-slate-900">{selectedProduct.name}</h4>
-                  <div className="flex items-center justify-between mt-1">
+                  <div className="mt-1">
                     <span className="text-sm font-black text-slate-900">₹{selectedProduct.price}</span>
-                    <span className="text-[10px] text-amber-600 font-semibold flex items-center gap-0.5">
-                      <Star className="w-3 h-3 fill-amber-500" />
-                      <span>{selectedProduct.rating} ({selectedProduct.reviews})</span>
-                    </span>
                   </div>
                 </div>
                 <button
@@ -1088,12 +1083,8 @@ export const CreateAdvertisementWizard: React.FC<CreateAdvertisementWizardProps>
                 />
                 <div>
                   <h4 className="text-xs font-bold text-slate-900">{selectedProduct.name}</h4>
-                  <div className="flex items-center justify-between mt-1">
+                  <div className="mt-1">
                     <span className="text-sm font-black text-slate-900">₹{selectedProduct.price}</span>
-                    <span className="text-[10px] text-amber-600 font-semibold flex items-center gap-0.5">
-                      <Star className="w-3 h-3 fill-amber-500" />
-                      <span>{selectedProduct.rating} ({selectedProduct.reviews})</span>
-                    </span>
                   </div>
                   <p className="text-[10px] text-slate-500 mt-1">
                     {selectedProduct.category} | {selectedProduct.color} | {selectedProduct.sizes}

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { 
-  Heart, Star, ArrowLeft, Loader2, Store as StoreIcon 
+  Heart, ArrowLeft, Loader2, Store as StoreIcon 
 } from 'lucide-react';
 import { AccountSidebar } from '@/components/account/AccountSidebar';
 import { fetchAllStores } from '@/lib/api/stores.js';
@@ -149,14 +149,6 @@ export function StoresClient() {
                       </div>
 
                       <div className="flex-1" />
-
-                      {/* Stats Line */}
-                      <div className="flex items-center gap-1 mt-2.5 text-[9px] lg:text-[11px] font-bold">
-                        <Star className="w-3 h-3 lg:w-3.5 lg:h-3.5 fill-[#06B95F] text-[#06B95F]" />
-                        <span className="text-[#06B95F]">{store.rating}</span>
-                        <span className="text-surface-400 font-medium">({store.reviews} ratings)</span>
-                      </div>
-                      
                     </div>
 
                   </Link>

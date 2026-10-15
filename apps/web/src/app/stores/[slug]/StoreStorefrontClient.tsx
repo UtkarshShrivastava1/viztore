@@ -127,7 +127,7 @@ export function StoreStorefrontClient({ slug }: StoreStorefrontClientProps) {
     } else if (activeTab === 'Best Deals') {
       result.sort((a, b) => (b.maxDiscount || 0) - (a.maxDiscount || 0) || (a.basePrice || 0) - (b.basePrice || 0));
     } else if (activeTab === 'Top Picks') {
-      result.sort((a, b) => (b.rating || 0) - (a.rating || 0) || (b.reviewCount || 0) - (a.reviewCount || 0));
+      result.sort((a, b) => (b.maxDiscount || 0) - (a.maxDiscount || 0) || (b.basePrice || 0) - (a.basePrice || 0));
     }
 
     return result;

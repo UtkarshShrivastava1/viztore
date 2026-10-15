@@ -7,7 +7,7 @@ import { StoreCardSkeleton } from '@/components/ui/Skeleton';
 import { useNearbyStores } from '@/hooks/useNearbyStores';
 import { useAllStores } from '@/hooks/useAllStores';
 import { useLocationStore } from '@/stores/location.store';
-import { MapPin, Search, Grid, List, CheckCircle2, Star, Clock, Tag, LayoutGrid, Truck, ShieldCheck } from 'lucide-react';
+import { MapPin, Search, Grid, List, CheckCircle2, Clock, Tag, LayoutGrid, Truck, ShieldCheck } from 'lucide-react';
 import { StoreCategory } from '@repo/shared-types';
 import { StoreCard } from '@/features/stores/components/StoreCard';
 import { StoreDirectoryCard } from '@/features/stores/StoreDirectoryCard';
@@ -15,7 +15,6 @@ import { StoreDirectoryCard } from '@/features/stores/StoreDirectoryCard';
 const filters = [
   { label: 'Categories', icon: LayoutGrid },
   { label: 'Distance', icon: MapPin },
-  { label: 'Ratings', icon: Star },
   { label: 'Open Now', icon: Clock },
   { label: 'Offers', icon: Tag },
 ];

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Star, ChevronRight } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import type { IStore } from '@repo/shared-types';
 
 interface StoreCardProps {
@@ -11,12 +11,6 @@ interface StoreCardProps {
 }
 
 export function StoreCard({ store, className }: StoreCardProps) {
-  const reviewsFormatted = store.reviewCount >= 1000 
-    ? (store.reviewCount / 1000).toFixed(1) + 'K' 
-    : (store.reviewCount || '1.2K');
-
-  const ratingFormatted = store.rating ? store.rating.toFixed(1) : '4.5';
-
   return (
     <Link
       href={`/stores/${store.slug}`}
@@ -63,13 +57,7 @@ export function StoreCard({ store, className }: StoreCardProps) {
             {store.name}
           </h3>
 
-          <div className="flex items-center gap-1 mt-0.5 text-xs leading-none">
-            <span className="font-extrabold text-[#061842]">{ratingFormatted}</span>
-            <Star className="w-3.5 h-3.5 text-emerald-500 fill-emerald-500 shrink-0" />
-            <span className="text-gray-400 font-medium">({reviewsFormatted})</span>
-          </div>
-
-          <p className="text-[12px] text-gray-500 font-medium truncate mt-1 leading-tight">
+          <p className="text-[12px] text-gray-500 font-medium truncate mt-0.5 leading-tight">
             {store.category || store.description || "Men's, Women's & Kids Fashion"}
           </p>
         </div>

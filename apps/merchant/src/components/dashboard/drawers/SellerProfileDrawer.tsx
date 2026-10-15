@@ -14,7 +14,6 @@ import {
   CreditCard,
   Lock,
   Bell,
-  Star,
 } from 'lucide-react';
 import { useAuthStore } from '../../../stores/authStore.js';
 import { useOrderStore } from '../../../stores/orderStore.js';
@@ -196,33 +195,20 @@ export const SellerProfileDrawer: React.FC<SellerProfileDrawerProps> = ({
               </button>
             </div>
 
-            <div className="grid grid-cols-3 gap-2 text-center">
-              <div className="p-2 rounded-xl bg-white border border-slate-100 shadow-2xs">
-                <div className="flex items-center justify-center gap-1 text-emerald-600 font-bold text-sm">
-                  <span>4.7</span>
-                  <Star className="w-3 h-3 fill-emerald-600 text-emerald-600" />
-                </div>
-                <span className="text-[9px] text-slate-400 mt-0.5 block">Average Rating</span>
-              </div>
-
-              <div className="p-2 rounded-xl bg-white border border-slate-100 shadow-2xs">
-                <span className="text-emerald-600 font-bold text-sm block">98%</span>
-                <span className="text-[9px] text-slate-400 mt-0.5 block">Positive Reviews</span>
-              </div>
-
-              <div className="p-2 rounded-xl bg-white border border-slate-100 shadow-2xs">
-                <span className="text-slate-900 font-bold text-sm block">
-                  {totalOrdersCount > 0 ? totalOrdersCount : '1,245'}
+            <div className="grid grid-cols-2 gap-2.5 text-center">
+              <div className="p-3 rounded-xl bg-white border border-slate-100 shadow-2xs">
+                <span className="text-slate-900 font-bold text-base block">
+                  {totalOrdersCount.toLocaleString('en-IN')}
                 </span>
-                <span className="text-[9px] text-slate-400 mt-0.5 block">Total Orders</span>
+                <span className="text-[10px] text-slate-400 mt-0.5 block font-medium">Total Orders</span>
               </div>
-            </div>
 
-            <div className="p-2.5 rounded-xl bg-white border border-slate-100 shadow-2xs flex items-center justify-between">
-              <span className="text-xs text-slate-500 font-medium">Total Sales</span>
-              <span className="text-sm font-extrabold text-emerald-600">
-                {totalSales > 0 ? `₹${totalSales.toLocaleString('en-IN')}` : '₹3.2L+'}
-              </span>
+              <div className="p-3 rounded-xl bg-white border border-slate-100 shadow-2xs">
+                <span className="text-emerald-600 font-bold text-base block">
+                  ₹{totalSales.toLocaleString('en-IN')}
+                </span>
+                <span className="text-[10px] text-slate-400 mt-0.5 block font-medium">Total Sales</span>
+              </div>
             </div>
           </div>
 

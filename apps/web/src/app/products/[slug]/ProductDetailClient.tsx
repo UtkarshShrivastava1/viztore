@@ -8,7 +8,7 @@ import { Footer } from '@/components/layout/Footer';
 import { fetchProductBySlug } from '@/lib/api/catalog';
 import { useCartStore } from '@/stores/cart.store';
 import { 
-  Star, ShoppingBag, Share2, ChevronRight, 
+  ShoppingBag, Share2, ChevronRight, 
   Check, Minus, Plus, Package, 
   ChevronDown, ChevronUp, Zap
 } from 'lucide-react';
@@ -170,19 +170,6 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
               </h1>
             </div>
 
-            {/* Rating */}
-            <div className="flex items-center gap-2 mt-1">
-              <div className="flex items-center gap-1 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100">
-                <span className="text-xs font-extrabold text-emerald-700">4.4</span>
-                <Star className="w-3.5 h-3.5 fill-emerald-600 text-emerald-600" />
-              </div>
-              <span className="text-xs font-extrabold text-surface-400">|</span>
-              <span className="text-xs font-extrabold text-surface-500">1.8k Ratings</span>
-              <span className="text-xs font-extrabold text-surface-400">|</span>
-              <button className="text-xs font-extrabold text-[#1668F6] flex items-center gap-0.5">
-                120 Reviews <ChevronRight className="w-3 h-3" strokeWidth={3} />
-              </button>
-            </div>
 
             {/* Price Block */}
             <div className="space-y-1 mt-4">
@@ -389,64 +376,6 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
              <ProductDeliveryInfo />
            </div>
 
-           <div className="h-px bg-surface-100" />
-
-           {/* Ratings & Reviews */}
-           <div className="space-y-5">
-             <div className="flex items-center justify-between">
-               <h2 className="text-[15px] font-extrabold text-[#192168]">Ratings & Reviews</h2>
-               <button className="text-[13px] font-bold text-[#1668F6]">View All</button>
-             </div>
-             
-             <div className="flex flex-col md:flex-row md:items-center gap-6 md:gap-12 md:px-4">
-               {/* Overall */}
-               <div className="flex flex-col items-center">
-                  <div className="flex items-center gap-1 text-[#192168]">
-                    <span className="text-4xl font-extrabold">4.3</span>
-                    <Star className="w-6 h-6 fill-emerald-600 text-emerald-600" />
-                  </div>
-                  <span className="text-[12px] font-extrabold text-[#192168] mt-1">(1.2K Reviews)</span>
-               </div>
-               
-               {/* Bars */}
-               <div className="flex-1 max-w-sm space-y-2">
-                  {[
-                    { s: 5, p: 68, c: 'bg-emerald-600' },
-                    { s: 4, p: 22, c: 'bg-emerald-600' },
-                    { s: 3, p: 7, c: 'bg-emerald-300' },
-                    { s: 2, p: 2, c: 'bg-emerald-300' },
-                    { s: 1, p: 1, c: 'bg-emerald-300' },
-                  ].map(b => (
-                    <div key={b.s} className="flex items-center gap-2 text-[12px] font-extrabold text-[#192168]">
-                      <span className="w-3 text-right">{b.s}</span>
-                      <Star className="w-3 h-3 fill-emerald-600 text-emerald-600 -ml-0.5" />
-                      <div className="flex-1 h-2 bg-surface-100 rounded-full overflow-hidden">
-                        <div className={`h-full ${b.c} rounded-full`} style={{ width: `${b.p}%` }} />
-                      </div>
-                      <span className="w-8 text-right font-extrabold text-[#192168]">{b.p}%</span>
-                    </div>
-                  ))}
-               </div>
-             </div>
-
-             {/* Reviews List */}
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
-               {[
-                 { t: 'Great quality fabric and perfect fit.', a: 'Rahul Sharma', r: 5 },
-                 { t: 'Comfortable and stylish. Loved it!', a: 'Amit Verma', r: 4 },
-               ].map((rev, i) => (
-                 <div key={i} className="p-4 bg-[#f4f5f9] rounded-xl space-y-2">
-                   <div className="flex gap-0.5">
-                     {Array.from({length: 5}).map((_, j) => (
-                       <Star key={j} className={`w-3.5 h-3.5 ${j < rev.r ? 'fill-emerald-600 text-emerald-600' : 'fill-surface-200 text-surface-200'}`} />
-                     ))}
-                   </div>
-                   <p className="text-[13px] font-extrabold text-[#192168]">{rev.t}</p>
-                   <p className="text-[11px] font-medium text-[#192168] opacity-70">- {rev.a}</p>
-                 </div>
-               ))}
-             </div>
-           </div>
 
         </div>
 

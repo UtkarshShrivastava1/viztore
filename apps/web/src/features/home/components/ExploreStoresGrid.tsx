@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Star, ChevronRight, Zap, Truck, RotateCcw, ShieldCheck, Headphones, Store as StoreIcon } from 'lucide-react';
+import { ChevronRight, Zap, Truck, RotateCcw, ShieldCheck, Headphones, Store as StoreIcon } from 'lucide-react';
 import { useAllStores } from '@/hooks/useAllStores';
 
 const trustItems = [
@@ -69,12 +69,6 @@ export function ExploreStoresGrid() {
                   <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-brand-600 transition-colors shrink-0" />
                 </div>
 
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="flex items-center gap-1 text-base font-bold text-gray-900">
-                    {(store.rating || 4.5).toFixed(1)} <Star className="w-4 h-4 fill-[#00B56A] text-[#00B56A]" />
-                  </div>
-                  <span className="text-base text-gray-500">({store.reviewCount || 0})</span>
-                </div>
 
                 <p className="text-base text-gray-600 line-clamp-1 mb-4">
                   {store.category ? `${store.category.charAt(0).toUpperCase() + store.category.slice(1).replace('_', ' ')}` : store.description}
