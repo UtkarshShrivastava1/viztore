@@ -3,7 +3,7 @@ import {
   FileText,
   PlusCircle,
   Boxes,
-  Receipt,
+  ReceiptIndianRupee,
   Landmark,
   RotateCcw,
   ShoppingCart,
@@ -53,7 +53,7 @@ export const QuickAccessPanel: React.FC<QuickAccessPanelProps> = ({
     {
       label: 'Add Expense',
       sublabel: 'Record new expense',
-      icon: Receipt,
+      icon: ReceiptIndianRupee,
       color: 'text-rose-600 bg-rose-50',
       borderColor: 'border-rose-200/80',
       onClick: () => onNavigate('expenses'),

@@ -3,7 +3,7 @@ import {
   X,
   Printer,
   FileText,
-  Receipt,
+  ReceiptIndianRupee,
   Download,
   Share2,
   Check,
@@ -158,7 +158,7 @@ export const PrintReceiptModal: React.FC<PrintReceiptModalProps> = ({
         {/* Header Toolbar */}
         <div className="px-5 py-3.5 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 bg-slate-50/70 shrink-0">
           <div className="flex items-center gap-2">
-            <Receipt className="w-5 h-5 text-blue-600" />
+            <ReceiptIndianRupee className="w-5 h-5 text-blue-600" />
             <div>
               <h2 className="text-sm sm:text-base font-bold text-slate-900">
                 Print Invoice: <span className="font-mono text-blue-600">{invoice.invoiceNo}</span>

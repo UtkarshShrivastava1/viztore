@@ -4,7 +4,7 @@ import {
   ShoppingBag,
   Package,
   Boxes,
-  Receipt,
+  ReceiptIndianRupee,
   Users,
   Wallet,
   ReceiptText,
@@ -191,7 +191,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     },
     { id: 'catalog', label: 'Products / Catalog', icon: Package },
     { id: 'inventory', label: 'Inventory', icon: Boxes },
-    { id: 'billing', label: 'Billing & Invoicing', icon: Receipt },
+    { id: 'billing', label: 'Billing & Invoicing', icon: ReceiptIndianRupee },
     { id: 'customers', label: 'Customers', icon: Users },
     {
       id: 'returns',
