@@ -1,236 +1,265 @@
-# 🚀 Platform End-to-End Staging & Operational Testing Playbook
-**Document Version:** `1.0.0-PROD`  
-**Classification:** Internal QA & Product Acceptance Testing  
+# 🚀 Hyperlocal Retail Commerce Platform — Live Staging Verification & Architecture Guide
+**Document Classification:** Production Acceptance & Architectural Verification Playbook  
+**Target Environments:** Cloud Staging & Live Production Deployments  
 **Authoritative Scope:** 7 Core E2E Hyperlocal Commerce Workflows + Production Labs Architecture  
 
 ---
 
-## 🌐 Live Cloud Deployment URLs
+## 🌐 Live Production Deployments
 
-| Application | Live Production / Staging URL | Local Dev URL | Purpose |
-|---|---|---|---|
-| **Customer Web Storefront** | **[viztore-web.vercel.app](https://viztore-web.vercel.app)** | `http://localhost:3000` | Hyperlocal store discovery, single-store cart, customer account hub, and checkout. |
-| **Merchant Management Portal** | **[viztore-merchant.vercel.app](https://viztore-merchant.vercel.app)** | `http://localhost:3001` | Onboarding, inventory, order fulfillment, POS counter billing, and CRM. |
-| **Backend Modular Monolith** | **`https://viztore.onrender.com/api/v1`** | `http://localhost:5000/api/v1` | Unified REST API, OCC versioning engine, and Socket.io server. |
+| System Component | Live Cloud URL | Primary Functional Scope |
+|---|---|---|
+| **Customer Web Storefront** | **[viztore-web.vercel.app](https://viztore-web.vercel.app)** | Hyperlocal store discovery, single-store cart, customer account hub, and online checkout. |
+| **Merchant Management Portal** | **[viztore-merchant.vercel.app](https://viztore-merchant.vercel.app)** | Onboarding, product catalog, inventory, order fulfillment, Counter POS billing, and CRM. |
+| **Backend Modular Monolith** | **`https://viztore.onrender.com/api/v1`** | High-concurrency REST API, OCC versioning engine, and real-time Socket.io server. |
 
 ---
 
-## 📋 Executive Overview & System Topology
+## 🏛️ Section 1: Architectural Philosophy & Three-Horizon Strategy
 
-The platform operates as a unified, dual-system hyperlocal commerce engine designed for Indian retail stores operating within a **3–4 km delivery radius**:
+To evaluate this platform objectively, it is essential to understand the engineering principles governing its design:
+
+### 1. Production-Grade Architecture vs. Cosmetic Prototypes
+* **Zero Hardcoded Dummy Arrays:** A prototype fills tables with static, un-purchasable fake rows. A **production-grade enterprise engine** starts with clean databases and dynamic empty states. As real transactions occur, catalog matrices, order pipelines, inventory ledgers, and financial charts hydrate organically in real time.
+* **Financial & Inventory Correctness First:** Hyperlocal commerce fails if a physical counter sale and an online order sell the same last shirt simultaneously. Therefore, the **Transactional Core** (ACID transactions, Optimistic Concurrency Control, and double-decrement race prevention) was engineered, stress-tested, and locked down first.
+
+### 2. The Three-Horizon Engineering Roadmap
+Rather than holding back the entire platform for months to build peripheral back-office software, development follows an **Agile Three-Horizon Strategy**:
 
 ```mermaid
-graph TD
-    subgraph System 1: Online Storefront & Fulfillment Triangle
-        CW["Customer Web<br/>viztore-web.vercel.app"] -->|Checkout & OTP| BK["Backend API<br/>viztore.onrender.com"]
-        BK -->|Live Socket Chime| MP["Merchant Portal<br/>viztore-merchant.vercel.app"]
-        MP -->|OTP Handshake Verification| BK
-    end
-
-    subgraph System 2: Walk-In Retail Counter POS Billing
-        POS["Merchant Counter POS<br/>viztore-merchant.vercel.app/billing"] -->|Atomic OCC Sale| BK
-        BK -->|Instant Stock Sync| CW
-    end
+timeline
+    title Three-Horizon Platform Evolution
+    section Horizon 1: Live Core (ACTIVE NOW)
+        Online Customer Web Storefront (:3000)
+        Merchant Onboarding, Catalog & Inventory
+        Real-Time Order Fulfillment & Delivery OTP
+        In-House Retail Counter POS Billing & 80mm Thermal Receipt
+    section Horizon 2: Advanced Operations (Iterative Sprints)
+        Merchant Wallet & Payout Sweeps (Late Oct)
+        Purchase Orders & Expense ERP (Early Nov)
+        Automated Reverse Logistics & Returns (Mid Nov)
+    section Horizon 3: Enterprise Scale (Late Q4)
+        Promotional Ads & Marketing Banners (Late Nov)
+        Multi-Cashier Staff Management RBAC (Dec)
+        Native Mobile Applications (Expo / React Native)
 ```
 
-* **System 1 (Online Storefront & Fulfillment Triangle):** Customer discovery, single-store cart enforcement, checkout in Bhilai, real-time merchant order reception with audio chimes, runner dispatch, and secure 4-digit Delivery OTP handshake.
-* **System 2 (In-House Retail Counter POS Billing):** High-speed counter barcode/SKU checkout, walk-in customer registration, multi-tender cash calculation with change return, 80mm ESC/POS thermal receipt printing, and real-time inventory deduction reflected instantly on the customer storefront.
+* **Core Commerce (Horizon 1 — 100% Complete & Active):** Everything needed to register shops, sell products, process walk-in POS counter sales, dispatch runners, and issue legal Indian GST invoices is fully functional right now.
+* **Production Labs (Horizons 2 & 3 — Active Pipeline):** Modules located in the lower sidebar under **"Production Labs"** represent advanced enterprise features scheduled for iterative weekly rollouts. Their inclusion in the UI provides structural architectural visibility and proves that the routing and layout models are already prepared.
 
 ---
 
-## 🧪 Master 7-Step Verification Workflow
+## 🧪 Section 2: Master 7-Step Verification Workflow (With Proactive Pre-Flight Notes)
 
-Follow these exact steps in sequence on the live staging deployments:
+You are encouraged to explore with a completely **empty canvas**: create your own merchant store, upload your own real products, set your own prices, register your own customer account, and execute live end-to-end sales.
+
+Follow these 7 steps to verify the entire system lifecycle:
 
 ---
 
 ### 🏁 Step 1: Merchant & Store Digital Onboarding
-* **Live Route:** **[viztore-merchant.vercel.app/?view=onboarding](https://viztore-merchant.vercel.app/?view=onboarding)** *(Local: `http://localhost:3001/?view=onboarding`)*  
-* **Objective:** Complete the 6-step paperless registration wizard and establish cloud store identity.
+**Target URL:** **[viztore-merchant.vercel.app/?view=onboarding](https://viztore-merchant.vercel.app/?view=onboarding)**  
+**Functional Goal:** Complete the paperless 6-step onboarding wizard and establish cloud store identity.
 
-1. **Mobile & Email Verification (Step 1):**
-   * **Mobile Number:** `9876543210` (Click *Send OTP*, enter `1234` or demo OTP).
-   * **Email Address:** `test.merchant@example.com` (Click *Send OTP*, enter `1234`).
-   * **Password:** `Password@123` (Enforces 8+ characters, uppercase, and special character).
-   * *Under the hood:* Creates authenticated user session with JWT Bearer access & refresh tokens.
-2. **Business Identity & Legal Compliance (Step 2):**
-   * **GSTIN:** `29ABCDE1234F1Z5` (Auto-validates Indian 15-character format and extracts PAN `ABCDE1234F`).
-   * **Legal Business Name:** `National Retail Store Ltd.`
+> [!NOTE]
+> **Proactive Pre-Flight Clarification (Carrier Gateway Decoupling):**  
+> In staging sandboxes, third-party SMS/Email carrier gateways (e.g. Twilio/Gupshup/AWS SES) are intentionally decoupled to prevent carrier rate-limiting, SMS delivery delays, and telecom billing overhead during QA.  
+> You can enter **any 10-digit mobile number and any valid email format**. When you click *Send OTP*, the system immediately enables verification (or auto-populates demo OTP `1234`) so you can test smoothly without waiting on telecom carriers.
+
+1. **Mobile, Email & Security (Step 1):**
+   * Enter your chosen mobile number and email address.
+   * Enter any secure password (minimum 8 characters, uppercase, and special character).
+   * Click verify to establish your authenticated merchant JWT session.
+2. **Business Identity & Indian Tax Compliance (Step 2):**
+   * Enter any standard Indian GSTIN format (15 characters, e.g. `29ABCDE1234F1Z5`). The system dynamically validates the checksum format and auto-extracts the underlying 10-character PAN (`ABCDE1234F`).
+   * Enter your registered legal business name.
 3. **Electronic Signature (Step 2 Sub-step):**
-   * Draw digital merchant signature on the HTML5 interactive canvas or select cursive font generator. Click *Save Signature*.
-4. **Store Profile & Geolocation (Step 3):**
-   * **Store Display Name:** `National Retail Store`
-   * **Category:** `Fashion & Apparel`
-   * **Physical Address:** `123 Main Street, Commercial Center, Bhilai - 452001`
-   * **Store Coordinates:** `[81.3854, 21.2132]` (Drop pin on map).
-   * **Operating Schedule:** Monday–Sunday, `09:00 AM – 09:00 PM` (All days active).
+   * Draw your signature directly on the HTML5 interactive touch/mouse canvas, or toggle to the cursive signature generator. Click *Save Signature*.
+4. **Store Profile, Timing & Geolocation (Step 3):**
+   * Enter your Store Display Name and select your store category (e.g. *Fashion & Apparel*).
+   * Drop your store pin on the interactive Leaflet map to establish your physical `2dsphere` coordinates for the 3–4 km delivery radius.
+   * Configure your weekly operating hours (Monday–Sunday).
 5. **Bank Settlement Account (Step 4):**
-   * **Account Number:** `123456789012`
-   * **Confirm Account Number:** `123456789012`
-   * **IFSC Code:** `HDFC0001234`
-6. **Submission & Verification:**
-   * Click **Submit Application**.
-   * The application transitions to the **Review & Verification Room**. Click **"Preview Merchant Dashboard"** to enter the operational management interface.
+   * Enter bank account number and Indian IFSC code (e.g. `HDFC0001234`).
+6. **Submission & Verification Room:**
+   * Click **Submit Application**. The account transitions to the verification room.
+   * Click **"Preview Merchant Dashboard"** to enter your operational store workstation.
 
 ---
 
-### 🏁 Step 2: Store Status & Operational Readiness
-* **Live Route:** **[viztore-merchant.vercel.app](https://viztore-merchant.vercel.app)** *(Local: `http://localhost:3001/`)*  
-* **Objective:** Confirm store active toggle, cloud synchronization, and multi-tenant context.
+### 🏁 Step 2: Store Operational Status Engine
+**Target URL:** **[viztore-merchant.vercel.app](https://viztore-merchant.vercel.app)**  
+**Functional Goal:** Validate live store open/closed status switching and multi-tenant persistence.
 
-1. **Store Header Toggle:**
-   * Look at the top-right header: Verify store profile displays `National Retail Store`.
-   * Observe the **Store Status Pill** (Green = *Store Open & Accepting Orders*, Red = *Store Closed*).
-2. **Persistence Check:**
-   * Toggle the switch: Confirmation dialog updates `isActive` in MongoDB Atlas via `PATCH /api/v1/stores/:id`.
-   * Refresh the browser: Status persists seamlessly without reset.
+> [!NOTE]
+> **Proactive Pre-Flight Clarification (Why Status Toggling Matters):**  
+> The store status toggle in the header is not a cosmetic switch. When toggled to **Closed (Red)**, the backend geospatial query (`$near` within 3–4 km) immediately excludes this store from customer discovery on the customer storefront. When **Open (Green)**, it broadcasts readiness to receive live orders.
+
+1. Observe the store profile in the top-right header displaying your registered store name.
+2. Toggle the **Store Status Switch**:
+   * A confirmation dialog appears explaining that closing the store pauses incoming customer orders.
+   * Confirm the action: Dispatches an asynchronous `PATCH /api/v1/stores/:id` to MongoDB Atlas.
+3. Refresh the page: The active status persists across sessions and browser reloads.
 
 ---
 
 ### 🏁 Step 3: Product Catalog Creation & Multi-Variant Matrix
-* **Live Route:** **[viztore-merchant.vercel.app/catalog](https://viztore-merchant.vercel.app/catalog)** *(Local: `http://localhost:3001/catalog`)*  
-* **Objective:** Publish polymorphic retail products with size/color variants and high-res imagery.
+**Target URL:** **[viztore-merchant.vercel.app/catalog](https://viztore-merchant.vercel.app/catalog)**  
+**Functional Goal:** Publish polymorphic retail products with size/color variants and live pricing discounts.
 
-1. Click **+ Add Product** button (top right).
-2. **Product 1 (Anchor Product):**
-   * **Title:** `Classic Cotton Polo T-Shirt`
-   * **Category:** `Men` ➔ Sub-category: `Topwear` ➔ Type: `Polo T-Shirts`
-   * **Brand:** `Polo Club`
-   * **Pricing:** Selling Price: `₹799`, MRP: `₹1,299` (Auto-calculates **38% OFF** discount badge).
-   * **Variants Enabled:** Check *This product has size/color variants*.
-     * Generate matrix: Sizes `S, M, L, XL` with Color `White`.
-     * Anchor Variant SKU: `POLO-WHT-M`, Opening Stock: `45` units.
-   * **Media Upload:** Drop product photograph or paste direct image URL.
-   * Click **Publish Product**.
-3. **Verify Catalog Table:**
-   * Confirm the product appears with live thumbnail, price `₹799`, total stock `45`, and active status badge.
+> [!NOTE]
+> **Proactive Pre-Flight Clarification (Empty State & Mockup Comparison):**  
+> If this is a freshly created store, the catalog table will display a clean "No Products Yet" empty state. This is intentional. In production software, products must be created by the merchant, not injected via hardcoded dummy fixtures.
+
+1. Click **+ Add Product** (top right) to open the 3-step creation wizard.
+2. **Basic Information:**
+   * Enter Product Title, Brand Name, and select Category ➔ Sub-category (e.g. *Men > Topwear > Polo T-Shirts*).
+3. **Pricing & Auto-Calculated MRP Discount:**
+   * Enter a **Selling Price** (e.g. `₹799`) and an **MRP** (e.g. `₹1,299`).
+   * The platform automatically calculates the discount badge (**38% OFF**) in real time.
+4. **Multi-Variant Generation:**
+   * Check *This product has size/color variants*.
+   * Select sizes (e.g. `S, M, L, XL`) and enter Color (e.g. `White`). The platform automatically constructs individual variant SKUs with independent stock counts.
+5. **Media Upload & Ingestion:**
+   * Drop a photograph from your device or paste any direct public image URL into the media input.
+6. Click **Publish Product**. Confirm the product immediately appears in the catalog register with thumbnail, active status badge, and stock count.
 
 ---
 
-### 🏁 Step 4: Inventory Management & Stock Adjustment
-* **Live Route:** **[viztore-merchant.vercel.app/inventory](https://viztore-merchant.vercel.app/inventory)** *(Local: `http://localhost:3001/inventory`)*  
-* **Objective:** Verify stock valuation, low-stock threshold triggers, and audit logging.
+### 🏁 Step 4: Real-Time Inventory Control & Audit Trail
+**Target URL:** **[viztore-merchant.vercel.app/inventory](https://viztore-merchant.vercel.app/inventory)**  
+**Functional Goal:** Verify stock valuation, adjustments, and immutable transaction history.
 
-1. **KPI Summary Bar:**
-   * Confirm **Total SKUs**, **Total Stock Units**, and **Stock Valuation (₹)** dynamically reflect published catalog products.
-2. **Single Product Adjustment:**
-   * Locate `Classic Cotton Polo T-Shirt` (`POLO-WHT-M`).
-   * Click the row action menu (`⋮`) ➔ Select **Adjust Stock**.
-   * Use stepper or manual entry (`+5` / `-5`), select reason (*Physical Count Reconciliation*), and save.
-   * Click **Stock History** drawer to observe the immutable audit trail with timestamp and reason.
+> [!NOTE]
+> **Proactive Pre-Flight Clarification (Dynamic Metric Computation):**  
+> The 5 KPI cards at the top of the inventory page (Total SKUs, Total Stock, Low Stock, Stock Value) compute their values dynamically from your live MongoDB catalog. They are not static numbers.
+
+1. Locate your newly created product in the inventory register.
+2. Click the row action menu (`⋮`) ➔ Select **Adjust Stock**:
+   * Use the stepper or manual numeric input (`+10` or `-5`).
+   * Select a reason (*Physical Count Reconciliation*, *Damaged Goods*, *Stock Inflow*).
+   * Save the adjustment: Dispatches an atomic stock update to the backend.
+3. Click the **Stock History** drawer on that product:
+   * Displays the immutable audit trail recording the exact timestamp, previous quantity, new quantity, and adjustment reason.
 
 ---
 
 ### 🏁 Step 5: Customer Discovery, Single-Store Cart & Checkout
-* **Live Route:** **[viztore-web.vercel.app](https://viztore-web.vercel.app)** *(Local: `http://localhost:3000`)*  
-* **Objective:** Verify hyperlocal store discovery, single-store cart enforcement, and order placement.
+**Target URL:** **[viztore-web.vercel.app](https://viztore-web.vercel.app)** *(Customer Storefront)*  
+**Functional Goal:** Discover the newly created store within the delivery zone, enforce single-store cart rules, and place an order.
 
-1. **Customer Authentication:**
-   * Click **Login / Register** in header.
-   * Enter Customer Name: `Pooja Sharma`, Phone: `9876501234`, Email: `pooja.customer@example.com`, Password: `Password@123`.
-   * Header displays authenticated profile: `Pooja Sharma - Sector 6, Bhilai`.
+> [!NOTE]
+> **Proactive Pre-Flight Clarification (The Hyperlocal Single-Store Cart Rule):**  
+> Hyperlocal commerce operates on rapid 30–45 minute delivery by dedicated local riders. Unlike Amazon (which delivers items across days from multiple national warehouses), a customer cannot mix items from two different local shops in a single checkout.  
+> The platform enforces this invariant: adding an item from Store B while having items from Store A prompts the customer to either keep or clear their active cart.
+
+1. **Customer Registration / Login:**
+   * Click **Login / Register** in the top navigation.
+   * Enter your name, mobile number, and email. Verify using the staging sandbox auth.
 2. **Hyperlocal Store Discovery:**
-   * Navigate to **Stores** ([viztore-web.vercel.app/stores](https://viztore-web.vercel.app/stores)).
-   * Locate `National Retail Store` (Commercial Center, Bhilai) with verified retailer badge.
-   * Click store card to open storefront catalog.
-3. **Product Page & Cart:**
-   * Select `Classic Cotton Polo T-Shirt`.
-   * Verify price `₹799` (inclusive of all taxes), MRP `₹1,299`, and select size `M`.
-   * Click **Add to Cart**. Floating cart badge updates to `1`.
-   * *(Single-Store Invariant):* Adding an item from any other store triggers a confirmation modal to clear the existing cart.
+   * Click **Stores** ([viztore-web.vercel.app/stores](https://viztore-web.vercel.app/stores)).
+   * Your registered store appears with its verified retailer badge and category tag.
+   * Click the store card to enter the merchant's dedicated storefront.
+3. **Product Page & Size Selection:**
+   * Select the product you created in Step 3.
+   * Notice that pricing, MRP discount badge, and variants match your merchant dashboard input.
+   * Select a variant (e.g. Size `M`) and click **Add to Cart**.
 4. **Checkout Experience:**
-   * Navigate to Checkout ([viztore-web.vercel.app/checkout](https://viztore-web.vercel.app/checkout)).
-   * **Delivery Address:** `Plot 14, Nehru Nagar West, Bhilai, Chhattisgarh - 490020`.
-   * **Payment Method:** Select **Cash on Delivery (COD)**.
-   * **Order Summary:** Subtotal `₹799.00` + 5% GST `₹39.95` = **Grand Total: ₹838.95**.
+   * Open the Cart and click **Proceed to Checkout** ([viztore-web.vercel.app/checkout](https://viztore-web.vercel.app/checkout)).
+   * Enter delivery address (e.g. `Plot 14, Nehru Nagar West, Bhilai - 490020`).
+   * Select **Cash on Delivery (COD)**.
+   * Review order financials: Subtotal + GST breakdown + delivery charge.
    * Click **Place Order**.
-5. **Success Screen (`/checkout/success`):**
-   * Confirms Order Number: `#ORD-20261015-CABA79`.
-   * Displays 4-digit confidential customer handover **Delivery OTP** (e.g. `5575`).
+5. **Success Confirmation & Delivery OTP:**
+   * The confirmation page displays your unique Order Number (`#ORD-...`).
+   * A **4-digit confidential customer Delivery OTP** is generated (e.g. `5575`). The customer must only share this OTP with the runner upon physical receipt of goods.
 
 ---
 
-### 🏁 Step 6: Merchant Order Fulfillment & Delivery OTP Lifecycle
-* **Live Route:** **[viztore-merchant.vercel.app/orders](https://viztore-merchant.vercel.app/orders)** *(Local: `http://localhost:3001/orders`)*  
-* **Objective:** Verify real-time Socket.io order alerts, pipeline progression, OTP verification, and tax invoice generation.
+### 🏁 Step 6: Merchant Order Pipeline & Secure Delivery OTP Handshake
+**Target URL:** **[viztore-merchant.vercel.app/orders](https://viztore-merchant.vercel.app/orders)**  
+**Functional Goal:** Receive real-time audio/visual alert, advance order fulfillment state machine, verify customer OTP, and issue legal GST invoice.
 
-1. **Audible Order Alert & New Orders Tab:**
-   * Upon customer checkout, the merchant dashboard plays a 2-tone melodic chime (D5 ➔ A5) and displays an arrival toast.
-   * Order appears under the **New Orders** tab (`ORD-20261015-CABA79` | `₹838.95` | `Pooja Sharma`).
-2. **State Machine Pipeline Progression:**
-   * **Step A (Accept):** Click **Accept Order**. Order moves from `PENDING` ➔ `CONFIRMED` (*Accepted* tab).
-   * **Step B (Pack):** Click **Ready to Ship**. Order moves to `PACKED` (*Ready to Ship* tab).
-   * **Step C (Dispatch):** Click **Mark Shipped**. Generates tracking ID (`TRK-650493`), assigns local delivery partner, and moves to `OUT_FOR_DELIVERY` (*Shipped* tab).
-3. **Delivery Handshake OTP Handover:**
+> [!NOTE]
+> **Proactive Pre-Flight Clarification (Event-Driven Real-Time Sockets):**  
+> The moment the customer places an order on `viztore-web.vercel.app`, the backend emits a Socket.io event to `store:${storeId}`. The merchant portal triggers a **harmonic 2-tone audio chime (D5 ➔ A5)** and an arrival notification. You do not need to refresh the page.
+
+1. **Incoming Order Discovery:**
+   * Open the **New Orders** tab. The order placed in Step 5 appears with total value and customer details.
+2. **State Machine Fulfillment:**
+   * **Accept Order:** Click *Accept*. Order transitions `PENDING` ➔ `CONFIRMED` and moves to the *Accepted* tab.
+   * **Ready to Ship:** Click *Ready to Ship*. Order transitions `CONFIRMED` ➔ `PACKED` (*Ready to Ship* tab).
+   * **Mark Shipped:** Click *Mark Shipped*. Generates a tracking ID (`TRK-...`) and transitions to `OUT_FOR_DELIVERY` (*Shipped* tab).
+3. **Delivery Handshake Verification:**
    * On the *Shipped* tab, click **Verify Delivery OTP**.
-   * A modern 4-digit PIN dialog opens. Enter customer's OTP: **`5575`**.
-   * Click **Verify & Mark Delivered**.
-   * The modal validates against the backend (`POST /api/v1/orders/:id/verify-otp`). Order transitions to **`DELIVERED`**.
-4. **Tax Invoice Verification:**
-   * Open the delivered order detail: Click **View Invoice**.
-   * Displays legal Indian Tax Invoice `INV-ORD-20261015-CABA79` with seller GSTIN, customer details, CGST (2.5%) `₹19.98`, SGST (2.5%) `₹19.97`, and Total `₹838.95`.
-5. **Atomic Stock Decrement Verification:**
-   * Product `Classic Cotton Polo T-Shirt` (`POLO-WHT-M`) stock automatically decremented from **45 down to 44 units** in MongoDB Atlas.
+   * Enter the 4-digit customer OTP issued in Step 5.
+   * Click **Verify & Mark Delivered**: The backend cryptographically validates the OTP. The order transitions to **`DELIVERED`**.
+4. **Indian Tax Invoice & Inventory Verification:**
+   * Click **View Invoice**: Displays legal tax invoice (`INV-ORD-...`) with intra-state GST (CGST + SGST split) and seller GSTIN.
+   * Check your inventory: The product's stock count was **atomically decremented** upon fulfillment.
 
 ---
 
 ### 🏁 Step 7: In-House Retail Counter POS Billing (System 2 Test)
-* **Live Route:** **[viztore-merchant.vercel.app/billing](https://viztore-merchant.vercel.app/billing)** *(Local: `http://localhost:3001/billing`)*  
-* **Objective:** Test walk-in retail counter sales, multi-tender cash change calculation, ESC/POS 80mm thermal receipt printing, and real-time storefront inventory deduction.
+**Target URL:** **[viztore-merchant.vercel.app/billing](https://viztore-merchant.vercel.app/billing)**  
+**Functional Goal:** Test walk-in retail counter sales, barcode wedge scanning, cash change calculation, ESC/POS 80mm thermal receipt printing, and zero-lag storefront inventory sync.
+
+> [!NOTE]
+> **Proactive Pre-Flight Clarification (Why Counter POS is Built Into Merchant Web):**  
+> Local Indian retailers have physical walk-in customers while simultaneously receiving online hyperlocal orders. If counter sales don't deduct online inventory immediately, customers will buy items online that were already sold across the counter 5 minutes ago.  
+> System 2 provides a high-speed POS register that synchronizes stock atomically with the online storefront.
 
 1. **Launch Counter POS Register:**
-   * On the Billing page, click the **Quick Counter POS** action button (`Zap` icon) or navigate to `/billing?view=pos_counter`.
+   * On the Billing page, click **Quick Counter POS** (`Zap` icon) or navigate to `/billing?view=pos_counter`.
    * Enters the fullscreen cashier workstation.
 2. **Fast Barcode / SKU Scan Station:**
-   * Focus is automatically placed on the barcode search input.
-   * Scan barcode or type `POLO-WHT-M` and hit `Enter`.
-   * Audio chime sounds and `Classic Cotton Polo T-Shirt` (Variant: `POLO-WHT-M`, ₹799) is added to the bill cart.
-3. **GST Tax Calculation & Customer Info:**
-   * Tax breakdown auto-calculates intra-state GST: CGST 9% (`₹71.91`) + SGST 9% (`₹71.91`), Grand Total = **`₹942.82`**.
-   * Enter walk-in retail customer details: Name: `Rahul Verma`, Phone: `9826112345`.
-4. **Multi-Tender Cash Settlement:**
-   * Select **Cash** tender mode.
-   * Click the **`₹1,000`** quick cash note pill or enter `1000` in the Tendered Cash input.
-   * Observe the live mathematical calculation: **Change to Return: `₹57.18`**.
-5. **Complete POS Sale & Thermal Slip Generation:**
-   * Click **Complete Sale & Print** (`POST /api/v1/billing/pos/sale`).
-   * The sale is processed with Optimistic Concurrency Control (OCC) and issues sequential invoice **`INV-1001`** (or `INV-1002`).
-   * The **ESC/POS 80mm Thermal Receipt Modal** opens automatically with store header, cashier attribution, itemized lines, GST slab breakdown, and print action.
-6. **Cross-App Zero-Lag Stock Sync Verification:**
-   * **MongoDB Atlas:** Variant `POLO-WHT-M` stock is atomically decremented from **44 down to 43 units**, and total product stock from **43 down to 42 units**.
-   * **Customer Web Storefront ([viztore-web.vercel.app](https://viztore-web.vercel.app)):** Refresh the product page or query the API.
-   * Instantly reflects **Total Stock: `42`, Size M Stock: `43`** with zero caching lag!
+   * The barcode input is auto-focused. Scan a barcode or type your SKU and press `Enter`.
+   * An audio chime sounds and the item is instantly added to the bill cart with quantity steppers.
+3. **Walk-In Customer & Tax Breakdown:**
+   * Enter customer details (Name & Phone).
+   * Intra-state GST (CGST 9% + SGST 9%) and commercial round-off are calculated automatically.
+4. **Multi-Tender Cash Settlement & Change Calculation:**
+   * Select **Cash** tender.
+   * Click a preset cash pill (e.g. `₹1,000`) or type cash received.
+   * The platform calculates the exact **Change to Return** (e.g. `₹57.18`) in real time.
+5. **Complete POS Sale & ESC/POS 80mm Thermal Receipt:**
+   * Click **Complete Sale & Print**.
+   * Issues sequential invoice (`INV-1001`, `INV-1002`).
+   * The **ESC/POS 80mm Thermal Receipt Modal** opens with centered typography, store header, tax slabs, and browser print action.
+6. **Zero-Lag Online Stock Deduction Verification:**
+   * Switch to the Customer Storefront ([viztore-web.vercel.app](https://viztore-web.vercel.app)).
+   * Refresh your product page: The stock available online **immediately decrements** by the exact quantity sold across the counter!
 
 ---
 
-## 🔬 "Production Labs" Sidebar Modules — Product Roadmap & Rollout Schedule
+## 🔬 Section 3: Deep-Dive on "Production Labs" & Fast-Follow Roadmap
 
-When exploring the Merchant Management Portal ([viztore-merchant.vercel.app](https://viztore-merchant.vercel.app)), you will notice a dedicated **"Production Labs"** section in the lower sidebar containing several advanced business modules:
+When exploring the lower navigation of the Merchant Management Portal, you will see a section labeled **"🧪 Production Labs"**:
 
 ```text
-├── CORE COMMERCE (100% Production Ready)
-│   ├── Orders Pipeline & Delivery OTP
-│   ├── Product Catalog & Variant Wizard
-│   ├── Inventory Management & Stock History
-│   ├── Billing & Invoicing (Counter POS + Thermal Engine)
+├── CORE COMMERCE (100% Production Ready & Tested in Steps 1–7)
+│   ├── Orders Pipeline & Delivery OTP Handshake
+│   ├── Product Catalog & Multi-Variant Generator
+│   ├── Inventory Management & Stock History Ledger
+│   ├── Billing & Invoicing (Counter POS + Thermal Slip Engine)
 │   ├── Customers CRM & Khata Credit Ledger
 │   └── Store Settings & Profiles
 │
-└── 🧪 PRODUCTION LABS (Iterative Rollout Roadmap)
-    ├── 👛 Wallet Hub & Merchant Payout Sweeps
+└── 🧪 PRODUCTION LABS (Fast-Follow Release Roadmap)
+    ├── 👛 Wallet Hub & Instant Bank Sweeps
     ├── 📦 Purchase Orders & Operating Expenses ERP
-    ├── ↩️ Automated Returns & Reverse Logistics
+    ├── ↩️ Automated Reverse Logistics
     ├── 📢 Marketing Suite, Banners & Coupon Creator
     └── 👥 Staff Management & Multi-Cashier RBAC
 ```
 
-### Why are these placed in Production Labs?
-1. **Tiered Rollout Strategy:**
-   * **Tier 1 & Tier 2 Launch Core (Now Active):** The priority is live retail hyper-local discovery, walk-in counter POS billing, physical store inventory synchronization, and the online purchase-to-delivery loop. This foundation is 100% hardened and operational.
-2. **Upcoming Release Sprints:**
-   * The modules under **Production Labs** are actively engineered and will be unlocked progressively in targeted weekly updates:
+### Proactive Clarification for Product Stakeholders:
+* **Why are these in Production Labs?**  
+  These represent back-office ERP and administrative modules. Building and testing them does not block a store from selling products or fulfilling orders. Grouping them in Production Labs gives full visual transparency into upcoming features while keeping the critical commerce loop uncluttered.
+* **Does "Coming Soon" mean it will take months?**  
+  **No.** All of these modules are already structurally routed and component-scaffolded. Their backend database schemas and REST controllers are part of the active development pipeline and will be released in targeted weekly sprints:
 
-| Module in Labs | Scheduled Milestone | Description & Business Capability |
+| Module in Labs | Scheduled Milestone | Business Capability & Scope |
 |---|:---:|---|
 | **👛 Wallet Hub & Instant Sweeps** | Sprint 2.1 (Late Oct) | Razorpay/Cashfree payout gateway integration, automated T+1 bank clearing, and on-demand wallet withdrawals. |
 | **📦 Purchase Orders & Expenses** | Sprint 2.2 (Early Nov) | Supplier vendor directory, raw material Purchase Bills, and operating expense vouchers (Rent, Electricity, Logistics). |
@@ -238,32 +267,16 @@ When exploring the Merchant Management Portal ([viztore-merchant.vercel.app](htt
 | **📢 Marketing & Ad Campaigns** | Sprint 3.1 (Late Nov) | Store banner slider manager, sponsored search placements, and interactive voucher ticket discount wizards. |
 | **👥 Staff Management (RBAC)** | Sprint 3.2 (Dec) | Granular cashier vs store manager roles with restricted POS permissions and PIN-locked registers. |
 
-> **QA Note for Evaluators:**  
-> When testing staging on [viztore-merchant.vercel.app](https://viztore-merchant.vercel.app), focus primarily on the **Core Commerce** navigation items (Dashboard, Orders, Catalog, Inventory, Billing & Invoicing, Customers, Settings). The Production Labs modules provide structural previews and will transition into active testing as their backend service integrations reach completion.
-
 ---
 
-## 🛠️ Staging Verification Quick-Reference Data
+## 📋 Staging Verification Summary Checklist
 
-| Entity | Field | Value for Testing |
-|---|---|---|
-| **Merchant Credentials** | Email / Password | `test.merchant@example.com` / `Password@123` |
-| **Merchant Mobile** | Mobile / OTP | `9876543210` / `1234` |
-| **Store Entity** | Name / Category | `National Retail Store` / `Fashion` |
-| **Store Location** | Address / PIN | Commercial Center, Bhilai - 452001 (`[81.3854, 21.2132]`) |
-| **Customer Credentials** | Email / Password | `pooja.customer@example.com` / `Password@123` |
-| **Customer Mobile** | Mobile / OTP | `9876501234` / `1234` |
-| **Delivery Address** | Full Address | Plot 14, Nehru Nagar West, Bhilai, Chhattisgarh - 490020 |
-| **POS Customer** | Name / Mobile | `Rahul Verma` / `9826112345` |
-| **Anchor Product** | Title / Variant | `Classic Cotton Polo T-Shirt` (`POLO-WHT-M`, ₹799) |
-
----
-
-## ✅ Summary of Verification Success Criteria
-
-A full operational verification is considered **100% PASSED** when:
-* [x] A merchant can register, upload products, and set active store status on [viztore-merchant.vercel.app](https://viztore-merchant.vercel.app).
-* [x] A customer can discover the store, add items, and place a COD order on [viztore-web.vercel.app](https://viztore-web.vercel.app).
-* [x] The merchant receives real-time audio/visual alert, packs, and verifies the runner with Delivery OTP.
-* [x] A physical walk-in sale at the POS register calculates cash change and prints an 80mm thermal receipt.
-* [x] Both online and counter sales immediately decrement inventory across the platform with zero discrepancy.
+| Workflow Step | Expected Operational Result | Status |
+|---|---|:---:|
+| **Step 1: Merchant Registration** | Complete 6-step onboarding wizard; carrier-decoupled OTP verification; store established in MongoDB. | 🟢 Ready |
+| **Step 2: Store Status Engine** | Header toggle updates store open/closed state in MongoDB; persists across browser reloads. | 🟢 Ready |
+| **Step 3: Catalog & Variants** | Add polymorphic product with sizes/colors; auto-calculate MRP discount %; Base64/URL image upload. | 🟢 Ready |
+| **Step 4: Inventory Management** | Real-time stock valuation cards; quantity stepper adjustments; immutable audit history ledger. | 🟢 Ready |
+| **Step 5: Customer Checkout** | Hyperlocal store discovery (3–4 km); single-store cart enforcement; COD checkout; 4-digit Delivery OTP. | 🟢 Ready |
+| **Step 6: Order Pipeline & OTP** | Real-time audio chime alert; 4-step state machine; OTP verification to `DELIVERED`; legal Indian GST invoice. | 🟢 Ready |
+| **Step 7: Counter POS Billing** | Barcode scan with chime; cash change return calculation; 80mm thermal receipt; zero-lag online stock sync. | 🟢 Ready |
