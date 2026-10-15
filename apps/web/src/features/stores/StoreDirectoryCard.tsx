@@ -2,8 +2,23 @@ import React from 'react';
 import Link from 'next/link';
 import { IStore } from '@repo/shared-types';
 import { Star, Heart } from 'lucide-react';
+import { useLocationStore } from '@/stores/location.store';
+import { calculateHaversineDistanceKm, formatDistance, isWithinDeliveryZone } from '@/lib/location/distance';
 
 export function StoreDirectoryCard({ store }: { store: IStore }) {
+  const { lat: userLat, lng: userLng } = useLocationStore();
+
+  let computedDistanceKm = store.distanceKm;
+  if (computedDistanceKm === undefined && store.location?.coordinates && userLat && userLng) {
+    const [storeLng, storeLat] = store.location.coordinates;
+    if (storeLat && storeLng) {
+      computedDistanceKm = calculateHaversineDistanceKm(userLat, userLng, storeLat, storeLng);
+    }
+  }
+
+  const inZone = isWithinDeliveryZone(computedDistanceKm, store.deliveryRadiusKm || 4);
+  const formattedDistance = formatDistance(computedDistanceKm);
+
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-surface-200 overflow-hidden">
       <div className="flex h-[130px] md:h-[160px] relative">
@@ -35,7 +50,9 @@ export function StoreDirectoryCard({ store }: { store: IStore }) {
             </h3>
 
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-xs font-bold text-[#192168]">{store.distanceKm ? `${store.distanceKm.toFixed(1)} km away` : '2.5 km away'}</span>
+              <span className={`text-xs font-bold ${inZone ? 'text-[#192168]' : 'text-amber-700'}`}>
+                {formattedDistance}
+              </span>
               <div className="flex items-center gap-0.5 text-emerald-600 bg-emerald-50 px-1 rounded">
                 <span className="text-[10px] font-extrabold">{store.rating.toFixed(1)}</span>
                 <Star className="w-3 h-3 fill-emerald-600" />

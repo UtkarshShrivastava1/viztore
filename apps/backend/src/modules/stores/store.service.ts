@@ -41,6 +41,29 @@ export async function createStore(ownerId: string, dto: CreateStoreDto): Promise
   return store.toJSON() as unknown as IStore;
 }
 
+function calculateDistanceKm(
+  coord1: [number, number], // [lng, lat]
+  coord2: [number, number], // [lng, lat]
+): number {
+  const [lng1, lat1] = coord1;
+  const [lng2, lat2] = coord2;
+
+  const R = 6371; // Earth radius in km
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lng2 - lng1) * Math.PI) / 180;
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distance = R * c;
+  return Math.round(distance * 10) / 10;
+}
+
 /**
  * Hyperlocal Store Discovery via Native 2dsphere $near Spatial Query
  */
@@ -74,7 +97,18 @@ export async function findNearbyStores(query: NearbyStoresQueryDto): Promise<ISt
     .limit(query.limit || 20)
     .lean();
 
-  return stores as unknown as IStore[];
+  return stores.map((s) => {
+    const coords = (s as any).location?.coordinates;
+    const distanceKm =
+      Array.isArray(coords) && coords.length === 2 && lat !== undefined && lng !== undefined
+        ? calculateDistanceKm([lng, lat], [coords[0], coords[1]])
+        : undefined;
+
+    return {
+      ...s,
+      distanceKm,
+    };
+  }) as unknown as IStore[];
 }
 
 /**

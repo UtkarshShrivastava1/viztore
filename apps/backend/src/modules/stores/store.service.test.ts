@@ -36,7 +36,12 @@ describe('Store Service Unit Tests', () => {
         radiusKm: 3,
       });
 
-      expect(result).toEqual(mockStores);
+      expect(result).toEqual([
+        {
+          ...mockStores[0],
+          distanceKm: 0,
+        },
+      ]);
       expect(StoreModel.find).toHaveBeenCalledWith({
         location: {
           $near: {

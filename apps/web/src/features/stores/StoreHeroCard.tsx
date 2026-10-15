@@ -1,8 +1,35 @@
 import React from 'react';
 import { Heart, Share2, Star, MapPin, Clock, Truck, RotateCcw, ShieldCheck, Headset, CheckCircle2 } from 'lucide-react';
 import { IStore } from '@repo/shared-types';
+import { useLocationStore } from '@/stores/location.store';
+import { calculateHaversineDistanceKm, formatDistance, isWithinDeliveryZone } from '@/lib/location/distance';
 
 export function StoreHeroCard({ store }: { store: IStore }) {
+  const { lat: userLat, lng: userLng } = useLocationStore();
+
+  // Dynamic Haversine distance calculation between customer GPS and store coordinates
+  let computedDistanceKm = store.distanceKm;
+  if (computedDistanceKm === undefined && store.location?.coordinates && userLat && userLng) {
+    const [storeLng, storeLat] = store.location.coordinates;
+    if (storeLat && storeLng) {
+      computedDistanceKm = calculateHaversineDistanceKm(userLat, userLng, storeLat, storeLng);
+    }
+  }
+
+  const deliveryRadius = store.deliveryRadiusKm || 4;
+  const inZone = isWithinDeliveryZone(computedDistanceKm, deliveryRadius);
+  const formattedDistance = formatDistance(computedDistanceKm);
+
+  const formattedAddress = [
+    store.address?.street,
+    store.address?.landmark,
+    store.address?.city,
+    store.address?.state,
+    store.address?.pincode ? `- ${store.address.pincode}` : '',
+  ]
+    .filter(Boolean)
+    .join(', ');
+
   return (
     <div className="relative w-full rounded-[24px] overflow-hidden mb-12 shadow-sm bg-white">
       {/* Background Banner */}
@@ -38,17 +65,26 @@ export function StoreHeroCard({ store }: { store: IStore }) {
               <Star className="w-4 h-4 text-[#06B95F] fill-[#06B95F]" />
               <span className="text-surface-500">({store.reviewCount || '1.2K'} ratings)</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <MapPin className="w-4 h-4 text-[#1668F6]" />
-              <span>{store.distanceKm ? `${store.distanceKm.toFixed(1)} km away` : '0.2 km away'}</span>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <MapPin className={`w-4 h-4 ${inZone ? 'text-[#1668F6]' : 'text-amber-500'}`} />
+              <span className={inZone ? 'font-medium' : 'text-amber-700 font-semibold'}>
+                {formattedDistance}
+              </span>
+              {!inZone && computedDistanceKm !== undefined && (
+                <span className="text-[10px] bg-amber-50 text-amber-700 font-bold px-2 py-0.5 rounded-full border border-amber-200">
+                  Outside delivery zone ({deliveryRadius} km max)
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-1.5">
               <Clock className="w-4 h-4 text-[#1668F6]" />
               <span>{store.isActive ? 'Open till 9:00 PM' : 'Closing Soon'}</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <MapPin className="w-4 h-4 text-[#1668F6]" />
-              <span className="text-surface-500">{store.address?.street || 'Boring Road, Patna, Bihar'}</span>
+            <div className="flex items-center gap-1.5 max-w-md">
+              <MapPin className="w-4 h-4 text-[#1668F6] shrink-0" />
+              <span className="text-surface-500 truncate" title={formattedAddress || 'Local Address'}>
+                {formattedAddress || 'Local Store Address'}
+              </span>
             </div>
           </div>
 

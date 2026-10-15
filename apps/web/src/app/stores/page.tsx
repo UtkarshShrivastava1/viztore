@@ -10,6 +10,7 @@ import { useLocationStore } from '@/stores/location.store';
 import { MapPin, Search, Grid, List, CheckCircle2, Star, Clock, Tag, LayoutGrid, Truck, ShieldCheck } from 'lucide-react';
 import { StoreCategory } from '@repo/shared-types';
 import { StoreCard } from '@/features/stores/components/StoreCard';
+import { StoreDirectoryCard } from '@/features/stores/StoreDirectoryCard';
 
 const filters = [
   { label: 'Categories', icon: LayoutGrid },
@@ -195,9 +196,13 @@ export default function StoresPage({
           </div>
         ) : stores && stores.length > 0 ? (
           <div className={`grid gap-4 md:gap-6 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4' : 'grid-cols-1 lg:grid-cols-2'}`}>
-            {stores.map((store) => (
-              <StoreCard key={store._id} store={store} className="w-full h-full" />
-            ))}
+            {stores.map((store) =>
+              viewMode === 'grid' ? (
+                <StoreCard key={store._id} store={store} className="w-full h-full" />
+              ) : (
+                <StoreDirectoryCard key={store._id} store={store} />
+              )
+            )}
           </div>
         ) : (
           <div className="py-20 text-center bg-white border border-surface-200 rounded-2xl shadow-sm">
