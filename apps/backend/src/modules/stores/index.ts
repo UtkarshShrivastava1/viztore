@@ -66,8 +66,8 @@ export const storeModule: IStoreFacade = {
   getStoreByOwnerId: async (ownerId: string) => {
     try {
       const stores = await storeService.getMerchantStores(ownerId);
-      if (!stores || stores.length === 0) return null;
       const primary = stores[0];
+      if (!primary) return null;
       return {
         id: (primary as any)._id?.toString() || (primary as any).id,
         name: primary.name,
