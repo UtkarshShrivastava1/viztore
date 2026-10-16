@@ -3,6 +3,7 @@ import { X, Plus, Calendar, Trash2, Printer, CheckCircle2, ShieldAlert } from 'l
 import { IInvoice, IInvoiceItem, useBillingStore } from '../../stores/billingStore.js';
 import { useCustomerStore } from '../../stores/customerStore.js';
 import { useInventoryStore } from '../../stores/inventoryStore.js';
+import { useCatalogStore } from '../../stores/catalogStore.js';
 import { INDIAN_STATES, DEFAULT_INDIAN_STATE } from '@repo/shared-types';
 
 interface CreateInvoiceModalProps {
@@ -19,6 +20,40 @@ export const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
   const { createInvoice, invoices } = useBillingStore();
   const { customers, addCustomer } = useCustomerStore();
   const { items: inventoryProducts } = useInventoryStore();
+  const { products: catalogProducts } = useCatalogStore();
+
+  // Combine inventory and catalog products into unified selectable items list
+  const selectableItems = useMemo(() => {
+    const list: { id: string; name: string; sku: string; rate: number; hsnCode: string }[] = [];
+    const seen = new Set<string>();
+
+    catalogProducts.forEach((cat) => {
+      seen.add(cat.id);
+      list.push({
+        id: cat.id,
+        name: cat.name,
+        sku: cat.sku,
+        rate: cat.price || 0,
+        hsnCode: cat.hsnCode || '61091000',
+      });
+    });
+
+    inventoryProducts.forEach((inv) => {
+      if (!seen.has(inv.id)) {
+        seen.add(inv.id);
+        const rate = inv.stock > 0 ? Math.round(inv.stockValue / inv.stock) : 0;
+        list.push({
+          id: inv.id,
+          name: inv.name,
+          sku: inv.sku,
+          rate,
+          hsnCode: '61091000',
+        });
+      }
+    });
+
+    return list;
+  }, [catalogProducts, inventoryProducts]);
 
   // Deduplicate and extract all customers who have actual history with this store
   const customersWithHistory = useMemo(() => {
@@ -213,12 +248,17 @@ export const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
         if (it.id !== id) return it;
         const updated = { ...it, [field]: value };
         if (field === 'productId') {
-          const matched = inventoryProducts.find((p) => p.id === value);
-          if (matched) {
-            updated.name = matched.name;
-            const unitRate = matched.stock > 0 ? Math.round(matched.stockValue / matched.stock) : 0;
-            updated.rate = unitRate;
-            updated.amount = updated.quantity * unitRate;
+          if (value === 'PRD-CUSTOM') {
+            updated.productId = 'PRD-CUSTOM';
+            if (!updated.name) updated.name = 'Custom Line Item';
+          } else {
+            const matched = selectableItems.find((p) => p.id === value);
+            if (matched) {
+              updated.name = matched.name;
+              updated.rate = matched.rate;
+              updated.amount = updated.quantity * matched.rate;
+              if (matched.hsnCode) updated.hsnSac = matched.hsnCode;
+            }
           }
         }
         if (field === 'quantity' || field === 'rate') {
@@ -688,18 +728,30 @@ export const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
                     {items.map((item) => (
                       <tr key={item.id} className="hover:bg-slate-50/50">
                         <td className="p-2">
-                          <select
-                            value={item.productId}
-                            onChange={(e) => handleItemChange(item.id, 'productId', e.target.value)}
-                            className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-800 focus:outline-none focus:border-blue-500"
-                          >
-                            {inventoryProducts.map((p) => (
-                              <option key={p.id} value={p.id}>
-                                {p.name}
-                              </option>
-                            ))}
-                            <option value="PRD-CUSTOM">Custom Line Item</option>
-                          </select>
+                          <div className="space-y-1">
+                            <select
+                              value={item.productId}
+                              onChange={(e) => handleItemChange(item.id, 'productId', e.target.value)}
+                              className="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-800 focus:outline-none focus:border-blue-500"
+                            >
+                              <option value="">Select product / SKU...</option>
+                              {selectableItems.map((p) => (
+                                <option key={p.id} value={p.id}>
+                                  {p.name} {p.rate ? `(₹${p.rate})` : ''}
+                                </option>
+                              ))}
+                              <option value="PRD-CUSTOM">+ Custom / Manual Product</option>
+                            </select>
+                            {(item.productId === 'PRD-CUSTOM' || selectableItems.length === 0) && (
+                              <input
+                                type="text"
+                                value={item.name}
+                                onChange={(e) => handleItemChange(item.id, 'name', e.target.value)}
+                                placeholder="Enter product name..."
+                                className="w-full px-2 py-1 bg-amber-50/50 border border-amber-200 rounded-md text-xs font-medium text-slate-900 focus:outline-none focus:border-amber-400"
+                              />
+                            )}
+                          </div>
                         </td>
                         <td className="p-2">
                           <input

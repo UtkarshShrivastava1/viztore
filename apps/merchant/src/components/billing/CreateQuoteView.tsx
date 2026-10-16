@@ -15,6 +15,7 @@ import {
 import { useBillingStore, IInvoiceItem } from '../../stores/billingStore.js';
 import { useCustomerStore } from '../../stores/customerStore.js';
 import { useInventoryStore } from '../../stores/inventoryStore.js';
+import { useCatalogStore } from '../../stores/catalogStore.js';
 import { INDIAN_STATES, DEFAULT_INDIAN_STATE } from '@repo/shared-types';
 
 interface CreateQuoteViewProps {
@@ -25,6 +26,42 @@ export const CreateQuoteView: React.FC<CreateQuoteViewProps> = ({ onBack }) => {
   const { createQuote, quotes, invoices } = useBillingStore();
   const { customers, addCustomer } = useCustomerStore();
   const { items: inventoryProducts } = useInventoryStore();
+  const { products: catalogProducts } = useCatalogStore();
+
+  // Combine catalog and inventory products into unified selectable items list
+  const selectableItems = useMemo(() => {
+    const list: { id: string; name: string; sku: string; rate: number; hsnCode: string; desc: string }[] = [];
+    const seen = new Set<string>();
+
+    catalogProducts.forEach((cat) => {
+      seen.add(cat.id);
+      list.push({
+        id: cat.id,
+        name: cat.name,
+        sku: cat.sku,
+        rate: cat.price || 0,
+        hsnCode: cat.hsnCode || '61091000',
+        desc: cat.description || `${cat.category} - ${cat.brand || 'Apparel'}`,
+      });
+    });
+
+    inventoryProducts.forEach((inv) => {
+      if (!seen.has(inv.id)) {
+        seen.add(inv.id);
+        const rate = inv.stock > 0 ? Math.round(inv.stockValue / inv.stock) : 0;
+        list.push({
+          id: inv.id,
+          name: inv.name,
+          sku: inv.sku,
+          rate,
+          hsnCode: '61091000',
+          desc: `${inv.brand || 'Apparel'} - ${inv.color || 'Standard'} (${inv.size || 'M'})`,
+        });
+      }
+    });
+
+    return list;
+  }, [catalogProducts, inventoryProducts]);
 
   // Deduplicate and extract all customers who have actual history with this store
   const customersWithHistory = useMemo(() => {
@@ -177,6 +214,21 @@ export const CreateQuoteView: React.FC<CreateQuoteViewProps> = ({ onBack }) => {
       prev.map((it) => {
         if (it.id !== id) return it;
         const updated = { ...it, [field]: value };
+        if (field === 'productId') {
+          if (value === 'PRD-CUSTOM') {
+            updated.productId = 'PRD-CUSTOM';
+            if (!updated.name) updated.name = 'Custom Line Item';
+          } else {
+            const matched = selectableItems.find((p) => p.id === value || p.name === value);
+            if (matched) {
+              updated.productId = matched.id;
+              updated.name = matched.name;
+              updated.rate = matched.rate;
+              if (matched.hsnCode) updated.hsnSac = matched.hsnCode;
+              if (matched.desc && !updated.description) updated.description = matched.desc;
+            }
+          }
+        }
         const gross = updated.quantity * updated.rate;
         const disc = (gross * (updated.discountPercent || 0)) / 100;
         const net = gross - disc;
@@ -739,18 +791,32 @@ export const CreateQuoteView: React.FC<CreateQuoteViewProps> = ({ onBack }) => {
                   <tr key={item.id} className="hover:bg-slate-50/50">
                     <td className="p-2.5 text-center text-slate-400 font-mono">{idx + 1}</td>
                     <td className="p-2.5">
-                      <select
-                        value={item.name}
-                        onChange={(e) => handleItemChange(item.id, 'name', e.target.value)}
-                        className="w-full px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-800"
-                      >
-                        <option value="Cotton T-Shirt (M)">Cotton T-Shirt (M)</option>
-                        <option value="Denim Jeans (32)">Denim Jeans (32)</option>
-                        <option value="Sneakers">Sneakers</option>
-                        <option value="Polo T-Shirt">Polo T-Shirt</option>
-                      </select>
-                      <div className="text-[10px] text-slate-400 font-mono mt-0.5">
-                        {item.hsnSac}
+                      <div className="space-y-1">
+                        <select
+                          value={item.productId || item.name}
+                          onChange={(e) => handleItemChange(item.id, 'productId', e.target.value)}
+                          className="w-full px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-800 focus:outline-none focus:border-blue-500"
+                        >
+                          <option value="">Select product / SKU...</option>
+                          {selectableItems.map((p) => (
+                            <option key={p.id} value={p.id}>
+                              {p.name} {p.rate ? `(₹${p.rate})` : ''}
+                            </option>
+                          ))}
+                          <option value="PRD-CUSTOM">+ Custom / Manual Product</option>
+                        </select>
+                        {(item.productId === 'PRD-CUSTOM' || selectableItems.length === 0) && (
+                          <input
+                            type="text"
+                            value={item.name}
+                            onChange={(e) => handleItemChange(item.id, 'name', e.target.value)}
+                            placeholder="Enter product name..."
+                            className="w-full px-2 py-1 bg-amber-50/50 border border-amber-200 rounded-md text-xs font-medium text-slate-900 focus:outline-none focus:border-amber-400"
+                          />
+                        )}
+                        <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+                          {item.hsnSac || 'HSN: 61091000'}
+                        </div>
                       </div>
                     </td>
                     <td className="p-2.5">
