@@ -289,6 +289,12 @@ Every online order placed through `apps/web` generates an authoritative, complia
   - **Track A (Completed)**: Customer discovery & store catalog exploration (`:3000`) ➔ Single-store cart checkout (`Pooja Sharma`, Nehru Nagar West, Bhilai) ➔ Real order generation (`ORD-20261015-CABA79`) ➔ Merchant Order Pipeline live receipt (`:3001`) ➔ Step-by-step state machine fulfillment (`PENDING` ➔ `CONFIRMED` ➔ `PACKED` ➔ `OUT_FOR_DELIVERY`) ➔ Runner delivery handshake OTP verification (`5575`) ➔ Final `DELIVERED` status ➔ GST compliant thermal tax invoice (`INV-ORD-20261015-CABA79`) ➔ Verified atomic inventory decrement in MongoDB Atlas (`Classic Cotton Polo T-Shirt` decremented 45 ➔ 44 units).
 - [x] **Core Platforms Live E2E Testing (System 2: In-House POS Billing & Barcode Counter) 🟢**:
   - **Track B (Completed)**: In-House Counter POS Barcode Scan (`/billing`) ➔ Multi-tender settlement (Cash with ₹1,000 note, change return ₹57.18) ➔ Thermal 80mm Receipt Print (`INV-1001` & `INV-1002`) ➔ Atomic Stock Decrement (`POLO-WHT-M` 44 ➔ 43 units, total 43 ➔ 42 units) reflected instantly on Customer Storefront API.
+- [x] **Merchant Onboarding Instant Auto-Approval & Live Verification Bypass 🟢**:
+  - Configured instant store auto-approval on onboarding completion (`approvalStatus: StoreApprovalStatus.APPROVED`) until Super Admin review portal is launched.
+  - Implemented auto-promotion in `getMerchantOnboardingStatus` and `getMerchantStores` promoting any legacy pending stores to approved on retrieval.
+  - Updated frontend `Step4BankAccount.tsx` and `Step6Financials.tsx` to transition directly to the active merchant dashboard without holding the user in the review waiting room.
+  - Audited and approved all remaining pending stores on live Render production database (`0 pending stores remaining`).
+  - **120/120 automated tests passing across 19 suites**; full monorepo clean build.
 - [ ] **Rider Fleet Open-Pool Broadcast & Atomic Mutex Claim Engine (Phase 2 Delivery Dispatch) — PLANNED 🟡**:
   - Implementation plan ready: WhatsApp open-pool teaser broadcasts, MongoDB atomic mutex claim (`findOneAndUpdate({ orderId, status: 'SEARCHING_PARTNER', rider: null })`), rider PWA assignment dashboard, turn-by-turn navigation, and delivery OTP handshake.
 
