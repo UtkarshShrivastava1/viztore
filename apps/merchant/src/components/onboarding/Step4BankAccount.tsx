@@ -122,16 +122,13 @@ export const Step4BankAccount: React.FC<Step4BankAccountProps> = ({ onBack, onCo
 
     try {
       const res = await api.post<any>('/stores/onboarding/submit', payload);
-      if (res?._id) {
-        useOnboardingStore.getState().setUnderReview(true, res._id);
-        await useAuthStore.getState().fetchCurrentStore();
-      } else {
-        setIsUnderReview(true);
-      }
+      // Auto-approved: update store in auth store and navigate directly to dashboard
+      useOnboardingStore.getState().setUnderReview(false);
+      await useAuthStore.getState().fetchCurrentStore();
       onComplete();
     } catch (err: any) {
       console.warn('Backend store onboarding submit fallback:', err);
-      setIsUnderReview(true);
+      useOnboardingStore.getState().setUnderReview(false);
       onComplete();
     } finally {
       setIsSubmitting(false);

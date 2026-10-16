@@ -95,7 +95,8 @@ export async function submitCompleteOnboarding(
       bankName: dto.step6.bankName,
       isVerified: false,
     };
-    store.approvalStatus = StoreApprovalStatus.PENDING;
+    // Auto-approve newly onboarded stores until Super Admin review panel is launched
+    store.approvalStatus = StoreApprovalStatus.APPROVED;
     store.isActive = true;
     await store.save();
   } else {
@@ -123,13 +124,13 @@ export async function submitCompleteOnboarding(
         bankName: dto.step6.bankName,
         isVerified: false,
       },
-      approvalStatus: StoreApprovalStatus.PENDING,
+      approvalStatus: StoreApprovalStatus.APPROVED,
       isActive: true,
     });
     await store.save();
   }
 
-  logger.info(`🏬 Merchant onboarded store '${store.name}' (ID: ${store._id}). Queued for Super Admin approval.`);
+  logger.info(`🏬 Merchant onboarded store '${store.name}' (ID: ${store._id}). Auto-approved for launch.`);
 
   return store.toJSON() as unknown as IStore;
 }
@@ -146,6 +147,15 @@ export async function getMerchantOnboardingStatus(userId: string): Promise<{
 
   if (!store) {
     return { hasStore: false };
+  }
+
+  // Auto-promote any legacy pending store to approved
+  if (store.approvalStatus === StoreApprovalStatus.PENDING) {
+    await StoreModel.updateOne(
+      { _id: (store as any)._id },
+      { $set: { approvalStatus: StoreApprovalStatus.APPROVED } }
+    );
+    (store as any).approvalStatus = StoreApprovalStatus.APPROVED;
   }
 
   return {

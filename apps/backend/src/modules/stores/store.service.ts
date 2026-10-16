@@ -186,6 +186,11 @@ export async function setStoreApprovalStatus(
  * List Merchant's Owned Stores
  */
 export async function getMerchantStores(ownerId: string): Promise<IStore[]> {
+  // Auto-approve any pending stores for the merchant until Super Admin review portal is live
+  await StoreModel.updateMany(
+    { ownerId, approvalStatus: StoreApprovalStatus.PENDING },
+    { $set: { approvalStatus: StoreApprovalStatus.APPROVED } }
+  );
   const stores = await StoreModel.find({ ownerId }).lean();
   return stores as unknown as IStore[];
 }

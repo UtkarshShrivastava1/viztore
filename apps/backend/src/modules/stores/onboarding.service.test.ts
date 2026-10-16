@@ -40,7 +40,7 @@ describe('Onboarding Service Unit Tests', () => {
       expect(result.hasStore).toBe(false);
     });
 
-    it('should return store and approval status if store exists', async () => {
+    it('should return store and auto-approved status if store exists', async () => {
       const mockStore = {
         _id: 'store_123',
         name: 'Sharma Apparels',
@@ -50,10 +50,11 @@ describe('Onboarding Service Unit Tests', () => {
       vi.spyOn(StoreModel, 'findOne').mockReturnValue({
         lean: vi.fn().mockResolvedValue(mockStore),
       } as any);
+      vi.spyOn(StoreModel, 'updateOne').mockResolvedValue({} as any);
 
       const result = await onboardingService.getMerchantOnboardingStatus('user_123');
       expect(result.hasStore).toBe(true);
-      expect(result.approvalStatus).toBe(StoreApprovalStatus.PENDING);
+      expect(result.approvalStatus).toBe(StoreApprovalStatus.APPROVED);
     });
   });
 });

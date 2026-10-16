@@ -126,7 +126,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
             {subStep === '4_bank' && (
               <Step4BankAccount
                 onBack={() => setSubStep('3_business')}
-                onComplete={() => {}}
+                onComplete={onEnterDashboard}
               />
             )}
           </div>

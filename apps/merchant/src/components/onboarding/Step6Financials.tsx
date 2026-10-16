@@ -96,10 +96,11 @@ export const Step6Financials: React.FC = () => {
 
       // Submit full onboarding to backend
       const result = await api.post<any>('/stores/onboarding/submit', completePayload);
-      setUnderReview(true, result._id || 'store-pending');
+      setUnderReview(false, result._id || 'store-active');
+      await useAuthStore.getState().fetchCurrentStore();
     } catch (err: any) {
       // Fallback for preview/mock demo mode
-      setUnderReview(true, 'store-preview-id');
+      setUnderReview(false, 'store-preview-id');
     } finally {
       setIsSubmitting(false);
     }
