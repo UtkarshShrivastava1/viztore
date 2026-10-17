@@ -7,9 +7,11 @@ import {
   ArrowLeft,
   Bookmark,
   ExternalLink,
+  Loader2,
 } from 'lucide-react';
 import { useCatalogStore } from '../../../stores/catalogStore.js';
 import { WizardHelpSidebar } from './WizardHelpSidebar.js';
+import { mediaApi } from '../../../lib/api.js';
 
 const samplePerspectiveViews = [
   {
@@ -47,25 +49,51 @@ export const AddProductStep2: React.FC = () => {
   const description = draftProduct.description || '';
 
   const [imageUrlInput, setImageUrlInput] = useState('');
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<string | null>(null);
 
-  const handleFilesSelected = (files: FileList | null) => {
+  const handleFilesSelected = async (files: FileList | null) => {
     if (!files) return;
     const maxAllowed = 10 - images.length;
     const limit = Math.min(files.length, maxAllowed);
+    if (limit <= 0) return;
 
-    Array.from(files).slice(0, limit).forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        if (result) {
+    setIsUploadingImage(true);
+    setUploadProgress(`Uploading 1/${limit} to Cloudinary...`);
+
+    const fileList = Array.from(files).slice(0, limit);
+
+    for (let i = 0; i < fileList.length; i++) {
+      const file = fileList[i];
+      if (!file) continue;
+      setUploadProgress(`Uploading ${i + 1}/${fileList.length} to Cloudinary...`);
+      try {
+        const uploadRes = await mediaApi.uploadImage(file, 'products');
+        if (uploadRes?.url) {
           const current = useCatalogStore.getState().draftProduct.images || [];
           if (current.length < 10) {
-            updateDraftProduct({ images: [...current, result] });
+            updateDraftProduct({ images: [...current, uploadRes.url] });
           }
         }
-      };
-      reader.readAsDataURL(file);
-    });
+      } catch (err) {
+        console.warn('Cloudinary upload fallback to local preview:', err);
+        // Fallback to data URL if network/offline
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const result = e.target?.result as string;
+          if (result) {
+            const current = useCatalogStore.getState().draftProduct.images || [];
+            if (current.length < 10) {
+              updateDraftProduct({ images: [...current, result] });
+            }
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    setIsUploadingImage(false);
+    setUploadProgress(null);
   };
 
   const handleAddImageUrl = () => {
@@ -142,19 +170,26 @@ export const AddProductStep2: React.FC = () => {
                   type="file"
                   ref={fileInputRef}
                   multiple
+                  disabled={isUploadingImage}
                   accept="image/jpeg,image/png,image/webp"
                   className="hidden"
                   onChange={(e) => handleFilesSelected(e.target.files)}
                 />
                 <div className="w-11 h-11 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mb-2.5">
-                  <UploadCloud className="w-6 h-6" />
+                  {isUploadingImage ? (
+                    <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+                  ) : (
+                    <UploadCloud className="w-6 h-6" />
+                  )}
                 </div>
                 <div className="text-xs font-bold text-slate-800">
-                  Drag &amp; drop images here
+                  {isUploadingImage ? 'Uploading to Cloudinary...' : 'Drag & drop images here'}
                 </div>
-                <div className="text-xs text-blue-600 font-semibold mt-0.5">or click to browse</div>
+                <div className="text-xs text-blue-600 font-semibold mt-0.5">
+                  {isUploadingImage ? (uploadProgress || 'Optimizing & uploading CDN asset...') : 'or click to browse'}
+                </div>
                 <div className="text-[11px] text-slate-400 mt-2">
-                  You can upload up to 10 images (Max 10MB each)
+                  Cloudinary CDN acceleration active • Up to 10 images (Max 10MB each)
                 </div>
               </div>
 

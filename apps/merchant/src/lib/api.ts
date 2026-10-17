@@ -71,8 +71,10 @@ export async function request<T>(
     } catch {}
   }
 
+  const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
+
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
+    ...(!isFormData ? { 'Content-Type': 'application/json' } : {}),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(storeIdHeader ? { 'x-store-id': storeIdHeader } : {}),
     ...(options.headers as Record<string, string>),
@@ -287,5 +289,37 @@ export const billingApi = {
   getLastReceipt: (paperSize?: string) => {
     const qs = paperSize ? `?paperSize=${paperSize}` : '';
     return api.get<any>(`/billing/pos/last-receipt${qs}`);
+  },
+};
+
+export const mediaApi = {
+  uploadImage: async (file: File, folder = 'products') => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('folder', folder);
+    return api.post<{
+      url: string;
+      publicId: string;
+      format: string;
+      width: number;
+      height: number;
+      bytes: number;
+    }>('/media/upload', formData);
+  },
+
+  uploadMultipleImages: async (files: File[], folder = 'products') => {
+    const formData = new FormData();
+    files.forEach((f) => formData.append('files', f));
+    formData.append('folder', folder);
+    return api.post<
+      Array<{
+        url: string;
+        publicId: string;
+        format: string;
+        width: number;
+        height: number;
+        bytes: number;
+      }>
+    >('/media/upload-multiple', formData);
   },
 };
