@@ -68,7 +68,9 @@ export async function request<T>(
     try {
       const parsed = JSON.parse(storedStoreRaw);
       storeIdHeader = parsed._id || parsed.id;
-    } catch {}
+    } catch {
+      // Fallback if local storage item is corrupted or not valid JSON
+    }
   }
 
   const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;

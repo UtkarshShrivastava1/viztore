@@ -273,16 +273,18 @@ export async function searchLocalities(query: string): Promise<GeocodedLocation[
       if (res.ok) {
         const json = await res.json();
         if (json.success && Array.isArray(json.data) && json.data.length > 0) {
-          return json.data.map((item: any) => {
+          return json.data.map((item: { geocoded?: GeocodedLocation; mainText?: string; secondaryText?: string; fullText?: string; placeId?: string }) => {
             if (item.geocoded) return item.geocoded;
+            const sec = item.secondaryText || '';
+            const main = item.mainText || '';
             return {
               lat: 21.1938,
               lng: 81.3800,
-              locality: item.mainText,
-              city: item.secondaryText.split(',')[0]?.trim() || 'Bhilai',
+              locality: main,
+              city: sec.split(',')[0]?.trim() || 'Bhilai',
               state: 'Chhattisgarh',
-              formattedAddress: item.fullText || `${item.mainText}, ${item.secondaryText}`,
-              address: item.fullText || `${item.mainText}, ${item.secondaryText}`,
+              formattedAddress: item.fullText || `${main}, ${sec}`,
+              address: item.fullText || `${main}, ${sec}`,
               placeId: item.placeId,
             } as GeocodedLocation & { placeId?: string };
           });

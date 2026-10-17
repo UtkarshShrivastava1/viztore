@@ -191,8 +191,8 @@ export function createOrderService(
 
     let storeName = 'Local Partner Store';
     let storeAddress = '123, Commercial Market, Indore, MP - 452001';
-    let storePhone = '+91 98765 43210';
-    let storeGstin = '23AAAAA0000A1Z5';
+    const storePhone = '+91 98765 43210';
+    const storeGstin = '23AAAAA0000A1Z5';
 
     if (storeFacade) {
       const store = await storeFacade.getStoreById(order.storeId).catch(() => null);

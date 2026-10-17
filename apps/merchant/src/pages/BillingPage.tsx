@@ -34,7 +34,7 @@ export const BillingPage: React.FC = () => {
   const getBreadcrumb = () => {
     if (activeSubTab === 'invoices' || activeView === 'settings') return null;
 
-    let subTabName = 'Estimates / Quotes';
+    const subTabName = 'Estimates / Quotes';
     let actionName = '';
     if (activeView === 'create_quote') actionName = 'Create Estimate / Quote';
     if (activeView === 'pos_counter') actionName = 'Counter POS Register';

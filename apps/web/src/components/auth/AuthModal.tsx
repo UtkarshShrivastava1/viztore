@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { X, Eye, EyeOff, Lock, Mail, User, Phone, CheckCircle2, AlertCircle } from 'lucide-react';
-import { branding } from '@repo/shared-types';
+import { branding, type IUserProfile } from '@repo/shared-types';
 import { useAuthStore } from '@/stores/auth.store';
 import { authApi } from '@/lib/api/auth';
 
@@ -40,7 +40,7 @@ export const AuthModal: React.FC = () => {
     openAuthModal(view);
   };
 
-  const handleSuccessfulAuth = (user: any, accessToken: string) => {
+  const handleSuccessfulAuth = (user: IUserProfile, accessToken: string) => {
     setAuth(user, accessToken);
     resetForm();
     if (typeof window !== 'undefined') {

@@ -12,7 +12,7 @@ interface LocationBarProps {
 }
 
 export default function LocationBar({
-  name: propName,
+  name: _propName,
   address: propAddress,
 }: LocationBarProps) {
   const [mounted, setMounted] = useState(false);

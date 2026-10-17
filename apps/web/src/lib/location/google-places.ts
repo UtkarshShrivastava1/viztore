@@ -152,12 +152,23 @@ export async function autocompleteGoogle(query: string): Promise<PlaceAutocomple
     const data = await res.json();
     if (!data.suggestions || !Array.isArray(data.suggestions)) return [];
 
-    return data.suggestions
-      .filter((s: any) => s.placePrediction)
-      .map((s: any) => {
+    type GooglePlaceSuggestion = {
+      placePrediction?: {
+        placeId?: string;
+        structuredFormat?: {
+          mainText?: { text?: string };
+          secondaryText?: { text?: string };
+        };
+        text?: { text?: string };
+      };
+    };
+
+    return (data.suggestions as GooglePlaceSuggestion[])
+      .filter((s): s is GooglePlaceSuggestion & { placePrediction: NonNullable<GooglePlaceSuggestion['placePrediction']> } => Boolean(s.placePrediction))
+      .map((s) => {
         const pred = s.placePrediction;
         return {
-          placeId: pred.placeId,
+          placeId: pred.placeId || '',
           mainText: pred.structuredFormat?.mainText?.text || pred.text?.text || query,
           secondaryText: pred.structuredFormat?.secondaryText?.text || '',
           fullText: pred.text?.text || pred.structuredFormat?.mainText?.text || query,

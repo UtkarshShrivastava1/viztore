@@ -640,7 +640,7 @@ export const useCustomerStore = create<CustomerState>((set) => ({
 
   syncFromStoreData: (invoices = [], orders = []) =>
     set((state) => {
-      let updated = [...state.customers];
+      const updated = [...state.customers];
 
       // Process invoices from POS / Tax billing
       invoices.forEach((inv) => {
