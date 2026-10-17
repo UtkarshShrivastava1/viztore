@@ -15,6 +15,7 @@ const storeFallbackImages = [
 ];
 
 const fallbackRatings = ['4.5', '4.3', '4.6', '4.2', '4.4', '4.7'];
+const fallbackEtas = ['10 mins', '12 mins', '8 mins', '15 mins', '16 mins', '14 mins'];
 
 interface HomeStoreCardProps {
   store: IStore;
@@ -24,11 +25,12 @@ interface HomeStoreCardProps {
 export function HomeStoreCard({ store, index = 0 }: HomeStoreCardProps) {
   const bannerImage = store.bannerUrl || storeFallbackImages[index % storeFallbackImages.length];
   const rating = store.rating ? Number(store.rating).toFixed(1) : fallbackRatings[index % fallbackRatings.length];
+  const eta = fallbackEtas[index % fallbackEtas.length];
 
   return (
     <Link
       href={`/stores/${store.slug || store._id}`}
-      className="group bg-white rounded-2xl border border-gray-100/90 shadow-2xs hover:shadow-md hover:border-blue-100 transition-all duration-300 overflow-hidden flex flex-col w-full"
+      className="group bg-white rounded-2xl border border-gray-100/90 shadow-2xs hover:shadow-md hover:border-blue-100 transition-all duration-300 overflow-hidden flex flex-col w-full shrink-0"
     >
       {/* 16:10 Store Banner */}
       <div className="relative w-full aspect-[16/10] overflow-hidden bg-surface-100">
@@ -41,6 +43,11 @@ export function HomeStoreCard({ store, index = 0 }: HomeStoreCardProps) {
             (e.target as HTMLImageElement).src = storeFallbackImages[index % storeFallbackImages.length];
           }}
         />
+
+        {/* ETA Badge (Matching Mob 1.0.png) */}
+        <span className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-full bg-white/95 backdrop-blur-xs text-[10px] font-bold text-gray-800 shadow-2xs flex items-center gap-1 border border-gray-100/80 leading-none">
+          <span className="text-emerald-600 text-[10px]">📍</span> {eta}
+        </span>
       </div>
 
       {/* Compact Bottom Bar */}

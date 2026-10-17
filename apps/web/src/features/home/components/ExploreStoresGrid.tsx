@@ -88,10 +88,10 @@ export function ExploreStoresGrid() {
               <Link
                 href={`/stores/${store.slug || store._id}`}
                 key={store._id || index}
-                className="group flex flex-col bg-white rounded-2xl border border-gray-100 shadow-2xs hover:shadow-lg hover:border-blue-100 transition-all duration-300 overflow-hidden"
+                className="group flex flex-row sm:flex-col bg-white rounded-2xl border border-gray-100 shadow-2xs hover:shadow-lg hover:border-blue-100 transition-all duration-300 overflow-hidden"
               >
-                {/* 16:9 Banner Image */}
-                <div className="relative aspect-[16/9] w-full overflow-hidden bg-gray-100">
+                {/* Banner Image (Compact split thumbnail on mobile matching Mob 1.1.png, 16:9 on desktop) */}
+                <div className="relative w-32 sm:w-full h-28 sm:h-auto sm:aspect-[16/9] overflow-hidden bg-gray-100 shrink-0">
                   <img
                     src={banner}
                     alt={store.name}
@@ -104,32 +104,32 @@ export function ExploreStoresGrid() {
                 </div>
 
                 {/* Details */}
-                <div className="p-4 sm:p-5 flex flex-col flex-1 justify-between">
+                <div className="p-3 sm:p-5 flex flex-col flex-1 justify-between min-w-0">
                   <div>
-                    <div className="flex items-center justify-between gap-3">
-                      <h3 className="text-base sm:text-lg font-bold text-[#0B1538] group-hover:text-[#1668F6] transition-colors truncate">
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="text-sm sm:text-lg font-bold text-[#0B1538] group-hover:text-[#1668F6] transition-colors truncate">
                         {store.name}
                       </h3>
-                      <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-[#1668F6] group-hover:translate-x-1 transition-all shrink-0" />
+                      <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-hover:text-[#1668F6] group-hover:translate-x-1 transition-all shrink-0" />
                     </div>
 
                     {/* Rating */}
-                    <div className="flex items-center gap-1.5 mt-1">
-                      <span className="text-sm font-bold text-gray-800">{store.rating ? Number(store.rating).toFixed(1) : meta.rating}</span>
-                      <Star className="w-3.5 h-3.5 fill-emerald-500 text-emerald-500" />
-                      <span className="text-xs text-gray-400">({meta.count})</span>
+                    <div className="flex items-center gap-1.5 mt-0.5 sm:mt-1">
+                      <span className="text-xs sm:text-sm font-bold text-gray-800">{store.rating ? Number(store.rating).toFixed(1) : meta.rating}</span>
+                      <Star className="w-3 sm:w-3.5 h-3 sm:h-3.5 fill-emerald-500 text-emerald-500" />
+                      <span className="text-[11px] sm:text-xs text-gray-400">({meta.count})</span>
                     </div>
 
                     {/* Description / Category */}
-                    <p className="text-xs sm:text-sm text-gray-500 line-clamp-1 mt-1.5">
+                    <p className="text-xs sm:text-sm text-gray-500 line-clamp-1 mt-1">
                       {categoryText}
                     </p>
                   </div>
 
                   {/* Fast Delivery Pill */}
-                  <div className="pt-3">
-                    <div className="inline-flex items-center gap-1.5 bg-[#F5F8FF] text-[#1668F6] text-xs font-semibold px-2.5 py-1 rounded-md">
-                      <Zap className="w-3.5 h-3.5 fill-current" /> Fast Delivery
+                  <div className="pt-2 sm:pt-3">
+                    <div className="inline-flex items-center gap-1 bg-[#F5F8FF] text-[#1668F6] text-[10px] sm:text-xs font-semibold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md">
+                      <Zap className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-current" /> Fast Delivery
                     </div>
                   </div>
                 </div>

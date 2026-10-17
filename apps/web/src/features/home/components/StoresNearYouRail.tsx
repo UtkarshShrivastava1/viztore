@@ -55,15 +55,17 @@ export function StoresNearYouRail() {
         </Link>
       </div>
 
-      {/* 5-Column Compact Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+      {/* 5-Column Compact Grid on Desktop, Horizontal Scroll Rail on Mobile (Matching Mob 1.0.png) */}
+      <div className="flex sm:grid sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 overflow-x-auto scrollbar-hide pb-1 snap-x snap-mandatory">
         {storesLoading ? (
           Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="aspect-[16/14] rounded-2xl bg-surface-100 animate-pulse" />
+            <div key={i} className="w-[155px] sm:w-auto shrink-0 snap-start aspect-[16/14] rounded-2xl bg-surface-100 animate-pulse" />
           ))
         ) : (
           displayStores.slice(0, 5).map((store, i) => (
-            <HomeStoreCard key={store._id || i} store={store} index={i} />
+            <div key={store._id || i} className="w-[155px] sm:w-auto shrink-0 snap-start">
+              <HomeStoreCard store={store} index={i} />
+            </div>
           ))
         )}
       </div>

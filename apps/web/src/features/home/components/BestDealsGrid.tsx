@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import { HorizontalDealCard } from './HorizontalDealCard';
+import { MobileDealCard } from './MobileDealCard';
 import { useFeaturedProducts } from '@/hooks/useFeaturedProducts';
 import type { IProduct, IProductVariant } from '@repo/shared-types';
 
@@ -132,8 +133,21 @@ export function BestDealsGrid() {
         </Link>
       </div>
 
-      {/* 4-Column Grid (2 rows of 4 = 8 horizontal cards) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
+      {/* Mobile Viewport: Horizontal Scroll Rail (Matching Mob 1.0.png) */}
+      <div className="flex md:hidden gap-3 overflow-x-auto scrollbar-hide pb-2 snap-x snap-mandatory">
+        {productsLoading ? (
+          Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="w-[155px] h-52 rounded-2xl bg-surface-100 animate-pulse shrink-0 snap-start" />
+          ))
+        ) : (
+          displayProducts.slice(0, 8).map((product, i) => (
+            <MobileDealCard key={product._id || i} product={product} index={i} />
+          ))
+        )}
+      </div>
+
+      {/* Desktop Viewport: 4-Column Grid of Horizontal Split Cards (Matching Web 1.0.png) */}
+      <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
         {productsLoading ? (
           Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="h-28 rounded-2xl bg-surface-100 animate-pulse" />

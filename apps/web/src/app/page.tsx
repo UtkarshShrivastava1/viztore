@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
 import { HeroBannerCarousel } from '@/features/home/components/HeroBannerCarousel';
+import { TrustValuePropsBar } from '@/features/home/components/TrustValuePropsBar';
 import { StoresNearYouRail } from '@/features/home/components/StoresNearYouRail';
 import { BestDealsGrid } from '@/features/home/components/BestDealsGrid';
 import { ExploreStoresGrid } from '@/features/home/components/ExploreStoresGrid';
@@ -12,10 +13,14 @@ import { ExploreStoresGrid } from '@/features/home/components/ExploreStoresGrid'
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-white">
-      <main className="mx-auto space-y-8 sm:space-y-10 pb-20 md:pb-16 bg-[#FAFCFF] min-h-screen">
+      <main className="mx-auto space-y-6 sm:space-y-10 pb-20 md:pb-16 bg-[#FAFCFF] min-h-screen">
         {/* ── 1. HERO SECTION (Carousel + Side Trust Perks) ─────────── */}
-        <section className="max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-24 pt-4 sm:pt-6">
+        <section className="max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-24 pt-4 sm:pt-6 space-y-3 sm:space-y-4">
           <HeroBannerCarousel />
+          {/* Mobile Trust Bar (Matching Mob 1.0.png) */}
+          <div className="lg:hidden">
+            <TrustValuePropsBar />
+          </div>
         </section>
 
         {/* ── 2. STORES NEAR YOU (5-Column Compact Grid) ────────────── */}
