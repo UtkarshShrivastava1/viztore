@@ -2,12 +2,20 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Sparkles, ChevronRight, MapPin } from 'lucide-react';
-import { StoreCard } from '@/features/stores/components/StoreCard';
-import { StoreCardSkeleton } from '@/components/ui/Skeleton';
+import { ChevronRight } from 'lucide-react';
+import { HomeStoreCard } from './HomeStoreCard';
 import { useNearbyStores } from '@/hooks/useNearbyStores';
 import { useAllStores } from '@/hooks/useAllStores';
 import { useLocationStore } from '@/stores/location.store';
+import { StoreCategory, type IStore } from '@repo/shared-types';
+
+const defaultStores: Partial<IStore>[] = [
+  { _id: 'store-1', name: 'Fashion Hub', slug: 'fashion-hub', category: StoreCategory.FASHION },
+  { _id: 'store-2', name: 'Sharma Electronics', slug: 'sharma-electronics', category: StoreCategory.ELECTRONICS },
+  { _id: 'store-3', name: 'Beauty Corner', slug: 'beauty-corner', category: StoreCategory.BEAUTY_CARE },
+  { _id: 'store-4', name: 'Home Needs', slug: 'home-needs', category: StoreCategory.HOME_LIVING },
+  { _id: 'store-5', name: 'Gadget Store', slug: 'gadget-store', category: StoreCategory.ELECTRONICS },
+];
 
 export function StoresNearYouRail() {
   const { lng, lat } = useLocationStore();
@@ -15,48 +23,48 @@ export function StoresNearYouRail() {
   const { data: allStoresResponse, isLoading: allLoading } = useAllStores({ limit: 5 });
 
   const storesLoading = nearbyLoading || (allLoading && (!nearbyStores || nearbyStores.length === 0));
-  const hasNearby = nearbyStores && nearbyStores.length > 0;
-  const displayStores = hasNearby ? nearbyStores.slice(0, 5) : allStoresResponse?.stores?.slice(0, 5) || [];
+  const liveStores = (nearbyStores && nearbyStores.length > 0)
+    ? nearbyStores
+    : (allStoresResponse?.stores && allStoresResponse.stores.length > 0)
+      ? allStoresResponse.stores
+      : [];
+
+  // Combine live stores with sample stores if fewer than 5
+  const displayStores: IStore[] = [...liveStores];
+  if (displayStores.length < 5) {
+    for (const def of defaultStores) {
+      if (displayStores.length >= 5) break;
+      if (!displayStores.some((s) => s.name.toLowerCase() === def.name?.toLowerCase())) {
+        displayStores.push(def as IStore);
+      }
+    }
+  }
 
   return (
-    <section className="space-y-4 w-full">
+    <section className="space-y-3.5 w-full">
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-brand-400" />
-          <h2 className="text-lg sm:text-2xl font-bold text-[#192168]">
-            {hasNearby ? 'Stores Near You' : 'Partner Stores'}
-          </h2>
-          {!hasNearby && !storesLoading && displayStores.length > 0 && (
-            <span className="hidden sm:inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
-              <MapPin className="w-3 h-3" /> Showing top stores
-            </span>
-          )}
-        </div>
+        <h2 className="text-xl sm:text-2xl font-bold text-[#0B1538]">
+          Stores Near You
+        </h2>
         <Link
           href="/stores"
-          className="flex items-center gap-1 text-sm font-medium sm:font-semibold text-[#192168] sm:text-[#1668F6] hover:text-brand-300 sm:hover:text-[#0f4bba] transition-colors"
+          className="flex items-center gap-1 text-sm font-semibold text-[#1668F6] hover:text-[#0f4bba] transition-colors"
         >
           See All <ChevronRight className="w-4 h-4" />
         </Link>
       </div>
 
-      <div className="flex md:grid md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6 overflow-x-auto scrollbar-hide pb-2 snap-x snap-mandatory">
+      {/* 5-Column Compact Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
         {storesLoading ? (
           Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="min-w-[280px] lg:min-w-0 shrink-0 snap-start">
-              <StoreCardSkeleton />
-            </div>
-          ))
-        ) : displayStores.length > 0 ? (
-          displayStores.map((store) => (
-            <div key={store._id} className="min-w-[260px] lg:min-w-0 shrink-0 snap-start">
-              <StoreCard store={store} />
-            </div>
+            <div key={i} className="aspect-[16/14] rounded-2xl bg-surface-100 animate-pulse" />
           ))
         ) : (
-          <div className="w-full py-12 text-center text-surface-500 col-span-full">
-            <p className="text-sm">No stores found nearby. Try changing your location.</p>
-          </div>
+          displayStores.slice(0, 5).map((store, i) => (
+            <HomeStoreCard key={store._id || i} store={store} index={i} />
+          ))
         )}
       </div>
     </section>

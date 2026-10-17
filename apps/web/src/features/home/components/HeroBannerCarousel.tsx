@@ -10,9 +10,9 @@ const promoSlides = [
     title: 'UP TO\n50% OFF',
     subtitle: 'On top products from local stores near you',
     cta: 'Shop Now',
-    href: '/products?category=deals',
+    href: '/deals',
     badge: 'BIG DEALS',
-    imageUrl: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&q=80&w=800',
+    imageUrl: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&q=80&w=800',
   },
   {
     id: 2,
@@ -48,25 +48,23 @@ export function HeroBannerCarousel() {
 
   return (
     <div className="w-full">
-      <div className="relative rounded-[2rem] overflow-hidden group min-h-[280px] sm:min-h-[320px] md:min-h-[360px] lg:min-h-[300px] w-full bg-gradient-to-r from-[#D4E4FF] via-[#E6EFFF] to-[#E1ECFF] shadow-sm flex items-center">
+      <div className="relative rounded-[2rem] overflow-hidden group min-h-[280px] sm:min-h-[320px] md:min-h-[360px] lg:min-h-[300px] w-full bg-gradient-to-r from-[#D5E5FF] via-[#E8F1FF] to-[#DEECFF] shadow-xs flex items-center">
         
         {/* Center Image (Extended & Overlapped) */}
         <div className="absolute inset-0 w-full h-full flex justify-center items-center pointer-events-none z-10 overflow-hidden">
-          
-          
           <img 
             src={slide.imageUrl} 
             alt={slide.title.replace('\n', ' ')} 
-            className=" w-[90%] md:w-[65%] h-full lg:w-[55%] object-contain object-center scale-[1.15] drop-shadow-2xl z-0 transition-transform duration-700 ease-out"
-            style={{ WebkitMaskImage: 'linear-gradient(to right, transparent 0%, #081028 20%, #081028 80%, transparent 100%)', maskImage: 'linear-gradient(to right, transparent 0%, #081028 20%, #081028 80%, transparent 100%)' }}
+            className="w-[85%] md:w-[60%] h-full lg:w-[50%] object-contain object-center scale-[1.05] drop-shadow-xl z-0 transition-transform duration-700 ease-out"
+            style={{ WebkitMaskImage: 'linear-gradient(to right, transparent 0%, #081028 15%, #081028 85%, transparent 100%)', maskImage: 'linear-gradient(to right, transparent 0%, #081028 15%, #081028 85%, transparent 100%)' }}
             onError={(e) => {
-              (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&q=80&w=800';
+              (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&q=80&w=800';
             }}
           />
 
           {/* Decorative Cursive Text */}
-          <div className="absolute right-[25%] bottom-[25%] -rotate-12 opacity-80 z-15 hidden lg:block">
-            <span className="text-brand-600 text-3xl font-serif italic tracking-wide leading-tight">
+          <div className="absolute right-[26%] bottom-[22%] -rotate-6 opacity-90 z-15 hidden lg:block">
+            <span className="text-[#1668F6] text-3xl font-serif italic tracking-wide leading-tight">
               Local Stores<br/>Bigger Possibilities
             </span>
           </div>
@@ -74,19 +72,19 @@ export function HeroBannerCarousel() {
 
         {/* Left Content */}
         <div className="absolute inset-y-0 left-0 w-full lg:w-[40%] flex flex-col justify-center px-6 sm:px-12 lg:pl-16 z-20 pointer-events-none">
-          <div className="max-w-[200px] sm:max-w-sm space-y-3 sm:space-y-4 pointer-events-auto">
-            <span className="inline-block bg-white text-brand-600 text-[10px] sm:text-xs font-bold px-3 py-1 rounded shadow-sm uppercase tracking-wider">
+          <div className="max-w-[220px] sm:max-w-sm space-y-2.5 sm:space-y-3.5 pointer-events-auto">
+            <span className="inline-block bg-white text-[#1668F6] text-[10px] sm:text-xs font-extrabold px-3 py-1 rounded-full shadow-2xs uppercase tracking-wider">
               {slide.badge}
             </span>
-            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-[#081028] leading-[1.1] tracking-tight whitespace-pre-line">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#0B1538] leading-[1.1] tracking-tight whitespace-pre-line">
               {slide.title}
             </h2>
-            <p className="text-[#081028]/80 text-sm sm:text-base font-medium leading-snug max-w-[260px]">
+            <p className="text-[#0B1538]/80 text-xs sm:text-sm font-medium leading-snug max-w-[260px]">
               {slide.subtitle}
             </p>
             <Link
               href={slide.href}
-              className="inline-flex items-center gap-2 px-6 py-2.5 sm:py-3 mt-2 sm:mt-4 rounded-xl bg-[#081028] text-white text-sm font-bold hover:bg-brand-600 transition-colors shadow-lg shadow-[#081028]/20"
+              className="inline-flex items-center gap-2 px-6 py-2.5 sm:py-3 mt-2 sm:mt-3 rounded-full bg-[#0B1538] text-white text-xs sm:text-sm font-bold hover:bg-[#1668F6] transition-colors shadow-md shadow-[#0B1538]/15"
             >
               {slide.cta} <ArrowRight className="w-4 h-4" />
             </Link>
@@ -94,17 +92,17 @@ export function HeroBannerCarousel() {
         </div>
 
         {/* Right Trust Bar (Overlaps the image slightly) */}
-        <div className="hidden lg:flex absolute inset-y-0 right-0 w-[300px] xl:w-[340px] flex-col justify-center gap-6 px-8 z-30 pointer-events-none">
-          <div className="absolute inset-0 bg-gradient-to-l from-[#E1ECFF] via-[#E1ECFF]/70 to-transparent -z-10" />
+        <div className="hidden lg:flex absolute inset-y-0 right-0 w-[280px] xl:w-[320px] flex-col justify-center gap-4 px-6 z-30 pointer-events-none">
+          <div className="absolute inset-0 bg-gradient-to-l from-[#DEECFF] via-[#DEECFF]/80 to-transparent -z-10" />
           
           {trustItems.map((item) => (
-            <div key={item.label} className="flex items-center gap-4">
-              <div className="shrink-0 text-brand-600 p-2.5 bg-white/60 backdrop-blur-md rounded-full shadow-sm">
-                <item.icon strokeWidth={1.5} className="w-8 h-8" />
+            <div key={item.label} className="flex items-center gap-3.5">
+              <div className="shrink-0 text-[#1668F6] p-2 bg-white/80 backdrop-blur-md rounded-full shadow-2xs border border-blue-100/60">
+                <item.icon strokeWidth={1.75} className="w-5 h-5" />
               </div>
               <div className="flex flex-col">
-                <h4 className="text-sm font-bold text-gray-900 leading-[1.4] mb-0.5">{item.label}</h4>
-                <p className="text-sm text-gray-700 leading-[1.4]">{item.description}</p>
+                <h4 className="text-xs sm:text-sm font-bold text-gray-900 leading-snug">{item.label}</h4>
+                <p className="text-[11px] sm:text-xs text-gray-600 leading-snug">{item.description}</p>
               </div>
             </div>
           ))}

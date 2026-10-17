@@ -4,61 +4,52 @@ import React from 'react';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 import { Footer } from '@/components/layout/Footer';
-import { TrustValuePropsBar } from '@/features/home/components/TrustValuePropsBar';
-import { ExploreStoresGrid } from '@/features/home/components/ExploreStoresGrid';
+import { HeroBannerCarousel } from '@/features/home/components/HeroBannerCarousel';
 import { StoresNearYouRail } from '@/features/home/components/StoresNearYouRail';
 import { BestDealsGrid } from '@/features/home/components/BestDealsGrid';
-
-import { HeroBannerCarousel } from '@/features/home/components/HeroBannerCarousel';
+import { ExploreStoresGrid } from '@/features/home/components/ExploreStoresGrid';
 
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-white">
-      <main className="mx-auto space-y-6 sm:space-y-8 pb-24 md:pb-12 bg-surface-50 min-h-screen">
-       
+      <main className="mx-auto space-y-8 sm:space-y-10 pb-20 md:pb-16 bg-[#FAFCFF] min-h-screen">
+        {/* ── 1. HERO SECTION (Carousel + Side Trust Perks) ─────────── */}
+        <section className="max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-24 pt-4 sm:pt-6">
+          <HeroBannerCarousel />
+        </section>
 
-        {/* ── HERO SECTION (Carousel + TrustBar) ─────────────────────── */}
-        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-24 mt-4 md:mt-6 space-y-4 md:space-y-6">
-        
-          <HeroBannerCarousel/>
-          <div className="lg:hidden">
-            <TrustValuePropsBar />
-          </div>
-        </div>
+        {/* ── 2. STORES NEAR YOU (5-Column Compact Grid) ────────────── */}
+        <section className="max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-24">
+          <StoresNearYouRail />
+        </section>
 
-        {/* ── Explore Stores Showcase ─────────────────────────────────── */}
+        {/* ── 3. BEST DEALS FOR YOU (4-Column Horizontal Split Cards) ── */}
+        <section className="max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-24">
+          <BestDealsGrid />
+        </section>
+
+        {/* ── 4. EXPLORE STORES (3-Column Showcase + Trust Bar) ──────── */}
         <section className="max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-24">
           <ExploreStoresGrid />
         </section>
 
-        {/* ── Stores Near You ────────────────────────────────────────── */}
-        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-24">
-          <StoresNearYouRail />
-        </div>
-
-        {/* ── Best Deals For You ─────────────────────────────────────── */}
-        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-24">
-          <BestDealsGrid />
-        </div>
-
         {/* ── MOBILE ONLY: Explore Stores CTA ────────────────────────── */}
-        <section className="md:hidden relative overflow-hidden rounded-2xl gradient-brand p-8 mx-4">
-          <div className="relative z-10 space-y-3">
-            <h2 className="text-2xl font-extrabold text-white">
+        <section className="md:hidden relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-700 p-6 mx-4 text-white shadow-md">
+          <div className="relative z-10 space-y-2.5">
+            <h2 className="text-xl font-bold">
               Explore All Local Stores
             </h2>
-            <p className="text-white/80 text-sm max-w-lg">
-              Discover amazing products from verified local retailers near you. Filter by category, browse trending deals, and find your new favourite shop.
+            <p className="text-white/80 text-xs max-w-sm leading-relaxed">
+              Discover verified local retailers near you. Browse trending deals, seasonal discounts, and find your new favourite shop.
             </p>
             <Link
               href="/stores"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-surface-900 font-semibold text-sm hover:bg-white/90 transition-colors shadow-lg mt-2"
+              className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-white text-[#0B1538] font-bold text-xs hover:bg-white/90 transition-colors shadow mt-2"
             >
               Browse Stores <ChevronRight className="w-4 h-4" />
             </Link>
           </div>
-          <div className="absolute -right-8 -bottom-8 w-40 h-40 rounded-full bg-white/10 animate-pulse-soft" />
-          <div className="absolute right-20 -top-10 w-24 h-24 rounded-full bg-white/5" />
+          <div className="absolute -right-6 -bottom-6 w-32 h-32 rounded-full bg-white/10 pointer-events-none" />
         </section>
       </main>
 
