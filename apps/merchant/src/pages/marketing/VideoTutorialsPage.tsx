@@ -84,26 +84,14 @@ export const VideoTutorialsPage: React.FC<VideoTutorialsPageProps> = ({
               </div>
             </div>
 
-            {/* Video Player Graphic */}
-            <div className="lg:col-span-5 flex items-center justify-center">
-              <div
+            {/* Video Hero Mockup Graphic (5.3.png) */}
+            <div className="lg:col-span-5 flex items-center justify-center lg:justify-end">
+              <img
+                src="/images/video-tutorials-hero.png"
+                alt="Video Tutorials"
+                className="w-full max-w-[480px] h-auto object-contain drop-shadow-lg rounded-2xl cursor-pointer hover:scale-[1.01] transition-transform"
                 onClick={() => gettingStartedVideos[0] && openVideoModal(gettingStartedVideos[0])}
-                className="w-full max-w-md aspect-video bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 rounded-3xl p-6 shadow-2xl border border-slate-800 text-white flex flex-col justify-between cursor-pointer group hover:scale-[1.02] transition-transform"
-              >
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-blue-300">Featured Walkthrough</span>
-                  <span className="px-2 py-0.5 rounded bg-black/60 text-white text-[10px]">3:12</span>
-                </div>
-
-                <div className="text-center space-y-2">
-                  <div className="w-14 h-14 rounded-full bg-[#0038ed] text-white flex items-center justify-center mx-auto shadow-lg group-hover:scale-110 transition-transform">
-                    <Play className="w-6 h-6 fill-white ml-0.5" />
-                  </div>
-                  <h4 className="text-sm font-bold text-white">How to Set Up Your Store</h4>
-                </div>
-
-                <div className="text-[11px] text-slate-400 text-center">Click to play tutorial</div>
-              </div>
+              />
             </div>
           </div>
         </div>
@@ -221,6 +209,102 @@ export const VideoTutorialsPage: React.FC<VideoTutorialsPageProps> = ({
                 onPlay={(v) => openVideoModal(v)}
               />
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 5b. Need Help Section (5.3.png) */}
+      <section className="py-14 bg-[#f8fbff] border-t border-slate-100">
+        <div className="max-w-[1340px] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+            <div>
+              <h2 className="text-2xl font-extrabold text-slate-900">Need Help?</h2>
+              <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                Still have questions? Watch these helpful videos or visit our Help Centre.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => onNavigate('/help')}
+              className="text-xs sm:text-sm font-bold text-[#0052ff] hover:underline flex items-center gap-1 cursor-pointer self-start sm:self-auto"
+            >
+              <span>Go to Help Centre</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div
+              onClick={() => onNavigate('/faqs')}
+              className="p-5 bg-white rounded-2xl border border-slate-200/90 shadow-2xs hover:border-[#0052ff] cursor-pointer transition-colors flex items-center justify-between group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#0052ff] flex items-center justify-center font-bold">
+                  ?
+                </div>
+                <div>
+                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-[#0052ff] transition-colors">
+                    Frequently Asked Questions
+                  </h4>
+                  <p className="text-[11px] text-slate-500 mt-0.5">12 videos</p>
+                </div>
+              </div>
+              <span className="text-slate-400 group-hover:text-[#0052ff] text-xs">&rsaquo;</span>
+            </div>
+
+            <div
+              onClick={() => onNavigate('/learn/guides')}
+              className="p-5 bg-white rounded-2xl border border-slate-200/90 shadow-2xs hover:border-[#0052ff] cursor-pointer transition-colors flex items-center justify-between group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center font-bold">
+                  💡
+                </div>
+                <div>
+                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-[#0052ff] transition-colors">
+                    Tips for Better Photos
+                  </h4>
+                  <p className="text-[11px] text-slate-500 mt-0.5">6 videos</p>
+                </div>
+              </div>
+              <span className="text-slate-400 group-hover:text-[#0052ff] text-xs">&rsaquo;</span>
+            </div>
+
+            <div
+              onClick={() => onNavigate('/contact')}
+              className="p-5 bg-white rounded-2xl border border-slate-200/90 shadow-2xs hover:border-[#0052ff] cursor-pointer transition-colors flex items-center justify-between group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
+                  🎧
+                </div>
+                <div>
+                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-[#0052ff] transition-colors">
+                    Troubleshooting
+                  </h4>
+                  <p className="text-[11px] text-slate-500 mt-0.5">8 videos</p>
+                </div>
+              </div>
+              <span className="text-slate-400 group-hover:text-[#0052ff] text-xs">&rsaquo;</span>
+            </div>
+
+            <div
+              onClick={() => onNavigate('/blog')}
+              className="p-5 bg-white rounded-2xl border border-slate-200/90 shadow-2xs hover:border-[#0052ff] cursor-pointer transition-colors flex items-center justify-between group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+                  📖
+                </div>
+                <div>
+                  <h4 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-[#0052ff] transition-colors">
+                    Feature Updates
+                  </h4>
+                  <p className="text-[11px] text-slate-500 mt-0.5">5 videos</p>
+                </div>
+              </div>
+              <span className="text-slate-400 group-hover:text-[#0052ff] text-xs">&rsaquo;</span>
+            </div>
           </div>
         </div>
       </section>

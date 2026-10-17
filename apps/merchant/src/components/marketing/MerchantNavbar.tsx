@@ -70,10 +70,10 @@ export const MerchantNavbar: React.FC<MerchantNavbarProps> = ({
           onClick={() => handleLinkClick('/')}
           className="flex items-center gap-2.5 cursor-pointer group"
         >
-          <div className="w-10 h-10 rounded-xl bg-[#0038ed] text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
+          <div className="w-9 h-9 rounded-xl bg-[#0052ff] text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
             <ShoppingBag className="w-5 h-5 fill-white/20" />
           </div>
-          <span className="text-2xl font-black text-[#0038ed] tracking-tight">
+          <span className="text-2xl font-black text-[#0052ff] tracking-tight">
             {branding.appName}
           </span>
         </div>
@@ -187,7 +187,7 @@ export const MerchantNavbar: React.FC<MerchantNavbarProps> = ({
           <button
             type="button"
             onClick={handleLoginClick}
-            className="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-bold text-sm hover:bg-slate-50 hover:border-slate-400 transition-all cursor-pointer"
+            className="px-6 py-2 rounded-lg border border-[#0052ff] text-[#0052ff] bg-white font-semibold text-sm hover:bg-blue-50/40 transition-all cursor-pointer"
           >
             Login
           </button>
@@ -195,7 +195,7 @@ export const MerchantNavbar: React.FC<MerchantNavbarProps> = ({
           <button
             type="button"
             onClick={handleSignupClick}
-            className="px-6 py-2.5 rounded-xl bg-[#0038ed] hover:bg-[#002fcf] text-white font-bold text-sm shadow-xs flex items-center gap-2 transition-all cursor-pointer"
+            className="px-6 py-2 rounded-lg bg-[#0052ff] hover:bg-[#0042d0] text-white font-semibold text-sm shadow-xs flex items-center gap-2 transition-all cursor-pointer"
           >
             <span>Start Selling</span>
             <ArrowRight className="w-4 h-4" />

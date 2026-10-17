@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { branding } from '../../lib/branding.js';
 import { MARKETING_DATA } from '../../data/marketingData.js';
+import { StillNeedHelpBanner } from '../../components/marketing/StillNeedHelpBanner.js';
 
 interface SellerBlogPageProps {
   onNavigate: (route: string) => void;
@@ -47,38 +48,50 @@ export const SellerBlogPage: React.FC<SellerBlogPageProps> = ({
   return (
     <div className="w-full bg-white select-none">
       {/* 1. Header (Mockup 5.6.png) */}
-      <section className="py-12 sm:py-16 bg-gradient-to-b from-[#f0f6ff] to-white border-b border-slate-100">
+      <section className="py-12 sm:py-16 bg-gradient-to-b from-[#f0f6ff] to-white border-b border-slate-100 overflow-hidden">
         <div className="max-w-[1340px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-2 text-xs text-slate-500 mb-6">
-            <button
-              onClick={() => onNavigate('/')}
-              className="hover:text-[#0038ed] transition-colors cursor-pointer"
-            >
-              Home
-            </button>
-            <span>&gt;</span>
-            <button
-              onClick={() => onNavigate('/learn/guides')}
-              className="hover:text-[#0038ed] transition-colors cursor-pointer"
-            >
-              Learn
-            </button>
-            <span>&gt;</span>
-            <span className="text-[#0038ed] font-bold">Seller Blog</span>
-          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            {/* Left 7 Cols: Title & Breadcrumbs */}
+            <div className="lg:col-span-7 space-y-4">
+              <div className="flex items-center gap-2 text-xs text-slate-500 mb-2">
+                <button
+                  onClick={() => onNavigate('/')}
+                  className="hover:text-[#0052ff] transition-colors cursor-pointer"
+                >
+                  Home
+                </button>
+                <span>&gt;</span>
+                <button
+                  onClick={() => onNavigate('/learn/guides')}
+                  className="hover:text-[#0052ff] transition-colors cursor-pointer"
+                >
+                  Learn
+                </button>
+                <span>&gt;</span>
+                <span className="text-[#0052ff] font-bold">Seller Blog</span>
+              </div>
 
-          <div className="max-w-3xl space-y-4">
-            <div className="inline-block px-3 py-1 rounded-full bg-blue-50 text-[#0038ed] font-bold text-xs uppercase tracking-wider">
-              SELLER BLOG
+              <div className="inline-block px-3 py-1 rounded-full bg-blue-50 text-[#0052ff] font-bold text-xs uppercase tracking-wider">
+                SELLER BLOG
+              </div>
+
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+                Tips, Ideas and Stories for Your Business
+              </h1>
+
+              <p className="text-base text-slate-600 leading-relaxed max-w-xl">
+                Practical guides, tips and real stories to help you manage and grow your store on {branding.appName}.
+              </p>
             </div>
 
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight">
-              Tips, Ideas and Stories for Your Business
-            </h1>
-
-            <p className="text-base text-slate-600 leading-relaxed max-w-xl">
-              Practical guides, tips and real stories to help you manage and grow your store on {branding.appName}.
-            </p>
+            {/* Right 5 Cols: Hero Mockup Image (5.6.png) */}
+            <div className="lg:col-span-5 flex justify-center lg:justify-end">
+              <img
+                src="/images/blog-hero.png"
+                alt="Seller Blog"
+                className="w-full max-w-[440px] h-auto object-contain drop-shadow-md rounded-2xl"
+              />
+            </div>
           </div>
         </div>
       </section>
@@ -205,47 +218,7 @@ export const SellerBlogPage: React.FC<SellerBlogPageProps> = ({
       </section>
 
       {/* 4. Still Need Help? Banner */}
-      <section className="py-12 bg-[#edf4ff] border-t border-blue-100">
-        <div className="max-w-[1340px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-blue-200/90 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-blue-50 text-[#0038ed] flex items-center justify-center shrink-0">
-                <Headphones className="w-7 h-7" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-slate-900">Still Need Help?</h3>
-                <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-                  Our regional team is here to support you. Get in touch with us anytime.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-6">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-blue-100 text-[#0038ed] flex items-center justify-center shrink-0">
-                  <Phone className="w-5 h-5" />
-                </div>
-                <div>
-                  <div className="text-[11px] text-slate-400 font-semibold uppercase">Call Us</div>
-                  <div className="text-xs sm:text-sm font-bold text-slate-900">+91 91091 07251</div>
-                  <div className="text-[10px] text-slate-500">Mon - Sat, 10:00 AM - 6:00 PM</div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-blue-100 text-[#0038ed] flex items-center justify-center shrink-0">
-                  <Mail className="w-5 h-5" />
-                </div>
-                <div>
-                  <div className="text-[11px] text-slate-400 font-semibold uppercase">Email Support</div>
-                  <div className="text-xs sm:text-sm font-bold text-[#0038ed]">{branding.supportEmail}</div>
-                  <div className="text-[10px] text-slate-500">We reply within 24 hours</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <StillNeedHelpBanner />
     </div>
   );
 };

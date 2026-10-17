@@ -40,42 +40,42 @@ export interface HelpTopic {
 export const MARKETING_DATA = {
   // 9 Retail Categories from 1.0.png
   retailCategories: [
-    { name: 'Fashion & Apparel', icon: 'Shirt', count: '1,200+ Stores' },
-    { name: 'Footwear', icon: 'Footprints', count: '450+ Stores' },
-    { name: 'Electronics', icon: 'Headphones', count: '620+ Stores' },
-    { name: 'Jewellery', icon: 'Gem', count: '310+ Stores' },
-    { name: 'Beauty & Personal Care', icon: 'Sparkles', count: '580+ Stores' },
-    { name: 'Home & Living', icon: 'Armchair', count: '400+ Stores' },
-    { name: 'Gifts & Toys', icon: 'Gift', count: '290+ Stores' },
-    { name: 'Sports & Fitness', icon: 'Trophy', count: '210+ Stores' },
-    { name: 'General Retail', icon: 'ShoppingBag', count: '890+ Stores' },
+    { name: 'Fashion & Apparel', icon: 'Shirt' },
+    { name: 'Footwear', icon: 'Footprints' },
+    { name: 'Electronics', icon: 'Headphones' },
+    { name: 'Jewellery', icon: 'Gem' },
+    { name: 'Beauty & Personal Care', icon: 'Sparkles' },
+    { name: 'Home & Living', icon: 'Armchair' },
+    { name: 'Gifts', icon: 'Gift' },
+    { name: 'Sports', icon: 'Trophy' },
+    { name: 'General Retail', icon: 'ShoppingBag' },
   ],
 
   // Value Pills for Hero Sections
   heroValuePills: [
     {
-      title: 'No marketplace commission',
-      subtitle: 'on product sales',
-      icon: 'BadgePercent',
-      badgeColor: 'bg-emerald-50 text-emerald-600',
+      title: 'No marketplace',
+      subtitle: 'commission on product sales',
+      icon: 'Award',
+      badgeColor: 'bg-[#e6f9f0] text-[#10b981]',
     },
     {
       title: 'Get Discovered Locally',
       subtitle: 'by nearby customers',
       icon: 'MapPin',
-      badgeColor: 'bg-blue-50 text-[#0038ed]',
+      badgeColor: 'bg-[#e8f1ff] text-[#0052ff]',
     },
     {
       title: 'Simple Seller Onboarding',
       subtitle: 'Get started in a few steps',
       icon: 'Zap',
-      badgeColor: 'bg-amber-50 text-amber-600',
+      badgeColor: 'bg-[#fff4e5] text-[#f59e0b]',
     },
     {
       title: 'Local Delivery Options',
       subtitle: 'Pickup or local delivery',
       icon: 'Truck',
-      badgeColor: 'bg-indigo-50 text-indigo-600',
+      badgeColor: 'bg-[#e8f1ff] text-[#0052ff]',
     },
   ],
 

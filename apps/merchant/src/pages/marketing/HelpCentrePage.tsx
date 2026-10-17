@@ -18,6 +18,7 @@ import {
 import { branding } from '../../lib/branding.js';
 import { MARKETING_DATA } from '../../data/marketingData.js';
 import { FaqAccordion } from '../../components/marketing/FaqAccordion.js';
+import { StillNeedHelpBanner } from '../../components/marketing/StillNeedHelpBanner.js';
 
 interface HelpCentrePageProps {
   onNavigate: (route: string) => void;
@@ -67,51 +68,65 @@ export const HelpCentrePage: React.FC<HelpCentrePageProps> = ({
 
   return (
     <div className="w-full bg-white select-none">
-      {/* 1. Hero Search Header (Mockup 5.4.png) */}
-      <section className="py-12 sm:py-16 bg-gradient-to-b from-[#f0f6ff] to-white border-b border-slate-100">
-        <div className="max-w-[1340px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-2 text-xs text-slate-500 mb-6">
+      {/* 1. Hero Header (Mockup 5.4.png) */}
+      <section className="py-12 sm:py-16 bg-[#f8fbff] border-b border-slate-100 overflow-hidden">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-2 text-xs text-slate-500 mb-6 font-medium">
             <button
               onClick={() => onNavigate('/')}
-              className="hover:text-[#0038ed] transition-colors cursor-pointer"
+              className="hover:text-[#0052ff] transition-colors cursor-pointer"
             >
               Home
             </button>
             <span>&gt;</span>
             <button
-              onClick={() => onNavigate('/learn/guides')}
-              className="hover:text-[#0038ed] transition-colors cursor-pointer"
+              onClick={() => onNavigate('/learn')}
+              className="hover:text-[#0052ff] transition-colors cursor-pointer"
             >
               Learn
             </button>
             <span>&gt;</span>
-            <span className="text-[#0038ed] font-bold">Help Centre</span>
+            <span className="text-[#0052ff] font-bold">Help Centre</span>
           </div>
 
-          <div className="max-w-3xl mx-auto text-center space-y-4">
-            <div className="inline-block px-3 py-1 rounded-full bg-blue-50 text-[#0038ed] font-bold text-xs uppercase tracking-wider">
-              HELP CENTRE
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+            {/* Left Column: Title, description, and search */}
+            <div className="lg:col-span-6 space-y-5">
+              <div className="inline-block text-[#0052ff] font-black text-xs uppercase tracking-wider">
+                HELP CENTRE
+              </div>
+
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#0c1427] tracking-tight leading-tight">
+                How Can We <span className="text-[#0052ff]">Help You?</span>
+              </h1>
+
+              <p className="text-base text-slate-600 leading-relaxed max-w-lg">
+                Find answers to common questions, learn how to use {branding.appName}, and get the
+                help you need to grow your business.
+              </p>
+
+              {/* Search Input Bar */}
+              <div className="pt-2">
+                <div className="relative max-w-md">
+                  <Search className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search help topics, guides, questions..."
+                    className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200/90 rounded-2xl text-sm text-slate-900 shadow-2xs focus:outline-none focus:border-[#0052ff] focus:ring-4 focus:ring-[#0052ff]/5 transition-all"
+                  />
+                </div>
+              </div>
             </div>
 
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight">
-              How Can We Help You?
-            </h1>
-
-            <p className="text-base text-slate-600 leading-relaxed max-w-xl mx-auto">
-              Find answers to common questions, learn how to use {branding.appName}, and get the
-              help you need to grow your business.
-            </p>
-
-            {/* Search Input Bar */}
-            <div className="pt-4 max-w-2xl mx-auto">
-              <div className="relative">
-                <Search className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search help topics, guides, questions..."
-                  className="w-full pl-12 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl text-sm text-slate-900 shadow-sm focus:outline-none focus:border-[#0038ed] focus:ring-4 focus:ring-[#0038ed]/5 transition-all"
+            {/* Right Column: Hero Graphic from 5.4.png */}
+            <div className="lg:col-span-6 flex justify-center lg:justify-end">
+              <div className="relative w-full max-w-[560px] rounded-3xl overflow-hidden shadow-xl border border-slate-200/60 bg-white">
+                <img
+                  src="/images/contact-support-hero.png"
+                  alt="Customer Support Executive with Headset"
+                  className="w-full h-auto object-cover block"
                 />
               </div>
             </div>
@@ -250,47 +265,7 @@ export const HelpCentrePage: React.FC<HelpCentrePageProps> = ({
       </section>
 
       {/* 5. Still Need Help? Contact Banner (Matching 5.4.png) */}
-      <section className="py-12 bg-[#edf4ff] border-t border-blue-100">
-        <div className="max-w-[1340px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-blue-200/90 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-blue-50 text-[#0038ed] flex items-center justify-center shrink-0">
-                <Headphones className="w-7 h-7" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-slate-900">Still Need Help?</h3>
-                <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-                  Our regional team is here to support you. Get in touch with us anytime.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-6">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-blue-100 text-[#0038ed] flex items-center justify-center shrink-0">
-                  <Phone className="w-5 h-5" />
-                </div>
-                <div>
-                  <div className="text-[11px] text-slate-400 font-semibold uppercase">Call Us</div>
-                  <div className="text-xs sm:text-sm font-bold text-slate-900">+91 91091 07251</div>
-                  <div className="text-[10px] text-slate-500">Mon - Sat, 10:00 AM - 6:00 PM</div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-blue-100 text-[#0038ed] flex items-center justify-center shrink-0">
-                  <Mail className="w-5 h-5" />
-                </div>
-                <div>
-                  <div className="text-[11px] text-slate-400 font-semibold uppercase">Email Support</div>
-                  <div className="text-xs sm:text-sm font-bold text-[#0038ed]">{branding.supportEmail}</div>
-                  <div className="text-[10px] text-slate-500">We reply within 24 hours</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <StillNeedHelpBanner />
     </div>
   );
 };

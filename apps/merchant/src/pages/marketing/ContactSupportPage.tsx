@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { branding } from '../../lib/branding.js';
 import { FaqAccordion, FaqItem } from '../../components/marketing/FaqAccordion.js';
+import { StillNeedHelpBanner } from '../../components/marketing/StillNeedHelpBanner.js';
 
 interface ContactSupportPageProps {
   onNavigate: (route: string) => void;
@@ -45,38 +46,59 @@ export const ContactSupportPage: React.FC<ContactSupportPageProps> = ({ onNaviga
   return (
     <div className="w-full bg-white select-none">
       {/* 1. Header (Mockup 5.7.png) */}
-      <section className="py-12 sm:py-16 bg-gradient-to-b from-[#f0f6ff] to-white border-b border-slate-100">
-        <div className="max-w-[1340px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-2 text-xs text-slate-500 mb-6">
+      <section className="py-12 sm:py-16 bg-[#f8fbff] border-b border-slate-100 overflow-hidden">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-2 text-xs text-slate-500 mb-6 font-medium">
             <button
               onClick={() => onNavigate('/')}
-              className="hover:text-[#0038ed] transition-colors cursor-pointer"
+              className="hover:text-[#0052ff] transition-colors cursor-pointer"
             >
               Home
             </button>
             <span>&gt;</span>
             <button
+              onClick={() => onNavigate('/learn')}
+              className="hover:text-[#0052ff] transition-colors cursor-pointer"
+            >
+              Learn
+            </button>
+            <span>&gt;</span>
+            <button
               onClick={() => onNavigate('/help')}
-              className="hover:text-[#0038ed] transition-colors cursor-pointer"
+              className="hover:text-[#0052ff] transition-colors cursor-pointer"
             >
               Help Centre
             </button>
             <span>&gt;</span>
-            <span className="text-[#0038ed] font-bold">Contact Support</span>
+            <span className="text-[#0052ff] font-bold">Contact Support</span>
           </div>
 
-          <div className="max-w-3xl space-y-4">
-            <div className="inline-block px-3 py-1 rounded-full bg-blue-50 text-[#0038ed] font-bold text-xs uppercase tracking-wider">
-              HELP CENTRE
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+            {/* Left Column: Heading and copy */}
+            <div className="lg:col-span-6 space-y-5">
+              <div className="inline-block text-[#0052ff] font-black text-xs uppercase tracking-wider">
+                HELP CENTRE
+              </div>
+
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#0c1427] tracking-tight leading-tight">
+                Contact <span className="text-[#0052ff]">Support</span>
+              </h1>
+
+              <p className="text-base text-slate-600 leading-relaxed max-w-xl">
+                We're here to help you with any questions or issues related to your {branding.appName} store.
+              </p>
             </div>
 
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight">
-              Contact <span className="text-[#0038ed]">Support</span>
-            </h1>
-
-            <p className="text-base text-slate-600 leading-relaxed max-w-xl">
-              We're here to help you with any questions or issues related to your {branding.appName} store.
-            </p>
+            {/* Right Column: Hero Graphic from 5.7.png */}
+            <div className="lg:col-span-6 flex justify-center lg:justify-end">
+              <div className="relative w-full max-w-[560px] rounded-3xl overflow-hidden shadow-xl border border-slate-200/60 bg-white">
+                <img
+                  src="/images/contact-support-hero.png"
+                  alt="Customer Support Executive with Headset and Help Bubble"
+                  className="w-full h-auto object-cover block"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -286,11 +308,11 @@ export const ContactSupportPage: React.FC<ContactSupportPageProps> = ({ onNaviga
                   className="w-full flex items-center justify-between p-3 rounded-2xl hover:bg-slate-50 border border-transparent hover:border-slate-200 transition-colors text-left group"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-blue-50 text-[#0038ed] flex items-center justify-center shrink-0">
+                    <div className="w-8 h-8 rounded-xl bg-blue-50 text-[#0052ff] flex items-center justify-center shrink-0">
                       <Play className="w-4 h-4" />
                     </div>
                     <div>
-                      <div className="font-bold text-slate-900 group-hover:text-[#0038ed] transition-colors">
+                      <div className="font-bold text-slate-900 group-hover:text-[#0052ff] transition-colors">
                         Video Tutorials
                       </div>
                       <div className="text-[10px] text-slate-400">
@@ -298,13 +320,16 @@ export const ContactSupportPage: React.FC<ContactSupportPageProps> = ({ onNaviga
                       </div>
                     </div>
                   </div>
-                  <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-[#0038ed] shrink-0" />
+                  <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-[#0052ff] shrink-0" />
                 </button>
               </div>
             </div>
           </div>
         </div>
       </section>
+
+      {/* 3. Still Need Help Banner (Mockup 5.7.png) */}
+      <StillNeedHelpBanner />
     </div>
   );
 };

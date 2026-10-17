@@ -33,6 +33,7 @@ import { MerchantHomePage } from './pages/marketing/MerchantHomePage.js';
 import { SellOnlinePage, SellOnlineTab } from './pages/marketing/SellOnlinePage.js';
 import { HowItWorksPage } from './pages/marketing/HowItWorksPage.js';
 import { LocalDiscoveryPage } from './pages/marketing/LocalDiscoveryPage.js';
+import { GrowLocalDiscoveryPage } from './pages/marketing/GrowLocalDiscoveryPage.js';
 import { PricingPage } from './pages/marketing/PricingPage.js';
 import { GrowBusinessPage } from './pages/marketing/GrowBusinessPage.js';
 import { BusinessGuidesPage } from './pages/marketing/BusinessGuidesPage.js';
@@ -187,11 +188,17 @@ export const App: React.FC = () => {
       );
     } else if (
       currentRoute === '/how-it-works/localdiscovery' ||
-      currentRoute === '/grow-business/localdiscovery' ||
       currentRoute === '/learn/local-discovery'
     ) {
       pageContent = (
         <LocalDiscoveryPage
+          onNavigate={navigateTo}
+          onStartSelling={() => navigateTo('/register')}
+        />
+      );
+    } else if (currentRoute === '/grow-business/localdiscovery') {
+      pageContent = (
+        <GrowLocalDiscoveryPage
           onNavigate={navigateTo}
           onStartSelling={() => navigateTo('/register')}
         />

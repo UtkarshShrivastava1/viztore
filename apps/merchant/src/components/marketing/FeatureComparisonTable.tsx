@@ -82,17 +82,15 @@ export const FeatureComparisonTable: React.FC = () => {
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse min-w-[620px]">
           <thead>
-            <tr className="bg-blue-50/70 border-b border-blue-100/80">
+            <tr className="bg-[#eef4ff] border-b border-blue-100">
               <th className="py-4.5 px-6 font-bold text-sm text-slate-800 w-[50%]">Features</th>
               <th className="py-4.5 px-6 font-bold text-sm text-center text-slate-800 w-[25%]">
                 <div>Standard Plan</div>
-                <div className="text-xs font-semibold text-[#0038ed] mt-0.5">₹12,000 / year</div>
+                <div className="text-xs font-bold text-[#0052ff] mt-0.5">₹12,000 / year</div>
               </th>
-              <th className="py-4.5 px-6 font-bold text-sm text-center text-slate-800 w-[25%] bg-blue-100/50">
-                <div className="flex items-center justify-center gap-1">
-                  <span>Premium Plan</span>
-                </div>
-                <div className="text-xs font-semibold text-[#0038ed] mt-0.5">₹16,000 / year</div>
+              <th className="py-4.5 px-6 font-bold text-sm text-center text-slate-800 w-[25%]">
+                <div>Premium Plan</div>
+                <div className="text-xs font-bold text-[#0052ff] mt-0.5">₹16,000 / year</div>
               </th>
             </tr>
           </thead>
@@ -100,14 +98,14 @@ export const FeatureComparisonTable: React.FC = () => {
             {rows.map((row, idx) => (
               <tr
                 key={idx}
-                className={idx % 2 === 0 ? 'bg-white hover:bg-slate-50/70' : 'bg-slate-50/30 hover:bg-slate-50/70'}
+                className={idx % 2 === 0 ? 'bg-white hover:bg-slate-50/70' : 'bg-slate-50/40 hover:bg-slate-50/70'}
               >
                 <td className="py-3.5 px-6 font-medium text-slate-700">{row.feature}</td>
                 <td className="py-3.5 px-6 text-center text-slate-700">
                   {typeof row.standard === 'boolean' ? (
                     row.standard ? (
-                      <div className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-[#0038ed]">
-                        <Check className="w-4 h-4 stroke-[2.5]" />
+                      <div className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#0052ff] text-white shadow-2xs">
+                        <Check className="w-3.5 h-3.5 stroke-[3]" />
                       </div>
                     ) : (
                       <span className="text-slate-300">—</span>
@@ -116,17 +114,17 @@ export const FeatureComparisonTable: React.FC = () => {
                     <span className="font-semibold text-slate-700">{row.standard}</span>
                   )}
                 </td>
-                <td className="py-3.5 px-6 text-center text-slate-700 bg-blue-50/20">
+                <td className="py-3.5 px-6 text-center text-slate-700">
                   {typeof row.premium === 'boolean' ? (
                     row.premium ? (
-                      <div className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#0038ed] text-white shadow-2xs">
-                        <Check className="w-4 h-4 stroke-[2.5]" />
+                      <div className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#0052ff] text-white shadow-2xs">
+                        <Check className="w-3.5 h-3.5 stroke-[3]" />
                       </div>
                     ) : (
                       <span className="text-slate-300">—</span>
                     )
                   ) : (
-                    <span className="font-bold text-[#0038ed]">{row.premium}</span>
+                    <span className="font-semibold text-slate-700">{row.premium}</span>
                   )}
                 </td>
               </tr>

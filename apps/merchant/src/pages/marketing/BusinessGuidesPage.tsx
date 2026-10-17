@@ -104,39 +104,13 @@ export const BusinessGuidesPage: React.FC<BusinessGuidesPageProps> = ({
               </div>
             </div>
 
-            {/* Right Summary Card */}
-            <div className="lg:col-span-5 flex items-center justify-center">
-              <div className="w-full max-w-md bg-white rounded-3xl p-6 border border-blue-200/90 shadow-xl space-y-3">
-                <div className="p-3 bg-blue-50/70 rounded-2xl flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-blue-100 text-[#0038ed] flex items-center justify-center font-bold">
-                    📈
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold text-slate-900">More Store Visits</div>
-                    <div className="text-[11px] text-slate-500">Reach more nearby customers.</div>
-                  </div>
-                </div>
-
-                <div className="p-3 bg-emerald-50/70 rounded-2xl flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold">
-                    🛒
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold text-slate-900">More Orders</div>
-                    <div className="text-[11px] text-slate-500">Turn store visits into orders.</div>
-                  </div>
-                </div>
-
-                <div className="p-3 bg-purple-50/70 rounded-2xl flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center font-bold">
-                    👥
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold text-slate-900">Business Growth</div>
-                    <div className="text-[11px] text-slate-500">Build a loyal customer base.</div>
-                  </div>
-                </div>
-              </div>
+            {/* Right Hero Mockup Image (5.2.png) */}
+            <div className="lg:col-span-5 flex items-center justify-center lg:justify-end">
+              <img
+                src="/images/business-guides-hero.png"
+                alt="Business Guides for Local Retailers"
+                className="w-full max-w-[460px] h-auto object-contain drop-shadow-lg rounded-2xl"
+              />
             </div>
           </div>
         </div>

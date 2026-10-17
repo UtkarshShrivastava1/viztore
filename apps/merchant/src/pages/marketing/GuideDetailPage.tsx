@@ -114,19 +114,13 @@ export const GuideDetailPage: React.FC<GuideDetailPageProps> = ({
               </div>
             </div>
 
-            {/* Laptop Preview Frame */}
-            <div className="lg:col-span-4 flex items-center justify-center">
-              <div className="w-full bg-slate-900 rounded-3xl p-4 shadow-xl border border-slate-800 text-white">
-                <div className="flex items-center justify-between pb-2 border-b border-slate-800 text-[11px]">
-                  <span className="font-bold text-blue-400">Store Setup Step 1 of 4</span>
-                  <span className="text-emerald-400">● Live Preview</span>
-                </div>
-                <div className="p-3 bg-slate-800/80 rounded-xl my-2 text-xs">
-                  <div className="font-bold text-white mb-1">Trendy Fashions Hub</div>
-                  <div className="text-[11px] text-slate-400">Category: Women's Clothing</div>
-                  <div className="text-[11px] text-slate-400">Civic Centre, Bhilai, 490006</div>
-                </div>
-              </div>
+            {/* Laptop Preview Frame (5.2a.png) */}
+            <div className="lg:col-span-4 flex items-center justify-center lg:justify-end">
+              <img
+                src="/images/guide-detail-hero.png"
+                alt={guide.title}
+                className="w-full max-w-[440px] h-auto object-contain drop-shadow-md rounded-2xl"
+              />
             </div>
           </div>
         </div>
