@@ -294,7 +294,12 @@ Every online order placed through `apps/web` generates an authoritative, complia
   - Implemented auto-promotion in `getMerchantOnboardingStatus` and `getMerchantStores` promoting any legacy pending stores to approved on retrieval.
   - Updated frontend `Step4BankAccount.tsx` and `Step6Financials.tsx` to transition directly to the active merchant dashboard without holding the user in the review waiting room.
   - Audited and approved all remaining pending stores on live Render production database (`0 pending stores remaining`).
-  - **120/120 automated tests passing across 19 suites**; full monorepo clean build.
+- [x] **Cloudinary Media Storage & Production CDN Streaming Pipeline 🟢**:
+  - Implemented backend media module (`apps/backend/src/modules/media/`) streaming binary image buffers to Cloudinary CDN via `multer` memory storage.
+  - Endpoints `POST /api/v1/media/upload` (single image) and `POST /api/v1/media/upload-multiple` (up to 10 images) with strict image MIME type validation (JPEG, PNG, WebP, GIF, AVIF) and 10MB file limit.
+  - Verified live account connectivity and streaming against Cloudinary cloud `dovysyg6n` (`200 OK`).
+  - Integrated merchant catalog wizard dropzone (`AddProductStep2.tsx`) to stream dragged and uploaded files directly to Cloudinary CDN with real-time upload progress feedback and safe local fallback.
+  - **125/125 automated tests passing across 20 suites**; full monorepo clean build.
 - [ ] **Rider Fleet Open-Pool Broadcast & Atomic Mutex Claim Engine (Phase 2 Delivery Dispatch) — PLANNED 🟡**:
   - Implementation plan ready: WhatsApp open-pool teaser broadcasts, MongoDB atomic mutex claim (`findOneAndUpdate({ orderId, status: 'SEARCHING_PARTNER', rider: null })`), rider PWA assignment dashboard, turn-by-turn navigation, and delivery OTP handshake.
 
