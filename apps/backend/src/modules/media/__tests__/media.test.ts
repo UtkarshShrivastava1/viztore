@@ -1,7 +1,19 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { v2 as cloudinary } from 'cloudinary';
-import { uploadBufferToCloudinary, deleteFromCloudinary } from '../media.service.js';
-import { AppError } from '../../../shared/utils/AppError.js';
+
+const { mockEnv } = vi.hoisted(() => ({
+  mockEnv: {
+    NODE_ENV: 'test',
+    CLOUDINARY_CLOUD_NAME: 'mock_cloud_name',
+    CLOUDINARY_API_KEY: 'mock_api_key',
+    CLOUDINARY_API_SECRET: 'mock_api_secret',
+  },
+}));
+
+vi.mock('../../../shared/config/env.config.js', () => ({
+  get env() {
+    return mockEnv;
+  },
+}));
 
 vi.mock('cloudinary', () => ({
   v2: {
@@ -13,9 +25,16 @@ vi.mock('cloudinary', () => ({
   },
 }));
 
+import { uploadBufferToCloudinary, deleteFromCloudinary } from '../media.service.js';
+import { v2 as cloudinary } from 'cloudinary';
+import { AppError } from '../../../shared/utils/AppError.js';
+
 describe('Media Service — Cloudinary Upload & Storage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockEnv.CLOUDINARY_CLOUD_NAME = 'mock_cloud_name';
+    mockEnv.CLOUDINARY_API_KEY = 'mock_api_key';
+    mockEnv.CLOUDINARY_API_SECRET = 'mock_api_secret';
   });
 
   describe('uploadBufferToCloudinary', () => {
@@ -69,6 +88,14 @@ describe('Media Service — Cloudinary Upload & Storage', () => {
         /Failed to upload image to Cloudinary storage/,
       );
     });
+
+    it('rejects with CLOUDINARY_NOT_CONFIGURED when Cloudinary env vars are missing', async () => {
+      mockEnv.CLOUDINARY_CLOUD_NAME = '';
+      const buffer = Buffer.from('fake-image-bytes');
+      await expect(uploadBufferToCloudinary(buffer)).rejects.toThrow(
+        /Cloudinary media storage is not configured/,
+      );
+    });
   });
 
   describe('deleteFromCloudinary', () => {
@@ -78,6 +105,13 @@ describe('Media Service — Cloudinary Upload & Storage', () => {
       const success = await deleteFromCloudinary('products/sample_123');
       expect(cloudinary.uploader.destroy).toHaveBeenCalledWith('products/sample_123');
       expect(success).toBe(true);
+    });
+
+    it('returns false immediately when CLOUDINARY_CLOUD_NAME is not configured', async () => {
+      mockEnv.CLOUDINARY_CLOUD_NAME = '';
+      const success = await deleteFromCloudinary('products/sample_123');
+      expect(cloudinary.uploader.destroy).not.toHaveBeenCalled();
+      expect(success).toBe(false);
     });
 
     it('returns false when Cloudinary destroy result is not ok', async () => {
