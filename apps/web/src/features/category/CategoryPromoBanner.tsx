@@ -1,48 +1,57 @@
 import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { ChevronRight } from 'lucide-react';
 
 interface CategoryPromoBannerProps {
   title: string;
-  subtitle: string;
+  storeName?: string;
+  subtitle?: string;
   imageUrl: string;
   href: string;
   bgColor?: string;
 }
 
-export function CategoryPromoBanner({ 
-  title, 
-  subtitle, 
-  imageUrl, 
+export function CategoryPromoBanner({
+  title,
+  storeName = 'Fashion Store',
+  imageUrl,
   href,
-  bgColor = "bg-blue-50" 
+  bgColor = 'bg-gradient-to-r from-[#EBF2FE] via-[#E2EDFC] to-[#D5E6FB]',
 }: CategoryPromoBannerProps) {
   return (
-    <Link href={href} className={`block w-full rounded-xl overflow-hidden mb-6 ${bgColor}`}>
-      <div className="flex items-center justify-between p-4 md:p-6 h-32 md:h-40 relative">
-        <div className="z-10 flex flex-col justify-center h-full max-w-[60%]">
-          <h2 className="text-lg md:text-2xl font-bold text-blue-900 leading-tight mb-1">
-            {title}
-          </h2>
-          <p className="text-xs md:text-sm text-blue-800 font-medium mb-2">
-            {subtitle}
-          </p>
-          <div className="flex items-center text-xs md:text-sm font-semibold text-blue-600 bg-white/80 w-max px-2 py-1 rounded-full">
-            Explore <ChevronRight className="w-3 h-3 md:w-4 md:h-4 ml-1" />
-          </div>
-        </div>
-        
-        {/* Absolute positioned image for the right side to overflow/blend nicely */}
-        <div className="absolute right-0 top-0 bottom-0 w-[45%]">
-           <Image 
-             src={imageUrl} 
-             alt={title} 
-             fill 
-             className="object-cover object-left"
-           />
-        </div>
+    <div
+      className={`relative w-full rounded-2xl ${bgColor} overflow-hidden px-4 py-3 sm:px-5 sm:py-4 flex items-center justify-between mb-5 shadow-2xs border border-blue-100/60`}
+    >
+      {/* Left Text */}
+      <div className="z-10 flex flex-col justify-center max-w-[55%]">
+        <h2 className="text-xl sm:text-2xl font-bold text-[#0B2562] leading-tight">
+          {title}
+        </h2>
+        <span className="text-xl sm:text-2xl font-black text-[#0B2562] leading-tight mt-0.5">
+          {storeName}
+        </span>
       </div>
-    </Link>
+
+      {/* Right Image + Circular Arrow Button */}
+      <div className="flex items-center gap-2">
+        <div className="relative w-24 h-24 sm:w-28 sm:h-28 -my-2 -mr-1">
+          <img
+            src={imageUrl}
+            alt={`${title} ${storeName}`}
+            className="w-full h-full object-contain object-bottom drop-shadow-md rounded-xl"
+            loading="lazy"
+          />
+        </div>
+        <Link
+          href={href}
+          aria-label={`Explore ${title} ${storeName}`}
+          className="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-md text-slate-700 hover:text-[#1668F6] hover:scale-105 active:scale-95 transition-all shrink-0 cursor-pointer"
+        >
+          <ChevronRight className="w-4 h-4" strokeWidth={2.5} />
+        </Link>
+      </div>
+    </div>
   );
 }
+
+export default CategoryPromoBanner;
