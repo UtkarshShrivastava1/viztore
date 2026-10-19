@@ -83,9 +83,9 @@ export function CheckoutPriceDetails({ storeId }: { storeId?: string }) {
       }
       const orderId = order.id || order._id || order.orderNumber;
       router.push(`/checkout/success?orderId=${encodeURIComponent(orderId)}&orderNumber=${encodeURIComponent(order.orderNumber)}`);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Backend order placement API error:', err);
-      const msg = err?.message || 'Failed to communicate with store server. Please try again.';
+      const msg = err instanceof Error ? err.message : 'Failed to communicate with store server. Please try again.';
       alert(`Could not place order: ${msg}`);
     } finally {
       setIsPlacingOrder(false);
