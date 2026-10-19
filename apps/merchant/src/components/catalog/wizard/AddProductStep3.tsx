@@ -32,14 +32,7 @@ export const AddProductStep3: React.FC = () => {
   const [tagInput, setTagInput] = useState('');
   const [copiedSku, setCopiedSku] = useState(false);
 
-  // Fallbacks from draft
-  const tags = draftProduct.tags || [
-    'men t-shirt',
-    'round neck t-shirt',
-    'black t-shirt',
-    'summer wear',
-    'casual wear',
-  ];
+  const tags = draftProduct.tags || [];
   const attributes = draftProduct.attributes || {};
   const status = draftProduct.status || 'active';
   const storage = draftProduct.storageLocation || {
@@ -880,7 +873,8 @@ export const AddProductStep3: React.FC = () => {
               </label>
               <input
                 type="text"
-                value={draftProduct.material || '100% Cotton'}
+                value={draftProduct.material || ''}
+                placeholder="e.g. 100% Cotton, Stainless Steel, Wood, Plastic, Organic..."
                 onChange={(e) => updateDraftProduct({ material: e.target.value })}
                 className="w-full px-2 py-1 text-xs border border-slate-200 rounded-md"
               />
@@ -891,7 +885,8 @@ export const AddProductStep3: React.FC = () => {
               </label>
               <input
                 type="text"
-                value={draftProduct.careInstructions || 'Machine wash cold, tumble dry low.'}
+                value={draftProduct.careInstructions || ''}
+                placeholder="e.g. Store in a cool dry place, Machine wash cold, Keep away from heat..."
                 onChange={(e) => updateDraftProduct({ careInstructions: e.target.value })}
                 className="w-full px-2 py-1 text-xs border border-slate-200 rounded-md"
               />
@@ -904,8 +899,11 @@ export const AddProductStep3: React.FC = () => {
             </label>
             <input
               type="text"
-              value={
-                draftProduct.metaTitle || 'Men Black Round Neck T-Shirt - Cotton Casual Wear'
+              value={draftProduct.metaTitle || ''}
+              placeholder={
+                draftProduct.name
+                  ? `${draftProduct.name} - Buy Online at Best Price`
+                  : 'e.g. Product Name - Buy Online at Best Price'
               }
               onChange={(e) => updateDraftProduct({ metaTitle: e.target.value })}
               className="w-full px-2 py-1 text-xs border border-slate-200 rounded-md"
@@ -918,9 +916,11 @@ export const AddProductStep3: React.FC = () => {
             </label>
             <input
               type="text"
-              value={
-                draftProduct.metaDescription ||
-                'Buy premium quality men black round neck t-shirt made with 100% cotton. Perfect for summer.'
+              value={draftProduct.metaDescription || ''}
+              placeholder={
+                draftProduct.description
+                  ? draftProduct.description.slice(0, 140)
+                  : 'Enter short product summary for search engines...'
               }
               onChange={(e) => updateDraftProduct({ metaDescription: e.target.value })}
               className="w-full px-2 py-1 text-xs border border-slate-200 rounded-md"

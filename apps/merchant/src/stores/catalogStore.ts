@@ -289,8 +289,8 @@ const initialDefaultDraft: Partial<ProductItem> = {
   isReturnable: true,
   weight: '0.250',
   dimensions: { length: '30', width: '20', height: '2' },
-  material: 'Cotton',
-  careInstructions: 'Hand wash cold',
+  material: '',
+  careInstructions: '',
   metaTitle: '',
   metaDescription: '',
 };
