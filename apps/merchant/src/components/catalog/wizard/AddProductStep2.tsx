@@ -43,9 +43,7 @@ export const AddProductStep2: React.FC = () => {
 
   const images = draftProduct.images || [];
   const name = draftProduct.name || '';
-  const brand = draftProduct.brand || 'PUMA';
   const barcode = draftProduct.barcode || '';
-  const hsnCode = draftProduct.hsnCode || '61091000';
   const description = draftProduct.description || '';
 
   const [imageUrlInput, setImageUrlInput] = useState('');
@@ -296,13 +294,13 @@ export const AddProductStep2: React.FC = () => {
               <h3 className="text-sm font-bold text-slate-900">Product Information</h3>
             </div>
             <p className="text-xs text-slate-500 ml-8 mb-2">
-              Enter the basic product details for your listing.
+              Enter the listing title, barcode, and detailed description for your product.
             </p>
 
-            {/* Row 1: Name, Brand, Barcode */}
+            {/* Row 1: Product Name & Barcode */}
             <div className="grid grid-cols-1 md:grid-cols-12 gap-3.5">
               {/* Product Name */}
-              <div className="md:col-span-5">
+              <div className="md:col-span-8">
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="text-xs font-semibold text-slate-700">
                     Product Name <span className="text-rose-500">*</span>
@@ -320,24 +318,6 @@ export const AddProductStep2: React.FC = () => {
                 />
               </div>
 
-              {/* Brand */}
-              <div className="md:col-span-3">
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  Brand / Manufacturer <span className="text-rose-500">*</span>
-                </label>
-                <select
-                  value={brand}
-                  onChange={(e) => updateDraftProduct({ brand: e.target.value })}
-                  className="w-full px-3 py-2 text-xs font-medium text-slate-800 bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer"
-                >
-                  <option value="PUMA">PUMA</option>
-                  <option value="Roadster">Roadster</option>
-                  <option value="Nike">Nike</option>
-                  <option value="Levis">Levis</option>
-                  <option value="HRX">HRX</option>
-                </select>
-              </div>
-
               {/* Barcode (Optional) */}
               <div className="md:col-span-4">
                 <label className="block text-xs font-semibold text-slate-700 mb-1.5">
@@ -348,7 +328,7 @@ export const AddProductStep2: React.FC = () => {
                     type="text"
                     value={barcode}
                     onChange={(e) => updateDraftProduct({ barcode: e.target.value })}
-                    placeholder="Enter barcode"
+                    placeholder="Enter barcode or SKU"
                     className="w-full pl-3 pr-9 py-2 text-xs font-mono text-slate-800 bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                   />
                   <div className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
@@ -356,21 +336,6 @@ export const AddProductStep2: React.FC = () => {
                   </div>
                 </div>
               </div>
-            </div>
-
-            {/* Row 2: HSN Code */}
-            <div className="w-full md:w-1/2">
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                HSN Code <span className="text-rose-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={hsnCode}
-                onChange={(e) => updateDraftProduct({ hsnCode: e.target.value })}
-                placeholder="61091000"
-                className="w-full px-3 py-2 text-xs font-mono text-slate-800 bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                required
-              />
             </div>
 
             {/* Row 3: Product Description */}
