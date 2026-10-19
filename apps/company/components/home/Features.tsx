@@ -154,8 +154,8 @@ export default function Features() {
   const [opsRef, opsVisible] = useReveal();
   const [reachRef, reachVisible] = useReveal();
 
-  function useReveal(): [React.RefObject<HTMLDivElement | null>, boolean] {
-  const ref = useRef<HTMLDivElement | null>(null);
+  function useReveal(): [React.RefObject<HTMLDivElement>, boolean] {
+  const ref = useRef<HTMLDivElement>(null!);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
