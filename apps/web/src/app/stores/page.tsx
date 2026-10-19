@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
 import { Footer } from '@/components/layout/Footer';
+import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 import { StoreCardSkeleton } from '@/components/ui/Skeleton';
 import { useNearbyStores } from '@/hooks/useNearbyStores';
 import { useAllStores } from '@/hooks/useAllStores';
@@ -49,11 +49,7 @@ export default function StoresPage({
       <main className="max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-24 py-2 space-y-4">
 
         {/* Breadcrumbs */}
-        <div className="flex items-center gap-1.5 text-[13px] font-medium text-surface-500">
-          <Link href="/" className="hover:text-[#1668F6] transition-colors">Home</Link>
-          <span className="text-surface-300">›</span>
-          <span className="text-surface-500">Stores <span className="text-[#1668F6]">Near You</span></span>
-        </div>
+        <Breadcrumbs items={[{ label: 'Home', href: '/' }, { label: 'Stores Near You' }]} />
 
         {/* Hero Banner */}
         <div className="flex flex-col lg:flex-row gap-5 lg:gap-6 relative">

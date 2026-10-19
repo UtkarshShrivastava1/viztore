@@ -12,6 +12,7 @@ import { useState, useEffect } from 'react';
 import { useCartStore } from '@/stores/cart.store';
 import { useWishlistFlyoutStore } from '@/stores/wishlistFlyoutStore';
 import { useNotificationStore } from '@/stores/notificationStore';
+import DesktopCategoryStrip from '@/components/layout/DesktopCategoryStrip';
 
 export interface MobileHeaderProps {
   userName?: string;
@@ -23,6 +24,9 @@ export interface MobileHeaderProps {
   isSimpleHeader?: boolean;
   isAccountPage?: boolean;
   displayTitle?: string;
+  showCategoryStrip?: boolean;
+  activeCategoryId?: string;
+  isHomePage?: boolean;
 }
 
 export function MobileHeader({
@@ -35,6 +39,9 @@ export function MobileHeader({
   isSimpleHeader,
   isAccountPage,
   displayTitle,
+  showCategoryStrip,
+  activeCategoryId,
+  isHomePage = false,
 }: MobileHeaderProps) {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
@@ -87,7 +94,7 @@ export function MobileHeader({
               placeholder={searchPlaceholder}
               notificationCount={notificationCount}
             />
-            {!isAccountPage && <CategoryTabs />}
+            {!isAccountPage && isHomePage && <CategoryTabs />}
           </>
         ) : (
           <div className="flex items-center justify-between px-4 py-1 pb-2">
@@ -114,10 +121,17 @@ export function MobileHeader({
         )}
       </div>
 
-      {/* Category Icons under the gradient for Mobile */}
-      {!isAccountPage && !isSimpleHeader && (
+      {/* Category Icons under the gradient for Mobile (Only on Home Page) */}
+      {isHomePage && !isAccountPage && !isSimpleHeader && (
         <div className="relative z-10 bg-gradient-to-b from-[#F5F9FE] to-white pt-2 pb-1">
           <CategoryIcons />
+        </div>
+      )}
+
+      {/* Category Strip for Mobile on Catalog/Category/Stores pages */}
+      {!isHomePage && showCategoryStrip && (
+        <div className="relative z-10 bg-white">
+          <DesktopCategoryStrip activeId={activeCategoryId} />
         </div>
       )}
     </div>

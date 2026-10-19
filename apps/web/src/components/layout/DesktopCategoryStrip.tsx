@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-const DESKTOP_CATEGORIES = [
+export const DESKTOP_CATEGORIES = [
   { id: "home", label: "Home", icon: Home, color: "#1668F6", activeBg: "#E8F0FE" },
   { id: "all", label: "All Categories", icon: LayoutGrid, color: "#1668F6", activeBg: "#E8F0FE" },
   { id: "fashion", label: "Fashion", icon: Shirt, color: "#2563EB", activeBg: "#E8F0FE" },
@@ -38,17 +38,26 @@ const DESKTOP_CATEGORIES = [
   { id: "2wheelers", label: "2 Wheelers", icon: Bike, color: "#3F51B5", activeBg: "#E8EAF6" },
 ];
 
-interface DesktopCategoryStripProps {
-  activeId?: string;
-  onSelect?: (id: string) => void;
+export function normalizeCategoryId(id?: string): string {
+  if (!id) return '';
+  const clean = id.toLowerCase().trim();
+  if (clean === 'auto_accessories') return 'auto';
+  if (clean === 'two_wheelers') return '2wheelers';
+  return clean;
 }
 
-export default function DesktopCategoryStrip({ activeId = "home", onSelect }: DesktopCategoryStripProps) {
-  const [selected, setSelected] = useState(activeId);
+export interface DesktopCategoryStripProps {
+  activeId?: string;
+  onSelect?: (id: string) => void;
+  className?: string;
+}
+
+export function DesktopCategoryStrip({ activeId = "home", onSelect, className = "" }: DesktopCategoryStripProps) {
+  const [selected, setSelected] = useState(normalizeCategoryId(activeId));
   const router = useRouter();
 
   useEffect(() => {
-    setSelected(activeId);
+    setSelected(normalizeCategoryId(activeId));
   }, [activeId]);
 
   const handleSelect = (id: string) => {
@@ -64,7 +73,7 @@ export default function DesktopCategoryStrip({ activeId = "home", onSelect }: De
   };
 
   return (
-    <div className="w-full bg-[#F8F9FA] border-b border-gray-200/90 select-none shadow-[inset_0_-1px_0_rgba(0,0,0,0.02)]">
+    <div className={`w-full bg-[#F8F9FA] border-b border-gray-200/90 select-none shadow-[inset_0_-1px_0_rgba(0,0,0,0.02)] ${className}`}>
       <div className="max-w-[1920px] mx-auto px-4 sm:px-6">
         <nav
           aria-label="Categories"
@@ -110,3 +119,7 @@ export default function DesktopCategoryStrip({ activeId = "home", onSelect }: De
     </div>
   );
 }
+
+export default DesktopCategoryStrip;
+export { DesktopCategoryStrip as CategoryStrip };
+

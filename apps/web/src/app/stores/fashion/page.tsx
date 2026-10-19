@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronDown, Loader2 } from 'lucide-react';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
+import { Footer } from '@/components/layout/Footer';
 import { StoreCard } from '@/features/stores/components/StoreCard';
 import { fetchAllStores } from '@/lib/api/stores';
 import { StoreCategory, type IStore } from '@repo/shared-types';
@@ -79,9 +80,15 @@ export default function FashionStoresPage() {
 
   return (
     <div className="min-h-screen bg-transparent pb-16 lg:pb-0">
-      <main className="max-w-[1920px] mx-auto lg:px-6 lg:py-4">
+      <main className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
         {/* Breadcrumbs */}
-        <Breadcrumbs items={[{ label: 'Home', href: '/' }, { label: 'Fashion Stores' }]} />
+        <Breadcrumbs 
+          items={[
+            { label: 'Home', href: '/' }, 
+            { label: 'Stores', href: '/stores' }, 
+            { label: 'Fashion Stores' }
+          ]} 
+        />
 
         {/* Title and Sort Header */}
         <div className="flex flex-col lg:flex-row lg:items-end justify-between mb-6">
@@ -117,6 +124,8 @@ export default function FashionStoresPage() {
           </div>
         )}
       </main>
+
+      <Footer />
     </div>
   );
 }

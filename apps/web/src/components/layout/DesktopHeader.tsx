@@ -23,6 +23,8 @@ export interface DesktopHeaderProps {
   isAccountPage?: boolean;
   isAuthenticated?: boolean;
   openAuthModal?: (mode: "login" | "signup") => void;
+  showCategoryStrip?: boolean;
+  activeCategoryId?: string;
 }
 
 export function DesktopHeader({
@@ -30,10 +32,12 @@ export function DesktopHeader({
   address: propAddress,
   cartCount: propCartCount,
   searchPlaceholder = "Search for products, stores and more...",
-  isSimpleHeader,
-  isAccountPage,
+  isSimpleHeader: _isSimpleHeader,
+  isAccountPage: _isAccountPage,
   isAuthenticated: propIsAuthenticated,
   openAuthModal: propOpenAuthModal,
+  showCategoryStrip: propShowCategoryStrip,
+  activeCategoryId: propActiveCategoryId,
 }: DesktopHeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -107,17 +111,24 @@ export function DesktopHeader({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
   
-  // Determine active category based on pathname
-  let activeCategoryId = "home";
+  // Determine active category based on prop or pathname
+  let derivedActiveId = "home";
   if (pathname === '/') {
-    activeCategoryId = "home";
+    derivedActiveId = "home";
   } else if (pathname === '/category') {
-    activeCategoryId = "all";
+    derivedActiveId = "all";
   } else if (pathname?.startsWith('/category/')) {
-    activeCategoryId = pathname.replace('/category/', '');
+    derivedActiveId = pathname.replace('/category/', '').split('/')[0] || "";
+  } else if (pathname?.startsWith('/stores/')) {
+    derivedActiveId = pathname.replace('/stores/', '').split('/')[0] || "";
   } else {
-    activeCategoryId = "";
+    derivedActiveId = "";
   }
+
+  const activeCategoryId = propActiveCategoryId !== undefined ? propActiveCategoryId : derivedActiveId;
+  const showCategoryStrip = propShowCategoryStrip !== undefined 
+    ? propShowCategoryStrip 
+    : (!pathname?.startsWith('/checkout') && !pathname?.startsWith('/cart'));
 
   const toggleOverlay = (overlay: 'notifications' | 'wishlist') => {
     setActiveOverlay(prev => prev === overlay ? null : overlay);
@@ -245,8 +256,8 @@ export function DesktopHeader({
       </div>
 
       {/* Category Strip (White Background) */}
-      {!isSimpleHeader && !isAccountPage && (
-      <DesktopCategoryStrip activeId={activeCategoryId} />
+      {showCategoryStrip && (
+        <DesktopCategoryStrip activeId={activeCategoryId} />
       )}
 
       {/* Location Modal */}

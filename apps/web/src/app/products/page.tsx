@@ -4,6 +4,7 @@ import React, { useCallback, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
+import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
 import { ProductCard } from '@/features/products/components/ProductCard';
 import { ProductGridSkeleton } from '@/components/ui/Skeleton';
 import { useProducts } from '@/hooks/useProducts';
@@ -54,9 +55,15 @@ function ProductsContent() {
 
   return (
     <div className="min-h-screen bg-transparent">
-      {/* <Header address={address} className="hidden md:block" /> */}
-
-      <main className="max-w-[1920px] mx-auto px-4 sm:px-6 py-6 space-y-6">
+      <main className="max-w-[1920px] mx-auto px-4 sm:px-6 py-4 space-y-6">
+        {/* Breadcrumbs */}
+        <Breadcrumbs 
+          items={[
+            { label: 'Home', href: '/' }, 
+            { label: 'Products', href: '/products' },
+            ...(query.category ? [{ label: query.category.charAt(0).toUpperCase() + query.category.slice(1).replace(/_/g, ' ') }] : [])
+          ]} 
+        />
         {/* Page Header */}
         <div className="flex items-center justify-between">
           <div>

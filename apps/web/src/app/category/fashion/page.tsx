@@ -1,22 +1,35 @@
 import React from 'react';
+import type { Metadata } from 'next';
 import { ShieldCheck, RotateCcw, Award } from 'lucide-react';
 import { CategoryHeroBanner } from '@/features/catalog/CategoryHeroBanner';
 import { ShopByCategoryGrid } from '@/features/catalog/ShopByCategoryGrid';
 import { ShopForLovedOnes } from '@/features/catalog/ShopForLovedOnes';
 import { FashionStores } from '@/features/catalog/FashionStores';
 import { Breadcrumbs } from '@/components/ui/Breadcrumbs';
+import { Footer } from '@/components/layout/Footer';
 import { branding } from '@repo/shared-types';
+
+export const metadata: Metadata = {
+  title: 'Fashion — Style for Every You',
+  description: `Trendy styles, top brands and great deals – only on ${branding.appName}`,
+};
 
 export default function FashionLandingPage() {
   return (
     <div className="min-h-screen bg-transparent pb-16 lg:pb-0">
-      <main className="max-w-[1920px] mx-auto lg:px-6 lg:py-4">
+      <main className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
 
         {/* Breadcrumbs */}
-        <Breadcrumbs items={[{ label: 'Home', href: '/' }, { label: 'Fashion' }]} />
+        <Breadcrumbs 
+          items={[
+            { label: 'Home', href: '/' }, 
+            { label: 'Categories', href: '/category' },
+            { label: 'Fashion' }
+          ]} 
+        />
 
         {/* Title and Top Badges Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6 p-8" >
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-6">
           <div>
             <h1 className="text-3xl font-extrabold text-[#061842] mb-1">Fashion</h1>
             <p className="text-[14px] font-bold text-[#061842]">Style for Every You</p>
@@ -62,6 +75,8 @@ export default function FashionLandingPage() {
           <FashionStores />
         </div>
       </main>
+
+      <Footer />
     </div>
   );
 }
