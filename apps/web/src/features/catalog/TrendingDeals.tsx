@@ -14,6 +14,7 @@ interface MockDeal {
   rating: number;
   reviews: string;
   storeName: string;
+  storeId?: string;
   image: string;
 }
 
@@ -125,7 +126,7 @@ export function TrendingDeals() {
       name: deal.name,
       imageUrl: deal.image,
       unitPrice: deal.price,
-      storeId: 'store-deals',
+      storeId: deal.storeId || '6acf505183256911d14c43cc',
       storeName: deal.storeName,
     }, 1);
 
@@ -143,21 +144,28 @@ export function TrendingDeals() {
   };
 
   // Build items based on live or fallback mockup data
-  const dealsToRender: MockDeal[] = (featuredProducts && featuredProducts.length >= 8)
-    ? featuredProducts.slice(0, 8).map((p, idx) => ({
-        id: p._id,
-        name: p.name,
-        price: p.basePrice,
-        mrp: p.baseMrp > p.basePrice ? p.baseMrp : Math.round(p.basePrice * 1.25),
-        discount: p.baseMrp > p.basePrice
-          ? `${Math.round(((p.baseMrp - p.basePrice) / p.baseMrp) * 100)}% OFF`
-          : MOCK_DEALS[idx]?.discount || '20% OFF',
-        rating: p.rating || 4.4,
-        reviews: `${(Math.random() * 2 + 1).toFixed(1)}K`,
-        storeName: p.storeName || MOCK_DEALS[idx]?.storeName || 'Official Store',
-        image: p.variants?.[0]?.images?.[0] || MOCK_DEALS[idx]?.image || '',
-      }))
-    : MOCK_DEALS;
+  const dealsToRender: MockDeal[] = (featuredProducts && featuredProducts.length > 0)
+    ? featuredProducts.slice(0, 8).map((p, idx) => {
+        const rawStoreId = p.storeId;
+        const storeId = typeof rawStoreId === 'object' && rawStoreId !== null
+          ? (rawStoreId as any)._id || String(rawStoreId)
+          : String(rawStoreId || '6acf505183256911d14c43cc');
+        return {
+          id: p._id,
+          name: p.name,
+          price: p.basePrice,
+          mrp: p.baseMrp > p.basePrice ? p.baseMrp : Math.round(p.basePrice * 1.25),
+          discount: p.baseMrp > p.basePrice
+            ? `${Math.round(((p.baseMrp - p.basePrice) / p.baseMrp) * 100)}% OFF`
+            : MOCK_DEALS[idx]?.discount || '20% OFF',
+          rating: p.rating || 4.4,
+          reviews: `${(Math.random() * 2 + 1).toFixed(1)}K`,
+          storeName: p.storeName || MOCK_DEALS[idx]?.storeName || 'National Retail Store',
+          storeId,
+          image: p.variants?.[0]?.images?.[0] || MOCK_DEALS[idx]?.image || '',
+        };
+      })
+    : MOCK_DEALS.map((d) => ({ ...d, storeId: '6acf505183256911d14c43cc' }));
 
   return (
     <section className="space-y-4 py-4 select-none">

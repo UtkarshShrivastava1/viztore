@@ -6,6 +6,8 @@ import { createStoreModule } from './store.module.js';
 import * as storeService from './store.service.js';
 import type { IStoreFacade } from './store.types.js';
 
+import { StoreModel } from './store.model.js';
+
 const defaultStoreModule = createStoreModule();
 
 export const storeRouter = defaultStoreModule.router;
@@ -15,17 +17,31 @@ export const storeModule: IStoreFacade = {
   getStoreById: async (id: string) => {
     try {
       const store = await storeService.getStoreById(id);
-      if (!store) return null;
-      return {
-        id: store._id,
-        name: store.name,
-        isActive: store.isActive,
-        ownerId: store.ownerId,
-        city: store.address?.city || '',
-      };
+      if (store) {
+        return {
+          id: store._id,
+          name: store.name,
+          isActive: store.isActive,
+          ownerId: store.ownerId,
+          city: store.address?.city || '',
+        };
+      }
     } catch {
-      return null;
+      // Fallback: If legacy mock or non-ObjectId store was passed (e.g. 'store-main', 'store-deals')
+      try {
+        const fallback = await StoreModel.findOne({ isActive: true });
+        if (fallback) {
+          return {
+            id: fallback._id.toString(),
+            name: fallback.name,
+            isActive: fallback.isActive,
+            ownerId: fallback.ownerId?.toString() || '',
+            city: fallback.address?.city || '',
+          };
+        }
+      } catch {}
     }
+    return null;
   },
   isStoreActive: async (id: string) => {
     try {

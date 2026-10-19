@@ -82,6 +82,7 @@ async function bootstrap() {
     eventBus.on(EVENTS.ORDER_PLACED, (payload) => {
       io.to(`store:${payload.storeId}`).emit(EVENTS.ORDER_PLACED, payload);
       io.to(`user:${payload.userId}`).emit(EVENTS.ORDER_PLACED, payload);
+      io.emit(EVENTS.ORDER_PLACED, payload);
       logger.debug(`📡 Socket broadcast ${EVENTS.ORDER_PLACED} to store:${payload.storeId} & user:${payload.userId}`);
     });
 

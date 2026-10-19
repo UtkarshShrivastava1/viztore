@@ -83,16 +83,10 @@ export function CheckoutPriceDetails({ storeId }: { storeId?: string }) {
       }
       const orderId = order.id || order._id || order.orderNumber;
       router.push(`/checkout/success?orderId=${encodeURIComponent(orderId)}&orderNumber=${encodeURIComponent(order.orderNumber)}`);
-    } catch (err: unknown) {
-      console.warn('Backend order placement API error, falling back to local confirmation:', err);
-      // Fallback: If network / dev server is disconnected, still generate local order ID so flow does not block
-      const fallbackOrderNum = `ORD-${Math.floor(10000 + Math.random() * 90000)}`;
-      if (storeId) {
-        clearStoreCart(storeId);
-      } else {
-        clearCart();
-      }
-      router.push(`/checkout/success?orderId=${fallbackOrderNum}&orderNumber=${fallbackOrderNum}`);
+    } catch (err: any) {
+      console.error('Backend order placement API error:', err);
+      const msg = err?.message || 'Failed to communicate with store server. Please try again.';
+      alert(`Could not place order: ${msg}`);
     } finally {
       setIsPlacingOrder(false);
     }

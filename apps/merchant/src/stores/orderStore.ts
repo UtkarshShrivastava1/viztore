@@ -717,14 +717,33 @@ export const useOrderStore = create<OrderStoreState>((set, get) => {
 
         const orderList = Array.isArray(rawData) ? rawData : (rawData as any)?.data || [];
         const mapped = orderList.map(mapApiOrderToMerchantRecord);
+
+        let localManualOrders: MerchantOrderRecord[] = [];
+        if (typeof window !== 'undefined') {
+          try {
+            const saved = localStorage.getItem('merchant_manual_orders');
+            if (saved) localManualOrders = JSON.parse(saved);
+          } catch {}
+        }
+
+        const combined = [...localManualOrders, ...mapped];
+        const uniqueOrders = Array.from(new Map(combined.map((o) => [o.id, o])).values());
+
         set({
-          orders: mapped,
+          orders: uniqueOrders.length > 0 ? uniqueOrders : initialSeedOrders,
           isLoading: false,
         });
       } catch (err: any) {
         console.warn('Could not fetch orders from API:', err?.message || err);
+        let localManualOrders: MerchantOrderRecord[] = [];
+        if (typeof window !== 'undefined') {
+          try {
+            const saved = localStorage.getItem('merchant_manual_orders');
+            if (saved) localManualOrders = JSON.parse(saved);
+          } catch {}
+        }
         set({
-          orders: [],
+          orders: localManualOrders.length > 0 ? localManualOrders : initialSeedOrders,
           isLoading: false,
           error: err?.message || 'Failed to fetch orders',
         });
@@ -952,11 +971,24 @@ export const useOrderStore = create<OrderStoreState>((set, get) => {
       },
       otp: String(Math.floor(1000 + Math.random() * 9000)),
       timestamps: {
-        createdAt: 'Just now',
+        createdAt: new Date().toLocaleString('en-IN', {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
       },
       currentStageName: 'New Order (Just now)',
       notes: newOrder.notes,
     };
+
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = JSON.parse(localStorage.getItem('merchant_manual_orders') || '[]');
+        localStorage.setItem('merchant_manual_orders', JSON.stringify([fullOrder, ...saved]));
+      } catch {}
+    }
 
     set((state) => ({
       orders: [fullOrder, ...state.orders],
