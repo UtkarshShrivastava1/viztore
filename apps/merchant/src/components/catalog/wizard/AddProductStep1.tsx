@@ -2,6 +2,7 @@ import React from 'react';
 import { Shirt, ListFilter, LayoutGrid, Info, ArrowRight, Search } from 'lucide-react';
 import { useCatalogStore } from '../../../stores/catalogStore.js';
 import { WizardHelpSidebar } from './WizardHelpSidebar.js';
+import { CreatableCombobox } from '../../ui/CreatableCombobox.js';
 
 interface CategoryDefinition {
   subCategories: string[];
@@ -76,27 +77,142 @@ const categoryCatalogTree: Record<string, CategoryDefinition> = {
       'Belts & Wallets': ['Genuine Leather Belt', 'Bi-fold RFID Wallet', 'Card Holder'],
     },
   },
+  'Grocery & Staples': {
+    subCategories: ['Atta & Flours', 'Rice & Grains', 'Dal & Pulses', 'Edible Oils & Ghee', 'Spices & Masalas', 'Dry Fruits & Nuts'],
+    productTypes: {
+      'Atta & Flours': ['Chakki Fresh Atta', 'Maida', 'Besan', 'Multi-grain Flour'],
+      'Rice & Grains': ['Basmati Rice', 'Kolam Rice', 'Poha / Flattened Rice', 'Dalia'],
+      'Dal & Pulses': ['Toor Dal', 'Moong Dal', 'Chana Dal', 'Urad Dal'],
+      'Edible Oils & Ghee': ['Mustard Oil', 'Sunflower Oil', 'Cow Ghee', 'Olive Oil'],
+      'Spices & Masalas': ['Turmeric Powder', 'Red Chilli Powder', 'Garam Masala', 'Whole Spices'],
+      'Dry Fruits & Nuts': ['Almonds / Badam', 'Cashews / Kaju', 'Raisins / Kishmish', 'Walnuts'],
+    },
+  },
+  'FMCG & Packaged Foods': {
+    subCategories: ['Biscuits & Cookies', 'Snacks & Namkeen', 'Beverages & Tea', 'Chocolates & Sweets', 'Instant Noodles & Soups'],
+    productTypes: {
+      'Biscuits & Cookies': ['Glucose Biscuits', 'Cream Crackers', 'Digestive Cookies', 'Rusk'],
+      'Snacks & Namkeen': ['Bhujia', 'Potato Chips', 'Roasted Makhanas', 'Mixture'],
+      'Beverages & Tea': ['Premium CTC Tea', 'Green Tea Bags', 'Instant Coffee', 'Fruit Juices'],
+      'Chocolates & Sweets': ['Milk Chocolate', 'Dark Chocolate Bar', 'Traditional Gulab Jamun Tin'],
+      'Instant Noodles & Soups': ['Instant Noodles 4-Pack', 'Cup Noodles', 'Tomato Soup Mix'],
+    },
+  },
+  'Beauty & Personal Care': {
+    subCategories: ['Skin Care', 'Hair Care', 'Bath & Body', 'Oral Care', 'Fragrances & Deos'],
+    productTypes: {
+      'Skin Care': ['Face Wash', 'Moisturizing Cream', 'Sunscreen SPF 50', 'Face Serum'],
+      'Hair Care': ['Anti-Dandruff Shampoo', 'Hair Conditioner', 'Coconut Hair Oil'],
+      'Bath & Body': ['Bathing Bar Soap', 'Body Wash Gel', 'Body Lotion'],
+      'Oral Care': ['Toothpaste 150g', 'Soft Toothbrush Pack', 'Mouthwash'],
+      'Fragrances & Deos': ['Pocket Deodorant', 'Body Spray 150ml', 'Eau de Parfum'],
+    },
+  },
+  'Pharmacy & Wellness': {
+    subCategories: ['Ayurvedic Care', 'First Aid', 'Health Supplements', 'Baby Nutrition'],
+    productTypes: {
+      'Ayurvedic Care': ['Chyawanprash', 'Triphala Powder', 'Herbal Cough Syrup', 'Giloy Juice'],
+      'First Aid': ['Antiseptic Liquid', 'Bandages / Strips', 'Pain Relief Gel', 'Cotton Roll'],
+      'Health Supplements': ['Multivitamin Capsules', 'Protein Powder', 'Fish Oil Omega-3'],
+      'Baby Nutrition': ['Infant Cereal', 'Gripe Water', 'Baby Gripe Water'],
+    },
+  },
+  'Sports & Fitness': {
+    subCategories: ['Fitness Equipment', 'Gym Wear', 'Yoga & Mats', 'Sports Gear'],
+    productTypes: {
+      'Fitness Equipment': ['Dumbbells Set', 'Resistance Bands', 'Hand Gripper'],
+      'Gym Wear': ['Quick-Dry Gym T-Shirt', 'Compression Tights', 'Workout Shorts'],
+      'Yoga & Mats': ['Anti-Slip Yoga Mat 6mm', 'Yoga Foam Roller', 'Yoga Block'],
+      'Sports Gear': ['Cricket Bat', 'Badminton Racket', 'Football Size 5', 'Shuttlecocks'],
+    },
+  },
+  'Automotive & Spares': {
+    subCategories: ['Two-Wheeler Helmets', 'Two-Wheeler Spares', 'Car Accessories', 'Cleaning & Lubricants'],
+    productTypes: {
+      'Two-Wheeler Helmets': ['Full Face Helmet', 'Open Face Helmet', 'Riding Gloves'],
+      'Two-Wheeler Spares': ['Brake Shoes', 'Spark Plug', 'Rearview Mirror Set', 'Indicator Light'],
+      'Car Accessories': ['Mobile Dashboard Holder', 'Car Perfume Vent Clip', 'Seat Cushion'],
+      'Cleaning & Lubricants': ['Engine Oil 4T 1L', 'Chain Lube Spray', 'Microfiber Cloth Pack'],
+    },
+  },
+  'Stationery & Books': {
+    subCategories: ['Notebooks & Registers', 'Pens & Writing', 'Art & Craft', 'Office Supplies'],
+    productTypes: {
+      'Notebooks & Registers': ['Single Line Notebook 172p', 'Spiral Journal A5', 'Register 240p'],
+      'Pens & Writing': ['Ballpoint Pens Pack of 5', 'Gel Pens 0.5mm', 'Highlighters Set'],
+      'Art & Craft': ['Acrylic Paints 12-Shades', 'Sketch Book A4', 'Oil Pastels'],
+      'Office Supplies': ['Stapler No. 10', 'Correction Pen', 'Desk Organizer', 'Calculator'],
+    },
+  },
+  'Bakery & Confectionery': {
+    subCategories: ['Fresh Breads', 'Cakes & Pastries', 'Cookies & Toast', 'Artisan Chocolates'],
+    productTypes: {
+      'Fresh Breads': ['Whole Wheat Brown Bread', 'White Sandwich Bread', 'Pav / Buns Pack'],
+      'Cakes & Pastries': ['Chocolate Truffle Pastry', 'Plum Cake', 'Red Velvet Slice'],
+      'Cookies & Toast': ['Butter Rusk', 'Jeera Khari Puff', 'Almond Biscotti'],
+      'Artisan Chocolates': ['Handcrafted Dark Truffles', 'Dry Fruit Chocolate Bar'],
+    },
+  },
+  'General & Other': {
+    subCategories: ['Daily Essentials', 'Hardware & Tools', 'Gifts & Toys', 'Pet Supplies'],
+    productTypes: {
+      'Daily Essentials': ['General Commodity', 'Packaged Goods', 'Utility Item'],
+      'Hardware & Tools': ['Screwdriver Set', 'Measuring Tape 5m', 'Insulation Tape'],
+      'Gifts & Toys': ['Gift Wrapping Paper', 'Action Figure', 'Board Game'],
+      'Pet Supplies': ['Dog Food 1kg', 'Cat Treats', 'Pet Shampoo'],
+    },
+  },
 };
+
+const commonBrandOptions = [
+  'Generic / Unbranded',
+  'Local Artisan / In-House',
+  'PUMA',
+  'Nike',
+  'Roadster',
+  'Levis',
+  'HRX',
+  'Zara',
+  'H&M',
+  'Amul',
+  'Tata Sampann',
+  'Nestle',
+  'Britannia',
+  'Dabur',
+  'Patanjali',
+  'boAt',
+  'Noise',
+  'Samsung',
+  'Milton',
+  'Prestige',
+];
 
 export const AddProductStep1: React.FC = () => {
   const { draftProduct, updateDraftProduct, setWizardStep } = useCatalogStore();
 
   const category = draftProduct.category || 'Men';
-  const currentCategoryData = categoryCatalogTree[category] || defaultCategoryData;
-  const subCategory = draftProduct.subCategory || currentCategoryData.subCategories[0] || 'T-Shirts';
+  const currentCategoryData = categoryCatalogTree[category] || {
+    subCategories: [draftProduct.subCategory || 'General'],
+    productTypes: {
+      [draftProduct.subCategory || 'General']: [draftProduct.productType || 'Standard'],
+    },
+  };
+  const subCategory =
+    draftProduct.subCategory || currentCategoryData.subCategories[0] || 'General';
   const availableProductTypes =
     (subCategory && currentCategoryData.productTypes[subCategory]) ||
     currentCategoryData.productTypes[currentCategoryData.subCategories[0] || ''] ||
-    ['Standard'];
+    [draftProduct.productType || 'Standard'];
   const productType = draftProduct.productType || availableProductTypes[0] || 'Standard';
   const productIdentification = draftProduct.productIdentification || 'new';
-  const brand = draftProduct.brand || 'Generic';
+  const brand = draftProduct.brand || 'Generic / Unbranded';
   const hsnCode = draftProduct.hsnCode || '61091000';
 
   const handleCategoryChange = (newCat: string) => {
-    const nextCatData = categoryCatalogTree[newCat] || defaultCategoryData;
-    const nextSub = nextCatData.subCategories[0] || 'T-Shirts';
-    const nextTypes = nextCatData.productTypes[nextSub] || ['Standard'];
+    const nextCatData = categoryCatalogTree[newCat];
+    const nextSub = nextCatData ? nextCatData.subCategories[0] || 'General' : 'General';
+    const nextTypes =
+      (nextCatData && nextCatData.productTypes[nextSub]) || ['Standard'];
     updateDraftProduct({
       category: newCat,
       subCategory: nextSub,
@@ -133,78 +249,45 @@ export const AddProductStep1: React.FC = () => {
               </h3>
             </div>
             <p className="text-xs text-slate-500 ml-8 mb-4">
-              Choose the right category, sub-category and product type to get relevant attributes.
+              Choose or type any category, sub-category, and product type to organize your catalog.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 pt-1">
               {/* Category */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  Category <span className="text-rose-500">*</span>
-                </label>
-                <div className="relative">
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-                    <Shirt className="w-4 h-4" />
-                  </div>
-                  <select
-                    value={category}
-                    onChange={(e) => handleCategoryChange(e.target.value)}
-                    className="w-full pl-9 pr-8 py-2 text-xs font-medium text-slate-800 bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer"
-                  >
-                    {Object.keys(categoryCatalogTree).map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+              <CreatableCombobox
+                label="Category"
+                required
+                leftIcon={<Shirt className="w-4 h-4 text-slate-400" />}
+                value={category}
+                options={Object.keys(categoryCatalogTree)}
+                onChange={handleCategoryChange}
+                placeholder="Select or type category..."
+                itemTypeLabel="Category"
+              />
 
               {/* Sub-category */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  Sub-category <span className="text-rose-500">*</span>
-                </label>
-                <div className="relative">
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-                    <ListFilter className="w-4 h-4" />
-                  </div>
-                  <select
-                    value={subCategory}
-                    onChange={(e) => handleSubCategoryChange(e.target.value)}
-                    className="w-full pl-9 pr-8 py-2 text-xs font-medium text-slate-800 bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer"
-                  >
-                    {currentCategoryData.subCategories.map((sub) => (
-                      <option key={sub} value={sub}>
-                        {sub}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+              <CreatableCombobox
+                label="Sub-category"
+                required
+                leftIcon={<ListFilter className="w-4 h-4 text-slate-400" />}
+                value={subCategory}
+                options={currentCategoryData.subCategories}
+                onChange={handleSubCategoryChange}
+                placeholder="Select or type sub-category..."
+                itemTypeLabel="Sub-category"
+              />
 
               {/* Product Type */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  Product Type <span className="text-rose-500">*</span>
-                </label>
-                <div className="relative">
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-                    <LayoutGrid className="w-4 h-4" />
-                  </div>
-                  <select
-                    value={productType}
-                    onChange={(e) => updateDraftProduct({ productType: e.target.value })}
-                    className="w-full pl-9 pr-8 py-2 text-xs font-medium text-slate-800 bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer"
-                  >
-                    {availableProductTypes.map((pt: string) => (
-                      <option key={pt} value={pt}>
-                        {pt}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+              <CreatableCombobox
+                label="Product Type"
+                required
+                leftIcon={<LayoutGrid className="w-4 h-4 text-slate-400" />}
+                value={productType}
+                options={availableProductTypes}
+                onChange={(newPt) => updateDraftProduct({ productType: newPt })}
+                placeholder="Select or type product type..."
+                itemTypeLabel="Product Type"
+              />
             </div>
           </div>
 
@@ -299,22 +382,25 @@ export const AddProductStep1: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
               {/* Brand */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  Brand / Manufacturer <span className="text-rose-500">*</span>
-                </label>
-                <select
+                <CreatableCombobox
+                  label="Brand / Manufacturer"
+                  required
                   value={brand}
-                  onChange={(e) => updateDraftProduct({ brand: e.target.value })}
-                  className="w-full px-3 py-2 text-xs font-medium text-slate-800 bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer"
-                >
-                  <option value="PUMA">PUMA</option>
-                  <option value="Roadster">Roadster</option>
-                  <option value="Nike">Nike</option>
-                  <option value="Levis">Levis</option>
-                  <option value="HRX">HRX</option>
-                  <option value="Zara">Zara</option>
-                  <option value="H&M">H&amp;M</option>
-                </select>
+                  options={commonBrandOptions}
+                  onChange={(newBrand) => updateDraftProduct({ brand: newBrand })}
+                  placeholder="Select or type brand..."
+                  itemTypeLabel="Brand"
+                />
+                <div className="flex items-center justify-between mt-1.5 text-[11px]">
+                  <span className="text-slate-500">For local or unbranded stock:</span>
+                  <button
+                    type="button"
+                    onClick={() => updateDraftProduct({ brand: 'Generic / Unbranded' })}
+                    className="text-blue-600 hover:text-blue-700 font-semibold hover:underline cursor-pointer"
+                  >
+                    + Set as Unbranded
+                  </button>
+                </div>
               </div>
 
               {/* HSN Code */}
