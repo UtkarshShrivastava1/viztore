@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuthStore } from './stores/authStore.js';
 import { useOnboardingStore } from './stores/onboardingStore.js';
-import { SellerLandingPage } from './pages/SellerLandingPage.js';
 import { SellerLoginPage } from './pages/SellerLoginPage.js';
 import { OnboardingPage } from './pages/OnboardingPage.js';
 import { DashboardOverviewPage } from './pages/DashboardOverviewPage.js';
@@ -30,11 +29,41 @@ import { AddProductModal } from './components/catalog/AddProductModal.js';
 import { BulkUploadModal } from './components/catalog/BulkUploadModal.js';
 import { LiveOrderSocketListener } from './components/dashboard/LiveOrderSocketListener.js';
 
+// Marketing Website Pages & Layout
+import { MerchantPublicLayout } from './components/marketing/MerchantPublicLayout.js';
+import { MerchantHomePage } from './pages/marketing/MerchantHomePage.js';
+import { SellOnlinePage, SellOnlineTab } from './pages/marketing/SellOnlinePage.js';
+import { HowItWorksPage } from './pages/marketing/HowItWorksPage.js';
+import { LocalDiscoveryPage } from './pages/marketing/LocalDiscoveryPage.js';
+import { GrowLocalDiscoveryPage } from './pages/marketing/GrowLocalDiscoveryPage.js';
+import { PricingPage } from './pages/marketing/PricingPage.js';
+import { GrowBusinessPage } from './pages/marketing/GrowBusinessPage.js';
+import { BusinessGuidesPage } from './pages/marketing/BusinessGuidesPage.js';
+import { GuideDetailPage } from './pages/marketing/GuideDetailPage.js';
+import { VideoTutorialsPage } from './pages/marketing/VideoTutorialsPage.js';
+import { HelpCentrePage } from './pages/marketing/HelpCentrePage.js';
+import { FaqPage } from './pages/marketing/FaqPage.js';
+import { SellerBlogPage } from './pages/marketing/SellerBlogPage.js';
+import { BlogDetailPage } from './pages/marketing/BlogDetailPage.js';
+import { ContactSupportPage } from './pages/marketing/ContactSupportPage.js';
+import { TermsPage } from './pages/marketing/legal/TermsPage.js';
+import { PrivacyPage } from './pages/marketing/legal/PrivacyPage.js';
+import { RefundPolicyPage } from './pages/marketing/legal/RefundPolicyPage.js';
+
 export type AppView = 'landing' | 'login' | 'onboarding' | 'dashboard';
 
 export const App: React.FC = () => {
   const { isAuthenticated, initialize } = useAuthStore();
   const { isUnderReview } = useOnboardingStore();
+
+  const getInitialRoute = (): string => {
+    if (typeof window !== 'undefined') {
+      return window.location.pathname.toLowerCase() || '/';
+    }
+    return '/';
+  };
+
+  const [currentRoute, setCurrentRoute] = useState<string>(getInitialRoute);
 
   // Determine initial view from URL path or subdomain (e.g. register.<domain>)
   const getInitialView = (): AppView => {
@@ -49,11 +78,15 @@ export const App: React.FC = () => {
       }
 
       if (params.get('view') === 'login' || path.endsWith('/login')) return 'login';
-      if (params.get('view') === 'signup' || params.get('view') === 'onboarding' || path.endsWith('/signup') || path.endsWith('/onboarding')) {
+      if (
+        params.get('view') === 'signup' ||
+        params.get('view') === 'onboarding' ||
+        path.endsWith('/signup') ||
+        path.endsWith('/onboarding')
+      ) {
         return 'onboarding';
       }
       if (params.get('view') === 'dashboard' || path.endsWith('/dashboard')) return 'dashboard';
-      if (params.get('view') === 'landing' || path.endsWith('/seller')) return 'landing';
       if (path === '/' && localStorage.getItem('access_token')) return 'dashboard';
     }
     return 'landing';
@@ -94,30 +127,196 @@ export const App: React.FC = () => {
     initialize();
   }, [initialize]);
 
-  // If already authenticated and on login or default root, transition to dashboard.
-  // When logged out, transition back to login.
+  // Handle browser back/forward buttons
   useEffect(() => {
-    if (isAuthenticated && (currentView === 'login' || currentView === 'landing')) {
-      if (typeof window !== 'undefined') {
-        const path = window.location.pathname.toLowerCase();
-        const params = new URLSearchParams(window.location.search);
-        if (params.get('view') === 'landing' || path.endsWith('/seller')) {
-          return;
-        }
+    const handlePopState = () => {
+      const path = window.location.pathname.toLowerCase();
+      setCurrentRoute(path);
+
+      if (path === '/login') {
+        setCurrentView('login');
+      } else if (path === '/register' || path === '/signup' || path === '/onboarding') {
+        setCurrentView('onboarding');
+      } else if (path === '/dashboard') {
+        setCurrentView('dashboard');
+      } else {
+        setCurrentView('landing');
       }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Navigation handler
+  const navigateTo = useCallback((route: string) => {
+    const cleanRoute = route.toLowerCase();
+    setCurrentRoute(cleanRoute);
+
+    if (typeof window !== 'undefined') {
+      window.history.pushState(null, '', route);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    if (cleanRoute === '/login') {
+      setCurrentView('login');
+    } else if (
+      cleanRoute === '/register' ||
+      cleanRoute === '/signup' ||
+      cleanRoute === '/onboarding'
+    ) {
+      setCurrentView('onboarding');
+    } else if (cleanRoute === '/dashboard') {
+      setCurrentView('dashboard');
+    } else {
+      setCurrentView('landing');
+    }
+  }, []);
+
+  // If already authenticated and on login or default root, transition to dashboard.
+  useEffect(() => {
+    if (isAuthenticated && currentView === 'login') {
       setCurrentView('dashboard');
     } else if (!isAuthenticated && currentView === 'dashboard') {
       setCurrentView('login');
     }
   }, [isAuthenticated, currentView]);
 
-  // Screen 1.png: Public Landing Page
+  // Public Marketing Website (23 Mockup Screens)
   if (currentView === 'landing') {
+    let pageContent: React.ReactNode = null;
+
+    if (currentRoute.startsWith('/sell-online')) {
+      const tab: SellOnlineTab = currentRoute.includes('managestore')
+        ? 'managestore'
+        : currentRoute.includes('ordersdelivery')
+        ? 'ordersdelivery'
+        : currentRoute.includes('sellertools')
+        ? 'sellertools'
+        : 'listproducts';
+
+      pageContent = (
+        <SellOnlinePage
+          initialTab={tab}
+          onNavigate={navigateTo}
+          onStartSelling={() => navigateTo('/register')}
+        />
+      );
+    } else if (currentRoute === '/how-it-works') {
+      pageContent = (
+        <HowItWorksPage
+          onNavigate={navigateTo}
+          onStartSelling={() => navigateTo('/register')}
+        />
+      );
+    } else if (
+      currentRoute === '/how-it-works/localdiscovery' ||
+      currentRoute === '/learn/local-discovery'
+    ) {
+      pageContent = (
+        <LocalDiscoveryPage
+          onNavigate={navigateTo}
+          onStartSelling={() => navigateTo('/register')}
+        />
+      );
+    } else if (currentRoute === '/grow-business/localdiscovery') {
+      pageContent = (
+        <GrowLocalDiscoveryPage
+          onNavigate={navigateTo}
+          onStartSelling={() => navigateTo('/register')}
+        />
+      );
+    } else if (currentRoute === '/pricing') {
+      pageContent = (
+        <PricingPage
+          onNavigate={navigateTo}
+          onStartSelling={() => navigateTo('/register')}
+        />
+      );
+    } else if (currentRoute === '/grow-business') {
+      pageContent = (
+        <GrowBusinessPage
+          onNavigate={navigateTo}
+          onStartSelling={() => navigateTo('/register')}
+        />
+      );
+    } else if (currentRoute === '/learn' || currentRoute === '/learn/guides') {
+      pageContent = (
+        <BusinessGuidesPage
+          onNavigate={navigateTo}
+          onSelectGuide={(slug) => navigateTo(`/learn/guides/${slug}`)}
+          onStartSelling={() => navigateTo('/register')}
+        />
+      );
+    } else if (currentRoute.startsWith('/learn/guides/')) {
+      const slug = currentRoute.replace('/learn/guides/', '');
+      pageContent = (
+        <GuideDetailPage
+          slug={slug}
+          onNavigate={navigateTo}
+          onSelectGuide={(s) => navigateTo(`/learn/guides/${s}`)}
+          onStartSelling={() => navigateTo('/register')}
+        />
+      );
+    } else if (currentRoute === '/learn/tutorials') {
+      pageContent = (
+        <VideoTutorialsPage
+          onNavigate={navigateTo}
+          onStartSelling={() => navigateTo('/register')}
+        />
+      );
+    } else if (currentRoute === '/help') {
+      pageContent = (
+        <HelpCentrePage
+          onNavigate={navigateTo}
+          onSelectGuide={(slug) => navigateTo(`/learn/guides/${slug}`)}
+        />
+      );
+    } else if (currentRoute === '/faqs') {
+      pageContent = <FaqPage onNavigate={navigateTo} />;
+    } else if (currentRoute === '/blog') {
+      pageContent = (
+        <SellerBlogPage
+          onNavigate={navigateTo}
+          onSelectPost={(slug) => navigateTo(`/blog/${slug}`)}
+        />
+      );
+    } else if (currentRoute.startsWith('/blog/')) {
+      const slug = currentRoute.replace('/blog/', '');
+      pageContent = (
+        <BlogDetailPage
+          slug={slug}
+          onNavigate={navigateTo}
+          onSelectPost={(s) => navigateTo(`/blog/${s}`)}
+        />
+      );
+    } else if (currentRoute === '/help/contact' || currentRoute === '/contact') {
+      pageContent = <ContactSupportPage onNavigate={navigateTo} />;
+    } else if (currentRoute === '/terms') {
+      pageContent = <TermsPage onNavigate={navigateTo} />;
+    } else if (currentRoute === '/privacy') {
+      pageContent = <PrivacyPage onNavigate={navigateTo} />;
+    } else if (currentRoute === '/refund-policy') {
+      pageContent = <RefundPolicyPage onNavigate={navigateTo} />;
+    } else {
+      // Default: 1.0.png Merchant Landing Homepage
+      pageContent = (
+        <MerchantHomePage
+          onNavigate={navigateTo}
+          onStartSelling={() => navigateTo('/register')}
+        />
+      );
+    }
+
     return (
-      <SellerLandingPage
-        onStartSelling={() => setCurrentView('onboarding')}
-        onLogin={() => setCurrentView('login')}
-      />
+      <MerchantPublicLayout
+        currentRoute={currentRoute}
+        onNavigate={navigateTo}
+        onGoToLogin={() => navigateTo('/login')}
+        onGoToSignup={() => navigateTo('/register')}
+      >
+        {pageContent}
+      </MerchantPublicLayout>
     );
   }
 
@@ -127,7 +326,7 @@ export const App: React.FC = () => {
       <SellerLoginPage
         onLoginSuccess={() => setCurrentView('dashboard')}
         onGoToRegister={() => setCurrentView('onboarding')}
-        onGoToHome={() => setCurrentView('landing')}
+        onGoToHome={() => navigateTo('/')}
       />
     );
   }
@@ -138,7 +337,7 @@ export const App: React.FC = () => {
       <OnboardingPage
         onEnterDashboard={() => setCurrentView('dashboard')}
         onGoToLogin={() => setCurrentView('login')}
-        onGoToHome={() => setCurrentView('landing')}
+        onGoToHome={() => navigateTo('/')}
       />
     );
   }
