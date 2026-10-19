@@ -73,9 +73,9 @@ export interface IProduct {
   name: string;
   slug: string;
   description: string;
-  category: ProductCategory;
+  category: ProductCategory | string;
   subCategory?: string;
-  subType?: ProductSubType;
+  subType?: ProductSubType | string;
   brand?: string;
   tags: string[];
   attributes: IProductAttribute[];
@@ -100,7 +100,7 @@ export interface IProductFacets {
   colors: { value: string; hex?: string; count: number }[];
   brands: { value: string; count: number }[];
   priceRange: { min: number; max: number };
-  categories: { value: ProductCategory; count: number }[];
+  categories: { value: string; count: number }[];
   totalCount: number;
 }
 
@@ -147,21 +147,8 @@ export const createProductSchema = z.object({
   subCategory: z.string().max(100).optional(),
   subType: z.preprocess((val) => {
     if (!val || typeof val !== 'string') return undefined;
-    const clean = val.toLowerCase().trim().replace(/[\s-]+/g, '_');
-    if (clean.includes('polo')) return ProductSubType.POLO;
-    if (clean.includes('round')) return ProductSubType.ROUND_NECK;
-    if (clean.includes('v_neck') || clean.includes('vneck')) return ProductSubType.V_NECK;
-    if (clean.includes('formal')) return ProductSubType.FORMAL;
-    if (clean.includes('casual')) return ProductSubType.CASUAL;
-    if (clean.includes('ethnic')) return ProductSubType.ETHNIC;
-    if (clean.includes('sport')) return ProductSubType.SPORTS;
-    if (clean.includes('printed')) return ProductSubType.PRINTED;
-    if (clean.includes('striped')) return ProductSubType.STRIPED;
-    if (clean.includes('full')) return ProductSubType.FULL_SLEEVE;
-    if (clean.includes('half')) return ProductSubType.HALF_SLEEVE;
-    const valid = Object.values(ProductSubType) as string[];
-    return valid.includes(clean) ? clean : undefined;
-  }, z.nativeEnum(ProductSubType).optional()).optional(),
+    return val.toLowerCase().trim().replace(/[\s-]+/g, '_');
+  }, z.string().max(100).optional()),
   brand: z.string().max(100).optional(),
   tags: z.array(z.string().max(50)).max(20).default([]),
   attributes: z.array(productAttributeSchema).max(30).default([]),
@@ -178,9 +165,9 @@ export const productQuerySchema = z.object({
   search: z.string().optional(),
 
   // Faceted filters
-  category: z.nativeEnum(ProductCategory).optional(),
+  category: z.string().optional(),
   subCategory: z.string().optional(),
-  subType: z.nativeEnum(ProductSubType).optional(),
+  subType: z.string().optional(),
   sizes: z.union([z.string(), z.array(z.string())]).optional(),
   colors: z.union([z.string(), z.array(z.string())]).optional(),
   brands: z.union([z.string(), z.array(z.string())]).optional(),
