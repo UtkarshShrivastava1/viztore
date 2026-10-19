@@ -3,6 +3,13 @@ import { Shirt, ListFilter, LayoutGrid, Info, ArrowRight, Search } from 'lucide-
 import { useCatalogStore } from '../../../stores/catalogStore.js';
 import { WizardHelpSidebar } from './WizardHelpSidebar.js';
 import { CreatableCombobox } from '../../ui/CreatableCombobox.js';
+import {
+  getCustomTaxonomy,
+  recordCustomCategory,
+  recordCustomBrand,
+  mineTaxonomyFromProducts,
+} from '../../../lib/customTaxonomyStorage.js';
+import { useAuthStore } from '../../../stores/authStore.js';
 
 interface CategoryDefinition {
   subCategories: string[];
@@ -188,15 +195,65 @@ const commonBrandOptions = [
 ];
 
 export const AddProductStep1: React.FC = () => {
-  const { draftProduct, updateDraftProduct, setWizardStep } = useCatalogStore();
+  const { draftProduct, updateDraftProduct, setWizardStep, products } = useCatalogStore();
+  const currentStore = useAuthStore((s) => s.currentStore);
+  const storeId = currentStore?._id || currentStore?.id;
+
+  // 1. Initial custom taxonomy loaded from store/localStorage + mined from catalog
+  const [customTax, setCustomTax] = React.useState(() => getCustomTaxonomy(storeId));
+
+  React.useEffect(() => {
+    const loaded = getCustomTaxonomy(storeId);
+    const mined = mineTaxonomyFromProducts(products || []);
+    const mergedCategories = Array.from(new Set([...loaded.categories, ...mined.categories])).filter(Boolean);
+    const mergedBrands = Array.from(new Set([...loaded.brands, ...mined.brands])).filter(Boolean);
+    const mergedSubs = { ...loaded.subCategories };
+    Object.entries(mined.subCategories).forEach(([cat, subs]) => {
+      mergedSubs[cat] = Array.from(new Set([...(mergedSubs[cat] || []), ...subs])).filter(Boolean);
+    });
+    const mergedPts = { ...loaded.productTypes };
+    Object.entries(mined.productTypes).forEach(([sub, pts]) => {
+      mergedPts[sub] = Array.from(new Set([...(mergedPts[sub] || []), ...pts])).filter(Boolean);
+    });
+
+    setCustomTax({
+      categories: mergedCategories,
+      subCategories: mergedSubs,
+      productTypes: mergedPts,
+      brands: mergedBrands,
+    });
+  }, [storeId, products]);
 
   const category = draftProduct.category || 'Men';
-  const currentCategoryData = categoryCatalogTree[category] || {
-    subCategories: [draftProduct.subCategory || 'General'],
-    productTypes: {
-      [draftProduct.subCategory || 'General']: [draftProduct.productType || 'Standard'],
-    },
-  };
+
+  // All Category options = built-in keys + saved custom categories
+  const allCategoryOptions = React.useMemo(() => {
+    return Array.from(
+      new Set([...Object.keys(categoryCatalogTree), ...(customTax.categories || [])]),
+    ).filter(Boolean);
+  }, [customTax.categories]);
+
+  // Current Category definition = built-in tree + custom subCategories and productTypes
+  const currentCategoryData = React.useMemo(() => {
+    const base = categoryCatalogTree[category] || { subCategories: [], productTypes: {} };
+    const savedSubs = customTax.subCategories[category] || [];
+    const mergedSubs = Array.from(
+      new Set([...base.subCategories, ...savedSubs, draftProduct.subCategory || 'General']),
+    ).filter(Boolean);
+
+    const mergedTypesMap: Record<string, string[]> = { ...base.productTypes };
+    Object.entries(customTax.productTypes).forEach(([sub, pts]) => {
+      mergedTypesMap[sub] = Array.from(
+        new Set([...(mergedTypesMap[sub] || []), ...pts]),
+      ).filter(Boolean);
+    });
+
+    return {
+      subCategories: mergedSubs.length > 0 ? mergedSubs : ['General'],
+      productTypes: mergedTypesMap,
+    };
+  }, [category, customTax, draftProduct.subCategory]);
+
   const subCategory =
     draftProduct.subCategory || currentCategoryData.subCategories[0] || 'General';
   const availableProductTypes =
@@ -208,24 +265,62 @@ export const AddProductStep1: React.FC = () => {
   const brand = draftProduct.brand || 'Generic / Unbranded';
   const hsnCode = draftProduct.hsnCode || '61091000';
 
+  // All Brand options = common options + saved custom brands
+  const allBrandOptions = React.useMemo(() => {
+    return Array.from(
+      new Set([...commonBrandOptions, ...(customTax.brands || [])]),
+    ).filter(Boolean);
+  }, [customTax.brands]);
+
   const handleCategoryChange = (newCat: string) => {
     const nextCatData = categoryCatalogTree[newCat];
-    const nextSub = nextCatData ? nextCatData.subCategories[0] || 'General' : 'General';
+    const savedSubs = customTax.subCategories[newCat] || [];
+    const nextSub = nextCatData ? (nextCatData.subCategories[0] || 'General') : (savedSubs[0] || 'General');
     const nextTypes =
-      (nextCatData && nextCatData.productTypes[nextSub]) || ['Standard'];
+      (nextCatData && nextCatData.productTypes[nextSub]) ||
+      customTax.productTypes[nextSub] ||
+      ['Standard'];
+
     updateDraftProduct({
       category: newCat,
       subCategory: nextSub,
       productType: nextTypes[0] || 'Standard',
     });
+
+    // Record custom category if not in static tree
+    if (!categoryCatalogTree[newCat]) {
+      const updated = recordCustomCategory(storeId, newCat, nextSub, nextTypes[0]);
+      setCustomTax(updated);
+    }
   };
 
   const handleSubCategoryChange = (newSub: string) => {
-    const nextTypes = currentCategoryData.productTypes[newSub] || ['Standard'];
+    const nextTypes =
+      currentCategoryData.productTypes[newSub] ||
+      customTax.productTypes[newSub] ||
+      ['Standard'];
+
     updateDraftProduct({
       subCategory: newSub,
       productType: nextTypes[0] || 'Standard',
     });
+
+    const updated = recordCustomCategory(storeId, category, newSub, nextTypes[0]);
+    setCustomTax(updated);
+  };
+
+  const handleProductTypeChange = (newPt: string) => {
+    updateDraftProduct({ productType: newPt });
+    const updated = recordCustomCategory(storeId, category, subCategory, newPt);
+    setCustomTax(updated);
+  };
+
+  const handleBrandChange = (newBrand: string) => {
+    updateDraftProduct({ brand: newBrand });
+    if (newBrand && newBrand !== 'Generic / Unbranded') {
+      const updated = recordCustomBrand(storeId, newBrand);
+      setCustomTax(updated);
+    }
   };
 
   const handleContinue = (e: React.FormEvent) => {
@@ -259,7 +354,7 @@ export const AddProductStep1: React.FC = () => {
                 required
                 leftIcon={<Shirt className="w-4 h-4 text-slate-400" />}
                 value={category}
-                options={Object.keys(categoryCatalogTree)}
+                options={allCategoryOptions}
                 onChange={handleCategoryChange}
                 placeholder="Select or type category..."
                 itemTypeLabel="Category"
@@ -284,7 +379,7 @@ export const AddProductStep1: React.FC = () => {
                 leftIcon={<LayoutGrid className="w-4 h-4 text-slate-400" />}
                 value={productType}
                 options={availableProductTypes}
-                onChange={(newPt) => updateDraftProduct({ productType: newPt })}
+                onChange={handleProductTypeChange}
                 placeholder="Select or type product type..."
                 itemTypeLabel="Product Type"
               />
@@ -386,8 +481,8 @@ export const AddProductStep1: React.FC = () => {
                   label="Brand / Manufacturer"
                   required
                   value={brand}
-                  options={commonBrandOptions}
-                  onChange={(newBrand) => updateDraftProduct({ brand: newBrand })}
+                  options={allBrandOptions}
+                  onChange={handleBrandChange}
                   placeholder="Select or type brand..."
                   itemTypeLabel="Brand"
                 />

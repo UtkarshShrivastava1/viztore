@@ -48,6 +48,7 @@ timeline
 | **B-04** | **High-Security Brute-Force Rate Limiter** | `P1` | Low | `shared/middlewares/rateLimiter.ts`, `app.ts` | **DONE ✅** | Mounted dedicated strict rate limiting (5–10 requests per 15 minutes) on sensitive routes: `authRateLimiter` on `/auth/login`, `deliveryOtpRateLimiter` on `/orders/:id/verify-otp`, and `otpRateLimiter` factory. 120/120 tests green (`commit 45ecdc1`). |
 | **B-05** | **MongoDB Compound Indexes Audit & Boot Verification** | `P1` | Low | `database/indexes.ts`, `server.ts` | **QUEUED 🟡** | Validate and ensure ESR-optimized compound indexes on startup: `orders` `{ storeId: 1, status: 1, createdAt: -1 }`, `invoices` `{ storeId: 1, status: 1 }`, `catalog_products` `{ storeId: 1, isActive: 1 }`. |
 | **B-06** | **Receipt & Invoicing PDF / Thermal Print Server Endpoint** | `P2` | Medium | `billing.service.ts`, `order.service.ts` | **QUEUED ⚪** | Server-side HTML render endpoint for direct PDF download (`/api/v1/orders/:id/invoice/print`) matching customer account bill requirements. |
+| **B-07** | **Dynamic Multi-Department Taxonomy & Custom Brand Catalog Creation** | `P1` | Medium | `catalog.types.ts`, `product.model.ts`, `AddProductStep1.tsx`, `CreatableCombobox.tsx` | **DONE ✅** | Relaxed category/subtype schema constraints to accept arbitrary strings; built `CreatableCombobox` supporting inline creation for Category, Sub-category, Product Type, and Brand across retail verticals. 127/127 tests green (`commit 93f84ec`). |
 
 ---
 
