@@ -70,6 +70,7 @@ timeline
 | **I-03** | **Vinay Task 8 Oversight** (`apps/mobile-customer/`) | `P2` | `feature/vinay-mobile-native-api` | **ASSIGNED 🟡** | Mobile native device APIs: `expo-location` GPS geolocation for customer address picker and `expo-image-picker` for support attachments. |
 | **I-04** | **Vinay Task 9 QA Audit Report** (`apps/web/`) | `P1` | `apps/web/CUSTOMER_WEB_QA_AUDIT_REPORT.md` | **ASSIGNED 🟡** | Comprehensive 66-mockup visual fidelity audit across desktop ($\ge 1280\text{px}$) and mobile ($375\text{px}$) viewports, plus customer simulation logs. |
 | **I-05** | **Abhay Task 11 E2E Simulation** (`apps/merchant/` & `apps/web/`) | `P0` | `apps/merchant/MERCHANT_E2E_QA_AUDIT_REPORT.md` | **ASSIGNED 🟡** | End-to-end manual operational loop: Merchant registration, store setup, cataloging, cross-platform customer order checkout on `:3000`, live order fulfillment with OTP, walk-in counter POS sale, and thermal printing audit. |
+| **I-06** | **Corporate Marketing Website Monorepo Ingestion** (`apps/company/`) | `P0` | `apps/company/` | **DONE ✅** | Ingested standalone Next.js website for corporate subdomain `company.*`. Unified under Turborepo, 100% white-label sanitized (`branding.config.ts`), zero brand leakage, React 18 harmonized, 13 static routes prerendered cleanly. |
 
 ---
 

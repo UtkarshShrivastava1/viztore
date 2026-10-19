@@ -9,6 +9,7 @@
     "dev:backend": "turbo run dev --filter=@repo/backend",
     "dev:merchant": "turbo run dev --filter=@repo/merchant",
     "dev:web": "turbo run dev --filter=@repo/web",
+    "dev:company": "turbo run dev --filter=@repo/company",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "test": "turbo run test",

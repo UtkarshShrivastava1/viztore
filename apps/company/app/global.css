@@ -1,0 +1,69 @@
+  @tailwind base;
+  @tailwind components;
+  @tailwind utilities;
+  @plugin "daisyui";
+
+/* your existing @layer components block stays as-is */
+
+  html {
+    scroll-behavior: smooth;
+
+  }
+  
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+   
+  body {
+    background-color: #ffffff;
+    color: #475569;
+   
+  }
+
+  @layer components {
+    .container-viz {
+      @apply mx-auto w-full max-w-7xl px-5 sm:px-8 lg:px-10;
+    }
+
+    .glass-card {
+      @apply rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl;
+    }
+
+    .glass-card-light {
+      @apply rounded-3xl border border-viz-border bg-white/70 backdrop-blur-md;
+    }
+
+    .badge-eyebrow {
+      @apply inline-flex items-center gap-2 rounded-full border border-viz-border bg-viz-bg-2 px-4 py-1.5 text-xs font-semibold tracking-wide text-viz-primary;
+    }
+
+    .btn-primary-viz {
+      @apply inline-flex items-center justify-center gap-2 rounded-2xl bg-viz-primary px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/25 transition-all duration-300 hover:-translate-y-0.5 hover:bg-blue-700 hover:shadow-xl hover:shadow-blue-600/30 active:translate-y-0;
+    }
+
+    .btn-secondary-viz {
+      @apply inline-flex items-center justify-center gap-2 rounded-2xl border border-viz-border bg-white px-6 py-3.5 text-sm font-semibold text-viz-heading transition-all duration-300 hover:-translate-y-0.5 hover:border-viz-primary/40 hover:shadow-lg active:translate-y-0;
+    }
+
+    .btn-secondary-viz-dark {
+      @apply inline-flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/5 px-6 py-3.5 text-sm font-semibold text-white backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/10 active:translate-y-0;
+    }
+
+    .section-heading {
+      @apply text-3xl font-bold text-viz-heading sm:text-4xl lg:text-4xl; 
+    }
+
+    .section-eyebrow {
+      @apply mb-4 inline-block text-xs font-bold uppercase tracking-[0.2em] text-viz-primary;
+    }
+
+  }
+
+  ::selection {
+    background-color: #fbbf24;
+    color: #0b1f4d;
+  }
