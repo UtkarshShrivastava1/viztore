@@ -18,6 +18,87 @@ export interface BusinessHours {
   closeTime: string;
 }
 
+// Section 4 Specification Interfaces
+export interface StoreProfileSettings {
+  storeDisplayName: string;
+  primaryCategory: string;
+  storeBio: string;
+  logoUrl?: string;
+  webBannerUrl?: string;
+  mobileBannerUrl?: string;
+  address: {
+    street: string;
+    city: string;
+    state: string;
+    pincode: string;
+  };
+}
+
+export interface BusinessTaxSettings {
+  legalEntityName: string;
+  panNumber: string;
+  gstin: string;
+  isGstinVerified: boolean;
+  fssaiNumber?: string;
+}
+
+export interface DaySchedule {
+  day: string;
+  isOpen: boolean;
+  openTime: string;
+  closeTime: string;
+}
+
+export interface TimingsDeliverySettings {
+  schedule: DaySchedule[];
+  deliveryRadiusKm: number; // 3-4 km default
+  minimumOrderValue: number;
+  deliveryFee: number;
+  freeDeliveryAbove?: number;
+}
+
+export interface BillingPreferencesSettings {
+  invoicePrefix: string; // e.g. "INV-"
+  nextInvoiceNumber: number;
+  quotePrefix: string;   // e.g. "Q-"
+  thermalFormat: '80mm' | '58mm' | 'a4';
+  receiptFooterNote: string;
+  termsAndConditions: string;
+}
+
+export interface TaxGstSettings {
+  isTaxInclusive: boolean;
+  defaultHsnCode: string;
+  applicableGstSlabs: number[]; // [0, 5, 12, 18, 28]
+  showTaxBreakdownOnBill: boolean;
+}
+
+export interface PaymentWalletSettings {
+  autoSweepDaily: boolean;
+  settlementAccount: {
+    bankName: string;
+    accountNumberMasked: string;
+    ifscCode: string;
+    isVerified: boolean;
+  };
+  settlementCycle: 'T+1' | 'T+2';
+  upiId: string;
+}
+
+export interface ShippingReturnsSettings {
+  acceptReturns: boolean;
+  returnWindowHours: number; // 24, 48, 168
+  conditions: string[];
+}
+
+export interface NotificationSettings {
+  whatsappCustomerUpdates: boolean;
+  merchantSmsAlerts: boolean;
+  audioChimeEnabled: boolean;
+  lowStockEmailThreshold: number;
+  dailySalesEmail: boolean;
+}
+
 export interface DeliverySettings {
   estimatedTimeMin: number;
   estimatedTimeMax: number;
@@ -247,6 +328,14 @@ export interface SettingsState {
   closeStoreVisibilityModal: () => void;
   openStoreInfoModal: () => void;
   closeStoreInfoModal: () => void;
+
+  // Unsaved changes tracking
+  isDirty: boolean;
+  setIsDirty: (dirty: boolean) => void;
+  markDirty: () => void;
+  markClean: () => void;
+  saveAllChanges: () => void;
+  discardAllChanges: () => void;
 }
 
 const defaultHours: BusinessHours[] = [
@@ -473,4 +562,12 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   closeStoreVisibilityModal: () => set({ isStoreVisibilityModalOpen: false }),
   openStoreInfoModal: () => set({ isStoreInfoModalOpen: true }),
   closeStoreInfoModal: () => set({ isStoreInfoModalOpen: false }),
+
+  // Unsaved changes tracking
+  isDirty: false,
+  setIsDirty: (dirty) => set({ isDirty: dirty }),
+  markDirty: () => set({ isDirty: true }),
+  markClean: () => set({ isDirty: false }),
+  saveAllChanges: () => set({ isDirty: false }),
+  discardAllChanges: () => set({ isDirty: false }),
 }));

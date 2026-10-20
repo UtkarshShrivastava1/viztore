@@ -21,6 +21,8 @@ import { PaymentsWalletTab } from './PaymentsWalletTab.js';
 import { ShippingReturnsTab } from './ShippingReturnsTab.js';
 import { NotificationsTab } from './NotificationsTab.js';
 import { SecurityLoginTab } from './SecurityLoginTab.js';
+import { SettingsTabsNav } from './SettingsTabsNav.js';
+import { SettingsStickyFooter } from './SettingsStickyFooter.js';
 
 interface SettingsHubViewProps {
   onNavigateToBillingSettings?: () => void;
@@ -142,30 +144,8 @@ export const SettingsHubView: React.FC<SettingsHubViewProps> = ({
       {/* Main Settings Layout (Left Nav + Content) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Sub-Navigation */}
-        <div className="lg:col-span-3 xl:col-span-3 bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-2 space-y-1">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeSubTab === item.id;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => setActiveSubTab(item.id)}
-                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all text-left ${
-                  isActive
-                    ? 'bg-blue-50 text-blue-600 font-bold shadow-2xs relative before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:bg-blue-600 before:rounded-r'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                }`}
-              >
-                <Icon
-                  className={`w-4 h-4 shrink-0 ${
-                    isActive ? 'text-blue-600' : 'text-slate-400'
-                  }`}
-                />
-                <span className="truncate">{item.label}</span>
-              </button>
-            );
-          })}
+        <div className="lg:col-span-3 xl:col-span-3">
+          <SettingsTabsNav />
         </div>
 
         {/* Right Tab Content Area */}
@@ -183,6 +163,9 @@ export const SettingsHubView: React.FC<SettingsHubViewProps> = ({
           )}
         </div>
       </div>
+
+      {/* Floating Unsaved Changes Footer */}
+      <SettingsStickyFooter />
     </div>
   );
 };
