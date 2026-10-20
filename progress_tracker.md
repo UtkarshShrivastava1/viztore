@@ -306,6 +306,11 @@ Every online order placed through `apps/web` generates an authoritative, complia
   - Patched `apps/merchant/src/stores/orderStore.ts` with `localStorage` persistence (`merchant_manual_orders`) so manual in-store orders created via `CreateOrderPage.tsx` persist across navigation and API reloads.
   - Broadcasted `order.placed` via global Socket.io emit so all active merchant dashboard tabs receive instantaneous audible chimes and live toast alerts.
   - Verified live database persistence in MongoDB Atlas (`ORD-20261019-049EF4`), **127/127 tests passing across 20 suites**, and 100% clean builds across Web and Merchant apps.
+- [x] **Abhay Task 13 (9-Tab Store Settings & Operational Policies Hub) — Merged via PR #21 (Commit `aa95ea3`) 🟢**:
+  - Full 9-tab settings suite matching mockups `14.0`–`14.8`: Store Profile, Business & Tax, Timings & 3-4km Delivery Radius, Thermal Billing Preferences, Tax & GST Slabs, Payment & Wallet Sweeps, Shipping & Returns Policy, Notifications & Audible Alerts, Security & Staff Access.
+  - Created modular `SettingsTabsNav.tsx` (horizontal/vertical orientations) and floating unsaved changes sticky footer (`SettingsStickyFooter.tsx`).
+  - Extended `stores/settingsStore.ts` with dirty state detection, discard/save actions, and batch configuration persistence.
+  - 100% white-label compliant, zero TypeScript errors, clean Vite production build, and all 127/127 backend unit tests passing.
 - [ ] **Rider Fleet Open-Pool Broadcast & Atomic Mutex Claim Engine (Phase 2 Delivery Dispatch) — PLANNED 🟡**:
   - Implementation plan ready: WhatsApp open-pool teaser broadcasts, MongoDB atomic mutex claim (`findOneAndUpdate({ orderId, status: 'SEARCHING_PARTNER', rider: null })`), rider PWA assignment dashboard, turn-by-turn navigation, and delivery OTP handshake.
 

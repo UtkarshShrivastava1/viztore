@@ -146,7 +146,7 @@
   - [x] Order Tax Invoice ("Print Bill" packing slip)
   - [x] Secure 4-digit Delivery OTP generation & physical handoff verification
   - [x] Storefront Merchandising suite (Store Sections 14.0, Add Section 14.01, Product Placement 14.1, Store View Settings 14.2) with interactive live phone preview chassis
-  - [x] Operational Settings Hub (15.0) for store profiles, tax parameters, and notification policies
+  - [x] Full 9-Tab Store Settings & Operational Policies Hub (`14.0`–`14.8` via PR #21) with horizontal/vertical sub-nav, floating sticky footer for unsaved changes, and reactive dirty state tracking in `settingsStore.ts`
   - [x] ordersApi client wired for backend order synchronization
   - [x] Merchant auth and order lifecycle defect fixes: dynamic store hydration, clean logout redirect to login, dynamic tab badges, uppercase `OrderStatus` mapping, and persistent active tab across page refresh
   - [x] Enterprise Catalog & Order Architecture Hardening (`enterprise_catalog_order_architecture_updated(1).md`):
