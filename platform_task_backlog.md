@@ -92,7 +92,8 @@ timeline
 | **D-02** | **Production Environment Variables Template Lockdown** | `P1` | Low | `.env.example`, `env.config.ts` | **DONE ✅** | Audited git tracking (zero secrets committed), updated master root `.env.example`, generated localized `.env.example` templates for all 4 apps (`backend`, `web`, `merchant`, `company`), and added comprehensive `env.test.ts` verifying connection pool limits, JWT secret constraints, and CORS origins. 164/164 tests green. |
 
 
-| **D-03** | **Production Seed Dataset Refinement** | `P1` | Low | `seed-merchants.ts` | **READY 🟢** | Multi-store dataset seeded with 5 real-looking retail shops in Bhilai/Durg (Clothing, Electronics, Grocery) and 60+ products with realistic barcodes and GST rates. |
+| **D-03** | **Production Seed Dataset Refinement** | `P1` | Low | `seed-merchants.ts`, `seed-dataset.ts`, `seed-dataset.test.ts` | **DONE ✅** | Built modular retail catalog suite (`seed-dataset.ts`) with 68 realistic products across 7 stores in Bhilai/Durg (Fashion, Consumer Electronics, Organic Staples, Pharmacy, Daily FMCG, Fresh Produce, Smart Gadgets). Assigned 68 unique EAN-13 barcodes (`890...`), statutory GST HSN codes, and tax rates (0%, 5%, 12%, 18%). Verified via unit test suite (`seed-dataset.test.ts`). 170/170 tests green (`commit 01ec6a9`). |
+
 
 ---
 
@@ -131,11 +132,8 @@ timeline
   ↓
 [COMPLETED] ➔ D-02: Production Environment Variables Template Lockdown
   ↓
-[NEXT] ➔ D-03: Production Seed Dataset Refinement
-
-
-
-
-
+[COMPLETED] ➔ D-03: Production Seed Dataset Refinement (68 Products, 7 Stores, EAN-13 Barcodes)
+  ↓
+[ALL PRE-FREEZE WORKSTREAMS 1, 2, 4 VERIFIED 100% COMPLETE & PASSING (170/170 TESTS)]
 ```
 

@@ -20,7 +20,7 @@
 | ↳ **Merchant & Admin Panel** | 25% | `[████████████████████]` | **100%** | 🟢 Complete Suite | All 7/7 Modules & Settings Merged (`b92a159`) |
 | ↳ **Customer Web Storefront** | 20% | `[████████████████████]` | **100%** | 🟢 Storefront & Cart Engine | All 4/4 Modular Suites Merged (`e942cc9`) |
 | ↳ **Corporate Marketing Website** | 5% | `[████████████████████]` | **100%** | 🟢 Corporate Hub | 13 Routes Prerendered, White-Label (`@repo/company`) |
-| ↳ **Production Readiness & DevOps** | 20% | `[████████████████████]` | **100%** | 🟢 Staging Live | 164/164 Tests Green (25/25 suites), Monorepo Clean Build |
+| ↳ **Production Readiness & DevOps** | 20% | `[████████████████████]` | **100%** | 🟢 Staging Live | 170/170 Tests Green (26/26 suites), Monorepo Clean Build |
 
 
 
@@ -320,6 +320,10 @@ Every online order placed through `apps/web` generates an authoritative, complia
   - Created modular `SettingsTabsNav.tsx` (horizontal/vertical orientations) and floating unsaved changes sticky footer (`SettingsStickyFooter.tsx`).
   - Extended `stores/settingsStore.ts` with dirty state detection, discard/save actions, and batch configuration persistence.
   - 100% white-label compliant, zero TypeScript errors, clean Vite production build, and all 127/127 backend unit tests passing.
+- [x] **Production Seed Dataset Refinement (Task D-03) 🟢**:
+  - Built modular retail catalog suite (`seed-dataset.ts`) with 68 realistic retail products across 7 stores in Bhilai/Durg (Fashion, Consumer Electronics, Organic Staples, Pharmacy & Wellness, Daily FMCG, Fresh Produce, Smart Gadgets).
+  - Assigned 68 unique EAN-13 barcodes (`890...`), valid statutory GST HSN codes, and accurate tax slabs (0%, 5%, 12%, 18%).
+  - Verified via unit test suite (`seed-dataset.test.ts`). **170/170 unit and integration tests passing across 26 suites**; full monorepo clean build.
 - [ ] **Rider Fleet Open-Pool Broadcast & Atomic Mutex Claim Engine (Phase 2 Delivery Dispatch) — PLANNED 🟡**:
   - Implementation plan ready: WhatsApp open-pool teaser broadcasts, MongoDB atomic mutex claim (`findOneAndUpdate({ orderId, status: 'SEARCHING_PARTNER', rider: null })`), rider PWA assignment dashboard, turn-by-turn navigation, and delivery OTP handshake.
 
