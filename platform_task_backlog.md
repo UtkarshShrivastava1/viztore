@@ -57,7 +57,9 @@ timeline
 
 | Task ID | Task Title | Priority | Complexity | Target File(s) | Status | Details & Deliverables |
 |:---:|---|:---:|:---:|---|:---:|---|
-| **T-01** | **Automated Headless E2E Simulation Script** | `P0` | Medium | `scripts/e2e-simulation.ts` | **QUEUED 🟡** | Single executable Node script testing the entire loop: Customer signup ➔ Store discovery ➔ Order creation ➔ Socket.io arrival event ➔ Merchant pack ➔ WhatsApp link generation ➔ OTP verification ➔ Stock verification. |
+| **T-01** | **Automated Headless E2E Simulation Script** | `P0` | Medium | `scripts/e2e-simulation.ts` | **DONE ✅** | Built executable 11-step headless simulation script (`pnpm sim:e2e`). Validated full commerce loop: health checks, customer signup & address, store catalog discovery, cart checkout, OCC versioning, WhatsApp dispatch manifest, 4-digit OTP handshake, atomic inventory decrement (-1 exact), and thermal/A4 invoice print. 151/151 tests green (`commit 8d45f31`). |
+
+
 | **T-02** | **Concurrent Checkout & OCC Stock Contention Test** | `P1` | Medium | `order.service.test.ts` | **QUEUED 🟡** | High-concurrency test simulating 10 simultaneous orders competing for 3 stock units. Verifies Optimistic Concurrency Control (OCC) version increments, deadlock-free isolation, and zero negative inventory drift. |
 | **T-03** | **WhatsApp Notification Failover & Payload Audit** | `P1` | Low | `whatsapp.service.ts` | **QUEUED 🟡** | Verify live Meta Graph API payload structure against Indian phone formats, ensure dry-run mode passes in CI, and verify 1-click fallback `wa.me` URI formatting with full invoice totals. |
 
@@ -111,8 +113,9 @@ timeline
   ↓
 [COMPLETED] ➔ B-06: Receipt & Invoicing PDF / Thermal Print Server Endpoint
   ↓
-[NEXT] ➔ T-01: Headless E2E Simulation Script (Pre-Freeze Loop)
+[COMPLETED] ➔ T-01: Headless E2E Simulation Script (Pre-Freeze Loop)
   ↓
 [NEXT] ➔ T-02: Concurrent Checkout & OCC Stock Contention Test
+
 ```
 

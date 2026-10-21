@@ -20,7 +20,8 @@
 | ↳ **Merchant & Admin Panel** | 25% | `[████████████████████]` | **100%** | 🟢 Complete Suite | All 7/7 Modules & Settings Merged (`b92a159`) |
 | ↳ **Customer Web Storefront** | 20% | `[████████████████████]` | **100%** | 🟢 Storefront & Cart Engine | All 4/4 Modular Suites Merged (`e942cc9`) |
 | ↳ **Corporate Marketing Website** | 5% | `[████████████████████]` | **100%** | 🟢 Corporate Hub | 13 Routes Prerendered, White-Label (`@repo/company`) |
-| ↳ **Production Readiness & DevOps** | 20% | `[████████████████████]` | **100%** | 🟢 Staging Live | 150/150 Tests Green (22/22 suites), Monorepo Clean Build |
+| ↳ **Production Readiness & DevOps** | 20% | `[████████████████████]` | **100%** | 🟢 Staging Live | 151/151 Tests Green (23/23 suites), Monorepo Clean Build |
+
 
 | **Total Full-Platform Scope** (Phases 1–7) | — | `[█████████████████░░░]` | **88%** | ⚪ Roadmap Reserved | Customer Mobile App (Phase 7 / Tier 3) |
 
@@ -165,7 +166,8 @@ Every online order placed through `apps/web` generates an authoritative, complia
 | **Shared Types** | TypeScript, Zod | **100% In Sync** ✅ | All contracts, validation schemas, DTOs, branding config |
 | **Real-Time & Events** | Socket.io + Redis Adapter + TypedEventBus | **Wired** ✅ | In-process domain events forwarded to Socket.io rooms with Redis distributed scaling |
 | **Agent Workflows** | Custom Skills & Rules | **Active** ✅ | Fullstack Feature Workflow, UI Matching, Intern Delegation, /create-task |
-| **Test Suite** | Vitest | **127/127 Passing** ✅ | 20 test suites (AppError, Auth/Addresses, Stores/Ratings, Onboarding, Catalog, Orders, Delivery, Notifications, WhatsApp Cloud API, WorkerPool, Cache-Aside, CORS Validation, OCC Versioning, Outbox Transactions, In-House Billing, Media Uploads, Rate Limiter & Order Expiry) |
+| **Test Suite** | Vitest | **151/151 Passing** ✅ | 23 test suites (AppError, Auth/Addresses, Stores/Ratings, Onboarding, Catalog, Orders, Delivery, Notifications, WhatsApp Cloud API, WorkerPool, Cache-Aside, CORS Validation, OCC Versioning, Outbox Transactions, In-House Billing, Media Uploads, Rate Limiter, Order Expiry, MongoDB Compound Indexes, Thermal/A4 Invoice Printing Engine, and Headless E2E Simulation) |
+
 | **Build Status** | Turborepo | **Clean** ✅ | Full monorepo builds with zero errors across all packages |
 | **Engineering Standards** | 8/8 Pillars (`structure.md`) | **100% Implemented** ✅ | Facades, Composition roots, 3-tier testing, EventBus, WorkerPool, Cache-Aside + Replica split, ESR indexing, Decoupled repos |
 

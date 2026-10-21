@@ -1,6 +1,6 @@
 # Viztore Platform — Implementation Checklist
 
-> **Overall Status:** Phase 1, Phase 2, Phase 3, Phase 4/5/6 Backend Complete, Tier 2 In-House Retail Billing, Stale Order Auto-Reclaim, OpenAPI Docs, Brute-Force Rate Limiting, MongoDB Compound Indexes Boot Verification (B-05), Thermal & A4 Invoice Print Engine (B-06) & Corporate Marketing Website (`apps/company`) Complete | 150/150 Unit & Integration Tests Passing | Full Monorepo Clean Build | Docker & Staging Blueprints Ready
+> **Overall Status:** Phase 1, Phase 2, Phase 3, Phase 4/5/6 Backend Complete, Tier 2 In-House Retail Billing, Stale Order Auto-Reclaim, OpenAPI Docs, Brute-Force Rate Limiting, MongoDB Compound Indexes Boot Verification (B-05), Thermal & A4 Invoice Print Engine (B-06), Automated Headless E2E Simulation Script (T-01) & Corporate Marketing Website (`apps/company`) Complete | 151/151 Unit & Integration Tests Passing | Full Monorepo Clean Build | Docker & Staging Blueprints Ready
 
 ---
 
@@ -35,6 +35,8 @@
   - [x] High-Security Brute-Force Rate Limiting: `authRateLimiter` on `/auth/login`, `deliveryOtpRateLimiter` on `/orders/:id/verify-otp` (Task B-04)
   - [x] MongoDB Compound Indexes Boot Audit & Verification: Automated verification of ESR-compliant compound indexes across Order, Product, Store (2dsphere), Invoice, Delivery, and Outbox on server boot (Task B-05)
   - [x] Receipt & Invoicing PDF / Thermal Print Server Endpoint: Headless HTML/CSS print engine supporting 80mm ESC/POS roll format (`?format=thermal`), standard GST Tax Invoice (`?format=a4`), and auto-print triggers (`?autoPrint=true`) mounted on `GET /api/v1/orders/:id/invoice/print` and `GET /api/v1/billing/invoices/:id/print` (Task B-06)
+  - [x] Automated Headless E2E Simulation Script: Single executable script (`pnpm sim:e2e` / `scripts/e2e-simulation.ts`) verifying 11-step complete loop from health probes, customer signup, store/catalog discovery, checkout, OCC versioning, WhatsApp dispatch, delivery handshake OTP, atomic inventory decrement (-1 exact), and thermal/A4 invoice print (Task T-01)
+
 
 - [x] **Containerization & Staging Cloud Blueprints**
   - [x] Multi-stage root `Dockerfile` and `apps/backend/Dockerfile` (`node:20-alpine`, non-root user, curl healthcheck)
