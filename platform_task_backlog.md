@@ -63,7 +63,9 @@ timeline
 | **T-02** | **Concurrent Checkout & OCC Stock Contention Test** | `P1` | Medium | `occStockContention.test.ts` | **DONE ✅** | Built high-concurrency test suite simulating 10 simultaneous orders competing for 3 stock units. Verified: exactly 3 succeed, 7 fail with `STOCK_UPDATE_CONFLICT`, final inventory exactly 0 with zero negative drift, product OCC version incremented by 3, multi-item deadlock-free sorting, and order status update OCC conflict rejection on stale versions (`commit d62fa10`). 155/155 tests green. |
 
 
-| **T-03** | **WhatsApp Notification Failover & Payload Audit** | `P1` | Low | `whatsapp.service.ts` | **QUEUED 🟡** | Verify live Meta Graph API payload structure against Indian phone formats, ensure dry-run mode passes in CI, and verify 1-click fallback `wa.me` URI formatting with full invoice totals. |
+| **T-03** | **WhatsApp Notification Failover & Payload Audit** | `P1` | Low | `whatsapp.service.ts` | **DONE ✅** | Verified live Meta Graph API payload structure against Indian phone formats (`91XXXXXXXXXX`), extracted modular message builders (`buildOrderConfirmationMessage`, `buildRiderDispatchMessage`, `buildOutForDeliveryMessage`, `buildDeliveryCompletedMessage`) with zero brand leaks, and built 1-click `wa.me` fallback URL generator embedding full invoice totals and OTP handshakes. 159/159 tests green (`commit 8e50b12`). |
+
+
 
 ---
 
@@ -119,7 +121,10 @@ timeline
   ↓
 [COMPLETED] ➔ T-02: Concurrent Checkout & OCC Stock Contention Test
   ↓
-[NEXT] ➔ T-03: WhatsApp Notification Failover & Payload Audit
+[COMPLETED] ➔ T-03: WhatsApp Notification Failover & Payload Audit
+  ↓
+[NEXT] ➔ D-01: Render Staging Health & Liveness Audit
+
 
 
 ```
