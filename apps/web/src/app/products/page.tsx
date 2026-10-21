@@ -2,8 +2,6 @@
 
 import React, { useCallback, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
 import { ProductCard } from '@/features/products/components/ProductCard';
 import { ProductGridSkeleton } from '@/components/ui/Skeleton';
 import { useProducts } from '@/hooks/useProducts';
@@ -165,8 +163,6 @@ function ProductsContent() {
           </div>
         )}
       </main>
-
-      <Footer />
     </div>
   );
 }
@@ -176,11 +172,9 @@ export default function ProductsPage() {
     <Suspense
       fallback={
         <div className="min-h-screen bg-transparent">
-          <Header className="hidden md:block" />
           <main className="max-w-[1920px] mx-auto px-4 sm:px-6 py-6">
             <ProductGridSkeleton count={8} />
           </main>
-          <Footer />
         </div>
       }
     >

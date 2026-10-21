@@ -51,75 +51,74 @@ export function MobileHeader({
   const notificationCount = mounted ? (propNotificationCount !== undefined ? propNotificationCount : rawNotificationCount) : 0;
 
   return (
-    <div className="md:hidden max-w-2xl mx-auto w-full relative pt-1.5 pb-2">
-      {/* Background Gradient for Mobile */}
-      {!isSimpleHeader && (
-        <div
-          className="absolute inset-0 z-0 block"
-          style={{
-            background: "linear-gradient(180deg, #011A5D 0%, #011B62 25%, #002070 45%, #01267F 55%, #04318C 62%, #1A49A2 68%, #3A6AC0 73%, #6894D8 78%, #9EBEEC 84%, #D4E3FA 91%, #EEF4FE 96%, #F5F9FE 100%)"
-          }}
-        />
-      )}
-      {/* White Background for Mobile Simple Header */}
-      {isSimpleHeader && (
-        <div className="absolute inset-0 z-0 bg-white" />
-      )}
-
-      {/* Soft misty fog / glow behind the categories */}
-      {!isAccountPage && !isSimpleHeader && (
-        <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-44 opacity-80 z-0"
-          style={{
-            background:
-              "radial-gradient(ellipse 95% 75% at 50% 90%, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0) 80%)",
-          }}
-          aria-hidden="true"
-        />
-      )}
-
-      <div className="relative z-10">
+    <div className="md:hidden max-w-2xl mx-auto w-full">
+      {/* ── 1. Top Header with Faded Gradient Effect ── */}
+      <div className="relative pt-1.5 pb-2.5 w-full">
+        {/* Background Gradient for Mobile */}
         {!isSimpleHeader ? (
-          <>
-            <TopBar wishlistCount={wishlistCount} cartCount={cartCount} />
-            <LocationBar name={userName} address={address} />
-            <SearchBar
-              placeholder={searchPlaceholder}
-              notificationCount={notificationCount}
-            />
-            {!isAccountPage && <CategoryTabs />}
-          </>
+          <div
+            className="absolute inset-0 z-0 block"
+            style={{
+              background: "linear-gradient(180deg, #011A5D 0%, #011B62 25%, #002070 45%, #01267F 55%, #04318C 62%, #1A49A2 68%, #3A6AC0 73%, #6894D8 78%, #9EBEEC 84%, #D4E3FA 91%, #EEF4FE 96%, #F5F9FE 100%)"
+            }}
+          />
         ) : (
-          <div className="flex items-center justify-between px-4 py-1 pb-2">
-            <button onClick={() => router.push('/account')} className="p-1 -ml-1 text-[#192168]">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
-            </button>
-            <div className={displayTitle ? "flex-1 flex justify-center text-[#192168] font-bold text-lg" : "scale-90"}>
-              {displayTitle ? displayTitle : <Logo theme="dark" />}
-            </div>
-            <div className="flex items-center gap-4">
-              <button type="button" className="text-[#192168]" onClick={() => router.push('/account/wishlist')}>
-                <Heart className="h-6 w-6" strokeWidth={1.5} />
-              </button>
-              <button type="button" className="relative text-[#192168]" onClick={() => router.push('/cart')}>
-                <ShoppingCart className="h-6 w-6" strokeWidth={1.5} />
-                {cartCount > 0 && (
-                  <span className="absolute -top-1.5 -right-2 flex h-[18px] min-w-[18px] px-1 items-center justify-center rounded-full bg-[#1668F6] text-[10.5px] font-bold text-white shadow-sm border border-white">
-                    {cartCount}
-                  </span>
-                )}
-              </button>
-            </div>
-          </div>
+          <div className="absolute inset-0 z-0 bg-white" />
         )}
+
+        {/* Soft misty fog / glow at the bottom of the faded header */}
+        {!isSimpleHeader && (
+          <div
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-32 opacity-80 z-0"
+            style={{
+              background:
+                "radial-gradient(ellipse 95% 75% at 50% 90%, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0) 80%)",
+            }}
+            aria-hidden="true"
+          />
+        )}
+
+        <div className="relative z-10">
+          {!isSimpleHeader ? (
+            <>
+              <TopBar wishlistCount={wishlistCount} cartCount={cartCount} />
+              <LocationBar name={userName} address={address} />
+              <SearchBar
+                placeholder={searchPlaceholder}
+                notificationCount={notificationCount}
+              />
+              {!isAccountPage && <CategoryTabs />}
+            </>
+          ) : (
+            <div className="flex items-center justify-between px-4 py-1 pb-2">
+              <button onClick={() => router.push('/account')} className="p-1 -ml-1 text-[#192168]">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+              </button>
+              <div className={displayTitle ? "flex-1 flex justify-center text-[#192168] font-bold text-lg" : "scale-90"}>
+                {displayTitle ? displayTitle : <Logo theme="dark" />}
+              </div>
+              <div className="flex items-center gap-4">
+                <button type="button" className="text-[#192168]" onClick={() => router.push('/account/wishlist')}>
+                  <Heart className="h-6 w-6" strokeWidth={1.5} />
+                </button>
+                <button type="button" className="relative text-[#192168]" onClick={() => router.push('/cart')}>
+                  <ShoppingCart className="h-6 w-6" strokeWidth={1.5} />
+                  {cartCount > 0 && (
+                    <span className="absolute -top-1.5 -right-2 flex h-[18px] min-w-[18px] px-1 items-center justify-center rounded-full bg-[#1668F6] text-[10.5px] font-bold text-white shadow-sm border border-white">
+                      {cartCount}
+                    </span>
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Category Icons under the gradient for Mobile */}
-      {!isAccountPage && !isSimpleHeader && (
-        <div className="relative z-10 bg-gradient-to-b from-[#F5F9FE] to-white pt-2 pb-1">
-          <CategoryIcons />
-        </div>
-      )}
+      {/* ── 2. Category Strip Directly Below on Clean White Background ── */}
+      <div className="w-full bg-white border-b border-surface-100 py-1 shadow-[0_2px_8px_rgba(0,0,0,0.03)]">
+        <CategoryIcons />
+      </div>
     </div>
   );
 }

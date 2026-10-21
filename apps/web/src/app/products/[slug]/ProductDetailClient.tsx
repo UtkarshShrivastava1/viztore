@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { Footer } from '@/components/layout/Footer';
 import { fetchProductBySlug } from '@/lib/api/catalog';
 import { useCartStore } from '@/stores/cart.store';
 import { 
@@ -69,7 +68,6 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
             Browse Products
           </Link>
         </main>
-        <Footer />
       </div>
     );
   }
@@ -392,10 +390,6 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
         onBuyNow={handleBuyNow}
         isAdded={isAdded}
       />
-      
-      <div className="hidden md:block">
-        <Footer />
-      </div>
     </div>
   );
 }
