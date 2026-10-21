@@ -16,7 +16,7 @@ const supportLinks = [
   { label: "Customer Terms & Conditions", href: "/terms-and-conditions" },
   { label: "Seller Terms & Conditions", href: "/terms-and-conditions" },
   { label: "Careers", href: "/careers" },
-  { label: "Privacy Policy", href: "/privacy-policy" },
+  { label: "Privacy Policy", href: "/terms-and-conditions" },
   { label: "Refund and Cancellation Policy", href: "/refund-policy" },
   { label: "Grievance Redressal", href: "/grievance-redressal" },
 ];
@@ -196,7 +196,7 @@ export default function Footer() {
 
           <div className="flex flex-wrap items-center gap-4">
             <span className="flex items-center gap-1.5">
-              Made in India <span className="text-red-500 text-sm">❤️</span> in India
+              Made with <span className="text-red-500 text-sm">❤️</span> in India
             </span>
             <span className="text-white/20">|</span>
             <span className="flex items-center gap-2">
