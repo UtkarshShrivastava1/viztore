@@ -11,6 +11,7 @@ import { logger } from './shared/utils/logger.js';
 import { isOriginAllowed } from './shared/utils/cors.js';
 import { startOutboxWorker, stopOutboxWorker } from './shared/database/outboxWorker.js';
 import { startOrderExpiryWorker, stopOrderExpiryWorker } from './modules/orders/index.js';
+import { ensureIndexes } from './shared/database/indexes.js';
 
 
 async function bootstrap() {
@@ -23,8 +24,12 @@ async function bootstrap() {
     // 2. Connect Redis
     await connectRedis();
 
-    // 3. Create Express App
+    // 3. Create Express App & Register Models
     const app = createApp();
+
+    // 3.1. Audit & Synchronize Compound Indexes (Task B-05)
+    await ensureIndexes();
+
     const server = http.createServer(app);
 
     // 4. Attach Socket.io
