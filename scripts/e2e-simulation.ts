@@ -101,6 +101,14 @@ export async function runSimulation(options: { targetUrl?: string; verbose?: boo
 
       await connectDatabase();
 
+      const { StoreModel } = await import('../apps/backend/src/modules/stores/store.model.js');
+      const storeCount = await StoreModel.countDocuments();
+      if (storeCount === 0) {
+        console.log(`  ${colors.yellow}🌱 Empty database detected in simulation environment. Auto-seeding catalog...${colors.reset}`);
+        const { seedMerchantsAndData } = await import('../apps/backend/src/scripts/seed-merchants.js');
+        await seedMerchantsAndData();
+      }
+
       const app = createApp();
       const ephemeralPort = 5055;
       inProcessServer = http.createServer(app);
