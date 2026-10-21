@@ -50,6 +50,7 @@ timeline
 | **B-06** | **Receipt & Invoicing PDF / Thermal Print Server Endpoint** | `P2` | Medium | `billing.service.ts`, `invoicePrint.template.ts`, `order.service.ts` | **DONE ✅** | Built headless HTML/CSS print engine supporting 80mm ESC/POS roll format (`?format=thermal`), standard GST Tax Invoice (`?format=a4`), and auto-print triggers (`?autoPrint=true`). Mounted on `GET /api/v1/orders/:id/invoice/print` & `GET /api/v1/billing/invoices/:id/print`. 150/150 tests green (`commit 0dd07fe`). |
 
 | **B-07** | **Dynamic Multi-Department Taxonomy & Custom Brand Catalog Creation** | `P1` | Medium | `catalog.types.ts`, `product.model.ts`, `AddProductStep1.tsx`, `CreatableCombobox.tsx` | **DONE ✅** | Relaxed category/subtype schema constraints to accept arbitrary strings; built `CreatableCombobox` supporting inline creation for Category, Sub-category, Product Type, and Brand across retail verticals. 127/127 tests green (`commit 93f84ec`). |
+| **B-08** | **Rider Fleet Open-Pool Broadcast & Atomic Mutex Claim Engine** | `P0` | Medium | `delivery.repository.ts`, `delivery.service.ts`, `delivery.routes.ts` | **DONE ✅** | Hyperlocal rider dispatch: WhatsApp open-pool teaser broadcasts, MongoDB atomic mutex claim (`findOneAndUpdate({ orderId, status: 'PENDING_ASSIGNMENT', 'rider.id': { $exists: false } })`), available jobs geospatial feed (`2dsphere`), and turn-by-turn two-wheeler navigation links. 174/174 tests green. |
 
 ---
 
@@ -134,6 +135,8 @@ timeline
   ↓
 [COMPLETED] ➔ D-03: Production Seed Dataset Refinement (68 Products, 7 Stores, EAN-13 Barcodes)
   ↓
-[ALL PRE-FREEZE WORKSTREAMS 1, 2, 4 VERIFIED 100% COMPLETE & PASSING (170/170 TESTS)]
+[COMPLETED] ➔ B-08: Rider Fleet Open-Pool Broadcast & Atomic Mutex Claim Engine
+  ↓
+[ALL BACKLOG & DEPLOYMENT PREPARATION TASKS VERIFIED 100% COMPLETE & PASSING (174/174 TESTS)]
 ```
 

@@ -7,6 +7,7 @@ import {
   type DeliveryResponseDto,
 } from './delivery.types.js';
 import type { IEventBus } from '../../shared/events/eventBus.js';
+import { EVENTS } from '../../shared/events/eventTypes.js';
 import type { IOrderFacade } from '../orders/index.js';
 
 describe('DeliveryService Unit Tests', () => {
@@ -63,6 +64,29 @@ describe('DeliveryService Unit Tests', () => {
         return Promise.resolve({
           ...sampleDelivery,
           status,
+        });
+      }),
+      recordBroadcast: vi.fn().mockImplementation((orderId, payout) => {
+        return Promise.resolve({
+          ...sampleDelivery,
+          isBroadcasted: true,
+          estimatedPayout: payout,
+          broadcastExpiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+        });
+      }),
+      findAvailablePoolJobs: vi.fn().mockResolvedValue({
+        data: [sampleDelivery],
+        total: 1,
+        page: 1,
+        limit: 20,
+      }),
+      claimRiderMutex: vi.fn().mockImplementation((orderId, rider, mins, msg) => {
+        return Promise.resolve({
+          ...sampleDelivery,
+          status: DeliveryStatus.ASSIGNED,
+          rider,
+          estimatedMinutes: mins,
+          dispatchMessage: msg,
         });
       }),
     };
@@ -171,4 +195,121 @@ describe('DeliveryService Unit Tests', () => {
       newStatus: DeliveryStatus.DELIVERED,
     }));
   });
+
+  describe('Open Delivery Pool Broadcast & Atomic Claiming', () => {
+    it('should broadcast an unassigned delivery job with sanitized teaser', async () => {
+      const broadcastMock = vi.fn().mockResolvedValue({
+        ...sampleDelivery,
+        isBroadcasted: true,
+        broadcastExpiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+        estimatedPayout: 65,
+      });
+      mockRepo.recordBroadcast = broadcastMock;
+
+      const service = createDeliveryService(mockRepo, mockBus, mockOrderFacade);
+
+      const teaser = await service.broadcastJob('order-123', {
+        broadcastRadiusKm: 5,
+        expiresInMinutes: 15,
+        estimatedPayout: 65,
+      });
+
+      expect(broadcastMock).toHaveBeenCalledWith('order-123', 65);
+      expect(teaser.orderId).toBe('order-123');
+      expect(teaser.orderNumber).toBe('ORD-1001');
+      expect(teaser.estimatedPayout).toBe(65);
+      expect(teaser.pickupArea).toBe('Store Depot, Mumbai');
+      // Verify PII is NOT leaked in teaser
+      expect((teaser as any).customerId).toBeUndefined();
+      expect((teaser as any).dropoffLocation).toBeUndefined();
+      expect(mockBus.emit).toHaveBeenCalledWith(
+        EVENTS.DELIVERY_BROADCAST,
+        expect.objectContaining({
+          orderId: 'order-123',
+          estimatedPayout: 65,
+        }),
+      );
+    });
+
+    it('should query available broadcasted jobs', async () => {
+      mockRepo.findAvailablePoolJobs = vi.fn().mockResolvedValue({
+        data: [sampleDelivery],
+        total: 1,
+        page: 1,
+        limit: 20,
+      });
+
+      const service = createDeliveryService(mockRepo, mockBus, mockOrderFacade);
+
+      const result = await service.getAvailableJobs({
+        lat: 19.076,
+        lng: 72.8777,
+        radiusKm: 5,
+      });
+
+      expect(result.data).toHaveLength(1);
+      expect(result.data[0].orderId).toBe('order-123');
+      expect(result.total).toBe(1);
+    });
+
+    it('should atomically claim a broadcasted job and assign rider', async () => {
+      const assignedDelivery = {
+        ...sampleDelivery,
+        status: DeliveryStatus.ASSIGNED,
+        isBroadcasted: false,
+        rider: {
+          id: 'rider-99',
+          name: 'Suresh Kumar',
+          phone: '9811223344',
+          vehicleType: VehicleType.SCOOTER,
+          vehicleNumber: 'MH-03-CD-5678',
+        },
+      };
+      mockRepo.claimRiderMutex = vi.fn().mockResolvedValue(assignedDelivery);
+
+      const service = createDeliveryService(mockRepo, mockBus, mockOrderFacade);
+
+      const claimResult = await service.claimJob('order-123', {
+        rider: {
+          id: 'rider-99',
+          name: 'Suresh Kumar',
+          phone: '9811223344',
+          vehicleType: VehicleType.SCOOTER,
+          vehicleNumber: 'MH-03-CD-5678',
+        },
+        estimatedMinutes: 20,
+      });
+
+      expect(claimResult.delivery.status).toBe(DeliveryStatus.ASSIGNED);
+      expect(claimResult.delivery.rider?.name).toBe('Suresh Kumar');
+      expect(claimResult.message).toContain('claimed successfully');
+      expect(mockBus.emit).toHaveBeenCalledWith(
+        'delivery.assigned',
+        expect.objectContaining({
+          orderId: 'order-123',
+          riderId: 'rider-99',
+          riderName: 'Suresh Kumar',
+        }),
+      );
+    });
+
+    it('should reject claim if job was already taken or expired', async () => {
+      mockRepo.claimRiderMutex = vi.fn().mockResolvedValue(null);
+
+      const service = createDeliveryService(mockRepo, mockBus, mockOrderFacade);
+
+      await expect(
+        service.claimJob('order-123', {
+          rider: {
+            id: 'rider-99',
+            name: 'Suresh Kumar',
+            phone: '9811223344',
+            vehicleType: VehicleType.SCOOTER,
+          },
+        }),
+      ).rejects.toThrow(/claimed/i);
+    });
+  });
 });
+
+

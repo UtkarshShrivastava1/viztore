@@ -5,6 +5,8 @@ import { roleGuard } from '../../shared/middlewares/roleGuard.js';
 import { validateBody } from '../../shared/middlewares/validateRequest.js';
 import {
   assignRiderSchema,
+  broadcastDeliverySchema,
+  claimDeliverySchema,
   updateDeliveryStatusSchema,
   verifyDeliveryOtpSchema,
 } from './delivery.validator.js';
@@ -16,7 +18,27 @@ export function createDeliveryRouter(controller: DeliveryController): Router {
   // Public/Customer tracking view
   router.get('/orders/:orderId/track', controller.getTracking);
 
-  // Merchant or Admin assigns rider partner
+  // Available open pool jobs for nearby delivery partners
+  router.get('/jobs/available', authGuard, controller.getAvailableJobs);
+
+  // Broadcast unassigned delivery job to nearby open pool
+  router.post(
+    '/orders/:orderId/broadcast',
+    authGuard,
+    roleGuard(UserRole.MERCHANT, UserRole.ADMIN),
+    validateBody(broadcastDeliverySchema),
+    controller.broadcastJob,
+  );
+
+  // Claim a broadcasted delivery job atomically
+  router.post(
+    '/orders/:orderId/claim',
+    authGuard,
+    validateBody(claimDeliverySchema),
+    controller.claimJob,
+  );
+
+  // Merchant or Admin assigns rider partner directly
   router.post(
     '/orders/:orderId/assign',
     authGuard,
@@ -43,3 +65,4 @@ export function createDeliveryRouter(controller: DeliveryController): Router {
 
   return router;
 }
+

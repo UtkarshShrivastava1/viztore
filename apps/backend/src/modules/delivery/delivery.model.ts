@@ -73,6 +73,9 @@ const deliverySchema = new Schema<IDeliveryDocument>(
     },
     dispatchMessage: { type: String },
     timeline: { type: [timelineSchema], default: [] },
+    estimatedPayout: { type: Number, default: 45 },
+    broadcastedAt: { type: Date },
+    claimedAt: { type: Date },
   },
   {
     timestamps: true,
@@ -91,6 +94,7 @@ const deliverySchema = new Schema<IDeliveryDocument>(
 deliverySchema.index({ storeId: 1, status: 1, createdAt: -1 });
 deliverySchema.index({ orderId: 1, status: 1 });
 deliverySchema.index({ 'rider.id': 1, status: 1, createdAt: -1 });
+deliverySchema.index({ status: 1, createdAt: -1 });
 deliverySchema.index({ 'pickupLocation.coordinates': '2dsphere' });
 
 export const DeliveryModel: Model<IDeliveryDocument> =

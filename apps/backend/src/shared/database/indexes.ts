@@ -84,6 +84,7 @@ export const CANONICAL_INDEX_SPECIFICATIONS: ModelIndexSpecification[] = [
       { fields: { storeId: 1, status: 1, createdAt: -1 } },
       { fields: { orderId: 1, status: 1 } },
       { fields: { 'rider.id': 1, status: 1, createdAt: -1 } },
+      { fields: { status: 1, createdAt: -1 } },
     ],
   },
   {

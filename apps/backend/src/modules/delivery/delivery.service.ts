@@ -5,6 +5,11 @@ import {
   type CreateDeliveryParams,
   type DeliveryResponseDto,
   type AssignRiderDto,
+  type BroadcastDeliveryDto,
+  type ClaimDeliveryDto,
+  type OpenPoolQueryDto,
+  type DeliveryPoolTeaserDto,
+  type ClaimResultDto,
   type UpdateDeliveryStatusDto,
 } from './delivery.types.js';
 import { IEventBus } from '../../shared/events/eventBus.js';
@@ -72,6 +77,39 @@ function constructDispatchMessage(
     `--------------------------------`,
     `Please verify the 4-digit OTP from customer upon delivery handoff.`,
   ].join('\n');
+}
+
+/**
+ * Sanitizes address strings for public rider pool teaser (privacy preservation)
+ */
+function extractArea(addressText: string): string {
+  if (!addressText) return 'Local Area';
+  const parts = addressText.split(',').map((p) => p.trim()).filter(Boolean);
+  if (parts.length >= 2) {
+    return parts.slice(-2).join(', ');
+  }
+  return parts[0] || 'Local Area';
+}
+
+/**
+ * Redacts exact customer address and phone number for open pool listing
+ */
+function sanitizeTeaser(delivery: DeliveryResponseDto): DeliveryPoolTeaserDto {
+  const payout = delivery.estimatedPayout ?? 45;
+  return {
+    deliveryId: delivery.id,
+    orderId: delivery.orderId,
+    orderNumber: delivery.orderNumber,
+    storeId: delivery.storeId,
+    pickupArea: extractArea(delivery.pickupLocation.addressText),
+    dropoffArea: extractArea(delivery.dropoffLocation.addressText),
+    distanceKm: delivery.distanceKm,
+    estimatedMinutes: delivery.estimatedMinutes,
+    estimatedPayout: payout,
+    claimUrl: `/api/v1/delivery/${delivery.orderId}/claim`,
+    broadcastedAt: delivery.broadcastedAt || new Date().toISOString(),
+    teaserWhatsAppText: `🛵 Hyperlocal Delivery Run: Order #${delivery.orderNumber} (${delivery.distanceKm}km, ~${delivery.estimatedMinutes}m) Payout: ₹${payout}. Claim run: /api/v1/delivery/${delivery.orderId}/claim`,
+  };
 }
 
 export function createDeliveryService(
@@ -150,6 +188,143 @@ export function createDeliveryService(
     return updated;
   }
 
+  async function broadcastJob(
+    orderId: string,
+    dto?: BroadcastDeliveryDto,
+  ): Promise<DeliveryPoolTeaserDto> {
+    const delivery = await repo.findByOrderId(orderId);
+    if (!delivery) {
+      throw AppError.notFound('Delivery record for this order not found', 'DELIVERY_NOT_FOUND');
+    }
+
+    if (delivery.status !== DeliveryStatus.PENDING_ASSIGNMENT || (delivery.rider && delivery.rider.id)) {
+      throw AppError.badRequest(
+        'Cannot broadcast job: delivery is already assigned or inactive',
+        'JOB_NOT_AVAILABLE',
+      );
+    }
+
+    const payout = dto?.estimatedPayout ?? delivery.estimatedPayout ?? 45;
+    const updated = await repo.recordBroadcast(orderId, payout);
+    const target = updated || delivery;
+    const teaser = sanitizeTeaser(target);
+
+    if (bus) {
+      bus.emit(EVENTS.DELIVERY_BROADCAST, {
+        orderId,
+        orderNumber: teaser.orderNumber,
+        storeId: teaser.storeId,
+        pickupArea: teaser.pickupArea,
+        dropoffArea: teaser.dropoffArea,
+        distanceKm: teaser.distanceKm,
+        estimatedMinutes: teaser.estimatedMinutes,
+        estimatedPayout: teaser.estimatedPayout,
+        claimUrl: teaser.claimUrl,
+        broadcastedAt: new Date().toISOString(),
+      });
+      logger.info(`[DeliveryService] Broadcasted order ${orderId} to rider pool (Payout: ₹${payout})`);
+    }
+
+    return teaser;
+  }
+
+  async function getAvailableJobs(
+    query: OpenPoolQueryDto,
+  ): Promise<{ data: DeliveryPoolTeaserDto[]; total: number; page: number; limit: number }> {
+    const page = query.page ? Number(query.page) : 1;
+    const limit = query.limit ? Number(query.limit) : 20;
+
+    const result = await repo.findAvailablePoolJobs({
+      lat: query.lat,
+      lng: query.lng,
+      radiusKm: query.radiusKm,
+      page,
+      limit,
+    });
+
+    return {
+      data: result.data.map(sanitizeTeaser),
+      total: result.total,
+      page,
+      limit,
+    };
+  }
+
+  async function claimJob(orderId: string, dto: ClaimDeliveryDto): Promise<ClaimResultDto> {
+    const delivery = await repo.findByOrderId(orderId);
+    if (!delivery) {
+      throw AppError.notFound('Delivery record for this order not found', 'DELIVERY_NOT_FOUND');
+    }
+
+    if (delivery.status !== DeliveryStatus.PENDING_ASSIGNMENT || (delivery.rider && delivery.rider.id)) {
+      throw AppError.conflict(
+        'This delivery job has already been claimed by another delivery partner.',
+        'DELIVERY_ALREADY_CLAIMED',
+      );
+    }
+
+    const estimatedMinutes = dto.estimatedMinutes || delivery.estimatedMinutes || 25;
+    const dispatchMessage = constructDispatchMessage(
+      delivery.orderNumber,
+      dto.rider.name,
+      delivery.pickupLocation,
+      delivery.dropoffLocation,
+    );
+
+    const updated = await repo.claimRiderMutex(
+      orderId,
+      dto.rider,
+      estimatedMinutes,
+      dispatchMessage,
+    );
+
+    if (!updated) {
+      throw AppError.conflict(
+        'Race condition detected: this delivery was claimed by another partner moments ago.',
+        'DELIVERY_ALREADY_CLAIMED',
+      );
+    }
+
+    if (bus) {
+      bus.emit(EVENTS.DELIVERY_CLAIMED, {
+        orderId,
+        orderNumber: updated.orderNumber,
+        riderId: dto.rider.id,
+        riderName: dto.rider.name,
+        riderPhone: dto.rider.phone,
+        claimedAt: new Date().toISOString(),
+      });
+      bus.emit(EVENTS.DELIVERY_ASSIGNED, {
+        orderId,
+        riderId: dto.rider.id,
+        estimatedMinutes,
+        riderPhone: dto.rider.phone,
+        riderName: dto.rider.name,
+        dispatchMessage,
+      });
+      logger.info(`[DeliveryService] Order ${orderId} successfully claimed by rider ${dto.rider.id} (${dto.rider.name}) via open pool mutex`);
+    }
+
+    const navigationUrl = `https://www.google.com/maps/dir/?api=1&origin=${updated.pickupLocation.coordinates[1]},${updated.pickupLocation.coordinates[0]}&destination=${updated.dropoffLocation.coordinates[1]},${updated.dropoffLocation.coordinates[0]}&travelmode=two-wheeler`;
+
+    return {
+      success: true,
+      message: 'Delivery job claimed successfully',
+      delivery: updated,
+      navigationUrl,
+      customerContact: {
+        name: 'Customer',
+        phone: '',
+        dropoffAddress: updated.dropoffLocation.addressText,
+      },
+      pickupContact: {
+        storeName: 'Local Partner Store',
+        pickupAddress: updated.pickupLocation.addressText,
+      },
+      instructions: 'Head to merchant shop, confirm order number, collect package, and verify OTP at customer doorstep.',
+    };
+  }
+
   async function updateStatus(
     orderId: string,
     dto: UpdateDeliveryStatusDto,
@@ -212,8 +387,12 @@ export function createDeliveryService(
     initializeDelivery,
     getTracking,
     assignRider,
+    broadcastJob,
+    getAvailableJobs,
+    claimJob,
     updateStatus,
     verifyOtpAndComplete,
     calculateEta,
   };
 }
+
