@@ -8,6 +8,7 @@ import {
   IStoreOperatingHours,
   IStoreLegalDetails,
   IStoreBankDetails,
+  IStoreSection,
 } from '@repo/shared-types';
 
 export interface IStoreDocument extends Omit<IStore, '_id'>, Document {}
@@ -79,6 +80,36 @@ const bankDetailsSchema = new Schema<IStoreBankDetails>(
     accountHolderName: { type: String, trim: true },
     bankName: { type: String, trim: true },
     isVerified: { type: Boolean, default: false },
+  },
+  { _id: false },
+);
+
+const storeSectionSchema = new Schema<IStoreSection>(
+  {
+    id: { type: String, required: true },
+    name: { type: String, required: true, trim: true },
+    badge: {
+      type: String,
+      enum: ['Special', 'New', 'Popular', 'Category', 'Brand', 'Default'],
+      default: 'Default',
+    },
+    type: {
+      type: String,
+      enum: ['Automatic', 'Manual'],
+      default: 'Manual',
+    },
+    sectionType: {
+      type: String,
+      enum: ['product', 'category', 'banner', 'brand'],
+      default: 'product',
+    },
+    productCount: { type: Number, default: 0 },
+    isActive: { type: Boolean, default: true },
+    isAlwaysOn: { type: Boolean, default: false },
+    displayOn: { type: String, default: 'Home' },
+    priority: { type: Number, default: 1 },
+    productIds: [{ type: String }],
+    description: { type: String, trim: true },
   },
   { _id: false },
 );
@@ -171,6 +202,7 @@ const storeSchema = new Schema<IStoreDocument>(
       productTypes: { type: Map, of: [String] },
       brands: [{ type: String, trim: true }],
     },
+    sections: [storeSectionSchema],
   },
   {
     timestamps: true,

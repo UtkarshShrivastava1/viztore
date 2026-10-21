@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { api, storesApi, catalogApi } from '../lib/api.js';
 
 export interface StoreSection {
   id: string;
@@ -47,12 +48,22 @@ export type StoreManagementSubTab =
   | 'view_settings';
 
 interface StoreManagementState {
+  currentStoreId: string | null;
+  isLoading: boolean;
+  isSaving: boolean;
+  lastSavedAt: string | null;
+  error: string | null;
+
   activeSubTab: StoreManagementSubTab;
   selectedPlacementSectionId: string;
   sections: StoreSection[];
   curatedProducts: CuratedProduct[];
   kpis: StoreKPIs;
   isAddSectionModalOpen: boolean;
+
+  // Backend sync methods
+  fetchStoreManagementData: () => Promise<void>;
+  persistStoreData: () => Promise<boolean>;
 
   // Store Appearance
   storeLogo: string;
@@ -325,10 +336,16 @@ const initialCuratedProducts: CuratedProduct[] = [
 ];
 
 export const useStoreManagementStore = create<StoreManagementState>((set, get) => ({
+  currentStoreId: null,
+  isLoading: false,
+  isSaving: false,
+  lastSavedAt: null,
+  error: null,
+
   activeSubTab: 'overview',
   selectedPlacementSectionId: 'sec-1',
   sections: initialSections,
-  curatedProducts: [],
+  curatedProducts: initialCuratedProducts,
   isAddSectionModalOpen: false,
 
   // Store Appearance
@@ -337,12 +354,151 @@ export const useStoreManagementStore = create<StoreManagementState>((set, get) =
   storeDescription: '',
   storeSlug: '',
 
-  setStoreLogo: (url) => set({ storeLogo: url }),
-  setStoreBanner: (url) => set({ storeBanner: url }),
-  setStoreDescription: (desc) => set({ storeDescription: desc }),
-  setStoreSlug: (slug) => set({ storeSlug: slug }),
+  fetchStoreManagementData: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      // 1. Load active merchant store
+      let storeData: any = null;
+      try {
+        const res = await storesApi.getMyStore();
+        if (Array.isArray(res) && res.length > 0) {
+          storeData = res[0];
+        } else if (res && typeof res === 'object') {
+          storeData = res;
+        }
+      } catch {
+        const stored = localStorage.getItem('current_store');
+        if (stored) {
+          try {
+            storeData = JSON.parse(stored);
+          } catch {}
+        }
+      }
 
-  reorderSections: (newSections) => set({ sections: newSections }),
+      const storeId = storeData?._id || storeData?.id;
+      let loadedSections = initialSections;
+
+      if (storeData?.sections && Array.isArray(storeData.sections) && storeData.sections.length > 0) {
+        loadedSections = storeData.sections;
+      }
+
+      // 2. Fetch catalog products to populate Curated Products
+      let mappedProducts = initialCuratedProducts;
+      if (storeId) {
+        try {
+          const prodRes = await catalogApi.getStoreCatalog(storeId);
+          const prodList = Array.isArray(prodRes)
+            ? prodRes
+            : Array.isArray(prodRes?.products)
+            ? prodRes.products
+            : Array.isArray(prodRes?.data)
+            ? prodRes.data
+            : [];
+
+          if (prodList.length > 0) {
+            mappedProducts = prodList.map((p: any) => ({
+              id: p._id || p.id,
+              name: p.name,
+              sku: p.sku || `PRD-${(p._id || '').slice(-6).toUpperCase()}`,
+              price: p.pricing?.sellingPrice || p.price || 0,
+              originalPrice: p.pricing?.mrp || p.originalPrice,
+              discount:
+                p.pricing?.mrp && p.pricing?.sellingPrice
+                  ? `${Math.round(((p.pricing.mrp - p.pricing.sellingPrice) / p.pricing.mrp) * 100)}% OFF`
+                  : undefined,
+              stock: p.inventory?.stockOnHand ?? p.stock ?? 0,
+              isActive: p.isActive ?? true,
+              image:
+                p.images?.[0]?.url ||
+                p.image ||
+                'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=400&q=80',
+              category: p.category || 'General',
+            }));
+          }
+        } catch (err) {
+          console.warn('Could not fetch store products for placement view:', err);
+        }
+      }
+
+      const activeCount = loadedSections.filter((s) => s.isActive && !s.isAlwaysOn).length;
+
+      set({
+        currentStoreId: storeId || null,
+        sections: loadedSections,
+        curatedProducts: mappedProducts,
+        storeLogo: storeData?.logoUrl || '',
+        storeBanner: storeData?.bannerUrl || '',
+        storeDescription: storeData?.description || '',
+        storeSlug: storeData?.slug || '',
+        kpis: {
+          totalSections: loadedSections.length,
+          activeSections: activeCount,
+          totalProducts: mappedProducts.length,
+          impressions: 12450,
+          impressionsGrowth: '+18.4%',
+          clicks: 3420,
+          clicksGrowth: '+12.1%',
+        },
+        isLoading: false,
+      });
+    } catch (err: any) {
+      set({ isLoading: false, error: err.message || 'Failed to load store management data' });
+    }
+  },
+
+  persistStoreData: async () => {
+    const { currentStoreId, sections, storeLogo, storeBanner, storeDescription, storeSlug } = get();
+    let targetId = currentStoreId;
+    if (!targetId) {
+      const raw = localStorage.getItem('current_store');
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          targetId = parsed._id || parsed.id;
+        } catch {}
+      }
+    }
+    if (!targetId) return false;
+
+    set({ isSaving: true });
+    try {
+      await storesApi.updateStoreSettings(targetId, {
+        sections,
+        logoUrl: storeLogo,
+        bannerUrl: storeBanner,
+        description: storeDescription,
+        slug: storeSlug,
+      });
+      set({ isSaving: false, lastSavedAt: new Date().toISOString() });
+      return true;
+    } catch (err: any) {
+      console.error('Failed to sync store management settings to backend:', err);
+      set({ isSaving: false, error: err.message || 'Failed to save store configurations' });
+      return false;
+    }
+  },
+
+  setStoreLogo: (url) => {
+    set({ storeLogo: url });
+    get().persistStoreData();
+  },
+  setStoreBanner: (url) => {
+    set({ storeBanner: url });
+    get().persistStoreData();
+  },
+  setStoreDescription: (desc) => {
+    set({ storeDescription: desc });
+    get().persistStoreData();
+  },
+  setStoreSlug: (slug) => {
+    set({ storeSlug: slug });
+    get().persistStoreData();
+  },
+
+  reorderSections: (newSections) => {
+    set({ sections: newSections });
+    get().persistStoreData();
+  },
 
   kpis: {
     totalSections: 0,
@@ -358,7 +514,7 @@ export const useStoreManagementStore = create<StoreManagementState>((set, get) =
 
   setSelectedPlacementSectionId: (id) => set({ selectedPlacementSectionId: id }),
 
-  toggleSectionStatus: (id) =>
+  toggleSectionStatus: (id) => {
     set((state) => {
       const updated = state.sections.map((sec) =>
         sec.id === id ? { ...sec, isActive: sec.isAlwaysOn ? true : !sec.isActive } : sec
@@ -371,9 +527,11 @@ export const useStoreManagementStore = create<StoreManagementState>((set, get) =
           activeSections: activeCount,
         },
       };
-    }),
+    });
+    get().persistStoreData();
+  },
 
-  updateSectionPriority: (id, newPriority) =>
+  updateSectionPriority: (id, newPriority) => {
     set((state) => {
       const safePriority = Math.max(1, Math.min(state.sections.length, newPriority));
       const target = state.sections.find((s) => s.id === id);
@@ -394,7 +552,9 @@ export const useStoreManagementStore = create<StoreManagementState>((set, get) =
       return {
         sections: updated.sort((a, b) => a.priority - b.priority),
       };
-    }),
+    });
+    get().persistStoreData();
+  },
 
   moveSectionPriority: (id, direction) => {
     const { sections, updateSectionPriority } = get();
@@ -408,7 +568,7 @@ export const useStoreManagementStore = create<StoreManagementState>((set, get) =
     }
   },
 
-  addSection: ({ name, sectionType, description, isActive, badge }) =>
+  addSection: ({ name, sectionType, description, isActive, badge }) => {
     set((state) => {
       const newPriority = state.sections.length + 1;
       const type: 'Automatic' | 'Manual' =
@@ -445,14 +605,18 @@ export const useStoreManagementStore = create<StoreManagementState>((set, get) =
           activeSections: updated.filter((s) => s.isActive).length,
         },
       };
-    }),
+    });
+    get().persistStoreData();
+  },
 
-  updateSection: (id, updates) =>
+  updateSection: (id, updates) => {
     set((state) => ({
       sections: state.sections.map((s) => (s.id === id ? { ...s, ...updates } : s)),
-    })),
+    }));
+    get().persistStoreData();
+  },
 
-  deleteSection: (id) =>
+  deleteSection: (id) => {
     set((state) => {
       const filtered = state.sections
         .filter((s) => s.id !== id)
@@ -465,9 +629,11 @@ export const useStoreManagementStore = create<StoreManagementState>((set, get) =
           activeSections: filtered.filter((s) => s.isActive).length,
         },
       };
-    }),
+    });
+    get().persistStoreData();
+  },
 
-  addProductToSection: (sectionId, productIds) =>
+  addProductToSection: (sectionId, productIds) => {
     set((state) => {
       const section = state.sections.find((s) => s.id === sectionId);
       if (!section) return state;
@@ -484,9 +650,11 @@ export const useStoreManagementStore = create<StoreManagementState>((set, get) =
             : s
         ),
       };
-    }),
+    });
+    get().persistStoreData();
+  },
 
-  removeProductFromSection: (sectionId, productId) =>
+  removeProductFromSection: (sectionId, productId) => {
     set((state) => {
       const section = state.sections.find((s) => s.id === sectionId);
       if (!section) return state;
@@ -503,14 +671,18 @@ export const useStoreManagementStore = create<StoreManagementState>((set, get) =
             : s
         ),
       };
-    }),
+    });
+    get().persistStoreData();
+  },
 
-  reorderProducts: (sectionId, productIds) =>
+  reorderProducts: (sectionId, productIds) => {
     set((state) => ({
       sections: state.sections.map((s) =>
         s.id === sectionId ? { ...s, productIds, productCount: productIds.length } : s
       ),
-    })),
+    }));
+    get().persistStoreData();
+  },
 
   toggleProductStatus: (productId) =>
     set((state) => ({

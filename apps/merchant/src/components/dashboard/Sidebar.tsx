@@ -114,7 +114,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     'assets',
     'analytics',
     'marketing',
-    'store',
   ];
 
   const [isLabsOpen, setIsLabsOpen] = React.useState(labsTabIds.includes(currentTab));
@@ -191,6 +190,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     },
     { id: 'catalog', label: 'Products / Catalog', icon: Package },
     { id: 'inventory', label: 'Inventory', icon: Boxes },
+    { id: 'store', label: 'Store Management', icon: Store },
     { id: 'billing', label: 'Billing & Invoicing', icon: ReceiptIndianRupee },
     { id: 'customers', label: 'Customers', icon: Users },
     {
@@ -212,7 +212,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'assets', label: 'Asset Management', icon: HardDrive },
     { id: 'analytics', label: 'Reports & Analytics', icon: BarChart3 },
     { id: 'marketing', label: 'Marketing & Ads', icon: Megaphone },
-    { id: 'store', label: 'Store Management', icon: Store },
   ];
 
   return (
@@ -266,6 +265,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           const isActive = currentTab === item.id;
           const isSubActiveItem =
             (isBilling && isActive && activeSubTab !== 'invoices') ||
+            (isStore && isActive && activeStoreSubTab !== 'overview') ||
             (isMarketing && isActive && activeMarketingSubTab !== 'overview');
 
           return (

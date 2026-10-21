@@ -88,9 +88,25 @@ export interface IStore {
   legalDetails?: IStoreLegalDetails;
   bankDetails?: IStoreBankDetails;
   customTaxonomy?: IStoreCustomTaxonomy;
+  sections?: IStoreSection[];
   createdAt: string;
   updatedAt: string;
   distanceKm?: number; // Computed during proximity scans
+}
+
+export interface IStoreSection {
+  id: string;
+  name: string;
+  badge?: 'Special' | 'New' | 'Popular' | 'Category' | 'Brand' | 'Default';
+  type: 'Automatic' | 'Manual';
+  sectionType: 'product' | 'category' | 'banner' | 'brand';
+  productCount: number;
+  isActive: boolean;
+  isAlwaysOn?: boolean;
+  displayOn?: string;
+  priority: number;
+  productIds: string[];
+  description?: string;
 }
 
 export interface IStoreCustomTaxonomy {
@@ -101,6 +117,21 @@ export interface IStoreCustomTaxonomy {
 }
 
 // Zod Schemas for Validation
+export const storeSectionSchema = z.object({
+  id: z.string(),
+  name: z.string().min(1).max(100),
+  badge: z.enum(['Special', 'New', 'Popular', 'Category', 'Brand', 'Default']).optional(),
+  type: z.enum(['Automatic', 'Manual']).default('Manual'),
+  sectionType: z.enum(['product', 'category', 'banner', 'brand']).default('product'),
+  productCount: z.number().default(0),
+  isActive: z.boolean().default(true),
+  isAlwaysOn: z.boolean().optional(),
+  displayOn: z.string().optional(),
+  priority: z.number().default(1),
+  productIds: z.array(z.string()).default([]),
+  description: z.string().max(500).optional(),
+});
+
 export const storeCustomTaxonomySchema = z.object({
   categories: z.array(z.string()).optional(),
   subCategories: z.record(z.array(z.string())).optional(),
@@ -148,14 +179,19 @@ export const createStoreSchema = z.object({
   address: storeAddressSchema,
   operatingHours: storeOperatingHoursSchema.optional(),
   deliveryRadiusKm: z.number().min(0.5).max(15).default(4),
-  logoUrl: z.string().url().optional(),
-  bannerUrl: z.string().url().optional(),
+  logoUrl: z.string().optional(),
+  bannerUrl: z.string().optional(),
   customTaxonomy: storeCustomTaxonomySchema.optional(),
+  sections: z.array(storeSectionSchema).optional(),
 });
 
 export const updateStoreSchema = createStoreSchema.partial().extend({
   isActive: z.boolean().optional(),
   isOpen: z.boolean().optional(),
+  sections: z.array(storeSectionSchema).optional(),
+  slug: z.string().min(2).max(100).optional(),
+  logoUrl: z.string().optional(),
+  bannerUrl: z.string().optional(),
 });
 
 export const nearbyStoresQuerySchema = z.object({
