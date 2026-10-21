@@ -86,7 +86,9 @@ timeline
 
 | Task ID | Task Title | Priority | Complexity | Target File(s) | Status | Details & Deliverables |
 |:---:|---|:---:|:---:|---|:---:|---|
-| **D-01** | **Render Staging Health & Liveness Audit** | `P0` | Low | `https://viztore.onrender.com` | **READY 🟢** | Verify `/healthz` & `/readyz` probes on live cloud staging; verify MongoDB Atlas and Redis Cloud connection pools under load. |
+| **D-01** | **Render Staging Health & Liveness Audit** | `P0` | Low | `https://viztore.onrender.com` | **DONE ✅** | Probed and validated live cloud staging on Render: `/healthz` (200 OK), `/readyz` (200 OK, MongoDB Atlas connected, bounded heap memory), `/api-docs.json` (200 OK OpenAPI 3.0 spec), and 2dsphere spatial store discovery (`/api/v1/stores`). |
+
+
 | **D-02** | **Production Environment Variables Template Lockdown** | `P1` | Low | `.env.example`, `env.config.ts` | **READY 🟢** | Complete audit of all mandatory env vars (`MONGODB_URI`, `JWT_ACCESS_SECRET`, `WHATSAPP_TOKEN`, `NEXT_PUBLIC_APP_NAME`), verifying zero secrets committed. |
 | **D-03** | **Production Seed Dataset Refinement** | `P1` | Low | `seed-merchants.ts` | **READY 🟢** | Multi-store dataset seeded with 5 real-looking retail shops in Bhilai/Durg (Clothing, Electronics, Grocery) and 60+ products with realistic barcodes and GST rates. |
 
@@ -123,7 +125,10 @@ timeline
   ↓
 [COMPLETED] ➔ T-03: WhatsApp Notification Failover & Payload Audit
   ↓
-[NEXT] ➔ D-01: Render Staging Health & Liveness Audit
+[COMPLETED] ➔ D-01: Render Staging Health & Liveness Audit
+  ↓
+[NEXT] ➔ D-02: Production Environment Variables Template Lockdown
+
 
 
 
