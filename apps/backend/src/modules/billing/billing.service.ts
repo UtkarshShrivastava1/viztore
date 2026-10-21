@@ -30,6 +30,10 @@ import {
   IQuoteDocument,
   IBillingSettingsDocument,
 } from './billing.model.js';
+import {
+  PrintableInvoiceData,
+  PrintableInvoiceItem,
+} from './invoicePrint.template.js';
 import { catalogModule } from '../catalog/index.js';
 import { storeModule } from '../stores/index.js';
 import { withTransaction } from '../../shared/database/transaction.js';
@@ -1191,6 +1195,102 @@ export class BillingService {
       paperSize,
       false,
     );
+  }
+
+  /**
+   * Retrieve normalized printable invoice data for thermal / A4 server-side rendering
+   */
+  async getPrintableInvoice(
+    storeId: string,
+    invoiceIdOrNumber: string,
+  ): Promise<PrintableInvoiceData> {
+    const isObjectId = mongoose.Types.ObjectId.isValid(invoiceIdOrNumber);
+    const query: any = { storeId: new mongoose.Types.ObjectId(storeId) };
+    if (isObjectId) {
+      query.$or = [{ _id: invoiceIdOrNumber }, { invoiceNumber: invoiceIdOrNumber }];
+    } else {
+      query.invoiceNumber = invoiceIdOrNumber;
+    }
+
+    const invoice = await InvoiceModel.findOne(query);
+    if (!invoice) {
+      throw AppError.notFound('Invoice not found', 'INVOICE_NOT_FOUND');
+    }
+
+    const [settings, storeProfile] = await Promise.all([
+      this.getOrCreateSettings(storeId),
+      storeModule.getStoreProfile(storeId),
+    ]);
+
+    const sellerName = storeProfile?.name || 'Local Retailer';
+    const sellerAddress = storeProfile?.address || 'Local Market';
+    const sellerPhone = storeProfile?.phone || '';
+    const sellerGstin = settings.gstin || storeProfile?.gstin;
+    const sellerState = settings.state || DEFAULT_INDIAN_STATE;
+
+    const printableItems: PrintableInvoiceItem[] = invoice.items.map((it) => ({
+      name: it.title,
+      sku: it.variantId,
+      hsnCode: it.hsnCode,
+      quantity: it.quantity,
+      unit: it.unit,
+      unitPrice: it.unitPrice,
+      discountAmount: it.discountAmount,
+      taxableAmount: it.taxableAmount,
+      taxRate: it.taxRate,
+      cgst: it.cgst,
+      sgst: it.sgst,
+      igst: it.igst,
+      lineTotal: it.totalAmount,
+    }));
+
+    return {
+      invoiceNumber: invoice.invoiceNumber,
+      date: invoice.dates.invoiceDate,
+      status: invoice.payment.status,
+      type: invoice.type === InvoiceType.TAX_INVOICE ? 'TAX INVOICE' : 'RETAIL CASH BILL',
+      seller: {
+        name: sellerName,
+        address: sellerAddress,
+        phone: sellerPhone,
+        gstin: sellerGstin,
+        state: sellerState,
+      },
+      customer: {
+        name: invoice.customer.name,
+        phone: invoice.customer.phone,
+        email: invoice.customer.email,
+        address: invoice.customer.billingAddress,
+        state: invoice.customer.state,
+        gstin: invoice.customer.gstin,
+      },
+      items: printableItems,
+      pricing: {
+        subtotal: invoice.pricing.subTotal,
+        discount: invoice.pricing.totalDiscount,
+        taxableAmount: invoice.pricing.taxableAmount,
+        tax: Number(
+          (
+            (invoice.pricing.cgstTotal || 0) +
+            (invoice.pricing.sgstTotal || 0) +
+            (invoice.pricing.igstTotal || 0)
+          ).toFixed(2),
+        ),
+        cgst: invoice.pricing.cgstTotal,
+        sgst: invoice.pricing.sgstTotal,
+        igst: invoice.pricing.igstTotal,
+        roundOff: invoice.pricing.roundOff,
+        grandTotal: invoice.pricing.grandTotal,
+      },
+      payment: {
+        settlementMode: invoice.payment.settlementMode,
+        status: invoice.payment.status,
+        paidAmount: invoice.payment.paidAmount,
+        dueAmount: invoice.payment.dueAmount,
+      },
+      notes: invoice.notes,
+      terms: settings.termsAndConditions,
+    };
   }
 
   private buildPOSResponseFromInvoice(

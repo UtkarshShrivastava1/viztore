@@ -46,8 +46,9 @@ timeline
 | **B-02** | **Stale Order Auto-Timeout & Inventory Reclaim Engine** | `P0` | Medium | `order.service.ts`, `orderExpiryWorker.ts` | **DONE ✅** | Background worker running every 60s checking orders in `pending` >30 minutes. Auto-transitions to `CANCELLED`, restores stock atomically via `catalogFacade.restoreStock()`, and emits `ORDER_CANCELLED`. 108/108 tests green (`commit fc7e9bd`). |
 | **B-03** | **Interactive OpenAPI / Swagger UI Documentation** | `P1` | Low | `apps/backend/src/app.ts`, `swagger.ts` | **DONE ✅** | Mounted Swagger UI at `/api-docs` & `/docs` with OpenAPI 3.0 specification covering all 7 modules + system probes. Raw spec served at `/api-docs.json`. 116/116 tests green (`commit 56fd227`). |
 | **B-04** | **High-Security Brute-Force Rate Limiter** | `P1` | Low | `shared/middlewares/rateLimiter.ts`, `app.ts` | **DONE ✅** | Mounted dedicated strict rate limiting (5–10 requests per 15 minutes) on sensitive routes: `authRateLimiter` on `/auth/login`, `deliveryOtpRateLimiter` on `/orders/:id/verify-otp`, and `otpRateLimiter` factory. 120/120 tests green (`commit 45ecdc1`). |
-| **B-05** | **MongoDB Compound Indexes Audit & Boot Verification** | `P1` | Low | `database/indexes.ts`, `server.ts` | **QUEUED 🟡** | Validate and ensure ESR-optimized compound indexes on startup: `orders` `{ storeId: 1, status: 1, createdAt: -1 }`, `invoices` `{ storeId: 1, status: 1 }`, `catalog_products` `{ storeId: 1, isActive: 1 }`. |
-| **B-06** | **Receipt & Invoicing PDF / Thermal Print Server Endpoint** | `P2` | Medium | `billing.service.ts`, `order.service.ts` | **QUEUED ⚪** | Server-side HTML render endpoint for direct PDF download (`/api/v1/orders/:id/invoice/print`) matching customer account bill requirements. |
+| **B-05** | **MongoDB Compound Indexes Audit & Boot Verification** | `P1` | Low | `database/indexes.ts`, `server.ts` | **DONE ✅** | Built `ensureIndexes()` & `checkIndexHealth()` verifying canonical ESR compound indexes across `Order`, `Product`, `Store` (2dsphere), `Invoice`, `Quote`, `Delivery`, `Outbox`. Integrated into boot sequence. 134/134 tests green (`commit 8a12e87`). |
+| **B-06** | **Receipt & Invoicing PDF / Thermal Print Server Endpoint** | `P2` | Medium | `billing.service.ts`, `invoicePrint.template.ts`, `order.service.ts` | **DONE ✅** | Built headless HTML/CSS print engine supporting 80mm ESC/POS roll format (`?format=thermal`), standard GST Tax Invoice (`?format=a4`), and auto-print triggers (`?autoPrint=true`). Mounted on `GET /api/v1/orders/:id/invoice/print` & `GET /api/v1/billing/invoices/:id/print`. 150/150 tests green (`commit 0dd07fe`). |
+
 | **B-07** | **Dynamic Multi-Department Taxonomy & Custom Brand Catalog Creation** | `P1` | Medium | `catalog.types.ts`, `product.model.ts`, `AddProductStep1.tsx`, `CreatableCombobox.tsx` | **DONE ✅** | Relaxed category/subtype schema constraints to accept arbitrary strings; built `CreatableCombobox` supporting inline creation for Category, Sub-category, Product Type, and Brand across retail verticals. 127/127 tests green (`commit 93f84ec`). |
 
 ---
@@ -98,17 +99,20 @@ timeline
 ## 7. Recommended Execution Order for Technical Head & Agent
 
 ```text
+[COMPLETED] ➔ B-01: Transactional Outbox Background Drain Worker
+  ↓
 [COMPLETED] ➔ B-02: Stale Order Auto-Timeout & Inventory Reclaim Engine
   ↓
 [COMPLETED] ➔ B-03: Interactive OpenAPI / Swagger UI (/api-docs)
   ↓
 [COMPLETED] ➔ B-04: High-Security Brute-Force Rate Limiting (OTP & Auth)
   ↓
-[COMPLETED] ➔ I-01: Audit & Merge Abhay Task 10 (Merchant E2E Polish - PR #17)
+[COMPLETED] ➔ B-05: MongoDB Compound Indexes Audit & Boot Verification
   ↓
-[NEXT] ➔ T-01: Headless E2E Simulation Script (Pre-Freeze Dry Run) OR B-05: Customer Profile Update API
+[COMPLETED] ➔ B-06: Receipt & Invoicing PDF / Thermal Print Server Endpoint
   ↓
-[OCT 13] ➔ I-02: Audit & Merge Vinay Task 7 (Web ESLint Zeroing)
+[NEXT] ➔ T-01: Headless E2E Simulation Script (Pre-Freeze Loop)
   ↓
-[OCT 14] ➔ Milestone 1 Feature Freeze & Codebase Lockdown
+[NEXT] ➔ T-02: Concurrent Checkout & OCC Stock Contention Test
 ```
+

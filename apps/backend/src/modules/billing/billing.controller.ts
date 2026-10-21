@@ -13,6 +13,7 @@ import { storeModule } from '../stores/index.js';
 import { AppError } from '../../shared/utils/AppError.js';
 import { catchAsync } from '../../shared/utils/catchAsync.js';
 import { ApiResponse } from '../../shared/utils/ApiResponse.js';
+import { renderPrintableInvoiceHtml } from './invoicePrint.template.js';
 
 async function extractStoreId(req: Request): Promise<string> {
   const authReq = req as AuthenticatedRequest;
@@ -193,4 +194,18 @@ export const billingController = {
     const result = await billingService.getLastReceipt(storeId, paperSize);
     return ApiResponse.success(res, result);
   }),
+
+  printInvoice: catchAsync(async (req: Request, res: Response) => {
+    const storeId = await extractStoreId(req);
+    const id = req.params.id as string;
+    const format = (req.query.format as string) === 'thermal' ? 'thermal' : 'a4';
+    const autoPrint = req.query.autoPrint === 'true';
+
+    const printableData = await billingService.getPrintableInvoice(storeId, id);
+    const html = renderPrintableInvoiceHtml(printableData, { format, autoPrint });
+
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    return res.status(200).send(html);
+  }),
 };
+

@@ -13,3 +13,4 @@ export {
   type IBillingSettingsDocument,
 } from './billing.model.js';
 export * from './billing.validation.js';
+export * from './invoicePrint.template.js';

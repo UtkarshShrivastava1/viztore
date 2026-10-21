@@ -30,6 +30,7 @@ export function createBillingRouter(guard = authGuard): Router {
     billingController.createInvoice,
   );
   router.get('/invoices/:id', billingController.getInvoiceById);
+  router.get('/invoices/:id/print', billingController.printInvoice);
   router.patch('/invoices/:id/payment', validateRecordPayment, billingController.recordPayment);
   router.patch('/invoices/:id/cancel', billingController.cancelInvoice);
 
