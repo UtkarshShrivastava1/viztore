@@ -13,7 +13,13 @@ interface ReturnLineItem {
 }
 
 export const CreatePurchaseReturnModal: React.FC = () => {
-  const { isCreateReturnModalOpen, setIsCreateReturnModalOpen, setIsAddVendorOpen } = useExpenseStore();
+  const {
+    isCreateReturnModalOpen,
+    setIsCreateReturnModalOpen,
+    setIsAddVendorOpen,
+    createCreditNoteRecord,
+    isSubmitting,
+  } = useExpenseStore();
 
   const [vendor, setVendor] = useState('Sharma Enterprises');
   const [billNumber, setBillNumber] = useState('BILL-2024-000127');
@@ -66,10 +72,22 @@ export const CreatePurchaseReturnModal: React.FC = () => {
   const totalReturnAmount = subtotal + taxAmount;
   const pendingCredit = Math.max(0, totalReturnAmount - (settledAmount || 0));
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert(`Purchase Return for ${billNumber} created successfully! Credit note generated.`);
-    setIsCreateReturnModalOpen(false);
+    const ok = await createCreditNoteRecord({
+      creditNoteNumber: `CN-${Date.now().toString().slice(-6)}`,
+      vendorName: vendor || 'Sharma Enterprises',
+      billNumber: billNumber || 'BILL-2024-000127',
+      reason: reason || 'Goods Return / Damaged Goods',
+      amount: totalReturnAmount > 0 ? totalReturnAmount : 1,
+      date: returnDate ? new Date(returnDate).toISOString() : new Date().toISOString(),
+      status: 'open',
+      notes: notes || returnNote || undefined,
+    });
+
+    if (ok) {
+      setIsCreateReturnModalOpen(false);
+    }
   };
 
   return createPortal(

@@ -4,9 +4,17 @@ import { X, Plus, Calendar } from 'lucide-react';
 import { useExpenseStore } from '../../stores/expenseStore.js';
 
 export const AddExpenseModal: React.FC = () => {
-  const { isAddExpenseModalOpen, setIsAddExpenseModalOpen, setIsAddVendorOpen } = useExpenseStore();
+  const {
+    isAddExpenseModalOpen,
+    setIsAddExpenseModalOpen,
+    setIsAddVendorOpen,
+    createExpenseRecord,
+    isSubmitting,
+  } = useExpenseStore();
 
   const [expenseType, setExpenseType] = useState('');
+  const [customType, setCustomType] = useState('');
+  const [isAddingCustomType, setIsAddingCustomType] = useState(false);
   const [vendor, setVendor] = useState('');
   const [date, setDate] = useState('2024-05-11');
   const [referenceNo, setReferenceNo] = useState('');
@@ -22,10 +30,30 @@ export const AddExpenseModal: React.FC = () => {
   const numTax = typeof tax === 'number' ? tax : 0;
   const totalAmount = numAmount + numTax;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert(`Expense of ₹${totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })} recorded successfully!`);
-    setIsAddExpenseModalOpen(false);
+    const effectiveCategory = isAddingCustomType && customType.trim() ? customType.trim() : (expenseType || 'General');
+    const ok = await createExpenseRecord({
+      category: effectiveCategory,
+      description: notes || `${effectiveCategory} - ${vendor || 'Store'}`,
+      amount: totalAmount > 0 ? totalAmount : 1,
+      date: date ? new Date(date).toISOString() : new Date().toISOString(),
+      paymentMethod: paymentMethod || 'Cash',
+      referenceNumber: referenceNo || undefined,
+      notes: notes || undefined,
+    });
+
+    if (ok) {
+      setIsAddExpenseModalOpen(false);
+      setExpenseType('');
+      setCustomType('');
+      setIsAddingCustomType(false);
+      setVendor('');
+      setAmount('');
+      setTax('');
+      setReferenceNo('');
+      setNotes('');
+    }
   };
 
   return createPortal(
@@ -55,35 +83,52 @@ export const AddExpenseModal: React.FC = () => {
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Expense For / Description <span className="text-red-500">*</span>
                 </label>
-                <div className="flex gap-2">
-                  <select
-                    value={expenseType}
-                    onChange={(e) => setExpenseType(e.target.value)}
-                    className="flex-1 px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-blue-500 bg-white"
-                    required
-                  >
-                    <option value="">Select or add expense type</option>
-                    <option value="Electricity Bill">Electricity Bill</option>
-                    <option value="Office Rent">Office Rent</option>
-                    <option value="Internet / Wi-Fi">Internet / Wi-Fi</option>
-                    <option value="Fuel / Travel">Fuel / Travel</option>
-                    <option value="Store Maintenance">Store Maintenance</option>
-                    <option value="Marketing Campaign">Marketing Campaign</option>
-                    <option value="Staff Refreshment">Staff Refreshment</option>
-                    <option value="Packaging Supplies">Packaging Supplies</option>
-                  </select>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const newType = prompt('Enter new expense type:');
-                      if (newType) setExpenseType(newType);
-                    }}
-                    className="px-2.5 py-2 border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-xl flex items-center justify-center transition-colors"
-                    title="Add new expense category"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </button>
-                </div>
+                {isAddingCustomType ? (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={customType}
+                      onChange={(e) => setCustomType(e.target.value)}
+                      placeholder="Enter new expense type (e.g. Renovation)"
+                      className="flex-1 px-3 py-2 text-xs border border-blue-400 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-blue-500 bg-white"
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setIsAddingCustomType(false)}
+                      className="px-3 py-2 border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-xl text-xs font-semibold"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <select
+                      value={expenseType}
+                      onChange={(e) => setExpenseType(e.target.value)}
+                      className="flex-1 px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-blue-500 bg-white"
+                      required
+                    >
+                      <option value="">Select or add expense type</option>
+                      <option value="Electricity Bill">Electricity Bill</option>
+                      <option value="Office Rent">Office Rent</option>
+                      <option value="Internet / Wi-Fi">Internet / Wi-Fi</option>
+                      <option value="Fuel / Travel">Fuel / Travel</option>
+                      <option value="Store Maintenance">Store Maintenance</option>
+                      <option value="Marketing Campaign">Marketing Campaign</option>
+                      <option value="Staff Refreshment">Staff Refreshment</option>
+                      <option value="Packaging Supplies">Packaging Supplies</option>
+                    </select>
+                    <button
+                      type="button"
+                      onClick={() => setIsAddingCustomType(true)}
+                      className="px-2.5 py-2 border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-xl flex items-center justify-center transition-colors"
+                      title="Add new expense category"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
                 <p className="text-[11px] text-slate-400 mt-1">
                   e.g. Electricity Bill, Office Rent, Internet, Fuel, Maintenance, Marketing, etc.
                 </p>
@@ -275,9 +320,10 @@ export const AddExpenseModal: React.FC = () => {
             </button>
             <button
               type="submit"
-              className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition-colors"
+              disabled={isSubmitting}
+              className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold rounded-xl shadow-xs transition-colors"
             >
-              Save Expense
+              {isSubmitting ? 'Saving Expense...' : 'Save Expense'}
             </button>
           </div>
         </form>

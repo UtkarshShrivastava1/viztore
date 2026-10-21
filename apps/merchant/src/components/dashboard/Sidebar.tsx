@@ -110,7 +110,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const labsTabIds: DashboardTab[] = [
     'wallet',
-    'expenses',
     'assets',
     'analytics',
     'marketing',
@@ -192,6 +191,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'inventory', label: 'Inventory', icon: Boxes },
     { id: 'store', label: 'Store Management', icon: Store },
     { id: 'billing', label: 'Billing & Invoicing', icon: ReceiptIndianRupee },
+    { id: 'expenses', label: 'Purchase / Expense', icon: ReceiptText },
     { id: 'customers', label: 'Customers', icon: Users },
     {
       id: 'returns',
@@ -208,7 +208,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   // In-progress / future modules grouped in Production Labs
   const productionLabsItems: MenuItem[] = [
     { id: 'wallet', label: 'Wallet Hub', icon: Wallet },
-    { id: 'expenses', label: 'Purchase / Expense', icon: ReceiptText },
     { id: 'assets', label: 'Asset Management', icon: HardDrive },
     { id: 'analytics', label: 'Reports & Analytics', icon: BarChart3 },
     { id: 'marketing', label: 'Marketing & Ads', icon: Megaphone },

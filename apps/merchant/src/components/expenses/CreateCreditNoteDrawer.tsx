@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Plus, Trash2, Calendar, FileText } from 'lucide-react';
+import { useExpenseStore } from '../../stores/expenseStore.js';
 
 interface CreateCreditNoteDrawerProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ export const CreateCreditNoteDrawer: React.FC<CreateCreditNoteDrawerProps> = ({
   onClose,
   onCreated,
 }) => {
+  const { setIsAddVendorOpen, createCreditNoteRecord, isSubmitting } = useExpenseStore();
   const [vendor, setVendor] = useState('Sharma Enterprises');
   const [cnNumber, setCnNumber] = useState('CN-2024-000013');
   const [cnDate, setCnDate] = useState('11/05/2024');
@@ -97,8 +99,9 @@ export const CreateCreditNoteDrawer: React.FC<CreateCreditNoteDrawerProps> = ({
                   </select>
                   <button
                     type="button"
-                    onClick={() => alert('Add New Vendor')}
+                    onClick={() => setIsAddVendorOpen(true)}
                     className="p-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors shadow-2xs"
+                    title="Add New Vendor"
                   >
                     <Plus className="w-4 h-4" />
                   </button>
@@ -281,13 +284,24 @@ export const CreateCreditNoteDrawer: React.FC<CreateCreditNoteDrawerProps> = ({
           </button>
           <button
             type="button"
-            onClick={() => {
+            disabled={isSubmitting}
+            onClick={async () => {
+              await createCreditNoteRecord({
+                creditNoteNumber: cnNumber || `CN-${Date.now().toString().slice(-6)}`,
+                vendorName: vendor || 'Sharma Enterprises',
+                billNumber: refPurchase || 'BILL-2024-000123',
+                reason: reasonType || 'Purchase Return',
+                amount: total > 0 ? total : 1,
+                date: cnDate ? new Date().toISOString() : new Date().toISOString(),
+                status: 'open',
+                notes: notes || undefined,
+              });
               onCreated();
               onClose();
             }}
-            className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-colors shadow-2xs"
+            className="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-colors shadow-2xs"
           >
-            Create Credit Note
+            {isSubmitting ? 'Creating...' : 'Create Credit Note'}
           </button>
         </div>
       </div>

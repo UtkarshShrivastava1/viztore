@@ -114,7 +114,18 @@ const ExpenseRowActionMenu: React.FC<{
           type="button"
           onClick={() => {
             onClose();
-            alert('Entry duplicated successfully.');
+            useExpenseStore.setState((s) => ({
+              allTransactions: [
+                {
+                  ...item,
+                  id: `TXN-DUP-${Date.now()}`,
+                  referenceNo: `${item.referenceNo || 'TXN'}-COPY`,
+                  date: 'Today',
+                  time: 'Just now',
+                },
+                ...s.allTransactions,
+              ],
+            }));
           }}
           className="w-full px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer"
         >
@@ -126,7 +137,16 @@ const ExpenseRowActionMenu: React.FC<{
           type="button"
           onClick={() => {
             onClose();
-            alert('Marked as Paid.');
+            useExpenseStore.setState((s) => ({
+              allTransactions: s.allTransactions.map((t) =>
+                t.id === item.id ? { ...t, status: 'Paid' } : t
+              ),
+              purchaseBills: s.purchaseBills.map((b) =>
+                b.id === item.id || b.billNumber === item.referenceNo
+                  ? { ...b, paymentStatus: 'Paid', settledAmount: b.totalAmount }
+                  : b
+              ),
+            }));
           }}
           className="w-full px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer"
         >
@@ -138,7 +158,7 @@ const ExpenseRowActionMenu: React.FC<{
           type="button"
           onClick={() => {
             onClose();
-            alert('Downloading invoice PDF...');
+            window.print();
           }}
           className="w-full px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer"
         >
@@ -176,9 +196,15 @@ const ExpenseRowActionMenu: React.FC<{
           type="button"
           onClick={() => {
             onClose();
-            if (confirm('Are you sure you want to delete this record?')) {
-              alert('Record deleted.');
+            const { deleteExpenseRecord } = useExpenseStore.getState();
+            if (item._id) {
+              deleteExpenseRecord(item._id);
             }
+            useExpenseStore.setState((s) => ({
+              allTransactions: s.allTransactions.filter((t) => t.id !== item.id && t.referenceNo !== item.referenceNo),
+              expenses: s.expenses.filter((e) => e.id !== item.id),
+              purchaseBills: s.purchaseBills.filter((b) => b.id !== item.id && b.billNumber !== item.referenceNo),
+            }));
           }}
           className="w-full px-3 py-1.5 text-xs text-rose-600 hover:bg-rose-50 flex items-center gap-2 cursor-pointer"
         >
@@ -226,6 +252,7 @@ export const ExpensesTable: React.FC<ExpensesTableProps> = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState('10');
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
+  const csvImportInputRef = useRef<HTMLInputElement>(null);
 
   // Tabs list matching mockup 8.0.png
   const tabs: { id: PurchaseSubTab; label: string }[] = [
@@ -328,11 +355,40 @@ export const ExpensesTable: React.FC<ExpensesTableProps> = ({
 
         {/* Tab Right Action (Download Report / Import PO) */}
         <div className="relative pb-2 sm:pb-0">
+          <input
+            type="file"
+            ref={csvImportInputRef}
+            accept=".csv,.xlsx"
+            className="hidden"
+            onChange={(e) => {
+              if (e.target.files && e.target.files[0]) {
+                const fileName = e.target.files[0].name;
+                // Add simulated imported PO
+                useExpenseStore.setState((s) => ({
+                  purchaseOrders: [
+                    {
+                      id: `PO-IMP-${Date.now()}`,
+                      poNumber: `PO-${Date.now().toString().slice(-6)}`,
+                      vendor: 'Imported Vendor',
+                      date: 'Today',
+                      time: 'Just now',
+                      expectedDate: 'In 5 days',
+                      totalAmount: 18500,
+                      status: 'Pending',
+                      itemsCount: '4 items',
+                    },
+                    ...s.purchaseOrders,
+                  ],
+                }));
+                e.target.value = '';
+              }
+            }}
+          />
           {activeSubTab === 'orders' ? (
             <button
               type="button"
-              onClick={() => alert('Import purchase orders via CSV/Excel...')}
-              className="px-3.5 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors shadow-2xs"
+              onClick={() => csvImportInputRef.current?.click()}
+              className="px-3.5 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
             >
               <Upload className="w-3.5 h-3.5 text-slate-500" />
               <span>Import Purchase Orders</span>
@@ -355,9 +411,9 @@ export const ExpensesTable: React.FC<ExpensesTableProps> = ({
                     type="button"
                     onClick={() => {
                       setIsDownloadOpen(false);
-                      alert('Generating PDF Report...');
+                      window.print();
                     }}
-                    className="w-full px-3 py-2 text-left text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                    className="w-full px-3 py-2 text-left text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer"
                   >
                     <FileText className="w-4 h-4 text-rose-500" />
                     <span>PDF Report</span>

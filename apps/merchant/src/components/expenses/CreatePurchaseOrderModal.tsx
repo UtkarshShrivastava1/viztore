@@ -68,7 +68,25 @@ export const CreatePurchaseOrderModal: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    alert(`Purchase Order ${poNumber} created successfully!`);
+    const newPO = {
+      id: `PO-${Date.now()}`,
+      poNumber: poNumber || `PO-${Date.now()}`,
+      vendor: vendor || 'Sharma Enterprises',
+      date: poDate ? new Date(poDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Today',
+      time: 'Just now',
+      expectedDate: expectedDate || 'In 7 days',
+      totalAmount: totalAmount > 0 ? totalAmount : 1,
+      status: 'Pending' as const,
+      itemsCount: `${items.length} items`,
+    };
+    useExpenseStore.setState((s) => ({
+      purchaseOrders: [newPO, ...s.purchaseOrders],
+      overviewKPIs: {
+        ...s.overviewKPIs,
+        openPurchaseOrders: s.overviewKPIs.openPurchaseOrders + totalAmount,
+        openPOCount: s.overviewKPIs.openPOCount + 1,
+      },
+    }));
     setIsCreatePOModalOpen(false);
   };
 

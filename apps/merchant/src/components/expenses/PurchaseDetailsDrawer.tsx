@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock.js';
+import { useExpenseStore } from '../../stores/expenseStore.js';
 
 interface PurchaseDetailsDrawerProps {
   purchase: any | null;
@@ -28,6 +29,7 @@ export const PurchaseDetailsDrawer: React.FC<PurchaseDetailsDrawerProps> = ({
   onEdit,
 }) => {
   useBodyScrollLock(isOpen, onClose);
+  const { setActiveSubTab } = useExpenseStore();
 
   const [activeTab, setActiveTab] = useState<'overview' | 'items' | 'payments' | 'eway' | 'notes' | 'activity'>('overview');
 
@@ -87,20 +89,12 @@ export const PurchaseDetailsDrawer: React.FC<PurchaseDetailsDrawerProps> = ({
 
           <button
             type="button"
-            onClick={() => alert('Downloading invoice...')}
+            onClick={() => window.print()}
             className="px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors shadow-2xs"
+            title="Print or save invoice as PDF"
           >
             <Download className="w-3.5 h-3.5 text-slate-500" />
-            <span>Download Invoice</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => alert('Additional purchase actions')}
-            className="px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl flex items-center gap-1 transition-colors shadow-2xs"
-          >
-            <span>More Actions</span>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+            <span>Download / Print Invoice</span>
           </button>
         </div>
 
@@ -148,7 +142,10 @@ export const PurchaseDetailsDrawer: React.FC<PurchaseDetailsDrawerProps> = ({
 
               <button
                 type="button"
-                onClick={() => alert('View Vendor Profile')}
+                onClick={() => {
+                  setActiveSubTab('vendors');
+                  onClose();
+                }}
                 className="px-3 py-1 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition-colors shadow-2xs shrink-0"
               >
                 View Vendor

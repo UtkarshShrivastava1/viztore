@@ -294,6 +294,49 @@ export const billingApi = {
   },
 };
 
+export const expensesApi = {
+  getOverview: () =>
+    api.get<any>('/expenses/overview'),
+
+  getAllTransactions: () =>
+    api.get<any[]>('/expenses/transactions'),
+
+  getExpenses: () =>
+    api.get<any[]>('/expenses'),
+
+  createExpense: (data: unknown) =>
+    api.post<any>('/expenses', data),
+
+  deleteExpense: (id: string) =>
+    api.delete<any>(`/expenses/${id}`),
+
+  getVendors: () =>
+    api.get<any[]>('/expenses/vendors'),
+
+  createVendor: (data: unknown) =>
+    api.post<any>('/expenses/vendors', data),
+
+  getPurchases: (type?: string) => {
+    const qs = type ? `?type=${encodeURIComponent(type)}` : '';
+    return api.get<any[]>(`/expenses/purchases${qs}`);
+  },
+
+  createPurchase: (data: unknown) =>
+    api.post<any>('/expenses/purchases', data),
+
+  getCreditNotes: () =>
+    api.get<any[]>('/expenses/credit-notes'),
+
+  createCreditNote: (data: unknown) =>
+    api.post<any>('/expenses/credit-notes', data),
+
+  getEWayBills: () =>
+    api.get<any[]>('/expenses/eway-bills'),
+
+  createEWayBill: (data: unknown) =>
+    api.post<any>('/expenses/eway-bills', data),
+};
+
 export const mediaApi = {
   uploadImage: async (file: File, folder = 'products') => {
     const formData = new FormData();

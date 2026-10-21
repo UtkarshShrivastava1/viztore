@@ -16,10 +16,12 @@ interface AddExpenseViewProps {
 }
 
 export const AddExpenseView: React.FC<AddExpenseViewProps> = ({ onBack }) => {
-  const { addExpense } = useExpenseStore();
+  const { addExpense, createExpenseRecord, setIsAddVendorOpen } = useExpenseStore();
 
   const [expenseName, setExpenseName] = useState('');
   const [category, setCategory] = useState<ExpenseCategory>('Rent');
+  const [isCustomCategoryOpen, setIsCustomCategoryOpen] = useState(false);
+  const [customCategoryName, setCustomCategoryName] = useState('');
   const [vendor, setVendor] = useState('Property Owners');
   const [description, setDescription] = useState('');
 
@@ -71,12 +73,24 @@ export const AddExpenseView: React.FC<AddExpenseViewProps> = ({ onBack }) => {
     const now = new Date();
     const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
+    const effectiveCategory = isCustomCategoryOpen && customCategoryName.trim() ? customCategoryName.trim() : category;
+
+    createExpenseRecord({
+      category: effectiveCategory,
+      description: description || `${effectiveCategory} - ${expenseName}`,
+      amount: totalAmount > 0 ? totalAmount : 1,
+      date: new Date().toISOString(),
+      paymentMethod,
+      referenceNumber: referenceNumber || undefined,
+      notes: notes || undefined,
+    });
+
     addExpense({
       date: expenseDate,
       time: timeStr,
       name: expenseName,
-      subtitle: description || `${category} expense`,
-      category,
+      subtitle: description || `${effectiveCategory} expense`,
+      category: effectiveCategory as any,
       vendor,
       paymentMethod,
       amount: numAmount,
@@ -198,35 +212,55 @@ export const AddExpenseView: React.FC<AddExpenseViewProps> = ({ onBack }) => {
             <label className="block text-xs font-semibold text-slate-700 mb-1.5">
               Category <span className="text-rose-500">*</span>
             </label>
-            <div className="flex items-center gap-2">
-              <div className="relative flex-1">
-                <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value as ExpenseCategory)}
-                  className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none shadow-2xs cursor-pointer"
+            {isCustomCategoryOpen ? (
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={customCategoryName}
+                  onChange={(e) => setCustomCategoryName(e.target.value)}
+                  placeholder="Enter custom category"
+                  className="w-full px-3.5 py-2 bg-white border border-blue-400 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-2xs"
+                  autoFocus
+                />
+                <button
+                  type="button"
+                  onClick={() => setIsCustomCategoryOpen(false)}
+                  className="px-2.5 py-2 text-xs border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-xl font-semibold"
                 >
-                  <option value="Rent">Rent</option>
-                  <option value="Utilities">Utilities</option>
-                  <option value="Office Supplies">Office Supplies</option>
-                  <option value="Meals & Entertainment">Meals & Entertainment</option>
-                  <option value="Marketing">Marketing</option>
-                  <option value="Software">Software</option>
-                  <option value="Travel">Travel</option>
-                  <option value="Salaries">Salaries</option>
-                  <option value="Packaging">Packaging</option>
-                  <option value="Miscellaneous">Miscellaneous</option>
-                </select>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  Cancel
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => alert('Add custom category modal')}
-                className="p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 transition-colors shadow-2xs"
-                title="Add Category"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
-            </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <select
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value as ExpenseCategory)}
+                    className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none shadow-2xs cursor-pointer"
+                  >
+                    <option value="Rent">Rent</option>
+                    <option value="Utilities">Utilities</option>
+                    <option value="Office Supplies">Office Supplies</option>
+                    <option value="Meals & Entertainment">Meals & Entertainment</option>
+                    <option value="Marketing">Marketing</option>
+                    <option value="Software">Software</option>
+                    <option value="Travel">Travel</option>
+                    <option value="Salaries">Salaries</option>
+                    <option value="Packaging">Packaging</option>
+                    <option value="Miscellaneous">Miscellaneous</option>
+                  </select>
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsCustomCategoryOpen(true)}
+                  className="p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 transition-colors shadow-2xs"
+                  title="Add Custom Category"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Vendor / Paid To with + button */}
@@ -254,12 +288,9 @@ export const AddExpenseView: React.FC<AddExpenseViewProps> = ({ onBack }) => {
               </div>
               <button
                 type="button"
-                onClick={() => {
-                  const newVen = prompt('Enter new vendor name:');
-                  if (newVen) setVendor(newVen);
-                }}
+                onClick={() => setIsAddVendorOpen(true)}
                 className="p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 transition-colors shadow-2xs"
-                title="Add Vendor"
+                title="Add New Vendor"
               >
                 <Plus className="w-4 h-4" />
               </button>

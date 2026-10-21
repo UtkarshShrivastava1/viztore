@@ -52,13 +52,21 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ onNavigateHome }) =>
     setIsAddExpenseModalOpen,
     viewMode,
     setViewMode,
+    fetchExpenseData,
+    isLoading,
   } = useExpenseStore();
 
   const [isAddPurchaseMenuOpen, setIsAddPurchaseMenuOpen] = useState(false);
   const [isMoreActionsOpen, setIsMoreActionsOpen] = useState(false);
+  const [showComplianceInfo, setShowComplianceInfo] = useState(false);
+  const [showInfoBanner, setShowInfoBanner] = useState(false);
 
   const purchaseMenuRef = useRef<HTMLDivElement>(null);
   const moreActionsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    fetchExpenseData();
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -309,26 +317,52 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ onNavigateHome }) =>
       />
 
       {/* Bottom Compliance & Information Banner matching Mockup 8.0 & 8.11 */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-            <ShieldCheck className="w-5 h-5" />
+      {/* Bottom Compliance & Information Banner matching Mockup 8.0 & 8.11 */}
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-slate-800">Streamlined Procurement & Expenses</h4>
+              <p className="text-[11px] text-slate-500">
+                Manage your vendors, purchases, expenses, credit notes and e-way bills in one place.
+              </p>
+            </div>
           </div>
-          <div>
-            <h4 className="text-xs font-bold text-slate-800">Streamlined Procurement & Expenses</h4>
-            <p className="text-[11px] text-slate-500">
-              Manage your vendors, purchases, expenses, credit notes and e-way bills in one place.
-            </p>
-          </div>
+
+          <button
+            type="button"
+            onClick={() => setShowComplianceInfo(!showComplianceInfo)}
+            className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-xl shrink-0 transition-colors cursor-pointer"
+          >
+            {showComplianceInfo ? 'Hide Guide' : 'Know More'}
+          </button>
         </div>
 
-        <button
-          type="button"
-          onClick={() => alert('Procurement documentation & compliance guide')}
-          className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-xl shrink-0 transition-colors"
-        >
-          Know More
-        </button>
+        {showComplianceInfo && (
+          <div className="px-5 pb-5 pt-2 border-t border-slate-100 bg-slate-50/50 grid grid-cols-1 md:grid-cols-3 gap-4 text-xs animate-in fade-in duration-150">
+            <div className="p-3 bg-white rounded-xl border border-slate-200">
+              <h5 className="font-bold text-slate-900 mb-1">GST ITC Matching</h5>
+              <p className="text-[11px] text-slate-600 leading-relaxed">
+                Ensure vendor invoices match GSTR-2B before filing. Unmatched input tax credit can be flagged via credit notes.
+              </p>
+            </div>
+            <div className="p-3 bg-white rounded-xl border border-slate-200">
+              <h5 className="font-bold text-slate-900 mb-1">E-Way Bill Compliance</h5>
+              <p className="text-[11px] text-slate-600 leading-relaxed">
+                Consignments exceeding ₹50,000 mandate an active Part-A and Part-B E-Way bill prior to dispatch.
+              </p>
+            </div>
+            <div className="p-3 bg-white rounded-xl border border-slate-200">
+              <h5 className="font-bold text-slate-900 mb-1">Vendor Payment Aging</h5>
+              <p className="text-[11px] text-slate-600 leading-relaxed">
+                Track payments within agreed credit terms (Net 15/30) to preserve vendor relationships and prevent supply delays.
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Slide-Over Drawers */}

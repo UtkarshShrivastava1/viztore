@@ -236,24 +236,25 @@
   - [x] Standardized horizontal KPI stats cards across Catalog, Inventory, Customers, Expenses, Returns, and Payouts
   - [x] Vite production bundle code-splitting (`vite.config.ts` manualChunks for `leaflet` and `lucide-react`)
   - [x] Enforced strict white-label compliance and preserved thermal (80mm) and A4 invoice printing workflows
-- [x] **Pre-Launch Must-Have Modules Hardening & Audit (Modules 6, 9, 10, 14, 15)**:
+- [x] **Pre-Launch Must-Have Modules Hardening & Audit (Modules 6, 8, 9, 10, 13, 14, 15)**:
   - [x] `MOD-06: Customers CRM & Khata Ledger` (7 mockups, zero alerts, in-app Delete modal, WhatsApp payment reminders, aging analysis, statements CSV)
-  - [x] `MOD-10: Payout & Settlements` (4 mockups, zero alerts, in-app Manage Bank Account modal, settlement requests state machine, UTR search)
-  - [x] `MOD-14: Settings` (9 mockups, full 9 tabs functional, profile, business GSTIN, timings, toast feedback)
+  - [x] `MOD-08: Purchase & Operating Expense ERP` (20 mockups, zero alerts, 5 MongoDB models, live CRUD, GSTIN validation, PO/bills/returns/credit notes/E-Way bills, promoted to primary sidebar)
   - [x] `MOD-09: Returns & Refunds` (4 mockups, zero alerts, photo dropzone, return-to-order navigation, return slip modal)
+  - [x] `MOD-10: Payout & Settlements` (4 mockups, zero alerts, in-app Manage Bank Account modal, settlement requests state machine, UTR search)
+  - [x] `MOD-13: Store Management Hub` (7 mockups, zero alerts, sections priority reordering, live phone chassis preview, product placement matrix, QR code generator, cloud sync)
+  - [x] `MOD-14: Settings` (9 mockups, full 9 tabs functional, profile, business GSTIN, timings, toast feedback)
   - [x] `MOD-15: Support & Help Desk` (2 mockups, zero alerts, ticket attachment input, WhatsApp support integration)
 - [x] **Core Platforms Live E2E Pilot Testing — System 1: Online Storefront & Fulfillment Triangle (Completed 🟢)**:
   - [x] Customer web discovery & cart checkout (`:3000`) ➔ Merchant Order Pipeline acceptance (`:3001`) ➔ Ready to Ship ➔ Runner OTP verification (`5575`) ➔ Delivered & Invoiced (`INV-ORD-20261015-CABA79`) ➔ Verified atomic stock decrement (45 ➔ 44 units)
 - [x] **Core Platforms Live E2E Pilot Testing — System 2: In-House POS Billing & Barcode Counter (Completed 🟢)**:
   - [x] In-House Counter POS Barcode Scan ➔ Multi-tender settlement (Cash / UPI / Khata) ➔ Thermal Receipt Print (`INV-1001` & `INV-1002`) ➔ Atomic Stock Decrement reflected on Storefront (43 ➔ 42 units)
-- [ ] **Rider Fleet Open-Pool Broadcast & Atomic Mutex Claim Engine (Phase 2 Delivery Dispatch) — PLANNED 🟡**:
-  - [ ] Multi-rider open pool broadcast via WhatsApp Cloud API / Webhook
-  - [ ] Atomic Mutex claim locking in MongoDB (`status: SEARCHING_PARTNER` ➔ `ASSIGNED`)
-  - [ ] Turn-by-turn navigation link generation & customer OTP verification
+- [x] **Rider Fleet Open-Pool Broadcast & Atomic Mutex Claim Engine (Phase 2 Delivery Dispatch) (Completed 🟢)**:
+  - [x] Multi-rider open pool broadcast via WhatsApp Cloud API / Webhook
+  - [x] Atomic Mutex claim locking in MongoDB (`status: PENDING_ASSIGNMENT` ➔ `ASSIGNED`)
+  - [x] Turn-by-turn navigation link generation & customer OTP verification
 
 - [ ] Merchant staff management & role-based access control (Manager, Cashier, Inventory Clerk)
 - [ ] Merchant marketing suite: promotional store banner manager & coupon builder (Post-Launch Phase 2)
-- [ ] Merchant purchase expense ERP (Post-Launch Phase 2)
 - [ ] Customer Mobile App with React Native & Expo (iOS + Android)
 - [ ] Background GPS geolocation & mobile push notifications
 - [ ] Customer in-app returns/exchange request hub & digital wallet loyalty balance

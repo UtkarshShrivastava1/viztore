@@ -13,8 +13,13 @@ interface LineItem {
 }
 
 export const CreateDirectPurchaseModal: React.FC = () => {
-  const { isCreateDirectPurchaseOpen, setIsCreateDirectPurchaseOpen, setIsAddVendorOpen } =
-    useExpenseStore();
+  const {
+    isCreateDirectPurchaseOpen,
+    setIsCreateDirectPurchaseOpen,
+    setIsAddVendorOpen,
+    createPurchaseRecord,
+    isSubmitting,
+  } = useExpenseStore();
 
   const [vendor, setVendor] = useState('Sharma Enterprises');
   const [billNumber, setBillNumber] = useState('BILL-2024-000128');
@@ -69,10 +74,35 @@ export const CreateDirectPurchaseModal: React.FC = () => {
   const totalAmount = discountedSubtotal + taxAmount;
   const pendingAmount = Math.max(0, totalAmount - (settledAmount || 0));
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert(`Direct Purchase ${billNumber} created successfully!`);
-    setIsCreateDirectPurchaseOpen(false);
+    const ok = await createPurchaseRecord({
+      billNumber: billNumber || `BILL-${Date.now()}`,
+      vendorName: vendor || 'Sharma Enterprises',
+      billDate: invoiceDate ? new Date(invoiceDate).toISOString() : new Date().toISOString(),
+      dueDate: expectedDate ? new Date(expectedDate).toISOString() : new Date().toISOString(),
+      items: items.map((i) => ({
+        productName: i.name || 'Inventory Item',
+        hsnCode: '3004',
+        quantity: i.qty > 0 ? i.qty : 1,
+        unit: i.unit || 'Pcs',
+        purchaseRate: i.rate > 0 ? i.rate : 1,
+        taxPercent: taxRate,
+        taxAmount: ((i.qty * i.rate) * taxRate) / 100,
+        totalAmount: (i.qty * i.rate) + (((i.qty * i.rate) * taxRate) / 100),
+      })),
+      subtotal,
+      taxAmount,
+      discountAmount: discount || 0,
+      totalAmount: totalAmount > 0 ? totalAmount : 1,
+      settledAmount: settledAmount || 0,
+      paymentStatus: settledAmount >= totalAmount ? 'paid' : (settledAmount > 0 ? 'partial' : 'unpaid'),
+      notes: notes || additionalNotes || undefined,
+    });
+
+    if (ok) {
+      setIsCreateDirectPurchaseOpen(false);
+    }
   };
 
   return createPortal(

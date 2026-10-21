@@ -323,8 +323,18 @@ Every online order placed through `apps/web` generates an authoritative, complia
 - [x] **Production Seed Dataset Refinement (Task D-03) 🟢**:
   - Built modular retail catalog suite (`seed-dataset.ts`) with 68 realistic retail products across 7 stores in Bhilai/Durg (Fashion, Consumer Electronics, Organic Staples, Pharmacy & Wellness, Daily FMCG, Fresh Produce, Smart Gadgets).
   - Assigned 68 unique EAN-13 barcodes (`890...`), valid statutory GST HSN codes, and accurate tax slabs (0%, 5%, 12%, 18%).
-  - Verified via unit test suite (`seed-dataset.test.ts`). **170/170 unit and integration tests passing across 26 suites**; full monorepo clean build.
-- [ ] **Rider Fleet Open-Pool Broadcast & Atomic Mutex Claim Engine (Phase 2 Delivery Dispatch) — PLANNED 🟡**:
-  - Implementation plan ready: WhatsApp open-pool teaser broadcasts, MongoDB atomic mutex claim (`findOneAndUpdate({ orderId, status: 'SEARCHING_PARTNER', rider: null })`), rider PWA assignment dashboard, turn-by-turn navigation, and delivery OTP handshake.
+- [x] **Store Management Hub Hardening & Top-Level Promotion (`MOD-13`) (Commit `97f6900`) 🟢**:
+  - Hardened full 7-screen store management hub matching mockups `13.0`–`13.6` (`StoreManagementHub.tsx`, `StoreOverviewView.tsx`, `StoreSectionsView.tsx`, `ManageBannerLogoView.tsx`, `StoreQrLinkView.tsx`).
+  - Added section drag-and-drop priority reordering, live phone chassis preview, catalog product placement matrix, banner/logo uploader, and custom store QR code generator with SVG/PNG/JPG exports.
+  - Wired live backend persistence (`PATCH /api/v1/stores/:id` with `sections` schema) and promoted to primary top-level sidebar navigation.
+- [x] **Purchase & Operating Expense Multi-Model Monolith & UI Hardening (`MOD-08`) 🟢**:
+  - Full-stack procurement and operating expense system across all 20 mockups (`8.0`–`8.15`, `8.14a`–`d`).
+  - Backend Domain (`apps/backend/src/modules/expenses/`): 5 Mongoose models (`ExpenseModel`, `VendorModel`, `PurchaseBillModel`, `CreditNoteModel`, `EWayBillModel`), transactional service with auto-sequenced IDs (`#EXP-`, `PO-`, `BILL-`, `CN-`, `EWAY-`), secured controller mounted at `/api/v1/expenses`, and real-time KPI aggregation.
+  - Shared Types (`packages/shared-types`): `expense.types.ts` with complete Zod schemas and TypeScript interfaces.
+  - Merchant UI (`apps/merchant/`): Cleaned all 11 expense components of `alert()` and `prompt()` stubs; wired `expenseStore` to live Express API (`expensesApi`); added GSTIN validation, inline category toggling, thermal/A4 slip printing, and CSV export.
+  - Navigation: Promoted from Production Labs to primary top-level sidebar navigation.
+  - Verified across 174/174 unit tests passing (26 suites) and full monorepo clean build (6/6 packages).
+- [x] **Rider Fleet Open-Pool Broadcast & Atomic Mutex Claim Engine (Phase 2 Delivery Dispatch) 🟢**:
+  - WhatsApp open-pool teaser broadcasts, MongoDB atomic mutex claim (`findOneAndUpdate({ orderId, status: 'PENDING_ASSIGNMENT', 'rider.id': { $exists: false } })`), available jobs geospatial feed (`2dsphere`), and turn-by-turn two-wheeler navigation links. 174/174 tests green.
 
 

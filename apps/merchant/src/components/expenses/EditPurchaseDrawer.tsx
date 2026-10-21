@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Plus, Trash2, Calendar } from 'lucide-react';
 import { INDIAN_STATES } from '@repo/shared-types';
+import { useExpenseStore } from '../../stores/expenseStore.js';
 
 interface EditPurchaseDrawerProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ export const EditPurchaseDrawer: React.FC<EditPurchaseDrawerProps> = ({
   onClose,
   onUpdate,
 }) => {
+  const { setIsAddVendorOpen } = useExpenseStore();
   const [vendor, setVendor] = useState('Sharma Enterprises');
   const [invoiceNo, setInvoiceNo] = useState('BILL-2024-000123');
   const [invoiceDate, setInvoiceDate] = useState('11/05/2024');
@@ -98,8 +100,9 @@ export const EditPurchaseDrawer: React.FC<EditPurchaseDrawerProps> = ({
                   </select>
                   <button
                     type="button"
-                    onClick={() => alert('Quick Add Vendor')}
+                    onClick={() => setIsAddVendorOpen(true)}
                     className="p-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors shadow-2xs"
+                    title="Add New Vendor"
                   >
                     <Plus className="w-4 h-4" />
                   </button>

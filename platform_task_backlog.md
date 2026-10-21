@@ -51,6 +51,7 @@ timeline
 
 | **B-07** | **Dynamic Multi-Department Taxonomy & Custom Brand Catalog Creation** | `P1` | Medium | `catalog.types.ts`, `product.model.ts`, `AddProductStep1.tsx`, `CreatableCombobox.tsx` | **DONE ✅** | Relaxed category/subtype schema constraints to accept arbitrary strings; built `CreatableCombobox` supporting inline creation for Category, Sub-category, Product Type, and Brand across retail verticals. 127/127 tests green (`commit 93f84ec`). |
 | **B-08** | **Rider Fleet Open-Pool Broadcast & Atomic Mutex Claim Engine** | `P0` | Medium | `delivery.repository.ts`, `delivery.service.ts`, `delivery.routes.ts` | **DONE ✅** | Hyperlocal rider dispatch: WhatsApp open-pool teaser broadcasts, MongoDB atomic mutex claim (`findOneAndUpdate({ orderId, status: 'PENDING_ASSIGNMENT', 'rider.id': { $exists: false } })`), available jobs geospatial feed (`2dsphere`), and turn-by-turn two-wheeler navigation links. 174/174 tests green. |
+| **B-09** | **Purchase & Operating Expense Multi-Model Monolith Subsystem** | `P0` | High | `apps/backend/src/modules/expenses/`, `expense.types.ts`, `app.ts` | **DONE ✅** | Built complete procurement and operating expenses domain: 5 Mongoose models (`ExpenseModel`, `VendorModel`, `PurchaseBillModel`, `CreditNoteModel`, `EWayBillModel`), transactional CRUD service, secured controller (`/api/v1/expenses`), real-time KPI aggregation, and Zod type contracts. 174/174 tests green (`commit 97f6900` + current). |
 
 ---
 
@@ -80,6 +81,8 @@ timeline
 | **I-04** | **Vinay Task 9 QA Audit Report** (`apps/web/`) | `P1` | `apps/web/CUSTOMER_WEB_QA_AUDIT_REPORT.md` | **ASSIGNED 🟡** | Comprehensive 66-mockup visual fidelity audit across desktop ($\ge 1280\text{px}$) and mobile ($375\text{px}$) viewports, plus customer simulation logs. |
 | **I-05** | **Abhay Task 11 E2E Simulation** (`apps/merchant/` & `apps/web/`) | `P0` | `apps/merchant/MERCHANT_E2E_QA_AUDIT_REPORT.md` | **ASSIGNED 🟡** | End-to-end manual operational loop: Merchant registration, store setup, cataloging, cross-platform customer order checkout on `:3000`, live order fulfillment with OTP, walk-in counter POS sale, and thermal printing audit. |
 | **I-06** | **Corporate Marketing Website Monorepo Ingestion** (`apps/company/`) | `P0` | `apps/company/` | **DONE ✅** | Ingested standalone Next.js website for corporate subdomain `company.*`. Unified under Turborepo, 100% white-label sanitized (`branding.config.ts`), zero brand leakage, React 18 harmonized, 13 static routes prerendered cleanly. |
+| **M-01** | **Store Management Hub Hardening & Primary Promotion** (`apps/merchant/`) | `P0` | `apps/merchant/src/pages/StoreManagementHub.tsx`, `Sidebar.tsx` | **DONE ✅** | Hardened 7 mockups (`13.0`–`13.6`): sections priority reorder, Add Section phone frame preview, product placement matrix, banner/logo editor, QR code SVG/PNG/JPG generator, cloud persistence via `PATCH /api/v1/stores/:id`, promoted to primary sidebar. 174/174 tests green (`commit 97f6900`). |
+| **M-02** | **Purchase & Operating Expense Hardening** (`apps/merchant/`) | `P0` | `apps/merchant/src/pages/ExpensesPage.tsx`, `components/expenses/` | **DONE ✅** | Hardened 20 mockups (`8.0`–`8.15`, `8.14a`–`d`): purged all alert stubs, connected `expenseStore` to live Express API (`/api/v1/expenses`), added GSTIN verification, thermal print preview, dynamic category addition, and promoted to primary sidebar. Clean 6/6 package build & 174/174 tests green. |
 
 ---
 
@@ -136,6 +139,12 @@ timeline
 [COMPLETED] ➔ D-03: Production Seed Dataset Refinement (68 Products, 7 Stores, EAN-13 Barcodes)
   ↓
 [COMPLETED] ➔ B-08: Rider Fleet Open-Pool Broadcast & Atomic Mutex Claim Engine
+  ↓
+[COMPLETED] ➔ M-01: Store Management Hub Hardening (Folder 13, 7 Screens, Cloud Sync, commit 97f6900)
+  ↓
+[COMPLETED] ➔ B-09: Purchase & Operating Expense Backend Monolith Module (5 MongoDB Models, CRUD, KPIs)
+  ↓
+[COMPLETED] ➔ M-02: Purchase & Operating Expense Hardening (Folder 8, 20 Screens, Sidebar Promoted)
   ↓
 [ALL BACKLOG & DEPLOYMENT PREPARATION TASKS VERIFIED 100% COMPLETE & PASSING (174/174 TESTS)]
 ```

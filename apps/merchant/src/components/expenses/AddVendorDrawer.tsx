@@ -8,6 +8,7 @@ import {
   validatePhone,
   validatePIN,
 } from '../../utils/validation.js';
+import { useExpenseStore } from '../../stores/expenseStore.js';
 
 interface AddVendorDrawerProps {
   isOpen: boolean;
@@ -42,8 +43,11 @@ export const AddVendorDrawer: React.FC<AddVendorDrawerProps> = ({
   const [notes, setNotes] = useState('');
   const [isActive, setIsActive] = useState(true);
 
+  const { createVendorRecord, isSubmitting } = useExpenseStore();
+
   // Validation errors
   const [gstinError, setGstinError] = useState('');
+  const [gstinSuccess, setGstinSuccess] = useState('');
   const [panError, setPanError] = useState('');
   const [phoneError, setPhoneError] = useState('');
   const [pincodeError, setPincodeError] = useState('');
@@ -197,7 +201,18 @@ export const AddVendorDrawer: React.FC<AddVendorDrawerProps> = ({
                   />
                   <button
                     type="button"
-                    onClick={() => alert('Verifying GSTIN against portal...')}
+                    onClick={() => {
+                      if (!gstin.trim()) {
+                        setGstinError('Please enter a GSTIN number to verify.');
+                        setGstinSuccess('');
+                      } else if (!validateGSTIN(gstin.trim())) {
+                        setGstinError('Invalid GSTIN format (15 characters alphanumeric).');
+                        setGstinSuccess('');
+                      } else {
+                        setGstinError('');
+                        setGstinSuccess('GSTIN verified against GST format standard.');
+                      }
+                    }}
                     className="absolute right-2 p-1 text-slate-400 hover:text-blue-600 transition-colors"
                     title="Verify GSTIN"
                   >
@@ -206,6 +221,9 @@ export const AddVendorDrawer: React.FC<AddVendorDrawerProps> = ({
                 </div>
                 {gstinError && (
                   <p className="text-[11px] text-rose-500 mt-1 font-medium">{gstinError}</p>
+                )}
+                {gstinSuccess && (
+                  <p className="text-[11px] text-emerald-600 mt-1 font-medium">{gstinSuccess}</p>
                 )}
               </div>
 
@@ -451,7 +469,8 @@ export const AddVendorDrawer: React.FC<AddVendorDrawerProps> = ({
           </button>
           <button
             type="button"
-            onClick={() => {
+            disabled={isSubmitting}
+            onClick={async () => {
               let hasErr = false;
               if (gstin.trim() && !validateGSTIN(gstin.trim())) {
                 setGstinError('Invalid GSTIN format (15 characters alphanumeric).');
@@ -474,12 +493,28 @@ export const AddVendorDrawer: React.FC<AddVendorDrawerProps> = ({
                 return;
               }
               setFormError('');
+
+              await createVendorRecord({
+                name: displayName.trim() || companyName.trim() || 'New Vendor',
+                companyName: companyName.trim() || displayName.trim() || undefined,
+                phone: phone.trim() || '9876543210',
+                gstin: gstin.trim() || undefined,
+                pan: pan.trim() || undefined,
+                address: addressLine.trim() || undefined,
+                city: city.trim() || undefined,
+                pincode: pincode.trim() || undefined,
+                category: category || 'General',
+                paymentTerms: paymentTerms || 'Due on Receipt',
+                openingBalance: parseFloat(openingBalance) || 0,
+                creditLimit: parseFloat(creditLimit) || 0,
+              });
+
               onSaved();
               onClose();
             }}
-            className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-colors shadow-2xs"
+            className="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-colors shadow-2xs"
           >
-            Save Vendor
+            {isSubmitting ? 'Saving Vendor...' : 'Save Vendor'}
           </button>
         </div>
       </div>
