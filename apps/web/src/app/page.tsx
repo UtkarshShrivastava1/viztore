@@ -3,7 +3,6 @@
 import React from 'react';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
-import { Footer } from '@/components/layout/Footer';
 import { HeroBannerCarousel } from '@/features/home/components/HeroBannerCarousel';
 import { TrustValuePropsBar } from '@/features/home/components/TrustValuePropsBar';
 import { StoresNearYouRail } from '@/features/home/components/StoresNearYouRail';
@@ -57,8 +56,6 @@ export default function HomePage() {
           <div className="absolute -right-6 -bottom-6 w-32 h-32 rounded-full bg-white/10 pointer-events-none" />
         </section>
       </main>
-
-      <Footer />
     </div>
   );
 }
