@@ -17,6 +17,7 @@ import {
 import { useExpenseStore } from '../stores/expenseStore.js';
 import { ExpensesKPIBar } from '../components/expenses/ExpensesKPIBar.js';
 import { ExpensesTable } from '../components/expenses/ExpensesTable.js';
+import { VendorsTab } from '../components/expenses/VendorsTab.js';
 import { PurchaseDetailsDrawer } from '../components/expenses/PurchaseDetailsDrawer.js';
 import { EditPurchaseDrawer } from '../components/expenses/EditPurchaseDrawer.js';
 import { CreateCreditNoteDrawer } from '../components/expenses/CreateCreditNoteDrawer.js';
@@ -28,6 +29,7 @@ import { CreatePurchaseReturnModal } from '../components/expenses/CreatePurchase
 import { CreateDirectPurchaseModal } from '../components/expenses/CreateDirectPurchaseModal.js';
 import { AddExpenseModal } from '../components/expenses/AddExpenseModal.js';
 import { AddExpenseView } from '../components/expenses/AddExpenseView.js';
+import { ImportProcurementModal } from '../components/expenses/ImportProcurementModal.js';
 
 interface ExpensesPageProps {
   onNavigateHome?: () => void;
@@ -35,6 +37,8 @@ interface ExpensesPageProps {
 
 export const ExpensesPage: React.FC<ExpensesPageProps> = ({ onNavigateHome }) => {
   const {
+    activeSubTab,
+    setActiveSubTab,
     selectedPurchase,
     setSelectedPurchase,
     isEditPurchaseOpen,
@@ -50,6 +54,9 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ onNavigateHome }) =>
     setIsCreateReturnModalOpen,
     setIsCreateDirectPurchaseOpen,
     setIsAddExpenseModalOpen,
+    openAddVendor,
+    openImportModal,
+    exportProcurementReportCsv,
     viewMode,
     setViewMode,
   } = useExpenseStore();
@@ -81,26 +88,46 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ onNavigateHome }) =>
     );
   }
 
+  const isVendorsTab = activeSubTab === 'vendors';
+
   return (
     <div className="w-full max-w-[1600px] mx-auto space-y-3.5">
-      {/* Breadcrumb + Header compact block matching 8.0.png */}
+      {/* Breadcrumb + Header compact block matching 8.0.png & 8.10.png */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
         <div>
           <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 mb-0.5">
             <button
               type="button"
               onClick={onNavigateHome}
-              className="hover:text-blue-600 flex items-center gap-1 transition-colors"
+              className="hover:text-blue-600 flex items-center gap-1 transition-colors cursor-pointer"
             >
               <Home className="w-3 h-3" />
               <span>Home</span>
             </button>
             <ChevronRight className="w-3 h-3 text-slate-400" />
-            <span className="text-slate-800">Purchase / Expense</span>
+            <button
+              type="button"
+              onClick={() => setActiveSubTab('all')}
+              className={`hover:text-blue-600 transition-colors cursor-pointer ${
+                isVendorsTab ? 'text-slate-500' : 'text-slate-800'
+              }`}
+            >
+              Purchase / Expense
+            </button>
+            {isVendorsTab && (
+              <>
+                <ChevronRight className="w-3 h-3 text-slate-400" />
+                <span className="text-slate-800 font-bold">Vendors</span>
+              </>
+            )}
           </div>
-          <h1 className="text-xl font-black text-slate-900 tracking-tight">Purchase / Expense</h1>
+          <h1 className="text-xl font-black text-slate-900 tracking-tight">
+            {isVendorsTab ? 'Vendors' : 'Purchase / Expense'}
+          </h1>
           <p className="text-[11px] text-slate-500">
-            Manage vendors, purchase orders, expenses, credit notes and e-way bills — all in one place.
+            {isVendorsTab
+              ? 'Manage your vendors, supplier details, contact information and transaction history.'
+              : 'Manage vendors, purchase orders, expenses, credit notes and e-way bills — all in one place.'}
           </p>
         </div>
 
@@ -109,7 +136,7 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ onNavigateHome }) =>
           <button
             type="button"
             onClick={() => setIsAddExpenseModalOpen(true)}
-            className="px-3 py-1.5 border border-blue-600 text-blue-600 hover:bg-blue-50 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors shadow-2xs"
+            className="px-3 py-1.5 border border-blue-600 text-blue-600 hover:bg-blue-50 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Add Expense</span>
@@ -120,7 +147,7 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ onNavigateHome }) =>
             <button
               type="button"
               onClick={() => setIsAddPurchaseMenuOpen(!isAddPurchaseMenuOpen)}
-              className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors shadow-2xs"
+              className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Add Purchase</span>
@@ -135,7 +162,7 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ onNavigateHome }) =>
                     setIsAddPurchaseMenuOpen(false);
                     setIsCreatePOModalOpen(true);
                   }}
-                  className="w-full text-left p-2.5 rounded-xl hover:bg-slate-50 flex items-start gap-3 transition-colors group"
+                  className="w-full text-left p-2.5 rounded-xl hover:bg-slate-50 flex items-start gap-3 transition-colors group cursor-pointer"
                 >
                   <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-blue-600 group-hover:text-white transition-colors">
                     <FileText className="w-4 h-4" />
@@ -152,7 +179,7 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ onNavigateHome }) =>
                     setIsAddPurchaseMenuOpen(false);
                     setIsCreateBillModalOpen(true);
                   }}
-                  className="w-full text-left p-2.5 rounded-xl hover:bg-slate-50 flex items-start gap-3 transition-colors group"
+                  className="w-full text-left p-2.5 rounded-xl hover:bg-slate-50 flex items-start gap-3 transition-colors group cursor-pointer"
                 >
                   <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-blue-600 group-hover:text-white transition-colors">
                     <Receipt className="w-4 h-4" />
@@ -169,7 +196,7 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ onNavigateHome }) =>
                     setIsAddPurchaseMenuOpen(false);
                     setIsCreateReturnModalOpen(true);
                   }}
-                  className="w-full text-left p-2.5 rounded-xl hover:bg-slate-50 flex items-start gap-3 transition-colors group"
+                  className="w-full text-left p-2.5 rounded-xl hover:bg-slate-50 flex items-start gap-3 transition-colors group cursor-pointer"
                 >
                   <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-rose-600 group-hover:text-white transition-colors">
                     <RotateCcw className="w-4 h-4" />
@@ -186,7 +213,7 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ onNavigateHome }) =>
                     setIsAddPurchaseMenuOpen(false);
                     setIsCreateDirectPurchaseOpen(true);
                   }}
-                  className="w-full text-left p-2.5 rounded-xl hover:bg-slate-50 flex items-start gap-3 transition-colors group"
+                  className="w-full text-left p-2.5 rounded-xl hover:bg-slate-50 flex items-start gap-3 transition-colors group cursor-pointer"
                 >
                   <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-purple-600 group-hover:text-white transition-colors">
                     <Zap className="w-4 h-4" />
@@ -205,7 +232,7 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ onNavigateHome }) =>
             <button
               type="button"
               onClick={() => setIsMoreActionsOpen(!isMoreActionsOpen)}
-              className="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors shadow-2xs"
+              className="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
             >
               <span>More Actions</span>
               <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
@@ -217,9 +244,9 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ onNavigateHome }) =>
                   type="button"
                   onClick={() => {
                     setIsMoreActionsOpen(false);
-                    setIsAddVendorOpen(true);
+                    openAddVendor();
                   }}
-                  className="w-full px-3.5 py-2 hover:bg-slate-50 text-slate-700 text-xs flex items-center gap-2.5 font-medium transition-colors"
+                  className="w-full px-3.5 py-2 hover:bg-slate-50 text-slate-700 text-xs flex items-center gap-2.5 font-medium transition-colors cursor-pointer"
                 >
                   <UserPlus className="w-4 h-4 text-slate-500" />
                   <span>Add Vendor</span>
@@ -231,7 +258,7 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ onNavigateHome }) =>
                     setIsMoreActionsOpen(false);
                     setIsGenerateEWayBillOpen(true);
                   }}
-                  className="w-full px-3.5 py-2 hover:bg-slate-50 text-slate-700 text-xs flex items-center gap-2.5 font-medium transition-colors"
+                  className="w-full px-3.5 py-2 hover:bg-slate-50 text-slate-700 text-xs flex items-center gap-2.5 font-medium transition-colors cursor-pointer"
                 >
                   <FileCheck className="w-4 h-4 text-slate-500" />
                   <span>Generate E-Way Bill</span>
@@ -243,9 +270,9 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ onNavigateHome }) =>
                   type="button"
                   onClick={() => {
                     setIsMoreActionsOpen(false);
-                    alert('Import Purchases modal');
+                    openImportModal('purchases');
                   }}
-                  className="w-full px-3.5 py-2 hover:bg-slate-50 text-slate-700 text-xs flex items-center gap-2.5 font-medium transition-colors"
+                  className="w-full px-3.5 py-2 hover:bg-slate-50 text-slate-700 text-xs flex items-center gap-2.5 font-medium transition-colors cursor-pointer"
                 >
                   <Upload className="w-4 h-4 text-slate-500" />
                   <span>Import Purchase</span>
@@ -255,9 +282,9 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ onNavigateHome }) =>
                   type="button"
                   onClick={() => {
                     setIsMoreActionsOpen(false);
-                    alert('Import Expenses modal');
+                    openImportModal('expenses');
                   }}
-                  className="w-full px-3.5 py-2 hover:bg-slate-50 text-slate-700 text-xs flex items-center gap-2.5 font-medium transition-colors"
+                  className="w-full px-3.5 py-2 hover:bg-slate-50 text-slate-700 text-xs flex items-center gap-2.5 font-medium transition-colors cursor-pointer"
                 >
                   <Upload className="w-4 h-4 text-slate-500" />
                   <span>Import Expense</span>
@@ -267,9 +294,9 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ onNavigateHome }) =>
                   type="button"
                   onClick={() => {
                     setIsMoreActionsOpen(false);
-                    alert('Import Vendors modal');
+                    openImportModal('vendors');
                   }}
-                  className="w-full px-3.5 py-2 hover:bg-slate-50 text-slate-700 text-xs flex items-center gap-2.5 font-medium transition-colors"
+                  className="w-full px-3.5 py-2 hover:bg-slate-50 text-slate-700 text-xs flex items-center gap-2.5 font-medium transition-colors cursor-pointer"
                 >
                   <Upload className="w-4 h-4 text-slate-500" />
                   <span>Import Vendors</span>
@@ -281,9 +308,9 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ onNavigateHome }) =>
                   type="button"
                   onClick={() => {
                     setIsMoreActionsOpen(false);
-                    alert('Downloading procurement & expenses report...');
+                    exportProcurementReportCsv();
                   }}
-                  className="w-full px-3.5 py-2 hover:bg-slate-50 text-slate-700 text-xs flex items-center gap-2.5 font-medium transition-colors"
+                  className="w-full px-3.5 py-2 hover:bg-slate-50 text-slate-700 text-xs flex items-center gap-2.5 font-medium transition-colors cursor-pointer"
                 >
                   <Download className="w-4 h-4 text-slate-500" />
                   <span>Download Report</span>
@@ -297,39 +324,51 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ onNavigateHome }) =>
       {/* Dynamic KPI Bar matching 8.0, 8.5, 8.7, 8.8, 8.9, 8.10 */}
       <ExpensesKPIBar />
 
-      {/* High Density Table matching 8.0 - 8.10 with row actions menu 8.1 */}
-      <ExpensesTable
-        onViewDetails={(item) => setSelectedPurchase(item)}
-        onEditItem={(item) => {
-          setSelectedPurchase(item);
-          setIsEditPurchaseOpen(true);
-        }}
-        onCreateCreditNote={() => setIsCreateCreditNoteOpen(true)}
-        onGenerateEWayBill={() => setIsGenerateEWayBillOpen(true)}
-      />
+      {/* Main Table or Dedicated Vendors Tab */}
+      {isVendorsTab ? (
+        <VendorsTab
+          onOpenAddVendor={() => openAddVendor()}
+          onEditVendor={(vendor) => openAddVendor(vendor)}
+          onCreatePO={() => setIsCreatePOModalOpen(true)}
+          onGenerateEWayBill={() => setIsGenerateEWayBillOpen(true)}
+        />
+      ) : (
+        <>
+          {/* High Density Table matching 8.0 - 8.9 with row actions menu 8.1 */}
+          <ExpensesTable
+            onViewDetails={(item) => setSelectedPurchase(item)}
+            onEditItem={(item) => {
+              setSelectedPurchase(item);
+              setIsEditPurchaseOpen(true);
+            }}
+            onCreateCreditNote={() => setIsCreateCreditNoteOpen(true)}
+            onGenerateEWayBill={() => setIsGenerateEWayBillOpen(true)}
+          />
 
-      {/* Bottom Compliance & Information Banner matching Mockup 8.0 & 8.11 */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-            <ShieldCheck className="w-5 h-5" />
-          </div>
-          <div>
-            <h4 className="text-xs font-bold text-slate-800">Streamlined Procurement & Expenses</h4>
-            <p className="text-[11px] text-slate-500">
-              Manage your vendors, purchases, expenses, credit notes and e-way bills in one place.
-            </p>
-          </div>
-        </div>
+          {/* Bottom Compliance & Information Banner matching Mockup 8.0 & 8.11 */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-slate-800">Streamlined Procurement & Expenses</h4>
+                <p className="text-[11px] text-slate-500">
+                  Manage your vendors, purchases, expenses, credit notes and e-way bills in one place.
+                </p>
+              </div>
+            </div>
 
-        <button
-          type="button"
-          onClick={() => alert('Procurement documentation & compliance guide')}
-          className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-xl shrink-0 transition-colors"
-        >
-          Know More
-        </button>
-      </div>
+            <button
+              type="button"
+              onClick={() => alert('Procurement documentation & compliance guide')}
+              className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-xl shrink-0 transition-colors cursor-pointer"
+            >
+              Know More
+            </button>
+          </div>
+        </>
+      )}
 
       {/* Slide-Over Drawers */}
       <PurchaseDetailsDrawer
@@ -365,6 +404,7 @@ export const ExpensesPage: React.FC<ExpensesPageProps> = ({ onNavigateHome }) =>
       <CreatePurchaseReturnModal />
       <CreateDirectPurchaseModal />
       <AddExpenseModal />
+      <ImportProcurementModal />
     </div>
   );
 };
