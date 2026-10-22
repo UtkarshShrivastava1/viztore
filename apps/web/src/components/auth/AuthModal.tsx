@@ -40,8 +40,8 @@ export const AuthModal: React.FC = () => {
     openAuthModal(view);
   };
 
-  const handleSuccessfulAuth = (user: IUserProfile, accessToken: string) => {
-    setAuth(user, accessToken);
+  const handleSuccessfulAuth = (user: IUserProfile, accessToken: string, refreshToken?: string) => {
+    setAuth(user, accessToken, refreshToken);
     resetForm();
     if (typeof window !== 'undefined') {
       const currentPath = window.location.pathname;
@@ -65,7 +65,7 @@ export const AuthModal: React.FC = () => {
       const res = await authApi.login({ email: email.trim(), password });
       setSuccessMsg('Welcome back!');
       setTimeout(() => {
-        handleSuccessfulAuth(res.user, res.tokens.accessToken);
+        handleSuccessfulAuth(res.user, res.tokens.accessToken, res.tokens.refreshToken);
       }, 500);
     } catch (err: unknown) {
       setError((err as { message?: string })?.message || 'Invalid email or password. Please check your credentials and try again.');
@@ -102,7 +102,7 @@ export const AuthModal: React.FC = () => {
       });
       setSuccessMsg('Account created successfully!');
       setTimeout(() => {
-        handleSuccessfulAuth(res.user, res.tokens.accessToken);
+        handleSuccessfulAuth(res.user, res.tokens.accessToken, res.tokens.refreshToken);
       }, 500);
     } catch (err: unknown) {
       setError((err as { message?: string })?.message || 'Registration failed. Please check your details and try again.');

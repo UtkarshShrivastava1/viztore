@@ -85,6 +85,16 @@ export function CheckoutPriceDetails({ storeId }: { storeId?: string }) {
       router.push(`/checkout/success?orderId=${encodeURIComponent(orderId)}&orderNumber=${encodeURIComponent(order.orderNumber)}`);
     } catch (err: unknown) {
       console.error('Backend order placement API error:', err);
+      const isAuthError =
+        (err as { statusCode?: number })?.statusCode === 401 ||
+        (err as { message?: string })?.message?.toLowerCase().includes('token') ||
+        (err as { message?: string })?.message?.toLowerCase().includes('unauthorized');
+
+      if (isAuthError) {
+        openAuthModal('login');
+        return;
+      }
+
       const msg = err instanceof Error ? err.message : 'Failed to communicate with store server. Please try again.';
       alert(`Could not place order: ${msg}`);
     } finally {
