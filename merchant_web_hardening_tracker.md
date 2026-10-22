@@ -1102,3 +1102,33 @@ graph LR
   - **Statutory Tax Integrity:** Multi-item and single-item B2B tax math preserves precise paise calculation without rounding drift.
   - **Client State Synchronization:** Store transitions in `billingStore.ts` trigger reactive table invalidation with zero ghost state or stale ledger rows.
 
+---
+
+### 🏁 Step 9: Customers CRM, Khata (Udhar) Credit & WhatsApp Reminders
+* **Date & Timestamp:** October 22, 2026
+* **Test Scope:**
+  1. Boot live local development stack (`apps/backend` on `:5000`, `apps/merchant` on `:3001`).
+  2. Authenticate as merchant owner (`test.merchant@example.com` / `Password@123`, `National Retail Store` `6acf505183256911d14c43cc`).
+  3. Navigate to `/customers` in the merchant panel (`CustomersPage.tsx`).
+  4. Verify Customer Directory & KPIs (Total Customers, Total Sales, Total Outstanding / Khata due, Store Credit).
+  5. Add/verify customer profile (`Rahul Verma`, Phone: `9876543210`, Email: `rahulverma@example.com`, GSTIN: `23ABCDE1234F1Z5`, Mumbai/Indore) and verify rendering in table (`customer_created_and_listed_1792651135349.png`).
+  6. Open Customer Details Drawer (`CustomerDetailsDrawer.tsx`), validating multi-tab breakdown (`Overview`, `Orders`, `Invoices`, `Payments`, `Statements`).
+  7. Open Customer Statement Drawer (`CustomerStatementDrawer.tsx`), verifying Running Transaction Ledger and Aging Summary tab with 5 vertical distribution bars (Current, 1–15 days, 16–30 days, 31–60 days, 60+ days) and overdue invoices list.
+  8. Verify 1-Click WhatsApp Payment Reminder: validate pre-formatted polite balance notification link (`https://wa.me/919876543210?text=...`) referencing customer name, outstanding balance, and store name.
+  9. Verify Khata Settlement & Store Credit adjustment modal (`AddStoreCreditModal.tsx`) with dual-mode support for recording debt repayments (Cash, UPI, Bank Transfer) and digital store credit adjustments.
+  10. Verify statement export engine supporting PDF, Excel (.xlsx), and RFC-compliant CSV formats.
+* **Status:** 🟢 **PASSED & VERIFIED (CRM DIRECTORY, STATEMENT AGING, WHATSAPP REMINDER & KHATA SETTLEMENT)**
+* **Automated Subagent Session Recordings:**
+  - `step9_customers_verified_1792651063017.webp`
+  - `step9_credit_aging_csv_1792651253737.webp`
+* **Visual Verification Artifacts:**
+  - `customer_crm_directory_loaded_1792651088550.png`: Customers CRM directory view
+  - `customer_created_and_listed_1792651135349.png`: Customer directory table with Rahul Verma
+  - `customer_profile_drawer_1792651146800.png`: Slide-over Customer Details drawer with action hooks
+  - `customer_statements_tab_1792651158877.png`: Customer Statement drawer with Transaction Ledger & Aging Summary
+* **Architectural Findings & System Verifications:**
+  - **Cross-Module Store Synchronization:** `CustomersPage.tsx` automatically pulls real buyers from previous online orders (`useOrderStore`) and walk-in counter POS invoices (`useBillingStore`) upon mount, maintaining a unified omni-channel customer profile.
+  - **Dynamic Debt Aging Engine:** `CustomerStatementDrawer.tsx` segments overdue liabilities into chronological risk buckets with responsive color-coded visual bars, giving merchants immediate visibility into collection priorities.
+  - **Frictionless Debt Collection:** 1-click WhatsApp deep-linking removes friction for Indian local merchants by formatting conversational Hindi/English debt reminders ready to dispatch instantly via WhatsApp Web or mobile.
+
+
