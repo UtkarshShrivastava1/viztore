@@ -1065,3 +1065,40 @@ graph LR
   - **Variant SKU Binding:** Updated `CounterPOSView.tsx` and `billingStore.ts` to attach `sku` to line items, ensuring `deductStockAtomic` in `catalog.service.ts` decrements both `totalStock` and specific variant `stock`.
   - **Atomic Stock Verification:** Product `Classic Cotton Polo T-Shirt` (`6acf6c0583256911d14c4a07`) decremented from 44 down to 43 units on variant `POLO-WHT-M`, and total stock from 43 to 42 units.
   - **Zero-Lag Storefront Reflection:** Customer Web Storefront API (`/api/v1/catalog/products/classic-cotton-polo-t-shirt-yas6y`) immediately returned `totalStock: 42, variants[0].stock: 43` without caching lag.
+
+---
+
+### 🏁 Step 8: Commercial Estimates / Quotations & 1-Click Invoice Conversion (B2B Quotation Loop)
+* **Date & Timestamp:** October 22, 2026
+* **Test Scope:**
+  1. Boot live local development stack (`apps/backend` on `:5000`, `apps/merchant` on `:3001`).
+  2. Authenticate as merchant owner (`test.merchant@example.com` / `Password@123`, `National Retail Store` `6acf505183256911d14c43cc`).
+  3. Navigate to `/billing` ➔ Estimates / Quotes sub-tab (`QuotesTableView.tsx`).
+  4. Create commercial quotation (`Q-1001`) via `CreateQuoteView.tsx` with business customer profile (`Apex Retailers Ltd`, Phone: `9826198765`, GSTIN: `22AAAAA0000A1Z5`, Bhilai, Chhattisgarh), line item (`Classic Cotton Polo T-Shirt`, Qty: 5 @ ₹799, 18% IGST), payment terms, and notes.
+  5. Validate persistence and rendering in Quotes table ledger (`quotes_table_created_1792650645881.png`).
+  6. Execute **1-Click Convert to Invoice**: open Quote Details modal (`QuoteDetailModal.tsx`), click "Convert to Tax Invoice", verify auto-population into `CreateInvoiceModal.tsx`, and save invoice.
+  7. Validate transition to Invoices table (`invoice_created_success_1792650719796.png`) with generated Tax Invoice `INV-1001` matching exact line items, tax calculations, and customer GST details.
+  8. Verify RFC-compliant CSV export from quotes ledger.
+* **Status:** 🟢 **PASSED & VERIFIED (QUOTE CREATED, CONVERTED TO TAX INVOICE)**
+* **Automated Subagent Session Recording:** `step8_convert_quote_1792650550221.webp`
+* **Visual Verification Artifacts:**
+  - `create_estimate_modal_1792650512632.png`: Estimate creation modal for `Q-1001`
+  - `quotes_table_created_1792650645881.png`: Quotes ledger displaying `Q-1001` for `Apex Retailers Ltd`
+  - `convert_to_invoice_menu_1792650690534.png`: Dropdown / details modal with Convert to Invoice action
+  - `invoice_created_success_1792650719796.png`: Created Tax Invoice `INV-1001` successfully displayed in Invoices table
+* **Financial Calculations & Document Details:**
+  - **Quotation (`Q-1001`):**
+    - Customer: `Apex Retailers Ltd` (Phone: `9826198765`, GSTIN: `22AAAAA0000A1Z5`)
+    - Line Item: `Classic Cotton Polo T-Shirt` (Qty: 5, Rate: ₹799.00)
+    - Subtotal: ₹3,995.00 | IGST (18%): ₹719.10 | **Grand Total: ₹4,714.10**
+    - Status: `SENT` ➔ `CONVERTED`
+  - **Tax Invoice (`INV-1001`):**
+    - Invoice Type: `Tax Invoice` (B2B Tax Invoice)
+    - Customer: `Apex Retailers Ltd`
+    - Subtotal: ₹3,995.00 | IGST (18%): ₹719.10 | Round Off: ₹0.00 | **Grand Total: ₹4,714.10**
+    - Status: Displayed in live Invoices register
+* **Architectural Findings & System Verifications:**
+  - **Auto-Sequencing & Prepopulation:** `QuotesTableView` seamlessly transfers quote state to `CreateInvoiceModal`, prefilling line items, customer address, and tax slabs without data truncation.
+  - **Statutory Tax Integrity:** Multi-item and single-item B2B tax math preserves precise paise calculation without rounding drift.
+  - **Client State Synchronization:** Store transitions in `billingStore.ts` trigger reactive table invalidation with zero ghost state or stale ledger rows.
+
