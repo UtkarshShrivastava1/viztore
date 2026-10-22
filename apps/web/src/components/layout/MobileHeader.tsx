@@ -143,25 +143,9 @@ export function MobileHeader({
                   </span>
                 )}
               </button>
-              <div className={displayTitle ? "flex-1 flex justify-center text-[#192168] font-bold text-lg" : "scale-90"}>
-                {displayTitle ? displayTitle : <Logo theme="dark" />}
-              </div>
-              <div className="flex items-center gap-4">
-                <button type="button" className="text-[#192168]" onClick={() => router.push('/account/wishlist')}>
-                  <Heart className="h-6 w-6" strokeWidth={1.5} />
-                </button>
-                <button type="button" className="relative text-[#192168]" onClick={() => router.push('/cart')}>
-                  <ShoppingCart className="h-6 w-6" strokeWidth={1.5} />
-                  {cartCount > 0 && (
-                    <span className="absolute -top-1.5 -right-2 flex h-[18px] min-w-[18px] px-1 items-center justify-center rounded-full bg-[#1668F6] text-[10.5px] font-bold text-white shadow-sm border border-white">
-                      {cartCount}
-                    </span>
-                  )}
-                </button>
-              </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Category Icons under the gradient for Mobile (transparent so misty gradient shines through) */}

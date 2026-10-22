@@ -2,7 +2,6 @@
 
 import React, { useCallback, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Header } from '@/components/layout/Header';
 import { ProductCard } from '@/features/products/components/ProductCard';
 import { ProductGridSkeleton } from '@/components/ui/Skeleton';
 import { useProducts } from '@/hooks/useProducts';
