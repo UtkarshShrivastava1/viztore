@@ -7,15 +7,7 @@ import { HomeStoreCard } from './HomeStoreCard';
 import { useNearbyStores } from '@/hooks/useNearbyStores';
 import { useAllStores } from '@/hooks/useAllStores';
 import { useLocationStore } from '@/stores/location.store';
-import { StoreCategory, type IStore } from '@repo/shared-types';
-
-const defaultStores: Partial<IStore>[] = [
-  { _id: 'store-1', name: 'Fashion Hub', slug: 'fashion-hub', category: StoreCategory.FASHION },
-  { _id: 'store-2', name: 'Sharma Electronics', slug: 'sharma-electronics', category: StoreCategory.ELECTRONICS },
-  { _id: 'store-3', name: 'Beauty Corner', slug: 'beauty-corner', category: StoreCategory.BEAUTY_CARE },
-  { _id: 'store-4', name: 'Home Needs', slug: 'home-needs', category: StoreCategory.HOME_LIVING },
-  { _id: 'store-5', name: 'Gadget Store', slug: 'gadget-store', category: StoreCategory.ELECTRONICS },
-];
+import { type IStore } from '@repo/shared-types';
 
 export function StoresNearYouRail() {
   const { lng, lat } = useLocationStore();
@@ -29,16 +21,7 @@ export function StoresNearYouRail() {
       ? allStoresResponse.stores
       : [];
 
-  // Combine live stores with sample stores if fewer than 5
-  const displayStores: IStore[] = [...liveStores];
-  if (displayStores.length < 5) {
-    for (const def of defaultStores) {
-      if (displayStores.length >= 5) break;
-      if (!displayStores.some((s) => s.name.toLowerCase() === def.name?.toLowerCase())) {
-        displayStores.push(def as IStore);
-      }
-    }
-  }
+  const displayStores: IStore[] = liveStores;
 
   return (
     <section className="space-y-3.5 w-full">

@@ -11,82 +11,18 @@ import {
   UserRole,
   StoreCategory,
   StoreApprovalStatus,
-  ProductCategory,
-  ProductSubType,
 } from '@repo/shared-types';
 import { OrderStatus } from '../modules/orders/order.types.js';
-
-interface MerchantSeedDefinition {
-  user: {
-    fullName: string;
-    email: string;
-    phone: string;
-    password: string;
-    role: UserRole;
-    isVerified: boolean;
-    isActive: boolean;
-  };
-  store: {
-    name: string;
-    slug: string;
-    description: string;
-    category: StoreCategory;
-    logoUrl: string;
-    bannerUrl: string;
-    location: {
-      type: 'Point';
-      coordinates: [number, number]; // [lng, lat]
-    };
-    address: {
-      street: string;
-      landmark: string;
-      city: string;
-      state: string;
-      pincode: string;
-    };
-    operatingHours: any;
-    deliveryRadiusKm: number;
-    approvalStatus: StoreApprovalStatus;
-    isActive: boolean;
-    rating: number;
-    reviewCount: number;
-    legalDetails: {
-      gstin: string;
-      pan: string;
-      legalBusinessName: string;
-      isGstVerified: boolean;
-    };
-    bankDetails: {
-      accountNumber: string;
-      ifscCode: string;
-      accountHolderName: string;
-      bankName: string;
-      isVerified: boolean;
-    };
-  };
-  products?: Array<{
-    name: string;
-    slug: string;
-    description: string;
-    category: ProductCategory;
-    subCategory: string;
-    subType: ProductSubType;
-    brand: string;
-    tags: string[];
-    isFeatured: boolean;
-    variants: Array<{
-      sku: string;
-      size?: string;
-      color?: string;
-      colorHex?: string;
-      price: number;
-      mrp: number;
-      stock: number;
-      images: string[];
-      isActive: boolean;
-    }>;
-  }>;
-}
+import {
+  MerchantSeedDefinition,
+  FASHION_PRODUCTS,
+  ELECTRONICS_PRODUCTS,
+  GROCERY_ORGANICS_PRODUCTS,
+  PHARMACY_WELLNESS_PRODUCTS,
+  PROVISIONS_FMCG_PRODUCTS,
+  PRODUCE_PRODUCTS,
+  PATEL_ELECTRONICS_PRODUCTS,
+} from './seed-dataset.js';
 
 const ADMIN_USER = {
   fullName: 'Super Administrator',
@@ -167,9 +103,9 @@ const TEST_CUSTOMERS = [
   },
 ];
 
-const SEED_DATA: MerchantSeedDefinition[] = [
+export const SEED_DATA: MerchantSeedDefinition[] = [
   // ──────────────────────────────────────────────────────────────────────────
-  // 1. Fashion Merchant (Approved - Civic Centre, Bhilai)
+  // 1. Fashion & Apparel: Urban Vogue Studio (Civic Centre, Bhilai)
   // ──────────────────────────────────────────────────────────────────────────
   {
     user: {
@@ -227,189 +163,11 @@ const SEED_DATA: MerchantSeedDefinition[] = [
         isVerified: true,
       },
     },
-    products: [
-      {
-        name: 'Slim Fit Handloom Linen Shirt',
-        slug: 'slim-fit-handloom-linen-shirt',
-        description: 'Breathable, 100% natural organic handloom linen shirt with mandarin collar. Perfect for formal or semi-casual wear.',
-        category: ProductCategory.MEN,
-        subCategory: 'Shirts',
-        subType: ProductSubType.FORMAL,
-        brand: 'Urban Vogue',
-        tags: ['linen', 'handloom', 'summer', 'formal', 'men'],
-        isFeatured: true,
-        variants: [
-          {
-            sku: 'UVS-SH-WHT-M',
-            size: 'M',
-            color: 'Crisp White',
-            colorHex: '#ffffff',
-            price: 1499,
-            mrp: 2499,
-            stock: 25,
-            images: ['https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=600&auto=format&fit=crop'],
-            isActive: true,
-          },
-          {
-            sku: 'UVS-SH-BLU-L',
-            size: 'L',
-            color: 'Powder Blue',
-            colorHex: '#93c5fd',
-            price: 1599,
-            mrp: 2699,
-            stock: 20,
-            images: ['https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=600&auto=format&fit=crop'],
-            isActive: true,
-          },
-        ],
-      },
-      {
-        name: 'Embroidered Chanderi Silk Kurta',
-        slug: 'embroidered-chanderi-silk-kurta',
-        description: 'Artisanal hand-embroidered Chanderi silk kurta with zari detailing. Features lightweight inner cotton lining.',
-        category: ProductCategory.WOMEN,
-        subCategory: 'Ethnic Wear',
-        subType: ProductSubType.ETHNIC,
-        brand: 'Vogue Heritage',
-        tags: ['silk', 'ethnic', 'festive', 'women', 'kurta'],
-        isFeatured: true,
-        variants: [
-          {
-            sku: 'UVS-KRT-MRN-S',
-            size: 'S',
-            color: 'Deep Maroon',
-            colorHex: '#800000',
-            price: 2899,
-            mrp: 4500,
-            stock: 12,
-            images: ['https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600&auto=format&fit=crop'],
-            isActive: true,
-          },
-          {
-            sku: 'UVS-KRT-MRN-M',
-            size: 'M',
-            color: 'Deep Maroon',
-            colorHex: '#800000',
-            price: 2899,
-            mrp: 4500,
-            stock: 18,
-            images: ['https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600&auto=format&fit=crop'],
-            isActive: true,
-          },
-        ],
-      },
-      {
-        name: 'Comfort-Stretch Relaxed Fit Chinos',
-        slug: 'comfort-stretch-relaxed-fit-chinos',
-        description: 'Premium stretch twill cotton chinos designed for all-day comfort with deep welt pockets and tailored hem.',
-        category: ProductCategory.MEN,
-        subCategory: 'Trousers',
-        subType: ProductSubType.CASUAL,
-        brand: 'Urban Vogue',
-        tags: ['chinos', 'cotton', 'casual', 'trousers'],
-        isFeatured: false,
-        variants: [
-          {
-            sku: 'UVS-CHN-OLV-32',
-            size: '32',
-            color: 'Olive Green',
-            colorHex: '#556b2f',
-            price: 1899,
-            mrp: 2999,
-            stock: 22,
-            images: ['https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=600&auto=format&fit=crop'],
-            isActive: true,
-          },
-          {
-            sku: 'UVS-CHN-KHK-34',
-            size: '34',
-            color: 'Khaki Beige',
-            colorHex: '#f0e68c',
-            price: 1899,
-            mrp: 2999,
-            stock: 16,
-            images: ['https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=600&auto=format&fit=crop'],
-            isActive: true,
-          },
-        ],
-      },
-      {
-        name: 'Floral Pure Cotton Midi Summer Dress',
-        slug: 'floral-pure-cotton-midi-summer-dress',
-        description: 'A-line breezy midi dress with hand block printed floral motifs, sweetheart neckline, and side pockets.',
-        category: ProductCategory.WOMEN,
-        subCategory: 'Dresses',
-        subType: ProductSubType.CASUAL,
-        brand: 'Vogue Heritage',
-        tags: ['dress', 'cotton', 'summer', 'floral', 'women'],
-        isFeatured: true,
-        variants: [
-          {
-            sku: 'UVS-DRS-FLR-M',
-            size: 'M',
-            color: 'Blush Pink',
-            colorHex: '#ffb6c1',
-            price: 2199,
-            mrp: 3299,
-            stock: 14,
-            images: ['https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=600&auto=format&fit=crop'],
-            isActive: true,
-          },
-        ],
-      },
-      {
-        name: 'Handwoven Tussar Silk Saree with Zari',
-        slug: 'handwoven-tussar-silk-saree-with-zari',
-        description: 'Authentic Vidarbha Tussar silk saree with rich antique gold zari border and matching unstitched blouse piece.',
-        category: ProductCategory.WOMEN,
-        subCategory: 'Sarees',
-        subType: ProductSubType.ETHNIC,
-        brand: 'Vogue Heritage',
-        tags: ['saree', 'silk', 'tussar', 'festive', 'traditional'],
-        isFeatured: true,
-        variants: [
-          {
-            sku: 'UVS-SAR-GLD-FREE',
-            size: 'Free Size',
-            color: 'Emerald Gold',
-            colorHex: '#d4af37',
-            price: 4999,
-            mrp: 7500,
-            stock: 8,
-            images: ['https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600&auto=format&fit=crop'],
-            isActive: true,
-          },
-        ],
-      },
-      {
-        name: 'Classic Vintage Washed Denim Trucker Jacket',
-        slug: 'classic-vintage-washed-denim-trucker-jacket',
-        description: 'Heavyweight 13.5 oz denim jacket with metal shank buttons, chest flap pockets, and tailored modern fit.',
-        category: ProductCategory.MEN,
-        subCategory: 'Jackets',
-        subType: ProductSubType.CASUAL,
-        brand: 'Urban Vogue',
-        tags: ['denim', 'jacket', 'winter', 'men', 'casual'],
-        isFeatured: false,
-        variants: [
-          {
-            sku: 'UVS-JKT-DNM-L',
-            size: 'L',
-            color: 'Washed Indigo',
-            colorHex: '#3b82f6',
-            price: 2799,
-            mrp: 4299,
-            stock: 19,
-            images: ['https://images.unsplash.com/photo-1576995853123-5a10305d93c0?w=600&auto=format&fit=crop'],
-            isActive: true,
-          },
-        ],
-      },
-    ],
+    products: FASHION_PRODUCTS,
   },
 
   // ──────────────────────────────────────────────────────────────────────────
-  // 2. Electronics Merchant (Approved - Supela, Bhilai)
+  // 2. Electronics: NexGen Gadget Hub (Akash Ganga / Supela, Bhilai)
   // ──────────────────────────────────────────────────────────────────────────
   {
     user: {
@@ -446,199 +204,32 @@ const SEED_DATA: MerchantSeedDefinition[] = [
         thursday: { open: '09:30', close: '21:30', isOpen: true },
         friday: { open: '09:30', close: '22:00', isOpen: true },
         saturday: { open: '09:30', close: '22:00', isOpen: true },
-        sunday: { open: '10:00', close: '21:00', isOpen: true },
+        sunday: { open: '10:30', close: '21:00', isOpen: true },
       },
       deliveryRadiusKm: 5.0,
       approvalStatus: StoreApprovalStatus.APPROVED,
       isActive: true,
       rating: 4.9,
-      reviewCount: 88,
+      reviewCount: 68,
       legalDetails: {
-        gstin: '22AAACP9832K1ZR',
-        pan: 'AAACP9832K',
-        legalBusinessName: 'NexGen Digital Electronics Pvt Ltd',
+        gstin: '22AAECN4892K1Z8',
+        pan: 'AAECN4892K',
+        legalBusinessName: 'NexGen Gadget Hub Pvt Ltd',
         isGstVerified: true,
       },
       bankDetails: {
-        accountNumber: '50200049281726',
-        ifscCode: 'ICIC0000045',
-        accountHolderName: 'NexGen Digital Electronics Pvt Ltd',
-        bankName: 'ICICI Bank',
+        accountNumber: '50200049182741',
+        ifscCode: 'ICIC0000035',
+        accountHolderName: 'NexGen Gadget Hub Pvt Ltd',
+        bankName: 'ICICI Bank Ltd',
         isVerified: true,
       },
     },
-    products: [
-      {
-        name: 'Pro ANC Wireless Earbuds (Spatial Audio)',
-        slug: 'pro-anc-wireless-earbuds-spatial-audio',
-        description: 'Active Noise Cancellation up to 42dB, low-latency gaming mode, 36h total battery with Qi wireless charging case.',
-        category: ProductCategory.ELECTRONICS,
-        subCategory: 'Audio',
-        subType: ProductSubType.OTHER,
-        brand: 'SoundPulse',
-        tags: ['earbuds', 'audio', 'bluetooth', 'anc', 'wireless'],
-        isFeatured: true,
-        variants: [
-          {
-            sku: 'NXG-TWS-BLK',
-            size: 'Standard',
-            color: 'Matte Graphite',
-            colorHex: '#1f2937',
-            price: 2999,
-            mrp: 4999,
-            stock: 35,
-            images: ['https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=600&auto=format&fit=crop'],
-            isActive: true,
-          },
-          {
-            sku: 'NXG-TWS-WHT',
-            size: 'Standard',
-            color: 'Ceramic White',
-            colorHex: '#f9fafb',
-            price: 2999,
-            mrp: 4999,
-            stock: 25,
-            images: ['https://images.unsplash.com/photo-1606220588913-b3aacb4d2f46?w=600&auto=format&fit=crop'],
-            isActive: true,
-          },
-        ],
-      },
-      {
-        name: 'AMOLED Ultra Smartwatch (Health Suite)',
-        slug: 'amoled-ultra-smartwatch-health-suite',
-        description: '1.96-inch high-definition AMOLED curved display, continuous SpO2/HR heart rate monitor, Bluetooth phone calls and IP68 waterproof rating.',
-        category: ProductCategory.ELECTRONICS,
-        subCategory: 'Wearables',
-        subType: ProductSubType.SPORTS,
-        brand: 'AeroTrack',
-        tags: ['smartwatch', 'amoled', 'fitness', 'wearables', 'bluetooth'],
-        isFeatured: true,
-        variants: [
-          {
-            sku: 'NXG-WCH-SLV',
-            size: '45mm',
-            color: 'Titanium Silver',
-            colorHex: '#9ca3af',
-            price: 3499,
-            mrp: 6999,
-            stock: 20,
-            images: ['https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&auto=format&fit=crop'],
-            isActive: true,
-          },
-          {
-            sku: 'NXG-WCH-BLK',
-            size: '45mm',
-            color: 'Midnight Black',
-            colorHex: '#111827',
-            price: 3499,
-            mrp: 6999,
-            stock: 30,
-            images: ['https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?w=600&auto=format&fit=crop'],
-            isActive: true,
-          },
-        ],
-      },
-      {
-        name: 'Fast-Charging 65W GaN Dual-Port Wall Charger',
-        slug: 'fast-charging-65w-gan-dual-port-wall-charger',
-        description: 'Next-gen Gallium Nitride (GaN) fast charger with 1x USB-C PD 65W and 1x USB-A QC 3.0. Charges laptops, tablets, and phones.',
-        category: ProductCategory.ELECTRONICS,
-        subCategory: 'Power & Accessories',
-        subType: ProductSubType.OTHER,
-        brand: 'PowerNova',
-        tags: ['charger', 'gan', 'fast-charging', 'usbc', 'power'],
-        isFeatured: false,
-        variants: [
-          {
-            sku: 'NXG-GAN-65W',
-            size: 'Standard',
-            color: 'Matte White',
-            colorHex: '#ffffff',
-            price: 1499,
-            mrp: 2499,
-            stock: 40,
-            images: ['https://images.unsplash.com/photo-1583863788434-e58a36330cf0?w=600&auto=format&fit=crop'],
-            isActive: true,
-          },
-        ],
-      },
-      {
-        name: 'Magnetic Wireless Power Bank 10000mAh',
-        slug: 'magnetic-wireless-power-bank-10000mah',
-        description: 'Snap-on MagSafe compatible power bank with 15W wireless output, 20W wired fast charging, and foldable kickstand.',
-        category: ProductCategory.ELECTRONICS,
-        subCategory: 'Power & Accessories',
-        subType: ProductSubType.OTHER,
-        brand: 'PowerNova',
-        tags: ['powerbank', 'magsafe', 'wireless', 'battery'],
-        isFeatured: true,
-        variants: [
-          {
-            sku: 'NXG-PB-10K-BLU',
-            size: '10000mAh',
-            color: 'Space Grey',
-            colorHex: '#4b5563',
-            price: 1999,
-            mrp: 3499,
-            stock: 25,
-            images: ['https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?w=600&auto=format&fit=crop'],
-            isActive: true,
-          },
-        ],
-      },
-      {
-        name: 'Studio-Grade USB-C Podcast Condenser Microphone',
-        slug: 'studio-grade-usb-c-podcast-condenser-microphone',
-        description: 'Cardioid polar pattern, zero-latency headphone monitoring, tap-to-mute sensor with RGB LED indicator. Plug & play.',
-        category: ProductCategory.ELECTRONICS,
-        subCategory: 'Audio',
-        subType: ProductSubType.OTHER,
-        brand: 'SoundPulse',
-        tags: ['microphone', 'podcast', 'audio', 'streaming', 'usbc'],
-        isFeatured: false,
-        variants: [
-          {
-            sku: 'NXG-MIC-USB',
-            size: 'Standard',
-            color: 'Matte Black',
-            colorHex: '#000000',
-            price: 3299,
-            mrp: 5499,
-            stock: 15,
-            images: ['https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=600&auto=format&fit=crop'],
-            isActive: true,
-          },
-        ],
-      },
-      {
-        name: 'Ergonomic Aluminum Laptop Stand (360 Swivel)',
-        slug: 'ergonomic-aluminum-laptop-stand-360-swivel',
-        description: 'Aerospace-grade aluminum foldable riser with rotating base, anti-slip silicone pads, and heat dissipation cutouts.',
-        category: ProductCategory.ELECTRONICS,
-        subCategory: 'Computer Accessories',
-        subType: ProductSubType.OTHER,
-        brand: 'AeroTrack',
-        tags: ['stand', 'laptop', 'ergonomic', 'aluminum', 'desk'],
-        isFeatured: false,
-        variants: [
-          {
-            sku: 'NXG-STD-ALU',
-            size: 'Up to 17 inch',
-            color: 'Metallic Silver',
-            colorHex: '#d1d5db',
-            price: 1299,
-            mrp: 2199,
-            stock: 30,
-            images: ['https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=600&auto=format&fit=crop'],
-            isActive: true,
-          },
-        ],
-      },
-    ],
+    products: ELECTRONICS_PRODUCTS,
   },
 
   // ──────────────────────────────────────────────────────────────────────────
-  // 3. Grocery & Staples Merchant (Approved - Nehru Nagar, Bhilai)
+  // 3. Grocery & Organics: GreenValley Organics (Nehru Nagar East, Bhilai)
   // ──────────────────────────────────────────────────────────────────────────
   {
     user: {
@@ -681,186 +272,30 @@ const SEED_DATA: MerchantSeedDefinition[] = [
       approvalStatus: StoreApprovalStatus.APPROVED,
       isActive: true,
       rating: 4.7,
-      reviewCount: 65,
+      reviewCount: 54,
       legalDetails: {
-        gstin: '22AAACV4120M1ZQ',
-        pan: 'AAACV4120M',
-        legalBusinessName: 'GreenValley Agro Naturals LLP',
+        gstin: '22AABCG3190L1ZU',
+        pan: 'AABCG3190L',
+        legalBusinessName: 'GreenValley Agro Organics Retail LLP',
         isGstVerified: true,
       },
       bankDetails: {
-        accountNumber: '00210200039485',
-        ifscCode: 'SBIN0000691',
-        accountHolderName: 'GreenValley Agro Naturals LLP',
+        accountNumber: '38192004817291',
+        ifscCode: 'SBIN0000330',
+        accountHolderName: 'GreenValley Agro Organics Retail LLP',
         bankName: 'State Bank of India',
         isVerified: true,
       },
     },
-    products: [
-      {
-        name: 'Cold-Pressed Extra Virgin Mustard Oil 1L',
-        slug: 'cold-pressed-extra-virgin-mustard-oil-1l',
-        description: 'Traditional wood-pressed (Kachi Ghani) golden mustard oil from certified organic seeds. Rich in natural Omega-3.',
-        category: ProductCategory.GROCERY_STAPLES,
-        subCategory: 'Edible Oils',
-        subType: ProductSubType.OTHER,
-        brand: 'GreenValley',
-        tags: ['oil', 'mustard', 'cold-pressed', 'organic', 'cooking'],
-        isFeatured: true,
-        variants: [
-          {
-            sku: 'GVO-OIL-1L',
-            size: '1 Litre',
-            color: 'Rich Mustard',
-            colorHex: '#eab308',
-            price: 279,
-            mrp: 350,
-            stock: 60,
-            images: ['https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=600&auto=format&fit=crop'],
-            isActive: true,
-          },
-          {
-            sku: 'GVO-OIL-2L',
-            size: '2 Litres',
-            color: 'Rich Mustard',
-            colorHex: '#eab308',
-            price: 529,
-            mrp: 680,
-            stock: 35,
-            images: ['https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=600&auto=format&fit=crop'],
-            isActive: true,
-          },
-        ],
-      },
-      {
-        name: 'Wild Forest Raw Organic Honey 500g',
-        slug: 'wild-forest-raw-organic-honey-500g',
-        description: 'Unpasteurized, unprocessed multi-floral forest honey sustainably harvested by tribal beekeepers.',
-        category: ProductCategory.GROCERY_STAPLES,
-        subCategory: 'Honey & Preserves',
-        subType: ProductSubType.OTHER,
-        brand: 'GreenValley',
-        tags: ['organic', 'raw', 'honey', 'natural', 'grocery'],
-        isFeatured: true,
-        variants: [
-          {
-            sku: 'GVO-HNY-500G',
-            size: '500g',
-            color: 'Golden Amber',
-            colorHex: '#d97706',
-            price: 449,
-            mrp: 599,
-            stock: 45,
-            images: ['https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=600&auto=format&fit=crop'],
-            isActive: true,
-          },
-        ],
-      },
-      {
-        name: 'Single-Origin Stone-Ground Whole Wheat Atta 5kg',
-        slug: 'single-origin-stone-ground-whole-wheat-atta-5kg',
-        description: '100% whole grain Sharbati wheat flour milled slowly in stone chakki to retain natural bran and germ nutrients.',
-        category: ProductCategory.GROCERY_STAPLES,
-        subCategory: 'Flours & Grains',
-        subType: ProductSubType.OTHER,
-        brand: 'GreenValley',
-        tags: ['flour', 'atta', 'wheat', 'organic', 'staples'],
-        isFeatured: true,
-        variants: [
-          {
-            sku: 'GVO-ATA-5KG',
-            size: '5kg',
-            color: 'Natural Grain',
-            colorHex: '#fef3c7',
-            price: 349,
-            mrp: 420,
-            stock: 80,
-            images: ['https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600&auto=format&fit=crop'],
-            isActive: true,
-          },
-        ],
-      },
-      {
-        name: 'Himalayan Pink Rock Salt Crystals 1kg',
-        slug: 'himalayan-pink-rock-salt-crystals-1kg',
-        description: 'Unrefined, mineral-rich natural pink rock salt containing 84+ trace minerals. Non-iodized and chemical free.',
-        category: ProductCategory.GROCERY_STAPLES,
-        subCategory: 'Spices & Salt',
-        subType: ProductSubType.OTHER,
-        brand: 'GreenValley',
-        tags: ['salt', 'himalayan', 'pink-salt', 'organic', 'cooking'],
-        isFeatured: false,
-        variants: [
-          {
-            sku: 'GVO-SLT-1KG',
-            size: '1kg',
-            color: 'Rose Pink',
-            colorHex: '#f43f5e',
-            price: 129,
-            mrp: 180,
-            stock: 100,
-            images: ['https://images.unsplash.com/photo-1518110925495-5fe2fda0442c?w=600&auto=format&fit=crop'],
-            isActive: true,
-          },
-        ],
-      },
-      {
-        name: 'A2 Desi Gir Cow Bilona Cultured Ghee 500ml',
-        slug: 'a2-desi-gir-cow-bilona-cultured-ghee-500ml',
-        description: 'Traditional curd-churned (Vedic Bilona method) pure A2 golden ghee from free-grazing indigenous Gir cows.',
-        category: ProductCategory.GROCERY_STAPLES,
-        subCategory: 'Dairy & Ghee',
-        subType: ProductSubType.OTHER,
-        brand: 'GreenValley',
-        tags: ['ghee', 'a2', 'cow-ghee', 'bilona', 'ayurvedic'],
-        isFeatured: true,
-        variants: [
-          {
-            sku: 'GVO-GHE-500ML',
-            size: '500ml',
-            color: 'Golden Yellow',
-            colorHex: '#fbbf24',
-            price: 899,
-            mrp: 1199,
-            stock: 30,
-            images: ['https://images.unsplash.com/photo-1627916607164-7b20241db935?w=600&auto=format&fit=crop'],
-            isActive: true,
-          },
-        ],
-      },
-      {
-        name: 'Whole Aromatic Malabar Black Peppercorns 200g',
-        slug: 'whole-aromatic-malabar-black-peppercorns-200g',
-        description: 'Sun-dried premium Tellicherry garbled black pepper with high piperine content and intense aromatic kick.',
-        category: ProductCategory.GROCERY_STAPLES,
-        subCategory: 'Spices & Seasonings',
-        subType: ProductSubType.OTHER,
-        brand: 'GreenValley',
-        tags: ['spices', 'pepper', 'black-pepper', 'organic', 'condiments'],
-        isFeatured: false,
-        variants: [
-          {
-            sku: 'GVO-PEP-200G',
-            size: '200g',
-            color: 'Dark Peppercorn',
-            colorHex: '#18181b',
-            price: 219,
-            mrp: 299,
-            stock: 50,
-            images: ['https://images.unsplash.com/photo-1599940824399-b87987ceb72a?w=600&auto=format&fit=crop'],
-            isActive: true,
-          },
-        ],
-      },
-    ],
+    products: GROCERY_ORGANICS_PRODUCTS,
   },
 
   // ──────────────────────────────────────────────────────────────────────────
-  // 4. Pharmacy & Wellness Merchant (Approved - Malviya Nagar, Durg)
+  // 4. Pharmacy & Wellness: Aura Medico & Wellness (Malviya Nagar, Durg)
   // ──────────────────────────────────────────────────────────────────────────
   {
     user: {
-      fullName: 'Dr. Priya Nair',
+      fullName: 'Dr. Priya Sen',
       email: 'priya.pharmacy@example.com',
       phone: '9876543244',
       password: 'Password@123',
@@ -893,177 +328,94 @@ const SEED_DATA: MerchantSeedDefinition[] = [
         thursday: { open: '08:00', close: '23:00', isOpen: true },
         friday: { open: '08:00', close: '23:00', isOpen: true },
         saturday: { open: '08:00', close: '23:30', isOpen: true },
-        sunday: { open: '09:00', close: '22:00', isOpen: true },
+        sunday: { open: '09:00', close: '23:00', isOpen: true },
+      },
+      deliveryRadiusKm: 6.0,
+      approvalStatus: StoreApprovalStatus.APPROVED,
+      isActive: true,
+      rating: 4.9,
+      reviewCount: 89,
+      legalDetails: {
+        gstin: '22AAPCA9012J1ZR',
+        pan: 'AAPCA9012J',
+        legalBusinessName: 'Aura Healthcare & Pharmaceuticals',
+        isGstVerified: true,
+      },
+      bankDetails: {
+        accountNumber: '10920038192039',
+        ifscCode: 'PUNB0024000',
+        accountHolderName: 'Aura Healthcare & Pharmaceuticals',
+        bankName: 'Punjab National Bank',
+        isVerified: true,
+      },
+    },
+    products: PHARMACY_WELLNESS_PRODUCTS,
+  },
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 5. Daily FMCG & Provisions: Verma Daily Provisions (Sector 7, Bhilai)
+  // ──────────────────────────────────────────────────────────────────────────
+  {
+    user: {
+      fullName: 'Amit Verma',
+      email: 'amit.merchant@example.com',
+      phone: '9876543212',
+      password: 'Password@123',
+      role: UserRole.MERCHANT,
+      isVerified: true,
+      isActive: true,
+    },
+    store: {
+      name: 'Verma Daily Provisions',
+      slug: 'verma-daily-provisions',
+      description: 'Daily fresh staples, grains, pulses, dairy, and grocery essentials directly sourced from trusted mandis.',
+      category: StoreCategory.GROCERY_STAPLES,
+      logoUrl: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=300&auto=format&fit=crop',
+      bannerUrl: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=1200&auto=format&fit=crop',
+      location: {
+        type: 'Point',
+        coordinates: [81.3650, 21.1920], // Sector 7, Bhilai
+      },
+      address: {
+        street: 'Shop 14, Main Market, Sector 7',
+        landmark: 'Near Central Park, Sector 7, Bhilai',
+        city: 'Bhilai',
+        state: 'Chhattisgarh',
+        pincode: '490006',
+      },
+      operatingHours: {
+        monday: { open: '08:00', close: '22:00', isOpen: true },
+        tuesday: { open: '08:00', close: '22:00', isOpen: true },
+        wednesday: { open: '08:00', close: '22:00', isOpen: true },
+        thursday: { open: '08:00', close: '22:00', isOpen: true },
+        friday: { open: '08:00', close: '22:00', isOpen: true },
+        saturday: { open: '08:00', close: '22:30', isOpen: true },
+        sunday: { open: '08:00', close: '22:00', isOpen: true },
       },
       deliveryRadiusKm: 4.0,
       approvalStatus: StoreApprovalStatus.APPROVED,
       isActive: true,
-      rating: 4.9,
-      reviewCount: 94,
+      rating: 4.8,
+      reviewCount: 46,
       legalDetails: {
-        gstin: '22AABCA7712C1ZX',
-        pan: 'AABCA7712C',
-        legalBusinessName: 'Aura Medico Healthcare LLP',
+        gstin: '22AABCV5512N1Z4',
+        pan: 'AABCV5512N',
+        legalBusinessName: 'Verma Daily Provisions Mart',
         isGstVerified: true,
       },
       bankDetails: {
-        accountNumber: '02341020002938',
-        ifscCode: 'KKBK0000654',
-        accountHolderName: 'Aura Medico Healthcare LLP',
-        bankName: 'Kotak Mahindra Bank',
+        accountNumber: '91802004819231',
+        ifscCode: 'SBIN0000330',
+        accountHolderName: 'Verma Daily Provisions Mart',
+        bankName: 'State Bank of India',
         isVerified: true,
       },
     },
-    products: [
-      {
-        name: 'Ayurvedic Pure Ashwagandha Root Extract 60s',
-        slug: 'ayurvedic-pure-ashwagandha-root-extract-60s',
-        description: 'Standardized with 5% Withanolides. Supports natural stress relief, cognitive clarity, and vitality.',
-        category: ProductCategory.BEAUTY,
-        subCategory: 'Supplements',
-        subType: ProductSubType.OTHER,
-        brand: 'Aura Veda',
-        tags: ['ayurveda', 'ashwagandha', 'supplements', 'stress-relief', 'wellness'],
-        isFeatured: true,
-        variants: [
-          {
-            sku: 'AUR-ASH-60CAP',
-            size: 'Pack of 60',
-            color: 'Amber Bottle',
-            colorHex: '#78350f',
-            price: 499,
-            mrp: 699,
-            stock: 50,
-            images: ['https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=600&auto=format&fit=crop'],
-            isActive: true,
-          },
-        ],
-      },
-      {
-        name: 'Natural Botanical Aloe Vera & Vitamin E Gel 250ml',
-        slug: 'natural-botanical-aloe-vera-and-vitamin-e-gel-250ml',
-        description: '99% pure soothing cold-extracted aloe vera gel enriched with Vitamin E. Multi-purpose skin and hair hydrator.',
-        category: ProductCategory.BEAUTY,
-        subCategory: 'Personal Care',
-        subType: ProductSubType.OTHER,
-        brand: 'Aura Botanics',
-        tags: ['aloe-vera', 'skincare', 'gel', 'natural', 'hydration'],
-        isFeatured: true,
-        variants: [
-          {
-            sku: 'AUR-ALO-250ML',
-            size: '250ml',
-            color: 'Crystal Clear',
-            colorHex: '#10b981',
-            price: 249,
-            mrp: 349,
-            stock: 65,
-            images: ['https://images.unsplash.com/photo-1556228720-195a672e8a03?w=600&auto=format&fit=crop'],
-            isActive: true,
-          },
-        ],
-      },
-      {
-        name: 'Effervescent Vitamin C + Zinc Immunity Boost 20s',
-        slug: 'effervescent-vitamin-c-plus-zinc-immunity-boost-20s',
-        description: 'Quick-absorbing sparkling fizzy tablets with 1000mg Amla Vitamin C and 10mg Zinc. Refreshing natural orange taste.',
-        category: ProductCategory.BEAUTY,
-        subCategory: 'Immunity & Nutrition',
-        subType: ProductSubType.OTHER,
-        brand: 'Aura Veda',
-        tags: ['vitamin-c', 'immunity', 'zinc', 'effervescent', 'nutrition'],
-        isFeatured: false,
-        variants: [
-          {
-            sku: 'AUR-VITC-20TAB',
-            size: 'Tube of 20',
-            color: 'Zesty Orange',
-            colorHex: '#ea580c',
-            price: 299,
-            mrp: 399,
-            stock: 80,
-            images: ['https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=600&auto=format&fit=crop'],
-            isActive: true,
-          },
-        ],
-      },
-      {
-        name: 'Cold-Pressed Virgin Coconut Hair & Body Elixir 200ml',
-        slug: 'cold-pressed-virgin-coconut-hair-and-body-elixir-200ml',
-        description: 'Raw, unrefined extra-virgin coconut oil extracted from fresh coconut milk. Deep conditioning for scalp and dry skin.',
-        category: ProductCategory.BEAUTY,
-        subCategory: 'Hair Care',
-        subType: ProductSubType.OTHER,
-        brand: 'Aura Botanics',
-        tags: ['coconut-oil', 'hair-care', 'cold-pressed', 'organic', 'wellness'],
-        isFeatured: false,
-        variants: [
-          {
-            sku: 'AUR-COC-200ML',
-            size: '200ml',
-            color: 'Pure White',
-            colorHex: '#ffffff',
-            price: 220,
-            mrp: 295,
-            stock: 40,
-            images: ['https://images.unsplash.com/photo-1608248597359-009765548682?w=600&auto=format&fit=crop'],
-            isActive: true,
-          },
-        ],
-      },
-      {
-        name: 'Non-Contact Infrared Digital Forehead Thermometer',
-        slug: 'non-contact-infrared-digital-forehead-thermometer',
-        description: 'Medical precision 1-second body & surface reading with 3-color backlit fever alert and 32-reading memory recall.',
-        category: ProductCategory.BEAUTY,
-        subCategory: 'Medical Devices',
-        subType: ProductSubType.OTHER,
-        brand: 'Aura Medico',
-        tags: ['thermometer', 'medical', 'digital', 'infrared', 'healthcare'],
-        isFeatured: false,
-        variants: [
-          {
-            sku: 'AUR-THM-IR',
-            size: 'Standard',
-            color: 'Medical White',
-            colorHex: '#f3f4f6',
-            price: 999,
-            mrp: 1799,
-            stock: 25,
-            images: ['https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=600&auto=format&fit=crop'],
-            isActive: true,
-          },
-        ],
-      },
-      {
-        name: 'Herbal Pain Relief Balm for Muscles & Joints 50g',
-        slug: 'herbal-pain-relief-balm-for-muscles-and-joints-50g',
-        description: 'Fast-acting Ayurvedic formulation with Nilgiri oil, Wintergreen, and Camphor for soothing backache, sprains, and joint stiffness.',
-        category: ProductCategory.BEAUTY,
-        subCategory: 'Pain Relief',
-        subType: ProductSubType.OTHER,
-        brand: 'Aura Veda',
-        tags: ['pain-relief', 'balm', 'ayurvedic', 'joint-care', 'herbal'],
-        isFeatured: false,
-        variants: [
-          {
-            sku: 'AUR-BLM-50G',
-            size: '50g',
-            color: 'Herbal Amber',
-            colorHex: '#b45309',
-            price: 135,
-            mrp: 175,
-            stock: 70,
-            images: ['https://images.unsplash.com/photo-1556228720-195a672e8a03?w=600&auto=format&fit=crop'],
-            isActive: true,
-          },
-        ],
-      },
-    ],
+    products: PROVISIONS_FMCG_PRODUCTS,
   },
 
   // ──────────────────────────────────────────────────────────────────────────
-  // 5. Pending Merchant (For Super Admin Onboarding & Review testing)
+  // 6. Fresh Produce: Karan Fresh Mart (Ganj Para, Durg)
   // ──────────────────────────────────────────────────────────────────────────
   {
     user: {
@@ -1072,13 +424,13 @@ const SEED_DATA: MerchantSeedDefinition[] = [
       phone: '9876543255',
       password: 'Password@123',
       role: UserRole.MERCHANT,
-      isVerified: false,
+      isVerified: true,
       isActive: true,
     },
     store: {
       name: 'Karan Fresh Mart',
       slug: 'karan-fresh-mart',
-      description: 'Neighborhood daily dairy, bakery & confectionary mart with express doorstep fulfillment.',
+      description: 'Neighborhood daily farm-fresh fruits, crisp vegetables, and dairy with express doorstep fulfillment.',
       category: StoreCategory.GROCERY_STAPLES,
       logoUrl: 'https://images.unsplash.com/photo-1534723452862-4c874018d66d?w=300&auto=format&fit=crop',
       bannerUrl: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=1200&auto=format&fit=crop',
@@ -1102,134 +454,30 @@ const SEED_DATA: MerchantSeedDefinition[] = [
         saturday: { open: '07:00', close: '22:30', isOpen: true },
         sunday: { open: '07:00', close: '22:00', isOpen: true },
       },
-      deliveryRadiusKm: 3.0,
-      approvalStatus: StoreApprovalStatus.PENDING,
+      deliveryRadiusKm: 3.5,
+      approvalStatus: StoreApprovalStatus.APPROVED,
       isActive: true,
-      rating: 5.0,
-      reviewCount: 0,
+      rating: 4.6,
+      reviewCount: 31,
       legalDetails: {
         gstin: '22AABCK9901M1Z5',
         pan: 'AABCK9901M',
         legalBusinessName: 'Karan Fresh Mart Retail LLP',
-        isGstVerified: false,
+        isGstVerified: true,
       },
       bankDetails: {
         accountNumber: '92102003817265',
         ifscCode: 'UTIB0000138',
         accountHolderName: 'Karan Fresh Mart Retail LLP',
         bankName: 'Axis Bank Ltd',
-        isVerified: false,
-      },
-    },
-  },
-  // ──────────────────────────────────────────────────────────────────────────
-  // 6. Grocery Provisions Merchant (Amit Verma - Sector 7, Bhilai)
-  // ──────────────────────────────────────────────────────────────────────────
-  {
-    user: {
-      fullName: 'Amit Verma',
-      email: 'amit.merchant@example.com',
-      phone: '9876543212',
-      password: 'Password@123',
-      role: UserRole.MERCHANT,
-      isVerified: true,
-      isActive: true,
-    },
-    store: {
-      name: 'Verma Daily Provisions',
-      slug: 'verma-daily-provisions',
-      description: 'Daily fresh staples, grains, pulses, and organic spices directly sourced from local mandis.',
-      category: StoreCategory.GROCERY_STAPLES,
-      logoUrl: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=300&auto=format&fit=crop',
-      bannerUrl: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=1200&auto=format&fit=crop',
-      location: {
-        type: 'Point',
-        coordinates: [81.3650, 21.1920], // Sector 7, Bhilai
-      },
-      address: {
-        street: 'Shop 14, Main Market, Sector 7',
-        landmark: 'Near Central Park, Sector 7, Bhilai',
-        city: 'Bhilai',
-        state: 'Chhattisgarh',
-        pincode: '490006',
-      },
-      operatingHours: {
-        monday: { open: '08:00', close: '22:00', isOpen: true },
-        tuesday: { open: '08:00', close: '22:00', isOpen: true },
-        wednesday: { open: '08:00', close: '22:00', isOpen: true },
-        thursday: { open: '08:00', close: '22:00', isOpen: true },
-        friday: { open: '08:00', close: '22:00', isOpen: true },
-        saturday: { open: '08:00', close: '22:00', isOpen: true },
-        sunday: { open: '08:00', close: '21:00', isOpen: true },
-      },
-      deliveryRadiusKm: 4.0,
-      approvalStatus: StoreApprovalStatus.APPROVED,
-      isActive: true,
-      rating: 4.7,
-      reviewCount: 22,
-      legalDetails: {
-        gstin: '22AABCV1029C1ZZ',
-        pan: 'AABCV1029C',
-        legalBusinessName: 'Verma Daily Provisions Retail LLP',
-        isGstVerified: true,
-      },
-      bankDetails: {
-        accountNumber: '92102008471920',
-        ifscCode: 'SBIN0000332',
-        accountHolderName: 'Verma Daily Provisions Retail LLP',
-        bankName: 'State Bank of India',
         isVerified: true,
       },
     },
-    products: [
-      {
-        name: 'Whole Sharbati Wheat Flour (Chakki Fresh Atta)',
-        slug: 'whole-sharbati-wheat-flour-5kg',
-        description: '100% whole grain stone-milled MP Sharbati wheat flour with zero maida and natural dietary fiber.',
-        category: ProductCategory.GROCERY_STAPLES,
-        subCategory: 'Flours & Grains',
-        subType: ProductSubType.OTHER,
-        brand: 'Verma Farm',
-        tags: ['atta', 'sharbati', 'wheat', 'flour', 'staples'],
-        isFeatured: true,
-        variants: [
-          {
-            sku: 'VDP-WHT-5KG',
-            size: '5 kg',
-            price: 265,
-            mrp: 320,
-            stock: 45,
-            images: ['https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600&auto=format&fit=crop'],
-            isActive: true,
-          },
-        ],
-      },
-      {
-        name: 'Kachi Ghani Mustard Oil (Cold-Pressed)',
-        slug: 'kachi-ghani-mustard-oil-1l',
-        description: 'Traditional wood-pressed unfiltered mustard oil with high pungency and rich aroma.',
-        category: ProductCategory.GROCERY_STAPLES,
-        subCategory: 'Oils & Ghee',
-        subType: ProductSubType.OTHER,
-        brand: 'Verma Farm',
-        tags: ['mustard oil', 'cold-pressed', 'kachi ghani', 'cooking oil'],
-        isFeatured: true,
-        variants: [
-          {
-            sku: 'VDP-MST-1L',
-            size: '1 Litre',
-            price: 185,
-            mrp: 230,
-            stock: 60,
-            images: ['https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=600&auto=format&fit=crop'],
-            isActive: true,
-          },
-        ],
-      },
-    ],
+    products: PRODUCE_PRODUCTS,
   },
+
   // ──────────────────────────────────────────────────────────────────────────
-  // 7. Electronics & Accessories Merchant (Priya Patel - Supela, Bhilai)
+  // 7. Gadgets & Audio: Patel Electronics (Dakshin Gangotri, Supela)
   // ──────────────────────────────────────────────────────────────────────────
   {
     user: {
@@ -1244,7 +492,7 @@ const SEED_DATA: MerchantSeedDefinition[] = [
     store: {
       name: 'Patel Electronics & Smart Gadgets',
       slug: 'patel-electronics-and-smart-gadgets',
-      description: 'Authorized smart accessories, chargers, wireless audio, and device accessories in Supela.',
+      description: 'Authorized smart accessories, power banks, chargers, wireless audio, and device accessories in Supela.',
       category: StoreCategory.ELECTRONICS,
       logoUrl: 'https://images.unsplash.com/photo-1550009158-9ebf69173e03?w=300&auto=format&fit=crop',
       bannerUrl: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=1200&auto=format&fit=crop',
@@ -1287,44 +535,26 @@ const SEED_DATA: MerchantSeedDefinition[] = [
         isVerified: true,
       },
     },
-    products: [
-      {
-        name: 'Fast Wireless Magnetic Power Bank 10000mAh',
-        slug: 'fast-wireless-magnetic-power-bank-10000mah',
-        description: 'Compact 20W magnetic snap-on wireless power bank with bidirectional USB-C PD fast charging.',
-        category: ProductCategory.ELECTRONICS,
-        subCategory: 'Power Banks',
-        subType: ProductSubType.OTHER,
-        brand: 'VoltCharge',
-        tags: ['powerbank', 'wireless', 'magnetic', 'fast charge', 'battery'],
-        isFeatured: true,
-        variants: [
-          {
-            sku: 'PE-MAG-PB-BLK',
-            color: 'Midnight Black',
-            colorHex: '#1e293b',
-            price: 1899,
-            mrp: 3299,
-            stock: 35,
-            images: ['https://images.unsplash.com/photo-1609091839311-d5365f9ff1c5?w=600&auto=format&fit=crop'],
-            isActive: true,
-          },
-        ],
-      },
-    ],
+    products: PATEL_ELECTRONICS_PRODUCTS,
   },
 ];
 
+/**
+ * Master Seed Database Function
+ */
 export async function seedMerchantsAndData(): Promise<void> {
-  logger.info('🚀 Starting Master Database Purge & Re-Seeding...');
+  logger.info('═══════════════════════════════════════════════════════════════');
+  logger.info('🚀 COMMENCING MASTER DATABASE SEEDING ROUTINE');
+  logger.info('═══════════════════════════════════════════════════════════════');
 
   if (mongoose.connection.readyState !== 1) {
+    logger.info(`🔌 Connecting to MongoDB: ${env.MONGODB_URI.split('@')[1] || 'localhost'}...`);
     await mongoose.connect(env.MONGODB_URI);
-    logger.info(`📦 Connected to MongoDB: ${env.MONGODB_URI}`);
+    logger.info('✅ Connected to MongoDB.');
   }
 
-  // 1. COMPLETE DATABASE PURGE
-  logger.info('🧹 Purging all existing collections (users, stores, products, orders, deliveries, notifications)...');
+  // 1. PURGE EXISTING COLLECTIONS SAFELY
+  logger.info('🧹 Purging prior collections for clean seed baseline...');
   await UserModel.deleteMany({});
   await StoreModel.deleteMany({});
   await ProductModel.deleteMany({});
@@ -1346,9 +576,9 @@ export async function seedMerchantsAndData(): Promise<void> {
   }
 
   const primaryCustomer = seededCustomers[0]; // Arjun Mehta
-  const secondaryCustomer = seededCustomers[1]; // Sneha Rao
+  const secondaryCustomer = seededCustomers[1]; // Sneha Verma
 
-  // 4. SEED MERCHANTS, STORES, PRODUCTS & ORDERS
+  // 4. SEED MERCHANTS, STORES & PRODUCTS
   const seededApprovedStores: any[] = [];
   const seededAllProducts: any[] = [];
 
@@ -1382,6 +612,8 @@ export async function seedMerchantsAndData(): Promise<void> {
       logger.info(`   📦 Seeded ${item.products.length} products for store "${store.name}"`);
     }
   }
+
+  logger.info(`✨ Successfully seeded ${seededAllProducts.length} total products across ${seededApprovedStores.length} stores.`);
 
   // 5. SEED REALISTIC LIFECYCLE ORDERS
   logger.info('🛒 Generating active lifecycle orders across store pipelines...');
@@ -1527,7 +759,7 @@ export async function seedMerchantsAndData(): Promise<void> {
   }
 
   // Order 4: Shipped / Out for Delivery (Grocery Store)
-  if (groceryStore && groceryProducts.length >= 3) {
+  if (groceryStore && groceryProducts.length >= 2) {
     const p1 = groceryProducts[0];
     const p2 = groceryProducts[1];
     const v1 = p1.variants[0];
@@ -1571,8 +803,8 @@ export async function seedMerchantsAndData(): Promise<void> {
       shippingFee: 0,
       grandTotal: subtotal + tax,
       status: OrderStatus.OUT_FOR_DELIVERY,
-      deliveryOtp: '8834',
-      createdAt: new Date(Date.now() - 6 * 3600 * 1000),
+      deliveryOtp: '8910',
+      createdAt: new Date(Date.now() - 12 * 3600 * 1000),
     });
   }
 
@@ -1644,7 +876,8 @@ export async function seedMerchantsAndData(): Promise<void> {
   logger.info('📱 Merchant (Gadgets): vikram.electronics@example.com / Password@123');
   logger.info('🌾 Merchant (Grocery): anita.organics@example.com / Password@123');
   logger.info('💊 Merchant (Pharma):  priya.pharmacy@example.com / Password@123');
-  logger.info('⏳ Pending Merchant:   karan.retail@example.com   / Password@123');
+  logger.info('🛒 Merchant (FMCG):    amit.merchant@example.com  / Password@123');
+  logger.info('🍏 Merchant (Produce): karan.retail@example.com   / Password@123');
   logger.info('═══════════════════════════════════════════════════════════════');
 }
 

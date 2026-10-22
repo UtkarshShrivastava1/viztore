@@ -165,6 +165,12 @@ const storeSchema = new Schema<IStoreDocument>(
     bankDetails: {
       type: bankDetailsSchema,
     },
+    customTaxonomy: {
+      categories: [{ type: String, trim: true }],
+      subCategories: { type: Map, of: [String] },
+      productTypes: { type: Map, of: [String] },
+      brands: [{ type: String, trim: true }],
+    },
   },
   {
     timestamps: true,

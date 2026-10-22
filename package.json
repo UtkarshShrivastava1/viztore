@@ -16,6 +16,7 @@
     "seed:merchants": "pnpm --filter=@repo/backend seed",
     "seed:staging": "pnpm --filter=@repo/backend seed",
     "test:whatsapp": "pnpm --filter=@repo/backend test:whatsapp",
+    "sim:e2e": "pnpm --filter=@repo/backend exec tsx ../../scripts/e2e-simulation.ts",
     "clean": "turbo run clean && rimraf node_modules"
   },
   "devDependencies": {

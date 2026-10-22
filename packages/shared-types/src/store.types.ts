@@ -87,12 +87,27 @@ export interface IStore {
   reviewCount: number;
   legalDetails?: IStoreLegalDetails;
   bankDetails?: IStoreBankDetails;
+  customTaxonomy?: IStoreCustomTaxonomy;
   createdAt: string;
   updatedAt: string;
   distanceKm?: number; // Computed during proximity scans
 }
 
+export interface IStoreCustomTaxonomy {
+  categories?: string[];
+  subCategories?: Record<string, string[]>;
+  productTypes?: Record<string, string[]>;
+  brands?: string[];
+}
+
 // Zod Schemas for Validation
+export const storeCustomTaxonomySchema = z.object({
+  categories: z.array(z.string()).optional(),
+  subCategories: z.record(z.array(z.string())).optional(),
+  productTypes: z.record(z.array(z.string())).optional(),
+  brands: z.array(z.string()).optional(),
+});
+
 export const geoPointSchema = z.object({
   type: z.literal('Point').default('Point'),
   coordinates: z.tuple([
@@ -135,6 +150,7 @@ export const createStoreSchema = z.object({
   deliveryRadiusKm: z.number().min(0.5).max(15).default(4),
   logoUrl: z.string().url().optional(),
   bannerUrl: z.string().url().optional(),
+  customTaxonomy: storeCustomTaxonomySchema.optional(),
 });
 
 export const updateStoreSchema = createStoreSchema.partial().extend({

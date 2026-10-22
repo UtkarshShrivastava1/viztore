@@ -10,9 +10,19 @@ jobs:
   validate:
     name: Build & Test Monorepo
     runs-on: ubuntu-latest
+    services:
+      mongodb:
+        image: mongo:7.0
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.runCommand({ ping: 1 })' || mongo --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     env:
       NODE_ENV: test
-      MONGODB_URI: mongodb://localhost:27017/platform-db
+      MONGODB_URI: mongodb://127.0.0.1:27017/platform-db
       JWT_ACCESS_SECRET: default_ci_test_jwt_access_secret_32_chars
       JWT_REFRESH_SECRET: default_ci_test_jwt_refresh_secret_32_chars
       CLOUDINARY_CLOUD_NAME: test-cloud

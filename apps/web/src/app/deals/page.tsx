@@ -5,21 +5,36 @@ import Link from 'next/link';
 import { DealProductCard } from '@/features/deals/components/DealProductCard';
 import { DealsFilterSidebar, PRICE_RANGES_LIST } from '@/features/deals/components/DealsFilterSidebar';
 import { useFeaturedProducts } from '@/hooks/useFeaturedProducts';
+import { useProducts } from '@/hooks/useProducts';
 import { ProductGridSkeleton } from '@/components/ui/Skeleton';
 import { ChevronDown, SlidersHorizontal, Percent, ShieldCheck, RefreshCw, Shield, ArrowUpDown } from 'lucide-react';
 
 export default function DealsPage() {
-  const { data: featuredProducts, isLoading } = useFeaturedProducts(20);
+  const { data: featuredProducts, isLoading: featuredLoading } = useFeaturedProducts(20);
+  const { data: allProductsResponse, isLoading: allLoading } = useProducts({ limit: 50 });
+  const isLoading = featuredLoading || allLoading;
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedPriceRanges, setSelectedPriceRanges] = useState<string[]>([]);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState('relevance');
 
-  const filteredProducts = React.useMemo(() => {
-    if (!featuredProducts) return [];
+  const productsPool = React.useMemo(() => {
+    const liveFeatured = featuredProducts && featuredProducts.length > 0 ? featuredProducts : [];
+    const liveAll = allProductsResponse?.products && allProductsResponse.products.length > 0 ? allProductsResponse.products : [];
+    const merged = [...liveFeatured];
+    for (const prod of liveAll) {
+      if (!merged.some((p) => p._id === prod._id)) {
+        merged.push(prod);
+      }
+    }
+    return merged;
+  }, [featuredProducts, allProductsResponse]);
 
-    return featuredProducts
+  const filteredProducts = React.useMemo(() => {
+    if (!productsPool || productsPool.length === 0) return [];
+
+    return productsPool
       .filter((product) => {
         // Category filter
         if (selectedCategories.length > 0) {

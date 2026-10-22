@@ -26,6 +26,14 @@ export const createStoreSchema = z.object({
       isClosed: z.boolean().default(false),
     }),
   ).optional(),
+  customTaxonomy: z
+    .object({
+      categories: z.array(z.string()).optional(),
+      subCategories: z.record(z.array(z.string())).optional(),
+      productTypes: z.record(z.array(z.string())).optional(),
+      brands: z.array(z.string()).optional(),
+    })
+    .optional(),
 });
 
 export const updateStoreSchema = createStoreSchema.partial();

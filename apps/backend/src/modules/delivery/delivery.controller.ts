@@ -3,6 +3,9 @@ import { StatusCodes } from 'http-status-codes';
 import type { IDeliveryService } from './delivery.types.js';
 import {
   assignRiderSchema,
+  broadcastDeliverySchema,
+  claimDeliverySchema,
+  openPoolQuerySchema,
   updateDeliveryStatusSchema,
   verifyDeliveryOtpSchema,
 } from './delivery.validator.js';
@@ -13,6 +16,9 @@ import { catchAsync } from '../../shared/utils/catchAsync.js';
 export interface DeliveryController {
   getTracking: RequestHandler;
   assignRider: RequestHandler;
+  broadcastJob: RequestHandler;
+  getAvailableJobs: RequestHandler;
+  claimJob: RequestHandler;
   updateStatus: RequestHandler;
   verifyOtp: RequestHandler;
 }
@@ -39,6 +45,35 @@ export function createDeliveryController(service: IDeliveryService): DeliveryCon
     }
 
     return ApiResponse.success(res, delivery, 'Rider assigned successfully', StatusCodes.OK);
+  });
+
+  const broadcastJob: RequestHandler = catchAsync(async (req: Request, res: Response) => {
+    const orderId = req.params.orderId as string;
+    const dto = broadcastDeliverySchema.parse(req.body || {});
+
+    const teaser = await service.broadcastJob(orderId, dto);
+    return ApiResponse.success(res, teaser, 'Delivery job broadcasted to rider pool successfully', StatusCodes.OK);
+  });
+
+  const getAvailableJobs: RequestHandler = catchAsync(async (req: Request, res: Response) => {
+    const query = openPoolQuerySchema.parse(req.query);
+    const result = await service.getAvailableJobs(query);
+
+    return ApiResponse.success(
+      res,
+      result.data,
+      'Available delivery jobs retrieved successfully',
+      StatusCodes.OK,
+      { page: result.page, limit: result.limit, total: result.total } as any,
+    );
+  });
+
+  const claimJob: RequestHandler = catchAsync(async (req: Request, res: Response) => {
+    const orderId = req.params.orderId as string;
+    const dto = claimDeliverySchema.parse(req.body);
+
+    const result = await service.claimJob(orderId, dto);
+    return ApiResponse.success(res, result.delivery, result.message, StatusCodes.OK);
   });
 
   const updateStatus: RequestHandler = catchAsync(async (req: Request, res: Response) => {
@@ -69,7 +104,11 @@ export function createDeliveryController(service: IDeliveryService): DeliveryCon
   return {
     getTracking,
     assignRider,
+    broadcastJob,
+    getAvailableJobs,
+    claimJob,
     updateStatus,
     verifyOtp,
   };
 }
+

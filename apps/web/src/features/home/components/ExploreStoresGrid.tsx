@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { ChevronRight, Zap, Truck, RotateCcw, ShieldCheck, Headphones, Star } from 'lucide-react';
 import { useAllStores } from '@/hooks/useAllStores';
-import { StoreCategory, type IStore } from '@repo/shared-types';
+import { type IStore } from '@repo/shared-types';
 
 const trustItems = [
   { icon: Truck, label: 'Fast Delivery', description: 'On orders above ₹199' },
@@ -14,12 +14,12 @@ const trustItems = [
 ];
 
 const fallbackStoreImages = [
-  'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=800', // Fashion Hub
-  'https://images.unsplash.com/photo-1550009158-9ebf69173e03?auto=format&fit=crop&q=80&w=800', // Sharma Electronics
-  'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&q=80&w=800', // Beauty Corner
-  'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&q=80&w=800', // Home Needs
-  'https://images.unsplash.com/photo-1546868871-7041f2a55e12?auto=format&fit=crop&q=80&w=800', // Gadget Store
-  'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&q=80&w=800', // Shoe World
+  'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=800',
+  'https://images.unsplash.com/photo-1550009158-9ebf69173e03?auto=format&fit=crop&q=80&w=800',
+  'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&q=80&w=800',
+  'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&q=80&w=800',
+  'https://images.unsplash.com/photo-1546868871-7041f2a55e12?auto=format&fit=crop&q=80&w=800',
+  'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&q=80&w=800',
 ];
 
 const fallbackStoreMeta = [
@@ -31,28 +31,11 @@ const fallbackStoreMeta = [
   { category: 'Men, Women & Kids Footwear', rating: '4.3', count: '980' },
 ];
 
-const defaultExploreStores: Partial<IStore>[] = [
-  { _id: 'exp-1', name: 'Fashion Hub', slug: 'fashion-hub', category: StoreCategory.FASHION, description: 'Clothing, Accessories, Footwear & more' },
-  { _id: 'exp-2', name: 'Sharma Electronics', slug: 'sharma-electronics', category: StoreCategory.ELECTRONICS, description: 'Mobiles, Accessories, Gadgets & more' },
-  { _id: 'exp-3', name: 'Beauty Corner', slug: 'beauty-corner', category: StoreCategory.BEAUTY_CARE, description: 'Skincare, Haircare, Makeup & more' },
-  { _id: 'exp-4', name: 'Home Needs', slug: 'home-needs', category: StoreCategory.HOME_LIVING, description: 'Home Decor, Kitchen, Furniture & more' },
-  { _id: 'exp-5', name: 'Gadget Store', slug: 'gadget-store', category: StoreCategory.ELECTRONICS, description: 'Smartwatches, Accessories, Audio & more' },
-  { _id: 'exp-6', name: 'Shoe World', slug: 'shoe-world', category: StoreCategory.FOOTWEAR, description: 'Men, Women & Kids Footwear' },
-];
-
 export function ExploreStoresGrid() {
   const { data: storesResponse, isLoading } = useAllStores({ limit: 6 });
   const liveStores = storesResponse?.stores && storesResponse.stores.length > 0 ? storesResponse.stores : [];
 
-  const displayStores: IStore[] = [...liveStores];
-  if (displayStores.length < 6) {
-    for (const def of defaultExploreStores) {
-      if (displayStores.length >= 6) break;
-      if (!displayStores.some((s) => s.name.toLowerCase() === def.name?.toLowerCase())) {
-        displayStores.push(def as IStore);
-      }
-    }
-  }
+  const displayStores: IStore[] = liveStores;
 
   return (
     <div className="w-full space-y-6">

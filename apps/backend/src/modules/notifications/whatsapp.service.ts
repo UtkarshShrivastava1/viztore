@@ -8,6 +8,7 @@ export interface WhatsAppSendResult {
   recipient: string;
   error?: string;
   dryRun?: boolean;
+  fallbackUrl?: string;
 }
 
 export interface OrderConfirmationParams {
@@ -47,6 +48,11 @@ export interface WhatsAppServiceConfig {
 
 export interface IWhatsAppService {
   normalizePhoneNumber(phone: string): string;
+  generateFallbackUrl(to: string, message: string): string;
+  buildOrderConfirmationMessage(params: OrderConfirmationParams): string;
+  buildRiderDispatchMessage(params: RiderDispatchParams): string;
+  buildOutForDeliveryMessage(params: OutForDeliveryParams): string;
+  buildDeliveryCompletedMessage(params: DeliveryCompletedParams): string;
   sendTextMessage(to: string, message: string): Promise<WhatsAppSendResult>;
   sendOrderConfirmation(to: string, params: OrderConfirmationParams): Promise<WhatsAppSendResult>;
   sendRiderDispatch(to: string, params: RiderDispatchParams): Promise<WhatsAppSendResult>;
@@ -75,6 +81,74 @@ export function normalizePhoneNumber(rawPhone: string): string {
   return cleaned;
 }
 
+/**
+ * Generates 1-click fallback wa.me URL for instant browser redirect or manual failover
+ */
+export function generateFallbackUrl(rawPhone: string, message: string): string {
+  const normalized = normalizePhoneNumber(rawPhone);
+  const encodedText = encodeURIComponent(message);
+  return normalized ? `https://wa.me/${normalized}?text=${encodedText}` : `https://wa.me/?text=${encodedText}`;
+}
+
+export function buildOrderConfirmationMessage(params: OrderConfirmationParams): string {
+  const storeText = params.storeName ? `\n🏪 *Store:* ${params.storeName}` : '';
+  const otpText = params.deliveryOtp ? `\n🔑 *Delivery Handoff OTP:* *${params.deliveryOtp}*` : '';
+
+  return [
+    `🛍️ *ORDER CONFIRMED!*`,
+    `Order #${params.orderNumber}`,
+    `--------------------------------`,
+    `📦 *Items:* ${params.itemsCount}`,
+    `💰 *Total Amount:* ₹${params.grandTotal.toLocaleString('en-IN')}${storeText}${otpText}`,
+    `--------------------------------`,
+    `Your order is being prepared by your local neighborhood retailer. Keep your 4-digit Delivery OTP ready for when the rider arrives.`,
+    `\nThank you for shopping local with *${branding.appName}*!`,
+  ].join('\n');
+}
+
+export function buildRiderDispatchMessage(params: RiderDispatchParams): string {
+  return [
+    `🛵 *NEW DELIVERY ASSIGNMENT*`,
+    `Order #${params.orderNumber}`,
+    `Assigned Rider: ${params.riderName}`,
+    `--------------------------------`,
+    `📍 *Pickup:* ${params.pickupAddress}`,
+    `🏠 *Dropoff:* ${params.dropoffAddress}`,
+    `🗺️ *Turn-by-Turn Navigation:*`,
+    `${params.mapsUrl}`,
+    `--------------------------------`,
+    `⚠️ *Action Required:* Collect the 4-digit Delivery OTP from the customer upon physical package handoff to complete the delivery.`,
+  ].join('\n');
+}
+
+export function buildOutForDeliveryMessage(params: OutForDeliveryParams): string {
+  const etaText = params.etaMinutes ? `\n⏱️ *Estimated Arrival:* ~${params.etaMinutes} minutes` : '';
+
+  return [
+    `🚚 *YOUR ORDER IS OUT FOR DELIVERY!*`,
+    `Order #${params.orderNumber}`,
+    `--------------------------------`,
+    `🛵 *Delivery Partner:* ${params.riderName}${etaText}`,
+    `🔑 *Delivery Handoff OTP:* *${params.deliveryOtp}*`,
+    `--------------------------------`,
+    `Please share this 4-digit OTP with the delivery partner only when you physically receive your package.`,
+    `\n*${branding.appName}* — Hyperlocal Neighborhood Delivery`,
+  ].join('\n');
+}
+
+export function buildDeliveryCompletedMessage(params: DeliveryCompletedParams): string {
+  const nameGreeting = params.customerName ? `Hi ${params.customerName}, ` : '';
+
+  return [
+    `✅ *ORDER DELIVERED SUCCESSFULLY!*`,
+    `Order #${params.orderNumber}`,
+    `--------------------------------`,
+    `${nameGreeting}Your delivery has been completed and verified via OTP.`,
+    `We hope you loved your items!`,
+    `\nRate your experience and explore more deals on *${branding.appName}*!`,
+  ].join('\n');
+}
+
 export function createWhatsAppService(config?: WhatsAppServiceConfig): IWhatsAppService {
   const phoneNumberId = config?.phoneNumberId ?? (env.WHATSAPP_PHONE_NUMBER_ID?.trim() || '');
   const accessToken = config?.accessToken ?? (env.WHATSAPP_ACCESS_TOKEN?.trim() || '');
@@ -83,9 +157,11 @@ export function createWhatsAppService(config?: WhatsAppServiceConfig): IWhatsApp
 
   async function sendTextMessage(to: string, body: string): Promise<WhatsAppSendResult> {
     const normalizedPhone = normalizePhoneNumber(to);
+    const fallbackUrl = generateFallbackUrl(to, body);
+
     if (!normalizedPhone || normalizedPhone.length < 10) {
       logger.warn(`[WhatsAppService] Skipping dispatch: invalid recipient phone "${to}"`);
-      return { success: false, recipient: to, error: 'INVALID_PHONE_NUMBER' };
+      return { success: false, recipient: to, error: 'INVALID_PHONE_NUMBER', fallbackUrl };
     }
 
     // Dry-run mode for test environments or when credentials are absent
@@ -98,6 +174,7 @@ export function createWhatsAppService(config?: WhatsAppServiceConfig): IWhatsApp
         messageId: `mock-wa-msg-${Date.now()}`,
         recipient: normalizedPhone,
         dryRun: true,
+        fallbackUrl,
       };
     }
 
@@ -139,6 +216,7 @@ export function createWhatsAppService(config?: WhatsAppServiceConfig): IWhatsApp
           success: false,
           recipient: normalizedPhone,
           error: errorMsg,
+          fallbackUrl,
         };
       }
 
@@ -149,6 +227,7 @@ export function createWhatsAppService(config?: WhatsAppServiceConfig): IWhatsApp
         messageId,
         recipient: normalizedPhone,
         dryRun: false,
+        fallbackUrl,
       };
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : String(err);
@@ -157,6 +236,7 @@ export function createWhatsAppService(config?: WhatsAppServiceConfig): IWhatsApp
         success: false,
         recipient: normalizedPhone,
         error: errorMsg,
+        fallbackUrl,
       };
     }
   }
@@ -165,20 +245,7 @@ export function createWhatsAppService(config?: WhatsAppServiceConfig): IWhatsApp
     to: string,
     params: OrderConfirmationParams,
   ): Promise<WhatsAppSendResult> {
-    const storeText = params.storeName ? `\n🏪 *Store:* ${params.storeName}` : '';
-    const otpText = params.deliveryOtp ? `\n🔑 *Delivery Handoff OTP:* *${params.deliveryOtp}*` : '';
-
-    const message = [
-      `🛍️ *ORDER CONFIRMED!*`,
-      `Order #${params.orderNumber}`,
-      `--------------------------------`,
-      `📦 *Items:* ${params.itemsCount}`,
-      `💰 *Total Amount:* ₹${params.grandTotal.toLocaleString('en-IN')}${storeText}${otpText}`,
-      `--------------------------------`,
-      `Your order is being prepared by your local neighborhood retailer. Keep your 4-digit Delivery OTP ready for when the rider arrives.`,
-      `\nThank you for shopping local with *${branding.appName}*!`,
-    ].join('\n');
-
+    const message = buildOrderConfirmationMessage(params);
     return sendTextMessage(to, message);
   }
 
@@ -186,19 +253,7 @@ export function createWhatsAppService(config?: WhatsAppServiceConfig): IWhatsApp
     to: string,
     params: RiderDispatchParams,
   ): Promise<WhatsAppSendResult> {
-    const message = [
-      `🛵 *NEW DELIVERY ASSIGNMENT*`,
-      `Order #${params.orderNumber}`,
-      `Assigned Rider: ${params.riderName}`,
-      `--------------------------------`,
-      `📍 *Pickup:* ${params.pickupAddress}`,
-      `🏠 *Dropoff:* ${params.dropoffAddress}`,
-      `🗺️ *Turn-by-Turn Navigation:*`,
-      `${params.mapsUrl}`,
-      `--------------------------------`,
-      `⚠️ *Action Required:* Collect the 4-digit Delivery OTP from the customer upon physical package handoff to complete the delivery.`,
-    ].join('\n');
-
+    const message = buildRiderDispatchMessage(params);
     return sendTextMessage(to, message);
   }
 
@@ -206,19 +261,7 @@ export function createWhatsAppService(config?: WhatsAppServiceConfig): IWhatsApp
     to: string,
     params: OutForDeliveryParams,
   ): Promise<WhatsAppSendResult> {
-    const etaText = params.etaMinutes ? `\n⏱️ *Estimated Arrival:* ~${params.etaMinutes} minutes` : '';
-
-    const message = [
-      `🚚 *YOUR ORDER IS OUT FOR DELIVERY!*`,
-      `Order #${params.orderNumber}`,
-      `--------------------------------`,
-      `🛵 *Delivery Partner:* ${params.riderName}${etaText}`,
-      `🔑 *Delivery Handoff OTP:* *${params.deliveryOtp}*`,
-      `--------------------------------`,
-      `Please share this 4-digit OTP with the delivery partner only when you physically receive your package.`,
-      `\n*${branding.appName}* — Hyperlocal Neighborhood Delivery`,
-    ].join('\n');
-
+    const message = buildOutForDeliveryMessage(params);
     return sendTextMessage(to, message);
   }
 
@@ -226,22 +269,17 @@ export function createWhatsAppService(config?: WhatsAppServiceConfig): IWhatsApp
     to: string,
     params: DeliveryCompletedParams,
   ): Promise<WhatsAppSendResult> {
-    const nameGreeting = params.customerName ? `Hi ${params.customerName}, ` : '';
-
-    const message = [
-      `✅ *ORDER DELIVERED SUCCESSFULLY!*`,
-      `Order #${params.orderNumber}`,
-      `--------------------------------`,
-      `${nameGreeting}Your delivery has been completed and verified via OTP.`,
-      `We hope you loved your items!`,
-      `\nRate your experience and explore more deals on *${branding.appName}*!`,
-    ].join('\n');
-
+    const message = buildDeliveryCompletedMessage(params);
     return sendTextMessage(to, message);
   }
 
   return {
     normalizePhoneNumber,
+    generateFallbackUrl,
+    buildOrderConfirmationMessage,
+    buildRiderDispatchMessage,
+    buildOutForDeliveryMessage,
+    buildDeliveryCompletedMessage,
     sendTextMessage,
     sendOrderConfirmation,
     sendRiderDispatch,

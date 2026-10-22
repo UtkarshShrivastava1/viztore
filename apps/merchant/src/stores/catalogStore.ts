@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { api, catalogApi } from '../lib/api.js';
 import { useAuthStore } from './authStore.js';
+import { recordCustomCategory, recordCustomBrand } from '../lib/customTaxonomyStorage.js';
 
 export interface StorageLocation {
   warehouse: string;
@@ -288,8 +289,8 @@ const initialDefaultDraft: Partial<ProductItem> = {
   isReturnable: true,
   weight: '0.250',
   dimensions: { length: '30', width: '20', height: '2' },
-  material: 'Cotton',
-  careInstructions: 'Hand wash cold',
+  material: '',
+  careInstructions: '',
   metaTitle: '',
   metaDescription: '',
 };
@@ -979,6 +980,23 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
       activeView: 'list',
       draftProduct: initialDefaultDraft,
     });
+
+    // Step 3 Persistence: Ensure category and brand are recorded for future products
+    try {
+      if (finalizedProduct.category) {
+        recordCustomCategory(
+          storeId,
+          finalizedProduct.category,
+          finalizedProduct.subCategory,
+          finalizedProduct.productType,
+        );
+      }
+      if (finalizedProduct.brand) {
+        recordCustomBrand(storeId, finalizedProduct.brand);
+      }
+    } catch (e) {
+      console.warn('[CatalogStore] Failed to persist custom taxonomy on product save:', e);
+    }
 
     return finalizedProduct;
   },

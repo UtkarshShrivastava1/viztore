@@ -10,14 +10,17 @@ function buildFakeService(): IOrderService {
   return {
     createOrder: vi.fn(),
     getOrderById: vi.fn(),
+    getOrderInvoice: vi.fn(),
     getOrdersByUserId: vi.fn(),
     getOrdersByStoreId: vi.fn(),
     getAllOrders: vi.fn(),
     updateOrderStatus: vi.fn(),
     verifyDeliveryOtp: vi.fn(),
     cancelOrder: vi.fn(),
+    autoCancelStaleOrders: vi.fn(),
   };
 }
+
 
 function buildTestApp(fakeService: IOrderService): Application {
   const app = express();
@@ -138,4 +141,111 @@ describe('Order Routes (HTTP Integration Tests via Supertest)', () => {
     expect(res.body.success).toBe(true);
     expect(res.body.data.status).toBe('CANCELLED');
   });
+
+  it('GET /api/v1/orders/:id/invoice/print - 200 HTML A4 format default', async () => {
+    const fakeService = buildFakeService();
+    vi.mocked(fakeService.getOrderInvoice).mockResolvedValue({
+      invoiceNumber: 'INV-ORD-20260903-ABCDEF',
+      orderNumber: 'ORD-20260903-ABCDEF',
+      orderId: '507f1f77bcf86cd799439011',
+      date: new Date().toISOString(),
+      status: 'confirmed' as any,
+      seller: {
+        name: 'Local Partner Store',
+        address: 'MG Road, Bengaluru',
+        phone: '+91 98765 43210',
+        gstin: '29AAAAA0000A1Z5',
+      },
+      customer: {
+        name: 'Jane Doe',
+        phone: '9876543210',
+        address: '45 MG Road, Bengaluru',
+      },
+      items: [
+        {
+          name: 'Fresh Milk',
+          sku: 'S1',
+          quantity: 2,
+          unitPrice: 30,
+          taxableAmount: 57.14,
+          lineTotal: 60,
+        },
+      ],
+      pricing: {
+        subtotal: 60,
+        tax: 3,
+        cgst: 1.5,
+        sgst: 1.5,
+        shippingFee: 49,
+        grandTotal: 112,
+      },
+      deliveryOtp: '1234',
+    });
+
+    const app = buildTestApp(fakeService);
+    const res = await request(app)
+      .get('/api/v1/orders/507f1f77bcf86cd799439011/invoice/print')
+      .set('x-user-id', 'user-123');
+
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toContain('text/html');
+    expect(res.text).toContain('size: A4 portrait');
+    expect(res.text).toContain('TAX INVOICE');
+    expect(res.text).toContain('INV-ORD-20260903-ABCDEF');
+    expect(res.text).toContain('Jane Doe');
+    expect(res.text).toContain('Fresh Milk');
+  });
+
+  it('GET /api/v1/orders/:id/invoice/print?format=thermal&autoPrint=true - 200 HTML 80mm format with auto-print', async () => {
+    const fakeService = buildFakeService();
+    vi.mocked(fakeService.getOrderInvoice).mockResolvedValue({
+      invoiceNumber: 'INV-ORD-20260903-ABCDEF',
+      orderNumber: 'ORD-20260903-ABCDEF',
+      orderId: '507f1f77bcf86cd799439011',
+      date: new Date().toISOString(),
+      status: 'confirmed' as any,
+      seller: {
+        name: 'Local Partner Store',
+        address: 'MG Road, Bengaluru',
+        phone: '+91 98765 43210',
+      },
+      customer: {
+        name: 'Jane Doe',
+        phone: '9876543210',
+        address: '45 MG Road, Bengaluru',
+      },
+      items: [
+        {
+          name: 'Fresh Milk',
+          sku: 'S1',
+          quantity: 2,
+          unitPrice: 30,
+          taxableAmount: 57.14,
+          lineTotal: 60,
+        },
+      ],
+      pricing: {
+        subtotal: 60,
+        tax: 3,
+        cgst: 1.5,
+        sgst: 1.5,
+        shippingFee: 49,
+        grandTotal: 112,
+      },
+      deliveryOtp: '1234',
+    });
+
+    const app = buildTestApp(fakeService);
+    const res = await request(app)
+      .get('/api/v1/orders/507f1f77bcf86cd799439011/invoice/print?format=thermal&autoPrint=true')
+      .set('x-user-id', 'user-123');
+
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toContain('text/html');
+    expect(res.text).toContain('size: 80mm auto');
+    expect(res.text).toContain("<script>window.addEventListener('load'");
+    expect(res.text).toContain('DELIVERY OTP:');
+    expect(res.text).toContain('1234');
+  });
 });
+

@@ -88,23 +88,17 @@ export async function createProduct(
     throw AppError.forbidden('You are not authorized to add products to this store', 'STORE_ACCESS_DENIED');
   }
 
-  // Ensure category is a valid enum value
-  const validCategories = Object.values(ProductCategory) as string[];
+  // Canonicalize category: map known synonyms, otherwise preserve clean custom category string
   let resolvedCategory = (dto.category || '').toLowerCase().trim().replace(/[\s-]+/g, '_');
-  if (!validCategories.includes(resolvedCategory)) {
-    if (resolvedCategory === 'apparel' || resolvedCategory === 'clothing') {
-      resolvedCategory = ProductCategory.FASHION;
-    } else {
-      resolvedCategory = ProductCategory.OTHER;
-    }
+  if (resolvedCategory === 'apparel' || resolvedCategory === 'clothing') {
+    resolvedCategory = ProductCategory.FASHION;
+  }
+  if (!resolvedCategory) {
+    resolvedCategory = ProductCategory.OTHER;
   }
 
-  // Ensure subType if provided is valid
-  const validSubTypes = Object.values(ProductSubType) as string[];
-  let resolvedSubType = dto.subType ? (dto.subType as string).toLowerCase().trim().replace(/[\s-]+/g, '_') : undefined;
-  if (resolvedSubType && !validSubTypes.includes(resolvedSubType)) {
-    resolvedSubType = undefined;
-  }
+  // Canonicalize subType: preserve custom subType string if provided
+  const resolvedSubType = dto.subType ? (dto.subType as string).toLowerCase().trim().replace(/[\s-]+/g, '_') : undefined;
 
   // Ensure variants have fallback images if empty
   const defaultImage = 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=600&q=80';
@@ -428,7 +422,7 @@ async function computeFacets(
     colors?: { value: string; hex?: string; count: number }[];
     brands?: { value: string; count: number }[];
     priceRange?: { min: number; max: number }[];
-    categories?: { value: ProductCategory; count: number }[];
+    categories?: { value: string; count: number }[];
     totalCount?: { count: number }[];
   } | undefined;
 

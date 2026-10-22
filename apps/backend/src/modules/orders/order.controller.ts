@@ -10,6 +10,10 @@ import {
 import { catchAsync } from '../../shared/utils/catchAsync.js';
 import { ApiResponse } from '../../shared/utils/ApiResponse.js';
 import { AppError } from '../../shared/utils/AppError.js';
+import {
+  renderPrintableInvoiceHtml,
+  normalizeOrderInvoiceToPrintable,
+} from '../billing/index.js';
 
 function getUserId(req: Request): string | undefined {
   return req.user?.sub || req.user?.id;
@@ -140,10 +144,27 @@ export function createOrderController(service: IOrderService) {
     return ApiResponse.success(res, invoice, 'Order invoice retrieved successfully');
   });
 
+  const printInvoice: RequestHandler = catchAsync(async (req: Request, res: Response) => {
+    const authReq = req as AuthenticatedRequest;
+    const userId = getUserId(authReq) || '';
+    const isAdminOrMerchant = authReq.user?.role === 'admin' || authReq.user?.role === 'merchant';
+    const orderId = req.params.id as string;
+    const format = (req.query.format as string) === 'thermal' ? 'thermal' : 'a4';
+    const autoPrint = req.query.autoPrint === 'true';
+
+    const orderInvoice = await service.getOrderInvoice(orderId, userId, isAdminOrMerchant);
+    const printableData = normalizeOrderInvoiceToPrintable(orderInvoice);
+    const html = renderPrintableInvoiceHtml(printableData, { format, autoPrint });
+
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    return res.status(200).send(html);
+  });
+
   return {
     createOrder,
     getOrder,
     getInvoice,
+    printInvoice,
     getMyOrders,
     getStoreOrders,
     getAllOrders,
@@ -152,3 +173,4 @@ export function createOrderController(service: IOrderService) {
     cancel,
   };
 }
+

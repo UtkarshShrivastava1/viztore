@@ -99,8 +99,8 @@ const productSchema = new Schema<IProductDocument>(
     },
     category: {
       type: String,
-      enum: Object.values(ProductCategory),
       required: [true, 'Product category is required'],
+      trim: true,
       index: true,
     },
     subCategory: {
@@ -110,7 +110,7 @@ const productSchema = new Schema<IProductDocument>(
     },
     subType: {
       type: String,
-      enum: Object.values(ProductSubType),
+      trim: true,
       index: true,
     },
     brand: {

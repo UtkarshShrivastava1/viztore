@@ -173,7 +173,6 @@ export default function ProductsPage() {
     <Suspense
       fallback={
         <div className="min-h-screen bg-transparent">
-          <Header className="hidden md:block" />
           <main className="max-w-[1920px] mx-auto px-4 sm:px-6 py-6">
             <ProductGridSkeleton count={8} />
           </main>

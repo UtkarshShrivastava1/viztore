@@ -3,9 +3,10 @@
 import React, { useState } from 'react';
 import { Heart, Store, ShoppingCart, Zap, Check } from 'lucide-react';
 import { useFeaturedProducts } from '@/hooks/useFeaturedProducts';
+import { useProducts } from '@/hooks/useProducts';
 import { useCartStore } from '@/stores/cart.store';
 
-interface MockDeal {
+interface ProductDealItem {
   id: string;
   name: string;
   price: number;
@@ -14,108 +15,19 @@ interface MockDeal {
   rating: number;
   reviews: string;
   storeName: string;
+  storeId?: string;
   image: string;
 }
 
-const MOCK_DEALS: MockDeal[] = [
-  {
-    id: 'deal-1',
-    name: 'Men Solid Cotton Shirt',
-    price: 899,
-    mrp: 999,
-    discount: '10% OFF',
-    rating: 4.3,
-    reviews: '2.1K',
-    storeName: 'Fashion Hub',
-    image: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=300&q=80&fm=png&bg=transparent',
-  },
-  {
-    id: 'deal-2',
-    name: 'boAt Airdopes 141 TWS Earbuds',
-    price: 999,
-    mrp: 1499,
-    discount: '25% OFF',
-    rating: 4.4,
-    reviews: '3.2K',
-    storeName: 'Sharma Electronics',
-    image: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=300&q=80&fm=png&bg=transparent',
-  },
-  {
-    id: 'deal-3',
-    name: 'Mamaearth Vitamin C Face Wash (100ml)',
-    price: 339,
-    mrp: 399,
-    discount: '15% OFF',
-    rating: 4.5,
-    reviews: '3.2K',
-    storeName: 'Beauty Corner',
-    image: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=300&q=80&fm=png&bg=transparent',
-  },
-  {
-    id: 'deal-4',
-    name: 'Prestige Non-stick Cookware Set',
-    price: 1999,
-    mrp: 2499,
-    discount: '20% OFF',
-    rating: 4.3,
-    reviews: '900',
-    storeName: 'Home Needs',
-    image: 'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?w=300&q=80&fm=png&bg=transparent',
-  },
-  {
-    id: 'deal-5',
-    name: 'Nike Revolution 7 Running Shoes',
-    price: 2799,
-    mrp: 3999,
-    discount: '30% OFF',
-    rating: 4.6,
-    reviews: '1.8K',
-    storeName: 'Fashion Hub',
-    image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=300&q=80&fm=png&bg=transparent',
-  },
-  {
-    id: 'deal-6',
-    name: 'Skybags Pixel 32L Laptop Backpack',
-    price: 1699,
-    mrp: 1999,
-    discount: '15% OFF',
-    rating: 4.4,
-    reviews: '2.5K',
-    storeName: 'Gadget Store',
-    image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=300&q=80&fm=png&bg=transparent',
-  },
-  {
-    id: 'deal-7',
-    name: 'Philips LED Table Lamp',
-    price: 799,
-    mrp: 999,
-    discount: '20% OFF',
-    rating: 4.5,
-    reviews: '1.1K',
-    storeName: 'Home Needs',
-    image: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=300&q=80&fm=png&bg=transparent',
-  },
-  {
-    id: 'deal-8',
-    name: 'Havells Prolife 4L Air Fryer',
-    price: 3999,
-    mrp: 4499,
-    discount: '10% OFF',
-    rating: 4.3,
-    reviews: '1.4K',
-    storeName: 'Sharma Electronics',
-    image: 'https://images.unsplash.com/photo-1585515320310-259814833e62?w=300&q=80&fm=png&bg=transparent',
-  },
-];
-
 export function TrendingDeals() {
   const { data: featuredProducts } = useFeaturedProducts(8);
+  const { data: allProductsResponse } = useProducts({ limit: 12 });
   const addItem = useCartStore((state) => state.addItem);
   const openCart = useCartStore((state) => state.openCart);
   const [addedIds, setAddedIds] = useState<Record<string, boolean>>({});
   const [wishlistedIds, setWishlistedIds] = useState<Record<string, boolean>>({});
 
-  const handleAddToCart = (e: React.MouseEvent, deal: MockDeal) => {
+  const handleAddToCart = (e: React.MouseEvent, deal: ProductDealItem) => {
     e.preventDefault();
     e.stopPropagation();
 
@@ -125,7 +37,7 @@ export function TrendingDeals() {
       name: deal.name,
       imageUrl: deal.image,
       unitPrice: deal.price,
-      storeId: 'store-deals',
+      storeId: deal.storeId || '6acf505183256911d14c43cc',
       storeName: deal.storeName,
     }, 1);
 
@@ -142,22 +54,37 @@ export function TrendingDeals() {
     setWishlistedIds((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  // Build items based on live or fallback mockup data
-  const dealsToRender: MockDeal[] = (featuredProducts && featuredProducts.length >= 8)
-    ? featuredProducts.slice(0, 8).map((p, idx) => ({
-        id: p._id,
-        name: p.name,
-        price: p.basePrice,
-        mrp: p.baseMrp > p.basePrice ? p.baseMrp : Math.round(p.basePrice * 1.25),
-        discount: p.baseMrp > p.basePrice
-          ? `${Math.round(((p.baseMrp - p.basePrice) / p.baseMrp) * 100)}% OFF`
-          : MOCK_DEALS[idx]?.discount || '20% OFF',
-        rating: p.rating || 4.4,
-        reviews: `${(Math.random() * 2 + 1).toFixed(1)}K`,
-        storeName: p.storeName || MOCK_DEALS[idx]?.storeName || 'Official Store',
-        image: p.variants?.[0]?.images?.[0] || MOCK_DEALS[idx]?.image || '',
-      }))
-    : MOCK_DEALS;
+  // Build items exclusively from live database products
+  const liveFeatured = featuredProducts && featuredProducts.length > 0 ? featuredProducts : [];
+  const liveAll = allProductsResponse?.products && allProductsResponse.products.length > 0 ? allProductsResponse.products : [];
+  const mergedProducts = [...liveFeatured];
+  for (const prod of liveAll) {
+    if (mergedProducts.length >= 8) break;
+    if (!mergedProducts.some((p) => p._id === prod._id)) {
+      mergedProducts.push(prod);
+    }
+  }
+
+  const dealsToRender: ProductDealItem[] = mergedProducts.slice(0, 8).map((p) => {
+    const rawStoreId = p.storeId;
+    const storeId = typeof rawStoreId === 'object' && rawStoreId !== null
+      ? (rawStoreId as { _id?: string })._id || String(rawStoreId)
+      : String(rawStoreId || '6acf505183256911d14c43cc');
+    return {
+      id: p._id,
+      name: p.name,
+      price: p.basePrice,
+      mrp: p.baseMrp > p.basePrice ? p.baseMrp : Math.round(p.basePrice * 1.25),
+      discount: p.baseMrp > p.basePrice
+        ? `${Math.round(((p.baseMrp - p.basePrice) / p.baseMrp) * 100)}% OFF`
+        : '20% OFF',
+      rating: p.rating || 4.5,
+      reviews: `${(Math.random() * 2 + 1).toFixed(1)}K`,
+      storeName: p.storeName || 'National Retail Store',
+      storeId,
+      image: p.variants?.[0]?.images?.[0] || 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=300&q=80&fm=png&bg=transparent',
+    };
+  });
 
   return (
     <section className="space-y-4 py-4 select-none">

@@ -7,6 +7,8 @@ export const EVENTS = {
   PAYMENT_SUCCEEDED: 'payment.succeeded',
   DELIVERY_ASSIGNED: 'delivery.assigned',
   DELIVERY_COMPLETED: 'delivery.completed',
+  DELIVERY_BROADCAST: 'delivery.broadcast',
+  DELIVERY_CLAIMED: 'delivery.claimed',
   PRODUCT_OUT_OF_STOCK: 'product.outOfStock',
   NOTIFICATION_CREATED: 'notification.created',
   INVOICE_ISSUED: 'invoice.issued',
@@ -87,6 +89,28 @@ export interface InvoiceEventPayload {
   correlationId?: string;
 }
 
+export interface DeliveryBroadcastPayload {
+  orderId: string;
+  orderNumber: string;
+  storeId: string;
+  pickupArea: string;
+  dropoffArea: string;
+  distanceKm: number;
+  estimatedMinutes: number;
+  estimatedPayout: number;
+  claimUrl: string;
+  broadcastedAt: string;
+}
+
+export interface DeliveryClaimedPayload {
+  orderId: string;
+  orderNumber: string;
+  riderId: string;
+  riderName: string;
+  riderPhone: string;
+  claimedAt: string;
+}
+
 export interface EventPayloadMap {
   [EVENTS.USER_REGISTERED]: UserRegisteredPayload;
   [EVENTS.ORDER_PLACED]: OrderPlacedPayload;
@@ -96,6 +120,8 @@ export interface EventPayloadMap {
   [EVENTS.PAYMENT_SUCCEEDED]: PaymentSucceededPayload;
   [EVENTS.DELIVERY_ASSIGNED]: DeliveryAssignedPayload;
   [EVENTS.DELIVERY_COMPLETED]: OrderStatusChangedPayload;
+  [EVENTS.DELIVERY_BROADCAST]: DeliveryBroadcastPayload;
+  [EVENTS.DELIVERY_CLAIMED]: DeliveryClaimedPayload;
   [EVENTS.PRODUCT_OUT_OF_STOCK]: ProductOutOfStockPayload;
   [EVENTS.NOTIFICATION_CREATED]: NotificationCreatedPayload;
   [EVENTS.INVOICE_ISSUED]: InvoiceEventPayload;

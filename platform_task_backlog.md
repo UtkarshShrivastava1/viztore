@@ -46,8 +46,11 @@ timeline
 | **B-02** | **Stale Order Auto-Timeout & Inventory Reclaim Engine** | `P0` | Medium | `order.service.ts`, `orderExpiryWorker.ts` | **DONE ✅** | Background worker running every 60s checking orders in `pending` >30 minutes. Auto-transitions to `CANCELLED`, restores stock atomically via `catalogFacade.restoreStock()`, and emits `ORDER_CANCELLED`. 108/108 tests green (`commit fc7e9bd`). |
 | **B-03** | **Interactive OpenAPI / Swagger UI Documentation** | `P1` | Low | `apps/backend/src/app.ts`, `swagger.ts` | **DONE ✅** | Mounted Swagger UI at `/api-docs` & `/docs` with OpenAPI 3.0 specification covering all 7 modules + system probes. Raw spec served at `/api-docs.json`. 116/116 tests green (`commit 56fd227`). |
 | **B-04** | **High-Security Brute-Force Rate Limiter** | `P1` | Low | `shared/middlewares/rateLimiter.ts`, `app.ts` | **DONE ✅** | Mounted dedicated strict rate limiting (5–10 requests per 15 minutes) on sensitive routes: `authRateLimiter` on `/auth/login`, `deliveryOtpRateLimiter` on `/orders/:id/verify-otp`, and `otpRateLimiter` factory. 120/120 tests green (`commit 45ecdc1`). |
-| **B-05** | **MongoDB Compound Indexes Audit & Boot Verification** | `P1` | Low | `database/indexes.ts`, `server.ts` | **QUEUED 🟡** | Validate and ensure ESR-optimized compound indexes on startup: `orders` `{ storeId: 1, status: 1, createdAt: -1 }`, `invoices` `{ storeId: 1, status: 1 }`, `catalog_products` `{ storeId: 1, isActive: 1 }`. |
-| **B-06** | **Receipt & Invoicing PDF / Thermal Print Server Endpoint** | `P2` | Medium | `billing.service.ts`, `order.service.ts` | **QUEUED ⚪** | Server-side HTML render endpoint for direct PDF download (`/api/v1/orders/:id/invoice/print`) matching customer account bill requirements. |
+| **B-05** | **MongoDB Compound Indexes Audit & Boot Verification** | `P1` | Low | `database/indexes.ts`, `server.ts` | **DONE ✅** | Built `ensureIndexes()` & `checkIndexHealth()` verifying canonical ESR compound indexes across `Order`, `Product`, `Store` (2dsphere), `Invoice`, `Quote`, `Delivery`, `Outbox`. Integrated into boot sequence. 134/134 tests green (`commit 8a12e87`). |
+| **B-06** | **Receipt & Invoicing PDF / Thermal Print Server Endpoint** | `P2` | Medium | `billing.service.ts`, `invoicePrint.template.ts`, `order.service.ts` | **DONE ✅** | Built headless HTML/CSS print engine supporting 80mm ESC/POS roll format (`?format=thermal`), standard GST Tax Invoice (`?format=a4`), and auto-print triggers (`?autoPrint=true`). Mounted on `GET /api/v1/orders/:id/invoice/print` & `GET /api/v1/billing/invoices/:id/print`. 150/150 tests green (`commit 0dd07fe`). |
+
+| **B-07** | **Dynamic Multi-Department Taxonomy & Custom Brand Catalog Creation** | `P1` | Medium | `catalog.types.ts`, `product.model.ts`, `AddProductStep1.tsx`, `CreatableCombobox.tsx` | **DONE ✅** | Relaxed category/subtype schema constraints to accept arbitrary strings; built `CreatableCombobox` supporting inline creation for Category, Sub-category, Product Type, and Brand across retail verticals. 127/127 tests green (`commit 93f84ec`). |
+| **B-08** | **Rider Fleet Open-Pool Broadcast & Atomic Mutex Claim Engine** | `P0` | Medium | `delivery.repository.ts`, `delivery.service.ts`, `delivery.routes.ts` | **DONE ✅** | Hyperlocal rider dispatch: WhatsApp open-pool teaser broadcasts, MongoDB atomic mutex claim (`findOneAndUpdate({ orderId, status: 'PENDING_ASSIGNMENT', 'rider.id': { $exists: false } })`), available jobs geospatial feed (`2dsphere`), and turn-by-turn two-wheeler navigation links. 174/174 tests green. |
 
 ---
 
@@ -55,9 +58,15 @@ timeline
 
 | Task ID | Task Title | Priority | Complexity | Target File(s) | Status | Details & Deliverables |
 |:---:|---|:---:|:---:|---|:---:|---|
-| **T-01** | **Automated Headless E2E Simulation Script** | `P0` | Medium | `scripts/e2e-simulation.ts` | **QUEUED 🟡** | Single executable Node script testing the entire loop: Customer signup ➔ Store discovery ➔ Order creation ➔ Socket.io arrival event ➔ Merchant pack ➔ WhatsApp link generation ➔ OTP verification ➔ Stock verification. |
-| **T-02** | **Concurrent Checkout & OCC Stock Contention Test** | `P1` | Medium | `order.service.test.ts` | **QUEUED 🟡** | High-concurrency test simulating 10 simultaneous orders competing for 3 stock units. Verifies Optimistic Concurrency Control (OCC) version increments, deadlock-free isolation, and zero negative inventory drift. |
-| **T-03** | **WhatsApp Notification Failover & Payload Audit** | `P1` | Low | `whatsapp.service.ts` | **QUEUED 🟡** | Verify live Meta Graph API payload structure against Indian phone formats, ensure dry-run mode passes in CI, and verify 1-click fallback `wa.me` URI formatting with full invoice totals. |
+| **T-01** | **Automated Headless E2E Simulation Script** | `P0` | Medium | `scripts/e2e-simulation.ts` | **DONE ✅** | Built executable 11-step headless simulation script (`pnpm sim:e2e`). Validated full commerce loop: health checks, customer signup & address, store catalog discovery, cart checkout, OCC versioning, WhatsApp dispatch manifest, 4-digit OTP handshake, atomic inventory decrement (-1 exact), and thermal/A4 invoice print. 151/151 tests green (`commit 8d45f31`). |
+
+
+| **T-02** | **Concurrent Checkout & OCC Stock Contention Test** | `P1` | Medium | `occStockContention.test.ts` | **DONE ✅** | Built high-concurrency test suite simulating 10 simultaneous orders competing for 3 stock units. Verified: exactly 3 succeed, 7 fail with `STOCK_UPDATE_CONFLICT`, final inventory exactly 0 with zero negative drift, product OCC version incremented by 3, multi-item deadlock-free sorting, and order status update OCC conflict rejection on stale versions (`commit d62fa10`). 155/155 tests green. |
+
+
+| **T-03** | **WhatsApp Notification Failover & Payload Audit** | `P1` | Low | `whatsapp.service.ts` | **DONE ✅** | Verified live Meta Graph API payload structure against Indian phone formats (`91XXXXXXXXXX`), extracted modular message builders (`buildOrderConfirmationMessage`, `buildRiderDispatchMessage`, `buildOutForDeliveryMessage`, `buildDeliveryCompletedMessage`) with zero brand leaks, and built 1-click `wa.me` fallback URL generator embedding full invoice totals and OTP handshakes. 159/159 tests green (`commit 8e50b12`). |
+
+
 
 ---
 
@@ -78,9 +87,14 @@ timeline
 
 | Task ID | Task Title | Priority | Complexity | Target File(s) | Status | Details & Deliverables |
 |:---:|---|:---:|:---:|---|:---:|---|
-| **D-01** | **Render Staging Health & Liveness Audit** | `P0` | Low | `https://viztore.onrender.com` | **READY 🟢** | Verify `/healthz` & `/readyz` probes on live cloud staging; verify MongoDB Atlas and Redis Cloud connection pools under load. |
-| **D-02** | **Production Environment Variables Template Lockdown** | `P1` | Low | `.env.example`, `env.config.ts` | **READY 🟢** | Complete audit of all mandatory env vars (`MONGODB_URI`, `JWT_ACCESS_SECRET`, `WHATSAPP_TOKEN`, `NEXT_PUBLIC_APP_NAME`), verifying zero secrets committed. |
-| **D-03** | **Production Seed Dataset Refinement** | `P1` | Low | `seed-merchants.ts` | **READY 🟢** | Multi-store dataset seeded with 5 real-looking retail shops in Bhilai/Durg (Clothing, Electronics, Grocery) and 60+ products with realistic barcodes and GST rates. |
+| **D-01** | **Render Staging Health & Liveness Audit** | `P0` | Low | `https://viztore.onrender.com` | **DONE ✅** | Probed and validated live cloud staging on Render: `/healthz` (200 OK), `/readyz` (200 OK, MongoDB Atlas connected, bounded heap memory), `/api-docs.json` (200 OK OpenAPI 3.0 spec), and 2dsphere spatial store discovery (`/api/v1/stores`). |
+
+
+| **D-02** | **Production Environment Variables Template Lockdown** | `P1` | Low | `.env.example`, `env.config.ts` | **DONE ✅** | Audited git tracking (zero secrets committed), updated master root `.env.example`, generated localized `.env.example` templates for all 4 apps (`backend`, `web`, `merchant`, `company`), and added comprehensive `env.test.ts` verifying connection pool limits, JWT secret constraints, and CORS origins. 164/164 tests green. |
+
+
+| **D-03** | **Production Seed Dataset Refinement** | `P1` | Low | `seed-merchants.ts`, `seed-dataset.ts`, `seed-dataset.test.ts` | **DONE ✅** | Built modular retail catalog suite (`seed-dataset.ts`) with 68 realistic products across 7 stores in Bhilai/Durg (Fashion, Consumer Electronics, Organic Staples, Pharmacy, Daily FMCG, Fresh Produce, Smart Gadgets). Assigned 68 unique EAN-13 barcodes (`890...`), statutory GST HSN codes, and tax rates (0%, 5%, 12%, 18%). Verified via unit test suite (`seed-dataset.test.ts`). 170/170 tests green (`commit 01ec6a9`). |
+
 
 ---
 
@@ -97,17 +111,32 @@ timeline
 ## 7. Recommended Execution Order for Technical Head & Agent
 
 ```text
+[COMPLETED] ➔ B-01: Transactional Outbox Background Drain Worker
+  ↓
 [COMPLETED] ➔ B-02: Stale Order Auto-Timeout & Inventory Reclaim Engine
   ↓
 [COMPLETED] ➔ B-03: Interactive OpenAPI / Swagger UI (/api-docs)
   ↓
 [COMPLETED] ➔ B-04: High-Security Brute-Force Rate Limiting (OTP & Auth)
   ↓
-[COMPLETED] ➔ I-01: Audit & Merge Abhay Task 10 (Merchant E2E Polish - PR #17)
+[COMPLETED] ➔ B-05: MongoDB Compound Indexes Audit & Boot Verification
   ↓
-[NEXT] ➔ T-01: Headless E2E Simulation Script (Pre-Freeze Dry Run) OR B-05: Customer Profile Update API
+[COMPLETED] ➔ B-06: Receipt & Invoicing PDF / Thermal Print Server Endpoint
   ↓
-[OCT 13] ➔ I-02: Audit & Merge Vinay Task 7 (Web ESLint Zeroing)
+[COMPLETED] ➔ T-01: Headless E2E Simulation Script (Pre-Freeze Loop)
   ↓
-[OCT 14] ➔ Milestone 1 Feature Freeze & Codebase Lockdown
+[COMPLETED] ➔ T-02: Concurrent Checkout & OCC Stock Contention Test
+  ↓
+[COMPLETED] ➔ T-03: WhatsApp Notification Failover & Payload Audit
+  ↓
+[COMPLETED] ➔ D-01: Render Staging Health & Liveness Audit
+  ↓
+[COMPLETED] ➔ D-02: Production Environment Variables Template Lockdown
+  ↓
+[COMPLETED] ➔ D-03: Production Seed Dataset Refinement (68 Products, 7 Stores, EAN-13 Barcodes)
+  ↓
+[COMPLETED] ➔ B-08: Rider Fleet Open-Pool Broadcast & Atomic Mutex Claim Engine
+  ↓
+[ALL BACKLOG & DEPLOYMENT PREPARATION TASKS VERIFIED 100% COMPLETE & PASSING (174/174 TESTS)]
 ```
+

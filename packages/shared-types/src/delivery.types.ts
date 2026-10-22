@@ -55,10 +55,32 @@ export const deliveryQuerySchema = z.object({
   status: z.nativeEnum(DeliveryStatus).optional(),
 });
 
+export const broadcastDeliverySchema = z.object({
+  radiusKm: z.number().positive().max(25).default(5),
+  estimatedPayout: z.number().positive().optional(),
+  notes: z.string().max(200).optional(),
+});
+
+export const claimDeliverySchema = z.object({
+  rider: riderInfoSchema,
+  estimatedMinutes: z.number().int().positive().max(180).default(30),
+});
+
+export const openPoolQuerySchema = z.object({
+  lat: z.coerce.number().min(-90).max(90).optional(),
+  lng: z.coerce.number().min(-180).max(180).optional(),
+  radiusKm: z.coerce.number().positive().max(50).default(10),
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(50).default(20),
+});
+
 // ── Inferred DTO Types ─────────────────────────────────────────────────
 
 export type RiderInfoDto = z.infer<typeof riderInfoSchema>;
 export type AssignRiderDto = z.infer<typeof assignRiderSchema>;
+export type BroadcastDeliveryDto = z.infer<typeof broadcastDeliverySchema>;
+export type ClaimDeliveryDto = z.infer<typeof claimDeliverySchema>;
+export type OpenPoolQueryDto = z.infer<typeof openPoolQuerySchema>;
 export type UpdateDeliveryStatusDto = z.infer<typeof updateDeliveryStatusSchema>;
 export type VerifyDeliveryOtpDto = z.infer<typeof verifyDeliveryOtpSchema>;
 export type DeliveryQueryDto = z.infer<typeof deliveryQuerySchema>;
@@ -67,6 +89,39 @@ export interface DeliveryTimelineEntry {
   status: DeliveryStatus;
   timestamp: string;
   note?: string;
+}
+
+export interface DeliveryPoolTeaserDto {
+  deliveryId: string;
+  orderId: string;
+  orderNumber: string;
+  storeId: string;
+  storeName?: string;
+  pickupArea: string;
+  dropoffArea: string;
+  distanceKm: number;
+  estimatedMinutes: number;
+  estimatedPayout: number;
+  claimUrl: string;
+  broadcastedAt: string;
+  teaserWhatsAppText: string;
+}
+
+export interface ClaimResultDto {
+  success: boolean;
+  message: string;
+  delivery: DeliveryResponseDto;
+  navigationUrl?: string;
+  customerContact?: {
+    name: string;
+    phone: string;
+    dropoffAddress: string;
+  };
+  pickupContact?: {
+    storeName: string;
+    pickupAddress: string;
+  };
+  instructions?: string;
 }
 
 export interface DeliveryResponseDto {
@@ -91,6 +146,9 @@ export interface DeliveryResponseDto {
   status: DeliveryStatus;
   dispatchMessage?: string;
   timeline: DeliveryTimelineEntry[];
+  estimatedPayout?: number;
+  broadcastedAt?: string;
+  claimedAt?: string;
   createdAt: string;
   updatedAt: string;
 }

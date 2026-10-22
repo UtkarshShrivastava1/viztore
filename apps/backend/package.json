@@ -14,6 +14,7 @@
     "seed:prod": "node dist/scripts/seed-merchants.js",
     "test:whatsapp": "tsx src/scripts/test-whatsapp-ping.ts",
     "purge:billing": "tsx src/scripts/purge-billing.ts",
+    "sim:e2e": "tsx ../../scripts/e2e-simulation.ts",
     "clean": "rimraf dist"
   },
   "dependencies": {

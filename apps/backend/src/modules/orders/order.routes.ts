@@ -32,6 +32,7 @@ export function createOrderRouter(
   router.get('/all', roleGuard(UserRole.ADMIN, UserRole.MERCHANT), controller.getAllOrders);
   router.get('/:id', controller.getOrder);
   router.get('/:id/invoice', controller.getInvoice);
+  router.get('/:id/invoice/print', controller.printInvoice);
   router.patch(
     '/:id/status',
     validateRequest({ body: updateOrderStatusSchema }),
