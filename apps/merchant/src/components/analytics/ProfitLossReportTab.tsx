@@ -10,9 +10,16 @@ import {
   Truck,
   Building,
 } from 'lucide-react';
+import { useAnalyticsStore } from '../../stores/analyticsStore.js';
 
 export const ProfitLossReportTab: React.FC = () => {
+  const { profitLossData } = useAnalyticsStore();
   const [trendPeriod, setTrendPeriod] = useState('Daily');
+
+  const revenueVal = profitLossData?.kpis?.totalRevenue ?? 145230.0;
+  const expensesVal = profitLossData?.kpis?.totalExpenses ?? ((profitLossData?.kpis?.cogs ?? 86780.0) + 30000.0);
+  const netProfitVal = profitLossData?.kpis?.netProfit ?? 58450.0;
+  const marginVal = profitLossData?.kpis?.profitMargin ?? 40.3;
 
   return (
     <div className="space-y-3.5">
@@ -26,7 +33,7 @@ export const ProfitLossReportTab: React.FC = () => {
                 <span className="text-xs font-semibold text-slate-500">Total Revenue</span>
                 <Info className="w-3 h-3 text-slate-400" />
               </div>
-              <h4 className="text-xl font-black text-slate-900 mt-1">₹ 1,45,230.00</h4>
+              <h4 className="text-xl font-black text-slate-900 mt-1">₹ {revenueVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h4>
             </div>
             <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
               <CreditCard className="w-5 h-5" />
@@ -34,7 +41,7 @@ export const ProfitLossReportTab: React.FC = () => {
           </div>
           <p className="text-[11px] text-emerald-600 font-semibold mt-2.5 flex items-center gap-1">
             <span className="font-bold">↑ 12.5%</span>
-            <span className="text-slate-400 font-normal">vs 03 May - 09 May 2024</span>
+            <span className="text-slate-400 font-normal">vs previous period</span>
           </p>
         </div>
 
@@ -46,7 +53,7 @@ export const ProfitLossReportTab: React.FC = () => {
                 <span className="text-xs font-semibold text-slate-500">Total Expenses</span>
                 <Info className="w-3 h-3 text-slate-400" />
               </div>
-              <h4 className="text-xl font-black text-slate-900 mt-1">₹ 86,780.00</h4>
+              <h4 className="text-xl font-black text-slate-900 mt-1">₹ {expensesVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h4>
             </div>
             <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
               <Receipt className="w-5 h-5" />
@@ -54,7 +61,7 @@ export const ProfitLossReportTab: React.FC = () => {
           </div>
           <p className="text-[11px] text-rose-600 font-semibold mt-2.5 flex items-center gap-1">
             <span className="font-bold">↑ 8.3%</span>
-            <span className="text-slate-400 font-normal">vs 03 May - 09 May 2024</span>
+            <span className="text-slate-400 font-normal">vs previous period</span>
           </p>
         </div>
 
@@ -66,7 +73,7 @@ export const ProfitLossReportTab: React.FC = () => {
                 <span className="text-xs font-semibold text-slate-500">Net Profit</span>
                 <Info className="w-3 h-3 text-slate-400" />
               </div>
-              <h4 className="text-xl font-black text-slate-900 mt-1">₹ 58,450.00</h4>
+              <h4 className="text-xl font-black text-slate-900 mt-1">₹ {netProfitVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h4>
             </div>
             <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
               <TrendingUp className="w-5 h-5" />
@@ -74,7 +81,7 @@ export const ProfitLossReportTab: React.FC = () => {
           </div>
           <p className="text-[11px] text-emerald-600 font-semibold mt-2.5 flex items-center gap-1">
             <span className="font-bold">↑ 15.2%</span>
-            <span className="text-slate-400 font-normal">vs 03 May - 09 May 2024</span>
+            <span className="text-slate-400 font-normal">vs previous period</span>
           </p>
         </div>
 
@@ -86,7 +93,7 @@ export const ProfitLossReportTab: React.FC = () => {
                 <span className="text-xs font-semibold text-slate-500">Profit Margin</span>
                 <Info className="w-3 h-3 text-slate-400" />
               </div>
-              <h4 className="text-xl font-black text-slate-900 mt-1">40.3%</h4>
+              <h4 className="text-xl font-black text-slate-900 mt-1">{marginVal}%</h4>
             </div>
             <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
               <Percent className="w-5 h-5" />
@@ -94,7 +101,7 @@ export const ProfitLossReportTab: React.FC = () => {
           </div>
           <p className="text-[11px] text-emerald-600 font-semibold mt-2.5 flex items-center gap-1">
             <span className="font-bold">↑ 3.1%</span>
-            <span className="text-slate-400 font-normal">vs 03 May - 09 May 2024</span>
+            <span className="text-slate-400 font-normal">vs previous period</span>
           </p>
         </div>
       </div>

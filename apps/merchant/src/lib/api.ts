@@ -368,3 +368,53 @@ export const mediaApi = {
     >('/media/upload-multiple', formData);
   },
 };
+
+export const analyticsApi = {
+  getOverview: (period: string = '7d') =>
+    api.get<any>(`/analytics/overview?period=${encodeURIComponent(period)}`),
+
+  getProfitLoss: (period: string = 'this_month') =>
+    api.get<any>(`/analytics/profit-loss?period=${encodeURIComponent(period)}`),
+
+  getProductWise: (period: string = '7d', category?: string) => {
+    const qs = category && category !== 'All Categories' ? `&category=${encodeURIComponent(category)}` : '';
+    return api.get<any>(`/analytics/products?period=${encodeURIComponent(period)}${qs}`);
+  },
+
+  getTotalOrders: (period: string = '7d') =>
+    api.get<any>(`/analytics/orders?period=${encodeURIComponent(period)}`),
+
+  getOfflineBilling: (period: string = '7d') =>
+    api.get<any>(`/analytics/offline-billing?period=${encodeURIComponent(period)}`),
+
+  getGSTReport: (period: string = 'this_month') =>
+    api.get<any>(`/analytics/gst?period=${encodeURIComponent(period)}`),
+
+  getPayouts: (period: string = 'this_month') =>
+    api.get<any>(`/analytics/payouts?period=${encodeURIComponent(period)}`),
+
+  getSettlements: (period: string = 'this_month') =>
+    api.get<any>(`/analytics/settlements?period=${encodeURIComponent(period)}`),
+
+  getTransactions: (period: string = 'this_month') =>
+    api.get<any>(`/analytics/transactions?period=${encodeURIComponent(period)}`),
+
+  downloadReportCsv: async (report: string, period: string = 'this_month') => {
+    const token = localStorage.getItem('access_token');
+    const res = await fetch(`${API_BASE_URL}/analytics/export?report=${encodeURIComponent(report)}&period=${encodeURIComponent(period)}`, {
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    if (!res.ok) throw new Error('Failed to download report');
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${report}_report_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  },
+};

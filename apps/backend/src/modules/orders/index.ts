@@ -72,5 +72,6 @@ export type {
   OrderExpiryWorkerStatus,
 } from './orderExpiryWorker.js';
 export { OrderStatus } from './order.types.js';
+export { OrderModel } from './order.model.js';
 
 

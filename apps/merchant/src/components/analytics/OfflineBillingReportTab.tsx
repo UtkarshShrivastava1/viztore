@@ -15,30 +15,42 @@ import {
   UserCheck,
   UserPlus,
 } from 'lucide-react';
+import { useAnalyticsStore } from '../../stores/analyticsStore.js';
+import type { IOfflineBillRecord } from '@repo/shared-types';
 
 export const OfflineBillingReportTab: React.FC = () => {
+  const { offlineBillingData } = useAnalyticsStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [paymentFilter, setPaymentFilter] = useState('All Payment Methods');
   const [staffFilter, setStaffFilter] = useState('All Staff');
 
-  const billsData = [
-    { id: 1, billNo: '#BIL-000342', date: '16 May 2024, 07:24 PM', customer: 'Rahul Sharma', items: 5, amount: 1245, payment: 'Cash', createdBy: 'Admin' },
-    { id: 2, billNo: '#BIL-000341', date: '16 May 2024, 06:18 PM', customer: 'Walk-in Customer', items: 3, amount: 890, payment: 'UPI', createdBy: 'Admin' },
-    { id: 3, billNo: '#BIL-000340', date: '16 May 2024, 05:45 PM', customer: 'Priya Verma', items: 4, amount: 2150, payment: 'Card', createdBy: 'Admin' },
-    { id: 4, billNo: '#BIL-000339', date: '15 May 2024, 08:12 PM', customer: 'Walk-in Customer', items: 2, amount: 560, payment: 'Cash', createdBy: 'Admin' },
-    { id: 5, billNo: '#BIL-000338', date: '15 May 2024, 07:36 PM', customer: 'Amit Kumar', items: 6, amount: 1980, payment: 'UPI', createdBy: 'Admin' },
-    { id: 6, billNo: '#BIL-000337', date: '15 May 2024, 06:21 PM', customer: 'Sneha Patel', items: 1, amount: 399, payment: 'Card', createdBy: 'Admin' },
-    { id: 7, billNo: '#BIL-000336', date: '14 May 2024, 08:05 PM', customer: 'Walk-in Customer', items: 4, amount: 1450, payment: 'Cash', createdBy: 'Admin' },
-    { id: 8, billNo: '#BIL-000335', date: '14 May 2024, 04:18 PM', customer: 'Vikash Singh', items: 3, amount: 1120, payment: 'UPI', createdBy: 'Admin' },
-    { id: 9, billNo: '#BIL-000334', date: '13 May 2024, 07:50 PM', customer: 'Neha Gupta', items: 5, amount: 2340, payment: 'Card', createdBy: 'Admin' },
-    { id: 10, billNo: '#BIL-000333', date: '13 May 2024, 06:14 PM', customer: 'Walk-in Customer', items: 2, amount: 680, payment: 'Cash', createdBy: 'Admin' },
+  const defaultBills: IOfflineBillRecord[] = [
+    { id: '1', billNo: '#BIL-000342', dateTime: '16 May 2024, 07:24 PM', customerName: 'Rahul Sharma', items: 5, amount: 1245, tax: 110, paymentMethod: 'Cash', createdBy: 'Admin' },
+    { id: '2', billNo: '#BIL-000341', dateTime: '16 May 2024, 06:18 PM', customerName: 'Walk-in Customer', items: 3, amount: 890, tax: 78, paymentMethod: 'UPI', createdBy: 'Admin' },
+    { id: '3', billNo: '#BIL-000340', dateTime: '16 May 2024, 05:45 PM', customerName: 'Priya Verma', items: 4, amount: 2150, tax: 180, paymentMethod: 'Card', createdBy: 'Admin' },
+    { id: '4', billNo: '#BIL-000339', dateTime: '15 May 2024, 08:12 PM', customerName: 'Walk-in Customer', items: 2, amount: 560, tax: 45, paymentMethod: 'Cash', createdBy: 'Admin' },
+    { id: '5', billNo: '#BIL-000338', dateTime: '15 May 2024, 07:36 PM', customerName: 'Amit Kumar', items: 6, amount: 1980, tax: 165, paymentMethod: 'UPI', createdBy: 'Admin' },
+    { id: '6', billNo: '#BIL-000337', dateTime: '15 May 2024, 06:21 PM', customerName: 'Sneha Patel', items: 1, amount: 399, tax: 35, paymentMethod: 'Card', createdBy: 'Admin' },
+    { id: '7', billNo: '#BIL-000336', dateTime: '14 May 2024, 08:05 PM', customerName: 'Walk-in Customer', items: 4, amount: 1450, tax: 120, paymentMethod: 'Cash', createdBy: 'Admin' },
+    { id: '8', billNo: '#BIL-000335', dateTime: '14 May 2024, 04:18 PM', customerName: 'Vikash Singh', items: 3, amount: 1120, tax: 95, paymentMethod: 'UPI', createdBy: 'Admin' },
+    { id: '9', billNo: '#BIL-000334', dateTime: '13 May 2024, 07:50 PM', customerName: 'Neha Gupta', items: 5, amount: 2340, tax: 195, paymentMethod: 'Card', createdBy: 'Admin' },
+    { id: '10', billNo: '#BIL-000333', dateTime: '13 May 2024, 06:14 PM', customerName: 'Walk-in Customer', items: 2, amount: 680, tax: 55, paymentMethod: 'Cash', createdBy: 'Admin' },
   ];
 
-  const filteredBills = billsData.filter((b) => {
-    if (searchTerm && !b.billNo.toLowerCase().includes(searchTerm.toLowerCase()) && !b.customer.toLowerCase().includes(searchTerm.toLowerCase())) {
+  const rawBills = (offlineBillingData?.bills && offlineBillingData.bills.length > 0)
+    ? offlineBillingData.bills
+    : defaultBills;
+
+  const billsCount = offlineBillingData?.kpis?.totalBills ?? (rawBills.length || 342);
+  const salesTotal = offlineBillingData?.kpis?.totalSales ?? 78450.0;
+  const avgVal = offlineBillingData?.kpis?.avgTicketSize ?? 229.38;
+  const itemsCount = rawBills.reduce((acc, b) => acc + b.items, 0) || 1125;
+
+  const filteredBills = rawBills.filter((b) => {
+    if (searchTerm && !b.billNo.toLowerCase().includes(searchTerm.toLowerCase()) && !b.customerName.toLowerCase().includes(searchTerm.toLowerCase())) {
       return false;
     }
-    if (paymentFilter !== 'All Payment Methods' && b.payment !== paymentFilter) {
+    if (paymentFilter !== 'All Payment Methods' && b.paymentMethod !== paymentFilter) {
       return false;
     }
     if (staffFilter !== 'All Staff' && b.createdBy !== staffFilter) {
@@ -59,7 +71,7 @@ export const OfflineBillingReportTab: React.FC = () => {
                 <span className="text-xs font-semibold text-slate-500">Offline Bills</span>
                 <Info className="w-3 h-3 text-slate-400" />
               </div>
-              <h4 className="text-xl font-black text-slate-900 mt-1">342</h4>
+              <h4 className="text-xl font-black text-slate-900 mt-1">{billsCount.toLocaleString('en-IN')}</h4>
             </div>
             <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
               <Receipt className="w-5 h-5" />
@@ -67,7 +79,7 @@ export const OfflineBillingReportTab: React.FC = () => {
           </div>
           <p className="text-[11px] text-emerald-600 font-semibold mt-2.5 flex items-center gap-1">
             <span className="font-bold">↑ 12.6%</span>
-            <span className="text-slate-400 font-normal">vs 03 May - 09 May 2024</span>
+            <span className="text-slate-400 font-normal">vs previous period</span>
           </p>
         </div>
 
@@ -79,7 +91,7 @@ export const OfflineBillingReportTab: React.FC = () => {
                 <span className="text-xs font-semibold text-slate-500">Offline Sales (₹)</span>
                 <Info className="w-3 h-3 text-slate-400" />
               </div>
-              <h4 className="text-xl font-black text-slate-900 mt-1">₹ 78,450.00</h4>
+              <h4 className="text-xl font-black text-slate-900 mt-1">₹ {salesTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h4>
             </div>
             <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
               <CreditCard className="w-5 h-5" />
@@ -87,7 +99,7 @@ export const OfflineBillingReportTab: React.FC = () => {
           </div>
           <p className="text-[11px] text-emerald-600 font-semibold mt-2.5 flex items-center gap-1">
             <span className="font-bold">↑ 15.4%</span>
-            <span className="text-slate-400 font-normal">vs 03 May - 09 May 2024</span>
+            <span className="text-slate-400 font-normal">vs previous period</span>
           </p>
         </div>
 
@@ -99,7 +111,7 @@ export const OfflineBillingReportTab: React.FC = () => {
                 <span className="text-xs font-semibold text-slate-500">Average Bill Value (₹)</span>
                 <Info className="w-3 h-3 text-slate-400" />
               </div>
-              <h4 className="text-xl font-black text-slate-900 mt-1">₹ 229.38</h4>
+              <h4 className="text-xl font-black text-slate-900 mt-1">₹ {avgVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h4>
             </div>
             <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
               <Store className="w-5 h-5" />
@@ -107,7 +119,7 @@ export const OfflineBillingReportTab: React.FC = () => {
           </div>
           <p className="text-[11px] text-emerald-600 font-semibold mt-2.5 flex items-center gap-1">
             <span className="font-bold">↑ 6.8%</span>
-            <span className="text-slate-400 font-normal">vs 03 May - 09 May 2024</span>
+            <span className="text-slate-400 font-normal">vs previous period</span>
           </p>
         </div>
 
@@ -119,7 +131,7 @@ export const OfflineBillingReportTab: React.FC = () => {
                 <span className="text-xs font-semibold text-slate-500">Items Sold (Offline)</span>
                 <Info className="w-3 h-3 text-slate-400" />
               </div>
-              <h4 className="text-xl font-black text-slate-900 mt-1">1,125</h4>
+              <h4 className="text-xl font-black text-slate-900 mt-1">{itemsCount.toLocaleString('en-IN')}</h4>
             </div>
             <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
               <Boxes className="w-5 h-5" />
@@ -127,7 +139,7 @@ export const OfflineBillingReportTab: React.FC = () => {
           </div>
           <p className="text-[11px] text-emerald-600 font-semibold mt-2.5 flex items-center gap-1">
             <span className="font-bold">↑ 11.2%</span>
-            <span className="text-slate-400 font-normal">vs 03 May - 09 May 2024</span>
+            <span className="text-slate-400 font-normal">vs previous period</span>
           </p>
         </div>
       </div>
@@ -360,13 +372,13 @@ export const OfflineBillingReportTab: React.FC = () => {
                     <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
                       <td className="py-2 px-2.5 font-medium text-slate-400">{idx + 1}</td>
                       <td className="py-2 px-2.5 font-bold text-blue-600 font-mono">{item.billNo}</td>
-                      <td className="py-2 px-2.5 text-slate-500">{item.date}</td>
-                      <td className="py-2 px-2.5 font-semibold text-slate-900">{item.customer}</td>
+                      <td className="py-2 px-2.5 text-slate-500">{item.dateTime}</td>
+                      <td className="py-2 px-2.5 font-semibold text-slate-900">{item.customerName}</td>
                       <td className="py-2 px-2.5 text-right font-medium">{item.items}</td>
                       <td className="py-2 px-2.5 text-right font-semibold text-slate-900">
                         ₹ {item.amount.toLocaleString('en-IN')}.00
                       </td>
-                      <td className="py-2 px-2.5 text-slate-600">{item.payment}</td>
+                      <td className="py-2 px-2.5 text-slate-600">{item.paymentMethod}</td>
                       <td className="py-2 px-2.5 text-slate-500">{item.createdBy}</td>
                       <td className="py-2 px-2.5 text-center">
                         <button className="text-slate-400 hover:text-slate-600 p-1">

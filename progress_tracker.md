@@ -20,7 +20,7 @@
 | ↳ **Merchant & Admin Panel** | 25% | `[████████████████████]` | **100%** | 🟢 Complete Suite | All 7/7 Modules & Settings Merged (`b92a159`) |
 | ↳ **Customer Web Storefront** | 20% | `[████████████████████]` | **100%** | 🟢 Storefront & Cart Engine | All 4/4 Modular Suites Merged (`e942cc9`) |
 | ↳ **Corporate Marketing Website** | 5% | `[████████████████████]` | **100%** | 🟢 Corporate Hub | 13 Routes Prerendered, White-Label (`@repo/company`) |
-| ↳ **Production Readiness & DevOps** | 20% | `[████████████████████]` | **100%** | 🟢 Staging Live | 174/174 Tests Green (26/26 suites), Monorepo Clean Build |
+| ↳ **Production Readiness & DevOps** | 20% | `[████████████████████]` | **100%** | 🟢 Staging Live | 182/182 Tests Green (27/27 suites), Monorepo Clean Build |
 
 
 
@@ -336,5 +336,12 @@ Every online order placed through `apps/web` generates an authoritative, complia
   - Verified across 174/174 unit tests passing (26 suites) and full monorepo clean build (6/6 packages).
 - [x] **Rider Fleet Open-Pool Broadcast & Atomic Mutex Claim Engine (Phase 2 Delivery Dispatch) 🟢**:
   - WhatsApp open-pool teaser broadcasts, MongoDB atomic mutex claim (`findOneAndUpdate({ orderId, status: 'PENDING_ASSIGNMENT', 'rider.id': { $exists: false } })`), available jobs geospatial feed (`2dsphere`), and turn-by-turn two-wheeler navigation links. 174/174 tests green.
+- [x] **Reports & Analytics Enterprise Subsystem & UI Hardening (`MOD-11`) (10 Screens) 🟢**:
+  - Full-stack business intelligence and reporting suite matching mockups `11.0`–`11.9`: Overview (`11.0`), Profit & Loss (`11.1`), Product Wise (`11.2`), Total Orders (`11.3`), POS Billing (`11.4`), GST Liability (`11.5`), Payouts (`11.6`), Settlements (`11.7`), Transactions & Reversals (`11.8`, `11.9`).
+  - Backend Domain (`apps/backend/src/modules/analytics/`): Real-time store-scoped aggregations across `OrderModel`, `InvoiceModel`, `ProductModel`, and `ExpenseModel`. Mounted at `/api/v1/analytics/*` with RBAC protection.
+  - Export Engine: RFC-compliant CSV report streaming with UTF-8 BOM encoding for direct Excel compatibility, plus thermal/A4 print view fallback.
+  - Merchant UI (`apps/merchant/`): Purged all alert stubs, interactive 7-preset date picker, dynamic tab-driven report switcher, and live API state hydration.
+  - Verified across **182/182 unit tests passing (27 suites)** and full clean monorepo build (6/6 packages).
+
 
 

@@ -10,3 +10,4 @@ export * from './notification.types.js';
 export * from './billing.types.js';
 export * from './escpos.generator.js';
 export * from './expense.types.js';
+export * from './analytics.types.js';

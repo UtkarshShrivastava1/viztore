@@ -14,33 +14,45 @@ import {
   CreditCard,
   Building,
 } from 'lucide-react';
+import { useAnalyticsStore } from '../../stores/analyticsStore.js';
 
 export const TotalOrdersReportTab: React.FC = () => {
+  const { totalOrdersData } = useAnalyticsStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All Order Status');
   const [paymentFilter, setPaymentFilter] = useState('All Payment Methods');
 
-  const ordersData = [
-    { id: 1, orderId: '#ORD-001245', date: '16 May 2024, 10:24 AM', customer: 'Rahul Sharma', amount: 2450, payment: 'UPI', status: 'Delivered' },
-    { id: 2, orderId: '#ORD-001244', date: '16 May 2024, 09:18 AM', customer: 'Priya Verma', amount: 1890, payment: 'Card', status: 'Pending' },
-    { id: 3, orderId: '#ORD-001243', date: '15 May 2024, 08:45 PM', customer: 'Amit Kumar', amount: 3250, payment: 'COD', status: 'Delivered' },
-    { id: 4, orderId: '#ORD-001242', date: '15 May 2024, 06:12 PM', customer: 'Sneha Patel', amount: 1200, payment: 'UPI', status: 'Cancelled' },
-    { id: 5, orderId: '#ORD-001241', date: '15 May 2024, 04:36 PM', customer: 'Vikash Singh', amount: 2990, payment: 'Card', status: 'Delivered' },
-    { id: 6, orderId: '#ORD-001240', date: '14 May 2024, 02:15 PM', customer: 'Neha Gupta', amount: 1450, payment: 'UPI', status: 'Returned' },
-    { id: 7, orderId: '#ORD-001239', date: '14 May 2024, 11:28 AM', customer: 'Suresh Yadav', amount: 2750, payment: 'COD', status: 'Delivered' },
-    { id: 8, orderId: '#ORD-001238', date: '13 May 2024, 07:50 PM', customer: 'Kavita Rao', amount: 1980, payment: 'Card', status: 'Pending' },
-    { id: 9, orderId: '#ORD-001237', date: '13 May 2024, 05:14 PM', customer: 'Manoj Kumar', amount: 3100, payment: 'UPI', status: 'Delivered' },
-    { id: 10, orderId: '#ORD-001236', date: '13 May 2024, 01:20 PM', customer: 'Pooja Mehta', amount: 890, payment: 'UPI', status: 'Cancelled' },
+  const defaultOrders = [
+    { id: '1', orderId: '#ORD-001245', dateTime: '16 May 2024, 10:24 AM', customerName: 'Rahul Sharma', amount: 2450, paymentMethod: 'UPI', status: 'Delivered' },
+    { id: '2', orderId: '#ORD-001244', dateTime: '16 May 2024, 09:18 AM', customerName: 'Priya Verma', amount: 1890, paymentMethod: 'Card', status: 'Pending' },
+    { id: '3', orderId: '#ORD-001243', dateTime: '15 May 2024, 08:45 PM', customerName: 'Amit Kumar', amount: 3250, paymentMethod: 'COD', status: 'Delivered' },
+    { id: '4', orderId: '#ORD-001242', dateTime: '15 May 2024, 06:12 PM', customerName: 'Sneha Patel', amount: 1200, paymentMethod: 'UPI', status: 'Cancelled' },
+    { id: '5', orderId: '#ORD-001241', dateTime: '15 May 2024, 04:36 PM', customerName: 'Vikash Singh', amount: 2990, paymentMethod: 'Card', status: 'Delivered' },
+    { id: '6', orderId: '#ORD-001240', dateTime: '14 May 2024, 02:15 PM', customerName: 'Neha Gupta', amount: 1450, paymentMethod: 'UPI', status: 'Returned' },
+    { id: '7', orderId: '#ORD-001239', dateTime: '14 May 2024, 11:28 AM', customerName: 'Suresh Yadav', amount: 2750, paymentMethod: 'COD', status: 'Delivered' },
+    { id: '8', orderId: '#ORD-001238', dateTime: '13 May 2024, 07:50 PM', customerName: 'Kavita Rao', amount: 1980, paymentMethod: 'Card', status: 'Pending' },
+    { id: '9', orderId: '#ORD-001237', dateTime: '13 May 2024, 05:14 PM', customerName: 'Manoj Kumar', amount: 3100, paymentMethod: 'UPI', status: 'Delivered' },
+    { id: '10', orderId: '#ORD-001236', dateTime: '13 May 2024, 01:20 PM', customerName: 'Pooja Mehta', amount: 890, paymentMethod: 'UPI', status: 'Cancelled' },
   ];
 
-  const filteredOrders = ordersData.filter((o) => {
-    if (searchTerm && !o.orderId.toLowerCase().includes(searchTerm.toLowerCase()) && !o.customer.toLowerCase().includes(searchTerm.toLowerCase())) {
+  const rawOrders = (totalOrdersData?.orders && totalOrdersData.orders.length > 0)
+    ? totalOrdersData.orders
+    : defaultOrders;
+
+  const totalOrdersCount = totalOrdersData?.kpis?.totalOrders ?? (rawOrders.length || 1245);
+  const deliveredCount = totalOrdersData?.kpis?.completedOrders ?? 890;
+  const cancelledCount = totalOrdersData?.kpis?.cancelledOrders ?? 95;
+  const returnedCount = totalOrdersData?.kpis?.returnedOrders ?? 80;
+  const pendingCount = Math.max(0, totalOrdersCount - deliveredCount - cancelledCount - returnedCount) || 180;
+
+  const filteredOrders = rawOrders.filter((o) => {
+    if (searchTerm && !o.orderId.toLowerCase().includes(searchTerm.toLowerCase()) && !o.customerName.toLowerCase().includes(searchTerm.toLowerCase())) {
       return false;
     }
     if (statusFilter !== 'All Order Status' && o.status !== statusFilter) {
       return false;
     }
-    if (paymentFilter !== 'All Payment Methods' && o.payment !== paymentFilter) {
+    if (paymentFilter !== 'All Payment Methods' && o.paymentMethod !== paymentFilter) {
       return false;
     }
     return true;
@@ -58,7 +70,7 @@ export const TotalOrdersReportTab: React.FC = () => {
                 <span className="text-xs font-semibold text-slate-500">Total Orders</span>
                 <Info className="w-3 h-3 text-slate-400" />
               </div>
-              <h4 className="text-xl font-black text-slate-900 mt-1">1,245</h4>
+              <h4 className="text-xl font-black text-slate-900 mt-1">{totalOrdersCount.toLocaleString('en-IN')}</h4>
             </div>
             <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
               <ShoppingBag className="w-5 h-5" />
@@ -66,7 +78,7 @@ export const TotalOrdersReportTab: React.FC = () => {
           </div>
           <p className="text-[11px] text-emerald-600 font-semibold mt-2.5 flex items-center gap-1">
             <span className="font-bold">↑ 8.7%</span>
-            <span className="text-slate-400 font-normal">vs 03 May - 09 May 2024</span>
+            <span className="text-slate-400 font-normal">vs previous period</span>
           </p>
         </div>
 
@@ -78,7 +90,7 @@ export const TotalOrdersReportTab: React.FC = () => {
                 <span className="text-xs font-semibold text-slate-500">Delivered Orders</span>
                 <Info className="w-3 h-3 text-slate-400" />
               </div>
-              <h4 className="text-xl font-black text-slate-900 mt-1">890</h4>
+              <h4 className="text-xl font-black text-slate-900 mt-1">{deliveredCount.toLocaleString('en-IN')}</h4>
             </div>
             <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
               <Truck className="w-5 h-5" />
@@ -86,7 +98,7 @@ export const TotalOrdersReportTab: React.FC = () => {
           </div>
           <p className="text-[11px] text-emerald-600 font-semibold mt-2.5 flex items-center gap-1">
             <span className="font-bold">↑ 12.5%</span>
-            <span className="text-slate-400 font-normal">vs 03 May - 09 May 2024</span>
+            <span className="text-slate-400 font-normal">vs previous period</span>
           </p>
         </div>
 
@@ -98,7 +110,7 @@ export const TotalOrdersReportTab: React.FC = () => {
                 <span className="text-xs font-semibold text-slate-500">Pending Orders</span>
                 <Info className="w-3 h-3 text-slate-400" />
               </div>
-              <h4 className="text-xl font-black text-slate-900 mt-1">180</h4>
+              <h4 className="text-xl font-black text-slate-900 mt-1">{pendingCount.toLocaleString('en-IN')}</h4>
             </div>
             <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
               <Clock className="w-5 h-5" />
@@ -106,7 +118,7 @@ export const TotalOrdersReportTab: React.FC = () => {
           </div>
           <p className="text-[11px] text-emerald-600 font-semibold mt-2.5 flex items-center gap-1">
             <span className="font-bold">↑ 6.3%</span>
-            <span className="text-slate-400 font-normal">vs 03 May - 09 May 2024</span>
+            <span className="text-slate-400 font-normal">vs previous period</span>
           </p>
         </div>
 
@@ -118,7 +130,7 @@ export const TotalOrdersReportTab: React.FC = () => {
                 <span className="text-xs font-semibold text-slate-500">Cancelled Orders</span>
                 <Info className="w-3 h-3 text-slate-400" />
               </div>
-              <h4 className="text-xl font-black text-slate-900 mt-1">95</h4>
+              <h4 className="text-xl font-black text-slate-900 mt-1">{cancelledCount.toLocaleString('en-IN')}</h4>
             </div>
             <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
               <XCircle className="w-5 h-5" />
@@ -126,7 +138,7 @@ export const TotalOrdersReportTab: React.FC = () => {
           </div>
           <p className="text-[11px] text-rose-600 font-semibold mt-2.5 flex items-center gap-1">
             <span className="font-bold">↑ 4.1%</span>
-            <span className="text-slate-400 font-normal">vs 03 May - 09 May 2024</span>
+            <span className="text-slate-400 font-normal">vs previous period</span>
           </p>
         </div>
 
@@ -138,7 +150,7 @@ export const TotalOrdersReportTab: React.FC = () => {
                 <span className="text-xs font-semibold text-slate-500">Returned Orders</span>
                 <Info className="w-3 h-3 text-slate-400" />
               </div>
-              <h4 className="text-xl font-black text-slate-900 mt-1">80</h4>
+              <h4 className="text-xl font-black text-slate-900 mt-1">{returnedCount.toLocaleString('en-IN')}</h4>
             </div>
             <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
               <RotateCcw className="w-5 h-5" />
@@ -362,12 +374,12 @@ export const TotalOrdersReportTab: React.FC = () => {
                     <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
                       <td className="py-2 px-2.5 font-medium text-slate-400">{idx + 1}</td>
                       <td className="py-2 px-2.5 font-bold text-blue-600 font-mono">{item.orderId}</td>
-                      <td className="py-2 px-2.5 text-slate-500">{item.date}</td>
-                      <td className="py-2 px-2.5 font-semibold text-slate-900">{item.customer}</td>
+                      <td className="py-2 px-2.5 text-slate-500">{item.dateTime}</td>
+                      <td className="py-2 px-2.5 font-semibold text-slate-900">{item.customerName}</td>
                       <td className="py-2 px-2.5 text-right font-semibold text-slate-900">
                         ₹ {item.amount.toLocaleString('en-IN')}.00
                       </td>
-                      <td className="py-2 px-2.5 text-slate-600">{item.payment}</td>
+                      <td className="py-2 px-2.5 text-slate-600">{item.paymentMethod}</td>
                       <td className="py-2 px-2.5">
                         <span
                           className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${

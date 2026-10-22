@@ -26,6 +26,7 @@ import { notificationRouter } from './modules/notifications/index.js';
 import { billingRouter } from './modules/billing/index.js';
 import { mediaRouter } from './modules/media/index.js';
 import { expenseRouter } from './modules/expenses/index.js';
+import { analyticsRouter } from './modules/analytics/index.js';
 
 export function createApp(): Express {
   const app: Express = express();
@@ -154,6 +155,7 @@ export function createApp(): Express {
   apiV1.use('/billing', billingRouter);
   apiV1.use('/media', mediaRouter);
   apiV1.use('/expenses', expenseRouter);
+  apiV1.use('/analytics', analyticsRouter);
 
 
   app.use(`/api/${env.API_VERSION}`, apiV1);

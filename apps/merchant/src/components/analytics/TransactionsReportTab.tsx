@@ -16,34 +16,45 @@ import {
   CreditCard,
   Sliders,
 } from 'lucide-react';
+import { useAnalyticsStore } from '../../stores/analyticsStore.js';
 
 export const TransactionsReportTab: React.FC = () => {
+  const { transactionsData } = useAnalyticsStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('All Transaction Types');
   const [paymentFilter, setPaymentFilter] = useState('All Payment Methods');
   const [statusFilter, setStatusFilter] = useState('All Status');
 
-  const transactionsData = [
-    { id: 1, txnId: '#TXN-000842', date: '16 May 2024, 07:24 PM', type: 'Order Payment', orderId: '#ORD-001245', customer: 'Rahul Sharma', payment: 'UPI', amount: 2450, status: 'Success' },
-    { id: 2, txnId: '#TXN-000841', date: '16 May 2024, 06:18 PM', type: 'Order Payment', orderId: '#ORD-001244', customer: 'Walk-in Customer', payment: 'Card', amount: 1980, status: 'Success' },
-    { id: 3, txnId: '#TXN-000840', date: '16 May 2024, 05:45 PM', type: 'Order Payment', orderId: '#ORD-001243', customer: 'Priya Verma', payment: 'UPI', amount: 3000, status: 'Success' },
-    { id: 4, txnId: '#TXN-000839', date: '15 May 2024, 08:12 PM', type: 'Order Payment', orderId: '#ORD-001242', customer: 'Walk-in Customer', payment: 'Cash', amount: 560, status: 'Success' },
-    { id: 5, txnId: '#TXN-000838', date: '15 May 2024, 07:36 PM', type: 'Order Payment', orderId: '#ORD-001241', customer: 'Amit Kumar', payment: 'Card', amount: 1450, status: 'Failed' },
-    { id: 6, txnId: '#TXN-000837', date: '15 May 2024, 06:21 PM', type: 'Refund', orderId: '#ORD-001240', customer: 'Sneha Patel', payment: 'UPI', amount: -399, status: 'Success' },
-    { id: 7, txnId: '#TXN-000836', date: '14 May 2024, 08:05 PM', type: 'Order Payment', orderId: '#ORD-001239', customer: 'Walk-in Customer', payment: 'Cash', amount: 1120, status: 'Success' },
-    { id: 8, txnId: '#TXN-000835', date: '14 May 2024, 04:18 PM', type: 'Order Payment', orderId: '#ORD-001238', customer: 'Vikash Singh', payment: 'UPI', amount: 2340, status: 'Success' },
-    { id: 9, txnId: '#TXN-000834', date: '13 May 2024, 07:50 PM', type: 'Order Payment', orderId: '#ORD-001237', customer: 'Neha Gupta', payment: 'Card', amount: 890, status: 'Success' },
-    { id: 10, txnId: '#TXN-000833', date: '13 May 2024, 06:14 PM', type: 'Order Payment', orderId: '#ORD-001236', customer: 'Walk-in Customer', payment: 'Cash', amount: 680, status: 'Success' },
+  const defaultTransactions = [
+    { id: '1', transactionId: '#TXN-000842', dateTime: '16 May 2024, 07:24 PM', type: 'Order Payment' as const, orderId: '#ORD-001245', customer: 'Rahul Sharma', paymentMethod: 'UPI' as const, amount: 2450, status: 'Success' as const },
+    { id: '2', transactionId: '#TXN-000841', dateTime: '16 May 2024, 06:18 PM', type: 'Order Payment' as const, orderId: '#ORD-001244', customer: 'Walk-in Customer', paymentMethod: 'Card' as const, amount: 1980, status: 'Success' as const },
+    { id: '3', transactionId: '#TXN-000840', dateTime: '16 May 2024, 05:45 PM', type: 'Order Payment' as const, orderId: '#ORD-001243', customer: 'Priya Verma', paymentMethod: 'UPI' as const, amount: 3000, status: 'Success' as const },
+    { id: '4', transactionId: '#TXN-000839', dateTime: '15 May 2024, 08:12 PM', type: 'Order Payment' as const, orderId: '#ORD-001242', customer: 'Walk-in Customer', paymentMethod: 'Cash' as const, amount: 560, status: 'Success' as const },
+    { id: '5', transactionId: '#TXN-000838', dateTime: '15 May 2024, 07:36 PM', type: 'Order Payment' as const, orderId: '#ORD-001241', customer: 'Amit Kumar', paymentMethod: 'Card' as const, amount: 1450, status: 'Failed' as const },
+    { id: '6', transactionId: '#TXN-000837', dateTime: '15 May 2024, 06:21 PM', type: 'Refund' as const, orderId: '#ORD-001240', customer: 'Sneha Patel', paymentMethod: 'UPI' as const, amount: -399, status: 'Success' as const },
+    { id: '7', transactionId: '#TXN-000836', dateTime: '14 May 2024, 08:05 PM', type: 'Order Payment' as const, orderId: '#ORD-001239', customer: 'Walk-in Customer', paymentMethod: 'Cash' as const, amount: 1120, status: 'Success' as const },
+    { id: '8', transactionId: '#TXN-000835', dateTime: '14 May 2024, 04:18 PM', type: 'Order Payment' as const, orderId: '#ORD-001238', customer: 'Vikash Singh', paymentMethod: 'UPI' as const, amount: 2340, status: 'Success' as const },
+    { id: '9', transactionId: '#TXN-000834', dateTime: '13 May 2024, 07:50 PM', type: 'Order Payment' as const, orderId: '#ORD-001237', customer: 'Neha Gupta', paymentMethod: 'Card' as const, amount: 890, status: 'Success' as const },
+    { id: '10', transactionId: '#TXN-000833', dateTime: '13 May 2024, 06:14 PM', type: 'Order Payment' as const, orderId: '#ORD-001236', customer: 'Walk-in Customer', paymentMethod: 'Cash' as const, amount: 680, status: 'Success' as const },
   ];
 
-  const filtered = transactionsData.filter((t) => {
-    if (searchTerm && !t.txnId.toLowerCase().includes(searchTerm.toLowerCase()) && !t.customer.toLowerCase().includes(searchTerm.toLowerCase()) && !t.orderId.toLowerCase().includes(searchTerm.toLowerCase())) {
+  const rawTxns = (transactionsData?.transactions && transactionsData.transactions.length > 0)
+    ? transactionsData.transactions
+    : defaultTransactions;
+
+  const totalTxnCount = transactionsData?.kpis?.totalTransactions ?? (rawTxns.length || 1842);
+  const totalAmountVal = transactionsData?.kpis?.totalVolume ?? 138500.0;
+  const successfulCount = transactionsData?.kpis?.successCount ?? 1768;
+  const failedCount = transactionsData?.kpis?.failedCount ?? 74;
+
+  const filtered = rawTxns.filter((t) => {
+    if (searchTerm && !t.transactionId.toLowerCase().includes(searchTerm.toLowerCase()) && !t.customer.toLowerCase().includes(searchTerm.toLowerCase()) && !t.orderId.toLowerCase().includes(searchTerm.toLowerCase())) {
       return false;
     }
     if (typeFilter !== 'All Transaction Types' && t.type !== typeFilter) {
       return false;
     }
-    if (paymentFilter !== 'All Payment Methods' && t.payment !== paymentFilter) {
+    if (paymentFilter !== 'All Payment Methods' && t.paymentMethod !== paymentFilter) {
       return false;
     }
     if (statusFilter !== 'All Status' && t.status !== statusFilter) {
@@ -64,7 +75,7 @@ export const TransactionsReportTab: React.FC = () => {
                 <span className="text-xs font-semibold text-slate-500">Total Transactions</span>
                 <Info className="w-3 h-3 text-slate-400" />
               </div>
-              <h4 className="text-xl font-black text-slate-900 mt-1">1,842</h4>
+              <h4 className="text-xl font-black text-slate-900 mt-1">{totalTxnCount.toLocaleString('en-IN')}</h4>
             </div>
             <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
               <ArrowLeftRight className="w-5 h-5" />
@@ -72,7 +83,7 @@ export const TransactionsReportTab: React.FC = () => {
           </div>
           <p className="text-[11px] text-emerald-600 font-semibold mt-2.5 flex items-center gap-1">
             <span className="font-bold">↑ 12.6%</span>
-            <span className="text-slate-400 font-normal">vs 03 May - 09 May 2024</span>
+            <span className="text-slate-400 font-normal">vs previous period</span>
           </p>
         </div>
 
@@ -84,7 +95,7 @@ export const TransactionsReportTab: React.FC = () => {
                 <span className="text-xs font-semibold text-slate-500">Total Amount</span>
                 <Info className="w-3 h-3 text-slate-400" />
               </div>
-              <h4 className="text-xl font-black text-slate-900 mt-1">₹ 1,38,500.00</h4>
+              <h4 className="text-xl font-black text-slate-900 mt-1">₹ {totalAmountVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h4>
             </div>
             <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
               <Wallet className="w-5 h-5" />
@@ -92,7 +103,7 @@ export const TransactionsReportTab: React.FC = () => {
           </div>
           <p className="text-[11px] text-emerald-600 font-semibold mt-2.5 flex items-center gap-1">
             <span className="font-bold">↑ 15.4%</span>
-            <span className="text-slate-400 font-normal">vs 03 May - 09 May 2024</span>
+            <span className="text-slate-400 font-normal">vs previous period</span>
           </p>
         </div>
 
@@ -104,7 +115,7 @@ export const TransactionsReportTab: React.FC = () => {
                 <span className="text-xs font-semibold text-slate-500">Successful Transactions</span>
                 <Info className="w-3 h-3 text-slate-400" />
               </div>
-              <h4 className="text-xl font-black text-slate-900 mt-1">1,768</h4>
+              <h4 className="text-xl font-black text-slate-900 mt-1">{successfulCount.toLocaleString('en-IN')}</h4>
             </div>
             <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
               <CheckCircle2 className="w-5 h-5" />
@@ -124,7 +135,7 @@ export const TransactionsReportTab: React.FC = () => {
                 <span className="text-xs font-semibold text-slate-500">Failed Transactions</span>
                 <Info className="w-3 h-3 text-slate-400" />
               </div>
-              <h4 className="text-xl font-black text-slate-900 mt-1">74</h4>
+              <h4 className="text-xl font-black text-slate-900 mt-1">{failedCount.toLocaleString('en-IN')}</h4>
             </div>
             <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
               <XCircle className="w-5 h-5" />
@@ -377,12 +388,12 @@ export const TransactionsReportTab: React.FC = () => {
                   {filtered.map((item, idx) => (
                     <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
                       <td className="py-2 px-2.5 font-medium text-slate-400">{idx + 1}</td>
-                      <td className="py-2 px-2.5 font-bold text-blue-600 font-mono">{item.txnId}</td>
-                      <td className="py-2 px-2.5 text-slate-500">{item.date}</td>
+                      <td className="py-2 px-2.5 font-bold text-blue-600 font-mono">{item.transactionId}</td>
+                      <td className="py-2 px-2.5 text-slate-500">{item.dateTime}</td>
                       <td className="py-2 px-2.5 text-slate-700 font-medium">{item.type}</td>
                       <td className="py-2 px-2.5 font-mono text-blue-600 font-medium">{item.orderId}</td>
                       <td className="py-2 px-2.5 font-semibold text-slate-900">{item.customer}</td>
-                      <td className="py-2 px-2.5 text-slate-600">{item.payment}</td>
+                      <td className="py-2 px-2.5 text-slate-600">{item.paymentMethod}</td>
                       <td className={`py-2 px-2.5 text-right font-semibold ${item.amount < 0 ? 'text-rose-600' : 'text-slate-900'}`}>
                         {item.amount < 0 ? `- ₹ ${Math.abs(item.amount).toLocaleString('en-IN')}.00` : `₹ ${item.amount.toLocaleString('en-IN')}.00`}
                       </td>

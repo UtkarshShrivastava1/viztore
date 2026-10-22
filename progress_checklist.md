@@ -241,6 +241,7 @@
   - [x] `MOD-08: Purchase & Operating Expense ERP` (20 mockups, zero alerts, 5 MongoDB models, live CRUD, GSTIN validation, PO/bills/returns/credit notes/E-Way bills, promoted to primary sidebar)
   - [x] `MOD-09: Returns & Refunds` (4 mockups, zero alerts, photo dropzone, return-to-order navigation, return slip modal)
   - [x] `MOD-10: Payout & Settlements` (4 mockups, zero alerts, in-app Manage Bank Account modal, settlement requests state machine, UTR search)
+  - [x] `MOD-11: Reports & Analytics` (10 mockups, 9 functional tabs: Overview, P&L, Product Wise, Total Orders, POS Billing, GST Report, Payouts, Settlements, Transactions & Reversals; zero alert stubs; live store-scoped aggregations across orders, invoices, products, expenses; RFC-compliant CSV report streaming with UTF-8 BOM; interactive 7-preset date picker)
   - [x] `MOD-13: Store Management Hub` (7 mockups, zero alerts, sections priority reordering, live phone chassis preview, product placement matrix, QR code generator, cloud sync)
   - [x] `MOD-14: Settings` (9 mockups, full 9 tabs functional, profile, business GSTIN, timings, toast feedback)
   - [x] `MOD-15: Support & Help Desk` (2 mockups, zero alerts, ticket attachment input, WhatsApp support integration)

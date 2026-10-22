@@ -11,33 +11,45 @@ import {
   MoreHorizontal,
   Calendar,
 } from 'lucide-react';
+import { useAnalyticsStore } from '../../stores/analyticsStore.js';
+import type { IGSTInvoiceRecord } from '@repo/shared-types';
 
 export const GSTReportTab: React.FC = () => {
+  const { gstReportData } = useAnalyticsStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [gstRateFilter, setGstRateFilter] = useState('All GST Rates');
   const [invoiceTypeFilter, setInvoiceTypeFilter] = useState('All Invoice Types');
 
-  const invoicesData = [
-    { id: 1, invoiceNo: '#INV-000342', date: '16 May 2024, 07:24 PM', customer: 'Rahul Sharma', type: 'Sale', taxable: 2076, rate: '12%', gst: 249, total: 2325 },
-    { id: 2, invoiceNo: '#INV-000341', date: '16 May 2024, 06:18 PM', customer: 'Walk-in Customer', type: 'Sale', taxable: 1598, rate: '18%', gst: 288, total: 1886 },
-    { id: 3, invoiceNo: '#INV-000340', date: '16 May 2024, 05:45 PM', customer: 'Priya Verma', type: 'Sale', taxable: 3000, rate: '18%', gst: 540, total: 3540 },
-    { id: 4, invoiceNo: '#INV-000339', date: '15 May 2024, 08:12 PM', customer: 'Walk-in Customer', type: 'Sale', taxable: 474, rate: '5%', gst: 24, total: 498 },
-    { id: 5, invoiceNo: '#INV-000338', date: '15 May 2024, 07:36 PM', customer: 'Amit Kumar', type: 'Sale', taxable: 1780, rate: '12%', gst: 214, total: 1994 },
-    { id: 6, invoiceNo: '#INV-000337', date: '15 May 2024, 06:21 PM', customer: 'Sneha Patel', type: 'Sale', taxable: 1250, rate: '18%', gst: 225, total: 1475 },
-    { id: 7, invoiceNo: '#INV-000336', date: '14 May 2024, 08:05 PM', customer: 'Walk-in Customer', type: 'Sale', taxable: 921, rate: '12%', gst: 111, total: 1032 },
-    { id: 8, invoiceNo: '#INV-000335', date: '14 May 2024, 04:18 PM', customer: 'Vikash Singh', type: 'Sale', taxable: 2000, rate: '18%', gst: 360, total: 2360 },
-    { id: 9, invoiceNo: '#INV-000334', date: '13 May 2024, 07:50 PM', customer: 'Neha Gupta', type: 'Sale', taxable: 1983, rate: '5%', gst: 99, total: 2082 },
-    { id: 10, invoiceNo: '#INV-000333', date: '13 May 2024, 06:14 PM', customer: 'Walk-in Customer', type: 'Sale', taxable: 576, rate: '28%', gst: 161, total: 737 },
+  const defaultInvoices: IGSTInvoiceRecord[] = [
+    { id: '1', invoiceNo: '#INV-000342', dateTime: '16 May 2024, 07:24 PM', customerName: 'Rahul Sharma', invoiceType: 'Tax Invoice', taxableValue: 2076, gstRate: '12%', cgst: 124.5, sgst: 124.5, igst: 0, totalGst: 249, totalAmount: 2325 },
+    { id: '2', invoiceNo: '#INV-000341', dateTime: '16 May 2024, 06:18 PM', customerName: 'Walk-in Customer', invoiceType: 'Tax Invoice', taxableValue: 1598, gstRate: '18%', cgst: 144, sgst: 144, igst: 0, totalGst: 288, totalAmount: 1886 },
+    { id: '3', invoiceNo: '#INV-000340', dateTime: '16 May 2024, 05:45 PM', customerName: 'Priya Verma', invoiceType: 'Tax Invoice', taxableValue: 3000, gstRate: '18%', cgst: 270, sgst: 270, igst: 0, totalGst: 540, totalAmount: 3540 },
+    { id: '4', invoiceNo: '#INV-000339', dateTime: '15 May 2024, 08:12 PM', customerName: 'Walk-in Customer', invoiceType: 'Bill of Supply', taxableValue: 474, gstRate: '5%', cgst: 12, sgst: 12, igst: 0, totalGst: 24, totalAmount: 498 },
+    { id: '5', invoiceNo: '#INV-000338', dateTime: '15 May 2024, 07:36 PM', customerName: 'Amit Kumar', invoiceType: 'Tax Invoice', taxableValue: 1780, gstRate: '12%', cgst: 107, sgst: 107, igst: 0, totalGst: 214, totalAmount: 1994 },
+    { id: '6', invoiceNo: '#INV-000337', dateTime: '15 May 2024, 06:21 PM', customerName: 'Sneha Patel', invoiceType: 'Tax Invoice', taxableValue: 1250, gstRate: '18%', cgst: 112.5, sgst: 112.5, igst: 0, totalGst: 225, totalAmount: 1475 },
+    { id: '7', invoiceNo: '#INV-000336', dateTime: '14 May 2024, 08:05 PM', customerName: 'Walk-in Customer', invoiceType: 'Tax Invoice', taxableValue: 921, gstRate: '12%', cgst: 55.5, sgst: 55.5, igst: 0, totalGst: 111, totalAmount: 1032 },
+    { id: '8', invoiceNo: '#INV-000335', dateTime: '14 May 2024, 04:18 PM', customerName: 'Vikash Singh', invoiceType: 'Tax Invoice', taxableValue: 2000, gstRate: '18%', cgst: 180, sgst: 180, igst: 0, totalGst: 360, totalAmount: 2360 },
+    { id: '9', invoiceNo: '#INV-000334', dateTime: '13 May 2024, 07:50 PM', customerName: 'Neha Gupta', invoiceType: 'Bill of Supply', taxableValue: 1983, gstRate: '5%', cgst: 49.5, sgst: 49.5, igst: 0, totalGst: 99, totalAmount: 2082 },
+    { id: '10', invoiceNo: '#INV-000333', dateTime: '13 May 2024, 06:14 PM', customerName: 'Walk-in Customer', invoiceType: 'Tax Invoice', taxableValue: 576, gstRate: '28%', cgst: 80.5, sgst: 80.5, igst: 0, totalGst: 161, totalAmount: 737 },
   ];
 
-  const filteredInvoices = invoicesData.filter((inv) => {
-    if (searchTerm && !inv.invoiceNo.toLowerCase().includes(searchTerm.toLowerCase()) && !inv.customer.toLowerCase().includes(searchTerm.toLowerCase())) {
+  const rawInvoices = (gstReportData?.invoices && gstReportData.invoices.length > 0)
+    ? gstReportData.invoices
+    : defaultInvoices;
+
+  const salesInclGst = (gstReportData?.kpis?.totalTaxableValue ?? 117413.0) + (gstReportData?.kpis?.totalGstLiability ?? 21087.0);
+  const gstCollected = gstReportData?.kpis?.totalGstLiability ?? 21087.0;
+  const taxableVal = gstReportData?.kpis?.totalTaxableValue ?? 117413.0;
+  const invoicesCount = gstReportData?.kpis?.totalInvoices ?? (rawInvoices.length || 342);
+
+  const filteredInvoices = rawInvoices.filter((inv) => {
+    if (searchTerm && !inv.invoiceNo.toLowerCase().includes(searchTerm.toLowerCase()) && !inv.customerName.toLowerCase().includes(searchTerm.toLowerCase())) {
       return false;
     }
-    if (gstRateFilter !== 'All GST Rates' && inv.rate !== gstRateFilter) {
+    if (gstRateFilter !== 'All GST Rates' && inv.gstRate !== gstRateFilter) {
       return false;
     }
-    if (invoiceTypeFilter !== 'All Invoice Types' && inv.type !== invoiceTypeFilter) {
+    if (invoiceTypeFilter !== 'All Invoice Types' && inv.invoiceType !== invoiceTypeFilter) {
       return false;
     }
     return true;
@@ -55,7 +67,7 @@ export const GSTReportTab: React.FC = () => {
                 <span className="text-xs font-semibold text-slate-500">Total Sales (Incl. GST)</span>
                 <Info className="w-3 h-3 text-slate-400" />
               </div>
-              <h4 className="text-xl font-black text-slate-900 mt-1">₹ 1,38,500.00</h4>
+              <h4 className="text-xl font-black text-slate-900 mt-1">₹ {salesInclGst.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h4>
             </div>
             <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
               <FileText className="w-5 h-5" />
@@ -63,7 +75,7 @@ export const GSTReportTab: React.FC = () => {
           </div>
           <p className="text-[11px] text-emerald-600 font-semibold mt-2.5 flex items-center gap-1">
             <span className="font-bold">↑ 15.4%</span>
-            <span className="text-slate-400 font-normal">vs 03 May - 09 May 2024</span>
+            <span className="text-slate-400 font-normal">vs previous period</span>
           </p>
         </div>
 
@@ -75,7 +87,7 @@ export const GSTReportTab: React.FC = () => {
                 <span className="text-xs font-semibold text-slate-500">Total GST Collected</span>
                 <Info className="w-3 h-3 text-slate-400" />
               </div>
-              <h4 className="text-xl font-black text-slate-900 mt-1">₹ 21,087.00</h4>
+              <h4 className="text-xl font-black text-slate-900 mt-1">₹ {gstCollected.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h4>
             </div>
             <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
               <Percent className="w-5 h-5" />
@@ -83,7 +95,7 @@ export const GSTReportTab: React.FC = () => {
           </div>
           <p className="text-[11px] text-emerald-600 font-semibold mt-2.5 flex items-center gap-1">
             <span className="font-bold">↑ 12.8%</span>
-            <span className="text-slate-400 font-normal">vs 03 May - 09 May 2024</span>
+            <span className="text-slate-400 font-normal">vs previous period</span>
           </p>
         </div>
 
@@ -95,7 +107,7 @@ export const GSTReportTab: React.FC = () => {
                 <span className="text-xs font-semibold text-slate-500">Total Taxable Value</span>
                 <Info className="w-3 h-3 text-slate-400" />
               </div>
-              <h4 className="text-xl font-black text-slate-900 mt-1">₹ 1,17,413.00</h4>
+              <h4 className="text-xl font-black text-slate-900 mt-1">₹ {taxableVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h4>
             </div>
             <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
               <FileText className="w-5 h-5" />
@@ -103,7 +115,7 @@ export const GSTReportTab: React.FC = () => {
           </div>
           <p className="text-[11px] text-emerald-600 font-semibold mt-2.5 flex items-center gap-1">
             <span className="font-bold">↑ 16.2%</span>
-            <span className="text-slate-400 font-normal">vs 03 May - 09 May 2024</span>
+            <span className="text-slate-400 font-normal">vs previous period</span>
           </p>
         </div>
 
@@ -115,7 +127,7 @@ export const GSTReportTab: React.FC = () => {
                 <span className="text-xs font-semibold text-slate-500">Total Invoices</span>
                 <Info className="w-3 h-3 text-slate-400" />
               </div>
-              <h4 className="text-xl font-black text-slate-900 mt-1">342</h4>
+              <h4 className="text-xl font-black text-slate-900 mt-1">{invoicesCount.toLocaleString('en-IN')}</h4>
             </div>
             <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
               <Receipt className="w-5 h-5" />
@@ -123,7 +135,7 @@ export const GSTReportTab: React.FC = () => {
           </div>
           <p className="text-[11px] text-emerald-600 font-semibold mt-2.5 flex items-center gap-1">
             <span className="font-bold">↑ 11.9%</span>
-            <span className="text-slate-400 font-normal">vs 03 May - 09 May 2024</span>
+            <span className="text-slate-400 font-normal">vs previous period</span>
           </p>
         </div>
       </div>
@@ -357,18 +369,18 @@ export const GSTReportTab: React.FC = () => {
                     <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
                       <td className="py-2 px-2.5 font-medium text-slate-400">{idx + 1}</td>
                       <td className="py-2 px-2.5 font-bold text-blue-600 font-mono">{item.invoiceNo}</td>
-                      <td className="py-2 px-2.5 text-slate-500">{item.date}</td>
-                      <td className="py-2 px-2.5 font-semibold text-slate-900">{item.customer}</td>
-                      <td className="py-2 px-2.5 text-slate-600">{item.type}</td>
+                      <td className="py-2 px-2.5 text-slate-500">{item.dateTime}</td>
+                      <td className="py-2 px-2.5 font-semibold text-slate-900">{item.customerName}</td>
+                      <td className="py-2 px-2.5 text-slate-600">{item.invoiceType}</td>
                       <td className="py-2 px-2.5 text-right text-slate-600">
-                        ₹ {item.taxable.toLocaleString('en-IN')}.00
+                        ₹ {item.taxableValue.toLocaleString('en-IN')}.00
                       </td>
-                      <td className="py-2 px-2.5 text-center font-bold text-slate-900">{item.rate}</td>
+                      <td className="py-2 px-2.5 text-center font-bold text-slate-900">{item.gstRate}</td>
                       <td className="py-2 px-2.5 text-right font-medium text-slate-700">
-                        ₹ {item.gst.toLocaleString('en-IN')}.00
+                        ₹ {item.totalGst.toLocaleString('en-IN')}.00
                       </td>
                       <td className="py-2 px-2.5 text-right font-semibold text-slate-900">
-                        ₹ {item.total.toLocaleString('en-IN')}.00
+                        ₹ {item.totalAmount.toLocaleString('en-IN')}.00
                       </td>
                       <td className="py-2 px-2.5 text-center">
                         <button className="text-slate-400 hover:text-slate-600 p-1">

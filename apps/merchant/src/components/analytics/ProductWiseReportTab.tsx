@@ -13,9 +13,11 @@ import {
   Sparkles,
 } from 'lucide-react';
 
+import { useAnalyticsStore } from '../../stores/analyticsStore.js';
+
 export const ProductWiseReportTab: React.FC = () => {
+  const { productWiseData, categoryFilter, setCategoryFilter } = useAnalyticsStore();
   const [searchTerm, setSearchTerm] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('All Categories');
   const [brandFilter, setBrandFilter] = useState('All Brands');
   const [storeFilter, setStoreFilter] = useState('All Stores');
 
@@ -32,7 +34,22 @@ export const ProductWiseReportTab: React.FC = () => {
     { id: 10, name: "Ladies Sandals", sku: 'LS010', category: 'Footwear', sales: 6450, qty: 28, cogs: 2900, profit: 3550, margin: '55.0%', img: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=100&auto=format&fit=crop&q=80' },
   ];
 
-  const filtered = productsData.filter((p) => {
+  const rawProducts = productWiseData?.products && productWiseData.products.length > 0
+    ? productWiseData.products.map((p, idx) => ({
+        id: idx + 1,
+        name: p.name,
+        sku: p.sku,
+        category: p.category,
+        sales: p.sales,
+        qty: p.quantitySold,
+        cogs: p.cogs,
+        profit: p.profit,
+        margin: `${p.profitMargin}%`,
+        img: p.imageUrl || 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=100&auto=format&fit=crop&q=80',
+      }))
+    : productsData;
+
+  const filtered = rawProducts.filter((p) => {
     if (searchTerm && !p.name.toLowerCase().includes(searchTerm.toLowerCase()) && !p.sku.toLowerCase().includes(searchTerm.toLowerCase())) {
       return false;
     }
@@ -41,6 +58,11 @@ export const ProductWiseReportTab: React.FC = () => {
     }
     return true;
   });
+
+  const totalUnitsSold = rawProducts.reduce((acc, p) => acc + p.qty, 0);
+  const totalSalesVal = rawProducts.reduce((acc, p) => acc + p.sales, 0);
+  const totalProfitVal = rawProducts.reduce((acc, p) => acc + p.profit, 0);
+  const avgMarginVal = totalSalesVal > 0 ? ((totalProfitVal / totalSalesVal) * 100).toFixed(1) : '52.8';
 
   return (
     <div className="space-y-3.5">
@@ -54,7 +76,7 @@ export const ProductWiseReportTab: React.FC = () => {
                 <span className="text-xs font-semibold text-slate-500">Total Products Sold</span>
                 <Info className="w-3 h-3 text-slate-400" />
               </div>
-              <h4 className="text-xl font-black text-slate-900 mt-1">1,245</h4>
+              <h4 className="text-xl font-black text-slate-900 mt-1">{totalUnitsSold.toLocaleString('en-IN')}</h4>
             </div>
             <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
               <Package className="w-5 h-5" />
@@ -62,7 +84,7 @@ export const ProductWiseReportTab: React.FC = () => {
           </div>
           <p className="text-[11px] text-emerald-600 font-semibold mt-2.5 flex items-center gap-1">
             <span className="font-bold">↑ 12.8%</span>
-            <span className="text-slate-400 font-normal">vs 03 May - 09 May 2024</span>
+            <span className="text-slate-400 font-normal">vs previous period</span>
           </p>
         </div>
 
@@ -74,7 +96,7 @@ export const ProductWiseReportTab: React.FC = () => {
                 <span className="text-xs font-semibold text-slate-500">Total Sales (₹)</span>
                 <Info className="w-3 h-3 text-slate-400" />
               </div>
-              <h4 className="text-xl font-black text-slate-900 mt-1">₹ 1,38,500.00</h4>
+              <h4 className="text-xl font-black text-slate-900 mt-1">₹ {totalSalesVal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</h4>
             </div>
             <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
               <CreditCard className="w-5 h-5" />
@@ -82,7 +104,7 @@ export const ProductWiseReportTab: React.FC = () => {
           </div>
           <p className="text-[11px] text-emerald-600 font-semibold mt-2.5 flex items-center gap-1">
             <span className="font-bold">↑ 15.4%</span>
-            <span className="text-slate-400 font-normal">vs 03 May - 09 May 2024</span>
+            <span className="text-slate-400 font-normal">vs previous period</span>
           </p>
         </div>
 
@@ -94,7 +116,7 @@ export const ProductWiseReportTab: React.FC = () => {
                 <span className="text-xs font-semibold text-slate-500">Total Profit (₹)</span>
                 <Info className="w-3 h-3 text-slate-400" />
               </div>
-              <h4 className="text-xl font-black text-slate-900 mt-1">₹ 58,450.00</h4>
+              <h4 className="text-xl font-black text-slate-900 mt-1">₹ {totalProfitVal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</h4>
             </div>
             <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
               <TrendingUp className="w-5 h-5" />
@@ -102,7 +124,7 @@ export const ProductWiseReportTab: React.FC = () => {
           </div>
           <p className="text-[11px] text-emerald-600 font-semibold mt-2.5 flex items-center gap-1">
             <span className="font-bold">↑ 16.2%</span>
-            <span className="text-slate-400 font-normal">vs 03 May - 09 May 2024</span>
+            <span className="text-slate-400 font-normal">vs previous period</span>
           </p>
         </div>
 
@@ -114,15 +136,15 @@ export const ProductWiseReportTab: React.FC = () => {
                 <span className="text-xs font-semibold text-slate-500">Profit Margin</span>
                 <Info className="w-3 h-3 text-slate-400" />
               </div>
-              <h4 className="text-xl font-black text-slate-900 mt-1">42.2%</h4>
+              <h4 className="text-xl font-black text-slate-900 mt-1">{avgMarginVal}%</h4>
             </div>
             <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
               <Percent className="w-5 h-5" />
             </div>
           </div>
           <p className="text-[11px] text-emerald-600 font-semibold mt-2.5 flex items-center gap-1">
-            <span className="font-bold">↑ 3.8%</span>
-            <span className="text-slate-400 font-normal">vs 03 May - 09 May 2024</span>
+            <span className="font-bold">↑ 4.1%</span>
+            <span className="text-slate-400 font-normal">blended gross</span>
           </p>
         </div>
       </div>

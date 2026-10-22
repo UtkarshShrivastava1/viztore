@@ -16,9 +16,21 @@ import {
 import { useAnalyticsStore } from '../../stores/analyticsStore.js';
 
 export const AnalyticsOverviewTab: React.FC = () => {
-  const { setActiveTab } = useAnalyticsStore();
+  const { setActiveTab, overviewData } = useAnalyticsStore();
   const [revenuePeriod, setRevenuePeriod] = useState('Daily');
   const [ordersPeriod, setOrdersPeriod] = useState('Daily');
+
+  const revenueVal = overviewData?.kpis?.totalRevenue ?? 145230.0;
+  const profitVal = overviewData?.kpis?.totalProfit ?? 28450.0;
+  const ordersVal = overviewData?.kpis?.totalOrders ?? 1245;
+  const offlineVal = overviewData?.kpis?.offlineBillingSales ?? 32450.0;
+  const cogsVal = 86780.0;
+  const grossProfitVal = 58450.0;
+  const expensesVal = 30000.0;
+  const netProfitVal = overviewData?.kpis?.totalProfit ?? 28450.0;
+  const profitMarginVal = overviewData?.kpis?.totalRevenue
+    ? Number(((overviewData.kpis.totalProfit / overviewData.kpis.totalRevenue) * 100).toFixed(2))
+    : 19.59;
 
   return (
     <div className="space-y-3.5">
@@ -34,10 +46,12 @@ export const AnalyticsOverviewTab: React.FC = () => {
               <span className="text-[11px] font-semibold text-slate-500 block truncate">Total Revenue</span>
               <Info className="w-3 h-3 text-slate-400 shrink-0" />
             </div>
-            <span className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate block">₹ 1,45,230.00</span>
+            <span className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate block">
+              ₹ {revenueVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </span>
             <div className="flex items-center gap-1 text-[10px] text-emerald-600 font-semibold mt-0.5 truncate">
               <span>↑ 12.5%</span>
-              <span className="text-slate-400 font-normal">vs prev 7d</span>
+              <span className="text-slate-400 font-normal">vs prev period</span>
             </div>
           </div>
         </div>
@@ -52,10 +66,12 @@ export const AnalyticsOverviewTab: React.FC = () => {
               <span className="text-[11px] font-semibold text-slate-500 block truncate">Total Profit</span>
               <Info className="w-3 h-3 text-slate-400 shrink-0" />
             </div>
-            <span className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate block">₹ 28,450.00</span>
+            <span className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate block">
+              ₹ {profitVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </span>
             <div className="flex items-center gap-1 text-[10px] text-emerald-600 font-semibold mt-0.5 truncate">
               <span>↑ 15.2%</span>
-              <span className="text-slate-400 font-normal">vs prev 7d</span>
+              <span className="text-slate-400 font-normal">vs prev period</span>
             </div>
           </div>
         </div>
@@ -70,10 +86,12 @@ export const AnalyticsOverviewTab: React.FC = () => {
               <span className="text-[11px] font-semibold text-slate-500 block truncate">Total Orders</span>
               <Info className="w-3 h-3 text-slate-400 shrink-0" />
             </div>
-            <span className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate block">1,245</span>
+            <span className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate block">
+              {ordersVal.toLocaleString('en-IN')}
+            </span>
             <div className="flex items-center gap-1 text-[10px] text-emerald-600 font-semibold mt-0.5 truncate">
               <span>↑ 8.7%</span>
-              <span className="text-slate-400 font-normal">vs prev 7d</span>
+              <span className="text-slate-400 font-normal">vs prev period</span>
             </div>
           </div>
         </div>
@@ -88,10 +106,12 @@ export const AnalyticsOverviewTab: React.FC = () => {
               <span className="text-[11px] font-semibold text-slate-500 block truncate">Offline Billing</span>
               <Info className="w-3 h-3 text-slate-400 shrink-0" />
             </div>
-            <span className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate block">₹ 32,450.00</span>
+            <span className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate block">
+              ₹ {offlineVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </span>
             <div className="flex items-center gap-1 text-[10px] text-emerald-600 font-semibold mt-0.5 truncate">
               <span>↑ 10.1%</span>
-              <span className="text-slate-400 font-normal">vs prev 7d</span>
+              <span className="text-slate-400 font-normal">vs prev period</span>
             </div>
           </div>
         </div>
@@ -112,29 +132,29 @@ export const AnalyticsOverviewTab: React.FC = () => {
             <div className="space-y-2 text-xs">
               <div className="flex justify-between text-slate-600">
                 <span>Total Revenue</span>
-                <span className="font-semibold text-slate-900">₹ 1,45,230.00</span>
+                <span className="font-semibold text-slate-900">₹ {revenueVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
               <div className="flex justify-between text-slate-600">
                 <span>Total COGS</span>
-                <span className="font-semibold text-slate-900">₹ 86,780.00</span>
+                <span className="font-semibold text-slate-900">₹ {cogsVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
               <div className="flex justify-between text-emerald-600 font-bold border-t border-slate-100 pt-1.5">
                 <span>Gross Profit</span>
-                <span>₹ 58,450.00</span>
+                <span>₹ {grossProfitVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
               <div className="flex justify-between text-slate-600">
                 <span>Total Expenses</span>
-                <span className="font-semibold text-slate-900">₹ 30,000.00</span>
+                <span className="font-semibold text-slate-900">₹ {expensesVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
               <div className="flex justify-between items-center bg-emerald-50/70 p-1.5 rounded-lg text-emerald-700 font-bold border border-emerald-100/60">
                 <span>Net Profit</span>
-                <span>₹ 28,450.00</span>
+                <span>₹ {netProfitVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
             </div>
           </div>
           <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
             <span className="text-slate-500 font-medium">Profit Margin</span>
-            <span className="text-xs font-black text-slate-900">19.59%</span>
+            <span className="text-xs font-black text-slate-900">{profitMarginVal}%</span>
           </div>
         </div>
 

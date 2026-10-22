@@ -13,33 +13,45 @@ import {
   Calendar,
   Building,
 } from 'lucide-react';
+import { useAnalyticsStore } from '../../stores/analyticsStore.js';
+import type { IPayoutReportRecord } from '@repo/shared-types';
 
 export const PayoutsReportTab: React.FC = () => {
+  const { payoutsData } = useAnalyticsStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All Payout Status');
   const [paymentFilter, setPaymentFilter] = useState('All Payment Methods');
 
-  const payoutsData = [
-    { id: 1, payoutId: '#PAY-000342', date: '16 May 2024, 07:24 PM', reference: 'ORD-001245', amount: 12450, status: 'Paid', method: 'Bank Transfer' },
-    { id: 2, payoutId: '#PAY-000341', date: '16 May 2024, 06:18 PM', reference: 'ORD-001244', amount: 8950, status: 'Paid', method: 'UPI' },
-    { id: 3, payoutId: '#PAY-000340', date: '16 May 2024, 05:45 PM', reference: 'ORD-001243', amount: 11200, status: 'Pending', method: 'Bank Transfer' },
-    { id: 4, payoutId: '#PAY-000339', date: '15 May 2024, 08:12 PM', reference: 'ORD-001242', amount: 6780, status: 'Paid', method: 'UPI' },
-    { id: 5, payoutId: '#PAY-000338', date: '15 May 2024, 07:36 PM', reference: 'ORD-001241', amount: 9450, status: 'Paid', method: 'Bank Transfer' },
-    { id: 6, payoutId: '#PAY-000337', date: '15 May 2024, 06:21 PM', reference: 'ORD-001240', amount: 7320, status: 'Pending', method: 'UPI' },
-    { id: 7, payoutId: '#PAY-000336', date: '14 May 2024, 08:05 PM', reference: 'ORD-001239', amount: 10850, status: 'Paid', method: 'Bank Transfer' },
-    { id: 8, payoutId: '#PAY-000335', date: '14 May 2024, 04:18 PM', reference: 'ORD-001238', amount: 5940, status: 'Paid', method: 'UPI' },
-    { id: 9, payoutId: '#PAY-000334', date: '13 May 2024, 07:50 PM', reference: 'ORD-001237', amount: 8100, status: 'Paid', method: 'Bank Transfer' },
-    { id: 10, payoutId: '#PAY-000333', date: '13 May 2024, 06:14 PM', reference: 'ORD-001236', amount: 6430, status: 'Paid', method: 'UPI' },
+  const defaultPayouts: IPayoutReportRecord[] = [
+    { id: '1', payoutId: '#PAY-000342', dateTime: '16 May 2024, 07:24 PM', reference: 'ORD-001245', amount: 12450, status: 'Paid', paymentMethod: 'Bank Transfer' },
+    { id: '2', payoutId: '#PAY-000341', dateTime: '16 May 2024, 06:18 PM', reference: 'ORD-001244', amount: 8950, status: 'Paid', paymentMethod: 'UPI' },
+    { id: '3', payoutId: '#PAY-000340', dateTime: '16 May 2024, 05:45 PM', reference: 'ORD-001243', amount: 11200, status: 'Pending', paymentMethod: 'Bank Transfer' },
+    { id: '4', payoutId: '#PAY-000339', dateTime: '15 May 2024, 08:12 PM', reference: 'ORD-001242', amount: 6780, status: 'Paid', paymentMethod: 'UPI' },
+    { id: '5', payoutId: '#PAY-000338', dateTime: '15 May 2024, 07:36 PM', reference: 'ORD-001241', amount: 9450, status: 'Paid', paymentMethod: 'Bank Transfer' },
+    { id: '6', payoutId: '#PAY-000337', dateTime: '15 May 2024, 06:21 PM', reference: 'ORD-001240', amount: 7320, status: 'Pending', paymentMethod: 'UPI' },
+    { id: '7', payoutId: '#PAY-000336', dateTime: '14 May 2024, 08:05 PM', reference: 'ORD-001239', amount: 10850, status: 'Paid', paymentMethod: 'Bank Transfer' },
+    { id: '8', payoutId: '#PAY-000335', dateTime: '14 May 2024, 04:18 PM', reference: 'ORD-001238', amount: 5940, status: 'Paid', paymentMethod: 'UPI' },
+    { id: '9', payoutId: '#PAY-000334', dateTime: '13 May 2024, 07:50 PM', reference: 'ORD-001237', amount: 8100, status: 'Paid', paymentMethod: 'Bank Transfer' },
+    { id: '10', payoutId: '#PAY-000333', dateTime: '13 May 2024, 06:14 PM', reference: 'ORD-001236', amount: 6430, status: 'Paid', paymentMethod: 'UPI' },
   ];
 
-  const filtered = payoutsData.filter((p) => {
+  const rawPayouts = (payoutsData?.payouts && payoutsData.payouts.length > 0)
+    ? payoutsData.payouts
+    : defaultPayouts;
+
+  const totalPayoutsVal = payoutsData?.kpis?.totalPayouts ?? 128450.0;
+  const paidPayoutsVal = payoutsData?.kpis?.processedAmount ?? 112300.0;
+  const pendingPayoutsVal = payoutsData?.kpis?.pendingAmount ?? 16150.0;
+  const failedPayoutsVal = payoutsData?.kpis?.failedAmount ?? 0.0;
+
+  const filtered = rawPayouts.filter((p) => {
     if (searchTerm && !p.payoutId.toLowerCase().includes(searchTerm.toLowerCase()) && !p.reference.toLowerCase().includes(searchTerm.toLowerCase())) {
       return false;
     }
     if (statusFilter !== 'All Payout Status' && p.status !== statusFilter) {
       return false;
     }
-    if (paymentFilter !== 'All Payment Methods' && p.method !== paymentFilter) {
+    if (paymentFilter !== 'All Payment Methods' && p.paymentMethod !== paymentFilter) {
       return false;
     }
     return true;
@@ -57,7 +69,7 @@ export const PayoutsReportTab: React.FC = () => {
                 <span className="text-xs font-semibold text-slate-500">Total Payouts</span>
                 <Info className="w-3 h-3 text-slate-400" />
               </div>
-              <h4 className="text-xl font-black text-slate-900 mt-1">₹ 1,28,450</h4>
+              <h4 className="text-xl font-black text-slate-900 mt-1">₹ {totalPayoutsVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h4>
             </div>
             <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
               <CreditCard className="w-5 h-5" />
@@ -65,7 +77,7 @@ export const PayoutsReportTab: React.FC = () => {
           </div>
           <p className="text-[11px] text-emerald-600 font-semibold mt-2.5 flex items-center gap-1">
             <span className="font-bold">↑ 14.2%</span>
-            <span className="text-slate-400 font-normal">vs 03 May - 09 May 2024</span>
+            <span className="text-slate-400 font-normal">vs previous period</span>
           </p>
         </div>
 
@@ -77,7 +89,7 @@ export const PayoutsReportTab: React.FC = () => {
                 <span className="text-xs font-semibold text-slate-500">Paid Payouts</span>
                 <Info className="w-3 h-3 text-slate-400" />
               </div>
-              <h4 className="text-xl font-black text-slate-900 mt-1">₹ 1,12,300</h4>
+              <h4 className="text-xl font-black text-slate-900 mt-1">₹ {paidPayoutsVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h4>
             </div>
             <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
               <CheckCircle2 className="w-5 h-5" />
@@ -85,7 +97,7 @@ export const PayoutsReportTab: React.FC = () => {
           </div>
           <p className="text-[11px] text-emerald-600 font-semibold mt-2.5 flex items-center gap-1">
             <span className="font-bold">↑ 16.8%</span>
-            <span className="text-slate-400 font-normal">vs 03 May - 09 May 2024</span>
+            <span className="text-slate-400 font-normal">vs previous period</span>
           </p>
         </div>
 
@@ -97,7 +109,7 @@ export const PayoutsReportTab: React.FC = () => {
                 <span className="text-xs font-semibold text-slate-500">Pending Payouts</span>
                 <Info className="w-3 h-3 text-slate-400" />
               </div>
-              <h4 className="text-xl font-black text-slate-900 mt-1">₹ 16,150</h4>
+              <h4 className="text-xl font-black text-slate-900 mt-1">₹ {pendingPayoutsVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h4>
             </div>
             <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
               <Clock className="w-5 h-5" />
@@ -105,7 +117,7 @@ export const PayoutsReportTab: React.FC = () => {
           </div>
           <p className="text-[11px] text-rose-600 font-semibold mt-2.5 flex items-center gap-1">
             <span className="font-bold">↑ 6.3%</span>
-            <span className="text-slate-400 font-normal">vs 03 May - 09 May 2024</span>
+            <span className="text-slate-400 font-normal">vs previous period</span>
           </p>
         </div>
 
@@ -117,14 +129,14 @@ export const PayoutsReportTab: React.FC = () => {
                 <span className="text-xs font-semibold text-slate-500">Failed Payouts</span>
                 <Info className="w-3 h-3 text-slate-400" />
               </div>
-              <h4 className="text-xl font-black text-slate-900 mt-1">₹ 0</h4>
+              <h4 className="text-xl font-black text-slate-900 mt-1">₹ {failedPayoutsVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h4>
             </div>
             <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
               <XCircle className="w-5 h-5" />
             </div>
           </div>
           <p className="text-[11px] text-slate-400 font-semibold mt-2.5">
-            — 0% vs 03 May - 09 May 2024
+            — 0% vs previous period
           </p>
         </div>
       </div>
@@ -339,7 +351,7 @@ export const PayoutsReportTab: React.FC = () => {
                     <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
                       <td className="py-2 px-2.5 font-medium text-slate-400">{idx + 1}</td>
                       <td className="py-2 px-2.5 font-bold text-blue-600 font-mono">{item.payoutId}</td>
-                      <td className="py-2 px-2.5 text-slate-500">{item.date}</td>
+                      <td className="py-2 px-2.5 text-slate-500">{item.dateTime}</td>
                       <td className="py-2 px-2.5 font-mono text-slate-600">{item.reference}</td>
                       <td className="py-2 px-2.5 text-right font-semibold text-slate-900">
                         ₹ {item.amount.toLocaleString('en-IN')}.00
@@ -355,7 +367,7 @@ export const PayoutsReportTab: React.FC = () => {
                           {item.status}
                         </span>
                       </td>
-                      <td className="py-2 px-2.5 text-slate-600">{item.method}</td>
+                      <td className="py-2 px-2.5 text-slate-600">{item.paymentMethod}</td>
                       <td className="py-2 px-2.5 text-center">
                         <button className="text-slate-400 hover:text-slate-600 p-1">
                           <MoreHorizontal className="w-4 h-4" />

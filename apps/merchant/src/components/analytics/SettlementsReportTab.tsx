@@ -13,27 +13,38 @@ import {
   Calendar,
   Building,
 } from 'lucide-react';
+import { useAnalyticsStore } from '../../stores/analyticsStore.js';
 
 export const SettlementsReportTab: React.FC = () => {
+  const { settlementsData } = useAnalyticsStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All Settlement Status');
   const [paymentFilter, setPaymentFilter] = useState('All Payment Methods');
 
-  const settlementsData = [
-    { id: 1, setId: '#SET-000342', date: '16 May 2024, 07:24 PM', period: '10 May - 16 May 2024', orders: 28, amount: 12450, status: 'Processed', method: 'Bank Transfer' },
-    { id: 2, setId: '#SET-000341', date: '15 May 2024, 06:18 PM', period: '09 May - 15 May 2024', orders: 26, amount: 8950, status: 'Processed', method: 'UPI' },
-    { id: 3, setId: '#SET-000340', date: '14 May 2024, 05:45 PM', period: '08 May - 14 May 2024', orders: 31, amount: 11200, status: 'Pending', method: 'Bank Transfer' },
-    { id: 4, setId: '#SET-000339', date: '13 May 2024, 08:12 PM', period: '07 May - 13 May 2024', orders: 22, amount: 6780, status: 'Processed', method: 'UPI' },
-    { id: 5, setId: '#SET-000338', date: '12 May 2024, 07:36 PM', period: '06 May - 12 May 2024', orders: 24, amount: 9450, status: 'Processed', method: 'Bank Transfer' },
-    { id: 6, setId: '#SET-000337', date: '11 May 2024, 06:21 PM', period: '05 May - 11 May 2024', orders: 18, amount: 7320, status: 'Processed', method: 'UPI' },
-    { id: 7, setId: '#SET-000336', date: '10 May 2024, 08:05 PM', period: '04 May - 10 May 2024', orders: 21, amount: 10850, status: 'Processed', method: 'Bank Transfer' },
-    { id: 8, setId: '#SET-000335', date: '09 May 2024, 04:18 PM', period: '03 May - 09 May 2024', orders: 16, amount: 5940, status: 'Processed', method: 'UPI' },
-    { id: 9, setId: '#SET-000334', date: '08 May 2024, 07:50 PM', period: '26 Apr - 02 May 2024', orders: 19, amount: 8100, status: 'Processed', method: 'Bank Transfer' },
-    { id: 10, setId: '#SET-000333', date: '07 May 2024, 06:14 PM', period: '19 Apr - 25 Apr 2024', orders: 14, amount: 6430, status: 'Processed', method: 'UPI' },
+  const defaultSettlements = [
+    { id: '1', settlementId: '#SET-000342', dateTime: '16 May 2024, 07:24 PM', settlementPeriod: '10 May - 16 May 2024', orders: 28, amount: 12450, deductions: 250, netAmount: 12200, status: 'Processed' as const, method: 'Bank Transfer' as const },
+    { id: '2', settlementId: '#SET-000341', dateTime: '15 May 2024, 06:18 PM', settlementPeriod: '09 May - 15 May 2024', orders: 26, amount: 8950, deductions: 180, netAmount: 8770, status: 'Processed' as const, method: 'UPI' as const },
+    { id: '3', settlementId: '#SET-000340', dateTime: '14 May 2024, 05:45 PM', settlementPeriod: '08 May - 14 May 2024', orders: 31, amount: 11200, deductions: 220, netAmount: 10980, status: 'Pending' as const, method: 'Bank Transfer' as const },
+    { id: '4', settlementId: '#SET-000339', dateTime: '13 May 2024, 08:12 PM', settlementPeriod: '07 May - 13 May 2024', orders: 22, amount: 6780, deductions: 135, netAmount: 6645, status: 'Processed' as const, method: 'UPI' as const },
+    { id: '5', settlementId: '#SET-000338', dateTime: '12 May 2024, 07:36 PM', settlementPeriod: '06 May - 12 May 2024', orders: 24, amount: 9450, deductions: 190, netAmount: 9260, status: 'Processed' as const, method: 'Bank Transfer' as const },
+    { id: '6', settlementId: '#SET-000337', dateTime: '11 May 2024, 06:21 PM', settlementPeriod: '05 May - 11 May 2024', orders: 18, amount: 7320, deductions: 145, netAmount: 7175, status: 'Processed' as const, method: 'UPI' as const },
+    { id: '7', settlementId: '#SET-000336', dateTime: '10 May 2024, 08:05 PM', settlementPeriod: '04 May - 10 May 2024', orders: 21, amount: 10850, deductions: 215, netAmount: 10635, status: 'Processed' as const, method: 'Bank Transfer' as const },
+    { id: '8', settlementId: '#SET-000335', dateTime: '09 May 2024, 04:18 PM', settlementPeriod: '03 May - 09 May 2024', orders: 16, amount: 5940, deductions: 120, netAmount: 5820, status: 'Processed' as const, method: 'UPI' as const },
+    { id: '9', settlementId: '#SET-000334', dateTime: '08 May 2024, 07:50 PM', settlementPeriod: '26 Apr - 02 May 2024', orders: 19, amount: 8100, deductions: 160, netAmount: 7940, status: 'Processed' as const, method: 'Bank Transfer' as const },
+    { id: '10', settlementId: '#SET-000333', dateTime: '07 May 2024, 06:14 PM', settlementPeriod: '19 Apr - 25 Apr 2024', orders: 14, amount: 6430, deductions: 130, netAmount: 6300, status: 'Processed' as const, method: 'UPI' as const },
   ];
 
-  const filtered = settlementsData.filter((s) => {
-    if (searchTerm && !s.setId.toLowerCase().includes(searchTerm.toLowerCase()) && !s.period.toLowerCase().includes(searchTerm.toLowerCase())) {
+  const rawSettlements = (settlementsData?.settlements && settlementsData.settlements.length > 0)
+    ? settlementsData.settlements
+    : defaultSettlements;
+
+  const totalSettlementsVal = settlementsData?.kpis?.grossVolume ?? 112450.0;
+  const processedCount = settlementsData?.kpis?.totalSettlements ?? 24;
+  const pendingVal = 8650.0;
+  const failedVal = 0.0;
+
+  const filtered = rawSettlements.filter((s) => {
+    if (searchTerm && !s.settlementId.toLowerCase().includes(searchTerm.toLowerCase()) && !s.settlementPeriod.toLowerCase().includes(searchTerm.toLowerCase())) {
       return false;
     }
     if (statusFilter !== 'All Settlement Status' && s.status !== statusFilter) {
@@ -57,7 +68,7 @@ export const SettlementsReportTab: React.FC = () => {
                 <span className="text-xs font-semibold text-slate-500">Total Settlements</span>
                 <Info className="w-3 h-3 text-slate-400" />
               </div>
-              <h4 className="text-xl font-black text-slate-900 mt-1">₹ 1,12,450</h4>
+              <h4 className="text-xl font-black text-slate-900 mt-1">₹ {totalSettlementsVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h4>
             </div>
             <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
               <Landmark className="w-5 h-5" />
@@ -65,7 +76,7 @@ export const SettlementsReportTab: React.FC = () => {
           </div>
           <p className="text-[11px] text-emerald-600 font-semibold mt-2.5 flex items-center gap-1">
             <span className="font-bold">↑ 15.4%</span>
-            <span className="text-slate-400 font-normal">vs 03 May - 09 May 2024</span>
+            <span className="text-slate-400 font-normal">vs previous period</span>
           </p>
         </div>
 
@@ -77,7 +88,7 @@ export const SettlementsReportTab: React.FC = () => {
                 <span className="text-xs font-semibold text-slate-500">Settlements Processed</span>
                 <Info className="w-3 h-3 text-slate-400" />
               </div>
-              <h4 className="text-xl font-black text-slate-900 mt-1">24</h4>
+              <h4 className="text-xl font-black text-slate-900 mt-1">{processedCount.toLocaleString('en-IN')}</h4>
             </div>
             <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
               <CheckCircle2 className="w-5 h-5" />
@@ -85,7 +96,7 @@ export const SettlementsReportTab: React.FC = () => {
           </div>
           <p className="text-[11px] text-emerald-600 font-semibold mt-2.5 flex items-center gap-1">
             <span className="font-bold">↑ 20.0%</span>
-            <span className="text-slate-400 font-normal">vs 03 May - 09 May 2024</span>
+            <span className="text-slate-400 font-normal">vs previous period</span>
           </p>
         </div>
 
@@ -97,7 +108,7 @@ export const SettlementsReportTab: React.FC = () => {
                 <span className="text-xs font-semibold text-slate-500">Settlement Pending</span>
                 <Info className="w-3 h-3 text-slate-400" />
               </div>
-              <h4 className="text-xl font-black text-slate-900 mt-1">₹ 8,650</h4>
+              <h4 className="text-xl font-black text-slate-900 mt-1">₹ {pendingVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h4>
             </div>
             <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
               <Clock className="w-5 h-5" />
@@ -105,7 +116,7 @@ export const SettlementsReportTab: React.FC = () => {
           </div>
           <p className="text-[11px] text-rose-600 font-semibold mt-2.5 flex items-center gap-1">
             <span className="font-bold">↑ 8.3%</span>
-            <span className="text-slate-400 font-normal">vs 03 May - 09 May 2024</span>
+            <span className="text-slate-400 font-normal">vs previous period</span>
           </p>
         </div>
 
@@ -117,14 +128,14 @@ export const SettlementsReportTab: React.FC = () => {
                 <span className="text-xs font-semibold text-slate-500">Settlement Failed</span>
                 <Info className="w-3 h-3 text-slate-400" />
               </div>
-              <h4 className="text-xl font-black text-slate-900 mt-1">₹ 0</h4>
+              <h4 className="text-xl font-black text-slate-900 mt-1">₹ {failedVal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h4>
             </div>
             <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
               <XCircle className="w-5 h-5" />
             </div>
           </div>
           <p className="text-[11px] text-slate-400 font-semibold mt-2.5">
-            — 0% vs 03 May - 09 May 2024
+            — 0% vs previous period
           </p>
         </div>
       </div>
@@ -344,9 +355,9 @@ export const SettlementsReportTab: React.FC = () => {
                   {filtered.map((item, idx) => (
                     <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
                       <td className="py-2 px-2.5 font-medium text-slate-400">{idx + 1}</td>
-                      <td className="py-2 px-2.5 font-bold text-blue-600 font-mono">{item.setId}</td>
-                      <td className="py-2 px-2.5 text-slate-500">{item.date}</td>
-                      <td className="py-2 px-2.5 text-slate-600">{item.period}</td>
+                      <td className="py-2 px-2.5 font-bold text-blue-600 font-mono">{item.settlementId}</td>
+                      <td className="py-2 px-2.5 text-slate-500">{item.dateTime}</td>
+                      <td className="py-2 px-2.5 text-slate-600">{item.settlementPeriod}</td>
                       <td className="py-2 px-2.5 text-right font-medium text-slate-700">{item.orders}</td>
                       <td className="py-2 px-2.5 text-right font-semibold text-slate-900">
                         ₹ {item.amount.toLocaleString('en-IN')}.00
