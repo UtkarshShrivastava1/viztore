@@ -79,7 +79,7 @@ export function Footer() {
                 <MapPin className="w-6 h-6 text-blue-600" />
               </div>
               <div className="flex flex-col space-y-2 pt-1 text-[15px] font-medium">
-                <span className="font-bold text-lg leading-none">Zager Digital Services</span>
+                <span className="font-bold text-lg leading-none">{branding.legalEntity}</span>
                 <p className="leading-relaxed">
                   Startup Enclave, CSIT Campus,<br/>
                   Shivaji Nagar, Balod Road,<br/>
