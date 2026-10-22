@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
@@ -70,18 +70,24 @@ interface CategoryIconsProps {
 }
 
 export default function CategoryIcons({
-  activeId = "fashion",
+  activeId = "",
   onSelect,
 }: CategoryIconsProps) {
   const [selected, setSelected] = useState(activeId);
 
   const router = useRouter();
 
+  useEffect(() => {
+    setSelected(activeId);
+  }, [activeId]);
+
   const handleSelect = (id: string) => {
     setSelected(id);
     onSelect?.(id);
     if (id === 'fashion') {
       router.push('/category/fashion');
+    } else {
+      router.push(`/category/${id}`);
     }
   };
 

@@ -50,10 +50,10 @@ export default function RootLayout({
           <div className="absolute inset-y-0 right-0 w-1/4 bg-gradient-to-l from-blue-50/50 to-transparent" />
         </div>
 
-        <div className="relative z-10 w-full min-h-screen flex flex-col">
+        <div className="relative z-10 w-full flex flex-col min-h-screen">
           <Providers>
             <Header />
-            <div className="flex-1 w-full flex flex-col">
+            <div className="flex-1 w-full">
               {children}
             </div>
             <Footer />

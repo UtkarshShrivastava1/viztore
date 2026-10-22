@@ -13,7 +13,7 @@ export function MobileCategoryExplorer() {
     CATEGORY_DATA_MAP[selectedCategory] || CATEGORY_DATA_MAP['mens-fashion'];
 
   return (
-    <div className="flex w-full bg-white border-t border-slate-100 min-h-[calc(100dvh-68px)]">
+    <div className="flex w-full bg-white min-h-[calc(100dvh-68px)]">
       {/* Left Vertical Category Navigation Rail */}
       <CategorySidebarRail />
 

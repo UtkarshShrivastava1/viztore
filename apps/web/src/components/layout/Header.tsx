@@ -20,16 +20,22 @@ export function Header(props: HeaderProps) {
   const pathname = usePathname();
   const isSimpleHeader = pathname?.startsWith('/checkout') || pathname === '/account/orders' || pathname === '/account/wishlist' || pathname === '/account/addresses' || pathname === '/account/edit-profile' || pathname === '/account/coupons' || pathname === '/account/support' || pathname === '/account/sell' || pathname === '/account/privacy' || pathname === '/account/feedback' || pathname === '/account/terms' || pathname === '/account/logout' || pathname === '/account/logged-out' || pathname?.startsWith('/account/orders/');
   const isAccountPage = pathname?.startsWith('/account') && !isSimpleHeader;
+  const isHomePage = pathname === '/';
 
   let displayTitle = pageTitle;
   if (!displayTitle && isSimpleHeader) {
-    if (pathname === '/account/edit-profile') displayTitle = 'Edit Profile';
+    if (pathname?.startsWith('/cart')) displayTitle = 'My Cart';
+    else if (pathname === '/account/edit-profile') displayTitle = 'Edit Profile';
     else if (pathname === '/account/addresses') displayTitle = 'My Addresses';
     else if (pathname === '/account/wishlist') displayTitle = 'Wishlist';
-    else if (pathname === '/account/orders') displayTitle = 'My Orders';
+    else if (pathname === '/account/orders' || pathname?.startsWith('/account/orders/')) displayTitle = 'My Orders';
     else if (pathname === '/account/coupons') displayTitle = 'My Coupons';
     else if (pathname === '/account/support') displayTitle = 'Help & Support';
-    else if (pathname === '/checkout') displayTitle = 'Checkout';
+    else if (pathname === '/account/sell') displayTitle = 'Sell With Us';
+    else if (pathname === '/account/privacy') displayTitle = 'Privacy Policy';
+    else if (pathname === '/account/feedback') displayTitle = 'Feedback';
+    else if (pathname === '/account/terms') displayTitle = 'Terms & Conditions';
+    else if (pathname === '/checkout' || pathname?.startsWith('/checkout')) displayTitle = 'Checkout';
   }
 
   return (
@@ -39,6 +45,7 @@ export function Header(props: HeaderProps) {
         displayTitle={displayTitle}
         isSimpleHeader={isSimpleHeader}
         isAccountPage={isAccountPage}
+        isHomePage={isHomePage}
       />
       <DesktopHeader
         {...restProps}

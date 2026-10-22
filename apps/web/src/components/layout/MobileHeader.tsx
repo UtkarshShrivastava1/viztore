@@ -1,13 +1,13 @@
 "use client";
 
-import { Heart, ShoppingCart } from "lucide-react";
+import { Heart, ShoppingCart, ChevronLeft } from "lucide-react";
 import TopBar from '@/components/layout/TopBar';
 import LocationBar from '@/components/layout/LocationBar';
 import SearchBar from '@/components/layout/SearchBar';
 import CategoryTabs from '@/components/layout/CategoryTabs';
 import CategoryIcons from '@/features/home/components/CategoryIcons';
 import Logo from '@/components/layout/Logo';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { useCartStore } from '@/stores/cart.store';
 import { useWishlistFlyoutStore } from '@/stores/wishlistFlyoutStore';
@@ -22,8 +22,17 @@ export interface MobileHeaderProps {
   searchPlaceholder?: string;
   isSimpleHeader?: boolean;
   isAccountPage?: boolean;
+  isHomePage?: boolean;
   displayTitle?: string;
 }
+
+// 12-stop canonical signature blue-to-white vertical gradient token
+const SIGNATURE_HEADER_GRADIENT =
+  "linear-gradient(180deg, #011A5D 0%, #011B62 25%, #002070 45%, #01267F 55%, #04318C 62%, #1A49A2 68%, #3A6AC0 73%, #6894D8 78%, #9EBEEC 84%, #D4E3FA 91%, #EEF4FE 96%, #FFFFFF 100%)";
+
+// Soft radial mist / diffused glow overlay
+const SIGNATURE_RADIAL_MIST =
+  "radial-gradient(ellipse 95% 75% at 50% 90%, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0) 80%)";
 
 export function MobileHeader({
   userName,
@@ -33,10 +42,12 @@ export function MobileHeader({
   notificationCount: propNotificationCount,
   searchPlaceholder,
   isSimpleHeader,
-  isAccountPage,
+  isAccountPage: _isAccountPage,
+  isHomePage: _isHomePage,
   displayTitle,
 }: MobileHeaderProps) {
   const router = useRouter();
+  const currentPathname = usePathname();
   const [mounted, setMounted] = useState(false);
   const rawCartCount = useCartStore((state) => state.items.reduce((sum, item) => sum + item.quantity, 0));
   const rawWishlistCount = useWishlistFlyoutStore((state) => state.items.length);
@@ -50,75 +61,99 @@ export function MobileHeader({
   const wishlistCount = mounted ? (propWishlistCount !== undefined ? propWishlistCount : rawWishlistCount) : 0;
   const notificationCount = mounted ? (propNotificationCount !== undefined ? propNotificationCount : rawNotificationCount) : 0;
 
+  const showCategoryIcons = !isSimpleHeader;
+
+  let currentCategory = "";
+  if (currentPathname?.startsWith('/category/')) {
+    currentCategory = currentPathname.replace('/category/', '');
+  }
+
+  const handleBack = () => {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      router.back();
+    } else {
+      router.push('/account');
+    }
+  };
+
   return (
-    <div className="md:hidden max-w-2xl mx-auto w-full">
-      {/* ── 1. Top Header with Faded Gradient Effect ── */}
-      <div className="relative pt-1.5 pb-2.5 w-full">
-        {/* Background Gradient for Mobile */}
+    <div className="md:hidden max-w-2xl mx-auto w-full relative pt-1.5 pb-2">
+      {/* Background Gradient */}
+      <div
+        className="absolute inset-0 z-0 block"
+        style={{
+          background: SIGNATURE_HEADER_GRADIENT,
+        }}
+      />
+
+      {/* Radial mist / diffused glow overlay */}
+      <div
+        className={`pointer-events-none absolute inset-x-0 bottom-0 z-0 ${
+          isSimpleHeader ? "h-full opacity-60" : "h-44 opacity-80"
+        }`}
+        style={{
+          background: SIGNATURE_RADIAL_MIST,
+        }}
+        aria-hidden="true"
+      />
+
+      <div className="relative z-10">
         {!isSimpleHeader ? (
-          <div
-            className="absolute inset-0 z-0 block"
-            style={{
-              background: "linear-gradient(180deg, #011A5D 0%, #011B62 25%, #002070 45%, #01267F 55%, #04318C 62%, #1A49A2 68%, #3A6AC0 73%, #6894D8 78%, #9EBEEC 84%, #D4E3FA 91%, #EEF4FE 96%, #F5F9FE 100%)"
-            }}
-          />
+          <>
+            <TopBar wishlistCount={wishlistCount} cartCount={cartCount} />
+            <LocationBar name={userName} address={address} />
+            <SearchBar
+              placeholder={searchPlaceholder}
+              notificationCount={notificationCount}
+            />
+            <CategoryTabs />
+          </>
         ) : (
-          <div className="absolute inset-0 z-0 bg-white" />
-        )}
-
-        {/* Soft misty fog / glow at the bottom of the faded header */}
-        {!isSimpleHeader && (
-          <div
-            className="pointer-events-none absolute inset-x-0 bottom-0 h-32 opacity-80 z-0"
-            style={{
-              background:
-                "radial-gradient(ellipse 95% 75% at 50% 90%, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0) 80%)",
-            }}
-            aria-hidden="true"
-          />
-        )}
-
-        <div className="relative z-10">
-          {!isSimpleHeader ? (
-            <>
-              <TopBar wishlistCount={wishlistCount} cartCount={cartCount} />
-              <LocationBar name={userName} address={address} />
-              <SearchBar
-                placeholder={searchPlaceholder}
-                notificationCount={notificationCount}
-              />
-              {!isAccountPage && <CategoryTabs />}
-            </>
-          ) : (
-            <div className="flex items-center justify-between px-4 py-1 pb-2">
-              <button onClick={() => router.push('/account')} className="p-1 -ml-1 text-[#192168]">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
-              </button>
-              <div className={displayTitle ? "flex-1 flex justify-center text-[#192168] font-bold text-lg" : "scale-90"}>
-                {displayTitle ? displayTitle : <Logo theme="dark" />}
-              </div>
-              <div className="flex items-center gap-4">
-                <button type="button" className="text-[#192168]" onClick={() => router.push('/account/wishlist')}>
-                  <Heart className="h-6 w-6" strokeWidth={1.5} />
-                </button>
-                <button type="button" className="relative text-[#192168]" onClick={() => router.push('/cart')}>
-                  <ShoppingCart className="h-6 w-6" strokeWidth={1.5} />
-                  {cartCount > 0 && (
-                    <span className="absolute -top-1.5 -right-2 flex h-[18px] min-w-[18px] px-1 items-center justify-center rounded-full bg-[#1668F6] text-[10.5px] font-bold text-white shadow-sm border border-white">
-                      {cartCount}
-                    </span>
-                  )}
-                </button>
-              </div>
+          <div className="flex items-center justify-between px-4 py-1.5 pb-2.5">
+            <button
+              type="button"
+              aria-label="Go back"
+              onClick={handleBack}
+              className="p-1 -ml-1 text-white hover:text-white/80 transition-colors cursor-pointer"
+            >
+              <ChevronLeft className="h-6 w-6 text-white" strokeWidth={2.5} />
+            </button>
+            <div className={displayTitle ? "flex-1 flex justify-center text-white font-bold text-lg tracking-tight" : "scale-90"}>
+              {displayTitle ? displayTitle : <Logo theme="light" />}
             </div>
-          )}
-        </div>
+            <div className="flex items-center gap-3.5">
+              <button
+                type="button"
+                aria-label="Wishlist"
+                className="text-white hover:text-white/80 transition-opacity cursor-pointer p-0.5"
+                onClick={() => router.push('/account/wishlist')}
+              >
+                <Heart className="h-6 w-6 text-white" strokeWidth={1.75} />
+              </button>
+              <button
+                type="button"
+                aria-label="Shopping Cart"
+                className="relative text-white hover:text-white/80 transition-opacity cursor-pointer p-0.5"
+                onClick={() => router.push('/cart')}
+              >
+                <ShoppingCart className="h-6 w-6 text-white" strokeWidth={1.75} />
+                {cartCount > 0 && (
+                  <span className="absolute -top-1.5 -right-2 flex h-[18px] min-w-[18px] px-1 items-center justify-center rounded-full bg-[#1668F6] text-[10.5px] font-bold text-white shadow-sm border border-white">
+                    {cartCount}
+                  </span>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* ── 2. Category Strip Directly Below on Clean White Background ── */}
-      <div className="w-full bg-white border-b border-surface-100 py-1 shadow-[0_2px_8px_rgba(0,0,0,0.03)]">
-        <CategoryIcons />
-      </div>
+      {/* Category Icons under the gradient for Mobile (transparent so misty gradient shines through) */}
+      {showCategoryIcons && (
+        <div className="relative z-10 bg-transparent pt-2 pb-1">
+          <CategoryIcons activeId={currentCategory} />
+        </div>
+      )}
     </div>
   );
 }
