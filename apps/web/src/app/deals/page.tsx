@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Footer } from '@/components/layout/Footer';
 import { DealProductCard } from '@/features/deals/components/DealProductCard';
 import { DealsFilterSidebar, PRICE_RANGES_LIST } from '@/features/deals/components/DealsFilterSidebar';
 import { useFeaturedProducts } from '@/hooks/useFeaturedProducts';
@@ -256,10 +255,6 @@ export default function DealsPage() {
           </div>
         </div>
       </main>
-
-      <div className="hidden md:block">
-        <Footer />
-      </div>
     </div>
   );
 }

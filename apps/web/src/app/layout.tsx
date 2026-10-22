@@ -6,6 +6,7 @@ import { CartDrawer } from '../components/cart/CartDrawer';
 import { StoreConflictModal } from '../components/cart/StoreConflictModal';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { Header } from '@/components/layout/Header';
+import { Footer } from '@/components/layout/Footer';
 import { AuthModal } from '@/components/auth/AuthModal';
 import './globals.css';
 
@@ -49,10 +50,13 @@ export default function RootLayout({
           <div className="absolute inset-y-0 right-0 w-1/4 bg-gradient-to-l from-blue-50/50 to-transparent" />
         </div>
 
-        <div className="relative z-10 w-full ">
+        <div className="relative z-10 w-full flex flex-col min-h-screen">
           <Providers>
             <Header />
-            {children}
+            <div className="flex-1 w-full">
+              {children}
+            </div>
+            <Footer />
             <CartDrawer />
             <StoreConflictModal />
             <BottomNav />

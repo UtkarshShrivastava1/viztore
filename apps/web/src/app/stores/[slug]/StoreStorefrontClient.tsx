@@ -3,7 +3,6 @@
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { Footer } from '@/components/layout/Footer';
 import { ProductCard } from '@/features/products/components/ProductCard';
 import { ProductGridSkeleton } from '@/components/ui/Skeleton';
 import { fetchStoreBySlug } from '@/lib/api/stores';
@@ -175,7 +174,6 @@ export function StoreStorefrontClient({ slug }: StoreStorefrontClientProps) {
             Browse All Stores
           </Link>
         </main>
-        <Footer />
       </div>
     );
   }
@@ -452,10 +450,6 @@ export function StoreStorefrontClient({ slug }: StoreStorefrontClientProps) {
           </div>
         </div>
       </main>
-
-      <div className="hidden md:block">
-        <Footer />
-      </div>
     </div>
   );
 }

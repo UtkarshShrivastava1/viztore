@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Footer } from '@/components/layout/Footer';
 import { StoreCardSkeleton } from '@/components/ui/Skeleton';
 import { useNearbyStores } from '@/hooks/useNearbyStores';
 import { useAllStores } from '@/hooks/useAllStores';
@@ -213,10 +212,6 @@ export default function StoresPage({
           </div>
         )}
       </main>
-
-      <div className="hidden md:block">
-        <Footer />
-      </div>
     </div>
   );
 }

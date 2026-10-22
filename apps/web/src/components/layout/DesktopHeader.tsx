@@ -30,7 +30,7 @@ export function DesktopHeader({
   address: propAddress,
   cartCount: propCartCount,
   searchPlaceholder = "Search for products, stores and more...",
-  isSimpleHeader,
+  isSimpleHeader: _isSimpleHeader,
   isAccountPage: _isAccountPage,
   isAuthenticated: propIsAuthenticated,
   openAuthModal: propOpenAuthModal,
@@ -41,7 +41,15 @@ export function DesktopHeader({
   const [activeOverlay, setActiveOverlay] = useState<'notifications' | 'wishlist' | null>(null);
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchCategory, setSearchCategory] = useState<string | null>(null);
   const headerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      setSearchCategory(params.get('category'));
+    }
+  }, [pathname]);
 
   const authUser = useAuthStore((state) => state.user);
   const authIsAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -107,14 +115,16 @@ export function DesktopHeader({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
   
-  // Determine active category based on pathname
-  let activeCategoryId = "home";
+  // Determine active category based on pathname and query parameters
+  let activeCategoryId = "";
   if (pathname === '/') {
     activeCategoryId = "home";
   } else if (pathname === '/category') {
-    activeCategoryId = "all";
+    activeCategoryId = "all-categories";
   } else if (pathname?.startsWith('/category/')) {
     activeCategoryId = pathname.replace('/category/', '');
+  } else if (pathname?.startsWith('/products') && searchCategory) {
+    activeCategoryId = searchCategory;
   } else {
     activeCategoryId = "";
   }
@@ -244,10 +254,8 @@ export function DesktopHeader({
         </div>
       </div>
 
-      {/* Category Strip (White Background) */}
-      {!isSimpleHeader && (
-        <DesktopCategoryStrip activeId={activeCategoryId} />
-      )}
+      {/* REQUIRED: Universal Category Strip across all desktop pages */}
+      <DesktopCategoryStrip activeId={activeCategoryId} />
 
       {/* Location Modal */}
       <LocationModal 
