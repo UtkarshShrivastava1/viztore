@@ -62,7 +62,7 @@ export function MobileHeader({
   const notificationCount = mounted ? (propNotificationCount !== undefined ? propNotificationCount : rawNotificationCount) : 0;
 
   const isHome = isHomePage ?? (currentPathname === '/');
-  const showCategoryIcons = isHome && !isAccountPage && !isSimpleHeader;
+  const showCategoryIcons = (isHome || isAccountPage) && !isSimpleHeader;
 
   const handleBack = () => {
     if (typeof window !== 'undefined' && window.history.length > 1) {
@@ -104,7 +104,7 @@ export function MobileHeader({
       )}
 
       {/* Soft misty fog / glow behind the categories */}
-      {!isAccountPage && !isSimpleHeader && (
+      {!isSimpleHeader && (
         <div
           className="pointer-events-none absolute inset-x-0 bottom-0 h-44 opacity-80 z-0"
           style={{
@@ -123,7 +123,7 @@ export function MobileHeader({
               placeholder={searchPlaceholder}
               notificationCount={notificationCount}
             />
-            {!isAccountPage && <CategoryTabs />}
+            <CategoryTabs />
           </>
         ) : (
           <div className="flex items-center justify-between px-4 py-1.5 pb-2.5">

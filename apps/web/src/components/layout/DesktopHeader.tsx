@@ -31,7 +31,7 @@ export function DesktopHeader({
   cartCount: propCartCount,
   searchPlaceholder = "Search for products, stores and more...",
   isSimpleHeader,
-  isAccountPage,
+  isAccountPage: _isAccountPage,
   isAuthenticated: propIsAuthenticated,
   openAuthModal: propOpenAuthModal,
 }: DesktopHeaderProps) {
@@ -245,8 +245,8 @@ export function DesktopHeader({
       </div>
 
       {/* Category Strip (White Background) */}
-      {!isSimpleHeader && !isAccountPage && (
-      <DesktopCategoryStrip activeId={activeCategoryId} />
+      {!isSimpleHeader && (
+        <DesktopCategoryStrip activeId={activeCategoryId} />
       )}
 
       {/* Location Modal */}
