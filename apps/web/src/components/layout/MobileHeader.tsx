@@ -1,6 +1,6 @@
 "use client";
 
-import { Heart, ShoppingCart } from "lucide-react";
+import { Heart, ShoppingCart, ChevronLeft } from "lucide-react";
 import TopBar from '@/components/layout/TopBar';
 import LocationBar from '@/components/layout/LocationBar';
 import SearchBar from '@/components/layout/SearchBar';
@@ -78,45 +78,24 @@ export function MobileHeader({
 
   return (
     <div className="md:hidden max-w-2xl mx-auto w-full relative pt-1.5 pb-2">
-      {/* Background Gradient for Full Mobile Header */}
-      {!isSimpleHeader && (
-        <div
-          className="absolute inset-0 z-0 block"
-          style={{
-            background: SIGNATURE_HEADER_GRADIENT,
-          }}
-        />
-      )}
+      {/* Background Gradient */}
+      <div
+        className="absolute inset-0 z-0 block"
+        style={{
+          background: SIGNATURE_HEADER_GRADIENT,
+        }}
+      />
 
-      {/* Subtle compact gradient fade for Simple Sub-Page Header */}
-      {isSimpleHeader && (
-        <>
-          <div
-            className="absolute inset-0 z-0 block"
-            style={{
-              background: SIGNATURE_HEADER_GRADIENT,
-            }}
-          />
-          <div
-            className="pointer-events-none absolute inset-x-0 bottom-0 h-full opacity-60 z-0"
-            style={{
-              background: SIGNATURE_RADIAL_MIST,
-            }}
-            aria-hidden="true"
-          />
-        </>
-      )}
-
-      {/* Soft misty fog / glow behind the categories */}
-      {!isSimpleHeader && (
-        <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-44 opacity-80 z-0"
-          style={{
-            background: SIGNATURE_RADIAL_MIST,
-          }}
-          aria-hidden="true"
-        />
-      )}
+      {/* Radial mist / diffused glow overlay */}
+      <div
+        className={`pointer-events-none absolute inset-x-0 bottom-0 z-0 ${
+          isSimpleHeader ? "h-full opacity-60" : "h-44 opacity-80"
+        }`}
+        style={{
+          background: SIGNATURE_RADIAL_MIST,
+        }}
+        aria-hidden="true"
+      />
 
       <div className="relative z-10">
         {!isSimpleHeader ? (
@@ -137,9 +116,7 @@ export function MobileHeader({
               onClick={handleBack}
               className="p-1 -ml-1 text-white hover:text-white/80 transition-colors cursor-pointer"
             >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="m15 18-6-6 6-6" />
-              </svg>
+              <ChevronLeft className="h-6 w-6 text-white" strokeWidth={2.5} />
             </button>
             <div className={displayTitle ? "flex-1 flex justify-center text-white font-bold text-lg tracking-tight" : "scale-90"}>
               {displayTitle ? displayTitle : <Logo theme="light" />}
