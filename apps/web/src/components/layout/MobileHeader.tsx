@@ -42,8 +42,8 @@ export function MobileHeader({
   notificationCount: propNotificationCount,
   searchPlaceholder,
   isSimpleHeader,
-  isAccountPage,
-  isHomePage,
+  isAccountPage: _isAccountPage,
+  isHomePage: _isHomePage,
   displayTitle,
 }: MobileHeaderProps) {
   const router = useRouter();
@@ -61,8 +61,12 @@ export function MobileHeader({
   const wishlistCount = mounted ? (propWishlistCount !== undefined ? propWishlistCount : rawWishlistCount) : 0;
   const notificationCount = mounted ? (propNotificationCount !== undefined ? propNotificationCount : rawNotificationCount) : 0;
 
-  const isHome = isHomePage ?? (currentPathname === '/');
-  const showCategoryIcons = (isHome || isAccountPage) && !isSimpleHeader;
+  const showCategoryIcons = !isSimpleHeader;
+
+  let currentCategory = "";
+  if (currentPathname?.startsWith('/category/')) {
+    currentCategory = currentPathname.replace('/category/', '');
+  }
 
   const handleBack = () => {
     if (typeof window !== 'undefined' && window.history.length > 1) {
@@ -167,10 +171,10 @@ export function MobileHeader({
         )}
       </div>
 
-      {/* Category Icons under the gradient for Mobile (Home only, transparent so misty gradient shines through) */}
+      {/* Category Icons under the gradient for Mobile (transparent so misty gradient shines through) */}
       {showCategoryIcons && (
         <div className="relative z-10 bg-transparent pt-2 pb-1">
-          <CategoryIcons />
+          <CategoryIcons activeId={currentCategory} />
         </div>
       )}
     </div>

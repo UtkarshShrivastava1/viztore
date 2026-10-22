@@ -123,6 +123,8 @@ export function DesktopHeader({
     activeCategoryId = "all-categories";
   } else if (pathname?.startsWith('/category/')) {
     activeCategoryId = pathname.replace('/category/', '');
+  } else if (pathname?.startsWith('/stores/')) {
+    activeCategoryId = pathname.replace('/stores/', '');
   } else if (pathname?.startsWith('/products') && searchCategory) {
     activeCategoryId = searchCategory;
   } else {
