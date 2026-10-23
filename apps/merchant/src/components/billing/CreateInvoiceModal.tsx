@@ -855,7 +855,7 @@ export const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
               </div>
 
               <div className="pt-2 flex items-center justify-between gap-3">
-                <span className="font-medium text-slate-700">Payment Received</span>
+                <span className="font-medium text-slate-700">Payment Received / Settled Amount</span>
                 <div className="w-36">
                   <input
                     type="number"
@@ -873,7 +873,7 @@ export const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
               </div>
 
               <div className="mt-2 p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-between">
-                <span className="font-semibold text-emerald-800">Balance / Settle Amount</span>
+                <span className="font-semibold text-emerald-800">Balance Due / Outstanding Amount</span>
                 <span className="font-extrabold text-emerald-700 text-sm">
                   ₹{balanceDue.toFixed(2)}
                 </span>
@@ -956,14 +956,20 @@ export const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
 
                 <div className="p-3.5 bg-emerald-50/60 border border-emerald-200 rounded-xl flex flex-col justify-between h-full">
                   <div>
-                    <span className="text-xs font-medium text-slate-600">Settle Amount (₹)</span>
-                    <div className="text-xl font-black text-emerald-600 mt-1">
-                      ₹{balanceDue.toFixed(2)}
+                    <div className="flex items-center justify-between text-xs mb-1.5 pb-1.5 border-b border-emerald-200/70">
+                      <span className="font-semibold text-slate-700">Settled / Paid Now:</span>
+                      <span className="font-bold text-slate-900">₹{effectiveReceived.toFixed(2)}</span>
+                    </div>
+                    <div>
+                      <span className="text-xs font-semibold text-emerald-800">Balance Due / Khata (₹)</span>
+                      <div className="text-xl font-black text-emerald-600 mt-0.5">
+                        ₹{balanceDue.toFixed(2)}
+                      </div>
                     </div>
                   </div>
                   <p className="text-[11px] text-emerald-800 flex items-center gap-1.5 mt-2">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                    Settle amount is the balance to be received from customer.
+                    Remaining balance to be collected from customer (added to Khata if unpaid).
                   </p>
                 </div>
               </div>
