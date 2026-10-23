@@ -71,7 +71,7 @@ export default function DesktopCategoryStrip({ activeId = "home", onSelect }: De
           className="flex items-center justify-between w-full py-2 gap-1 sm:gap-1.5 md:gap-2 overflow-x-auto scrollbar-hide scroll-smooth"
         >
           {DESKTOP_CATEGORIES.map(({ id, label, icon: Icon, color, activeBg }) => {
-            const isActive = selected === id;
+            const isActive = selected === id || (id === "all" && (selected === "all" || selected === "all-categories"));
 
             return (
               <button

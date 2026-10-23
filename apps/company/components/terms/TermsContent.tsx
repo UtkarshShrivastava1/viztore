@@ -49,7 +49,7 @@ const policiesData: Record<PolicyTab, PolicyCategory> = {
     badge: "For Shoppers",
     icon: Shield,
     preamble:
-      'These Customer Terms & Conditions ("Terms`) govern your access to and use of ${branding.appName}, including the ${branding.appName} website, mobile application, store pages, product listings, ordering features and related services (collectively, the `Platform"). The Platform is operated by ${branding.legalEntity} (`${branding.appName}`, "we", "us" or "our"). By accessing or using the Platform, placing an order, creating an account or otherwise using our Services, you agree to these Terms and applicable law.',
+      `These Customer Terms & Conditions ("Terms") govern your access to and use of ${branding.appName}, including the ${branding.appName} website, mobile application, store pages, product listings, ordering features and related services (collectively, the "Platform"). The Platform is operated by ${branding.legalEntity} ("${branding.appName}", "we", "us" or "our"). By accessing or using the Platform, placing an order, creating an account or otherwise using our Services, you agree to these Terms and applicable law.`,
     sections: [
       {
         id: "cust-acceptance",
@@ -446,7 +446,7 @@ const policiesData: Record<PolicyTab, PolicyCategory> = {
                   href={`mailto:${branding.supportEmail}`}
                   className="text-blue-600 font-semibold underline"
                 >
-                  ${branding.supportEmail}
+                  {branding.supportEmail}
                 </a>
                 . For escalation, please refer to our Grievance Redressal Policy
                 and the Grievance Officer details published below.
@@ -804,7 +804,7 @@ const policiesData: Record<PolicyTab, PolicyCategory> = {
                   href={`mailto:${branding.supportEmail}`}
                   className="text-blue-600 font-semibold underline"
                 >
-                  ${branding.supportEmail}
+                  {branding.supportEmail}
                 </a>{" "}
                 and escalated under the Grievance Redressal Policy.
               </span>
@@ -970,7 +970,7 @@ const policiesData: Record<PolicyTab, PolicyCategory> = {
                   href={`mailto:${branding.supportEmail}`}
                   className="text-blue-600 font-semibold underline"
                 >
-                  ${branding.supportEmail}
+                  {branding.supportEmail}
                 </a>{" "}
                 or to the designated Grievance Officer.
               </span>
@@ -1036,7 +1036,7 @@ const policiesData: Record<PolicyTab, PolicyCategory> = {
                   href={`mailto:${branding.supportEmail}`}
                   className="text-blue-600 font-semibold underline"
                 >
-                  ${branding.supportEmail}
+                  {branding.supportEmail}
                 </a>
               </span>
             ),
@@ -1272,7 +1272,7 @@ const policiesData: Record<PolicyTab, PolicyCategory> = {
                   href={`mailto:${branding.supportEmail}`}
                   className="text-blue-600 font-semibold underline"
                 >
-                  ${branding.supportEmail}
+                  {branding.supportEmail}
                 </a>
                 . Please provide the Order ID, registered mobile/email, reason
                 for the request and supporting photographs or information where
@@ -1365,7 +1365,7 @@ const policiesData: Record<PolicyTab, PolicyCategory> = {
                   href={`mailto:${branding.supportEmail}`}
                   className="text-blue-600 font-semibold underline"
                 >
-                  ${branding.supportEmail}
+                  {branding.supportEmail}
                 </a>
                 .
               </span>
@@ -1468,10 +1468,9 @@ const policiesData: Record<PolicyTab, PolicyCategory> = {
                   <div className="flex items-start gap-2.5">
                     <MapPin className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
                     <span>
-                      <strong>${branding.legalEntity}</strong>
+                      <strong>{branding.legalEntity}</strong>
                       <br />
-                      Startup Enclave, CSIT Campus, Shivaji Nagar, Balod Road,
-                      Durg, Chhattisgarh 491001, India
+                      {branding.companyAddress}
                     </span>
                   </div>
                   <div className="space-y-2">
@@ -1481,16 +1480,16 @@ const policiesData: Record<PolicyTab, PolicyCategory> = {
                         href={`mailto:${branding.supportEmail}`}
                         className="text-blue-600 font-semibold underline"
                       >
-                        ${branding.supportEmail}
+                        {branding.supportEmail}
                       </a>
                     </div>
                     <div className="flex items-center gap-2.5">
                       <Phone className="h-4 w-4 text-blue-600 shrink-0" />
                       <a
-                        href="tel:+919497655717"
+                        href={`tel:${branding.contactPhone.replace(/\s+/g, '')}`}
                         className="text-slate-800 font-semibold"
                       >
-                        +91-9497655717
+                        {branding.contactPhone}
                       </a>
                     </div>
                     <div className="flex items-center gap-2.5 text-slate-500">
@@ -1519,9 +1518,9 @@ const policiesData: Record<PolicyTab, PolicyCategory> = {
                   href={`mailto:${branding.supportEmail}`}
                   className="text-blue-600 font-semibold underline"
                 >
-                  ${branding.supportEmail}
+                  {branding.supportEmail}
                 </a>{" "}
-                and/or the Grievance Officer. ${branding.appName} may verify identity before
+                and/or the Grievance Officer. {branding.appName} may verify identity before
                 acting on a request involving personal information.
               </span>
             ),
@@ -1555,7 +1554,7 @@ const policiesData: Record<PolicyTab, PolicyCategory> = {
                   href={`mailto:${branding.supportEmail}`}
                   className="text-blue-600 font-semibold underline"
                 >
-                  ${branding.supportEmail}
+                  {branding.supportEmail}
                 </a>
                 . Do not share OTPs, PINs, CVVs or passwords in a complaint.
               </span>

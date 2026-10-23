@@ -24,13 +24,18 @@ export function Header(props: HeaderProps) {
 
   let displayTitle = pageTitle;
   if (!displayTitle && isSimpleHeader) {
-    if (pathname === '/account/edit-profile') displayTitle = 'Edit Profile';
+    if (pathname?.startsWith('/cart')) displayTitle = 'My Cart';
+    else if (pathname === '/account/edit-profile') displayTitle = 'Edit Profile';
     else if (pathname === '/account/addresses') displayTitle = 'My Addresses';
     else if (pathname === '/account/wishlist') displayTitle = 'Wishlist';
-    else if (pathname === '/account/orders') displayTitle = 'My Orders';
+    else if (pathname === '/account/orders' || pathname?.startsWith('/account/orders/')) displayTitle = 'My Orders';
     else if (pathname === '/account/coupons') displayTitle = 'My Coupons';
     else if (pathname === '/account/support') displayTitle = 'Help & Support';
-    else if (pathname === '/checkout') displayTitle = 'Checkout';
+    else if (pathname === '/account/sell') displayTitle = 'Sell With Us';
+    else if (pathname === '/account/privacy') displayTitle = 'Privacy Policy';
+    else if (pathname === '/account/feedback') displayTitle = 'Feedback';
+    else if (pathname === '/account/terms') displayTitle = 'Terms & Conditions';
+    else if (pathname === '/checkout' || pathname?.startsWith('/checkout')) displayTitle = 'Checkout';
   }
 
   return (

@@ -5,6 +5,7 @@ import SectionHeading from "@/components/ui/SectionHeading";
 import FeatureCard from "@/components/ui/FeatureCard";
 import TimelineCard from "@/components/ui/TimelineCard";
 import CategoryCard from "@/components/ui/CategoryCard";
+import CTASection from "@/components/ui/CTASection";
 import { branding } from "@repo/shared-types/branding.config";
 
 import {
@@ -386,7 +387,13 @@ export default function ForRetailersContent() {
           </div>
         </section>
 
-      
+        {/* Call to Action */}
+        <CTASection
+          title="Ready to take your store to the next level?"
+          description={`Join hundreds of local retailers already getting discovered with ${branding.appName}.`}
+          primaryLabel="Join Waitlist"
+          secondaryLabel="Request Demo"
+        />
       </main>
       <Footer />
     </>

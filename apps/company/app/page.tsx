@@ -8,18 +8,17 @@ import Features from "@/components/home/Features";
 import RetailCategories from "@/components/home/RetailCategories";
 import CustomerSection from "@/components/home/CustomerSection";
 import WhyChooseUs from "@/components/home/WhyChooseUs";
+import CTASection from "@/components/home/CTASection";
 import { useRef } from "react";
 
 export default function Home() {
 
   const heroRef = useRef<HTMLDivElement>(null); // Explicitly type the ref to HTMLDivElement
 
-
-
   return (
     <>
       <Navbar />
-      <main > {/* Adjust padding to match Navbar height (h-18 = 72px) */}
+      <main> {/* Adjust padding to match Navbar height (h-18 = 72px) */}
         {/* Pass the ref to the Hero component */}
         <div ref={heroRef}>
           <Hero />
@@ -31,7 +30,7 @@ export default function Home() {
         <RetailCategories />
         <CustomerSection />
         <WhyChooseUs />
-        {/* <CTASection /> */}
+        <CTASection />
       </main>
       <Footer />
     </>

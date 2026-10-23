@@ -7,7 +7,7 @@ import { branding } from '@repo/shared-types';
 export function Footer() {
   return (
     <footer className="w-full bg-gradient-to-b from-blue-50 via-blue-600 to-[#00174F] text-black">
-      <div className="max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-24 pt-16 pb-28 md:pb-8">
+      <div className="max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-24 pt-16 pb-24 md:pb-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 lg:gap-24">
           
           {/* Column 1: Brand & Social */}
@@ -79,7 +79,7 @@ export function Footer() {
                 <MapPin className="w-6 h-6 text-blue-600" />
               </div>
               <div className="flex flex-col space-y-2 pt-1 text-[15px] font-medium">
-                <span className="font-bold text-lg leading-none">Zager Digital Services</span>
+                <span className="font-bold text-lg leading-none">{branding.legalEntity}</span>
                 <p className="leading-relaxed">
                   Startup Enclave, CSIT Campus,<br/>
                   Shivaji Nagar, Balod Road,<br/>
