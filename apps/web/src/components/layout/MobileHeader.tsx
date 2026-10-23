@@ -7,7 +7,7 @@ import SearchBar from '@/components/layout/SearchBar';
 import CategoryTabs from '@/components/layout/CategoryTabs';
 import CategoryIcons from '@/features/home/components/CategoryIcons';
 import Logo from '@/components/layout/Logo';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { useCartStore } from '@/stores/cart.store';
 import { useWishlistFlyoutStore } from '@/stores/wishlistFlyoutStore';
@@ -22,6 +22,7 @@ export interface MobileHeaderProps {
   searchPlaceholder?: string;
   isSimpleHeader?: boolean;
   isAccountPage?: boolean;
+  isHomePage?: boolean;
   displayTitle?: string;
 }
 
@@ -33,10 +34,13 @@ export function MobileHeader({
   notificationCount: propNotificationCount,
   searchPlaceholder,
   isSimpleHeader,
-  isAccountPage,
+  isAccountPage: _isAccountPage,
+  isHomePage,
   displayTitle,
 }: MobileHeaderProps) {
   const router = useRouter();
+  const currentPathname = usePathname();
+  const isHome = isHomePage !== undefined ? isHomePage : currentPathname === '/';
   const [mounted, setMounted] = useState(false);
   const rawCartCount = useCartStore((state) => state.items.reduce((sum, item) => sum + item.quantity, 0));
   const rawWishlistCount = useWishlistFlyoutStore((state) => state.items.length);
@@ -87,7 +91,7 @@ export function MobileHeader({
                 placeholder={searchPlaceholder}
                 notificationCount={notificationCount}
               />
-              {!isAccountPage && <CategoryTabs />}
+              {isHome && <CategoryTabs />}
             </>
           ) : (
             <div className="flex items-center justify-between px-4 py-1 pb-2">
@@ -115,10 +119,12 @@ export function MobileHeader({
         </div>
       </div>
 
-      {/* ── 2. Category Strip Directly Below on Clean White Background ── */}
-      <div className="w-full bg-white border-b border-surface-100 py-1 shadow-[0_2px_8px_rgba(0,0,0,0.03)]">
-        <CategoryIcons />
-      </div>
+      {/* ── 2. Category Strip Directly Below on Clean White Background (Mobile Home Screen Only) ── */}
+      {isHome && (
+        <div className="w-full bg-white border-b border-surface-100 py-1 shadow-[0_2px_8px_rgba(0,0,0,0.03)]">
+          <CategoryIcons />
+        </div>
+      )}
     </div>
   );
 }
