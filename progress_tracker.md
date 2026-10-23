@@ -342,6 +342,11 @@ Every online order placed through `apps/web` generates an authoritative, complia
   - Export Engine: RFC-compliant CSV report streaming with UTF-8 BOM encoding for direct Excel compatibility, plus thermal/A4 print view fallback.
   - Merchant UI (`apps/merchant/`): Purged all alert stubs, interactive 7-preset date picker, dynamic tab-driven report switcher, and live API state hydration.
   - Verified across **182/182 unit tests passing (27 suites)** and full clean monorepo build (6/6 packages).
+- [x] **Procurement, Vendors Hub & Advanced Expense Management Integration (PR #24, commit `dc3fe67`) 🟢**:
+  - Merged `feature/abhay-procurementvendors-hub` into `main`: Vendors Management Directory Tab (`8.10.png`), 4-Tab Add/Edit Vendor Drawer (`8.12.png`), Part-A/Part-B E-Way Bill Generation Drawer (`8.13.png`), real drag-and-drop CSV Import dialogs (`Import Purchases`, `Import Expenses`, `Import Vendors`), and Support Ticket Creator (`15.1.png`).
+  - Reconciled offline Zustand state with live Express/MongoDB billing and expense backend APIs (`createVendorRecord`, `createEWayBillRecord`, `fetchExpenseData`).
+  - 100% white-label compliant, zero brand leakage.
+  - **182/182 automated unit & integration tests passing across 27 test files**; full monorepo clean build across all packages.
 
 
 
