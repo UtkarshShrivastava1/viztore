@@ -15,6 +15,7 @@ import {
   Info,
 } from 'lucide-react';
 import { useExpenseStore } from '../../stores/expenseStore.js';
+import { VendorsKPIBar } from './VendorsKPIBar.js';
 
 export const ExpensesKPIBar: React.FC = () => {
   const { activeSubTab, overviewKPIs, purchaseBills } = useExpenseStore();
@@ -297,53 +298,7 @@ export const ExpensesKPIBar: React.FC = () => {
   }
 
   if (activeSubTab === 'vendors') {
-    return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-        <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-            <Users className="w-5 h-5" />
-          </div>
-          <div className="min-w-0">
-            <span className="text-[11px] font-semibold text-slate-500 block truncate">Total Vendors</span>
-            <h4 className="text-lg font-black text-slate-900 tracking-tight mt-0.5">28</h4>
-            <span className="text-[10px] text-slate-400 mt-0.5 block">All Time</span>
-          </div>
-        </div>
-
-        <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-            <CheckCircle2 className="w-5 h-5" />
-          </div>
-          <div className="min-w-0">
-            <span className="text-[11px] font-semibold text-slate-500 block truncate">Active Vendors</span>
-            <h4 className="text-lg font-black text-slate-900 tracking-tight mt-0.5">24</h4>
-            <span className="text-[10px] text-slate-500 mt-0.5 block font-medium">85.7% of total</span>
-          </div>
-        </div>
-
-        <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center shrink-0">
-            <Clock className="w-5 h-5" />
-          </div>
-          <div className="min-w-0">
-            <span className="text-[11px] font-semibold text-slate-500 block truncate">Inactive Vendors</span>
-            <h4 className="text-lg font-black text-slate-900 tracking-tight mt-0.5">3</h4>
-            <span className="text-[10px] text-slate-500 mt-0.5 block font-medium">10.7% of total</span>
-          </div>
-        </div>
-
-        <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
-            <XCircle className="w-5 h-5" />
-          </div>
-          <div className="min-w-0">
-            <span className="text-[11px] font-semibold text-slate-500 block truncate">Blocked Vendors</span>
-            <h4 className="text-lg font-black text-slate-900 tracking-tight mt-0.5">1</h4>
-            <span className="text-[10px] text-slate-500 mt-0.5 block font-medium">3.6% of total</span>
-          </div>
-        </div>
-      </div>
-    );
+    return <VendorsKPIBar />;
   }
 
   // Default: Overview 5 KPI Cards (Mockup 8.0.png and 8.6.png)

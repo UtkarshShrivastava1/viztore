@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { expensesApi } from '../lib/api.js';
+import { downloadCSV } from '../utils/csvExport.js';
 
 export type PurchaseSubTab =
   | 'all'
@@ -81,11 +82,14 @@ export interface EWayBillItem {
   distanceKm: number;
   validTill: string;
   status: 'Active' | 'In Transit' | 'Expired' | 'Cancelled';
+  vehicleNo?: string;
+  totalValue?: number;
+  itemsCount?: number;
 }
 
-export interface VendorItem {
+export interface Vendor {
   id: string;
-  vendorCode: string;
+  vendorCode: string; // e.g. "VND-001"
   vendorName: string;
   contactPerson: string;
   phone: string;
@@ -93,7 +97,21 @@ export interface VendorItem {
   city: string;
   totalPurchases: number;
   status: 'Active' | 'Inactive' | 'Blocked';
+  gstin?: string;
+  pan?: string;
+  category?: string;
+  paymentTerms?: string;
+  creditLimit?: number;
+  openingBalance?: number;
+  address?: string;
+  pincode?: string;
+  bankName?: string;
+  accountNumber?: string;
+  ifsc?: string;
+  notes?: string;
 }
+
+export type VendorItem = Vendor;
 
 // Backward compatibility interfaces
 export type ExpenseCategory = string;
@@ -207,6 +225,24 @@ interface PurchaseExpenseState {
   createEWayBillRecord: (data: any) => Promise<boolean>;
   deleteExpenseRecord: (id: string) => Promise<boolean>;
 
+  // Vendor & Procurement Hub States (TASK-ABH-14)
+  selectedVendor: Vendor | null;
+  setSelectedVendor: (v: Vendor | null) => void;
+  isImportModalOpen: boolean;
+  importType: 'purchases' | 'expenses' | 'vendors' | null;
+
+  // Actions
+  openAddVendor: (vendor?: Vendor) => void;
+  closeAddVendor: () => void;
+  openImportModal: (type: 'purchases' | 'expenses' | 'vendors') => void;
+  closeImportModal: () => void;
+  saveVendor: (vendor: Partial<Vendor>) => void;
+  deleteVendor: (id: string) => void;
+  exportVendorsCsv: () => void;
+  exportProcurementReportCsv: () => void;
+  importCsvData: (type: 'purchases' | 'expenses' | 'vendors', rows: any[]) => void;
+  addEWayBill: (bill: EWayBillItem) => void;
+
   // Backward compatibility fields
   viewMode: 'list' | 'add';
   setViewMode: (mode: 'list' | 'add') => void;
@@ -217,6 +253,8 @@ interface PurchaseExpenseState {
     thisWeek: number;
   };
 }
+
+export type ExpenseStoreState = PurchaseExpenseState;
 
 const initialTransactions: PurchaseTransaction[] = [
   {
@@ -772,95 +810,539 @@ const initialEwayBills: EWayBillItem[] = [
   },
 ];
 
-const initialVendors: VendorItem[] = [
+const initialVendors: Vendor[] = [
   {
-    id: 'VND-01',
-    vendorCode: 'VND-001',
-    vendorName: 'Sharma Enterprises',
-    contactPerson: 'Rajesh Sharma',
-    phone: '98765 43210',
-    email: 'rajesh@sharmaent.com',
-    city: 'Raipur',
-    totalPurchases: 125000.0,
-    status: 'Active',
+    "id": "VND-01",
+    "vendorCode": "VND-001",
+    "vendorName": "Sharma Enterprises",
+    "contactPerson": "Rajesh Sharma",
+    "phone": "98765 43210",
+    "email": "rajesh@sharmaent.com",
+    "city": "Raipur",
+    "totalPurchases": 125000,
+    "status": "Active",
+    "gstin": "22ABCDE1234F1Z5",
+    "pan": "ABCDE1234F",
+    "category": "Inventory (Apparel)",
+    "paymentTerms": "Net 30",
+    "creditLimit": 200000,
+    "openingBalance": 15000,
+    "address": "Plot No. 12, Industrial Area, Ring Road No. 2, Raipur",
+    "pincode": "492001"
   },
   {
-    id: 'VND-02',
-    vendorCode: 'VND-002',
-    vendorName: 'Gupta Traders',
-    contactPerson: 'Amit Gupta',
-    phone: '98261 12345',
-    email: 'amit@guptatraders.in',
-    city: 'Durg',
-    totalPurchases: 98450.0,
-    status: 'Active',
+    "id": "VND-02",
+    "vendorCode": "VND-002",
+    "vendorName": "Gupta Traders",
+    "contactPerson": "Amit Gupta",
+    "phone": "98261 12345",
+    "email": "amit@guptatraders.in",
+    "city": "Durg",
+    "totalPurchases": 98450,
+    "status": "Active",
+    "gstin": "22FGHIJ5678K1Z9",
+    "pan": "FGHIJ5678K",
+    "category": "Inventory (Footwear)",
+    "paymentTerms": "Net 15",
+    "creditLimit": 150000,
+    "openingBalance": 0,
+    "address": "Shop No. 4, G.E. Road, Power House, Durg",
+    "pincode": "491001"
   },
   {
-    id: 'VND-03',
-    vendorCode: 'VND-003',
-    vendorName: 'Verma Distributors',
-    contactPerson: 'Suresh Verma',
-    phone: '97531 67890',
-    email: 'suresh@vermadist.com',
-    city: 'Bhilai',
-    totalPurchases: 76200.0,
-    status: 'Active',
+    "id": "VND-03",
+    "vendorCode": "VND-003",
+    "vendorName": "Verma Distributors",
+    "contactPerson": "Suresh Verma",
+    "phone": "97531 67890",
+    "email": "suresh@vermadist.com",
+    "city": "Bhilai",
+    "totalPurchases": 76200,
+    "status": "Active",
+    "gstin": "22KLMNO9012P1Z3",
+    "pan": "KLMNO9012P",
+    "category": "Inventory (Electronics)",
+    "paymentTerms": "Due on Receipt",
+    "creditLimit": 100000,
+    "openingBalance": 5000,
+    "address": "Sector 6 Commercial Complex, Bhilai",
+    "pincode": "490006"
   },
   {
-    id: 'VND-04',
-    vendorCode: 'VND-004',
-    vendorName: 'Agarwal & Co.',
-    contactPerson: 'Neeraj Agarwal',
-    phone: '93012 34567',
-    email: 'neeraj@agarwalco.in',
-    city: 'Raipur',
-    totalPurchases: 62500.0,
-    status: 'Active',
+    "id": "VND-04",
+    "vendorCode": "VND-004",
+    "vendorName": "Agarwal & Co.",
+    "contactPerson": "Neeraj Agarwal",
+    "phone": "93012 34567",
+    "email": "neeraj@agarwalco.in",
+    "city": "Raipur",
+    "totalPurchases": 62500,
+    "status": "Active",
+    "gstin": "22PQRST3456U1Z7",
+    "pan": "PQRST3456U",
+    "category": "Inventory (Accessories)",
+    "paymentTerms": "Net 30",
+    "creditLimit": 120000,
+    "openingBalance": 0,
+    "address": "Gol Bazar Wholesale Market, Raipur",
+    "pincode": "492001"
   },
   {
-    id: 'VND-05',
-    vendorCode: 'VND-005',
-    vendorName: 'Office Mart',
-    contactPerson: 'Pankaj Jain',
-    phone: '90987 65432',
-    email: 'pankaj@officemart.in',
-    city: 'Durg',
-    totalPurchases: 48300.0,
-    status: 'Inactive',
+    "id": "VND-05",
+    "vendorCode": "VND-005",
+    "vendorName": "Office Mart",
+    "contactPerson": "Pankaj Jain",
+    "phone": "90987 65432",
+    "email": "pankaj@officemart.in",
+    "city": "Durg",
+    "totalPurchases": 48300,
+    "status": "Inactive",
+    "gstin": "22UVWXY7890Z1Z1",
+    "pan": "UVWXY7890Z",
+    "category": "Office Supplies",
+    "paymentTerms": "Net 15",
+    "creditLimit": 50000,
+    "openingBalance": 1200,
+    "address": "Station Road, Durg",
+    "pincode": "491001"
   },
   {
-    id: 'VND-06',
-    vendorCode: 'VND-006',
-    vendorName: 'Khandelwal Traders',
-    contactPerson: 'Mahesh Khandelwal',
-    phone: '88855 11223',
-    email: 'mahesh@khandelwal.in',
-    city: 'Bhilai',
-    totalPurchases: 38750.0,
-    status: 'Active',
+    "id": "VND-06",
+    "vendorCode": "VND-006",
+    "vendorName": "Khandelwal Traders",
+    "contactPerson": "Mahesh Khandelwal",
+    "phone": "88855 11223",
+    "email": "mahesh@khandelwal.in",
+    "city": "Bhilai",
+    "totalPurchases": 38750,
+    "status": "Active",
+    "gstin": "22AAAAA0000A1Z5",
+    "pan": "AAAAA0000A",
+    "category": "Packaging",
+    "paymentTerms": "Net 30",
+    "creditLimit": 80000,
+    "openingBalance": 0,
+    "address": "Light Industrial Area, Supela, Bhilai",
+    "pincode": "490023"
   },
   {
-    id: 'VND-07',
-    vendorCode: 'VND-007',
-    vendorName: 'Fashion Supply Co.',
-    contactPerson: 'Vikram Singh',
-    phone: '77766 33445',
-    email: 'vikram@fashionsupply.in',
-    city: 'Raipur',
-    totalPurchases: 29600.0,
-    status: 'Active',
+    "id": "VND-07",
+    "vendorCode": "VND-007",
+    "vendorName": "Fashion Supply Co.",
+    "contactPerson": "Vikram Singh",
+    "phone": "77766 33445",
+    "email": "vikram@fashionsupply.in",
+    "city": "Raipur",
+    "totalPurchases": 29600,
+    "status": "Active",
+    "gstin": "22BBBBB1111B1Z6",
+    "pan": "BBBBB1111B",
+    "category": "Inventory (Apparel)",
+    "paymentTerms": "Due on Receipt",
+    "creditLimit": 60000,
+    "openingBalance": 3500,
+    "address": "Pandri Cloth Market, Raipur",
+    "pincode": "492004"
   },
   {
-    id: 'VND-08',
-    vendorCode: 'VND-008',
-    vendorName: 'Shree Balaji Traders',
-    contactPerson: 'Manoj Sahu',
-    phone: '76655 22110',
-    email: 'manoj@balajitraders.in',
-    city: 'Durg',
-    totalPurchases: 22400.0,
-    status: 'Blocked',
+    "id": "VND-08",
+    "vendorCode": "VND-008",
+    "vendorName": "Shree Balaji Traders",
+    "contactPerson": "Manoj Sahu",
+    "phone": "76655 22110",
+    "email": "manoj@balajitraders.in",
+    "city": "Durg",
+    "totalPurchases": 22400,
+    "status": "Blocked",
+    "gstin": "22CCCCC2222C1Z7",
+    "pan": "CCCCC2222C",
+    "category": "Hardware & Maintenance",
+    "paymentTerms": "Immediate",
+    "creditLimit": 0,
+    "openingBalance": 8400,
+    "address": "Indira Market, Durg",
+    "pincode": "491001"
   },
+  {
+    "id": "VND-09",
+    "vendorCode": "VND-009",
+    "vendorName": "Central Logistics Corp",
+    "contactPerson": "Ravi Teja",
+    "phone": "98271 88776",
+    "email": "ravi@centrallogistics.com",
+    "city": "Raipur",
+    "totalPurchases": 54200,
+    "status": "Active",
+    "gstin": "22DDDDD3333D1Z8",
+    "pan": "DDDDD3333D",
+    "category": "Logistics",
+    "paymentTerms": "Net 15",
+    "creditLimit": 100000,
+    "openingBalance": 0,
+    "address": "Transport Nagar, Tatibandh, Raipur",
+    "pincode": "492099"
+  },
+  {
+    "id": "VND-10",
+    "vendorCode": "VND-010",
+    "vendorName": "Apex Poly Packs",
+    "contactPerson": "Sunita Dewangan",
+    "phone": "94252 44332",
+    "email": "sunita@apexpacks.in",
+    "city": "Bhilai",
+    "totalPurchases": 18500,
+    "status": "Active",
+    "gstin": "22EEEEE4444E1Z9",
+    "pan": "EEEEE4444E",
+    "category": "Packaging",
+    "paymentTerms": "Net 30",
+    "creditLimit": 40000,
+    "openingBalance": 0,
+    "address": "Hathkhoj Industrial Area, Bhilai",
+    "pincode": "490026"
+  },
+  {
+    "id": "VND-11",
+    "vendorCode": "VND-011",
+    "vendorName": "Chhajed Fabrics",
+    "contactPerson": "Paras Chhajed",
+    "phone": "98279 11234",
+    "email": "paras@chhajedfabrics.com",
+    "city": "Raipur",
+    "totalPurchases": 89400,
+    "status": "Active",
+    "gstin": "22FFFFF5555F1Z0",
+    "pan": "FFFFF5555F",
+    "category": "Inventory (Apparel)",
+    "paymentTerms": "Net 30",
+    "creditLimit": 150000,
+    "openingBalance": 12000,
+    "address": "Malviya Road, Raipur",
+    "pincode": "492001"
+  },
+  {
+    "id": "VND-12",
+    "vendorCode": "VND-012",
+    "vendorName": "National Footwear Depot",
+    "contactPerson": "Irfan Khan",
+    "phone": "93001 99887",
+    "email": "irfan@nationalfootwear.in",
+    "city": "Durg",
+    "totalPurchases": 43100,
+    "status": "Active",
+    "gstin": "22GGGGG6666G1Z1",
+    "pan": "GGGGG6666G",
+    "category": "Inventory (Footwear)",
+    "paymentTerms": "Net 15",
+    "creditLimit": 75000,
+    "openingBalance": 0,
+    "address": "Bus Stand Road, Durg",
+    "pincode": "491001"
+  },
+  {
+    "id": "VND-13",
+    "vendorCode": "VND-013",
+    "vendorName": "Vardhaman Stationery",
+    "contactPerson": "Ritesh Vardhaman",
+    "phone": "94060 22334",
+    "email": "ritesh@vardhamanstat.com",
+    "city": "Bhilai",
+    "totalPurchases": 15600,
+    "status": "Active",
+    "gstin": "22HHHHH7777H1Z2",
+    "pan": "HHHHH7777H",
+    "category": "Office Supplies",
+    "paymentTerms": "Due on Receipt",
+    "creditLimit": 25000,
+    "openingBalance": 0,
+    "address": "Civic Centre, Shop 18, Bhilai",
+    "pincode": "490006"
+  },
+  {
+    "id": "VND-14",
+    "vendorCode": "VND-014",
+    "vendorName": "Modern Furnishings",
+    "contactPerson": "Anand Swamy",
+    "phone": "98266 55443",
+    "email": "anand@modernfurnishings.in",
+    "city": "Raipur",
+    "totalPurchases": 32000,
+    "status": "Inactive",
+    "gstin": "22IIIII8888I1Z3",
+    "pan": "IIIII8888I",
+    "category": "Hardware & Maintenance",
+    "paymentTerms": "Net 30",
+    "creditLimit": 50000,
+    "openingBalance": 0,
+    "address": "VIP Road, Raipur",
+    "pincode": "492015"
+  },
+  {
+    "id": "VND-15",
+    "vendorCode": "VND-015",
+    "vendorName": "Speedy Express Couriers",
+    "contactPerson": "Deepak Rao",
+    "phone": "97520 88990",
+    "email": "deepak@speedycouriers.in",
+    "city": "Bhilai",
+    "totalPurchases": 27800,
+    "status": "Active",
+    "gstin": "22JJJJJ9999J1Z4",
+    "pan": "JJJJJ9999J",
+    "category": "Logistics",
+    "paymentTerms": "Net 15",
+    "creditLimit": 50000,
+    "openingBalance": 1500,
+    "address": "Supela Chowk, Bhilai",
+    "pincode": "490023"
+  },
+  {
+    "id": "VND-16",
+    "vendorCode": "VND-016",
+    "vendorName": "Bhilai Print & Sign",
+    "contactPerson": "Santosh Yadav",
+    "phone": "93025 66778",
+    "email": "santosh@bhilaiprint.com",
+    "city": "Bhilai",
+    "totalPurchases": 19400,
+    "status": "Active",
+    "gstin": "22KKKKK0000K1Z5",
+    "pan": "KKKKK0000K",
+    "category": "Marketing",
+    "paymentTerms": "Due on Receipt",
+    "creditLimit": 30000,
+    "openingBalance": 0,
+    "address": "Nehru Nagar East, Bhilai",
+    "pincode": "490020"
+  },
+  {
+    "id": "VND-17",
+    "vendorCode": "VND-017",
+    "vendorName": "Kalyan Jewellers & Accessories",
+    "contactPerson": "Kalyan B.",
+    "phone": "98270 33445",
+    "email": "kalyan@kalyanacc.com",
+    "city": "Durg",
+    "totalPurchases": 64200,
+    "status": "Active",
+    "gstin": "22LLLLL1111L1Z6",
+    "pan": "LLLLL1111L",
+    "category": "Inventory (Accessories)",
+    "paymentTerms": "Net 30",
+    "creditLimit": 120000,
+    "openingBalance": 5000,
+    "address": "Main Road, Durg",
+    "pincode": "491001"
+  },
+  {
+    "id": "VND-18",
+    "vendorCode": "VND-018",
+    "vendorName": "Krishna Electricals",
+    "contactPerson": "Gopal Soni",
+    "phone": "94255 12340",
+    "email": "gopal@krishnaelect.in",
+    "city": "Raipur",
+    "totalPurchases": 18900,
+    "status": "Active",
+    "gstin": "22MMMMM2222M1Z7",
+    "pan": "MMMMM2222M",
+    "category": "Hardware & Maintenance",
+    "paymentTerms": "Net 15",
+    "creditLimit": 40000,
+    "openingBalance": 0,
+    "address": "Ramsagar Para, Raipur",
+    "pincode": "492001"
+  },
+  {
+    "id": "VND-19",
+    "vendorCode": "VND-019",
+    "vendorName": "Mahamaya Textile Mills",
+    "contactPerson": "Dinesh Agrawal",
+    "phone": "98263 77889",
+    "email": "dinesh@mahamayatextile.com",
+    "city": "Raipur",
+    "totalPurchases": 112000,
+    "status": "Active",
+    "gstin": "22NNNNN3333N1Z8",
+    "pan": "NNNNN3333N",
+    "category": "Inventory (Apparel)",
+    "paymentTerms": "Net 45",
+    "creditLimit": 250000,
+    "openingBalance": 24000,
+    "address": "Urla Industrial Area, Raipur",
+    "pincode": "492003"
+  },
+  {
+    "id": "VND-20",
+    "vendorCode": "VND-020",
+    "vendorName": "City Carton Manufacturers",
+    "contactPerson": "Mohan Lal",
+    "phone": "93010 44556",
+    "email": "mohan@citycartons.in",
+    "city": "Durg",
+    "totalPurchases": 21300,
+    "status": "Active",
+    "gstin": "22OOOOO4444O1Z9",
+    "pan": "OOOOO4444O",
+    "category": "Packaging",
+    "paymentTerms": "Net 30",
+    "creditLimit": 50000,
+    "openingBalance": 0,
+    "address": "Borsi Extension, Durg",
+    "pincode": "491001"
+  },
+  {
+    "id": "VND-21",
+    "vendorCode": "VND-021",
+    "vendorName": "Surya Safety & Security",
+    "contactPerson": "Surya Narayanan",
+    "phone": "98275 66778",
+    "email": "surya@suryasafety.in",
+    "city": "Bhilai",
+    "totalPurchases": 14750,
+    "status": "Active",
+    "gstin": "22PPPPP5555P1Z0",
+    "pan": "PPPPP5555P",
+    "category": "Hardware & Maintenance",
+    "paymentTerms": "Due on Receipt",
+    "creditLimit": 30000,
+    "openingBalance": 0,
+    "address": "Sector 1 Market, Bhilai",
+    "pincode": "490001"
+  },
+  {
+    "id": "VND-22",
+    "vendorCode": "VND-022",
+    "vendorName": "Premier Packaging Solutions",
+    "contactPerson": "Kamal Joshi",
+    "phone": "94242 88991",
+    "email": "kamal@premierpackaging.com",
+    "city": "Raipur",
+    "totalPurchases": 9800,
+    "status": "Inactive",
+    "gstin": "22QQQQQ6666Q1Z1",
+    "pan": "QQQQQ6666Q",
+    "category": "Packaging",
+    "paymentTerms": "Net 15",
+    "creditLimit": 25000,
+    "openingBalance": 0,
+    "address": "Bhanpuri, Raipur",
+    "pincode": "492003"
+  },
+  {
+    "id": "VND-23",
+    "vendorCode": "VND-023",
+    "vendorName": "Chhattisgarh Bag House",
+    "contactPerson": "Hemant Sahu",
+    "phone": "93005 12345",
+    "email": "hemant@cgbaghouse.in",
+    "city": "Durg",
+    "totalPurchases": 34500,
+    "status": "Active",
+    "gstin": "22RRRRR7777R1Z2",
+    "pan": "RRRRR7777R",
+    "category": "Inventory (Accessories)",
+    "paymentTerms": "Net 30",
+    "creditLimit": 60000,
+    "openingBalance": 2000,
+    "address": "Gandhi Chowk, Durg",
+    "pincode": "491001"
+  },
+  {
+    "id": "VND-24",
+    "vendorCode": "VND-024",
+    "vendorName": "Royal Threads Garments",
+    "contactPerson": "Alok Roy",
+    "phone": "98268 99001",
+    "email": "alok@royalthreads.com",
+    "city": "Raipur",
+    "totalPurchases": 78900,
+    "status": "Active",
+    "gstin": "22SSSSS8888S1Z3",
+    "pan": "SSSSS8888S",
+    "category": "Inventory (Apparel)",
+    "paymentTerms": "Net 30",
+    "creditLimit": 150000,
+    "openingBalance": 11000,
+    "address": "Devendra Nagar, Raipur",
+    "pincode": "492004"
+  },
+  {
+    "id": "VND-25",
+    "vendorCode": "VND-025",
+    "vendorName": "Durg Clean & Hygiene",
+    "contactPerson": "Brijesh Sharma",
+    "phone": "97541 23456",
+    "email": "brijesh@durgclean.in",
+    "city": "Durg",
+    "totalPurchases": 12400,
+    "status": "Active",
+    "gstin": "22TTTTT9999T1Z4",
+    "pan": "TTTTT9999T",
+    "category": "Office Supplies",
+    "paymentTerms": "Due on Receipt",
+    "creditLimit": 20000,
+    "openingBalance": 0,
+    "address": "Kasaridih, Durg",
+    "pincode": "491001"
+  },
+  {
+    "id": "VND-26",
+    "vendorCode": "VND-026",
+    "vendorName": "Bhilai Steel Fixtures",
+    "contactPerson": "Nitin Patel",
+    "phone": "94079 87654",
+    "email": "nitin@bhilaifixtures.com",
+    "city": "Bhilai",
+    "totalPurchases": 46700,
+    "status": "Active",
+    "gstin": "22UUUUU0000U1Z5",
+    "pan": "UUUUU0000U",
+    "category": "Hardware & Maintenance",
+    "paymentTerms": "Net 30",
+    "creditLimit": 80000,
+    "openingBalance": 0,
+    "address": "Industrial Area, Nandini Road, Bhilai",
+    "pincode": "490011"
+  },
+  {
+    "id": "VND-27",
+    "vendorCode": "VND-027",
+    "vendorName": "QuickStep Logistics",
+    "contactPerson": "Pradeep Verma",
+    "phone": "98273 45678",
+    "email": "pradeep@quickstep.in",
+    "city": "Raipur",
+    "totalPurchases": 31200,
+    "status": "Active",
+    "gstin": "22VVVVV1111V1Z6",
+    "pan": "VVVVV1111V",
+    "category": "Logistics",
+    "paymentTerms": "Net 15",
+    "creditLimit": 50000,
+    "openingBalance": 0,
+    "address": "Bhatagaon, Raipur",
+    "pincode": "492013"
+  },
+  {
+    "id": "VND-28",
+    "vendorCode": "VND-028",
+    "vendorName": "Krupa Footwear Works",
+    "contactPerson": "Krupa Shankar",
+    "phone": "93033 67890",
+    "email": "krupa@krupafootwear.in",
+    "city": "Bhilai",
+    "totalPurchases": 51800,
+    "status": "Active",
+    "gstin": "22WWWWW2222W1Z7",
+    "pan": "WWWWW2222W",
+    "category": "Inventory (Footwear)",
+    "paymentTerms": "Net 30",
+    "creditLimit": 90000,
+    "openingBalance": 4200,
+    "address": "Power House Market, Bhilai",
+    "pincode": "490011"
+  }
 ];
 
 export const useExpenseStore = create<PurchaseExpenseState>((set, get) => ({
@@ -872,12 +1354,12 @@ export const useExpenseStore = create<PurchaseExpenseState>((set, get) => ({
   error: null,
 
   overviewKPIs: {
-    totalPurchase: 120950.0,
+    totalPurchase: 185600.0,
     totalExpense: 28450.0,
-    totalCreditNote: 6700.0,
-    openPurchaseOrders: 73000.0,
-    openPOCount: 2,
-    eWayBillsCount: 4,
+    totalCreditNote: 12450.0,
+    openPurchaseOrders: 65000.0,
+    openPOCount: 3,
+    eWayBillsCount: 12,
   },
 
   allTransactions: initialTransactions,
@@ -917,6 +1399,9 @@ export const useExpenseStore = create<PurchaseExpenseState>((set, get) => ({
   selectedPurchase: null,
   setSelectedPurchase: (selectedPurchase) => set({ selectedPurchase }),
 
+  selectedVendor: null,
+  setSelectedVendor: (selectedVendor) => set({ selectedVendor }),
+
   isEditPurchaseOpen: false,
   setIsEditPurchaseOpen: (isEditPurchaseOpen) => set({ isEditPurchaseOpen }),
 
@@ -944,6 +1429,194 @@ export const useExpenseStore = create<PurchaseExpenseState>((set, get) => ({
 
   isAddExpenseModalOpen: false,
   setIsAddExpenseModalOpen: (isAddExpenseModalOpen) => set({ isAddExpenseModalOpen }),
+
+  isImportModalOpen: false,
+  importType: null,
+
+  openAddVendor: (vendor) => set({ isAddVendorOpen: true, selectedVendor: vendor || null }),
+  closeAddVendor: () => set({ isAddVendorOpen: false, selectedVendor: null }),
+
+  openImportModal: (type) => set({ isImportModalOpen: true, importType: type }),
+  closeImportModal: () => set({ isImportModalOpen: false, importType: null }),
+
+  saveVendor: (vendorData) =>
+    set((state) => {
+      if (vendorData.id && state.vendors.some((v) => v.id === vendorData.id)) {
+        return {
+          vendors: state.vendors.map((v) =>
+            v.id === vendorData.id ? ({ ...v, ...vendorData } as Vendor) : v
+          ),
+          isAddVendorOpen: false,
+          selectedVendor: null,
+        };
+      }
+      const nextCode = `VND-${String(state.vendors.length + 1).padStart(3, '0')}`;
+      const newVendor: Vendor = {
+        id: vendorData.id || `VND-${Date.now()}`,
+        vendorCode: vendorData.vendorCode || nextCode,
+        vendorName: vendorData.vendorName || 'New Vendor',
+        contactPerson: vendorData.contactPerson || '',
+        phone: vendorData.phone || '',
+        email: vendorData.email || '',
+        city: vendorData.city || 'Bhilai',
+        totalPurchases: Number(vendorData.totalPurchases || 0),
+        status: vendorData.status || 'Active',
+        gstin: vendorData.gstin || '',
+        pan: vendorData.pan || '',
+        category: vendorData.category || 'Inventory (Apparel)',
+        paymentTerms: vendorData.paymentTerms || 'Due on Receipt',
+        creditLimit: Number(vendorData.creditLimit || 0),
+        openingBalance: Number(vendorData.openingBalance || 0),
+        address: vendorData.address || '',
+        pincode: vendorData.pincode || '',
+        notes: vendorData.notes || '',
+      };
+      return {
+        vendors: [newVendor, ...state.vendors],
+        isAddVendorOpen: false,
+        selectedVendor: null,
+      };
+    }),
+
+  deleteVendor: (id) =>
+    set((state) => ({
+      vendors: state.vendors.filter((v) => v.id !== id),
+    })),
+
+  exportVendorsCsv: () => {
+    const state = useExpenseStore.getState();
+    const headers = [
+      'Vendor Code',
+      'Vendor Name',
+      'Contact Person',
+      'Phone',
+      'Email',
+      'City',
+      'Category',
+      'GSTIN',
+      'Payment Terms',
+      'Total Purchases (INR)',
+      'Status',
+    ];
+    const rows = state.vendors.map((v) => [
+      v.vendorCode,
+      v.vendorName,
+      v.contactPerson,
+      v.phone,
+      v.email,
+      v.city,
+      v.category,
+      v.gstin || '',
+      v.paymentTerms,
+      v.totalPurchases,
+      v.status,
+    ]);
+    downloadCSV('vendors_directory.csv', headers, rows);
+  },
+
+  exportProcurementReportCsv: () => {
+    const state = useExpenseStore.getState();
+    const headers = [
+      'Reference No',
+      'Date',
+      'Type',
+      'Vendor / Paid To',
+      'Category',
+      'Amount (INR)',
+      'Status',
+    ];
+    const rows = state.allTransactions.map((t) => [
+      t.referenceNo,
+      `${t.date} ${t.time}`,
+      t.type,
+      t.vendorOrPaidTo,
+      t.category,
+      t.amount,
+      t.status,
+    ]);
+    downloadCSV('procurement_expenses_report.csv', headers, rows);
+  },
+
+  importCsvData: (type, rows) => {
+    set((state) => {
+      if (type === 'vendors') {
+        const imported: Vendor[] = rows.map((r, idx) => ({
+          id: `VND-IMP-${Date.now()}-${idx}`,
+          vendorCode:
+            r.vendorCode ||
+            r['Vendor Code'] ||
+            `VND-${String(state.vendors.length + idx + 1).padStart(3, '0')}`,
+          vendorName: r.vendorName || r['Vendor Name'] || 'Imported Vendor',
+          contactPerson: r.contactPerson || r['Contact Person'] || '',
+          phone: r.phone || r['Phone'] || '',
+          email: r.email || r['Email'] || '',
+          city: r.city || r['City'] || 'Bhilai',
+          totalPurchases: Number(r.totalPurchases || r['Total Purchases'] || 0),
+          status: (r.status || r['Status'] || 'Active') as any,
+          gstin: r.gstin || r['GSTIN'] || '',
+          pan: r.pan || r['PAN'] || '',
+          category: r.category || r['Category'] || 'General',
+          paymentTerms: r.paymentTerms || r['Payment Terms'] || 'Due on Receipt',
+          creditLimit: Number(r.creditLimit || 0),
+          openingBalance: Number(r.openingBalance || 0),
+        }));
+        return {
+          vendors: [...imported, ...state.vendors],
+          isImportModalOpen: false,
+          importType: null,
+        };
+      }
+      if (type === 'purchases') {
+        const imported: PurchaseTransaction[] = rows.map((r, idx) => ({
+          id: `TXN-IMP-${Date.now()}-${idx}`,
+          date: r.date || r['Date'] || '11 May 2024',
+          time: '12:00 PM',
+          referenceNo:
+            r.referenceNo ||
+            r['Reference No'] ||
+            `BILL-2024-${Math.floor(100000 + Math.random() * 900000)}`,
+          type: 'Purchase',
+          vendorOrPaidTo: r.vendor || r['Vendor'] || 'Vendor',
+          category: r.category || r['Category'] || 'Inventory (Apparel)',
+          amount: -Math.abs(Number(r.amount || r['Amount'] || 1000)),
+          status: 'Paid',
+        }));
+        return {
+          allTransactions: [...imported, ...state.allTransactions],
+          isImportModalOpen: false,
+          importType: null,
+        };
+      }
+      if (type === 'expenses') {
+        const imported: ExpenseItem[] = rows.map((r, idx) => ({
+          id: `EXP-IMP-${Date.now()}-${idx}`,
+          expenseNo:
+            r.referenceNo ||
+            r['Reference No'] ||
+            `EXP-2024-${Math.floor(1000 + Math.random() * 9000)}`,
+          date: r.date || r['Date'] || '11 May 2024',
+          time: '12:00 PM',
+          category: r.category || r['Category'] || 'General',
+          description: r.description || r['Description'] || 'Business Expense',
+          amount: Number(r.amount || r['Amount'] || 500),
+          paymentMethod: r.paymentMethod || r['Payment Method'] || 'Cash',
+          status: 'Paid',
+        }));
+        return {
+          expenses: [...imported, ...state.expenses],
+          isImportModalOpen: false,
+          importType: null,
+        };
+      }
+      return { isImportModalOpen: false, importType: null };
+    });
+  },
+
+  addEWayBill: (bill) =>
+    set((state) => ({
+      ewayBills: [bill, ...state.ewayBills],
+      isGenerateEWayBillOpen: false,
+    })),
 
   viewMode: 'list',
   setViewMode: (viewMode) => set({ viewMode }),
@@ -997,7 +1670,11 @@ export const useExpenseStore = create<PurchaseExpenseState>((set, get) => ({
           email: v.email,
           city: v.city,
           totalPurchases: v.totalPurchases || 0,
-          status: v.status,
+          status: v.status || 'Active',
+          category: v.category || 'General',
+          paymentTerms: v.paymentTerms || 'Due on Receipt',
+          creditLimit: v.creditLimit || 0,
+          openingBalance: v.openingBalance || 0,
         }));
       }
 
@@ -1096,12 +1773,16 @@ export const useExpenseStore = create<PurchaseExpenseState>((set, get) => ({
             id: `VND-${Date.now()}`,
             vendorCode: `VND-${String(state.vendors.length + 1).padStart(3, '0')}`,
             vendorName: data.vendorName || data.companyName,
-            contactPerson: data.contactPerson,
-            phone: data.phone,
+            contactPerson: data.contactPerson || '—',
+            phone: data.phone || '—',
             email: data.email || '',
-            city: data.city,
+            city: data.city || 'Raipur',
             totalPurchases: 0,
             status: 'Active',
+            category: data.category || 'General',
+            paymentTerms: data.paymentTerms || 'Due on Receipt',
+            creditLimit: Number(data.creditLimit || 0),
+            openingBalance: Number(data.openingBalance || 0),
           },
           ...state.vendors,
         ],

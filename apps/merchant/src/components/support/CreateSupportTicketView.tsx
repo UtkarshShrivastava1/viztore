@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   UploadCloud,
   ChevronRight,
@@ -7,6 +7,8 @@ import {
   Phone,
   CheckCircle2,
   AlertCircle,
+  X,
+  File,
 } from 'lucide-react';
 import { useSupportStore, TicketPriority } from '../../stores/supportStore.js';
 import { validatePhone } from '../../utils/validation.js';
@@ -24,8 +26,26 @@ export const CreateSupportTicketView: React.FC<CreateSupportTicketViewProps> = (
   const [contactPhone, setContactPhone] = useState('');
   const [phoneError, setPhoneError] = useState('');
   const [description, setDescription] = useState('');
+  const [attachments, setAttachments] = useState<{ name: string; size: string; type: string }[]>([]);
   const [errorMessage, setErrorMessage] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const newFiles = Array.from(e.target.files).map((f) => ({
+        name: f.name,
+        size: `${(f.size / (1024 * 1024)).toFixed(2)} MB`,
+        type: f.type,
+      }));
+      setAttachments((prev) => [...prev, ...newFiles].slice(0, 5));
+    }
+  };
+
+  const handleRemoveAttachment = (idx: number) => {
+    setAttachments((prev) => prev.filter((_, i) => i !== idx));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,6 +74,7 @@ export const CreateSupportTicketView: React.FC<CreateSupportTicketViewProps> = (
       priority,
       status: 'open',
       initialMessage: description,
+      attachments,
     });
 
     setIsSuccess(true);
@@ -81,12 +102,11 @@ export const CreateSupportTicketView: React.FC<CreateSupportTicketViewProps> = (
       {/* Top Header & Breadcrumb (15.1.png) */}
       <div>
         <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 mb-1">
-          <span className="hover:text-slate-800 cursor-pointer">Home</span>
+          <span className="hover:text-slate-800 cursor-pointer" onClick={handleCancel}>
+            Home
+          </span>
           <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-          <span
-            onClick={handleCancel}
-            className="hover:text-slate-800 cursor-pointer"
-          >
+          <span onClick={handleCancel} className="hover:text-slate-800 cursor-pointer">
             Support
           </span>
           <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
@@ -129,7 +149,7 @@ export const CreateSupportTicketView: React.FC<CreateSupportTicketViewProps> = (
                 placeholder="Enter a short subject for your issue (e.g. Order not received)"
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-2xs"
               />
             </div>
 
@@ -141,7 +161,7 @@ export const CreateSupportTicketView: React.FC<CreateSupportTicketViewProps> = (
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-2xs cursor-pointer"
               >
                 <option value="">Select a category</option>
                 <option value="Orders & Delivery">Orders & Delivery</option>
@@ -154,7 +174,7 @@ export const CreateSupportTicketView: React.FC<CreateSupportTicketViewProps> = (
               </select>
             </div>
 
-            {/* Priority */}
+            {/* Priority (Mockup 15.1.png) */}
             <div className="space-y-2">
               <label className="text-xs font-bold text-slate-700">
                 Priority <span className="text-rose-500">*</span>
@@ -228,39 +248,7 @@ export const CreateSupportTicketView: React.FC<CreateSupportTicketViewProps> = (
               </div>
             </div>
 
-            {/* Contact Mobile Phone (Optional) */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700">
-                Contact Mobile Number (Optional)
-              </label>
-              <input
-                type="tel"
-                placeholder="Enter 10-digit mobile number for callback (e.g. 9876543210)"
-                value={contactPhone}
-                maxLength={10}
-                onChange={(e) => {
-                  setContactPhone(e.target.value);
-                  if (phoneError) setPhoneError('');
-                }}
-                onBlur={() => {
-                  if (contactPhone.trim() && !validatePhone(contactPhone.trim())) {
-                    setPhoneError('Please enter a valid 10-digit Indian mobile number (e.g. 9876543210).');
-                  } else {
-                    setPhoneError('');
-                  }
-                }}
-                className={`w-full px-3.5 py-2.5 bg-slate-50 border rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 transition-colors ${
-                  phoneError
-                    ? 'border-rose-400 focus:ring-rose-400/20 focus:border-rose-400'
-                    : 'border-slate-200 focus:ring-blue-500/20 focus:border-blue-500'
-                }`}
-              />
-              {phoneError && (
-                <p className="text-[11px] text-rose-500 mt-1 font-medium">{phoneError}</p>
-              )}
-            </div>
-
-            {/* Description */}
+            {/* Description with 0/1000 Counter matching mockup 15.1.png */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold text-slate-700">
@@ -271,19 +259,22 @@ export const CreateSupportTicketView: React.FC<CreateSupportTicketViewProps> = (
                 </span>
               </div>
               <textarea
-                rows={4}
+                rows={5}
                 maxLength={1000}
                 placeholder="Please describe your issue in detail..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 leading-relaxed focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none"
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 leading-relaxed focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none shadow-2xs"
               />
             </div>
 
-            {/* Attachments */}
+            {/* Attachments Dropzone matching mockup 15.1.png */}
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-slate-700">Attachments (Optional)</label>
-              <div className="border-2 border-dashed border-slate-200 hover:border-blue-400 rounded-xl p-6 text-center bg-slate-50/50 hover:bg-blue-50/20 cursor-pointer transition-all">
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="border-2 border-dashed border-slate-200 hover:border-blue-400 rounded-xl p-6 text-center bg-slate-50/50 hover:bg-blue-50/20 cursor-pointer transition-all"
+              >
                 <UploadCloud className="w-8 h-8 text-blue-600 mx-auto mb-2" />
                 <p className="text-xs font-bold text-slate-800">
                   <span className="text-blue-600">Click to upload</span> or drag and drop
@@ -291,22 +282,54 @@ export const CreateSupportTicketView: React.FC<CreateSupportTicketViewProps> = (
                 <p className="text-[11px] text-slate-400 mt-0.5">
                   PNG, JPG, PDF (Max 5 files, 10 MB each)
                 </p>
-                <input type="file" multiple className="hidden" />
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept="image/png,image/jpeg,application/pdf"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
               </div>
+
+              {/* Uploaded Files Chips */}
+              {attachments.length > 0 && (
+                <div className="flex flex-wrap gap-2 pt-2">
+                  {attachments.map((file, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center gap-2 px-2.5 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-xs"
+                    >
+                      <File className="w-3.5 h-3.5 text-slate-500" />
+                      <span className="font-medium text-slate-700 max-w-[150px] truncate">
+                        {file.name}
+                      </span>
+                      <span className="text-[10px] text-slate-400">({file.size})</span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveAttachment(idx)}
+                        className="p-0.5 text-slate-400 hover:text-rose-600 rounded"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {/* Bottom Actions */}
+            {/* Bottom Actions matching mockup 15.1.png */}
             <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
               <button
                 type="button"
                 onClick={handleCancel}
-                className="px-4 py-2 border border-slate-200 text-slate-700 text-xs font-bold rounded-xl hover:bg-slate-50 transition-colors"
+                className="px-5 py-2 border border-slate-200 text-slate-700 text-xs font-bold rounded-xl hover:bg-slate-50 transition-colors shadow-2xs cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition-colors"
+                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
               >
                 Submit Ticket
               </button>
@@ -314,9 +337,9 @@ export const CreateSupportTicketView: React.FC<CreateSupportTicketViewProps> = (
           </form>
         </div>
 
-        {/* Right Column */}
+        {/* Right Sidebar Column matching mockup 15.1.png */}
         <div className="xl:col-span-4 space-y-5">
-          {/* Need Immediate Help Card */}
+          {/* 1. Need Immediate Help Card */}
           <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-5 space-y-3.5">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
@@ -338,7 +361,7 @@ export const CreateSupportTicketView: React.FC<CreateSupportTicketViewProps> = (
             </div>
           </div>
 
-          {/* Support Guidelines Card */}
+          {/* 2. Support Guidelines Card */}
           <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-5 space-y-3.5">
             <div className="flex items-center gap-2 text-blue-600 font-bold text-xs">
               <Lightbulb className="w-4 h-4" />
@@ -365,7 +388,7 @@ export const CreateSupportTicketView: React.FC<CreateSupportTicketViewProps> = (
             </ul>
           </div>
 
-          {/* Common Topics Card */}
+          {/* 3. Common Topics Card */}
           <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-5 space-y-3.5">
             <div className="flex items-center gap-2 text-slate-900 font-bold text-xs">
               <FileText className="w-4 h-4 text-blue-600" />
@@ -378,7 +401,7 @@ export const CreateSupportTicketView: React.FC<CreateSupportTicketViewProps> = (
                   key={topic}
                   type="button"
                   onClick={() => setCategory(topic)}
-                  className="w-full py-2.5 flex items-center justify-between text-left hover:text-blue-600 transition-colors group"
+                  className="w-full py-2.5 flex items-center justify-between text-left hover:text-blue-600 transition-colors group cursor-pointer"
                 >
                   <span className="text-slate-700 group-hover:text-blue-600">{topic}</span>
                   <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600" />

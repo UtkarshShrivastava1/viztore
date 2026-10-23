@@ -22,6 +22,7 @@ export interface SupportTicket {
   createdAt: string;
   orderRef?: string;
   messages: TicketMessage[];
+  attachments?: { name: string; size: string; type: string }[];
 }
 
 export interface HelpTopic {
@@ -188,6 +189,7 @@ interface SupportState {
     status?: TicketStatus;
     orderRef?: string;
     initialMessage: string;
+    attachments?: { name: string; size: string; type: string }[];
   }) => void;
   addTicketMessage: (ticketId: string, text: string, sender?: 'merchant' | 'support') => void;
   updateTicketStatus: (ticketId: string, status: TicketStatus) => void;
@@ -199,7 +201,7 @@ interface SupportState {
 export const useSupportStore = create<SupportState>((set) => ({
   activeView: 'hub',
   activeTab: 'overview',
-  tickets: [],
+  tickets: initialTickets,
   helpTopics: initialHelpTopics,
   selectedTicketId: null,
   selectedHelpTopicId: null,
@@ -214,7 +216,7 @@ export const useSupportStore = create<SupportState>((set) => ({
   setSelectedHelpTopicId: (id) => set({ selectedHelpTopicId: id }),
   setIsCreateTicketModalOpen: (isOpen) => set({ isCreateTicketModalOpen: isOpen }),
 
-  addTicket: ({ subject, category, priority, status, orderRef, initialMessage }) =>
+  addTicket: ({ subject, category, priority, status, orderRef, initialMessage, attachments }) =>
     set((state) => {
       const now = new Date();
       const dateStr = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -230,6 +232,7 @@ export const useSupportStore = create<SupportState>((set) => ({
         lastUpdated: dateStr,
         createdAt: `${dateStr}, ${timeStr}`,
         orderRef,
+        attachments: attachments || [],
         messages: [
           {
             id: `msg-${Date.now()}`,
