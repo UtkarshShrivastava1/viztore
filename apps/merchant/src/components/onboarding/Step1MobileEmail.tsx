@@ -233,13 +233,23 @@ export const Step1MobileEmail: React.FC<Step1MobileEmailProps> = ({
         {/* Dynamic Legal Terms */}
         <p className="text-[11px] text-slate-500 pt-1 leading-relaxed">
           By continuing, I agree to {branding.appName}'s{' '}
-          <span className="font-semibold text-slate-800 hover:underline cursor-pointer">
+          <a
+            href="/terms"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-[#0038ed] hover:underline cursor-pointer"
+          >
             Terms of Use
-          </span>{' '}
+          </a>{' '}
           &amp;{' '}
-          <span className="font-semibold text-slate-800 hover:underline cursor-pointer">
+          <a
+            href="/privacy"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-[#0038ed] hover:underline cursor-pointer"
+          >
             Privacy Policy
-          </span>
+          </a>
         </p>
 
         {/* Primary Action Button */}

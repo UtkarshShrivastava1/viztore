@@ -11,6 +11,9 @@ import {
   ArrowRight,
   ArrowLeft,
   ChevronDown,
+  Clock,
+  Calendar,
+  Copy,
 } from 'lucide-react';
 import { useOnboardingStore } from '../../stores/onboardingStore.js';
 import { StoreCategory } from '@repo/shared-types';
@@ -53,7 +56,24 @@ export const Step3BusinessInfo: React.FC<Step3BusinessInfoProps> = ({
   ]);
   const [error, setError] = useState<string | null>(null);
 
-  const daysList = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+type DayName = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
+interface DaySchedule {
+  isOpen: boolean;
+  open: string;
+  close: string;
+}
+
+const DAYS_LIST: DayName[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+const DAY_KEY_MAP: Record<DayName, 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday'> = {
+  Monday: 'monday',
+  Tuesday: 'tuesday',
+  Wednesday: 'wednesday',
+  Thursday: 'thursday',
+  Friday: 'friday',
+  Saturday: 'saturday',
+  Sunday: 'sunday',
+};
 
   const toggleCategory = (id: string) => {
     setSelectedCategories((prev) =>
@@ -61,10 +81,109 @@ export const Step3BusinessInfo: React.FC<Step3BusinessInfoProps> = ({
     );
   };
 
-  const toggleDay = (day: string) => {
-    setOpenDays((prev) =>
-      prev.includes(day) ? (prev.length > 1 ? prev.filter((d) => d !== day) : prev) : [...prev, day],
-    );
+  const [showDayWiseSlots, setShowDayWiseSlots] = useState(false);
+  const [daySchedules, setDaySchedules] = useState<Record<DayName, DaySchedule>>(() => {
+    const existing = draft.step5?.operatingHours;
+    const initialMap: Record<DayName, DaySchedule> = {
+      Monday: { isOpen: true, open: openTime, close: closeTime },
+      Tuesday: { isOpen: true, open: openTime, close: closeTime },
+      Wednesday: { isOpen: true, open: openTime, close: closeTime },
+      Thursday: { isOpen: true, open: openTime, close: closeTime },
+      Friday: { isOpen: true, open: openTime, close: closeTime },
+      Saturday: { isOpen: true, open: openTime, close: closeTime },
+      Sunday: { isOpen: true, open: openTime, close: closeTime },
+    };
+
+    DAYS_LIST.forEach((day) => {
+      const dayKey = DAY_KEY_MAP[day];
+      const saved = existing ? existing[dayKey] : null;
+      if (saved) {
+        initialMap[day] = {
+          isOpen: saved.isOpen,
+          open: saved.open || openTime,
+          close: saved.close || closeTime,
+        };
+      }
+    });
+    return initialMap;
+  });
+
+  const timeOptionsOpen = [
+    '06:00', '06:30', '07:00', '07:30', '08:00', '08:30',
+    '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00'
+  ];
+
+  const timeOptionsClose = [
+    '16:00', '17:00', '18:00', '18:30', '19:00', '19:30',
+    '20:00', '20:30', '21:00', '21:30', '22:00', '22:30', '23:00', '23:30', '00:00'
+  ];
+
+  const formatTime12h = (timeStr: string): string => {
+    const [hStr, mStr] = timeStr.split(':');
+    const h = parseInt(hStr || '0', 10);
+    const m = mStr || '00';
+    if (h === 0) return `12:${m} AM`;
+    if (h < 12) return `${h.toString().padStart(2, '0')}:${m} AM`;
+    if (h === 12) return `12:${m} PM`;
+    return `${(h - 12).toString().padStart(2, '0')}:${m} PM`;
+  };
+
+  const handleDayScheduleChange = (
+    day: DayName,
+    field: keyof DaySchedule,
+    value: boolean | string,
+  ) => {
+    setDaySchedules((prev) => {
+      const current = prev[day] || { isOpen: true, open: openTime, close: closeTime };
+      return {
+        ...prev,
+        [day]: {
+          ...current,
+          [field]: value,
+        },
+      };
+    });
+  };
+
+  const copyMondayToAllActiveDays = () => {
+    const mon = daySchedules['Monday'];
+    if (!mon) return;
+    setDaySchedules((prev) => {
+      const next: Record<DayName, DaySchedule> = { ...prev };
+      DAYS_LIST.forEach((d) => {
+        const item = next[d];
+        if (item?.isOpen) {
+          next[d] = {
+            ...item,
+            open: mon.open,
+            close: mon.close,
+          };
+        }
+      });
+      return next;
+    });
+  };
+
+  const toggleDay = (day: DayName) => {
+    setOpenDays((prev) => {
+      const nextDays = prev.includes(day)
+        ? (prev.length > 1 ? prev.filter((d) => d !== day) : prev)
+        : [...prev, day];
+
+      // Keep daySchedules in sync
+      setDaySchedules((schedPrev) => {
+        const current = schedPrev[day] || { isOpen: true, open: openTime, close: closeTime };
+        return {
+          ...schedPrev,
+          [day]: {
+            ...current,
+            isOpen: nextDays.includes(day),
+          },
+        };
+      });
+
+      return nextDays;
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -74,11 +193,21 @@ export const Step3BusinessInfo: React.FC<Step3BusinessInfoProps> = ({
       return;
     }
 
-    const daySchedule = (dayName: string) => ({
-      open: openTime,
-      close: closeTime,
-      isOpen: openDays.includes(dayName),
-    });
+    const daySchedule = (dayName: DayName) => {
+      if (showDayWiseSlots) {
+        const sched = daySchedules[dayName];
+        return {
+          open: sched?.open || openTime,
+          close: sched?.close || closeTime,
+          isOpen: Boolean(sched?.isOpen),
+        };
+      }
+      return {
+        open: openTime,
+        close: closeTime,
+        isOpen: openDays.includes(dayName),
+      };
+    };
 
     updateStep(5, {
       primaryCategory: (selectedCategories[0] || StoreCategory.FASHION) as any,
@@ -242,7 +371,7 @@ export const Step3BusinessInfo: React.FC<Step3BusinessInfoProps> = ({
             </span>
 
             <div className="flex flex-wrap gap-2">
-              {daysList.map((day) => {
+              {DAYS_LIST.map((day) => {
                 const isOpen = openDays.includes(day);
                 return (
                   <button
@@ -268,16 +397,129 @@ export const Step3BusinessInfo: React.FC<Step3BusinessInfoProps> = ({
             </div>
 
             <div className="pt-2">
-              <span className="text-[11px] text-slate-500">
-                Have separate day wise timings?{' '}
-                <button
-                  type="button"
-                  onClick={() => alert('Day-wise custom time slots enabled.')}
-                  className="text-[#0038ed] font-semibold hover:underline cursor-pointer"
-                >
-                  Add day wise slots
-                </button>
-              </span>
+              {!showDayWiseSlots ? (
+                <div className="flex items-center justify-between p-3 rounded-xl bg-blue-50/50 border border-blue-100">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-[#0038ed]" />
+                    <span className="text-[12px] text-slate-700">
+                      Have separate day wise timings?
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowDayWiseSlots(true)}
+                    className="text-xs text-[#0038ed] font-bold hover:underline cursor-pointer px-2.5 py-1 rounded-md bg-white border border-blue-200 shadow-2xs hover:bg-blue-50 transition-colors"
+                  >
+                    + Add day wise slots
+                  </button>
+                </div>
+              ) : (
+                <div className="rounded-xl border border-blue-200/90 bg-blue-50/30 p-4 space-y-3.5">
+                  <div className="flex items-center justify-between pb-2 border-b border-blue-100/80">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-[#0038ed]" />
+                      <span className="text-xs font-bold text-slate-900">
+                        Individual Day-wise Timings
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={copyMondayToAllActiveDays}
+                        className="text-[11px] font-semibold text-[#0038ed] hover:text-[#002fcf] bg-white px-2.5 py-1 rounded-md border border-blue-200 shadow-2xs flex items-center gap-1 cursor-pointer transition-colors"
+                        title="Copy Monday's open & close hours to all active open days"
+                      >
+                        <Copy className="w-3 h-3" />
+                        <span>Copy Monday timings</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowDayWiseSlots(false)}
+                        className="text-[11px] text-slate-500 hover:text-slate-700 underline cursor-pointer"
+                      >
+                        Reset to uniform hours
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2.5">
+                    {DAYS_LIST.map((day) => {
+                      const sched = daySchedules[day] || { isOpen: true, open: openTime, close: closeTime };
+                      return (
+                        <div
+                          key={day}
+                          className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 rounded-lg border transition-all ${
+                            sched.isOpen
+                              ? 'bg-white border-slate-200 shadow-2xs'
+                              : 'bg-slate-50 border-slate-200/60 opacity-70'
+                          }`}
+                        >
+                          <label className="flex items-center gap-2.5 cursor-pointer select-none sm:w-36">
+                            <input
+                              type="checkbox"
+                              checked={sched.isOpen}
+                              onChange={(e) => handleDayScheduleChange(day, 'isOpen', e.target.checked)}
+                              className="w-4 h-4 rounded text-[#0038ed] focus:ring-[#0038ed] border-slate-300 cursor-pointer"
+                            />
+                            <span
+                              className={`text-xs font-semibold ${
+                                sched.isOpen ? 'text-slate-800' : 'text-slate-400 line-through'
+                              }`}
+                            >
+                              {day}
+                            </span>
+                            {!sched.isOpen && (
+                              <span className="text-[10px] uppercase font-bold text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded">
+                                Off-day
+                              </span>
+                            )}
+                          </label>
+
+                          {sched.isOpen ? (
+                            <div className="flex items-center gap-2 flex-1 sm:justify-end">
+                              <div className="relative">
+                                <select
+                                  value={sched.open}
+                                  onChange={(e) => handleDayScheduleChange(day, 'open', e.target.value)}
+                                  className="text-xs border border-slate-200 rounded-md px-2.5 py-1.5 bg-white text-slate-800 pr-7 appearance-none focus:outline-none focus:border-[#0038ed] cursor-pointer"
+                                >
+                                  {timeOptionsOpen.map((t) => (
+                                    <option key={t} value={t}>
+                                      {formatTime12h(t)}
+                                    </option>
+                                  ))}
+                                </select>
+                                <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-1.5 top-2 pointer-events-none" />
+                              </div>
+
+                              <span className="text-xs text-slate-400 font-medium">to</span>
+
+                              <div className="relative">
+                                <select
+                                  value={sched.close}
+                                  onChange={(e) => handleDayScheduleChange(day, 'close', e.target.value)}
+                                  className="text-xs border border-slate-200 rounded-md px-2.5 py-1.5 bg-white text-slate-800 pr-7 appearance-none focus:outline-none focus:border-[#0038ed] cursor-pointer"
+                                >
+                                  {timeOptionsClose.map((t) => (
+                                    <option key={t} value={t}>
+                                      {formatTime12h(t)}
+                                    </option>
+                                  ))}
+                                </select>
+                                <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-1.5 top-2 pointer-events-none" />
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-slate-400 italic sm:text-right">
+                              Store closed on this day
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

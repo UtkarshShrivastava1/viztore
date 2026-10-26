@@ -127,13 +127,23 @@ export const SellerLoginPage: React.FC<SellerLoginPageProps> = ({
             {/* Terms Disclaimer */}
             <p className="text-[11px] text-slate-500 text-center pt-3 leading-relaxed">
               By continuing, you agree to {branding.appName}'s{' '}
-              <span className="font-semibold text-slate-700 hover:underline cursor-pointer">
+              <a
+                href="/terms"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-[#0038ed] hover:underline cursor-pointer"
+              >
                 Terms of Use
-              </span>{' '}
-              &{' '}
-              <span className="font-semibold text-slate-700 hover:underline cursor-pointer">
+              </a>{' '}
+              &amp;{' '}
+              <a
+                href="/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-[#0038ed] hover:underline cursor-pointer"
+              >
                 Privacy Policy
-              </span>
+              </a>
             </p>
           </form>
         </div>
