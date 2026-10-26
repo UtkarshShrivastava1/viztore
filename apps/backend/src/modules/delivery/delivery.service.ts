@@ -402,10 +402,10 @@ export function createDeliveryService(
         const order = await orderFacade.getOrderById(delivery.orderId);
         if (order) {
           orderInfo = {
-            totalAmount: order.pricing?.totalAmount ?? 0,
-            paymentMethod: order.payment?.paymentMethod ?? 'CASH_ON_DELIVERY',
-            customerName: order.customer?.name ?? 'Customer',
-            customerPhone: order.customer?.phone ?? '',
+            totalAmount: order.grandTotal ?? 0,
+            paymentMethod: 'CASH_ON_DELIVERY',
+            customerName: order.shippingAddress?.fullName ?? 'Customer',
+            customerPhone: order.shippingAddress?.phone ?? '',
           };
         }
       } catch (err) {
