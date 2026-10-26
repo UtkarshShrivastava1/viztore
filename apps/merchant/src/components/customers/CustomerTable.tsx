@@ -194,6 +194,7 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [perPage, setPerPage] = useState('10');
+  const [currentPage, setCurrentPage] = useState(1);
   const [showMoreFilters, setShowMoreFilters] = useState(false);
   const [tierFilter, setTierFilter] = useState<'All' | 'VIP' | 'Regular' | 'New'>('All');
   const [hasKhataDueFilter, setHasKhataDueFilter] = useState(false);
@@ -235,6 +236,15 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
 
     return true;
   });
+
+  const pageSize = Number(perPage) || 10;
+  const totalCount = filteredCustomers.length;
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+  const validCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+  const paginatedCustomers = filteredCustomers.slice(
+    (validCurrentPage - 1) * pageSize,
+    validCurrentPage * pageSize
+  );
 
   const getInitials = (name: string) => {
     return name
@@ -493,7 +503,7 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
                   </td>
                 </tr>
               ) : (
-                filteredCustomers.map((customer) => {
+                paginatedCustomers.map((customer) => {
                   const initials = getInitials(customer.name);
                   const avatarBg = getAvatarBg(customer.id);
                   const isMenuOpen = activeMenuId === customer.id;
@@ -657,13 +667,16 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
           </table>
         </div>
 
-        {/* 3. Footer Pagination Bar matching Mockup 6.0.png */}
+        {/* 3. Footer Pagination Bar */}
         <div className="px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-500">
           <div className="flex items-center gap-3">
             <div className="relative">
               <select
                 value={perPage}
-                onChange={(e) => setPerPage(e.target.value)}
+                onChange={(e) => {
+                  setPerPage(e.target.value);
+                  setCurrentPage(1);
+                }}
                 className="pl-3 pr-7 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none shadow-2xs"
               >
                 <option value="10">10 per page</option>
@@ -672,34 +685,46 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
               </select>
               <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
-            <span>Showing 1 to {Math.min(filteredCustomers.length, 8)} of 1,248 customers</span>
+            <span>
+              Showing {totalCount > 0 ? (validCurrentPage - 1) * pageSize + 1 : 0} to{' '}
+              {Math.min(validCurrentPage * pageSize, totalCount)} of {totalCount} customers
+            </span>
           </div>
 
-          <div className="flex items-center gap-1">
-            <button className="px-2.5 py-1 rounded-xl border border-slate-200 text-slate-400 hover:bg-slate-50 disabled:opacity-40">
-              &lt;
-            </button>
-            <button className="px-3 py-1 rounded-xl bg-blue-600 text-white font-bold">1</button>
-            <button className="px-3 py-1 rounded-xl hover:bg-slate-50 text-slate-600 font-medium">
-              2
-            </button>
-            <button className="px-3 py-1 rounded-xl hover:bg-slate-50 text-slate-600 font-medium">
-              3
-            </button>
-            <button className="px-3 py-1 rounded-xl hover:bg-slate-50 text-slate-600 font-medium">
-              4
-            </button>
-            <button className="px-3 py-1 rounded-xl hover:bg-slate-50 text-slate-600 font-medium">
-              5
-            </button>
-            <span className="px-1 text-slate-400">...</span>
-            <button className="px-3 py-1 rounded-xl hover:bg-slate-50 text-slate-600 font-medium">
-              125
-            </button>
-            <button className="px-2.5 py-1 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50">
-              &gt;
-            </button>
-          </div>
+          {totalPages > 1 && (
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={validCurrentPage <= 1}
+                className="px-2.5 py-1 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                &lt;
+              </button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  type="button"
+                  onClick={() => setCurrentPage(page)}
+                  className={`px-3 py-1 rounded-xl font-bold transition-colors ${
+                    page === validCurrentPage
+                      ? 'bg-blue-600 text-white'
+                      : 'hover:bg-slate-50 text-slate-600 font-medium'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={validCurrentPage >= totalPages}
+                className="px-2.5 py-1 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                &gt;
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

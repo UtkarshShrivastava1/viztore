@@ -472,6 +472,14 @@ export const QuotesTableView: React.FC<QuotesTableViewProps> = ({
           <div className="flex items-center gap-2 shrink-0">
             <button
               type="button"
+              onClick={onCreateQuoteClick}
+              className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Create Quote</span>
+            </button>
+            <button
+              type="button"
               onClick={handleExportQuotesCsv}
               className="px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 flex items-center gap-1.5 shadow-3xs transition-colors"
             >
@@ -520,6 +528,13 @@ export const QuotesTableView: React.FC<QuotesTableViewProps> = ({
                       <p className="text-xs text-slate-400 max-w-sm">
                         Create estimates or formal quotations for customers and convert them into live invoices with 1 click.
                       </p>
+                      <button
+                        onClick={onCreateQuoteClick}
+                        className="mt-2 inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-xs transition shadow-xs"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        Create First Quote
+                      </button>
                     </div>
                   </td>
                 </tr>

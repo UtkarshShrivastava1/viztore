@@ -173,7 +173,7 @@ export const ReturnsTable: React.FC<ReturnsTableProps> = ({ onViewReturn }) => {
     }
   };
 
-  const totalRefundSum = 18760;
+  const totalRefundSum = filteredReturns.reduce((sum, r) => sum + (r.amount || 0), 0);
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-visible">
@@ -239,11 +239,11 @@ export const ReturnsTable: React.FC<ReturnsTableProps> = ({ onViewReturn }) => {
                 onChange={(e) => setDateRange(e.target.value)}
                 className="appearance-none bg-white border border-slate-200 rounded-xl pl-3 pr-8 py-1.5 text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 min-w-[125px]"
               >
+                <option value="All Time">All Time</option>
                 <option value="Last 7 Days">Last 7 Days</option>
                 <option value="Today">Today</option>
                 <option value="Yesterday">Yesterday</option>
                 <option value="Last 30 Days">Last 30 Days</option>
-                <option value="All Time">All Time</option>
               </select>
               <Calendar className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>

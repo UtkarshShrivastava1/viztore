@@ -32,7 +32,7 @@ const samplePerspectiveViews = [
   },
   {
     title: 'Fabric / Zoom',
-    image: 'https://images.unsplash.com/photo-1622445268121-ac30457e24cb?auto=format&fit=crop&w=200&q=80',
+    image: 'https://images.unsplash.com/photo-1598033129183-c4f50c736f10?auto=format&fit=crop&w=200&q=80',
   },
 ];
 

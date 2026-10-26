@@ -421,8 +421,8 @@ const seedCustomers: Customer[] = [
 ];
 
 export const useCustomerStore = create<CustomerState>((set) => ({
-  customers: [],
-  kpis: computeCustomerKPIs([]),
+  customers: seedCustomers,
+  kpis: computeCustomerKPIs(seedCustomers),
   searchQuery: '',
   statusFilter: 'All',
   typeFilter: 'All',

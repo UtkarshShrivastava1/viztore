@@ -15,6 +15,8 @@ import {
   RefreshCw,
   X,
   CheckCircle,
+  Zap,
+  Plus,
 } from 'lucide-react';
 import { useBillingStore, IInvoice, InvoiceStatus } from '../../stores/billingStore.js';
 import { InvoiceRowActionMenu } from './InvoiceRowActionMenu.js';
@@ -99,6 +101,8 @@ export const InvoicesTableView: React.FC = () => {
     isLoadingInvoices,
     recordPayment,
     cancelInvoice,
+    setActiveView,
+    openCreateInvoiceModal,
   } = useBillingStore();
 
   const [activeMenuInvoiceId, setActiveMenuInvoiceId] = useState<string | null>(null);
@@ -477,6 +481,26 @@ export const InvoicesTableView: React.FC = () => {
               Clear All
             </button>
           </div>
+
+          {/* Direct POS and Invoice Creation Shortcut Actions */}
+          <div className="flex items-center gap-2 pt-3 sm:pt-4 ml-auto">
+            <button
+              type="button"
+              onClick={() => setActiveView('pos_counter')}
+              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
+            >
+              <Zap className="w-3.5 h-3.5 fill-current text-emerald-200" />
+              <span>Counter POS</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => openCreateInvoiceModal()}
+              className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>+ Create Invoice</span>
+            </button>
+          </div>
         </div>
 
         {/* 7 Status Tabs */}
@@ -536,6 +560,24 @@ export const InvoicesTableView: React.FC = () => {
                       <p className="text-xs text-slate-400 max-w-sm">
                         Create your first counter sale bill or tax invoice to begin tracking retail payments and inventory.
                       </p>
+                      <div className="flex items-center gap-3 mt-3">
+                        <button
+                          type="button"
+                          onClick={() => setActiveView('pos_counter')}
+                          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
+                        >
+                          <Zap className="w-3.5 h-3.5 fill-current text-emerald-200" />
+                          <span>Launch Counter POS</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openCreateInvoiceModal()}
+                          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                        >
+                          <Plus className="w-4 h-4" />
+                          <span>Create Invoice</span>
+                        </button>
+                      </div>
                     </div>
                   </td>
                 </tr>
