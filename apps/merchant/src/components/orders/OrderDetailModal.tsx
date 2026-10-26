@@ -34,6 +34,9 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
   if (!isOpen || !order) return null;
 
   const getWebUrl = () => {
+    if (import.meta.env.VITE_STOREFRONT_URL) {
+      return import.meta.env.VITE_STOREFRONT_URL;
+    }
     if (typeof window !== 'undefined') {
       const host = window.location.hostname;
       if (host === 'localhost' || host === '127.0.0.1') {
