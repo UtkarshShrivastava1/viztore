@@ -8,7 +8,8 @@ import { ProductGridSkeleton } from '@/components/ui/Skeleton';
 import { fetchStoreBySlug } from '@/lib/api/stores';
 import { useStoreProducts } from '@/hooks/useStoreProducts';
 import { StoreHeroCard } from '@/features/stores/StoreHeroCard';
-import { Store, Search, ChevronRight, X } from 'lucide-react';
+import { Store, Search, ChevronRight, X, ShoppingBag, ArrowRight, SlidersHorizontal } from 'lucide-react';
+import { useCartStore } from '@/stores/cart.store';
 
 interface StoreStorefrontClientProps {
   slug: string;
@@ -19,7 +20,12 @@ export function StoreStorefrontClient({ slug }: StoreStorefrontClientProps) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [brandSearch, setBrandSearch] = useState('');
+  const [storeSearch, setStoreSearch] = useState('');
+  const [sortOption, setSortOption] = useState<'featured' | 'price_asc' | 'price_desc' | 'discount' | 'newest'>('featured');
   const [priceLimit, setPriceLimit] = useState<number | null>(null);
+
+  const cartItems = useCartStore((state) => state.items);
+  const openCart = useCartStore((state) => state.openCart);
 
   const { data: store, isLoading: storeLoading } = useQuery({
     queryKey: ['store', slug],
@@ -96,9 +102,21 @@ export function StoreStorefrontClient({ slug }: StoreStorefrontClientProps) {
 
   const currentPriceLimit = priceLimit ?? maxPrice;
 
-  // 4. Reactive product filtering based on active sidebar selections & tab
+  // 4. Reactive product filtering based on active sidebar selections, store search & tab
   const filteredProducts = useMemo(() => {
     let result = [...rawProducts];
+
+    // Filter by in-store live search query
+    if (storeSearch.trim()) {
+      const q = storeSearch.toLowerCase().trim();
+      result = result.filter((p) => {
+        const nameMatch = p.name?.toLowerCase().includes(q);
+        const catMatch = p.category?.toLowerCase().includes(q);
+        const brandMatch = p.brand?.toLowerCase().includes(q);
+        const descMatch = p.description?.toLowerCase().includes(q);
+        return Boolean(nameMatch || catMatch || brandMatch || descMatch);
+      });
+    }
 
     // Filter by category
     if (selectedCategory) {
@@ -124,28 +142,64 @@ export function StoreStorefrontClient({ slug }: StoreStorefrontClientProps) {
     if (activeTab === 'New Arrivals') {
       result.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
     } else if (activeTab === 'Best Deals') {
+      result = result.filter((p) => (p.baseMrp && p.baseMrp > p.basePrice) || (p.maxDiscount && p.maxDiscount > 0));
       result.sort((a, b) => (b.maxDiscount || 0) - (a.maxDiscount || 0) || (a.basePrice || 0) - (b.basePrice || 0));
     } else if (activeTab === 'Top Picks') {
-      result.sort((a, b) => (b.maxDiscount || 0) - (a.maxDiscount || 0) || (b.basePrice || 0) - (a.basePrice || 0));
+      result.sort((a, b) => (b.rating || 0) - (a.rating || 0) || (b.basePrice || 0) - (a.basePrice || 0));
+    }
+
+    // Apply explicit sort option
+    if (sortOption === 'price_asc') {
+      result.sort((a, b) => (a.basePrice || 0) - (b.basePrice || 0));
+    } else if (sortOption === 'price_desc') {
+      result.sort((a, b) => (b.basePrice || 0) - (a.basePrice || 0));
+    } else if (sortOption === 'discount') {
+      const getDisc = (p: typeof rawProducts[0]) => (p.baseMrp && p.baseMrp > p.basePrice ? ((p.baseMrp - p.basePrice) / p.baseMrp) * 100 : 0);
+      result.sort((a, b) => getDisc(b) - getDisc(a));
+    } else if (sortOption === 'newest') {
+      result.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
     }
 
     return result;
-  }, [rawProducts, selectedCategory, selectedBrands, priceLimit, activeTab]);
+  }, [rawProducts, storeSearch, selectedCategory, selectedBrands, priceLimit, activeTab, sortOption]);
 
   const filteredBrands = useMemo(() => {
     if (!brandSearch.trim()) return brandFacets;
     return brandFacets.filter((b) => b.name.toLowerCase().includes(brandSearch.toLowerCase().trim()));
   }, [brandFacets, brandSearch]);
 
+  const storeCartItems = useMemo(() => {
+    if (!store) return [];
+    return cartItems.filter(
+      (item) => item.storeId === store._id || item.storeName === store.name,
+    );
+  }, [cartItems, store]);
+
+  const storeCartCount = useMemo(
+    () => storeCartItems.reduce((acc, item) => acc + item.quantity, 0),
+    [storeCartItems],
+  );
+
+  const storeCartSubtotal = useMemo(
+    () => storeCartItems.reduce((acc, item) => acc + item.unitPrice * item.quantity, 0),
+    [storeCartItems],
+  );
+
   const clearAllFilters = () => {
     setSelectedCategory(null);
     setSelectedBrands([]);
     setPriceLimit(null);
     setBrandSearch('');
+    setStoreSearch('');
+    setSortOption('featured');
   };
 
   const activeFilterCount =
-    (selectedCategory ? 1 : 0) + selectedBrands.length + (priceLimit !== null ? 1 : 0);
+    (selectedCategory ? 1 : 0) +
+    selectedBrands.length +
+    (priceLimit !== null ? 1 : 0) +
+    (storeSearch ? 1 : 0) +
+    (sortOption !== 'featured' ? 1 : 0);
 
   if (storeLoading) {
     return (
@@ -357,6 +411,28 @@ export function StoreStorefrontClient({ slug }: StoreStorefrontClientProps) {
 
           {/* Product Grid Area */}
           <div className="flex-1">
+            {/* In-Store Live Search Bar (Amazon / Flipkart Storefront Standard) */}
+            <div className="relative mb-5">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400" />
+              <input
+                type="text"
+                value={storeSearch}
+                onChange={(e) => setStoreSearch(e.target.value)}
+                placeholder={`Search products in ${store.name} (e.g. shirt, jacket, sneaker)...`}
+                className="w-full h-11 pl-10 pr-10 rounded-xl border border-surface-200 bg-white text-[13px] font-medium text-[#192168] placeholder:text-surface-400 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 shadow-2xs transition-all"
+              />
+              {storeSearch && (
+                <button
+                  type="button"
+                  onClick={() => setStoreSearch('')}
+                  title="Clear search"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md text-surface-400 hover:text-surface-700 hover:bg-surface-100 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
             {/* Tabs & Sort Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-surface-200 pb-px mb-6">
               <div className="flex overflow-x-auto hide-scrollbar gap-8">
@@ -379,8 +455,27 @@ export function StoreStorefrontClient({ slug }: StoreStorefrontClientProps) {
                   </button>
                 ))}
               </div>
-              <div className="flex items-center gap-2 text-[13px] font-bold text-[#192168] pb-4">
-                <span>Showing {filteredProducts.length} of {rawProducts.length} items</span>
+
+              {/* Sort Selector & Product Count */}
+              <div className="flex items-center gap-3 pb-3 sm:pb-4 justify-between sm:justify-end">
+                <div className="flex items-center gap-1.5 bg-white border border-surface-200 rounded-xl px-3 py-1.5 shadow-2xs">
+                  <SlidersHorizontal className="w-3.5 h-3.5 text-surface-400" />
+                  <span className="text-[11px] font-bold text-surface-500 whitespace-nowrap">Sort:</span>
+                  <select
+                    value={sortOption}
+                    onChange={(e) => setSortOption(e.target.value as 'featured' | 'price_asc' | 'price_desc' | 'discount' | 'newest')}
+                    className="text-[12px] font-extrabold text-[#192168] bg-transparent focus:outline-none cursor-pointer"
+                  >
+                    <option value="featured">Featured / Best Match</option>
+                    <option value="price_asc">Price: Low to High</option>
+                    <option value="price_desc">Price: High to Low</option>
+                    <option value="discount">Biggest Discount</option>
+                    <option value="newest">New Arrivals</option>
+                  </select>
+                </div>
+                <div className="text-[12px] font-bold text-[#192168]">
+                  <span>{filteredProducts.length} items</span>
+                </div>
               </div>
             </div>
 
@@ -388,6 +483,14 @@ export function StoreStorefrontClient({ slug }: StoreStorefrontClientProps) {
             {activeFilterCount > 0 && (
               <div className="flex items-center gap-2 flex-wrap mb-6">
                 <span className="text-xs font-bold text-slate-500">Active Filters:</span>
+                {storeSearch && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold border border-blue-200">
+                    Search: "{storeSearch}"
+                    <button onClick={() => setStoreSearch('')} className="hover:text-blue-900">
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </span>
+                )}
                 {selectedCategory && (
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold border border-blue-200">
                     Category: {selectedCategory}
@@ -438,17 +541,53 @@ export function StoreStorefrontClient({ slug }: StoreStorefrontClientProps) {
             ) : (
               <div className="py-16 text-center bg-white border border-surface-200 rounded-[24px]">
                 <Store className="w-12 h-12 mx-auto text-surface-300 mb-4" />
-                <p className="text-[15px] text-surface-600 font-extrabold">No products match your active filters.</p>
+                <p className="text-[15px] text-surface-600 font-extrabold">No products match your active search or filters.</p>
+                <p className="text-xs text-surface-400 mt-1 max-w-sm mx-auto">
+                  Try checking for spelling errors or clearing your search term to see all store products.
+                </p>
                 <button
                   onClick={clearAllFilters}
-                  className="mt-4 px-4 py-2 bg-blue-50 text-blue-600 text-xs font-bold rounded-xl hover:bg-blue-100 transition-colors"
+                  className="mt-4 px-5 py-2.5 bg-blue-600 text-white text-xs font-bold rounded-xl hover:bg-blue-700 transition-colors shadow-sm"
                 >
-                  Clear all filters
+                  Clear all filters & search
                 </button>
               </div>
             )}
           </div>
         </div>
+
+        {/* Floating Bottom Cart Bar (Blinkit / Zepto / Amazon Fresh Standard) */}
+        {storeCartCount > 0 && (
+          <div className="fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 w-[94%] max-w-xl bg-slate-900/95 backdrop-blur-md text-white rounded-2xl p-3 sm:p-3.5 shadow-2xl border border-slate-700/60 flex items-center justify-between animate-in slide-in-from-bottom-5 duration-200">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center relative shrink-0 shadow-md">
+                <ShoppingBag className="w-5 h-5" />
+                <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-emerald-500 text-white text-[10px] font-black flex items-center justify-center border-2 border-slate-900">
+                  {storeCartCount}
+                </span>
+              </div>
+              <div className="min-w-0">
+                <div className="text-[11px] font-extrabold text-blue-300 flex items-center gap-1.5 truncate">
+                  <span className="truncate">{store.name}</span>
+                  <span className="w-1 h-1 rounded-full bg-blue-400 shrink-0" />
+                  <span className="text-emerald-400 font-bold shrink-0">{storeCartCount} item{storeCartCount > 1 ? 's' : ''}</span>
+                </div>
+                <div className="text-sm sm:text-base font-black text-white">
+                  ₹{storeCartSubtotal.toLocaleString('en-IN')}
+                  <span className="text-[11px] font-medium text-slate-400 ml-1.5 hidden sm:inline">(plus taxes/delivery)</span>
+                </div>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={openCart}
+              className="px-4 py-2.5 bg-[#1668F6] hover:bg-blue-600 active:scale-95 text-white text-xs font-black rounded-xl transition-all shadow-md flex items-center gap-2 shrink-0 cursor-pointer"
+            >
+              <span>View Cart</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        )}
       </main>
     </div>
   );

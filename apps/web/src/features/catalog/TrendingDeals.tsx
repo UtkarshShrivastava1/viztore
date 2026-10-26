@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Heart, Store, ShoppingCart, Zap, Check } from 'lucide-react';
+import { Heart, Store, Zap, Check, Plus, Minus } from 'lucide-react';
 import { useFeaturedProducts } from '@/hooks/useFeaturedProducts';
 import { useProducts } from '@/hooks/useProducts';
 import { useCartStore } from '@/stores/cart.store';
@@ -22,8 +22,10 @@ interface ProductDealItem {
 export function TrendingDeals() {
   const { data: featuredProducts } = useFeaturedProducts(8);
   const { data: allProductsResponse } = useProducts({ limit: 12 });
+  const items = useCartStore((state) => state.items);
   const addItem = useCartStore((state) => state.addItem);
-  const openCart = useCartStore((state) => state.openCart);
+  const updateQuantity = useCartStore((state) => state.updateQuantity);
+  const removeItem = useCartStore((state) => state.removeItem);
   const [addedIds, setAddedIds] = useState<Record<string, boolean>>({});
   const [wishlistedIds, setWishlistedIds] = useState<Record<string, boolean>>({});
 
@@ -45,7 +47,22 @@ export function TrendingDeals() {
     setTimeout(() => {
       setAddedIds((prev) => ({ ...prev, [deal.id]: false }));
     }, 1500);
-    openCart();
+  };
+
+  const handleIncrement = (e: React.MouseEvent, dealId: string, currentQty: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    updateQuantity(dealId, currentQty + 1);
+  };
+
+  const handleDecrement = (e: React.MouseEvent, dealId: string, currentQty: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (currentQty <= 1) {
+      removeItem(dealId);
+    } else {
+      updateQuantity(dealId, currentQty - 1);
+    }
   };
 
   const toggleWishlist = (e: React.MouseEvent, id: string) => {
@@ -102,6 +119,8 @@ export function TrendingDeals() {
         {dealsToRender.map((deal) => {
           const isAdded = !!addedIds[deal.id];
           const isWishlisted = !!wishlistedIds[deal.id];
+          const cartItem = items.find((item) => item.productId === deal.id);
+          const quantity = cartItem?.quantity || 0;
 
           return (
             <div
@@ -152,30 +171,65 @@ export function TrendingDeals() {
                 )}
               </div>
 
-
-              {/* Footer Row: Store & Cart Button */}
+              {/* Footer Row: Store & Cart Stepper Button */}
               <div className="flex items-center justify-between pt-1 border-t border-gray-50 mt-auto">
-                <div className="flex items-center gap-1 text-[11px] md:text-xs text-gray-500 font-medium truncate max-w-[120px]">
+                <div className="flex items-center gap-1 text-[11px] md:text-xs text-gray-500 font-medium truncate max-w-[100px] sm:max-w-[120px]">
                   <Store className="w-3.5 h-3.5 text-[#1668F6] shrink-0" />
                   <span className="truncate">{deal.storeName}</span>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={(e) => handleAddToCart(e, deal)}
-                  aria-label="Add to cart"
-                  className={`p-2 rounded-xl border transition-all active:scale-95 flex items-center justify-center cursor-pointer ${
-                    isAdded
-                      ? 'bg-emerald-500 text-white border-emerald-500'
-                      : 'border-blue-200 text-[#1668F6] hover:bg-blue-50 hover:border-blue-300'
-                  }`}
-                >
-                  {isAdded ? (
-                    <Check className="w-4 h-4 stroke-[2.5]" />
-                  ) : (
-                    <ShoppingCart className="w-4 h-4" />
-                  )}
-                </button>
+                {quantity > 0 ? (
+                  <div
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                    className="flex items-center bg-[#1668F6] text-white rounded-xl px-1 py-0.5 shadow-sm"
+                  >
+                    <button
+                      type="button"
+                      onClick={(e) => handleDecrement(e, deal.id, quantity)}
+                      className="w-6 h-6 flex items-center justify-center hover:bg-white/20 active:bg-white/30 rounded transition-colors"
+                      aria-label="Decrease quantity"
+                    >
+                      <Minus className="w-3.5 h-3.5 stroke-[2.5]" />
+                    </button>
+                    <span className="w-6 text-center text-xs font-black tracking-tight select-none">
+                      {quantity}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={(e) => handleIncrement(e, deal.id, quantity)}
+                      className="w-6 h-6 flex items-center justify-center hover:bg-white/20 active:bg-white/30 rounded transition-colors"
+                      aria-label="Increase quantity"
+                    >
+                      <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={(e) => handleAddToCart(e, deal)}
+                    aria-label="Add to cart"
+                    className={`px-3 py-1.5 rounded-xl border font-bold text-xs transition-all active:scale-95 flex items-center gap-1 cursor-pointer ${
+                      isAdded
+                        ? 'bg-emerald-500 text-white border-emerald-500'
+                        : 'border-blue-200 text-[#1668F6] hover:bg-blue-50 hover:border-blue-300'
+                    }`}
+                  >
+                    {isAdded ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                        <span>Added</span>
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                        <span>Add</span>
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
             </div>
           );
