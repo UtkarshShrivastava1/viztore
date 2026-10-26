@@ -347,7 +347,13 @@ Every online order placed through `apps/web` generates an authoritative, complia
   - Merged `feature/abhay-procurementvendors-hub` into `main`: Vendors Management Directory Tab (`8.10.png`), 4-Tab Add/Edit Vendor Drawer (`8.12.png`), Part-A/Part-B E-Way Bill Generation Drawer (`8.13.png`), real drag-and-drop CSV Import dialogs (`Import Purchases`, `Import Expenses`, `Import Vendors`), and Support Ticket Creator (`15.1.png`).
   - Reconciled offline Zustand state with live Express/MongoDB billing and expense backend APIs (`createVendorRecord`, `createEWayBillRecord`, `fetchExpenseData`).
   - 100% white-label compliant, zero brand leakage.
-  - **182/182 automated unit & integration tests passing across 27 test files**; full monorepo clean build across all packages.
+  - **185/185 automated unit & integration tests passing across 27 test files**; full monorepo clean build across all packages.
+- [x] **Rider Delivery Run & OTP State Machine Hardening (Commit `b6305f8`) 🟢**:
+  - **OTP Verification Bug Fixed**: Resolved order state machine transition `PACKED -> DELIVERED` and `CONFIRMED -> DELIVERED` on OTP verification; updated repository query resolver to handle both MongoDB `_id` and order numbers interchangeably (`buildOrderQuery` and `buildDeliveryQuery`).
+  - **Dynamic Delivery Run Details Alignment**: Fixed runner view falling back to placeholder strings (`Store Local Depot`, `Customer Delivery Address`) by hydrating real store name, store address, phone, and customer dropoff address dynamically from `findStoreById` and `order.shippingAddress`.
+  - **Payment & Cash Collection Accuracy**: Fixed hardcoded `CASH_ON_DELIVERY` flag in `delivery.service.ts`; runner now accurately displays `✅ Prepaid Online (Do not collect cash)` for online/prepaid orders and only prompts cash collection when COD is explicitly chosen.
+  - **Broadcast Text Deduplication**: Deduplicated locality/city joining in merchant fleet broadcasts (preventing redundant `Local City, Local City`).
+  - **Test Suite**: **185/185 unit & simulation tests passing across 27 test files**; clean TypeScript build across backend, merchant, and web.
 
 
 
