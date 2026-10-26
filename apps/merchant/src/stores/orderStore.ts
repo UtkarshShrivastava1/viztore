@@ -193,14 +193,37 @@ export function mapApiOrderToMerchantRecord(apiOrder: any): MerchantOrderRecord 
       phone: apiOrder.shippingAddress?.phone || '+91 98765 43210',
       avatarInitials: initials || 'CS',
     },
-    deliveryAddress: {
-      street,
-      locality: resolvedLocality,
-      city: resolvedCity,
-      state: apiOrder.shippingAddress?.state || 'Chhattisgarh',
-      pincode: apiOrder.shippingAddress?.postalCode || '',
-      fullText: `${street}, ${resolvedCity}, ${apiOrder.shippingAddress?.state || ''} - ${apiOrder.shippingAddress?.postalCode || ''}`,
-    },
+    deliveryAddress: (() => {
+      const state = apiOrder.shippingAddress?.state || 'Chhattisgarh';
+      const pincode = apiOrder.shippingAddress?.postalCode || '';
+      const streetLower = street.toLowerCase();
+      const cityInStreet = resolvedCity && streetLower.includes(resolvedCity.toLowerCase());
+      const pinInStreet = pincode && street.includes(pincode);
+
+      let fullText = street;
+      if (!cityInStreet || !pinInStreet) {
+        const parts: string[] = [];
+        if (!cityInStreet) parts.push(resolvedCity);
+        if (!streetLower.includes(state.toLowerCase())) parts.push(state);
+        const suffix = parts.join(', ');
+        if (suffix && pincode && !pinInStreet) {
+          fullText = `${street}, ${suffix} - ${pincode}`;
+        } else if (suffix) {
+          fullText = `${street}, ${suffix}`;
+        } else if (pincode && !pinInStreet) {
+          fullText = `${street} - ${pincode}`;
+        }
+      }
+
+      return {
+        street,
+        locality: resolvedLocality,
+        city: resolvedCity,
+        state,
+        pincode,
+        fullText,
+      };
+    })(),
     items,
     itemsSummary: {
       count: items.reduce((acc: number, curr: OrderItemDetail) => acc + curr.quantity, 0) || 1,

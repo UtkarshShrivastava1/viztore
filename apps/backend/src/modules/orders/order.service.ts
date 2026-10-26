@@ -18,6 +18,7 @@ import { withTransaction } from '../../shared/database/transaction.js';
 import { appendOutboxEvent, processPendingOutboxEvents } from '../../shared/database/outbox.service.js';
 import type { IStoreFacade } from '../stores/index.js';
 import type { ICatalogFacade } from '../catalog/index.js';
+import { authService } from '../auth/index.js';
 
 const allowedTransitions: Record<OrderStatus, OrderStatus[]> = {
   [OrderStatus.PENDING]: [OrderStatus.PACKED, OrderStatus.CONFIRMED, OrderStatus.CANCELLED],
@@ -180,6 +181,49 @@ export function createOrderService(
         deliveryOtp: order.deliveryOtp,
         correlationId,
       });
+    }
+ 
+    // 8. Auto-sync shipping address to customer profile if authenticated and not yet saved
+    if (userId && normalizedShippingAddress?.street) {
+      authService
+        .getAddresses(userId)
+        .then(async (existingAddresses) => {
+          const streetLower = normalizedShippingAddress.street.trim().toLowerCase();
+          const alreadyExists = existingAddresses.some(
+            (a) => a.street?.trim().toLowerCase() === streetLower,
+          );
+          if (!alreadyExists) {
+            const rawPhone = normalizedShippingAddress.phone
+              ? normalizedShippingAddress.phone.replace(/\D/g, '')
+              : '';
+            const validPhone =
+              rawPhone.length === 10
+                ? rawPhone
+                : rawPhone.length > 10
+                  ? rawPhone.slice(-10)
+                  : '9876543210';
+            const validPin =
+              normalizedShippingAddress.pincode && /^\d{6}$/.test(normalizedShippingAddress.pincode)
+                ? normalizedShippingAddress.pincode
+                : '490006';
+
+            await authService.addAddress(userId, {
+              label: 'Home',
+              recipientName: normalizedShippingAddress.recipientName || 'Customer',
+              phone: validPhone,
+              street: normalizedShippingAddress.street,
+              city: normalizedShippingAddress.city || 'Bhilai',
+              state: normalizedShippingAddress.state || 'Chhattisgarh',
+              pincode: validPin,
+              landmark: normalizedShippingAddress.landmark,
+              isDefault: existingAddresses.length === 0,
+            });
+            logger.info(`Auto-synced order shipping address to user profile for user ${userId}`);
+          }
+        })
+        .catch((err) => {
+          logger.warn(`Non-blocking: Failed to auto-sync shipping address to user profile: ${err}`);
+        });
     }
 
     return order;

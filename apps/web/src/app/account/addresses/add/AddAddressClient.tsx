@@ -21,6 +21,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
+import { useLocationStore } from '@/stores/location.store';
 import { AccountSidebar } from '@/components/account/AccountSidebar';
 import { userApi } from '@/lib/api/user.js';
 import type { CreateAddressDto } from '@repo/shared-types';
@@ -28,6 +29,7 @@ import type { CreateAddressDto } from '@repo/shared-types';
 export function AddAddressClient() {
   const router = useRouter();
   const { user, isAuthenticated, openAuthModal } = useAuthStore();
+  const { address: locationAddress, city: locationCity, locality: locationLocality, pincode: locationPincode, isSet: isLocationSet } = useLocationStore();
 
   const [addressType, setAddressType] = useState<'home' | 'work' | 'other'>('home');
   const [customLabel, setCustomLabel] = useState('');
@@ -49,6 +51,16 @@ export function AddAddressClient() {
   const [isLocating, setIsLocating] = useState(false);
 
   const handleUseCurrentLocation = () => {
+    // If location is already detected and available in location store, use it instantly
+    if (isLocationSet && locationAddress) {
+      setStreetAddress(locationAddress);
+      if (locationLocality) setLocality(locationLocality);
+      if (locationCity) setCity(locationCity);
+      if (locationPincode) setPincode(locationPincode);
+      setState('Chhattisgarh');
+      return;
+    }
+
     if (!navigator.geolocation) {
       alert('Geolocation is not supported by your browser.');
       return;

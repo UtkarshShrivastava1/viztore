@@ -49,7 +49,7 @@ export const addAddress: RequestHandler = catchAsync(async (req: Request, res: R
     throw AppError.unauthorized();
   }
   const updatedUser = await authService.addAddress(req.user.sub, req.body);
-  return ApiResponse.created(res, updatedUser, 'Address added successfully');
+  return ApiResponse.created(res, updatedUser.addresses, 'Address added successfully');
 });
 
 export const updateAddress: RequestHandler = catchAsync(async (req: Request, res: Response) => {
@@ -61,7 +61,7 @@ export const updateAddress: RequestHandler = catchAsync(async (req: Request, res
     throw AppError.badRequest('Address ID is required');
   }
   const updatedUser = await authService.updateAddress(req.user.sub, addressId, req.body);
-  return ApiResponse.success(res, updatedUser, 'Address updated successfully');
+  return ApiResponse.success(res, updatedUser.addresses, 'Address updated successfully');
 });
 
 export const setDefaultAddress: RequestHandler = catchAsync(async (req: Request, res: Response) => {
@@ -73,7 +73,7 @@ export const setDefaultAddress: RequestHandler = catchAsync(async (req: Request,
     throw AppError.badRequest('Address ID is required');
   }
   const updatedUser = await authService.setDefaultAddress(req.user.sub, addressId);
-  return ApiResponse.success(res, updatedUser, 'Default address set successfully');
+  return ApiResponse.success(res, updatedUser.addresses, 'Default address set successfully');
 });
 
 export const deleteAddress: RequestHandler = catchAsync(async (req: Request, res: Response) => {
@@ -85,7 +85,7 @@ export const deleteAddress: RequestHandler = catchAsync(async (req: Request, res
     throw AppError.badRequest('Address ID is required');
   }
   const updatedUser = await authService.deleteAddress(req.user.sub, addressId);
-  return ApiResponse.success(res, updatedUser, 'Address removed successfully');
+  return ApiResponse.success(res, updatedUser.addresses, 'Address removed successfully');
 });
 
 export const logout: RequestHandler = catchAsync(async (req: Request, res: Response) => {

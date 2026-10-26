@@ -27,8 +27,6 @@ interface LocationState {
   clearLocation: () => void;
 }
 
-const DEFAULT_ADDRESS = 'Sector 6, Central Avenue, Near Civic Centre, Bhilai, Chhattisgarh - 490006';
-
 /**
  * Customer location store — persisted to localStorage.
  * Defaults to primary launch hub in Bhilai, Chhattisgarh.
@@ -38,11 +36,11 @@ export const useLocationStore = create<LocationState>()(
     (set) => ({
       lng: 81.3800,
       lat: 21.1938,
-      address: DEFAULT_ADDRESS,
-      locality: 'Sector 6',
+      address: '',
+      locality: 'Bhilai',
       city: 'Bhilai',
       pincode: '490006',
-      formattedAddress: DEFAULT_ADDRESS,
+      formattedAddress: '',
       isSet: false,
 
       setLocation: (lng, lat, address, details) => {
@@ -67,11 +65,11 @@ export const useLocationStore = create<LocationState>()(
         set({
           lng: 81.3800,
           lat: 21.1938,
-          address: DEFAULT_ADDRESS,
-          locality: 'Sector 6',
+          address: '',
+          locality: 'Bhilai',
           city: 'Bhilai',
           pincode: '490006',
-          formattedAddress: DEFAULT_ADDRESS,
+          formattedAddress: '',
           isSet: false,
         }),
     }),
