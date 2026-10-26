@@ -152,3 +152,53 @@ export interface DeliveryResponseDto {
   createdAt: string;
   updatedAt: string;
 }
+
+// ── Pilot Rider Roster & Run Details ───────────────────────────────────
+
+export interface PilotRider {
+  id: string;
+  name: string;
+  phone: string;
+  zone: string;
+  vehicleType?: VehicleType;
+}
+
+export const PILOT_RIDERS: PilotRider[] = [
+  { id: 'RDR-001', name: 'Raju Sharma', phone: '9876543210', zone: 'Nehru Nagar / Smriti Nagar', vehicleType: VehicleType.MOTORCYCLE },
+  { id: 'RDR-002', name: 'Vikram Patel', phone: '9876543211', zone: 'Supela / Vaishali Nagar', vehicleType: VehicleType.MOTORCYCLE },
+  { id: 'RDR-003', name: 'Amit Verma', phone: '9876543212', zone: 'Durg Station / Market', vehicleType: VehicleType.MOTORCYCLE },
+  { id: 'RDR-004', name: 'Sunil Sahu', phone: '9876543213', zone: 'Risali / Bhilai-3', vehicleType: VehicleType.MOTORCYCLE },
+  { id: 'RDR-005', name: 'Pankaj Kumar', phone: '9876543214', zone: 'Sector 6 / Civic Center', vehicleType: VehicleType.MOTORCYCLE },
+];
+
+export interface RiderRunDetailsDto {
+  orderId: string;
+  orderNumber: string;
+  status: DeliveryStatus;
+  distanceKm: number;
+  estimatedMinutes: number;
+  estimatedPayout: number;
+  pickupArea: string;
+  dropoffArea: string;
+  paymentMethod: string;
+  totalAmount: number;
+  isClaimed: boolean;
+  isClaimedByCaller: boolean;
+  claimedByRider?: {
+    id: string;
+    name: string;
+  };
+  pickupDetails?: {
+    storeName: string;
+    storePhone: string;
+    pickupAddress: string;
+    navigationUrl: string;
+    pickupCode: string;
+  };
+  dropoffDetails?: {
+    customerName: string;
+    customerPhone: string;
+    dropoffAddress: string;
+    navigationUrl: string;
+  };
+}

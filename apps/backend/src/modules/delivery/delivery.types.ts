@@ -12,9 +12,12 @@ import {
   type UpdateDeliveryStatusDto,
   type DeliveryResponseDto,
   type DeliveryTimelineEntry,
+  type PilotRider,
+  PILOT_RIDERS,
+  type RiderRunDetailsDto,
 } from '@repo/shared-types';
 
-export { DeliveryStatus, VehicleType };
+export { DeliveryStatus, VehicleType, PILOT_RIDERS };
 export type {
   RiderInfoDto,
   AssignRiderDto,
@@ -26,6 +29,8 @@ export type {
   UpdateDeliveryStatusDto,
   DeliveryResponseDto,
   DeliveryTimelineEntry,
+  PilotRider,
+  RiderRunDetailsDto,
 };
 
 export interface IDeliveryDocument extends Document {
@@ -101,6 +106,8 @@ export interface IDeliveryService {
   updateStatus(orderId: string, dto: UpdateDeliveryStatusDto, actorRole?: string): Promise<DeliveryResponseDto | null>;
   verifyOtpAndComplete(orderId: string, otp: string): Promise<DeliveryResponseDto | null>;
   calculateEta(pickup: [number, number], dropoff: [number, number]): { distanceKm: number; estimatedMinutes: number };
+  getPilotRoster(): PilotRider[];
+  getRunDetails(orderId: string, callerRiderId?: string): Promise<RiderRunDetailsDto | null>;
 }
 
 export interface IDeliveryFacade {

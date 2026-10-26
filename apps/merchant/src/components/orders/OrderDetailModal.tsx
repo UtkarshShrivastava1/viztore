@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   X,
   Printer,
@@ -10,8 +10,11 @@ import {
   CreditCard,
   Key,
   MessageCircle,
+  Copy,
+  Check,
 } from 'lucide-react';
 import { MerchantOrderRecord } from '../../stores/orderStore.js';
+import { branding } from '../../lib/branding.js';
 
 interface OrderDetailModalProps {
   order: MerchantOrderRecord | null;
@@ -26,31 +29,55 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
   onClose,
   onPrint,
 }) => {
+  const [copied, setCopied] = useState(false);
+
   if (!isOpen || !order) return null;
 
-  const handleWhatsAppDispatch = () => {
-    const itemsText = order.items
-      .map((item, idx) => `${idx + 1}. ${item.name} (x${item.quantity}) - ₹${item.price * item.quantity}`)
-      .join('\n');
+  const getWebUrl = () => {
+    if (typeof window !== 'undefined') {
+      const host = window.location.hostname;
+      if (host === 'localhost' || host === '127.0.0.1') {
+        return 'http://localhost:3000';
+      }
+      return `${window.location.protocol}//${host.replace('partner.', 'shop.').replace('merchant.', 'web.')}`;
+    }
+    return 'https://viztore-web.vercel.app';
+  };
 
-    const text = 
-`🚚 *DELIVERY DISPATCH MANIFEST — ${order.orderNumber}*
-━━━━━━━━━━━━━━━━━━━━━━
-🏪 *Store Pickup:* Merchant Store Partner
-📍 *Drop Address:* ${order.deliveryAddress.fullText || `${order.deliveryAddress.street}, ${order.deliveryAddress.city}`}
-👤 *Customer:* ${order.customer.name}
-📞 *Customer Phone:* ${order.customer.phone}
+  const getRunUrl = () => {
+    return `${getWebUrl()}/rider/run/${order.id || order.orderNumber}`;
+  };
 
-📦 *Items to Deliver:*
-${itemsText}
+  const buildFleetBroadcastText = () => {
+    const dropArea = order.deliveryAddress?.city || order.deliveryAddress?.street || 'Local Customer Area';
+    const isCod = order.payment?.paymentMethod === 'Cash on Delivery';
+    const paymentText = isCod
+      ? `Cash on Delivery (₹${order.pricing.totalAmount.toLocaleString('en-IN')})`
+      : 'Prepaid Online (₹0 to collect)';
 
-💰 *Bill Amount:* ₹${order.pricing.totalAmount.toLocaleString('en-IN')} (${order.payment.paymentMethod})
-🔑 *Handshake OTP (Collect from Customer):* *${order.otp}*
-━━━━━━━━━━━━━━━━━━━━━━
-_Please collect package from store and verify 4-digit OTP upon customer handover._`;
+    return [
+      `🛵 *NEW DELIVERY RUN — ${order.orderNumber}*`,
+      `━━━━━━━━━━━━━━━━━━━━━━`,
+      `🏪 *Pickup Store:* Store Partner`,
+      `🏠 *Drop Area:* ${dropArea}`,
+      `💰 *Rider Payout:* ₹40 (${paymentText})`,
+      `━━━━━━━━━━━━━━━━━━━━━━`,
+      `👉 *Tap to Accept & Start Pickup:*`,
+      `${getRunUrl()}`,
+    ].join('\n');
+  };
 
+  const handleBroadcastToFleet = () => {
+    const text = buildFleetBroadcastText();
     const waUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
     window.open(waUrl, '_blank');
+  };
+
+  const handleCopyRunLink = () => {
+    const text = buildFleetBroadcastText();
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
   };
 
   const handlePrint = () => {
@@ -85,12 +112,26 @@ _Please collect package from store and verify 4-digit OTP upon customer handover
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={handleWhatsAppDispatch}
+              onClick={handleBroadcastToFleet}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#25D366] hover:bg-[#1EBE5D] text-white text-xs font-bold transition-all shadow-sm"
-              title="Send Delivery Manifest to Rider on WhatsApp"
+              title="Broadcast Run to WhatsApp Fleet Group"
             >
               <MessageCircle className="w-3.5 h-3.5 fill-current" />
-              <span>WhatsApp Rider</span>
+              <span>Broadcast Run</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleCopyRunLink}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all ${
+                copied
+                  ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                  : 'border-slate-200 hover:bg-slate-100 text-slate-700'
+              }`}
+              title="Copy Run Link to Clipboard"
+            >
+              {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-slate-500" />}
+              <span>{copied ? 'Copied Link!' : 'Copy Link'}</span>
             </button>
 
             <button

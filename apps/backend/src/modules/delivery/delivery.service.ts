@@ -11,6 +11,9 @@ import {
   type DeliveryPoolTeaserDto,
   type ClaimResultDto,
   type UpdateDeliveryStatusDto,
+  type PilotRider,
+  PILOT_RIDERS,
+  type RiderRunDetailsDto,
 } from './delivery.types.js';
 import { IEventBus } from '../../shared/events/eventBus.js';
 import { EVENTS } from '../../shared/events/eventTypes.js';
@@ -383,6 +386,74 @@ export function createDeliveryService(
     return updated;
   }
 
+  function getPilotRoster(): PilotRider[] {
+    return PILOT_RIDERS;
+  }
+
+  async function getRunDetails(orderId: string, callerRiderId?: string): Promise<RiderRunDetailsDto | null> {
+    const delivery = await repo.findByOrderId(orderId);
+    if (!delivery) {
+      return null;
+    }
+
+    let orderInfo: { totalAmount: number; paymentMethod: string; customerName: string; customerPhone: string } | null = null;
+    if (orderFacade) {
+      try {
+        const order = await orderFacade.getOrderById(delivery.orderId);
+        if (order) {
+          orderInfo = {
+            totalAmount: order.pricing?.totalAmount ?? 0,
+            paymentMethod: order.payment?.paymentMethod ?? 'CASH_ON_DELIVERY',
+            customerName: order.customer?.name ?? 'Customer',
+            customerPhone: order.customer?.phone ?? '',
+          };
+        }
+      } catch (err) {
+        logger.warn(`[DeliveryService] Could not fetch order ${orderId} details: ${err}`);
+      }
+    }
+
+    const isClaimed = Boolean(delivery.rider?.id && delivery.status !== DeliveryStatus.PENDING_ASSIGNMENT);
+    const isClaimedByCaller = Boolean(isClaimed && callerRiderId && delivery.rider?.id === callerRiderId);
+
+    const pickupNavigationUrl = `https://www.google.com/maps/dir/?api=1&destination=${delivery.pickupLocation.coordinates[1]},${delivery.pickupLocation.coordinates[0]}&travelmode=two-wheeler`;
+    const dropoffNavigationUrl = `https://www.google.com/maps/dir/?api=1&origin=${delivery.pickupLocation.coordinates[1]},${delivery.pickupLocation.coordinates[0]}&destination=${delivery.dropoffLocation.coordinates[1]},${delivery.dropoffLocation.coordinates[0]}&travelmode=two-wheeler`;
+
+    const result: RiderRunDetailsDto = {
+      orderId: delivery.orderId,
+      orderNumber: delivery.orderNumber,
+      status: delivery.status,
+      distanceKm: delivery.distanceKm,
+      estimatedMinutes: delivery.estimatedMinutes,
+      estimatedPayout: delivery.estimatedPayout ?? 40,
+      pickupArea: extractArea(delivery.pickupLocation.addressText),
+      dropoffArea: extractArea(delivery.dropoffLocation.addressText),
+      paymentMethod: orderInfo?.paymentMethod || 'CASH_ON_DELIVERY',
+      totalAmount: orderInfo?.totalAmount || 0,
+      isClaimed,
+      isClaimedByCaller,
+      claimedByRider: delivery.rider ? { id: delivery.rider.id, name: delivery.rider.name } : undefined,
+    };
+
+    if (isClaimedByCaller) {
+      result.pickupDetails = {
+        storeName: delivery.pickupLocation.addressText.split(',')[0] || 'Local Retailer',
+        storePhone: '',
+        pickupAddress: delivery.pickupLocation.addressText,
+        navigationUrl: pickupNavigationUrl,
+        pickupCode: `#${delivery.orderNumber.slice(-4).toUpperCase()}`,
+      };
+      result.dropoffDetails = {
+        customerName: orderInfo?.customerName || 'Customer',
+        customerPhone: orderInfo?.customerPhone || '',
+        dropoffAddress: delivery.dropoffLocation.addressText,
+        navigationUrl: dropoffNavigationUrl,
+      };
+    }
+
+    return result;
+  }
+
   return {
     initializeDelivery,
     getTracking,
@@ -393,6 +464,8 @@ export function createDeliveryService(
     updateStatus,
     verifyOtpAndComplete,
     calculateEta,
+    getPilotRoster,
+    getRunDetails,
   };
 }
 

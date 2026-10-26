@@ -20,7 +20,7 @@
 | ↳ **Merchant & Admin Panel** | 25% | `[████████████████████]` | **100%** | 🟢 Complete Suite | All 7/7 Modules & Settings Merged (`b92a159`) |
 | ↳ **Customer Web Storefront** | 20% | `[████████████████████]` | **100%** | 🟢 Storefront & Cart Engine | All 4/4 Modular Suites Merged (`e942cc9`) |
 | ↳ **Corporate Marketing Website** | 5% | `[████████████████████]` | **100%** | 🟢 Corporate Hub | 13 Routes Prerendered, White-Label (`@repo/company`) |
-| ↳ **Production Readiness & DevOps** | 20% | `[████████████████████]` | **100%** | 🟢 Staging Live | 182/182 Tests Green (27/27 suites), Monorepo Clean Build |
+| ↳ **Production Readiness & DevOps** | 20% | `[████████████████████]` | **100%** | 🟢 Staging Live | 185/185 Tests Green (27/27 suites), Monorepo Clean Build |
 
 
 
@@ -125,8 +125,9 @@ Every online order placed through `apps/web` generates an authoritative, complia
    - Connected `socket.io-client` in `apps/merchant` (`socket.ts`) joining `store:${storeId}` room to receive backend `order.placed` dispatches.
    - Mounted global `LiveOrderSocketListener.tsx` in `App.tsx` displaying interactive amber alert toast with 1-click order navigation.
    - Integrated volume mute toggle and interactive "Test Sound" button in `LiveOrderAlerts.tsx`.
-3. **Pilot Merchant Onboarding (Soft Launch)**:
+3. **Pilot Merchant Onboarding & Rider Dispatch Pipeline (DELIVERED ✅)**:
    - Target 5–10 physical brick-and-mortar shops within a compact 3–4km delivery cluster.
+   - Built zero-install in-app browser web runner (`/rider/run/[orderId]`) for initial 5 pilot riders: 1-tap name selector, atomic claim mutex lock, Google Maps two-wheeler store & doorstep navigation, counter pickup code, COD collection alerts, 4-digit doorstep OTP handshake, and merchant "Broadcast to Fleet" WhatsApp action.
    - Free onboarding for beta testing.
    - Live on-ground execution with local delivery partners to stress-test real inventory synchronization and delivery SLAs.
 
