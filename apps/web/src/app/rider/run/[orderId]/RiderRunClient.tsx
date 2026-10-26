@@ -507,6 +507,16 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
               {!isPickedUp && (
                 <div className="mt-4 space-y-2.5">
                   <a
+                    href={`https://wa.me/?text=${encodeURIComponent(`✅ *ORDER CLAIMED!* I am picking up #${runDetails.orderNumber} from ${runDetails.pickupDetails?.storeName || 'Store'}. — ${selectedRider?.name || 'Rider'} 🛵💨`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-2.5 px-4 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-300 font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-xs"
+                  >
+                    <MessageCircle className="w-4 h-4 text-emerald-400" />
+                    <span>Post "Claimed" to Fleet Group</span>
+                  </a>
+
+                  <a
                     href={runDetails.pickupDetails?.navigationUrl}
                     target="_blank"
                     rel="noopener noreferrer"

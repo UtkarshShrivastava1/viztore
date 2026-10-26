@@ -14,6 +14,7 @@ import {
   Check,
 } from 'lucide-react';
 import { MerchantOrderRecord } from '../../stores/orderStore.js';
+import { useAuthStore } from '../../stores/authStore.js';
 import { branding } from '../../lib/branding.js';
 
 interface OrderDetailModalProps {
@@ -52,20 +53,34 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
   };
 
   const buildFleetBroadcastText = () => {
-    const dropArea = order.deliveryAddress?.city || order.deliveryAddress?.street || 'Local Customer Area';
+    const store = useAuthStore.getState().currentStore;
+    const storeName = store?.name || 'Store Partner';
+    const storeLocality = store?.address?.locality || store?.address?.city || '';
+    const pickupDisplay = storeLocality ? `${storeName} (${storeLocality})` : storeName;
+
+    const dropArea = [
+      order.deliveryAddress?.locality,
+      order.deliveryAddress?.city,
+    ].filter(Boolean).join(', ') || order.deliveryAddress?.street || 'Local Customer Area';
+
+    const itemsCount = order.itemsSummary?.count || order.items?.length || 1;
+    const itemsTitle = order.itemsSummary?.title || order.items?.[0]?.name || 'Packaged parcel';
+
     const isCod = order.payment?.paymentMethod === 'Cash on Delivery';
     const paymentText = isCod
-      ? `Cash on Delivery (₹${order.pricing.totalAmount.toLocaleString('en-IN')})`
-      : 'Prepaid Online (₹0 to collect)';
+      ? `Cash on Delivery (Collect ₹${order.pricing.totalAmount.toLocaleString('en-IN')} cash)`
+      : 'Prepaid Online (₹0 cash to collect)';
 
     return [
-      `🛵 *NEW DELIVERY RUN — ${order.orderNumber}*`,
+      `🛵 *NEW DELIVERY RUN — #${order.orderNumber}*`,
       `━━━━━━━━━━━━━━━━━━━━━━`,
-      `🏪 *Pickup Store:* Store Partner`,
+      `🏪 *Pickup Store:* ${pickupDisplay}`,
       `🏠 *Drop Area:* ${dropArea}`,
-      `💰 *Rider Payout:* ₹40 (${paymentText})`,
+      `📦 *Items:* ${itemsCount} item${itemsCount > 1 ? 's' : ''} (${itemsTitle})`,
+      `💰 *Rider Payout:* ₹40`,
+      `💳 *Payment:* ${paymentText}`,
       `━━━━━━━━━━━━━━━━━━━━━━`,
-      `👉 *Tap to Accept & Start Pickup:*`,
+      `👉 *Tap to Accept & Claim Run:*`,
       `${getRunUrl()}`,
     ].join('\n');
   };
