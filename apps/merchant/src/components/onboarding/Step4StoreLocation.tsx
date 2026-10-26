@@ -192,8 +192,10 @@ export const Step4StoreLocation: React.FC = () => {
               className="h-full w-full"
             >
               <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                attribution='&copy; Google Maps'
+                url="https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"
+                subdomains={['0', '1', '2', '3']}
+                maxZoom={20}
               />
               <LocationMarker coords={mapCoords} setCoords={handleMapCoordChange} />
             </MapContainer>
