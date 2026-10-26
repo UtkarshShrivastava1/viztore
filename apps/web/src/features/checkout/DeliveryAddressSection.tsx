@@ -10,7 +10,7 @@ import type { IAddress } from '@repo/shared-types';
 
 export function DeliveryAddressSection() {
   const { user, isAuthenticated } = useAuthStore();
-  const { address: locationAddress } = useLocationStore();
+  const { address: locationAddress, city: locationCity, pincode: locationPincode } = useLocationStore();
   const { shippingAddress, setShippingAddress } = useCheckoutStore();
 
   const [savedAddresses, setSavedAddresses] = useState<IAddress[]>([]);
@@ -31,14 +31,14 @@ export function DeliveryAddressSection() {
       setShippingAddress({
         fullName: user?.fullName || 'Customer',
         phone: user?.phone || '9876543210',
-        street: locationAddress || '123 Market Street',
-        city: 'Local City',
-        state: 'State',
-        postalCode: '452001',
+        street: locationAddress || 'Sector 6, Central Avenue, Near Civic Centre, Bhilai, Chhattisgarh - 490006',
+        city: locationCity || 'Bhilai',
+        state: 'Chhattisgarh',
+        postalCode: locationPincode || '490006',
         country: 'IN',
       });
     }
-  }, [user, locationAddress, shippingAddress, setShippingAddress]);
+  }, [user, locationAddress, locationCity, locationPincode, shippingAddress, setShippingAddress]);
 
   // Fetch saved user addresses if authenticated
   useEffect(() => {
@@ -53,9 +53,9 @@ export function DeliveryAddressSection() {
                 fullName: defaultAddr.recipientName || user?.fullName || 'Customer',
                 phone: defaultAddr.phone || user?.phone || '9876543210',
                 street: `${defaultAddr.street}${defaultAddr.landmark ? `, Near ${defaultAddr.landmark}` : ''}`,
-                city: defaultAddr.city,
-                state: defaultAddr.state,
-                postalCode: defaultAddr.pincode,
+                city: defaultAddr.city || locationCity || 'Bhilai',
+                state: defaultAddr.state || 'Chhattisgarh',
+                postalCode: defaultAddr.pincode || locationPincode || '490006',
                 country: 'IN',
               });
             }
@@ -63,15 +63,15 @@ export function DeliveryAddressSection() {
         })
         .catch(() => {});
     }
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, locationCity, locationPincode, shippingAddress, setShippingAddress]);
 
   const handleOpenEdit = () => {
     setFullName(shippingAddress?.fullName || user?.fullName || '');
     setPhone(shippingAddress?.phone || user?.phone || '');
     setStreet(shippingAddress?.street || locationAddress || '');
-    setCity(shippingAddress?.city || 'Local City');
-    setState(shippingAddress?.state || 'State');
-    setPostalCode(shippingAddress?.postalCode || '452001');
+    setCity(shippingAddress?.city && shippingAddress.city !== 'Local City' ? shippingAddress.city : (locationCity || 'Bhilai'));
+    setState(shippingAddress?.state && shippingAddress.state !== 'State' ? shippingAddress.state : 'Chhattisgarh');
+    setPostalCode(shippingAddress?.postalCode && shippingAddress.postalCode !== '452001' ? shippingAddress.postalCode : (locationPincode || '490006'));
     setIsEditing(true);
     setIsModalOpen(true);
   };
@@ -84,9 +84,9 @@ export function DeliveryAddressSection() {
       fullName: fullName.trim(),
       phone: phone.trim(),
       street: street.trim(),
-      city: (city.trim() || 'Local City'),
-      state: (state.trim() || 'State'),
-      postalCode: postalCode.trim(),
+      city: city.trim() && city.trim() !== 'Local City' ? city.trim() : (locationCity || 'Bhilai'),
+      state: state.trim() && state.trim() !== 'State' ? state.trim() : 'Chhattisgarh',
+      postalCode: postalCode.trim() && postalCode.trim() !== '452001' ? postalCode.trim() : (locationPincode || '490006'),
       country: 'IN',
     };
 
@@ -139,8 +139,8 @@ export function DeliveryAddressSection() {
             {shippingAddress?.phone || user?.phone || '+91 98765 43210'}
           </p>
           <p className="text-[12px] text-gray-600 leading-snug pr-4">
-            {shippingAddress?.street || locationAddress || '123 Commercial Hub, Main Road'}<br />
-            {shippingAddress?.city || 'Local City'}, {shippingAddress?.state || 'State'} - {shippingAddress?.postalCode || '452001'}
+            {shippingAddress?.street || locationAddress || 'Sector 6, Central Avenue, Near Civic Centre, Bhilai, Chhattisgarh - 490006'}<br />
+            {(shippingAddress?.city && shippingAddress.city !== 'Local City') ? shippingAddress.city : (locationCity || 'Bhilai')}, {(shippingAddress?.state && shippingAddress.state !== 'State') ? shippingAddress.state : 'Chhattisgarh'} - {(shippingAddress?.postalCode && shippingAddress.postalCode !== '452001') ? shippingAddress.postalCode : (locationPincode || '490006')}
           </p>
         </div>
       </div>

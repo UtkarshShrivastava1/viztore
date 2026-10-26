@@ -22,7 +22,7 @@ export function CheckoutPriceDetails({ storeId }: { storeId?: string }) {
     removeCoupon
   } = useCheckoutStore();
   const { isAuthenticated, user, openAuthModal } = useAuthStore();
-  const { address: locationAddress } = useLocationStore();
+  const { address: locationAddress, city: locationCity, pincode: locationPincode } = useLocationStore();
 
   const totalItemCount = getItemCount(storeId);
   const subtotal = getSubtotal(storeId);
@@ -53,10 +53,10 @@ export function CheckoutPriceDetails({ storeId }: { storeId?: string }) {
     const finalAddress = {
       fullName: shippingAddress?.fullName || user?.fullName || 'Customer',
       phone: shippingAddress?.phone || user?.phone || '9876543210',
-      street: shippingAddress?.street || locationAddress || '123 Market Street',
-      city: shippingAddress?.city || 'Local City',
-      state: shippingAddress?.state || 'State',
-      postalCode: shippingAddress?.postalCode || '452001',
+      street: shippingAddress?.street || locationAddress || 'Sector 6, Central Avenue, Near Civic Centre, Bhilai, Chhattisgarh - 490006',
+      city: (shippingAddress?.city && shippingAddress.city !== 'Local City') ? shippingAddress.city : (locationCity || 'Bhilai'),
+      state: (shippingAddress?.state && shippingAddress.state !== 'State') ? shippingAddress.state : 'Chhattisgarh',
+      postalCode: (shippingAddress?.postalCode && shippingAddress.postalCode !== '452001') ? shippingAddress.postalCode : (locationPincode || '490006'),
       country: 'IN',
     };
 

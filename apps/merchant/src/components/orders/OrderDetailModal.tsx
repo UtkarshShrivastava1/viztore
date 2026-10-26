@@ -58,11 +58,31 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
     const storeLocality = store?.address?.locality || store?.address?.city || '';
     const pickupDisplay = storeLocality ? `${storeName} (${storeLocality})` : storeName;
 
-    const locality = order.deliveryAddress?.locality?.trim();
-    const city = order.deliveryAddress?.city?.trim();
-    const dropArea = (locality && city && locality.toLowerCase() === city.toLowerCase())
-      ? city
-      : ([locality, city].filter(Boolean).join(', ') || order.deliveryAddress?.street || 'Local Customer Area');
+    const street = order.deliveryAddress?.street || '';
+    const streetParts = street.split(',').map((p) => p.trim()).filter(Boolean);
+    const streetLocality = streetParts[0] || '';
+    let streetCity = '';
+    for (let i = streetParts.length - 1; i >= 0; i--) {
+      const rawPart = streetParts[i];
+      if (!rawPart) continue;
+      const part = rawPart.replace(/-\s*\d+$/, '').trim();
+      if (!/^\d+$/.test(part) && !/chhattisgarh|state|india/i.test(part) && part.length > 2) {
+        streetCity = part;
+        break;
+      }
+    }
+
+    let locality = order.deliveryAddress?.locality?.trim() || '';
+    let city = order.deliveryAddress?.city?.trim() || '';
+    if (locality.toLowerCase() === 'local city' || locality.toLowerCase() === 'city') locality = '';
+    if (city.toLowerCase() === 'local city' || city.toLowerCase() === 'city') city = '';
+
+    const resolvedLocality = locality || streetLocality;
+    const resolvedCity = city || streetCity || 'Local Area';
+
+    const dropArea = (resolvedLocality && resolvedCity && resolvedLocality.toLowerCase() === resolvedCity.toLowerCase())
+      ? resolvedCity
+      : [resolvedLocality, resolvedCity].filter(Boolean).filter((v, idx, arr) => arr.indexOf(v) === idx).join(', ') || street || 'Local Customer Area';
 
     const itemsCount = order.itemsSummary?.count || order.items?.length || 1;
     const itemsTitle = order.itemsSummary?.title || order.items?.[0]?.name || 'Packaged parcel';

@@ -164,6 +164,24 @@ export function mapApiOrderToMerchantRecord(apiOrder: any): MerchantOrderRecord 
     .slice(0, 2)
     .toUpperCase();
 
+  const street = apiOrder.shippingAddress?.street || '';
+  const streetParts = street.split(',').map((p: string) => p.trim()).filter(Boolean);
+  const streetLocality = streetParts[0] || '';
+  let extractedCity = apiOrder.shippingAddress?.city || '';
+  if (!extractedCity || extractedCity.toLowerCase() === 'local city') {
+    for (let i = streetParts.length - 1; i >= 0; i--) {
+      const rawPart = streetParts[i];
+      if (!rawPart) continue;
+      const part = rawPart.replace(/-\s*\d+$/, '').trim();
+      if (!/^\d+$/.test(part) && !/chhattisgarh|state|india/i.test(part) && part.length > 2) {
+        extractedCity = part;
+        break;
+      }
+    }
+  }
+  const resolvedCity = (extractedCity && extractedCity.toLowerCase() !== 'local city') ? extractedCity : 'Bhilai';
+  const resolvedLocality = streetLocality || resolvedCity;
+
   return {
     id: apiOrder._id || apiOrder.id,
     orderNumber: apiOrder.orderNumber || `#ORD-${(apiOrder._id || '').slice(-5)}`,
@@ -176,12 +194,12 @@ export function mapApiOrderToMerchantRecord(apiOrder: any): MerchantOrderRecord 
       avatarInitials: initials || 'CS',
     },
     deliveryAddress: {
-      street: apiOrder.shippingAddress?.street || '',
-      locality: apiOrder.shippingAddress?.city || '',
-      city: apiOrder.shippingAddress?.city || '',
-      state: apiOrder.shippingAddress?.state || '',
+      street,
+      locality: resolvedLocality,
+      city: resolvedCity,
+      state: apiOrder.shippingAddress?.state || 'Chhattisgarh',
       pincode: apiOrder.shippingAddress?.postalCode || '',
-      fullText: `${apiOrder.shippingAddress?.street || ''}, ${apiOrder.shippingAddress?.city || ''}, ${apiOrder.shippingAddress?.state || ''} - ${apiOrder.shippingAddress?.postalCode || ''}`,
+      fullText: `${street}, ${resolvedCity}, ${apiOrder.shippingAddress?.state || ''} - ${apiOrder.shippingAddress?.postalCode || ''}`,
     },
     items,
     itemsSummary: {
