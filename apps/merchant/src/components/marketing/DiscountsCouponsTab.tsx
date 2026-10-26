@@ -99,6 +99,56 @@ export const DiscountsCouponsTab: React.FC<DiscountsCouponsTabProps> = ({ onCrea
     }
   };
 
+  const getCouponCodeBadgeClass = (code: string) => {
+    const upper = code.toUpperCase();
+    if (upper.includes('WEEKEND') || upper.includes('BOGO')) {
+      return 'bg-amber-50 border-amber-200 text-amber-700';
+    }
+    if (upper.includes('FREDEL') || upper.includes('CLEARANCE')) {
+      return 'bg-rose-50 border-rose-200 text-rose-700';
+    }
+    if (upper.includes('WELCOME')) {
+      return 'bg-purple-50 border-purple-200 text-purple-700';
+    }
+    if (upper.includes('FASHION')) {
+      return 'bg-sky-50 border-sky-200 text-sky-700';
+    }
+    if (upper.includes('MENS')) {
+      return 'bg-emerald-50 border-emerald-200 text-emerald-700';
+    }
+    return 'bg-blue-50 border-blue-200 text-blue-700';
+  };
+
+  const renderBenefit = (benefitStr: string, type: CouponType) => {
+    if (benefitStr.includes(' Max ')) {
+      const [main, sub] = benefitStr.split(' Max ');
+      return (
+        <div className="leading-tight">
+          <span className="font-bold text-slate-900 block text-xs whitespace-nowrap">{main}</span>
+          <span className="text-[10px] text-slate-400 font-medium block whitespace-nowrap">Max {sub}</span>
+        </div>
+      );
+    }
+    if (benefitStr.includes(' Min. ')) {
+      const [main, sub] = benefitStr.split(' Min. ');
+      return (
+        <div className="leading-tight">
+          <span className="font-bold text-slate-900 block text-xs whitespace-nowrap">{main}</span>
+          <span className="text-[10px] text-slate-400 font-medium block whitespace-nowrap">Min. {sub}</span>
+        </div>
+      );
+    }
+    if (type === 'BOGO' || benefitStr.toLowerCase().includes('buy 1 get 1')) {
+      return (
+        <div className="leading-tight">
+          <span className="font-bold text-slate-900 block text-xs whitespace-nowrap">Buy 1 Get 1</span>
+          <span className="text-[10px] text-slate-400 font-medium block whitespace-nowrap">Free</span>
+        </div>
+      );
+    }
+    return <span className="font-bold text-slate-900 block text-xs whitespace-nowrap">{benefitStr}</span>;
+  };
+
   const getStatusBadgeClass = (status: CouponStatus) => {
     switch (status) {
       case 'Active':
@@ -106,8 +156,9 @@ export const DiscountsCouponsTab: React.FC<DiscountsCouponsTabProps> = ({ onCrea
       case 'Scheduled':
         return 'bg-blue-50 text-blue-700 border-blue-200';
       case 'Completed':
+        return 'bg-purple-50 text-purple-700 border-purple-200';
       case 'Expired':
-        return 'bg-slate-100 text-slate-700 border-slate-200';
+        return 'bg-rose-50 text-rose-700 border-rose-200';
       default:
         return 'bg-slate-50 text-slate-500 border-slate-200';
     }
@@ -296,29 +347,29 @@ export const DiscountsCouponsTab: React.FC<DiscountsCouponsTabProps> = ({ onCrea
         </div>
       </div>
 
-      {/* 2-Column Main Layout: Table (8 cols) + Right Analytics (4 cols) (12.7.png) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
-        {/* Left Column: High Density Coupons Table (8 cols) */}
-        <div className="lg:col-span-8 bg-white rounded-xl border border-slate-200/90 shadow-2xs overflow-hidden">
+      {/* 2-Column Main Layout: Table (flex-1) + Right Analytics (xl:w-[310px]) (12.7.png) */}
+      <div className="flex flex-col xl:flex-row items-start gap-4">
+        {/* Left Column: High Density Coupons Table */}
+        <div className="flex-1 min-w-0 w-full bg-white rounded-xl border border-slate-200/90 shadow-2xs overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                  <th className="py-2.5 px-3 w-8">
+                  <th className="py-2.5 px-3 w-8 text-center">
                     <input
                       type="checkbox"
                       checked={selectedRowIds.length === filteredCoupons.length && filteredCoupons.length > 0}
                       onChange={toggleSelectAll}
-                      className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                      className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                     />
                   </th>
                   <th className="py-2.5 px-3">Coupon Details</th>
-                  <th className="py-2.5 px-2.5">Type</th>
+                  <th className="py-2.5 px-2">Type</th>
                   <th className="py-2.5 px-2.5">Discount / Benefit</th>
                   <th className="py-2.5 px-2.5">Applicable On</th>
                   <th className="py-2.5 px-2.5">Validity</th>
-                  <th className="py-2.5 px-3">Usage</th>
-                  <th className="py-2.5 px-2.5">Status</th>
+                  <th className="py-2.5 px-2.5 w-24">Usage</th>
+                  <th className="py-2.5 px-2">Status</th>
                   <th className="py-2.5 px-3 text-right">Action</th>
                 </tr>
               </thead>
@@ -333,24 +384,28 @@ export const DiscountsCouponsTab: React.FC<DiscountsCouponsTabProps> = ({ onCrea
                         isChecked ? 'bg-blue-50/30' : ''
                       }`}
                     >
-                      <td className="py-2.5 px-3">
+                      <td className="py-2.5 px-3 text-center">
                         <input
                           type="checkbox"
                           checked={isChecked}
                           onChange={() => toggleSelectRow(c.id)}
-                          className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                          className="rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                         />
                       </td>
 
-                      {/* Coupon Details */}
+                      {/* Coupon Details (12.7.png colored badge) */}
                       <td className="py-2.5 px-3">
                         <div className="space-y-1">
-                          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-blue-50 border border-blue-200 text-blue-700 font-mono font-bold text-xs">
+                          <div
+                            className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md border font-mono font-bold text-xs ${getCouponCodeBadgeClass(
+                              c.code
+                            )}`}
+                          >
                             <span>{c.code}</span>
                             <button
                               type="button"
                               onClick={() => handleCopyCode(c.code)}
-                              className="text-blue-500 hover:text-blue-800 p-0.5"
+                              className="opacity-70 hover:opacity-100 p-0.5 cursor-pointer"
                               title="Copy code"
                             >
                               {copiedCode === c.code ? (
@@ -360,14 +415,14 @@ export const DiscountsCouponsTab: React.FC<DiscountsCouponsTabProps> = ({ onCrea
                               )}
                             </button>
                           </div>
-                          <span className="text-[10px] text-slate-500 block truncate max-w-[150px]">
+                          <span className="text-[10px] text-slate-500 block truncate max-w-[130px]">
                             {c.title}
                           </span>
                         </div>
                       </td>
 
                       {/* Type */}
-                      <td className="py-2.5 px-2.5">
+                      <td className="py-2.5 px-2">
                         <span
                           className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold border ${getTypeBadgeClass(
                             c.type
@@ -377,31 +432,32 @@ export const DiscountsCouponsTab: React.FC<DiscountsCouponsTabProps> = ({ onCrea
                         </span>
                       </td>
 
-                      {/* Discount / Benefit */}
+                      {/* Discount / Benefit (2-line stacked format matching 12.7.png) */}
                       <td className="py-2.5 px-2.5">
-                        <span className="font-bold text-slate-900 block whitespace-nowrap">
-                          {c.benefit}
-                        </span>
+                        {renderBenefit(c.benefit, c.type)}
                       </td>
 
                       {/* Applicable On */}
-                      <td className="py-2.5 px-2.5 text-slate-600 whitespace-nowrap">
+                      <td className="py-2.5 px-2.5 text-slate-600 whitespace-nowrap text-xs">
                         {c.applicableOn}
                       </td>
 
-                      {/* Validity */}
-                      <td className="py-2.5 px-2.5 text-slate-600 whitespace-nowrap text-[11px]">
-                        {c.startDate} - {c.endDate}
+                      {/* Validity (2-line stacked format matching 12.7.png) */}
+                      <td className="py-2.5 px-2.5 whitespace-nowrap text-[11px] leading-tight text-slate-600">
+                        <div>
+                          <span>{c.startDate} -</span>
+                          <span className="block text-slate-500">{c.endDate}</span>
+                        </div>
                       </td>
 
-                      {/* Usage progress */}
-                      <td className="py-2.5 px-3 min-w-[110px]">
+                      {/* Usage progress (Compact matching 12.7.png) */}
+                      <td className="py-2.5 px-2.5 w-24">
                         <div className="space-y-1">
-                          <div className="flex justify-between text-[10px] font-semibold text-slate-700">
+                          <div className="text-[10px] font-semibold text-slate-700 whitespace-nowrap">
                             <span>{c.usedCount.toLocaleString()}</span>
-                            <span className="text-slate-400">/ {c.totalLimit.toLocaleString()}</span>
+                            <span className="text-slate-400"> / {c.totalLimit.toLocaleString()}</span>
                           </div>
-                          <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                          <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden">
                             <div
                               className="h-full bg-blue-600 rounded-full transition-all"
                               style={{ width: `${usagePercent}%` }}
@@ -411,7 +467,7 @@ export const DiscountsCouponsTab: React.FC<DiscountsCouponsTabProps> = ({ onCrea
                       </td>
 
                       {/* Status */}
-                      <td className="py-2.5 px-2.5">
+                      <td className="py-2.5 px-2">
                         <span
                           className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold border ${getStatusBadgeClass(
                             c.status
@@ -425,7 +481,9 @@ export const DiscountsCouponsTab: React.FC<DiscountsCouponsTabProps> = ({ onCrea
                       <td className="py-2.5 px-3 text-right">
                         <button
                           type="button"
-                          className="px-2.5 py-1 border border-slate-200 hover:bg-slate-50 text-slate-700 text-[11px] font-semibold rounded-lg inline-flex items-center gap-1 transition-colors"
+                          onClick={() => handleShareWhatsApp(c)}
+                          className="px-2.5 py-1 border border-slate-200 hover:bg-slate-50 text-slate-700 text-[11px] font-semibold rounded-lg inline-flex items-center gap-1 transition-colors cursor-pointer"
+                          title="Options / Share"
                         >
                           <span>View</span>
                           <ChevronDown className="w-3 h-3 text-slate-400" />
@@ -470,8 +528,8 @@ export const DiscountsCouponsTab: React.FC<DiscountsCouponsTabProps> = ({ onCrea
           </div>
         </div>
 
-        {/* Right Column: Analytics, Top Performing & Tips (4 cols) (12.7.png) */}
-        <div className="lg:col-span-4 space-y-4">
+        {/* Right Column: Analytics, Top Performing & Tips (xl:w-[310px]) (12.7.png) */}
+        <div className="w-full xl:w-[310px] shrink-0 space-y-4">
           {/* Coupon Usage Overview (Last 30 Days) Donut Card */}
           <div className="bg-white rounded-xl border border-slate-200/90 p-4 shadow-2xs space-y-3">
             <h3 className="text-xs font-bold text-slate-900">

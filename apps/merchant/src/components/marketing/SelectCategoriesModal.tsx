@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Search, Check, FolderTree } from 'lucide-react';
+import { X, Search } from 'lucide-react';
 
 interface SelectCategoriesModalProps {
   isOpen: boolean;
@@ -19,7 +19,24 @@ export const SelectCategoriesModal: React.FC<SelectCategoriesModalProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [activeGroup, setActiveGroup] = useState('All Categories');
 
+  useEffect(() => {
+    if (isOpen) {
+      setCurrentSelected(selectedCategories);
+    }
+  }, [isOpen, selectedCategories]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
+  if (typeof document === 'undefined' || !document.body) return null;
 
   const categoryGroups = [
     { id: 'all', name: 'All Categories', count: 24 },
@@ -108,13 +125,16 @@ export const SelectCategoriesModal: React.FC<SelectCategoriesModalProps> = ({
       id: 'cat-12',
       name: 'Gifts & Lifestyle',
       itemsCount: '620 items',
-      image: 'https://images.unsplash.com/photo-1513885535751-8b9238bd345a?w=120&auto=format&fit=crop&q=80',
+      image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=120&auto=format&fit=crop&q=80',
     },
   ];
 
-  const filteredCards = categoryCards.filter((c) =>
-    c.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredCards = categoryCards.filter((c) => {
+    const matchSearch = c.name.toLowerCase().includes(searchTerm.toLowerCase());
+    if (!matchSearch) return false;
+    if (activeGroup === 'All Categories') return true;
+    return c.name.toLowerCase().includes(activeGroup.toLowerCase());
+  });
 
   const toggleSelectCard = (name: string) => {
     setCurrentSelected((prev) =>
@@ -136,7 +156,12 @@ export const SelectCategoriesModal: React.FC<SelectCategoriesModalProps> = ({
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
+    <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+      className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150"
+    >
       <div className="w-full max-w-4xl max-h-[90vh] bg-white rounded-2xl border border-slate-200 shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-150">
         {/* Header (12.7c.png) */}
         <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between">

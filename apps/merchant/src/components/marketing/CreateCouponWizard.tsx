@@ -482,45 +482,67 @@ export const CreateCouponWizard: React.FC<CreateCouponWizardProps> = ({ onClose 
                     <span>All Products</span>
                   </label>
 
-                  <label className="flex items-center gap-2 text-xs text-slate-800 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="applicableOn"
-                      checked={applicableOn === 'Selected Products'}
-                      onChange={() => {
-                        setApplicableOn('Selected Products');
-                        setIsProductModalOpen(true);
-                      }}
-                      className="text-blue-600"
-                    />
-                    <span>
-                      Selected Products{' '}
-                      {applicableOn === 'Selected Products' && (
-                        <span className="text-blue-600 font-bold">({selectedProductIds.length})</span>
-                      )}
-                    </span>
-                  </label>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <label className="flex items-center gap-2 text-xs text-slate-800 cursor-pointer select-none">
+                      <input
+                        type="radio"
+                        name="applicableOn"
+                        checked={applicableOn === 'Selected Products'}
+                        onChange={() => {
+                          setApplicableOn('Selected Products');
+                          setIsProductModalOpen(true);
+                        }}
+                        className="text-blue-600 cursor-pointer"
+                      />
+                      <span>
+                        Selected Products{' '}
+                        {applicableOn === 'Selected Products' && (
+                          <span className="text-blue-600 font-bold">({selectedProductIds.length})</span>
+                        )}
+                      </span>
+                    </label>
+                    {applicableOn === 'Selected Products' && (
+                      <button
+                        type="button"
+                        onClick={() => setIsProductModalOpen(true)}
+                        className="px-2 py-0.5 text-[11px] font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md border border-blue-200 transition-colors cursor-pointer"
+                      >
+                        Choose Products
+                      </button>
+                    )}
+                  </div>
 
-                  <label className="flex items-center gap-2 text-xs text-slate-800 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="applicableOn"
-                      checked={applicableOn === 'Selected Categories'}
-                      onChange={() => {
-                        setApplicableOn('Selected Categories');
-                        setIsCategoryModalOpen(true);
-                      }}
-                      className="text-blue-600"
-                    />
-                    <span>
-                      Selected Categories{' '}
-                      {applicableOn === 'Selected Categories' && (
-                        <span className="text-blue-600 font-bold">
-                          ({selectedCategoryNames.length})
-                        </span>
-                      )}
-                    </span>
-                  </label>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <label className="flex items-center gap-2 text-xs text-slate-800 cursor-pointer select-none">
+                      <input
+                        type="radio"
+                        name="applicableOn"
+                        checked={applicableOn === 'Selected Categories'}
+                        onChange={() => {
+                          setApplicableOn('Selected Categories');
+                          setIsCategoryModalOpen(true);
+                        }}
+                        className="text-blue-600 cursor-pointer"
+                      />
+                      <span>
+                        Selected Categories{' '}
+                        {applicableOn === 'Selected Categories' && (
+                          <span className="text-blue-600 font-bold">
+                            ({selectedCategoryNames.length})
+                          </span>
+                        )}
+                      </span>
+                    </label>
+                    {applicableOn === 'Selected Categories' && (
+                      <button
+                        type="button"
+                        onClick={() => setIsCategoryModalOpen(true)}
+                        className="px-2 py-0.5 text-[11px] font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md border border-blue-200 transition-colors cursor-pointer"
+                      >
+                        Choose Categories
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
