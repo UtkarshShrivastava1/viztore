@@ -1,7 +1,39 @@
 import React, { useState } from 'react';
-import { Info, Search, Navigation, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Info, Search, Navigation, ArrowRight, ArrowLeft, ChevronDown } from 'lucide-react';
 import { useOnboardingStore } from '../../stores/onboardingStore.js';
 import { MapPicker } from './MapPicker.js';
+
+const CHHATTISGARH_CITIES = [
+  'Bhilai',
+  'Durg',
+  'Raipur',
+  'Bilaspur',
+  'Rajnandgaon',
+  'Korba',
+  'Raigarh',
+  'Jagdalpur',
+  'Ambikapur',
+  'Dhamtari',
+  'Mahasamund',
+  'Kanker',
+  'Kawardha',
+  'Champa',
+  'Bhatapara',
+  'Other',
+];
+
+const STATES_LIST = [
+  'Chhattisgarh',
+  'Madhya Pradesh',
+  'Maharashtra',
+  'Delhi',
+  'Karnataka',
+  'Uttar Pradesh',
+  'Gujarat',
+  'Rajasthan',
+  'Odisha',
+  'Other',
+];
 
 interface Step3StoreDetailsProps {
   onContinue: () => void;
@@ -22,15 +54,18 @@ export const Step3StoreDetails: React.FC<Step3StoreDetailsProps> = ({
 
   // Address
   const [building, setBuilding] = useState(draft.step4?.address?.street || '');
-  const [area, setArea] = useState('Commercial District');
+  const [area, setArea] = useState(
+    draft.step4?.address?.street?.split(',')?.[1]?.trim() || 'Akashganga, Supela',
+  );
   const [landmark, setLandmark] = useState(draft.step4?.address?.landmark || '');
-  const [city, setCity] = useState(draft.step4?.address?.city || 'Bengaluru');
-  const [state, setState] = useState(draft.step4?.address?.state || 'Karnataka');
-  const [pincode, setPincode] = useState(draft.step4?.address?.pincode || '560001');
+  const [city, setCity] = useState(draft.step4?.address?.city || 'Bhilai');
+  const [customCity, setCustomCity] = useState('');
+  const [state, setState] = useState(draft.step4?.address?.state || 'Chhattisgarh');
+  const [pincode, setPincode] = useState(draft.step4?.address?.pincode || '490023');
 
-  // Coordinates [lng, lat]
+  // Coordinates [lng, lat] default to Bhilai / Durg commercial district [81.3780, 21.1920]
   const [coordinates, setCoordinates] = useState<[number, number]>(
-    draft.step4?.location?.coordinates || [77.5946, 12.9716],
+    draft.step4?.location?.coordinates || [81.378, 21.192],
   );
   const [pickupSearch, setPickupSearch] = useState('');
   const [isLocating, setIsLocating] = useState(false);
@@ -66,6 +101,9 @@ export const Step3StoreDetails: React.FC<Step3StoreDetailsProps> = ({
       return;
     }
 
+    const finalCity = city === 'Other' ? customCity.trim() || 'Bhilai' : city;
+    const finalState = state.trim() || 'Chhattisgarh';
+
     updateStep(4, {
       merchantFullName: fullName,
       storeDisplayName: storeName,
@@ -73,8 +111,8 @@ export const Step3StoreDetails: React.FC<Step3StoreDetailsProps> = ({
       address: {
         street: area ? `${building}, ${area}` : building,
         landmark,
-        city,
-        state,
+        city: finalCity,
+        state: finalState,
         pincode,
       },
       location: {
@@ -202,23 +240,64 @@ export const Step3StoreDetails: React.FC<Step3StoreDetailsProps> = ({
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              <input
-                type="text"
-                placeholder="Enter City *"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                className="w-full text-xs sm:text-sm border border-slate-200 rounded-lg px-3.5 py-2.5 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#0038ed]"
-                required
-              />
-              <input
-                type="text"
-                placeholder="Enter State *"
-                value={state}
-                onChange={(e) => setState(e.target.value)}
-                className="w-full text-xs sm:text-sm border border-slate-200 rounded-lg px-3.5 py-2.5 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#0038ed]"
-                required
-              />
+              {/* City Dropdown */}
+              <div className="relative">
+                <select
+                  value={CHHATTISGARH_CITIES.includes(city) ? city : 'Other'}
+                  onChange={(e) => {
+                    const selected = e.target.value;
+                    setCity(selected);
+                    if (selected !== 'Other') {
+                      setCustomCity('');
+                    }
+                  }}
+                  className="w-full text-xs sm:text-sm border border-slate-200 rounded-lg px-3.5 py-2.5 bg-white text-slate-900 focus:outline-none focus:border-[#0038ed] appearance-none cursor-pointer pr-9 font-medium"
+                  required
+                >
+                  <option value="" disabled>Select City *</option>
+                  {CHHATTISGARH_CITIES.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-slate-400">
+                  <ChevronDown className="w-4 h-4" />
+                </div>
+              </div>
+
+              {/* State Dropdown (Fixed / Preselected to Chhattisgarh) */}
+              <div className="relative">
+                <select
+                  value={state}
+                  onChange={(e) => setState(e.target.value)}
+                  className="w-full text-xs sm:text-sm border border-slate-200 rounded-lg px-3.5 py-2.5 bg-white text-slate-900 focus:outline-none focus:border-[#0038ed] appearance-none cursor-pointer pr-9 font-medium"
+                  required
+                >
+                  {STATES_LIST.map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-slate-400">
+                  <ChevronDown className="w-4 h-4" />
+                </div>
+              </div>
             </div>
+
+            {/* Custom City Input when 'Other' is chosen */}
+            {(city === 'Other' || (!CHHATTISGARH_CITIES.includes(city) && city)) && (
+              <div>
+                <input
+                  type="text"
+                  placeholder="Enter your City / Town name *"
+                  value={city === 'Other' ? customCity : city}
+                  onChange={(e) => {
+                    setCustomCity(e.target.value);
+                    setCity('Other');
+                  }}
+                  className="w-full text-xs sm:text-sm border border-slate-200 rounded-lg px-3.5 py-2.5 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#0038ed]"
+                  required
+                />
+              </div>
+            )}
 
             <div>
               <input

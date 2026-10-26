@@ -59,9 +59,9 @@ export const Step4StoreLocation: React.FC = () => {
       address: {
         street: draft.step4?.address?.street || '',
         landmark: draft.step4?.address?.landmark || '',
-        city: draft.step4?.address?.city || 'Bengaluru',
-        state: draft.step4?.address?.state || 'Karnataka',
-        pincode: draft.step4?.address?.pincode || '560001',
+        city: draft.step4?.address?.city || 'Bhilai',
+        state: draft.step4?.address?.state || 'Chhattisgarh',
+        pincode: draft.step4?.address?.pincode || '490023',
       },
       location: {
         type: 'Point',
