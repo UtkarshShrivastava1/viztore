@@ -354,6 +354,11 @@ Every online order placed through `apps/web` generates an authoritative, complia
   - **Payment & Cash Collection Accuracy**: Fixed hardcoded `CASH_ON_DELIVERY` flag in `delivery.service.ts`; runner now accurately displays `✅ Prepaid Online (Do not collect cash)` for online/prepaid orders and only prompts cash collection when COD is explicitly chosen.
   - **Broadcast Text Deduplication**: Deduplicated locality/city joining in merchant fleet broadcasts (preventing redundant `Local City, Local City`).
   - **Test Suite**: **185/185 unit & simulation tests passing across 27 test files**; clean TypeScript build across backend, merchant, and web.
+- [x] **Storefront Checkout & Merchant Fleet Broadcast Address Sanitization (Commit `e54d9bc`) 🟢**:
+  - **Live Atlas DB Sanitization**: Updated test order `ORD-20261026-DEC1E9` and its delivery document in MongoDB Atlas to real location values (`Bhilai`, `Chhattisgarh`, `490006`).
+  - **Customer Storefront Checkout (`apps/web`)**: Replaced hardcoded fallback strings (`Local City`, `State`, `452001`) in `DeliveryAddressSection.tsx` and `CheckoutPriceDetails.tsx` with dynamic properties from `useLocationStore`.
+  - **Merchant Fleet Broadcast Parser (`apps/merchant`)**: Enhanced address extraction in `OrderDetailModal.tsx` and `orderStore.ts` to parse locality (`Sector 6`) and city (`Bhilai`) directly from street address segments when legacy placeholder values are present. Added safe null indexing guards resolving TS2532.
+  - **Build & Test Verification**: 185/185 automated tests passing; 100% clean TypeScript production builds for backend, merchant, and web storefront.
 
 
 

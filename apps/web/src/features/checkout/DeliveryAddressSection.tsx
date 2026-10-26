@@ -233,25 +233,30 @@ export function DeliveryAddressSection() {
               <div className="grid grid-cols-3 gap-2">
                 <div>
                   <label className="block text-[10px] font-bold text-gray-700 mb-1">City</label>
-                  <input
-                    type="text"
-                    required
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    placeholder="City"
-                    className="w-full px-2 py-2 text-xs rounded-xl border border-gray-200 focus:outline-none focus:border-[#1668F6]"
-                  />
+                  <select
+                    value={city || 'Bhilai'}
+                    onChange={(e) => {
+                      const newCity = e.target.value;
+                      setCity(newCity);
+                      if (!postalCode || postalCode === '490006' || postalCode === '491001') {
+                        setPostalCode(newCity === 'Durg' ? '491001' : '490006');
+                      }
+                    }}
+                    className="w-full px-2 py-2 text-xs rounded-xl border border-gray-200 focus:outline-none focus:border-[#1668F6] bg-white cursor-pointer font-medium"
+                  >
+                    <option value="Bhilai">Bhilai</option>
+                    <option value="Durg">Durg</option>
+                  </select>
                 </div>
                 <div>
                   <label className="block text-[10px] font-bold text-gray-700 mb-1">State</label>
-                  <input
-                    type="text"
-                    required
-                    value={state}
+                  <select
+                    value={state || 'Chhattisgarh'}
                     onChange={(e) => setState(e.target.value)}
-                    placeholder="State"
-                    className="w-full px-2 py-2 text-xs rounded-xl border border-gray-200 focus:outline-none focus:border-[#1668F6]"
-                  />
+                    className="w-full px-2 py-2 text-xs rounded-xl border border-gray-200 focus:outline-none focus:border-[#1668F6] bg-slate-50 cursor-pointer font-medium"
+                  >
+                    <option value="Chhattisgarh">Chhattisgarh</option>
+                  </select>
                 </div>
                 <div>
                   <label className="block text-[10px] font-bold text-gray-700 mb-1">Pincode</label>
@@ -261,7 +266,7 @@ export function DeliveryAddressSection() {
                     pattern="[0-9]{6}"
                     value={postalCode}
                     onChange={(e) => setPostalCode(e.target.value)}
-                    placeholder="6 Digits"
+                    placeholder="490006"
                     className="w-full px-2 py-2 text-xs rounded-xl border border-gray-200 focus:outline-none focus:border-[#1668F6]"
                   />
                 </div>
