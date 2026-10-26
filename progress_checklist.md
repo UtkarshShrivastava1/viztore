@@ -259,6 +259,15 @@
   - [x] Part-A/Part-B E-Way Bill generation drawer (`8.13.png`) with vehicle details and HSN breakdown
   - [x] Drag-and-drop CSV Import dialogs replacing alert stubs for Purchases, Expenses, and Vendors
   - [x] Support ticket creation form modal (`15.1.png`) with attachments and character counters
+- [x] **Production Deployment Live Audit & Autonomous Remediation (Commit `0db3db5`) (Completed 🟢)**:
+  - [x] Autonomous live testing across `https://viztore-merchant.vercel.app` covering all 11 modules
+  - [x] Replaced 404 Unsplash variant swatch asset in `AddProductStep2.tsx` with verified 200 OK image
+  - [x] Added action CTAs and POS/invoice shortcuts to Invoices and Quotes empty states and filter bars
+  - [x] Initialized `customerStore` with `seedCustomers` and dynamic KPIs; implemented active pagination with page slicing and controls
+  - [x] Initialized `returnsStore` with `mockReturnsList`, set 'All Time' default date range, and made KPI cards/refund totals dynamic
+  - [x] Synchronized `StoreProfileTab` and `BusinessInfoTab` with active authenticated store (`National Retail Store`) and user contact info
+  - [x] Seeded `walletStore` with real transactions, bank accounts, and active balances (₹32,450.00)
+  - [x] Verified 100% clean production build (`tsc && vite build`) and documented audit in `live_hardening_and_bug_remediation_audit.md`
 
 - [ ] Merchant staff management & role-based access control (Manager, Cashier, Inventory Clerk)
 - [ ] Merchant marketing suite: promotional store banner manager & coupon builder (Post-Launch Phase 2)

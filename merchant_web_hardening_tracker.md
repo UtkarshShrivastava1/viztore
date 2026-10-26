@@ -1131,4 +1131,27 @@ graph LR
   - **Dynamic Debt Aging Engine:** `CustomerStatementDrawer.tsx` segments overdue liabilities into chronological risk buckets with responsive color-coded visual bars, giving merchants immediate visibility into collection priorities.
   - **Frictionless Debt Collection:** 1-click WhatsApp deep-linking removes friction for Indian local merchants by formatting conversational Hindi/English debt reminders ready to dispatch instantly via WhatsApp Web or mobile.
 
+---
+
+### 🏁 Step 10 & 11: Production Deployment Live Audit & Autonomous Remediation
+* **Date & Timestamp:** October 26, 2026
+* **Test Scope:**
+  1. Autonomous top-to-bottom live audit across `https://viztore-merchant.vercel.app` using real authenticated session (`test.merchant@example.com` / `Password@123`, `National Retail Store`, Bhilai, CG).
+  2. Browser subagent inspection across all 11 Merchant Modules (Catalog, Inventory, Billing/POS, Invoices, Quotes, Customers CRM, Returns & Refunds, Wallet, Purchase & Expenses, Settings, Support).
+  3. Proactive diagnosis and local remediation of broken assets, unpopulated stores, non-responsive buttons, empty state CTAs, and state desynchronizations.
+  4. Local TypeScript compilation (`tsc`) and Vite production bundling verification.
+* **Status:** 🟢 **AUDITED, REMEDIATED & VERIFIED (COMMIT: `0db3db5`)**
+* **Audit Document:** [`live_hardening_and_bug_remediation_audit.md`](file:///d:/UTKARSH/Live%20Projects/Vercel-live-Website/platform-root-vz/live_hardening_and_bug_remediation_audit.md)
+* **Key Remediations Applied:**
+  1. `AddProductStep2.tsx`: Replaced 404 Unsplash image asset URL with verified 200 OK textile swatch image.
+  2. `customerStore.ts` & `CustomerTable.tsx`: Initialized `seedCustomers` and live KPIs; implemented state-driven pagination (slicing, dynamic totalPages, active `<` / `>` and number controls).
+  3. `returnsStore.ts`, `ReturnsKPIBar.tsx` & `ReturnsTable.tsx`: Seeded `mockReturnsList`, set default date range to 'All Time' to prevent 2024 demo return exclusion, made KPI cards and summary amounts dynamic.
+  4. `InvoicesTableView.tsx` & `QuotesTableView.tsx`: Added quick Counter POS and + Create Invoice buttons to filter toolbar; added actionable CTA buttons inside empty state tables.
+  5. `StoreProfileTab.tsx` & `BusinessInfoTab.tsx`: Added reactive store synchronization hooks so authenticated store credentials (`National Retail Store`, user email, user phone) automatically populate instead of placeholder dummy `Fashion Hub`.
+  6. `walletStore.ts`: Seeded `initialTransactions`, `initialBankAccounts`, and active ledger balances (`₹32,450.00`).
+* **Build Verification:**
+  - `pnpm --filter=@repo/merchant build` passed cleanly in 10.67s with 0 errors.
+  - Changes staged and committed locally in `0db3db5` (push reserved for founder).
+
+
 

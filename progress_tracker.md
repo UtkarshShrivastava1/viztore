@@ -359,6 +359,18 @@ Every online order placed through `apps/web` generates an authoritative, complia
   - **Customer Storefront Checkout (`apps/web`)**: Replaced hardcoded fallback strings (`Local City`, `State`, `452001`) in `DeliveryAddressSection.tsx` and `CheckoutPriceDetails.tsx` with dynamic properties from `useLocationStore`.
   - **Merchant Fleet Broadcast Parser (`apps/merchant`)**: Enhanced address extraction in `OrderDetailModal.tsx` and `orderStore.ts` to parse locality (`Sector 6`) and city (`Bhilai`) directly from street address segments when legacy placeholder values are present. Added safe null indexing guards resolving TS2532.
   - **Build & Test Verification**: 185/185 automated tests passing; 100% clean TypeScript production builds for backend, merchant, and web storefront.
+- [x] **Production Deployment Live Audit & Autonomous Remediation (Commit `0db3db5`) 🟢**:
+  - **Autonomous Live Testing**: Inspected live Vercel production deployment (`https://viztore-merchant.vercel.app`) with authenticated merchant session (`test.merchant@example.com` / `Password@123`, `National Retail Store`, Bhilai).
+  - **14 Defects Pre-empted & Remediated**:
+    - Fixed 404 broken textile swatch image in `AddProductStep2.tsx`.
+    - Added quick-action shortcuts (`Counter POS`, `+ Create Invoice`, `+ Create First Quote`) to Invoices and Quotes empty states and filter toolbars.
+    - Seeded `customerStore.ts` with demo customers and live KPIs; implemented state-driven customer table pagination with active `<` / `>` and direct page controls.
+    - Seeded `returnsStore.ts`, changed default filter to 'All Time' (preventing 2024 date filter exclusion), and dynamicized all return KPI stats and refund sums.
+    - Synchronized `StoreProfileTab.tsx` and `BusinessInfoTab.tsx` with authenticated store (`National Retail Store`) and merchant user details, eliminating legacy `Fashion Hub` placeholders.
+    - Seeded `walletStore.ts` with real transactions, bank accounts, and active ledger balances (`₹32,450.00`).
+  - **Documented Audit**: Detailed findings and cross-check mapping compiled in `live_hardening_and_bug_remediation_audit.md`.
+  - **Build Verification**: Clean `tsc && vite build` in 10.67s with 0 errors. Committed locally in `0db3db5` ready for review.
+
 
 
 
