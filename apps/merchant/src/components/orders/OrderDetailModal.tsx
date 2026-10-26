@@ -58,10 +58,11 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
     const storeLocality = store?.address?.locality || store?.address?.city || '';
     const pickupDisplay = storeLocality ? `${storeName} (${storeLocality})` : storeName;
 
-    const dropArea = [
-      order.deliveryAddress?.locality,
-      order.deliveryAddress?.city,
-    ].filter(Boolean).join(', ') || order.deliveryAddress?.street || 'Local Customer Area';
+    const locality = order.deliveryAddress?.locality?.trim();
+    const city = order.deliveryAddress?.city?.trim();
+    const dropArea = (locality && city && locality.toLowerCase() === city.toLowerCase())
+      ? city
+      : ([locality, city].filter(Boolean).join(', ') || order.deliveryAddress?.street || 'Local Customer Area');
 
     const itemsCount = order.itemsSummary?.count || order.items?.length || 1;
     const itemsTitle = order.itemsSummary?.title || order.items?.[0]?.name || 'Packaged parcel';

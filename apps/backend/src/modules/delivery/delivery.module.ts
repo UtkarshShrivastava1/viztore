@@ -10,6 +10,8 @@ import { orderModule, type IOrderFacade } from '../orders/index.js';
 import type { IDeliveryRepository, IDeliveryService } from './delivery.types.js';
 import { logger } from '../../shared/utils/logger.js';
 
+import { findStoreById } from '../stores/store.service.js';
+
 export interface DeliveryModule {
   router: Router;
   service: IDeliveryService;
@@ -29,19 +31,48 @@ export function createDeliveryModule(
   events.on(EVENTS.ORDER_CONFIRMED, async ({ orderId, orderNumber }) => {
     try {
       logger.info(`[DeliveryModule] Order #${orderNumber} confirmed. Initializing dispatch...`);
+      const order = await orders.getOrderById(orderId);
+      let storeName = 'Store Partner';
+      let storeAddress = 'Local Depot';
+      let storeCoords: [number, number] = [72.8777, 19.076];
+
+      if (order?.storeId) {
+        try {
+          const store = await findStoreById(order.storeId);
+          if (store) {
+            storeName = store.name;
+            const parts = [store.address?.street, store.address?.city, store.address?.state].filter(Boolean);
+            storeAddress = parts.join(', ') || store.name;
+            if (store.location?.coordinates && store.location.coordinates.length === 2) {
+              storeCoords = store.location.coordinates as [number, number];
+            }
+          }
+        } catch {
+          // ignore
+        }
+      }
+
+      let dropAddress = 'Customer Delivery Address';
+      let dropCoords: [number, number] = [storeCoords[0] + 0.01, storeCoords[1] + 0.01];
+      if (order?.shippingAddress) {
+        const parts = [order.shippingAddress.street, order.shippingAddress.city, order.shippingAddress.state].filter(Boolean);
+        dropAddress = parts.join(', ');
+      }
+
       await service.initializeDelivery({
         orderId,
         orderNumber,
-        storeId: 'store-dispatch-placeholder',
-        customerId: 'customer-placeholder',
+        storeId: order?.storeId || 'store-dispatch-placeholder',
+        customerId: order?.userId || 'customer-placeholder',
         pickupLocation: {
-          coordinates: [72.8777, 19.076], // Default Mumbai hub
-          addressText: 'Store Local Depot',
+          coordinates: storeCoords,
+          addressText: `${storeName}, ${storeAddress}`,
         },
         dropoffLocation: {
-          coordinates: [72.885, 19.085], // ~1.5km delivery dropoff
-          addressText: 'Customer Delivery Address',
+          coordinates: dropCoords,
+          addressText: dropAddress,
         },
+        estimatedPayout: 40,
       });
     } catch (err) {
       logger.warn(`[DeliveryModule] Failed to auto-initialize delivery on order confirmation: ${err instanceof Error ? err.message : String(err)}`);

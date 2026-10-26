@@ -20,6 +20,7 @@ import { EVENTS } from '../../shared/events/eventTypes.js';
 import { AppError } from '../../shared/utils/AppError.js';
 import { logger } from '../../shared/utils/logger.js';
 import type { IOrderFacade } from '../orders/index.js';
+import { findStoreById } from '../stores/store.service.js';
 
 const allowedTransitions: Record<DeliveryStatus, DeliveryStatus[]> = {
   [DeliveryStatus.PENDING_ASSIGNMENT]: [DeliveryStatus.ASSIGNED, DeliveryStatus.CANCELLED],
@@ -89,6 +90,11 @@ function extractArea(addressText: string): string {
   if (!addressText) return 'Local Area';
   const parts = addressText.split(',').map((p) => p.trim()).filter(Boolean);
   if (parts.length >= 2) {
+    const last = parts[parts.length - 1];
+    const secondLast = parts[parts.length - 2];
+    if (last && secondLast && last.toLowerCase() === secondLast.toLowerCase()) {
+      return last;
+    }
     return parts.slice(-2).join(', ');
   }
   return parts[0] || 'Local Area';
@@ -98,7 +104,7 @@ function extractArea(addressText: string): string {
  * Redacts exact customer address and phone number for open pool listing
  */
 function sanitizeTeaser(delivery: DeliveryResponseDto): DeliveryPoolTeaserDto {
-  const payout = delivery.estimatedPayout ?? 45;
+  const payout = delivery.estimatedPayout ?? 40;
   return {
     deliveryId: delivery.id,
     orderId: delivery.orderId,
@@ -364,8 +370,15 @@ export function createDeliveryService(
     orderId: string,
     otp: string,
   ): Promise<DeliveryResponseDto | null> {
+    const delivery = await repo.findByOrderId(orderId);
+    if (!delivery) {
+      throw AppError.notFound('Delivery record for this order not found', 'DELIVERY_NOT_FOUND');
+    }
+
+    const targetOrderId = delivery.orderId || delivery.orderNumber || orderId;
+
     if (orderFacade) {
-      const order = await orderFacade.markAsDelivered(orderId, otp);
+      const order = await orderFacade.markAsDelivered(targetOrderId, otp);
       if (!order) {
         throw AppError.badRequest('Invalid 4-digit Delivery OTP or order could not be confirmed', 'INVALID_DELIVERY_OTP');
       }
@@ -375,12 +388,12 @@ export function createDeliveryService(
 
     if (updated && bus) {
       bus.emit(EVENTS.DELIVERY_COMPLETED, {
-        orderId,
+        orderId: updated.orderId,
         orderNumber: updated.orderNumber,
         previousStatus: DeliveryStatus.ARRIVED,
         newStatus: DeliveryStatus.DELIVERED,
       });
-      logger.info(`[DeliveryService] Emitted DELIVERY_COMPLETED for order ${orderId}`);
+      logger.info(`[DeliveryService] Emitted DELIVERY_COMPLETED for order ${updated.orderId}`);
     }
 
     return updated;
@@ -396,16 +409,59 @@ export function createDeliveryService(
       return null;
     }
 
-    let orderInfo: { totalAmount: number; paymentMethod: string; customerName: string; customerPhone: string } | null = null;
+    const targetOrderId = delivery.orderId || delivery.orderNumber || orderId;
+    let orderInfo: {
+      totalAmount: number;
+      paymentMethod: string;
+      customerName: string;
+      customerPhone: string;
+      dropoffAddress?: string;
+      pickupStoreName?: string;
+      pickupAddress?: string;
+      pickupPhone?: string;
+    } | null = null;
+
     if (orderFacade) {
       try {
-        const order = await orderFacade.getOrderById(delivery.orderId);
+        const order = await orderFacade.getOrderById(targetOrderId);
         if (order) {
+          const isCod = Boolean(
+            (order as any).payment?.paymentMethod === 'Cash on Delivery' ||
+            (order as any).paymentMethod === 'cod' ||
+            (order as any).paymentMethod === 'COD' ||
+            (order as any).paymentMethod === 'CASH_ON_DELIVERY'
+          );
+
+          let storeName = '';
+          let storeAddress = '';
+          let storePhone = '';
+          if (order.storeId) {
+            try {
+              const store = await findStoreById(order.storeId);
+              if (store) {
+                storeName = store.name;
+                storePhone = store.phone || '';
+                const parts = [store.address?.street, store.address?.city, store.address?.state].filter(Boolean);
+                storeAddress = parts.join(', ') || store.name;
+              }
+            } catch {
+              // fallback
+            }
+          }
+
+          const dropAddress = order.shippingAddress
+            ? [order.shippingAddress.street, order.shippingAddress.city, order.shippingAddress.state].filter(Boolean).join(', ')
+            : undefined;
+
           orderInfo = {
             totalAmount: order.grandTotal ?? 0,
-            paymentMethod: 'CASH_ON_DELIVERY',
+            paymentMethod: isCod ? 'CASH_ON_DELIVERY' : 'PREPAID',
             customerName: order.shippingAddress?.fullName ?? 'Customer',
             customerPhone: order.shippingAddress?.phone ?? '',
+            dropoffAddress: dropAddress,
+            pickupStoreName: storeName,
+            pickupAddress: storeAddress,
+            pickupPhone: storePhone,
           };
         }
       } catch (err) {
@@ -419,6 +475,10 @@ export function createDeliveryService(
     const pickupNavigationUrl = `https://www.google.com/maps/dir/?api=1&destination=${delivery.pickupLocation.coordinates[1]},${delivery.pickupLocation.coordinates[0]}&travelmode=two-wheeler`;
     const dropoffNavigationUrl = `https://www.google.com/maps/dir/?api=1&origin=${delivery.pickupLocation.coordinates[1]},${delivery.pickupLocation.coordinates[0]}&destination=${delivery.dropoffLocation.coordinates[1]},${delivery.dropoffLocation.coordinates[0]}&travelmode=two-wheeler`;
 
+    const pickupAddressText: string = orderInfo?.pickupAddress || (delivery.pickupLocation.addressText !== 'Store Local Depot' ? delivery.pickupLocation.addressText : 'Store Partner');
+    const storeDisplayName: string = orderInfo?.pickupStoreName || (delivery.pickupLocation.addressText !== 'Store Local Depot' ? (delivery.pickupLocation.addressText.split(',')[0] || 'Store Partner') : 'Store Partner');
+    const dropAddressText: string = orderInfo?.dropoffAddress || (delivery.dropoffLocation.addressText !== 'Customer Delivery Address' ? delivery.dropoffLocation.addressText : 'Customer Address');
+
     const result: RiderRunDetailsDto = {
       orderId: delivery.orderId,
       orderNumber: delivery.orderNumber,
@@ -426,9 +486,9 @@ export function createDeliveryService(
       distanceKm: delivery.distanceKm,
       estimatedMinutes: delivery.estimatedMinutes,
       estimatedPayout: delivery.estimatedPayout ?? 40,
-      pickupArea: extractArea(delivery.pickupLocation.addressText),
-      dropoffArea: extractArea(delivery.dropoffLocation.addressText),
-      paymentMethod: orderInfo?.paymentMethod || 'CASH_ON_DELIVERY',
+      pickupArea: storeDisplayName,
+      dropoffArea: extractArea(dropAddressText),
+      paymentMethod: orderInfo?.paymentMethod || 'PREPAID',
       totalAmount: orderInfo?.totalAmount || 0,
       isClaimed,
       isClaimedByCaller,
@@ -437,16 +497,16 @@ export function createDeliveryService(
 
     if (isClaimedByCaller) {
       result.pickupDetails = {
-        storeName: delivery.pickupLocation.addressText.split(',')[0] || 'Local Retailer',
-        storePhone: '',
-        pickupAddress: delivery.pickupLocation.addressText,
+        storeName: storeDisplayName,
+        storePhone: orderInfo?.pickupPhone || '',
+        pickupAddress: pickupAddressText,
         navigationUrl: pickupNavigationUrl,
         pickupCode: `#${delivery.orderNumber.slice(-4).toUpperCase()}`,
       };
       result.dropoffDetails = {
         customerName: orderInfo?.customerName || 'Customer',
         customerPhone: orderInfo?.customerPhone || '',
-        dropoffAddress: delivery.dropoffLocation.addressText,
+        dropoffAddress: dropAddressText,
         navigationUrl: dropoffNavigationUrl,
       };
     }

@@ -194,7 +194,8 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
       await deliveryApi.verifyOtp(orderId, otp);
       await fetchRun(selectedRider?.id);
     } catch (err: any) {
-      setOtpError('Invalid OTP! Please ask customer to re-check their order tracking screen.');
+      const msg = err?.error?.message || err?.message;
+      setOtpError(msg || 'Invalid OTP! Please ask customer to re-check their order tracking screen.');
     } finally {
       setIsSubmitting(false);
     }

@@ -1,4 +1,4 @@
-import type { Model } from 'mongoose';
+import mongoose, { isValidObjectId, type Model } from 'mongoose';
 import {
   DeliveryStatus,
   type IDeliveryDocument,
@@ -23,7 +23,7 @@ function toResponse(doc: any): DeliveryResponseDto {
     status: doc.status,
     dispatchMessage: doc.dispatchMessage,
     timeline: doc.timeline || [],
-    estimatedPayout: doc.estimatedPayout ?? 45,
+    estimatedPayout: doc.estimatedPayout ?? 40,
     broadcastedAt: doc.broadcastedAt ? new Date(doc.broadcastedAt).toISOString() : undefined,
     claimedAt: doc.claimedAt ? new Date(doc.claimedAt).toISOString() : undefined,
     createdAt: doc.createdAt ? new Date(doc.createdAt).toISOString() : new Date().toISOString(),
@@ -37,7 +37,7 @@ export function createDeliveryRepository(
   async function create(params: CreateDeliveryParams): Promise<DeliveryResponseDto> {
     const delivery = new model({
       ...params,
-      estimatedPayout: params.estimatedPayout ?? 45,
+      estimatedPayout: params.estimatedPayout ?? 40,
       status: DeliveryStatus.PENDING_ASSIGNMENT,
       timeline: [
         {
@@ -51,8 +51,21 @@ export function createDeliveryRepository(
     return toResponse(saved);
   }
 
+  function buildDeliveryQuery(orderId: string) {
+    const clean = orderId.replace(/^#+/, '');
+    return {
+      $or: [
+        { orderId },
+        { orderNumber: orderId },
+        { orderNumber: clean },
+        { orderNumber: `#${clean}` },
+        ...(isValidObjectId(orderId) ? [{ _id: orderId }] : []),
+      ],
+    };
+  }
+
   async function findByOrderId(orderId: string): Promise<DeliveryResponseDto | null> {
-    const doc = await model.findOne({ orderId }).read('secondaryPreferred');
+    const doc = await model.findOne(buildDeliveryQuery(orderId)).read('secondaryPreferred');
     return doc ? toResponse(doc) : null;
   }
 
@@ -116,7 +129,7 @@ export function createDeliveryRepository(
     dispatchMessage?: string,
   ): Promise<DeliveryResponseDto | null> {
     const doc = await model.findOneAndUpdate(
-      { orderId },
+      buildDeliveryQuery(orderId),
       {
         $set: {
           rider,
@@ -147,7 +160,7 @@ export function createDeliveryRepository(
     // Atomic mutex claim: only succeeds if orderId is in PENDING_ASSIGNMENT AND rider is unset
     const doc = await model.findOneAndUpdate(
       {
-        orderId,
+        ...buildDeliveryQuery(orderId),
         status: DeliveryStatus.PENDING_ASSIGNMENT,
         $or: [
           { rider: { $exists: false } },
@@ -188,14 +201,14 @@ export function createDeliveryRepository(
     }
 
     const doc = await model.findOneAndUpdate(
-      { orderId },
+      buildDeliveryQuery(orderId),
       {
         $set: updateSet,
         $push: {
           timeline: {
             status: DeliveryStatus.PENDING_ASSIGNMENT,
             timestamp: new Date().toISOString(),
-            note: `Broadcasted to hyperlocal rider pool (Payout: ₹${estimatedPayout ?? 45})`,
+            note: `Broadcasted to hyperlocal rider pool (Payout: ₹${estimatedPayout ?? 40})`,
           },
         },
       },
@@ -265,7 +278,7 @@ export function createDeliveryRepository(
     note?: string,
   ): Promise<DeliveryResponseDto | null> {
     const doc = await model.findOneAndUpdate(
-      { orderId },
+      buildDeliveryQuery(orderId),
       {
         $set: { status },
         $push: {
