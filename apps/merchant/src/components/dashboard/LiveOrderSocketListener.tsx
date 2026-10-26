@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Bell, X, ArrowRight, Volume2, VolumeX } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore.js';
 import { useOrderStore } from '../../stores/orderStore.js';
+import { useCatalogStore } from '../../stores/catalogStore.js';
 import { merchantSocket, OrderPlacedSocketPayload } from '../../lib/socket.js';
 import { isAudioAlertMuted, toggleAudioAlertMuted, playOrderAlertChime } from '../../lib/audioAlert.js';
 
@@ -24,6 +25,10 @@ export const LiveOrderSocketListener: React.FC<LiveOrderSocketListenerProps> = (
     const storeId = currentStore?._id || currentStore?.id;
     merchantSocket.connect(storeId);
 
+    // Immediate initial sync for the merchant portal
+    useOrderStore.getState().fetchOrders(storeId).catch(() => {});
+    useCatalogStore.getState().fetchProducts(storeId).catch(() => {});
+
     const unsubscribe = merchantSocket.onOrderPlaced((order) => {
       setActiveAlert(order);
     });
@@ -38,6 +43,8 @@ export const LiveOrderSocketListener: React.FC<LiveOrderSocketListenerProps> = (
     const storeId = currentStore?._id || currentStore?.id;
     if (storeId) {
       merchantSocket.setStoreId(storeId);
+      useOrderStore.getState().fetchOrders(storeId).catch(() => {});
+      useCatalogStore.getState().fetchProducts(storeId).catch(() => {});
     }
   }, [currentStore]);
 

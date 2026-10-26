@@ -745,6 +745,18 @@ export const useOrderStore = create<OrderStoreState>((set, get) => {
           targetStoreId = authState.currentStore?._id || authState.currentStore?.id;
         }
 
+        if (!targetStoreId) {
+          try {
+            const stores = await api.get<any[]>('/stores/mine');
+            if (Array.isArray(stores) && stores.length > 0) {
+              targetStoreId = stores[0]._id || stores[0].id;
+              useAuthStore.getState().setCurrentStore(stores[0]);
+            }
+          } catch {
+            // fallback
+          }
+        }
+
         let rawData: any[] = [];
         if (targetStoreId) {
           rawData = await api.get<any[]>(`/orders/store/${targetStoreId}`).catch(async () => {

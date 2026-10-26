@@ -71,15 +71,16 @@ export const GreetingHeader: React.FC = () => {
 };
 
 export const KpiCards: React.FC = () => {
-  const { orders } = useOrderStore();
-  const { products } = useCatalogStore();
+  const { orders, isLoading: ordersLoading } = useOrderStore();
+  const { products, isLoading: productsLoading } = useCatalogStore();
 
   const totalSalesAmount = orders.reduce((sum, o) => sum + (o.pricing?.totalAmount || 0), 0);
+  const isInitialLoading = (ordersLoading && orders.length === 0) || (productsLoading && products.length === 0);
 
   const kpis = [
     {
       title: 'Total Sales',
-      value: `₹${totalSalesAmount.toLocaleString('en-IN')}`,
+      value: isInitialLoading ? '...' : `₹${totalSalesAmount.toLocaleString('en-IN')}`,
       change: orders.length > 0 ? '+100%' : '0%',
       timeframe: 'vs last 7 days',
       icon: ShoppingBag,
@@ -88,7 +89,7 @@ export const KpiCards: React.FC = () => {
     },
     {
       title: 'Total Orders',
-      value: `${orders.length}`,
+      value: isInitialLoading ? '...' : `${orders.length}`,
       change: orders.length > 0 ? '+100%' : '0%',
       timeframe: 'vs last 7 days',
       icon: ClipboardList,
@@ -97,7 +98,7 @@ export const KpiCards: React.FC = () => {
     },
     {
       title: 'Products Listed',
-      value: `${products.length}`,
+      value: isInitialLoading ? '...' : `${products.length}`,
       change: products.length > 0 ? '+100%' : '0%',
       timeframe: 'active in catalog',
       icon: Users,
