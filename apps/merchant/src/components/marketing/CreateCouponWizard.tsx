@@ -21,6 +21,8 @@ import {
 import { useMarketingStore, CouponItem } from '../../stores/marketingStore.js';
 import { SelectProductsModal } from './SelectProductsModal.js';
 import { SelectCategoriesModal } from './SelectCategoriesModal.js';
+import { LiveVoucherTicketPreview } from './LiveVoucherTicketPreview.js';
+import { CouponSuccessModal } from './CouponSuccessModal.js';
 
 interface CreateCouponWizardProps {
   onClose?: () => void;
@@ -68,6 +70,8 @@ export const CreateCouponWizard: React.FC<CreateCouponWizardProps> = ({ onClose 
   const [combineOffers, setCombineOffers] = useState(false);
   const [confirmed, setConfirmed] = useState(true);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [createdCoupon, setCreatedCoupon] = useState<Partial<CouponItem> | null>(null);
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
 
   // Modals state
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
@@ -86,10 +90,17 @@ export const CreateCouponWizard: React.FC<CreateCouponWizardProps> = ({ onClose 
         ? `₹${discountValue} Flat OFF`
         : 'Free Delivery';
 
-    addCoupon({
-      code: code.trim(),
+    const newCouponItem: CouponItem = {
+      id: `CPN-${Date.now().toString().slice(-4)}`,
+      code: code.trim().toUpperCase(),
       title: name.trim(),
+      name: name.trim(),
+      description: description.trim(),
       type: discountType,
+      discountType: discountType === 'Fixed Amount' ? 'fixed' : discountType === 'Free Shipping' ? 'free_shipping' : 'percentage',
+      discountValue,
+      maxDiscount,
+      minOrderValue,
       benefit: benefitText,
       applicableOn:
         applicableOn === 'All Products'
@@ -99,17 +110,24 @@ export const CreateCouponWizard: React.FC<CreateCouponWizardProps> = ({ onClose 
           : `${selectedCategoryNames.length} Categories`,
       startDate: '20 May 2024',
       endDate: '20 Jun 2024',
+      usedCount: 0,
+      usageCount: 0,
       totalLimit: usageLimit === 'Limited' ? maxUsage : 9999,
+      usageLimit: usageLimit === 'Limited' ? maxUsage : 9999,
       status: 'Active',
-    });
+      isActive: true,
+    };
 
-    setIsSuccess(true);
-    setTimeout(() => {
-      setIsSuccess(false);
-      if (onClose) onClose();
-      else closeCreateCouponWizard();
-      setActiveSubTab('discounts_coupons');
-    }, 1200);
+    addCoupon(newCouponItem);
+    setCreatedCoupon(newCouponItem);
+    setIsSuccessModalOpen(true);
+  };
+
+  const handleFinishSuccess = () => {
+    setIsSuccessModalOpen(false);
+    if (onClose) onClose();
+    else closeCreateCouponWizard();
+    setActiveSubTab('discounts_coupons');
   };
 
   const handleCancel = () => {
@@ -600,52 +618,18 @@ export const CreateCouponWizard: React.FC<CreateCouponWizardProps> = ({ onClose 
               <div className="flex items-center justify-between">
                 <h3 className="text-xs font-bold text-slate-900">Coupon Preview</h3>
                 <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold">
-                  Preview
+                  Live Voucher Preview
                 </span>
               </div>
-
-              {/* Realistic ticket with dashed borders, punch-out notches, and Scissors */}
-              <div className="relative border-2 border-dashed border-blue-300 rounded-2xl p-3.5 bg-gradient-to-r from-blue-50/70 via-white to-blue-50/50 shadow-2xs overflow-hidden flex items-stretch justify-between">
-                <div className="space-y-1 min-w-0 pr-3 flex-1">
-                  <span className="font-mono text-base font-black text-blue-700 tracking-wider block">
-                    {code || 'COUPONCODE'}
-                  </span>
-                  <p className="text-[11px] font-bold text-slate-800 line-clamp-1">
-                    {name || 'Coupon Name'}
-                  </p>
-                  <p className="text-[10px] text-slate-500 line-clamp-2">
-                    {description || 'Special savings applied at checkout.'}
-                  </p>
-                  <div className="text-[9px] font-semibold text-slate-400 pt-1">
-                    Min. order ₹{minOrderValue.toLocaleString()} | Max. discount ₹{maxDiscount.toLocaleString()}
-                  </div>
-                </div>
-
-                {/* Perforated vertical separator with scissors */}
-                <div className="relative flex flex-col items-center justify-center px-2">
-                  <div className="absolute -top-5 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-white border border-blue-200" />
-                  <div className="h-full border-l-2 border-dashed border-blue-300 relative flex items-center justify-center">
-                    <div className="absolute bg-white p-0.5 rounded-full border border-blue-200 text-blue-500 shadow-2xs">
-                      <Scissors className="w-3 h-3 rotate-90" />
-                    </div>
-                  </div>
-                  <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-white border border-blue-200" />
-                </div>
-
-                {/* Benefit value */}
-                <div className="pl-3 flex flex-col items-center justify-center shrink-0 min-w-[65px] text-center">
-                  <span className="text-xl font-black text-blue-700 leading-tight">
-                    {discountType === 'Percentage'
-                      ? `${discountValue}%`
-                      : discountType === 'Fixed Amount'
-                      ? `₹${discountValue}`
-                      : 'FREE'}
-                  </span>
-                  <span className="text-[9px] font-black text-blue-900 uppercase tracking-wider">
-                    {discountType === 'Free Shipping' ? 'DELIVERY' : 'OFF'}
-                  </span>
-                </div>
-              </div>
+              <LiveVoucherTicketPreview
+                code={code}
+                name={name}
+                description={description}
+                discountType={discountType}
+                discountValue={discountValue}
+                maxDiscount={maxDiscount}
+                minOrderValue={minOrderValue}
+              />
             </div>
 
             {/* Important Information card */}
@@ -822,44 +806,15 @@ export const CreateCouponWizard: React.FC<CreateCouponWizardProps> = ({ onClose 
                   How it will appear
                 </span>
               </div>
-
-              <div className="relative border-2 border-dashed border-blue-300 rounded-2xl p-3.5 bg-gradient-to-r from-blue-50/70 via-white to-blue-50/50 shadow-2xs overflow-hidden flex items-stretch justify-between">
-                <div className="space-y-1 min-w-0 pr-3 flex-1">
-                  <span className="font-mono text-base font-black text-blue-700 tracking-wider block">
-                    {code || 'COUPONCODE'}
-                  </span>
-                  <p className="text-[11px] font-bold text-slate-800 line-clamp-1">
-                    {name || 'Coupon Name'}
-                  </p>
-                  <p className="text-[10px] text-slate-500 line-clamp-2">
-                    {description || 'Special savings applied at checkout.'}
-                  </p>
-                  <div className="text-[9px] font-semibold text-slate-400 pt-1">
-                    Min. order ₹{minOrderValue.toLocaleString()} | Max. discount ₹{maxDiscount.toLocaleString()}
-                  </div>
-                </div>
-
-                {/* Perforated vertical separator with scissors */}
-                <div className="relative flex flex-col items-center justify-center px-2">
-                  <div className="absolute -top-5 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-white border border-blue-200" />
-                  <div className="h-full border-l-2 border-dashed border-blue-300 relative flex items-center justify-center">
-                    <div className="absolute bg-white p-0.5 rounded-full border border-blue-200 text-blue-500 shadow-2xs">
-                      <Scissors className="w-3 h-3 rotate-90" />
-                    </div>
-                  </div>
-                  <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-white border border-blue-200" />
-                </div>
-
-                {/* Benefit value */}
-                <div className="pl-3 flex flex-col items-center justify-center shrink-0 min-w-[65px] text-center">
-                  <span className="text-xl font-black text-blue-700 leading-tight">
-                    {discountType === 'Percentage' ? `${discountValue}%` : `₹${discountValue}`}
-                  </span>
-                  <span className="text-[9px] font-black text-blue-900 uppercase tracking-wider">
-                    {discountType === 'Free Shipping' ? 'DELIVERY' : 'OFF'}
-                  </span>
-                </div>
-              </div>
+              <LiveVoucherTicketPreview
+                code={code}
+                name={name}
+                description={description}
+                discountType={discountType}
+                discountValue={discountValue}
+                maxDiscount={maxDiscount}
+                minOrderValue={minOrderValue}
+              />
             </div>
 
             {/* Before You Create Checklist */}

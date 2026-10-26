@@ -24,7 +24,7 @@ interface DiscountsCouponsTabProps {
 }
 
 export const DiscountsCouponsTab: React.FC<DiscountsCouponsTabProps> = ({ onCreateCoupon }) => {
-  const { coupons, openCreateCouponWizard } = useMarketingStore();
+  const { coupons, openCreateCouponWizard, toggleCouponStatus } = useMarketingStore();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState<string>('All Types');
@@ -36,6 +36,13 @@ export const DiscountsCouponsTab: React.FC<DiscountsCouponsTabProps> = ({ onCrea
   const handleLaunchCreate = () => {
     if (onCreateCoupon) onCreateCoupon();
     else openCreateCouponWizard();
+  };
+
+  const handleShareWhatsApp = (coupon: CouponItem) => {
+    const text = encodeURIComponent(
+      `🎉 Special Offer! Use coupon code *${coupon.code}* to get ${coupon.benefit} on your order! Shop now!`
+    );
+    window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
   };
 
   const handleCopyCode = (code: string) => {
@@ -153,7 +160,7 @@ export const DiscountsCouponsTab: React.FC<DiscountsCouponsTabProps> = ({ onCrea
           </div>
           <div className="min-w-0 flex-1">
             <span className="text-[11px] font-semibold text-slate-500 block truncate">Total Coupons</span>
-            <span className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate block">18</span>
+            <span className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate block">{coupons.length}</span>
             <div className="flex items-center gap-1 text-[10px] text-emerald-600 font-semibold mt-0.5 truncate">
               <span>↑ 20%</span>
               <span className="text-slate-400 font-normal">vs last 30d</span>
@@ -168,7 +175,7 @@ export const DiscountsCouponsTab: React.FC<DiscountsCouponsTabProps> = ({ onCrea
           </div>
           <div className="min-w-0 flex-1">
             <span className="text-[11px] font-semibold text-slate-500 block truncate">Active Coupons</span>
-            <span className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate block">12</span>
+            <span className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate block">{coupons.filter((c) => c.status === 'Active').length}</span>
             <div className="flex items-center gap-1 text-[10px] text-emerald-600 font-semibold mt-0.5 truncate">
               <span>↑ 33%</span>
               <span className="text-slate-400 font-normal">vs last 30d</span>
@@ -183,7 +190,7 @@ export const DiscountsCouponsTab: React.FC<DiscountsCouponsTabProps> = ({ onCrea
           </div>
           <div className="min-w-0 flex-1">
             <span className="text-[11px] font-semibold text-slate-500 block truncate">Coupons Used</span>
-            <span className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate block">1,245</span>
+            <span className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate block">{coupons.reduce((a, c) => a + c.usedCount, 0).toLocaleString()}</span>
             <div className="flex items-center gap-1 text-[10px] text-emerald-600 font-semibold mt-0.5 truncate">
               <span>↑ 28%</span>
               <span className="text-slate-400 font-normal">vs last 30d</span>

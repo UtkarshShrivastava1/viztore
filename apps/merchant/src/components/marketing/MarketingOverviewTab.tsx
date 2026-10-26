@@ -21,7 +21,7 @@ import {
 import { useMarketingStore, AdType } from '../../stores/marketingStore.js';
 
 export const MarketingOverviewTab: React.FC = () => {
-  const { setActiveSubTab, setAdView, updateDraftAd, setCouponView } = useMarketingStore();
+  const { setActiveSubTab, setAdView, updateDraftAd, setCouponView, advertisements, coupons, openAdAnalytics } = useMarketingStore();
 
   const handleCreateAd = (type: AdType) => {
     updateDraftAd({ type });
@@ -45,7 +45,7 @@ export const MarketingOverviewTab: React.FC = () => {
           </div>
           <div className="min-w-0 flex-1">
             <span className="text-[11px] font-semibold text-slate-500 block truncate">Active Promotions</span>
-            <span className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate block">5</span>
+            <span className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate block">{advertisements.filter((a) => a.status === 'Active').length + coupons.filter((c) => c.status === 'Active').length}</span>
             <div className="flex items-center gap-1 text-[10px] text-emerald-600 font-semibold mt-0.5 truncate">
               <span>↑ 25%</span>
               <span className="text-slate-400 font-normal">vs last 30d</span>
@@ -60,7 +60,7 @@ export const MarketingOverviewTab: React.FC = () => {
           </div>
           <div className="min-w-0 flex-1">
             <span className="text-[11px] font-semibold text-slate-500 block truncate">Total Ad Spend</span>
-            <span className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate block">₹ 12,450</span>
+            <span className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate block">₹ {advertisements.reduce((acc, a) => acc + (a.totalSpend || 0), 0).toLocaleString('en-IN')}</span>
             <div className="flex items-center gap-1 text-[10px] text-emerald-600 font-semibold mt-0.5 truncate">
               <span>↑ 18.6%</span>
               <span className="text-slate-400 font-normal">vs last 30d</span>
@@ -75,7 +75,7 @@ export const MarketingOverviewTab: React.FC = () => {
           </div>
           <div className="min-w-0 flex-1">
             <span className="text-[11px] font-semibold text-slate-500 block truncate">Total Coupon Redemptions</span>
-            <span className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate block">1,245</span>
+            <span className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate block">{coupons.reduce((acc, c) => acc + (c.usedCount || 0), 0).toLocaleString()}</span>
             <div className="flex items-center gap-1 text-[10px] text-emerald-600 font-semibold mt-0.5 truncate">
               <span>↑ 22.3%</span>
               <span className="text-slate-400 font-normal">vs last 30d</span>
@@ -90,7 +90,7 @@ export const MarketingOverviewTab: React.FC = () => {
           </div>
           <div className="min-w-0 flex-1">
             <span className="text-[11px] font-semibold text-slate-500 block truncate">Revenue from Promotions</span>
-            <span className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate block">₹ 48,750</span>
+            <span className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate block">₹ {(advertisements.reduce((acc, a) => acc + (a.revenueGenerated || 0), 0) + Math.round(coupons.reduce((acc, c) => acc + c.usedCount, 0) * 39.15)).toLocaleString('en-IN')}</span>
             <div className="flex items-center gap-1 text-[10px] text-emerald-600 font-semibold mt-0.5 truncate">
               <span>↑ 31.4%</span>
               <span className="text-slate-400 font-normal">vs last 30d</span>
@@ -277,21 +277,15 @@ export const MarketingOverviewTab: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-slate-700">
-                {[
-                  { name: 'Men Solid Cotton Shirt', type: 'Product', duration: '7 Days', amount: 1499, status: 'Active', img: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=100&auto=format&fit=crop&q=80' },
-                  { name: 'Fashion Hub Store', type: 'Store', duration: '15 Days', amount: 2999, status: 'Active', img: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=100&auto=format&fit=crop&q=80' },
-                  { name: "Men's Fashion", type: 'Category', duration: '7 Days', amount: 1999, status: 'Scheduled', img: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=100&auto=format&fit=crop&q=80' },
-                  { name: 'Weekend Sale', type: 'Best Deals', duration: '3 Days', amount: 999, status: 'Completed', img: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=100&auto=format&fit=crop&q=80' },
-                  { name: 'Summer Banner', type: 'Banner', duration: '15 Days', amount: 2499, status: 'Active', img: 'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=100&auto=format&fit=crop&q=80' },
-                ].map((row, idx) => (
-                  <tr key={idx} className="hover:bg-slate-50/70 transition-colors">
+                {advertisements.slice(0, 5).map((row) => (
+                  <tr key={row.id} className="hover:bg-slate-50/70 transition-colors">
                     <td className="py-1.5 px-2">
                       <div className="flex items-center gap-1.5">
-                        <img src={row.img} alt="" className="w-5 h-5 rounded object-cover border border-slate-200" />
+                        <img src={row.imageUrl} alt="" className="w-5 h-5 rounded object-cover border border-slate-200" />
                         <span className="font-semibold text-slate-900 truncate max-w-[110px]">{row.name}</span>
                       </div>
                     </td>
-                    <td className="py-1.5 px-2 text-slate-600">{row.type}</td>
+                    <td className="py-1.5 px-2 text-slate-600">{row.type.replace('Advertisement', 'Ad')}</td>
                     <td className="py-1.5 px-2 text-slate-600">{row.duration}</td>
                     <td className="py-1.5 px-2 text-right font-semibold text-slate-900">₹{row.amount.toLocaleString('en-IN')}</td>
                     <td className="py-1.5 px-2 text-center">
@@ -299,6 +293,8 @@ export const MarketingOverviewTab: React.FC = () => {
                         className={`inline-flex px-1.5 py-0.5 rounded-full text-[9px] font-bold ${
                           row.status === 'Active'
                             ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
+                            : row.status === 'Paused'
+                            ? 'bg-amber-50 text-amber-700 border border-amber-200/60'
                             : row.status === 'Scheduled'
                             ? 'bg-blue-50 text-blue-700 border border-blue-200/60'
                             : 'bg-slate-100 text-slate-600'
@@ -308,14 +304,19 @@ export const MarketingOverviewTab: React.FC = () => {
                       </span>
                     </td>
                     <td className="py-1.5 px-2 text-center">
-                      <button className="text-[10px] font-semibold text-slate-600 hover:text-blue-600 flex items-center gap-0.5 mx-auto">
+                      <button
+                        onClick={() => {
+                          openAdAnalytics(row);
+                          setActiveSubTab('advertisements');
+                        }}
+                        className="text-[10px] font-semibold text-slate-600 hover:text-blue-600 flex items-center gap-0.5 mx-auto"
+                      >
                         <span>View</span>
                         <ChevronDown className="w-2.5 h-2.5" />
                       </button>
                     </td>
                   </tr>
-                ))}
-              </tbody>
+                ))}</tbody>
             </table>
           </div>
         </div>
@@ -344,36 +345,29 @@ export const MarketingOverviewTab: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-slate-700">
-                {[
-                  { code: 'WELCOME100', discount: '₹100 OFF Min. order ₹999', valid: '20 May 2024', status: 'Active', usage: 145 },
-                  { code: 'FASHION20', discount: '20% OFF Max. ₹1,000', valid: '25 May 2024', status: 'Active', usage: 320 },
-                  { code: 'FREESHIP', discount: 'Free Delivery Min. order ₹499', valid: '31 May 2024', status: 'Active', usage: 210 },
-                  { code: 'B1G1', discount: 'Buy 1 Get 1 Selected products', valid: '28 May 2024', status: 'Active', usage: 98 },
-                  { code: 'SUMMER50', discount: '₹50 OFF Min. order ₹699', valid: '18 May 2024', status: 'Expired', usage: 560 },
-                ].map((row, idx) => (
-                  <tr key={idx} className="hover:bg-slate-50/70 transition-colors">
+                {coupons.slice(0, 5).map((row) => (
+                  <tr key={row.id} className="hover:bg-slate-50/70 transition-colors">
                     <td className="py-1.5 px-2">
                       <span className="font-mono font-bold text-blue-600 bg-blue-50/70 px-1.5 py-0.5 rounded text-[10px] border border-blue-200/50">
                         {row.code}
                       </span>
                     </td>
-                    <td className="py-1.5 px-2 text-slate-700">{row.discount}</td>
-                    <td className="py-1.5 px-2 text-slate-500">{row.valid}</td>
+                    <td className="py-1.5 px-2 text-slate-700 truncate max-w-[120px]">{row.benefit}</td>
+                    <td className="py-1.5 px-2 text-slate-500">{row.endDate}</td>
                     <td className="py-1.5 px-2 text-center">
                       <span
                         className={`inline-flex px-1.5 py-0.5 rounded-full text-[9px] font-bold ${
                           row.status === 'Active'
                             ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
-                            : 'bg-rose-50 text-rose-700 border border-rose-200/60'
+                            : 'bg-slate-100 text-slate-600 border border-slate-200/60'
                         }`}
                       >
                         {row.status}
                       </span>
                     </td>
-                    <td className="py-1.5 px-2 text-right font-medium text-slate-800">{row.usage}</td>
+                    <td className="py-1.5 px-2 text-right font-medium text-slate-800">{row.usedCount}</td>
                   </tr>
-                ))}
-              </tbody>
+                ))}</tbody>
             </table>
           </div>
         </div>
