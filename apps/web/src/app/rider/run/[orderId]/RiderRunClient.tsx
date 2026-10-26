@@ -90,7 +90,12 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
       const details = await deliveryApi.getRunDetails(orderId, riderId);
       setRunDetails(details);
 
-      if (details.isClaimed && !details.isClaimedByCaller) {
+      const isClaimedByMe = Boolean(
+        details.isClaimedByCaller ||
+        (details.isClaimed && riderId && details.claimedByRider?.id === riderId)
+      );
+
+      if (details.isClaimed && !isClaimedByMe) {
         setIsAlreadyClaimedByOther(true);
         if (details.claimedByRider?.name) {
           setClaimedByName(details.claimedByRider.name);
@@ -237,6 +242,11 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
     runDetails?.status === DeliveryStatus.IN_TRANSIT ||
     runDetails?.status === DeliveryStatus.ARRIVED ||
     isDelivered;
+
+  const isClaimedByCaller = Boolean(
+    runDetails?.isClaimedByCaller ||
+    (runDetails?.isClaimed && selectedRider?.id && runDetails?.claimedByRider?.id === selectedRider?.id)
+  );
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center">
@@ -434,7 +444,7 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
         )}
 
         {/* ── STATE 3: ACTIVE DELIVERY RUN (CLAIMED BY CALLER) ──────────── */}
-        {runDetails?.isClaimedByCaller && !isDelivered && (
+        {runDetails && isClaimedByCaller && !isDelivered && (
           <div className="space-y-4 animate-in fade-in duration-200">
             {/* Step Progress Tracker */}
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-3 flex items-center justify-between text-xs font-bold">

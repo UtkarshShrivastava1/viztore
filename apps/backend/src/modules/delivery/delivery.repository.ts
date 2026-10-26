@@ -158,14 +158,19 @@ export function createDeliveryRepository(
     dispatchMessage?: string,
   ): Promise<DeliveryResponseDto | null> {
     // Atomic mutex claim: only succeeds if orderId is in PENDING_ASSIGNMENT AND rider is unset
+    const orderFilter = buildDeliveryQuery(orderId);
     const doc = await model.findOneAndUpdate(
       {
-        ...buildDeliveryQuery(orderId),
-        status: DeliveryStatus.PENDING_ASSIGNMENT,
-        $or: [
-          { rider: { $exists: false } },
-          { 'rider.id': { $exists: false } },
-          { rider: null },
+        $and: [
+          orderFilter,
+          { status: DeliveryStatus.PENDING_ASSIGNMENT },
+          {
+            $or: [
+              { rider: { $exists: false } },
+              { 'rider.id': { $exists: false } },
+              { rider: null },
+            ],
+          },
         ],
       },
       {

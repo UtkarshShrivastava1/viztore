@@ -202,20 +202,26 @@ export function createOrderService(
                 : rawPhone.length > 10
                   ? rawPhone.slice(-10)
                   : '9876543210';
+            const rawPin =
+              normalizedShippingAddress.postalCode ||
+              (normalizedShippingAddress as any).pincode;
             const validPin =
-              normalizedShippingAddress.pincode && /^\d{6}$/.test(normalizedShippingAddress.pincode)
-                ? normalizedShippingAddress.pincode
+              rawPin && /^\d{6}$/.test(rawPin)
+                ? rawPin
                 : '490006';
 
             await authService.addAddress(userId, {
               label: 'Home',
-              recipientName: normalizedShippingAddress.recipientName || 'Customer',
+              recipientName:
+                normalizedShippingAddress.fullName ||
+                (normalizedShippingAddress as any).recipientName ||
+                'Customer',
               phone: validPhone,
               street: normalizedShippingAddress.street,
               city: normalizedShippingAddress.city || 'Bhilai',
               state: normalizedShippingAddress.state || 'Chhattisgarh',
               pincode: validPin,
-              landmark: normalizedShippingAddress.landmark,
+              landmark: (normalizedShippingAddress as any).landmark,
               isDefault: existingAddresses.length === 0,
             });
             logger.info(`Auto-synced order shipping address to user profile for user ${userId}`);

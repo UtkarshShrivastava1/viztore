@@ -14,9 +14,10 @@ export const deliveryApi = {
   },
 
   getRunDetails: async (orderId: string, riderId?: string): Promise<RiderRunDetailsDto> => {
-    const res = await api.get<RiderRunDetailsDto>(`/delivery/orders/${orderId}/run-details`, {
-      riderId,
-    });
+    const res = await api.get<RiderRunDetailsDto>(
+      `/delivery/orders/${orderId}/run-details`,
+      riderId ? { riderId } : undefined,
+    );
     return res.data;
   },
 

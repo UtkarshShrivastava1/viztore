@@ -155,6 +155,64 @@ export function createDeliveryService(
     return delivery;
   }
 
+  async function ensureDeliveryRecord(orderId: string): Promise<DeliveryResponseDto | null> {
+    const existing = await repo.findByOrderId(orderId);
+    if (existing) return existing;
+
+    if (!orderFacade) return null;
+
+    try {
+      const order = await orderFacade.getOrderById(orderId);
+      if (!order) return null;
+
+      let storeName = 'Store Partner';
+      let storeAddress = 'Local Depot';
+      let storeCoords: [number, number] = [72.8777, 19.076];
+
+      if (order.storeId) {
+        try {
+          const store = await findStoreById(order.storeId);
+          if (store) {
+            storeName = store.name;
+            const parts = [store.address?.street, store.address?.city, store.address?.state].filter(Boolean);
+            storeAddress = parts.join(', ') || store.name;
+            if (store.location?.coordinates && store.location.coordinates.length === 2) {
+              storeCoords = store.location.coordinates as [number, number];
+            }
+          }
+        } catch {
+          // ignore
+        }
+      }
+
+      let dropAddress = 'Customer Delivery Address';
+      let dropCoords: [number, number] = [storeCoords[0] + 0.01, storeCoords[1] + 0.01];
+      if (order.shippingAddress) {
+        const parts = [order.shippingAddress.street, order.shippingAddress.city, order.shippingAddress.state].filter(Boolean);
+        dropAddress = parts.join(', ') || dropAddress;
+      }
+
+      return await initializeDelivery({
+        orderId: (order as any)._id?.toString() || orderId,
+        orderNumber: order.orderNumber,
+        storeId: order.storeId || 'store-dispatch-placeholder',
+        customerId: (order as any).userId || 'customer-placeholder',
+        pickupLocation: {
+          coordinates: storeCoords,
+          addressText: `${storeName}, ${storeAddress}`,
+        },
+        dropoffLocation: {
+          coordinates: dropCoords,
+          addressText: dropAddress,
+        },
+        estimatedPayout: 40,
+      });
+    } catch (err) {
+      logger.warn(`[DeliveryService] ensureDeliveryRecord failed for ${orderId}: ${err}`);
+      return null;
+    }
+  }
+
   async function getTracking(orderId: string): Promise<DeliveryResponseDto | null> {
     return repo.findByOrderId(orderId);
   }
@@ -260,7 +318,7 @@ export function createDeliveryService(
   }
 
   async function claimJob(orderId: string, dto: ClaimDeliveryDto): Promise<ClaimResultDto> {
-    const delivery = await repo.findByOrderId(orderId);
+    const delivery = await ensureDeliveryRecord(orderId);
     if (!delivery) {
       throw AppError.notFound('Delivery record for this order not found', 'DELIVERY_NOT_FOUND');
     }
@@ -404,7 +462,7 @@ export function createDeliveryService(
   }
 
   async function getRunDetails(orderId: string, callerRiderId?: string): Promise<RiderRunDetailsDto | null> {
-    const delivery = await repo.findByOrderId(orderId);
+    const delivery = await ensureDeliveryRecord(orderId);
     if (!delivery) {
       return null;
     }
