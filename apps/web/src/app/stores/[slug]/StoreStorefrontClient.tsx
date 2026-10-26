@@ -169,10 +169,15 @@ export function StoreStorefrontClient({ slug }: StoreStorefrontClientProps) {
   }, [brandFacets, brandSearch]);
 
   const storeCartItems = useMemo(() => {
-    if (!store) return [];
-    return cartItems.filter(
-      (item) => item.storeId === store._id || item.storeName === store.name,
+    if (!cartItems.length) return [];
+    if (!store) return cartItems;
+    const storeIdStr = String(store._id || (store as { id?: string }).id || '');
+    const matched = cartItems.filter(
+      (item) =>
+        (storeIdStr && String(item.storeId) === storeIdStr) ||
+        (store.name && item.storeName?.trim().toLowerCase() === store.name?.trim().toLowerCase()),
     );
+    return matched.length > 0 ? matched : cartItems;
   }, [cartItems, store]);
 
   const storeCartCount = useMemo(
@@ -233,7 +238,7 @@ export function StoreStorefrontClient({ slug }: StoreStorefrontClientProps) {
   }
 
   return (
-    <div className="min-h-screen bg-transparent pt-14 pb-20 md:pb-0">
+    <div className="min-h-screen bg-transparent pt-14 pb-36 md:pb-16">
       <main className="max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-24 py-6">
         {/* Breadcrumbs */}
         <div className="flex items-center gap-2 text-[12px] font-semibold text-surface-500 mb-4">
@@ -558,9 +563,12 @@ export function StoreStorefrontClient({ slug }: StoreStorefrontClientProps) {
 
         {/* Floating Bottom Cart Bar (Blinkit / Zepto / Amazon Fresh Standard) */}
         {storeCartCount > 0 && (
-          <div className="fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 w-[94%] max-w-xl bg-slate-900/95 backdrop-blur-md text-white rounded-2xl p-3 sm:p-3.5 shadow-2xl border border-slate-700/60 flex items-center justify-between animate-in slide-in-from-bottom-5 duration-200">
+          <div 
+            onClick={openCart}
+            className="fixed bottom-[80px] md:bottom-6 left-1/2 -translate-x-1/2 z-[60] w-[94%] max-w-xl bg-slate-900/95 backdrop-blur-md text-white rounded-2xl p-3 sm:p-3.5 shadow-2xl border border-slate-700/60 flex items-center justify-between animate-in slide-in-from-bottom-5 duration-200 cursor-pointer hover:bg-slate-900 active:scale-[0.99] transition-all"
+          >
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center relative shrink-0 shadow-md">
+              <div className="w-10 h-10 rounded-xl bg-[#1668F6] text-white flex items-center justify-center relative shrink-0 shadow-md">
                 <ShoppingBag className="w-5 h-5" />
                 <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-emerald-500 text-white text-[10px] font-black flex items-center justify-center border-2 border-slate-900">
                   {storeCartCount}
@@ -580,7 +588,10 @@ export function StoreStorefrontClient({ slug }: StoreStorefrontClientProps) {
             </div>
             <button
               type="button"
-              onClick={openCart}
+              onClick={(e) => {
+                e.stopPropagation();
+                openCart();
+              }}
               className="px-4 py-2.5 bg-[#1668F6] hover:bg-blue-600 active:scale-95 text-white text-xs font-black rounded-xl transition-all shadow-md flex items-center gap-2 shrink-0 cursor-pointer"
             >
               <span>View Cart</span>
