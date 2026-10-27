@@ -8,6 +8,7 @@ import { Step3StoreDetails } from '../components/onboarding/Step3StoreDetails.js
 import { Step3BusinessInfo } from '../components/onboarding/Step3BusinessInfo.js';
 import { Step4BankAccount } from '../components/onboarding/Step4BankAccount.js';
 import { ReviewWaitingRoom } from '../components/onboarding/ReviewWaitingRoom.js';
+import { RegistrationSuccessView } from '../components/onboarding/RegistrationSuccessView.js';
 import { useOnboardingStore } from '../stores/onboardingStore.js';
 import { branding } from '../lib/branding.js';
 
@@ -18,7 +19,7 @@ interface OnboardingPageProps {
   onNavigate?: (route: string) => void;
 }
 
-export type SubStepKey = '1_account' | '2_id' | '2_signature' | '3_store' | '3_business' | '4_bank';
+export type SubStepKey = '1_account' | '2_id' | '2_signature' | '3_store' | '3_business' | '4_bank' | 'success';
 
 export const OnboardingPage: React.FC<OnboardingPageProps> = ({
   onEnterDashboard,
@@ -69,6 +70,25 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
               setSubStep('4_bank');
             }}
           />
+        </div>
+        <footer className="py-6 border-t border-slate-200 text-center text-xs text-slate-500 bg-white">
+          &copy; {new Date().getFullYear()} {branding.appName}. Hyperlocal Retail Commerce Infrastructure.
+        </footer>
+      </div>
+    );
+  }
+
+  if (subStep === 'success') {
+    return (
+      <div className="min-h-screen bg-[#f3f6fc] flex flex-col justify-between font-sans selection:bg-[#0038ed] selection:text-white">
+        <MerchantNavbar
+          currentRoute="/register"
+          onNavigate={handleNavigate}
+          onGoToLogin={onGoToLogin}
+          onGoToSignup={() => setSubStep('1_account')}
+        />
+        <div className="flex-1 py-10 px-4 sm:px-6 flex items-center justify-center">
+          <RegistrationSuccessView onEnterDashboard={onEnterDashboard} />
         </div>
         <footer className="py-6 border-t border-slate-200 text-center text-xs text-slate-500 bg-white">
           &copy; {new Date().getFullYear()} {branding.appName}. Hyperlocal Retail Commerce Infrastructure.
@@ -161,7 +181,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
             {subStep === '4_bank' && (
               <Step4BankAccount
                 onBack={() => setSubStep('3_business')}
-                onComplete={onEnterDashboard}
+                onComplete={() => setSubStep('success')}
               />
             )}
           </div>

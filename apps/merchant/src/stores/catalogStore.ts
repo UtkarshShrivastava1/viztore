@@ -673,7 +673,7 @@ export const initialCatalogMockupProducts: ProductItem[] = [
   },
 ];
 
-const initialDefaultKpis: CatalogKPIs = {
+export const initialDefaultKpis: CatalogKPIs = {
   totalProducts: 0,
   activeProducts: 0,
   lowStock: 0,
@@ -737,10 +737,12 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
         }
       }
 
-      const endpoint = activeStoreId
-        ? `/catalog/stores/${activeStoreId}/products`
-        : '/catalog/products?limit=100';
+      if (!activeStoreId) {
+        set({ products: [], kpis: initialDefaultKpis, isLoading: false });
+        return;
+      }
 
+      const endpoint = `/catalog/stores/${activeStoreId}/products`;
       const rawData = await api.get<any>(endpoint);
       const productList = Array.isArray(rawData) ? rawData : rawData?.products || rawData?.data || [];
       const mapped = productList.map(mapApiProductToProductItem);

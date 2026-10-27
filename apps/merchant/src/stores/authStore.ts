@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { IUser } from '@repo/shared-types';
 import { api, storesApi } from '../lib/api.js';
+import { initialDefaultKpis } from './catalogStore.js';
 
 interface AuthState {
   user: IUser | null;
@@ -100,6 +101,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     localStorage.removeItem('is_store_active');
     localStorage.removeItem('merchant_active_order_tab');
     set({ user: null, currentStore: null, accessToken: null, isAuthenticated: false });
+
+    // Cleanly reset order and catalog stores on logout
+    import('./orderStore.js').then(({ useOrderStore }) => {
+      useOrderStore.setState({ orders: [], selectedOrderIds: [], searchQuery: '' });
+    }).catch(() => {});
+    import('./catalogStore.js').then(({ useCatalogStore }) => {
+      useCatalogStore.setState({
+        products: [],
+        kpis: initialDefaultKpis,
+      });
+    }).catch(() => {});
   },
 
   initialize: () => {

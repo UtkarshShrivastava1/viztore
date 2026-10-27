@@ -280,440 +280,7 @@ export function mapApiOrderToMerchantRecord(apiOrder: any): MerchantOrderRecord 
   };
 }
 
-export const initialSeedOrders: MerchantOrderRecord[] = [
-  {
-    id: 'ord-10325',
-    orderNumber: '#ORD-10325',
-    orderType: 'Online Order',
-    status: 'new',
-    customer: {
-      name: 'Rahul Sharma',
-      email: 'rahul.sharma@example.com',
-      phone: '+91 98765 43210',
-      avatarInitials: 'RS',
-    },
-    deliveryAddress: {
-      street: 'Flat 302, Green Valley Apartments',
-      locality: 'Kalyani Nagar',
-      city: 'Pune',
-      state: 'Maharashtra',
-      pincode: '411006',
-      fullText: 'Flat 302, Green Valley Apartments, Kalyani Nagar, Pune - 411006',
-    },
-    items: [
-      {
-        id: 'item-101',
-        name: 'Pure Cotton Slim Fit T-Shirt',
-        variant: 'Navy Blue, Size L',
-        price: 1000,
-        quantity: 1,
-      },
-    ],
-    itemsSummary: {
-      count: 1,
-      title: 'Pure Cotton Slim Fit T-Shirt',
-      categoryIconType: 'tshirt',
-    },
-    pricing: {
-      itemsTotal: 1000,
-      packagingFee: 20,
-      deliveryFee: 40,
-      totalAmount: 1060,
-    },
-    payment: {
-      status: 'Paid',
-      paymentMethod: 'Online Paid',
-      mode: 'UPI',
-    },
-    otp: '4827',
-    timestamps: {
-      createdAt: '19 May 2024 09:42 AM',
-    },
-    currentStageName: 'Stage 01: New Order',
-    notes: {
-      customerInstructions: 'Leave package at security desk if unavailable.',
-    },
-  },
-  {
-    id: 'ord-10326',
-    orderNumber: '#ORD-10326',
-    orderType: 'Online Order',
-    status: 'new',
-    customer: {
-      name: 'Priya Singh',
-      email: 'priya.singh@example.com',
-      phone: '+91 98220 12345',
-      avatarInitials: 'PS',
-    },
-    deliveryAddress: {
-      street: 'Plot 45, Silver Oak Enclave',
-      locality: 'Viman Nagar',
-      city: 'Pune',
-      state: 'Maharashtra',
-      pincode: '411014',
-      fullText: 'Plot 45, Silver Oak Enclave, Viman Nagar, Pune - 411014',
-    },
-    items: [
-      {
-        id: 'item-102',
-        name: 'Floral Print Rayon Kurti',
-        variant: 'Yellow / Pink, Size M',
-        price: 1200,
-        quantity: 2,
-      },
-    ],
-    itemsSummary: {
-      count: 2,
-      title: 'Floral Print Rayon Kurti',
-      categoryIconType: 'kurti',
-    },
-    pricing: {
-      itemsTotal: 2400,
-      packagingFee: 20,
-      deliveryFee: 0,
-      totalAmount: 2420,
-    },
-    payment: {
-      status: 'Pending',
-      paymentMethod: 'Cash on Delivery',
-      mode: 'Cash',
-    },
-    otp: '7391',
-    timestamps: {
-      createdAt: '19 May 2024 10:15 AM',
-    },
-    currentStageName: 'Stage 01: New Order',
-  },
-  {
-    id: 'ord-10320',
-    orderNumber: '#ORD-10320',
-    orderType: 'Online Order',
-    status: 'accepted',
-    customer: {
-      name: 'Ananya Patel',
-      email: 'ananya.p@example.com',
-      phone: '+91 97112 34567',
-      avatarInitials: 'AP',
-    },
-    deliveryAddress: {
-      street: 'B-14, Neelkanth Heights',
-      locality: 'Baner Road',
-      city: 'Pune',
-      state: 'Maharashtra',
-      pincode: '411045',
-      fullText: 'B-14, Neelkanth Heights, Baner Road, Pune - 411045',
-    },
-    items: [
-      {
-        id: 'item-103',
-        name: 'Classic Indigo Denim Jeans',
-        variant: 'Stone Wash, Waist 32',
-        price: 1850,
-        quantity: 1,
-      },
-    ],
-    itemsSummary: {
-      count: 1,
-      title: 'Classic Indigo Denim Jeans',
-      categoryIconType: 'jeans',
-    },
-    pricing: {
-      itemsTotal: 1850,
-      packagingFee: 20,
-      deliveryFee: 40,
-      totalAmount: 1910,
-    },
-    payment: {
-      status: 'Paid',
-      paymentMethod: 'Online Paid',
-      mode: 'Card',
-    },
-    otp: '4827',
-    timestamps: {
-      createdAt: '19 May 2024 08:30 AM',
-      acceptedAt: '19 May 2024 09:00 AM',
-    },
-    currentStageName: 'Stage 02: Accepted Order',
-  },
-  {
-    id: 'ord-10318',
-    orderNumber: '#ORD-10318',
-    orderType: 'Online Order',
-    status: 'ready_to_ship',
-    customer: {
-      name: 'Vikram Malhotra',
-      email: 'vikram.m@example.com',
-      phone: '+91 98450 98765',
-      avatarInitials: 'VM',
-    },
-    deliveryAddress: {
-      street: 'Penthouse 12, Tower 3, Royal Palms',
-      locality: 'Koregaon Park',
-      city: 'Pune',
-      state: 'Maharashtra',
-      pincode: '411001',
-      fullText: 'Penthouse 12, Tower 3, Royal Palms, Koregaon Park, Pune - 411001',
-    },
-    items: [
-      {
-        id: 'item-104',
-        name: 'Embroidered Silk Blend Saree',
-        variant: 'Maroon / Gold',
-        price: 3499,
-        quantity: 1,
-      },
-    ],
-    itemsSummary: {
-      count: 1,
-      title: 'Embroidered Silk Blend Saree',
-      categoryIconType: 'saree',
-    },
-    pricing: {
-      itemsTotal: 3499,
-      packagingFee: 30,
-      deliveryFee: 0,
-      totalAmount: 3529,
-    },
-    payment: {
-      status: 'Paid',
-      paymentMethod: 'Online Paid',
-      mode: 'UPI',
-    },
-    otp: '6291',
-    timestamps: {
-      createdAt: '18 May 2024 07:15 PM',
-      acceptedAt: '18 May 2024 07:45 PM',
-    },
-    currentStageName: 'Stage 04: Ready to Ship',
-  },
-  {
-    id: 'ord-10314',
-    orderNumber: '#ORD-10314',
-    orderType: 'Online Order',
-    status: 'shipped',
-    customer: {
-      name: 'Sneha Reddy',
-      email: 'sneha.reddy@example.com',
-      phone: '+91 99887 65432',
-      avatarInitials: 'SR',
-    },
-    deliveryAddress: {
-      street: 'Villa 7, Palm Meadows',
-      locality: 'Aundh',
-      city: 'Pune',
-      state: 'Maharashtra',
-      pincode: '411007',
-      fullText: 'Villa 7, Palm Meadows, Aundh, Pune - 411007',
-    },
-    items: [
-      {
-        id: 'item-105',
-        name: 'Cotton Casual Summer Dress',
-        variant: 'Pastel Blue, Size S',
-        price: 1599,
-        quantity: 1,
-      },
-    ],
-    itemsSummary: {
-      count: 1,
-      title: 'Cotton Casual Summer Dress',
-      categoryIconType: 'dress',
-    },
-    pricing: {
-      itemsTotal: 1599,
-      packagingFee: 20,
-      deliveryFee: 40,
-      totalAmount: 1659,
-    },
-    payment: {
-      status: 'Paid',
-      paymentMethod: 'Online Paid',
-      mode: 'UPI',
-    },
-    otp: '8104',
-    timestamps: {
-      createdAt: '18 May 2024 03:20 PM',
-      acceptedAt: '18 May 2024 03:45 PM',
-      shippedAt: '18 May 2024 04:30 PM',
-    },
-    courier: {
-      partner: 'Local Express Delivery',
-      trackingId: 'TRK-849201',
-      trackingUrl: '#track',
-    },
-    currentStageName: 'Stage 05: Shipped',
-  },
-  {
-    id: 'ord-10301',
-    orderNumber: '#ORD-10301',
-    orderType: 'Online Order',
-    status: 'delivered',
-    customer: {
-      name: 'Amit Verma',
-      email: 'amit.verma@example.com',
-      phone: '+91 98123 45678',
-      avatarInitials: 'AV',
-    },
-    deliveryAddress: {
-      street: 'Flat 402, Sunshine Apts, MG Road',
-      locality: 'Camp',
-      city: 'Pune',
-      state: 'Maharashtra',
-      pincode: '411001',
-      fullText: 'Flat 402, Sunshine Apts, MG Road, Camp, Pune - 411001',
-    },
-    items: [
-      {
-        id: 'item-106',
-        name: 'Graphic Print Crew Neck T-Shirt',
-        variant: 'Olive Green, Size XL',
-        price: 899,
-        quantity: 1,
-      },
-    ],
-    itemsSummary: {
-      count: 1,
-      title: 'Graphic Print Crew Neck T-Shirt',
-      categoryIconType: 'tshirt',
-    },
-    pricing: {
-      itemsTotal: 899,
-      packagingFee: 20,
-      deliveryFee: 40,
-      totalAmount: 959,
-    },
-    payment: {
-      status: 'Paid',
-      paymentMethod: 'Online Paid',
-      mode: 'UPI',
-    },
-    otp: '3948',
-    timestamps: {
-      createdAt: '17 May 2024 04:10 PM',
-      acceptedAt: '17 May 2024 04:30 PM',
-      shippedAt: '17 May 2024 05:00 PM',
-      deliveredAt: '17 May 2024 06:15 PM',
-    },
-    courier: {
-      partner: 'Local Express Delivery',
-      trackingId: 'TRK-772190',
-      trackingUrl: '#track',
-    },
-    currentStageName: 'Stage 06: Delivered',
-  },
-  {
-    id: 'ord-10295',
-    orderNumber: '#ORD-10295',
-    orderType: 'Online Order',
-    status: 'cancelled',
-    customer: {
-      name: 'Neha Gupta',
-      email: 'neha.gupta@example.com',
-      phone: '+91 98760 11223',
-      avatarInitials: 'NG',
-    },
-    deliveryAddress: {
-      street: 'Flat 101, Crystal Tower',
-      locality: 'Shivaji Nagar',
-      city: 'Pune',
-      state: 'Maharashtra',
-      pincode: '411005',
-      fullText: 'Flat 101, Crystal Tower, Shivaji Nagar, Pune - 411005',
-    },
-    items: [
-      {
-        id: 'item-107',
-        name: 'Linen Casual Shorts',
-        variant: 'Beige, Size 34',
-        price: 999,
-        quantity: 1,
-      },
-    ],
-    itemsSummary: {
-      count: 1,
-      title: 'Linen Casual Shorts',
-      categoryIconType: 'shorts',
-    },
-    pricing: {
-      itemsTotal: 999,
-      packagingFee: 20,
-      deliveryFee: 40,
-      totalAmount: 1059,
-    },
-    payment: {
-      status: 'Refunded',
-      paymentMethod: 'Online Paid',
-      mode: 'UPI',
-    },
-    otp: '5512',
-    timestamps: {
-      createdAt: '16 May 2024 10:45 AM',
-      cancelledAt: '16 May 2024 11:20 AM',
-    },
-    cancellation: {
-      reason: 'Customer requested cancellation before dispatch',
-      refundStatus: 'Refunded to UPI (Txn: #UPI-98421)',
-    },
-    currentStageName: 'Cancelled',
-  },
-  {
-    id: 'ord-10288',
-    orderNumber: '#ORD-10288',
-    orderType: 'Online Order',
-    status: 'return_requested',
-    customer: {
-      name: 'Rajesh Nair',
-      email: 'rajesh.nair@example.com',
-      phone: '+91 97654 32109',
-      avatarInitials: 'RN',
-    },
-    deliveryAddress: {
-      street: 'House 18, Green Acres Colony',
-      locality: 'Kothrud',
-      city: 'Pune',
-      state: 'Maharashtra',
-      pincode: '411038',
-      fullText: 'House 18, Green Acres Colony, Kothrud, Pune - 411038',
-    },
-    items: [
-      {
-        id: 'item-108',
-        name: 'Slim Fit Denim Jacket',
-        variant: 'Classic Blue, Size M',
-        price: 2199,
-        quantity: 1,
-      },
-    ],
-    itemsSummary: {
-      count: 1,
-      title: 'Slim Fit Denim Jacket',
-      categoryIconType: 'jeans',
-    },
-    pricing: {
-      itemsTotal: 2199,
-      packagingFee: 20,
-      deliveryFee: 0,
-      totalAmount: 2219,
-    },
-    payment: {
-      status: 'Paid',
-      paymentMethod: 'Online Paid',
-      mode: 'Card',
-    },
-    otp: '9012',
-    timestamps: {
-      createdAt: '14 May 2024 11:00 AM',
-      deliveredAt: '15 May 2024 01:10 PM',
-      returnRequestedAt: '15 May 2024 02:40 PM',
-    },
-    returns: {
-      returnStatus: 'Return Pickup Scheduled',
-      refundStatus: 'Pending Quality Check',
-      returnReason: 'Size does not fit (Ordered M, requested L)',
-    },
-    currentStageName: 'Stage 06: Returns',
-  },
-];
+export const initialSeedOrders: MerchantOrderRecord[] = [];
 
 export const useOrderStore = create<OrderStoreState>((set, get) => {
   const getInitialTab = (): OrderTab => {
@@ -738,8 +305,8 @@ export const useOrderStore = create<OrderStoreState>((set, get) => {
 
     fetchOrders: async (storeId?: string) => {
       set({ isLoading: true, error: null });
+      let targetStoreId = storeId;
       try {
-        let targetStoreId = storeId;
         if (!targetStoreId) {
           const authState = useAuthStore.getState();
           targetStoreId = authState.currentStore?._id || authState.currentStore?.id;
@@ -759,22 +326,16 @@ export const useOrderStore = create<OrderStoreState>((set, get) => {
 
         let rawData: any[] = [];
         if (targetStoreId) {
-          rawData = await api.get<any[]>(`/orders/store/${targetStoreId}`).catch(async () => {
-            return await api.get<any[]>('/orders/all').catch(() => []);
-          });
-        } else {
-          rawData = await api.get<any[]>('/orders/all').catch(async () => {
-            return await api.get<any[]>('/orders').catch(() => []);
-          });
+          rawData = await api.get<any[]>(`/orders/store/${targetStoreId}`).catch(() => []);
         }
 
         const orderList = Array.isArray(rawData) ? rawData : (rawData as any)?.data || [];
         const mapped = orderList.map(mapApiOrderToMerchantRecord);
 
         let localManualOrders: MerchantOrderRecord[] = [];
-        if (typeof window !== 'undefined') {
+        if (typeof window !== 'undefined' && targetStoreId) {
           try {
-            const saved = localStorage.getItem('merchant_manual_orders');
+            const saved = localStorage.getItem(`merchant_manual_orders_${targetStoreId}`);
             if (saved) localManualOrders = JSON.parse(saved);
           } catch {}
         }
@@ -783,20 +344,20 @@ export const useOrderStore = create<OrderStoreState>((set, get) => {
         const uniqueOrders = Array.from(new Map(combined.map((o) => [o.id, o])).values());
 
         set({
-          orders: uniqueOrders.length > 0 ? uniqueOrders : initialSeedOrders,
+          orders: uniqueOrders,
           isLoading: false,
         });
       } catch (err: any) {
         console.warn('Could not fetch orders from API:', err?.message || err);
         let localManualOrders: MerchantOrderRecord[] = [];
-        if (typeof window !== 'undefined') {
+        if (typeof window !== 'undefined' && targetStoreId) {
           try {
-            const saved = localStorage.getItem('merchant_manual_orders');
+            const saved = localStorage.getItem(`merchant_manual_orders_${targetStoreId}`);
             if (saved) localManualOrders = JSON.parse(saved);
           } catch {}
         }
         set({
-          orders: localManualOrders.length > 0 ? localManualOrders : initialSeedOrders,
+          orders: localManualOrders,
           isLoading: false,
           error: err?.message || 'Failed to fetch orders',
         });
@@ -1038,8 +599,10 @@ export const useOrderStore = create<OrderStoreState>((set, get) => {
 
     if (typeof window !== 'undefined') {
       try {
-        const saved = JSON.parse(localStorage.getItem('merchant_manual_orders') || '[]');
-        localStorage.setItem('merchant_manual_orders', JSON.stringify([fullOrder, ...saved]));
+        const storeId = useAuthStore.getState().currentStore?._id || useAuthStore.getState().currentStore?.id || 'default';
+        const key = `merchant_manual_orders_${storeId}`;
+        const saved = JSON.parse(localStorage.getItem(key) || '[]');
+        localStorage.setItem(key, JSON.stringify([fullOrder, ...saved]));
       } catch {}
     }
 

@@ -381,7 +381,20 @@ Every online order placed through `apps/web` generates an authoritative, complia
   - **Strict Signature Validation Guard**: Enforced strict return boolean guard in `Step2Signature.tsx` preventing premature step progression if neither drawn signature nor generated e-sign exists; added IT Act 2000 legal compliance tag.
   - **Design System Harmonization**: Upgraded all registration wizard steps (Steps 1, 2, 3, 4) to `rounded-3xl` glass cards with modern gradient step badges, consistent input borders, focus rings, and active press states.
   - **Bhilai Geography Alignment**: Replaced legacy fallback coordinates from Bengaluru to Bhilai/Chhattisgarh (`490023`, `[81.3780, 21.1920]`) across store creation and bank account submission payloads.
-  - **Verification**: 185/185 automated tests passing across 27 test files; full end-to-end browser subagent walkthrough on Port 3001 verified clean progression into the Merchant Dashboard.
+- [x] **Post-Registration Graceful Confirmation Screen & Dashboard Zero-State Polish (`[active]`) 🟢**:
+  - **Graceful Confirmation Transition (`RegistrationSuccessView.tsx`)**: Created a celebratory, glassmorphic confirmation screen featuring:
+    - Glowing verification checkmark badge and sparkles ("Store Verified & Onboarding Complete").
+    - Personalized welcome banner: "Welcome to {branding.appName}, {merchantName}!".
+    - Store Identity Summary Card: Displays real store name, proprietor name, category, 4 km hyperlocal radius in Bhilai/Chhattisgarh, and masked settlement bank account (`•••• 1234`) with resolved bank title.
+    - 4 Live Operational Pills: Instant Orders (melodic chimes), Zero Commission (Tier 1 launch), Catalog Manager (easy product adds), and T+1 Payouts (direct bank transfer).
+    - Smooth 5-Second Animated Countdown: Real-time progress bar transitioning smoothly into the merchant dashboard with pause/resume controls and direct "Launch Merchant Dashboard Now ➔" primary CTA button.
+  - **Eliminated Dashboard Dummy & Stale Data on First Login**:
+    - **Order Store Scoping (`orderStore.ts`)**: Purged 433 lines of hardcoded fake Pune seed orders (`initialSeedOrders = []`) that previously injected `₹19,208.35` and `8` orders whenever a newly registered store had zero orders.
+    - **Endpoint Leakage Prevention**: Removed fallback to platform-wide `/orders/all` and `/orders` endpoints; scoped order fetching strictly to `/orders/store/${targetStoreId}`, returning genuine zero orders for newly created stores.
+    - **Catalog Store Scoping (`catalogStore.ts`)**: Removed fallback to `/catalog/products?limit=100` when no active store was detected; now returns clean empty product list and zero-state KPIs for new stores.
+    - **Session State Isolation (`authStore.ts`)**: Added automatic store state resets on `logout()` and `setAuth()` to prevent cross-merchant data bleed.
+    - **Clean Zero-State Verification**: Verified via browser subagent on Port 3001 that first login displays genuine zero-state metrics: Total Sales: ₹0, Total Orders: 0, Products Listed: 0, Live Orders: "No incoming orders yet", Top Products: "No products found", Low Stock: "Inventory Healthy", and flat 7-day revenue chart.
+  - **Build & Test Verification**: 185/185 automated tests green; clean TypeScript compilation (`tsc --noEmit`) with 0 errors across backend and merchant.
 
 
 
