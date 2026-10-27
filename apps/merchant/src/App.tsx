@@ -338,6 +338,7 @@ export const App: React.FC = () => {
         onEnterDashboard={() => setCurrentView('dashboard')}
         onGoToLogin={() => setCurrentView('login')}
         onGoToHome={() => navigateTo('/')}
+        onNavigate={navigateTo}
       />
     );
   }
