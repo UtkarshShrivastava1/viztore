@@ -370,6 +370,19 @@ Every online order placed through `apps/web` generates an authoritative, complia
     - Seeded `walletStore.ts` with real transactions, bank accounts, and active ledger balances (`₹32,450.00`).
   - **Documented Audit**: Detailed findings and cross-check mapping compiled in `live_hardening_and_bug_remediation_audit.md`.
   - **Build Verification**: Clean `tsc && vite build` in 10.67s with 0 errors. Committed locally in `0db3db5` ready for review.
+- [x] **Merchant Login/Register Modal Close Button, Backdrop Dismissal & Dual Tabs (`522543c`) 🟢**:
+  - Added close button (`X`) with hover rotation and focus rings; wired click-outside backdrop dismissal and global `Escape` keyboard dismissal to prevent trapping users in the modal.
+  - Implemented segmented tab switcher between "Sign In" and "Create Account" with zero yellow browser autofill artifacts (`-webkit-box-shadow` inset override).
+  - Verified on Port 3001 via browser subagent across both desktop viewports and modal transitions.
+- [x] **Merchant Registration Header Navigation & Step 1 UI/UX Polish (`a867e69`) 🟢**:
+  - Replaced unwired header buttons in `OnboardingPage.tsx` and `SellerNavbar.tsx` with fully functional, interactive `MerchantNavbar` supporting `Sell Online` and `Learn` dropdowns, `/how-it-works`, `/pricing`, `/grow-business`, and mobile drawer menu.
+  - Added "Proprietor / Representative Full Name" input field to Step 1 with user icon, synced to registration payload and persisted state.
+  - Added `+91` mobile prefix pill, instant OTP simulation feedback badges, side-by-side password inputs with visibility toggles, and 256-bit SSL trust tag.
+  - Modernized `OnboardingSidebar.tsx` with rounded-3xl glass container, active blue gradient timeline, and 4-pill trust credentials (`100% Safe`, `24x7 Help`, `10k+ Stores`, `Fast Growth`).
+  - Added horizontal step progress bar indicator on mobile/tablet viewports.
+  - Wrapped `useOnboardingStore` with Zustand `persist` middleware (`merchant_onboarding_draft`) and updated fallback coordinates to Bhilai (`[81.3780, 21.1920]`).
+  - Verified on Port 3001 via browser subagent: 0 TypeScript errors, clean compilation.
+
 
 
 
