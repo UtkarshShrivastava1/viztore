@@ -229,24 +229,35 @@ const DAY_KEY_MAP: Record<DayName, 'monday' | 'tuesday' | 'wednesday' | 'thursda
   };
 
   return (
-    <div className="bg-white border border-slate-200/80 rounded-2xl p-6 sm:p-8 lg:p-9 shadow-xs">
+    <div className="bg-white border border-slate-200/90 rounded-3xl p-6 sm:p-8 lg:p-9 shadow-xl shadow-slate-200/40 relative">
       {/* Header with Step 3 Badge */}
-      <div className="flex items-center gap-2.5 mb-1">
-        <div className="w-7 h-7 rounded-full bg-[#0038ed] text-white font-bold text-xs flex items-center justify-center shadow-2xs shrink-0">
-          3
+      <div className="flex items-center justify-between pb-5 mb-6 border-b border-slate-100">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#0038ed] to-blue-500 text-white font-extrabold text-sm flex items-center justify-center shadow-md shadow-blue-600/25 shrink-0">
+            3
+          </div>
+          <div>
+            <h2 className="text-xs sm:text-sm font-black tracking-wider text-[#0038ed] uppercase">
+              Business Category &amp; Operating Hours
+            </h2>
+            <p className="text-xs text-slate-400 mt-0.5">Catalog taxonomy &amp; retail operating schedule</p>
+          </div>
         </div>
-        <h2 className="text-xs sm:text-[13px] font-bold tracking-wider text-[#0038ed] uppercase">
-          BUSINESS INFORMATION
-        </h2>
+
+        <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-600 bg-slate-50 px-2.5 py-1 rounded-full border border-slate-200/60 font-medium">
+          <Clock className="w-3.5 h-3.5 text-blue-600" />
+          <span>Hyperlocal Availability</span>
+        </div>
       </div>
 
-      <p className="text-xs text-slate-500 mb-5">
-        Add your business details to help customers know more about your store.
+      <p className="text-xs text-slate-500 mb-5 leading-relaxed">
+        Select the categories that best describe your inventory and set your weekly opening hours for customer ordering.
       </p>
 
       {error && (
-        <div className="mb-5 p-3 bg-rose-50 border border-rose-200 rounded-lg text-rose-600 text-xs font-medium">
-          {error}
+        <div className="mb-5 p-3.5 bg-rose-50 border border-rose-200/80 rounded-xl text-rose-600 text-xs font-semibold flex items-center gap-2 animate-in fade-in">
+          <div className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
+          <span>{error}</span>
         </div>
       )}
 
@@ -525,11 +536,11 @@ const DAY_KEY_MAP: Record<DayName, 'monday' | 'tuesday' | 'wednesday' | 'thursda
         </div>
 
         {/* Back and Continue Actions */}
-        <div className="flex items-center gap-3 pt-3">
+        <div className="flex items-center gap-3 pt-4">
           <button
             type="button"
             onClick={onBack}
-            className="w-32 py-3 px-4 rounded-lg border border-[#0038ed] text-[#0038ed] font-semibold text-sm hover:bg-blue-50/50 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+            className="w-32 py-3.5 px-4 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Back</span>
@@ -537,9 +548,9 @@ const DAY_KEY_MAP: Record<DayName, 'monday' | 'tuesday' | 'wednesday' | 'thursda
 
           <button
             type="submit"
-            className="flex-1 py-3 px-6 rounded-lg bg-[#0038ed] hover:bg-[#002fcf] text-white font-semibold text-sm shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+            className="flex-1 py-3.5 px-6 rounded-xl bg-gradient-to-r from-[#0038ed] to-blue-600 hover:from-[#002fcf] hover:to-blue-700 text-white font-bold text-sm shadow-lg shadow-blue-600/25 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
           >
-            <span>Continue</span>
+            <span>Proceed to Bank Account &amp; Payouts</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>

@@ -126,24 +126,35 @@ export const Step3StoreDetails: React.FC<Step3StoreDetailsProps> = ({
   };
 
   return (
-    <div className="bg-white border border-slate-200/80 rounded-2xl p-6 sm:p-8 lg:p-9 shadow-xs">
+    <div className="bg-white border border-slate-200/90 rounded-3xl p-6 sm:p-8 lg:p-9 shadow-xl shadow-slate-200/40 relative">
       {/* Header with Step 3 Badge */}
-      <div className="flex items-center gap-2.5 mb-1">
-        <div className="w-7 h-7 rounded-full bg-[#0038ed] text-white font-bold text-xs flex items-center justify-center shadow-2xs shrink-0">
-          3
+      <div className="flex items-center justify-between pb-5 mb-6 border-b border-slate-100">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#0038ed] to-blue-500 text-white font-extrabold text-sm flex items-center justify-center shadow-md shadow-blue-600/25 shrink-0">
+            3
+          </div>
+          <div>
+            <h2 className="text-xs sm:text-sm font-black tracking-wider text-[#0038ed] uppercase">
+              Store Profile &amp; Location
+            </h2>
+            <p className="text-xs text-slate-400 mt-0.5">Physical store presence &amp; customer discovery</p>
+          </div>
         </div>
-        <h2 className="text-xs sm:text-[13px] font-bold tracking-wider text-[#0038ed] uppercase">
-          CREATE YOUR STORE
-        </h2>
+
+        <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-600 bg-slate-50 px-2.5 py-1 rounded-full border border-slate-200/60 font-medium">
+          <Navigation className="w-3.5 h-3.5 text-blue-600" />
+          <span>Hyperlocal 4 km Radius</span>
+        </div>
       </div>
 
-      <p className="text-xs text-slate-500 mb-5">
-        Enter your store details to help customers discover your business.
+      <p className="text-xs text-slate-500 mb-5 leading-relaxed">
+        Enter your store details and pin your retail shop location to help nearby customers discover and order from your business.
       </p>
 
       {error && (
-        <div className="mb-5 p-3 bg-rose-50 border border-rose-200 rounded-lg text-rose-600 text-xs font-medium">
-          {error}
+        <div className="mb-5 p-3.5 bg-rose-50 border border-rose-200/80 rounded-xl text-rose-600 text-xs font-semibold flex items-center gap-2 animate-in fade-in">
+          <div className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
+          <span>{error}</span>
         </div>
       )}
 
@@ -151,15 +162,15 @@ export const Step3StoreDetails: React.FC<Step3StoreDetailsProps> = ({
         {/* Full Name & Store Display Name */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <div>
-            <label className="block text-xs font-semibold text-slate-800 mb-1.5">
-              Enter Your Full Name *
+            <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+              Proprietor / Representative Name <span className="text-rose-500">*</span>
             </label>
             <input
               type="text"
               placeholder="Enter your full name"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="w-full text-xs sm:text-sm border border-slate-200 rounded-lg px-3.5 py-2.5 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#0038ed]"
+              className="w-full text-xs sm:text-sm border border-slate-200 rounded-xl px-3.5 py-3 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#0038ed] focus:ring-2 focus:ring-blue-100 transition-all shadow-2xs font-medium"
               required
             />
           </div>
@@ -358,12 +369,12 @@ export const Step3StoreDetails: React.FC<Step3StoreDetailsProps> = ({
         </div>
 
         {/* Action Buttons */}
-        <div className="pt-3 flex items-center gap-3">
+        <div className="pt-4 flex items-center gap-3">
           {onBack && (
             <button
               type="button"
               onClick={onBack}
-              className="w-32 py-3 px-4 rounded-lg border border-[#0038ed] text-[#0038ed] font-semibold text-sm hover:bg-blue-50/50 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              className="w-32 py-3.5 px-4 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Back</span>
@@ -372,9 +383,9 @@ export const Step3StoreDetails: React.FC<Step3StoreDetailsProps> = ({
 
           <button
             type="submit"
-            className="flex-1 py-3 px-6 rounded-lg bg-[#0038ed] hover:bg-[#002fcf] text-white font-semibold text-sm shadow-xs transition-all cursor-pointer flex items-center justify-center gap-2"
+            className="flex-1 py-3.5 px-6 rounded-xl bg-gradient-to-r from-[#0038ed] to-blue-600 hover:from-[#002fcf] hover:to-blue-700 text-white font-bold text-sm shadow-lg shadow-blue-600/25 transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-[0.99]"
           >
-            <span>Continue</span>
+            <span>Proceed to Business Category</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
