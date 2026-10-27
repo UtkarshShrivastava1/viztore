@@ -374,14 +374,14 @@ Every online order placed through `apps/web` generates an authoritative, complia
   - Added close button (`X`) with hover rotation and focus rings; wired click-outside backdrop dismissal and global `Escape` keyboard dismissal to prevent trapping users in the modal.
   - Implemented segmented tab switcher between "Sign In" and "Create Account" with zero yellow browser autofill artifacts (`-webkit-box-shadow` inset override).
   - Verified on Port 3001 via browser subagent across both desktop viewports and modal transitions.
-- [x] **Merchant Registration Header Navigation & Step 1 UI/UX Polish (`a867e69`) 🟢**:
-  - Replaced unwired header buttons in `OnboardingPage.tsx` and `SellerNavbar.tsx` with fully functional, interactive `MerchantNavbar` supporting `Sell Online` and `Learn` dropdowns, `/how-it-works`, `/pricing`, `/grow-business`, and mobile drawer menu.
-  - Added "Proprietor / Representative Full Name" input field to Step 1 with user icon, synced to registration payload and persisted state.
-  - Added `+91` mobile prefix pill, instant OTP simulation feedback badges, side-by-side password inputs with visibility toggles, and 256-bit SSL trust tag.
-  - Modernized `OnboardingSidebar.tsx` with rounded-3xl glass container, active blue gradient timeline, and 4-pill trust credentials (`100% Safe`, `24x7 Help`, `10k+ Stores`, `Fast Growth`).
-  - Added horizontal step progress bar indicator on mobile/tablet viewports.
-  - Wrapped `useOnboardingStore` with Zustand `persist` middleware (`merchant_onboarding_draft`) and updated fallback coordinates to Bhilai (`[81.3780, 21.1920]`).
-  - Verified on Port 3001 via browser subagent: 0 TypeScript errors, clean compilation.
+- [x] **Merchant Registration Pipeline Polish: Dynamic IFSC Bank Resolution, GSTIN State Auto-Detection & UI Enhancement (`15f2a00`) 🟢**:
+  - **Dynamic IFSC Resolution**: Implemented `BANK_IFSC_PREFIX_MAP` in `Step4BankAccount.tsx` covering all major Indian public, private, and payments banks (SBIN, HDFC, ICIC, PUNB, BARB, AXIS, KKBK, CNRB, UBIN, INDB, YESB, etc.); live detected bank badge (`Building2` icon, verified checkmark, and bold bank title) renders as user inputs IFSC code.
+  - **Account Holder Pre-population**: Pre-populates bank account holder name from proprietor full name or legal business name with full user-editable control.
+  - **GSTIN State Code Auto-Detection & PAN Auto-Extraction**: Added `GST_STATE_CODE_MAP` (36 Indian States/UTs) in backend `onboarding.service.ts`; `Step2IdVerification.tsx` auto-extracts PAN from characters 2–12 upon typing 15-character GSTIN and renders live state jurisdiction badge (`📍 Jurisdiction: Chhattisgarh (State Code 22)`).
+  - **Strict Signature Validation Guard**: Enforced strict return boolean guard in `Step2Signature.tsx` preventing premature step progression if neither drawn signature nor generated e-sign exists; added IT Act 2000 legal compliance tag.
+  - **Design System Harmonization**: Upgraded all registration wizard steps (Steps 1, 2, 3, 4) to `rounded-3xl` glass cards with modern gradient step badges, consistent input borders, focus rings, and active press states.
+  - **Bhilai Geography Alignment**: Replaced legacy fallback coordinates from Bengaluru to Bhilai/Chhattisgarh (`490023`, `[81.3780, 21.1920]`) across store creation and bank account submission payloads.
+  - **Verification**: 185/185 automated tests passing across 27 test files; full end-to-end browser subagent walkthrough on Port 3001 verified clean progression into the Merchant Dashboard.
 
 
 
