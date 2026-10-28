@@ -213,6 +213,28 @@ export const catalogApi = {
 
   deleteProduct: (productId: string) =>
     api.delete<any>(`/catalog/products/${productId}`),
+
+  getTaxonomyCategories: () =>
+    api.get<Array<{ name: string; subcategoryCount: number; productTypeCount: number }>>('/catalog/taxonomy/categories'),
+
+  getTaxonomySubcategories: (category: string) =>
+    api.get<Array<{ name: string; productTypeCount: number }>>(`/catalog/taxonomy/subcategories?category=${encodeURIComponent(category)}`),
+
+  getTaxonomyProductTypes: (category: string, subCategory: string) =>
+    api.get<string[]>(`/catalog/taxonomy/product-types?category=${encodeURIComponent(category)}&subCategory=${encodeURIComponent(subCategory)}`),
+
+  getTaxonomyAttributes: (productType: string, category?: string) => {
+    const qs = category ? `&category=${encodeURIComponent(category)}` : '';
+    return api.get<any>(`/catalog/taxonomy/attributes?productType=${encodeURIComponent(productType)}${qs}`);
+  },
+
+  lookupHSN: (category: string, subcategory?: string, productType?: string) => {
+    const params = new URLSearchParams({ category, subcategory: subcategory || '', productType: productType || '' });
+    return api.get<any>(`/catalog/taxonomy/hsn-lookup?${params.toString()}`);
+  },
+
+  searchTaxonomy: (query: string) =>
+    api.get<any[]>(`/catalog/taxonomy/search?q=${encodeURIComponent(query)}`),
 };
 
 export const storesApi = {

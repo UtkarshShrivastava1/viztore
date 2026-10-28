@@ -24,6 +24,15 @@ const popularTagSuggestions = [
   'Summer Wear',
 ];
 
+import masterTaxonomies from '../../../data/taxonomies.json';
+
+interface TaxonomyAttribute {
+  name: string;
+  values: string[];
+  isMultiSelect?: boolean;
+  isRequired?: boolean;
+}
+
 const sizeOptions = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 
 export const AddProductStep3: React.FC = () => {
@@ -31,6 +40,23 @@ export const AddProductStep3: React.FC = () => {
 
   const [tagInput, setTagInput] = useState('');
   const [copiedSku, setCopiedSku] = useState(false);
+
+  const matchedTaxonomy = React.useMemo(() => {
+    const pType = (draftProduct.productType || '').trim().toLowerCase();
+    const cat = (draftProduct.category || '').trim().toLowerCase();
+    return (
+      (masterTaxonomies as any[]).find(
+        (t) =>
+          t.productType.toLowerCase() === pType &&
+          (!cat || t.category.toLowerCase() === cat),
+      ) ||
+      (masterTaxonomies as any[]).find(
+        (t) => t.productType.toLowerCase() === pType,
+      )
+    );
+  }, [draftProduct.productType, draftProduct.category]);
+
+  const dynamicAttributes: TaxonomyAttribute[] = matchedTaxonomy?.attributes || [];
 
   const tags = draftProduct.tags || [];
   const attributes = draftProduct.attributes || {};
@@ -47,9 +73,9 @@ export const AddProductStep3: React.FC = () => {
   const costPrice = draftProduct.costPrice ?? 350;
   const mrp = draftProduct.mrp ?? 699;
   const tax = draftProduct.tax || {
-    category: 'Apparel (5%)',
-    rate: 5,
-    inclusive: false,
+    category: matchedTaxonomy?.category ? `${matchedTaxonomy.category} (${matchedTaxonomy.gstRate ?? 18}%)` : 'Standard (18%)',
+    rate: matchedTaxonomy?.gstRate ?? 18,
+    inclusive: true,
     amount: 28.52,
   };
   const stock = draftProduct.stock ?? 120;
@@ -196,148 +222,97 @@ export const AddProductStep3: React.FC = () => {
 
         {/* 2. Product Attributes (4 cols) */}
         <div className="lg:col-span-4 bg-white rounded-xl border border-slate-200/80 p-4 shadow-2xs space-y-3">
-          <div className="flex items-center gap-2 mb-1">
-            <div className="w-5 h-5 rounded-md bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs">
-              2
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 rounded-md bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs">
+                2
+              </div>
+              <h3 className="text-xs font-bold text-slate-900">Product Attributes</h3>
             </div>
-            <h3 className="text-xs font-bold text-slate-900">Product Attributes</h3>
+            {matchedTaxonomy && (
+              <span className="text-[10px] font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
+                {matchedTaxonomy.productType} ({dynamicAttributes.length} specs)
+              </span>
+            )}
           </div>
           <p className="text-[11px] text-slate-500 mb-2">
-            Add detailed attributes for your product.
+            Schema-driven attributes for <span className="font-semibold text-slate-700">{draftProduct.productType || 'Standard'}</span>.
           </p>
 
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <div>
-              <label className="block text-[11px] font-medium text-slate-600 mb-1">Fit Type</label>
-              <select
-                value={attributes.fit || 'Regular'}
-                onChange={(e) =>
-                  updateDraftProduct({ attributes: { ...attributes, fit: e.target.value } })
-                }
-                className="w-full px-2 py-1.5 text-xs bg-white border border-slate-200 rounded-lg cursor-pointer"
-              >
-                <option value="Regular">Regular</option>
-                <option value="Slim Fit">Slim Fit</option>
-                <option value="Relaxed">Relaxed</option>
-                <option value="Oversized">Oversized</option>
-              </select>
-            </div>
+          <div className="grid grid-cols-2 gap-2 text-xs max-h-[260px] overflow-y-auto pr-1">
+            {dynamicAttributes.length > 0 ? (
+              dynamicAttributes.map((attr: TaxonomyAttribute, idx: number) => (
+                <div key={idx} className={attr.values && attr.values.length > 8 ? 'col-span-2' : ''}>
+                  <label className="block text-[11px] font-medium text-slate-600 mb-1">
+                    {attr.name} {attr.isRequired && <span className="text-rose-500">*</span>}
+                  </label>
+                  {attr.values && attr.values.length > 0 ? (
+                    <select
+                      value={attributes[attr.name] || ''}
+                      onChange={(e) =>
+                        updateDraftProduct({
+                          attributes: { ...attributes, [attr.name]: e.target.value },
+                        })
+                      }
+                      className="w-full px-2 py-1.5 text-xs bg-white border border-slate-200 rounded-lg cursor-pointer focus:outline-hidden focus:border-blue-500"
+                    >
+                      <option value="">Select {attr.name}...</option>
+                      {attr.values.map((val: string, vIdx: number) => (
+                        <option key={vIdx} value={val}>
+                          {val}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      value={attributes[attr.name] || ''}
+                      placeholder={`Enter ${attr.name.toLowerCase()}...`}
+                      onChange={(e) =>
+                        updateDraftProduct({
+                          attributes: { ...attributes, [attr.name]: e.target.value },
+                        })
+                      }
+                      className="w-full px-2 py-1.5 text-xs bg-white border border-slate-200 rounded-lg"
+                    />
+                  )}
+                </div>
+              ))
+            ) : (
+              <>
+                <div>
+                  <label className="block text-[11px] font-medium text-slate-600 mb-1">Fit Type</label>
+                  <select
+                    value={attributes.fit || 'Regular'}
+                    onChange={(e) =>
+                      updateDraftProduct({ attributes: { ...attributes, fit: e.target.value } })
+                    }
+                    className="w-full px-2 py-1.5 text-xs bg-white border border-slate-200 rounded-lg cursor-pointer"
+                  >
+                    <option value="Regular">Regular</option>
+                    <option value="Slim Fit">Slim Fit</option>
+                    <option value="Relaxed">Relaxed</option>
+                    <option value="Oversized">Oversized</option>
+                  </select>
+                </div>
 
-            <div>
-              <label className="block text-[11px] font-medium text-slate-600 mb-1">Sleeve Type</label>
-              <select
-                value={attributes.sleeve || 'Half Sleeve'}
-                onChange={(e) =>
-                  updateDraftProduct({ attributes: { ...attributes, sleeve: e.target.value } })
-                }
-                className="w-full px-2 py-1.5 text-xs bg-white border border-slate-200 rounded-lg cursor-pointer"
-              >
-                <option value="Half Sleeve">Half Sleeve</option>
-                <option value="Full Sleeve">Full Sleeve</option>
-                <option value="Sleeveless">Sleeveless</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-medium text-slate-600 mb-1">Neck Type</label>
-              <select
-                value={attributes.neck || 'Round Neck'}
-                onChange={(e) =>
-                  updateDraftProduct({ attributes: { ...attributes, neck: e.target.value } })
-                }
-                className="w-full px-2 py-1.5 text-xs bg-white border border-slate-200 rounded-lg cursor-pointer"
-              >
-                <option value="Round Neck">Round Neck</option>
-                <option value="Polo Neck">Polo Neck</option>
-                <option value="V-Neck">V-Neck</option>
-                <option value="Henley Neck">Henley Neck</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-medium text-slate-600 mb-1">Fabric</label>
-              <select
-                value={attributes.fabric || 'Cotton'}
-                onChange={(e) =>
-                  updateDraftProduct({ attributes: { ...attributes, fabric: e.target.value } })
-                }
-                className="w-full px-2 py-1.5 text-xs bg-white border border-slate-200 rounded-lg cursor-pointer"
-              >
-                <option value="Cotton">Cotton</option>
-                <option value="Cotton Blend">Cotton Blend</option>
-                <option value="Polyester">Polyester</option>
-                <option value="Linen">Linen</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-medium text-slate-600 mb-1">Pattern</label>
-              <select
-                value={attributes.pattern || 'Solid'}
-                onChange={(e) =>
-                  updateDraftProduct({ attributes: { ...attributes, pattern: e.target.value } })
-                }
-                className="w-full px-2 py-1.5 text-xs bg-white border border-slate-200 rounded-lg cursor-pointer"
-              >
-                <option value="Solid">Solid</option>
-                <option value="Striped">Striped</option>
-                <option value="Printed">Printed</option>
-                <option value="Checked">Checked</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-medium text-slate-600 mb-1">Occasion</label>
-              <select
-                value={attributes.occasion || 'Casual'}
-                onChange={(e) =>
-                  updateDraftProduct({ attributes: { ...attributes, occasion: e.target.value } })
-                }
-                className="w-full px-2 py-1.5 text-xs bg-white border border-slate-200 rounded-lg cursor-pointer"
-              >
-                <option value="Casual">Casual</option>
-                <option value="Party">Party</option>
-                <option value="Formal">Formal</option>
-                <option value="Sports">Sports</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-medium text-slate-600 mb-1">Gender</label>
-              <select
-                value={attributes.gender || 'Men'}
-                onChange={(e) =>
-                  updateDraftProduct({ attributes: { ...attributes, gender: e.target.value } })
-                }
-                className="w-full px-2 py-1.5 text-xs bg-white border border-slate-200 rounded-lg cursor-pointer"
-              >
-                <option value="Men">Men</option>
-                <option value="Women">Women</option>
-                <option value="Unisex">Unisex</option>
-                <option value="Kids">Kids</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-medium text-slate-600 mb-1">Color</label>
-              <div className="flex items-center gap-1.5 px-2 py-1 bg-white border border-slate-200 rounded-lg">
-                <span className="w-3.5 h-3.5 rounded-full bg-black shrink-0" />
-                <select
-                  value={attributes.color || 'Black'}
-                  onChange={(e) =>
-                    updateDraftProduct({ attributes: { ...attributes, color: e.target.value } })
-                  }
-                  className="w-full text-xs bg-transparent border-none outline-hidden cursor-pointer"
-                >
-                  <option value="Black">Black</option>
-                  <option value="White">White</option>
-                  <option value="Navy Blue">Navy Blue</option>
-                  <option value="Grey">Grey</option>
-                  <option value="Maroon">Maroon</option>
-                  <option value="Blue">Blue</option>
-                </select>
-              </div>
-            </div>
+                <div>
+                  <label className="block text-[11px] font-medium text-slate-600 mb-1">Fabric</label>
+                  <select
+                    value={attributes.fabric || 'Cotton'}
+                    onChange={(e) =>
+                      updateDraftProduct({ attributes: { ...attributes, fabric: e.target.value } })
+                    }
+                    className="w-full px-2 py-1.5 text-xs bg-white border border-slate-200 rounded-lg cursor-pointer"
+                  >
+                    <option value="Cotton">Cotton</option>
+                    <option value="Cotton Blend">Cotton Blend</option>
+                    <option value="Polyester">Polyester</option>
+                    <option value="Linen">Linen</option>
+                  </select>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Size Pills */}
@@ -606,17 +581,45 @@ export const AddProductStep3: React.FC = () => {
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div>
               <label className="block text-[11px] font-medium text-slate-600 mb-1">
+                HSN / SAC Code <span className="text-slate-400 font-normal">(Auto-Suggested)</span>
+              </label>
+              <input
+                type="text"
+                value={draftProduct.hsnCode || matchedTaxonomy?.hsnCode || '61091000'}
+                onChange={(e) => updateDraftProduct({ hsnCode: e.target.value })}
+                placeholder="e.g. 8517, 6109"
+                className="w-full px-2.5 py-1.5 text-xs font-mono font-semibold text-slate-800 bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-medium text-slate-600 mb-1">
                 Tax Category <span className="text-rose-500">*</span>
               </label>
               <select
                 value={tax.category}
-                onChange={(e) => updateDraftProduct({ tax: { ...tax, category: e.target.value } })}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  let rate = tax.rate;
+                  if (val.includes('0%')) rate = 0;
+                  else if (val.includes('5%')) rate = 5;
+                  else if (val.includes('12%')) rate = 12;
+                  else if (val.includes('18%')) rate = 18;
+                  else if (val.includes('28%')) rate = 28;
+                  updateDraftProduct({ tax: { ...tax, category: val, rate } });
+                }}
                 className="w-full px-2 py-1.5 text-xs bg-white border border-slate-200 rounded-lg cursor-pointer"
               >
-                <option value="Apparel (5%)">Apparel (5%)</option>
-                <option value="Apparel (12%)">Apparel (12%)</option>
-                <option value="Standard (18%)">Standard (18%)</option>
-                <option value="Zero (0%)">Zero (0%)</option>
+                {matchedTaxonomy?.category && (
+                  <option value={`${matchedTaxonomy.category} (${matchedTaxonomy.gstRate ?? 18}%)`}>
+                    {matchedTaxonomy.category} ({matchedTaxonomy.gstRate ?? 18}%)
+                  </option>
+                )}
+                <option value="Zero (0%)">Zero GST (0%)</option>
+                <option value="Apparel & Essentials (5%)">Apparel &amp; Essentials (5%)</option>
+                <option value="Footwear & Healthcare (12%)">Footwear &amp; Healthcare (12%)</option>
+                <option value="Standard Electronics & Goods (18%)">Standard Goods (18%)</option>
+                <option value="Luxury & Appliances (28%)">Luxury &amp; Appliances (28%)</option>
               </select>
             </div>
 
@@ -644,8 +647,8 @@ export const AddProductStep3: React.FC = () => {
               />
             </div>
 
-            <div className="flex flex-col justify-between">
-              <label className="text-[11px] font-medium text-slate-600">Inclusive of Tax</label>
+            <div className="col-span-2 flex items-center justify-between pt-1">
+              <label className="text-[11px] font-medium text-slate-600">Price is Inclusive of Tax</label>
               <div className="flex items-center gap-2">
                 <span className="text-[11px] text-slate-500">{tax.inclusive ? 'Yes' : 'No'}</span>
                 <label className="relative inline-flex items-center cursor-pointer">
@@ -662,7 +665,7 @@ export const AddProductStep3: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className="text-[10px] text-slate-400">Final price includes tax.</div>
+          <div className="text-[10px] text-slate-400">Final selling price includes GST according to Indian Statutory Schedule.</div>
         </div>
       </div>
 

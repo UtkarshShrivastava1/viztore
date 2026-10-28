@@ -20,7 +20,7 @@
 | ↳ **Merchant & Admin Panel** | 25% | `[████████████████████]` | **100%** | 🟢 Complete Suite | All 7/7 Modules & Settings Merged (`b92a159`) |
 | ↳ **Customer Web Storefront** | 20% | `[████████████████████]` | **100%** | 🟢 Storefront & Cart Engine | All 4/4 Modular Suites Merged (`e942cc9`) |
 | ↳ **Corporate Marketing Website** | 5% | `[████████████████████]` | **100%** | 🟢 Corporate Hub | 13 Routes Prerendered, White-Label (`@repo/company`) |
-| ↳ **Production Readiness & DevOps** | 20% | `[████████████████████]` | **100%** | 🟢 Staging Live | 185/185 Tests Green (27/27 suites), Monorepo Clean Build |
+| ↳ **Production Readiness & DevOps** | 20% | `[████████████████████]` | **100%** | 🟢 Staging Live | 197/197 Tests Green (28/28 suites), Monorepo Clean Build |
 
 
 
@@ -395,6 +395,13 @@ Every online order placed through `apps/web` generates an authoritative, complia
     - **Session State Isolation (`authStore.ts`)**: Added automatic store state resets on `logout()` and `setAuth()` to prevent cross-merchant data bleed.
     - **Clean Zero-State Verification**: Verified via browser subagent on Port 3001 that first login displays genuine zero-state metrics: Total Sales: ₹0, Total Orders: 0, Products Listed: 0, Live Orders: "No incoming orders yet", Top Products: "No products found", Low Stock: "Inventory Healthy", and flat 7-day revenue chart.
   - **Build & Test Verification**: 185/185 automated tests green; clean TypeScript compilation (`tsc --noEmit`) with 0 errors across backend and merchant.
+- [x] **Master Taxonomy Engine, Dynamic Schema-Driven Attributes & Statutory HSN Lookup (`[AUDIT-041]`) 🟢**:
+  - **Master Taxonomy Ingestion**: Parsed all 5,015 rows of `Categories.xlsx` into `taxonomies.data.json` & `taxonomies.json` covering 17 master categories, 78 subcategories, 357 product types, and 246 brand filters with precompiled in-memory fallback.
+  - **Statutory HSN & GST Schedule Resolver**: Implemented deterministic Indian GST rule engine in `hsn.service.ts` auto-resolving official 4-digit HSN/SAC codes and GST tax slabs (0%, 5%, 12%, 18%, 28%) across all categories.
+  - **Mongoose & Shared Types**: Created `TaxonomyModel` with compound unique index on `{ category, subcategory, productType }` and full-text index; extended `IProduct`, `product.model.ts`, and Zod schemas with `hsnCode` and `gstRate`.
+  - **Merchant Catalog Wizard (`AddProductStep1` & `AddProductStep3`)**: Replaced 10 hardcoded categories with full 357 product types, integrated ⚡ Quick Hierarchy Search with instant suggestions, added dynamic schema-driven attributes renderer, and implemented auto-populating HSN / SAC code with statutory GST slab selection.
+  - **Automated Test Suite**: Added 12 taxonomy unit tests in `taxonomy.service.test.ts`; **197/197 tests passing across 28 test suites**; 100% clean builds for `@repo/merchant` and `@repo/web`.
+
 
 
 

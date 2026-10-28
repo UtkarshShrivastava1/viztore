@@ -892,6 +892,8 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
         ? draftProduct.productType.toLowerCase().trim().replace(/[\s-]+/g, '_')
         : undefined,
       brand: draftProduct.brand || 'Generic',
+      hsnCode: draftProduct.hsnCode || undefined,
+      gstRate: draftProduct.tax?.rate ?? 18,
       tags: draftProduct.tags || [],
       attributes: attributesArray,
       variants,

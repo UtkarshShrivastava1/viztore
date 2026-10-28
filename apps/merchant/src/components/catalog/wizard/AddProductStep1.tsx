@@ -11,188 +11,72 @@ import {
 } from '../../../lib/customTaxonomyStorage.js';
 import { useAuthStore } from '../../../stores/authStore.js';
 
+import masterTaxonomies from '../../../data/taxonomies.json';
+
 interface CategoryDefinition {
   subCategories: string[];
   productTypes: Record<string, string[]>;
 }
 
-const defaultCategoryData: CategoryDefinition = {
-  subCategories: ['T-Shirts', 'Shirts', 'Jeans', 'Trousers', 'Ethnic Wear'],
-  productTypes: {
-    'T-Shirts': ['Round Neck T-Shirt', 'Polo T-Shirt', 'Oversized T-Shirt', 'V-Neck T-Shirt'],
-    'Shirts': ['Formal Shirt', 'Casual Shirt', 'Flannel Shirt', 'Linen Shirt'],
-    'Jeans': ['Slim Fit Jeans', 'Relaxed Jeans', 'Skinny Jeans', 'Ripped Jeans'],
-    'Trousers': ['Chinos', 'Formal Trousers', 'Cargo Pants'],
-    'Ethnic Wear': ['Kurta Pajama', 'Nehru Jacket', 'Sherwani'],
-  },
+interface TaxonomyItem {
+  category: string;
+  subcategory: string;
+  productType: string;
+  hsnCode?: string;
+  gstRate?: number;
+  attributes: Array<{ name: string; values: string[]; isMultiSelect: boolean; isRequired: boolean }>;
+}
+
+const typedMasterTaxonomies = masterTaxonomies as unknown as TaxonomyItem[];
+
+const buildMasterCategoryTree = (): Record<string, CategoryDefinition> => {
+  const tree: Record<string, CategoryDefinition> = {};
+  for (const item of typedMasterTaxonomies) {
+    const cat = item.category.trim();
+    const sub = item.subcategory.trim();
+    const pt = item.productType.trim();
+    if (!cat || !sub || !pt) continue;
+
+    if (!tree[cat]) {
+      tree[cat] = { subCategories: [], productTypes: {} };
+    }
+    if (!tree[cat].subCategories.includes(sub)) {
+      tree[cat].subCategories.push(sub);
+    }
+    if (!tree[cat].productTypes[sub]) {
+      tree[cat].productTypes[sub] = [];
+    }
+    if (!tree[cat].productTypes[sub].includes(pt)) {
+      tree[cat].productTypes[sub].push(pt);
+    }
+  }
+  return tree;
 };
 
-const categoryCatalogTree: Record<string, CategoryDefinition> = {
-  Men: defaultCategoryData,
-  Women: {
-    subCategories: ['Sarees', 'Kurtis & Suits', 'Dresses', 'Western Tops', 'Jeans & Jeggings'],
-    productTypes: {
-      'Sarees': ['Silk Saree', 'Cotton Saree', 'Georgette Saree', 'Chiffon Saree'],
-      'Kurtis & Suits': ['Straight Kurti', 'Anarkali Suit', 'Palazzo Set'],
-      'Dresses': ['Maxi Dress', 'A-Line Dress', 'Bodycon Dress', 'Floral Sundress'],
-      'Western Tops': ['Crop Top', 'Button-Down Shirt', 'Peplum Top'],
-      'Jeans & Jeggings': ['High-Waist Jeans', 'Skinny Jeggings', 'Bootcut Jeans'],
-    },
-  },
-  Kids: {
-    subCategories: ['Boys Clothing', 'Girls Clothing', 'Baby Care', 'Footwear'],
-    productTypes: {
-      'Boys Clothing': ['Graphic T-Shirt', 'Shorts Set', 'Party Wear Suit'],
-      'Girls Clothing': ['Frock Dress', 'Top & Skirt Set', 'Ethnic Lehenga'],
-      'Baby Care': ['Romper Onesie', 'Cotton Bodysuit', 'Swaddle Blanket'],
-      'Footwear': ['Light-up Sneakers', 'Soft Booties', 'Sandals'],
-    },
-  },
-  Footwear: {
-    subCategories: ['Sneakers', 'Formal Shoes', 'Sandals & Slides', 'Sports Shoes'],
-    productTypes: {
-      'Sneakers': ['Low-top Canvas', 'Chunky Sneakers', 'Slip-on Shoes'],
-      'Formal Shoes': ['Oxford Shoes', 'Derby Shoes', 'Loafers'],
-      'Sandals & Slides': ['Leather Sandals', 'Casual Slides', 'Flip-Flops'],
-      'Sports Shoes': ['Running Shoes', 'Training Shoes', 'Football Cleats'],
-    },
-  },
-  Electronics: {
-    subCategories: ['Audio', 'Mobile Accessories', 'Wearables', 'Cables & Power'],
-    productTypes: {
-      'Audio': ['Wireless Earbuds', 'Over-ear Headphones', 'Bluetooth Speaker'],
-      'Mobile Accessories': ['Shockproof Case', 'Tempered Glass', 'Phone Stand'],
-      'Wearables': ['Fitness Tracker', 'Smartwatch with AMOLED', 'Sports Band'],
-      'Cables & Power': ['Fast Charger Adapter', 'Type-C Braided Cable', 'Power Bank 20000mAh'],
-    },
-  },
-  'Home & Living': {
-    subCategories: ['Bedding', 'Home Decor', 'Kitchen & Dining', 'Bath & Towels'],
-    productTypes: {
-      'Bedding': ['Bedsheet Set (Double)', 'Microfiber Pillows', 'Comforter Quilt'],
-      'Home Decor': ['Wall Clock', 'Scented Candle', 'Indoor Planter Ceramic'],
-      'Kitchen & Dining': ['Insulated Water Bottle', 'Stainless Steel Cookware', 'Coffee Mug Set'],
-      'Bath & Towels': ['Cotton Bath Towel', 'Hand Towels Set', 'Anti-skid Bath Mat'],
-    },
-  },
-  Accessories: {
-    subCategories: ['Bags & Backpacks', 'Watches', 'Sunglasses', 'Belts & Wallets'],
-    productTypes: {
-      'Bags & Backpacks': ['Laptop Backpack', 'Travel Duffel', 'Crossbody Sling'],
-      'Watches': ['Chronograph Watch', 'Minimalist Leather Watch', 'Digital Sport Watch'],
-      'Sunglasses': ['Aviator Sunglasses', 'Wayfarer Shades', 'Polarized Sport'],
-      'Belts & Wallets': ['Genuine Leather Belt', 'Bi-fold RFID Wallet', 'Card Holder'],
-    },
-  },
-  'Grocery & Staples': {
-    subCategories: ['Atta & Flours', 'Rice & Grains', 'Dal & Pulses', 'Edible Oils & Ghee', 'Spices & Masalas', 'Dry Fruits & Nuts'],
-    productTypes: {
-      'Atta & Flours': ['Chakki Fresh Atta', 'Maida', 'Besan', 'Multi-grain Flour'],
-      'Rice & Grains': ['Basmati Rice', 'Kolam Rice', 'Poha / Flattened Rice', 'Dalia'],
-      'Dal & Pulses': ['Toor Dal', 'Moong Dal', 'Chana Dal', 'Urad Dal'],
-      'Edible Oils & Ghee': ['Mustard Oil', 'Sunflower Oil', 'Cow Ghee', 'Olive Oil'],
-      'Spices & Masalas': ['Turmeric Powder', 'Red Chilli Powder', 'Garam Masala', 'Whole Spices'],
-      'Dry Fruits & Nuts': ['Almonds / Badam', 'Cashews / Kaju', 'Raisins / Kishmish', 'Walnuts'],
-    },
-  },
-  'FMCG & Packaged Foods': {
-    subCategories: ['Biscuits & Cookies', 'Snacks & Namkeen', 'Beverages & Tea', 'Chocolates & Sweets', 'Instant Noodles & Soups'],
-    productTypes: {
-      'Biscuits & Cookies': ['Glucose Biscuits', 'Cream Crackers', 'Digestive Cookies', 'Rusk'],
-      'Snacks & Namkeen': ['Bhujia', 'Potato Chips', 'Roasted Makhanas', 'Mixture'],
-      'Beverages & Tea': ['Premium CTC Tea', 'Green Tea Bags', 'Instant Coffee', 'Fruit Juices'],
-      'Chocolates & Sweets': ['Milk Chocolate', 'Dark Chocolate Bar', 'Traditional Gulab Jamun Tin'],
-      'Instant Noodles & Soups': ['Instant Noodles 4-Pack', 'Cup Noodles', 'Tomato Soup Mix'],
-    },
-  },
-  'Beauty & Personal Care': {
-    subCategories: ['Skin Care', 'Hair Care', 'Bath & Body', 'Oral Care', 'Fragrances & Deos'],
-    productTypes: {
-      'Skin Care': ['Face Wash', 'Moisturizing Cream', 'Sunscreen SPF 50', 'Face Serum'],
-      'Hair Care': ['Anti-Dandruff Shampoo', 'Hair Conditioner', 'Coconut Hair Oil'],
-      'Bath & Body': ['Bathing Bar Soap', 'Body Wash Gel', 'Body Lotion'],
-      'Oral Care': ['Toothpaste 150g', 'Soft Toothbrush Pack', 'Mouthwash'],
-      'Fragrances & Deos': ['Pocket Deodorant', 'Body Spray 150ml', 'Eau de Parfum'],
-    },
-  },
-  'Pharmacy & Wellness': {
-    subCategories: ['Ayurvedic Care', 'First Aid', 'Health Supplements', 'Baby Nutrition'],
-    productTypes: {
-      'Ayurvedic Care': ['Chyawanprash', 'Triphala Powder', 'Herbal Cough Syrup', 'Giloy Juice'],
-      'First Aid': ['Antiseptic Liquid', 'Bandages / Strips', 'Pain Relief Gel', 'Cotton Roll'],
-      'Health Supplements': ['Multivitamin Capsules', 'Protein Powder', 'Fish Oil Omega-3'],
-      'Baby Nutrition': ['Infant Cereal', 'Gripe Water', 'Baby Gripe Water'],
-    },
-  },
-  'Sports & Fitness': {
-    subCategories: ['Fitness Equipment', 'Gym Wear', 'Yoga & Mats', 'Sports Gear'],
-    productTypes: {
-      'Fitness Equipment': ['Dumbbells Set', 'Resistance Bands', 'Hand Gripper'],
-      'Gym Wear': ['Quick-Dry Gym T-Shirt', 'Compression Tights', 'Workout Shorts'],
-      'Yoga & Mats': ['Anti-Slip Yoga Mat 6mm', 'Yoga Foam Roller', 'Yoga Block'],
-      'Sports Gear': ['Cricket Bat', 'Badminton Racket', 'Football Size 5', 'Shuttlecocks'],
-    },
-  },
-  'Automotive & Spares': {
-    subCategories: ['Two-Wheeler Helmets', 'Two-Wheeler Spares', 'Car Accessories', 'Cleaning & Lubricants'],
-    productTypes: {
-      'Two-Wheeler Helmets': ['Full Face Helmet', 'Open Face Helmet', 'Riding Gloves'],
-      'Two-Wheeler Spares': ['Brake Shoes', 'Spark Plug', 'Rearview Mirror Set', 'Indicator Light'],
-      'Car Accessories': ['Mobile Dashboard Holder', 'Car Perfume Vent Clip', 'Seat Cushion'],
-      'Cleaning & Lubricants': ['Engine Oil 4T 1L', 'Chain Lube Spray', 'Microfiber Cloth Pack'],
-    },
-  },
-  'Stationery & Books': {
-    subCategories: ['Notebooks & Registers', 'Pens & Writing', 'Art & Craft', 'Office Supplies'],
-    productTypes: {
-      'Notebooks & Registers': ['Single Line Notebook 172p', 'Spiral Journal A5', 'Register 240p'],
-      'Pens & Writing': ['Ballpoint Pens Pack of 5', 'Gel Pens 0.5mm', 'Highlighters Set'],
-      'Art & Craft': ['Acrylic Paints 12-Shades', 'Sketch Book A4', 'Oil Pastels'],
-      'Office Supplies': ['Stapler No. 10', 'Correction Pen', 'Desk Organizer', 'Calculator'],
-    },
-  },
-  'Bakery & Confectionery': {
-    subCategories: ['Fresh Breads', 'Cakes & Pastries', 'Cookies & Toast', 'Artisan Chocolates'],
-    productTypes: {
-      'Fresh Breads': ['Whole Wheat Brown Bread', 'White Sandwich Bread', 'Pav / Buns Pack'],
-      'Cakes & Pastries': ['Chocolate Truffle Pastry', 'Plum Cake', 'Red Velvet Slice'],
-      'Cookies & Toast': ['Butter Rusk', 'Jeera Khari Puff', 'Almond Biscotti'],
-      'Artisan Chocolates': ['Handcrafted Dark Truffles', 'Dry Fruit Chocolate Bar'],
-    },
-  },
-  'General & Other': {
-    subCategories: ['Daily Essentials', 'Hardware & Tools', 'Gifts & Toys', 'Pet Supplies'],
-    productTypes: {
-      'Daily Essentials': ['General Commodity', 'Packaged Goods', 'Utility Item'],
-      'Hardware & Tools': ['Screwdriver Set', 'Measuring Tape 5m', 'Insulation Tape'],
-      'Gifts & Toys': ['Gift Wrapping Paper', 'Action Figure', 'Board Game'],
-      'Pet Supplies': ['Dog Food 1kg', 'Cat Treats', 'Pet Shampoo'],
-    },
-  },
-};
+const categoryCatalogTree: Record<string, CategoryDefinition> = buildMasterCategoryTree();
 
-const commonBrandOptions = [
-  'Generic / Unbranded',
-  'Local Artisan / In-House',
-  'PUMA',
-  'Nike',
-  'Roadster',
-  'Levis',
-  'HRX',
-  'Zara',
-  'H&M',
-  'Amul',
-  'Tata Sampann',
-  'Nestle',
-  'Britannia',
-  'Dabur',
-  'Patanjali',
-  'boAt',
-  'Noise',
-  'Samsung',
-  'Milton',
-  'Prestige',
-];
+const commonBrandOptions = Array.from(
+  new Set([
+    'Generic / Unbranded',
+    'Local Artisan / In-House',
+    ...typedMasterTaxonomies
+      .flatMap((t) => t.attributes || [])
+      .filter((a) => a.name.toLowerCase() === 'brand')
+      .flatMap((a) => a.values || []),
+    'Nike',
+    'Puma',
+    'Adidas',
+    'Levis',
+    'Zara',
+    'H&M',
+    'Apple',
+    'Samsung',
+    'Amul',
+    'Tata',
+    'Britannia',
+    'boAt',
+  ]),
+).filter(Boolean);
 
 export const AddProductStep1: React.FC = () => {
   const { draftProduct, updateDraftProduct, setWizardStep, products } = useCatalogStore();
@@ -310,9 +194,54 @@ export const AddProductStep1: React.FC = () => {
   };
 
   const handleProductTypeChange = (newPt: string) => {
-    updateDraftProduct({ productType: newPt });
+    const match = typedMasterTaxonomies.find(
+      (t) =>
+        t.productType.toLowerCase() === newPt.toLowerCase() &&
+        (!category || t.category.toLowerCase() === category.toLowerCase()),
+    );
+
+    updateDraftProduct({
+      productType: newPt,
+      hsnCode: match?.hsnCode || draftProduct.hsnCode || '61091000',
+      tax: match?.gstRate
+        ? {
+            category: match.category,
+            rate: match.gstRate,
+            inclusive: true,
+          }
+        : draftProduct.tax,
+    });
     const updated = recordCustomCategory(storeId, category, subCategory, newPt);
     setCustomTax(updated);
+  };
+
+  const [quickSearch, setQuickSearch] = React.useState('');
+  const quickSearchResults = React.useMemo(() => {
+    const q = quickSearch.trim().toLowerCase();
+    if (!q || q.length < 2) return [];
+    return typedMasterTaxonomies
+      .filter(
+        (t) =>
+          t.productType.toLowerCase().includes(q) ||
+          t.subcategory.toLowerCase().includes(q) ||
+          t.category.toLowerCase().includes(q),
+      )
+      .slice(0, 6);
+  }, [quickSearch]);
+
+  const selectHierarchy = (t: TaxonomyItem) => {
+    updateDraftProduct({
+      category: t.category,
+      subCategory: t.subcategory,
+      productType: t.productType,
+      hsnCode: t.hsnCode || '61091000',
+      tax: {
+        category: t.category,
+        rate: t.gstRate ?? 18,
+        inclusive: true,
+      },
+    });
+    setQuickSearch('');
   };
 
   const handleBrandChange = (newBrand: string) => {
@@ -343,9 +272,40 @@ export const AddProductStep1: React.FC = () => {
                 Category, Sub-category &amp; Product Type
               </h3>
             </div>
-            <p className="text-xs text-slate-500 ml-8 mb-4">
-              Choose or type any category, sub-category, and product type to organize your catalog.
+            <p className="text-xs text-slate-500 ml-8 mb-3">
+              Choose or search across 350+ master retail categories and product types.
             </p>
+
+            {/* Quick Auto-Complete Bar */}
+            <div className="ml-8 mb-4">
+              <div className="relative">
+                <input
+                  type="text"
+                  value={quickSearch}
+                  onChange={(e) => setQuickSearch(e.target.value)}
+                  placeholder="⚡ Quick Search (e.g. Smartphones, T-Shirts, Laptop Bags, Rice, Kurta...)"
+                  className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
+                />
+                <Search className="w-4 h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
+
+              {quickSearchResults.length > 0 && (
+                <div className="mt-1.5 p-2 bg-slate-50 border border-slate-200 rounded-lg flex flex-wrap gap-1.5">
+                  <span className="text-[11px] font-medium text-slate-400 self-center mr-1">Suggestions:</span>
+                  {quickSearchResults.map((t, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => selectHierarchy(t)}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium bg-white hover:bg-blue-50 hover:text-blue-700 text-slate-700 border border-slate-200 rounded-md transition-colors cursor-pointer shadow-2xs"
+                    >
+                      <span className="text-slate-400">{t.category} › {t.subcategory} ›</span>
+                      <span className="font-semibold">{t.productType}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 pt-1">
               {/* Category */}

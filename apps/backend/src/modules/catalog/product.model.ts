@@ -118,6 +118,17 @@ const productSchema = new Schema<IProductDocument>(
       trim: true,
       index: true,
     },
+    hsnCode: {
+      type: String,
+      trim: true,
+      index: true,
+    },
+    gstRate: {
+      type: Number,
+      min: 0,
+      max: 100,
+      default: 0,
+    },
     tags: {
       type: [String],
       default: [],
