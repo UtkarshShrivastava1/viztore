@@ -2,9 +2,9 @@
 
 ## 📊 Global Audit Remediation Progress Tracker
 
-> **Current Status**: **Sprint 3 In Progress! (1/14 - 7.1%)** — Storefront Discovery, Merchant Config & Tooling  
-> **Platform Completion**: **22 / 62 Items Completed** (**35.5%**)  
-> **Overall Progress Bar**: `[███████░░░░░░░░░░░░░] 35.5%`
+> **Current Status**: **Sprint 3 In Progress! (4/14 - 28.6%)** — Storefront Discovery, Merchant Config & Tooling  
+> **Platform Completion**: **25 / 62 Items Completed** (**40.3%**)  
+> **Overall Progress Bar**: `[████████░░░░░░░░░░░░] 40.3%`
 
 ### Sprint Completion Breakdown
 
@@ -12,10 +12,10 @@
 |---|---|:---:|---|:---:|:---:|
 | **Sprint 1** | **Core Architectural Foundations & Critical Blockers** | **9 / 9** | `[████████████████████]` | **100.0%** | `DONE ✅` |
 | **Sprint 2** | **Commercial Engines, Billing, Ledger & Procurement** | **12 / 12** | `[████████████████████]` | **100.0%** | `DONE ✅` |
-| **Sprint 3** | **Storefront Discovery, Merchant Config & Tooling** | **1 / 14** | `[██░░░░░░░░░░░░░░░░░░]` | **7.1%** | `IN PROGRESS 🟡` |
+| **Sprint 3** | **Storefront Discovery, Merchant Config & Tooling** | **4 / 14** | `[██████░░░░░░░░░░░░░░]` | **28.6%** | `IN PROGRESS 🟡` |
 | **Sprint 4** | **Catalog & Merchant Inventory Workflows (Phase 4A)** | **0 / 13** | `[░░░░░░░░░░░░░░░░░░░░]` | **0.0%** | `PENDING ⚪` |
 | **Sprint 5** | **Store Merchandising, Policies & Micro-Polish (Phase 4B)** | **0 / 14** | `[░░░░░░░░░░░░░░░░░░░░]` | **0.0%** | `PENDING ⚪` |
-| **TOTAL** | **Hyperlocal Multi-Vendor Commerce Platform** | **22 / 62** | `[███████░░░░░░░░░░░░░]` | **35.5%** | **ACTIVE 🚀** |
+| **TOTAL** | **Hyperlocal Multi-Vendor Commerce Platform** | **25 / 62** | `[████████░░░░░░░░░░░░]` | **40.3%** | **ACTIVE 🚀** |
 
 > *Note: Sprints 4 & 5 correspond to the detailed breakdown of Roadmap Milestone 4 (27 UI/UX Hardening & Visual Excellence deliverables).*
 
@@ -63,11 +63,11 @@ This document serves as the master engineering log for all findings, functional 
 | `AUDIT-016` | Catalog Edit Product Modal Glitches & Field Binding | Merchant Hub | Catalog | Bug / Defect | P2 | Low | Logged 📝 |
 | `AUDIT-017` | Inventory Module Hardening & Catalog Synchronization | Merchant Hub | Inventory | Bug / UX | P0 | High | DONE ✅ |
 | `AUDIT-018` | Store Management "New Arrivals" Section Sequencing | Merchant Hub | Storefront CMS | Bug / Defect | P1 | Medium | Logged 📝 |
-| `AUDIT-019` | Store Management Logo, Banner & Mobile Banner Saving | Merchant Hub | Media / Settings | Bug / Defect | P0 | Medium | Logged 📝 |
-| `AUDIT-020` | "Your Store Link" 404 Routing on Public Storefront | Merchant Hub / Web | Storefront URLs | Bug / Defect | P0 | Low | Logged 📝 |
+| `AUDIT-019` | Store Management Logo, Banner & Mobile Banner Saving | Merchant Hub | Media / Settings | Bug / Defect | P0 | Medium | DONE ✅ |
+| `AUDIT-020` | "Your Store Link" 404 Routing on Public Storefront | Merchant Hub / Web | Storefront URLs | Bug / Defect | P0 | Low | DONE ✅ |
 | `AUDIT-021` | Store QR Code Generation Pending & Inactive | Merchant Hub | Storefront CMS | Functional Gap | P1 | Low | Logged 📝 |
 | `AUDIT-022` | Store Management Radio Button Direct Click Event | Merchant Hub | Storefront CMS | UI / Defect | P2 | Low | Logged 📝 |
-| `AUDIT-023` | "Manage Sections" Changes Not Persisting on Save | Merchant Hub | Storefront CMS | Bug / Defect | P1 | Medium | Logged 📝 |
+| `AUDIT-023` | "Manage Sections" Changes Not Persisting on Save | Merchant Hub | Storefront CMS | Bug / Defect | P1 | Medium | DONE ✅ |
 | `AUDIT-024` | Marketing Website "Sell Online" Nav Tab Hover Activation | Merchant Hub | Marketing Nav | UI/UX Polish | P3 | Low | Logged 📝 |
 | `AUDIT-025` | Expense Module: New Vendor, Date Default & Amount Glitch | Merchant Hub | Expenses | Bug / Defect | P1 | Medium | Logged 📝 |
 | `AUDIT-026` | Global System Date & Timezone Synchronization | Cross-Cutting | Core / Runtime | Reliability | P1 | Medium | DONE ✅ |
@@ -1433,9 +1433,9 @@ Executing strictly in this order guarantees that **every data model, schema cont
 * **Goal**: Connect store settings to live APIs, enable distance-sorted hyperlocal discovery, wire customer wishlist/share actions, and activate merchant command palette.
 * **Items**:
   1. `[AUDIT-057]` Merchant Settings & Store Configuration Backend Persistence (`PATCH /api/v1/stores/:id`) (DONE ✅ - Commit `68a2b1d`).
-  2. `[AUDIT-019]` Store Management Logo & Banner Media Persistence (Cloudinary multipart upload).
-  3. `[AUDIT-023]` Store Management "Manage Sections" Persistence in MongoDB.
-  4. `[AUDIT-020]` "Your Store Link" 404 Route Handler (`/stores/:slug`).
+  2. `[AUDIT-019]` Store Management Logo & Banner Media Persistence (DONE ✅ - Commit `3710d9e`).
+  3. `[AUDIT-023]` Store Management "Manage Sections" Persistence in MongoDB (DONE ✅ - Commit `3710d9e`).
+  4. `[AUDIT-020]` "Your Store Link" 404 Route Handler (`/stores/:slug`) (DONE ✅ - Commit `3710d9e`).
   5. `[AUDIT-027]` "Stores Near You" Ascending Distance Proximity Sort (2dsphere haversine query).
   6. `[AUDIT-048]` Customer "Favourite Stores" Pipeline & Persistence.
   7. `[AUDIT-060]` Customer Profile & Feedback Persistence (wire `handleSave` and feedback API).
