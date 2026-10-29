@@ -9,6 +9,7 @@ import { BillingSettingsView } from '../components/billing/BillingSettingsView.j
 import { CreateInvoiceModal } from '../components/billing/CreateInvoiceModal.js';
 import { BillingHeaderActions } from '../components/billing/BillingHeaderActions.js';
 import { CounterPOSView } from '../components/billing/CounterPOSView.js';
+import { NotesTableView } from '../components/billing/NotesTableView.js';
 
 export const BillingPage: React.FC = () => {
   const {
@@ -34,7 +35,14 @@ export const BillingPage: React.FC = () => {
   const getBreadcrumb = () => {
     if (activeSubTab === 'invoices' || activeView === 'settings') return null;
 
-    const subTabName = 'Estimates / Quotes';
+    const subTabName =
+      activeSubTab === 'quotes'
+        ? 'Estimates / Quotes'
+        : activeSubTab === 'credit_notes'
+        ? 'Credit Notes'
+        : activeSubTab === 'debit_notes'
+        ? 'Debit Notes'
+        : 'Billing';
     let actionName = '';
     if (activeView === 'create_quote') actionName = 'Create Estimate / Quote';
     if (activeView === 'pos_counter') actionName = 'Counter POS Register';

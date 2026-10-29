@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import {
+  Loader2,
   Calendar,
   Settings,
   Info,

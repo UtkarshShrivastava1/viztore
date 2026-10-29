@@ -20,6 +20,7 @@ export const BillingSettingsView: React.FC<BillingSettingsViewProps> = ({ onBack
   // Local form state initialized from store
   const [formState, setFormState] = useState<BillingSettings>({ ...settings });
   const [isSaved, setIsSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleChange = <K extends keyof BillingSettings>(key: K, value: BillingSettings[K]) => {
     setFormState((prev) => ({ ...prev, [key]: value }));

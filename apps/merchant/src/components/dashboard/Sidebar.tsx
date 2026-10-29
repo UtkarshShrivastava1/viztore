@@ -9,6 +9,8 @@ import {
   Wallet,
   ReceiptText,
   CreditCard,
+  FileDiff,
+  FileMinus,
   FileText,
   HardDrive,
   RotateCcw,
@@ -72,6 +74,8 @@ interface MenuItem {
 const billingSubItems = [
   { id: 'invoices', label: 'Invoices', icon: ReceiptText },
   { id: 'quotes', label: 'Estimates / Quotes', icon: FileText },
+  { id: 'credit_notes', label: 'Credit Notes', icon: FileDiff },
+  { id: 'debit_notes', label: 'Debit Notes', icon: FileMinus },
 ] as const;
 
 const storeSubItems = [

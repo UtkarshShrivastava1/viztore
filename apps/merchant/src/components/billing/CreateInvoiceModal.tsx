@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { X, Plus, Calendar, Trash2, Printer, CheckCircle2, ShieldAlert } from 'lucide-react';
+import { X, Plus, Calendar, Trash2, Printer, CheckCircle2, ShieldAlert, Loader2 } from 'lucide-react';
 import { IInvoice, IInvoiceItem, useBillingStore } from '../../stores/billingStore.js';
 import { useCustomerStore } from '../../stores/customerStore.js';
 import { useInventoryStore } from '../../stores/inventoryStore.js';
@@ -176,6 +176,7 @@ export const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
   const [paymentDate, setPaymentDate] = useState(() => new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }));
   const [paidStatusOption, setPaidStatusOption] = useState<'unpaid' | 'partial' | 'full'>('unpaid');
   const [saveAsDraft, setSaveAsDraft] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Prepopulate if initialData exists (e.g. from Convert Quote to Invoice)
   useEffect(() => {

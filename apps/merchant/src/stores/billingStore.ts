@@ -7,7 +7,7 @@ export type InvoiceStatus = 'draft' | 'issued' | 'paid' | 'partially_paid' | 'ov
 export type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'declined' | 'expired' | 'converted' | 'cancelled';
 export type NoteStatus = 'draft' | 'issued' | 'used' | 'partially_used' | 'expired' | 'cancelled';
 
-export type BillingSubTab = 'invoices' | 'quotes' | 'pos';
+export type BillingSubTab = 'invoices' | 'quotes' | 'pos' | 'credit_notes' | 'debit_notes';
 export type BillingViewMode = 'list' | 'create_quote' | 'settings' | 'pos_counter';
 
 export interface BillingSettings {
@@ -26,6 +26,7 @@ export interface BillingSettings {
   allowDiscounts: boolean;
   discountType: 'percentage' | 'fixed';
   maxDiscountLimit: number;
+  version?: number;
 }
 
 export interface IInvoiceItem {
@@ -161,9 +162,15 @@ export function normalizeBackendInvoice(raw: any): IInvoice {
     return raw;
   }
 
-  const dateFormatted = raw.createdAt
-    ? new Date(raw.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
-    : (raw.date || new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }));
+  const rawDate = raw.dates?.invoiceDate || raw.createdAt || raw.date;
+  const dateFormatted = rawDate
+    ? new Date(rawDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+    : new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+  const rawDueDate = raw.dates?.dueDate || raw.dueDate || rawDate;
+  const dueDateFormatted = rawDueDate
+    ? new Date(rawDueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+    : dateFormatted;
 
   const subTotal = raw.pricing?.subTotal ?? raw.subTotal ?? 0;
   const discountTotal = raw.pricing?.totalDiscount ?? raw.discountTotal ?? 0;
@@ -178,7 +185,7 @@ export function normalizeBackendInvoice(raw: any): IInvoice {
     id: raw.id || raw._id || ('inv-' + Date.now()),
     invoiceNo: raw.invoiceNumber || raw.invoiceNo || 'INV-1001',
     date: dateFormatted,
-    dueDate: raw.dueDate || dateFormatted,
+    dueDate: dueDateFormatted,
     customerName: raw.customer?.name || raw.customerName || 'Walk-in Retail Customer',
     customerPhone: raw.customer?.phone || raw.customerPhone || '',
     customerGstin: raw.customer?.gstin || raw.customerGstin,
@@ -338,10 +345,10 @@ interface BillingStoreState {
   setQuotes: (quotes: any[]) => void;
   openCreateInvoiceModal: (draft?: Partial<IInvoice>) => void;
   closeCreateInvoiceModal: () => void;
-  createInvoice: (invoice: Omit<IInvoice, 'id'>) => IInvoice;
+  createInvoice: (invoice: Omit<IInvoice, 'id'>) => Promise<IInvoice>;
   updateInvoiceStatus: (id: string, status: InvoiceStatus) => void;
   duplicateInvoice: (id: string) => void;
-  recordPayment: (id: string, amount: number, mode: 'upi' | 'cash' | 'card' | 'bank_transfer') => void;
+  recordPayment: (id: string, amount: number, mode: 'upi' | 'cash' | 'card' | 'bank_transfer', reference?: string) => Promise<void>;
   cancelInvoice: (id: string, reason?: string) => Promise<void>;
 
   // Quote Actions
@@ -353,8 +360,8 @@ interface BillingStoreState {
   setQuoteCurrentTab: (tab: string) => void;
   clearQuoteFilters: () => void;
   updateQuoteStatus: (id: string, status: QuoteStatus) => void;
-  createQuote: (quote: Omit<IQuote, 'id'>) => IQuote;
-  convertQuoteToInvoice: (quoteId: string) => void;
+  createQuote: (quote: Omit<IQuote, 'id'>) => Promise<IQuote>;
+  convertQuoteToInvoice: (quoteId: string) => Promise<void>;
 
   // Credit Note Actions
   setCreditNoteSearchQuery: (q: string) => void;
@@ -376,7 +383,7 @@ interface BillingStoreState {
 
   // Settings State & Actions
   settings: BillingSettings;
-  updateBillingSettings: (settings: Partial<BillingSettings>) => void;
+  updateBillingSettings: (settings: Partial<BillingSettings>) => Promise<void>;
 }
 
 export const initialBillingSettings: BillingSettings = {
@@ -884,8 +891,80 @@ const initialQuotes: IQuote[] = [
   },
 ];
 
-const initialCreditNotes: ICreditNote[] = [];
-const initialDebitNotes: IDebitNote[] = [];
+const initialCreditNotes: ICreditNote[] = [
+  {
+    id: 'cn-1001',
+    noteNo: 'CN-1001',
+    invoiceNo: 'INV-1248',
+    date: '15 May 2024',
+    expiryDate: '15 Aug 2024',
+    customerName: 'Ramesh Stores',
+    customerPhone: '9876543210',
+    customerGstin: '27AABCR1234F1Z1',
+    customerAddress: 'Shop 4, MG Road Market, Mumbai, Maharashtra - 400001',
+    placeOfSupply: DEFAULT_INDIAN_STATE,
+    reason: 'Customer returned 1 damaged Casual Shirt',
+    items: [
+      {
+        id: 'cn-item-1',
+        productId: 'PRD-1001',
+        name: "Men's Cotton Casual Shirt (M)",
+        hsnSac: '6205',
+        quantity: 1,
+        invoicedQty: 2,
+        returnedQty: 1,
+        rate: 2500,
+        discountPercent: 0,
+        taxPercent: 18,
+        amount: 2500,
+        unit: 'Pcs',
+      },
+    ],
+    subTotal: 2500,
+    discountTotal: 0,
+    taxTotal: 450,
+    totalAmount: 2950,
+    usedAmount: 0,
+    unusedAmount: 2950,
+    status: 'issued',
+  },
+];
+const initialDebitNotes: IDebitNote[] = [
+  {
+    id: 'dn-1001',
+    noteNo: 'DN-1001',
+    invoiceNo: 'INV-1249',
+    date: '18 May 2024',
+    expiryDate: '18 Aug 2024',
+    customerName: 'Priya Sharma',
+    customerPhone: '9123456780',
+    placeOfSupply: DEFAULT_INDIAN_STATE,
+    reason: 'Price adjustment on delayed delivery guarantee',
+    items: [
+      {
+        id: 'dn-item-1',
+        productId: 'PRD-1002',
+        name: "Women's Embroidered Kurti (L)",
+        hsnSac: '6204',
+        quantity: 1,
+        invoicedQty: 1,
+        returnedQty: 0,
+        rate: 500,
+        discountPercent: 0,
+        taxPercent: 18,
+        amount: 500,
+        unit: 'Pcs',
+      },
+    ],
+    subTotal: 500,
+    discountTotal: 0,
+    taxTotal: 90,
+    totalAmount: 590,
+    usedAmount: 590,
+    unusedAmount: 0,
+    status: 'used',
+  },
+];
 
 export const useBillingStore = create<BillingStoreState>((set, get) => ({
   // Sub navigation & View state
@@ -896,10 +975,28 @@ export const useBillingStore = create<BillingStoreState>((set, get) => ({
 
   // Settings State
   settings: initialBillingSettings,
-  updateBillingSettings: (newSettings) =>
+  updateBillingSettings: async (newSettings) => {
     set((state) => ({
       settings: { ...state.settings, ...newSettings },
-    })),
+    }));
+
+    try {
+      const payload = {
+        invoicePrefix: newSettings.invoicePrefix,
+        startingSequenceNumber: newSettings.startingSequenceNumber,
+        defaultCurrency: newSettings.defaultCurrency?.includes('INR') ? 'INR' : newSettings.defaultCurrency,
+        gstEnabled: newSettings.gstEnabled,
+        gstin: newSettings.gstin || undefined,
+        state: newSettings.state,
+        taxCalculationType: newSettings.taxCalculationType,
+        allowDiscounts: newSettings.allowDiscounts,
+        maxDiscountPercent: newSettings.maxDiscountLimit,
+      };
+      await billingApi.updateSettings(payload, get().settings.version);
+    } catch (err) {
+      console.warn('Backend updateBillingSettings non-blocking fallback (local settings retained):', err);
+    }
+  },
 
   // Invoices State
   invoices: [],
@@ -1123,45 +1220,101 @@ export const useBillingStore = create<BillingStoreState>((set, get) => ({
       activeInvoiceForModal: null,
     }),
 
-  createInvoice: (invoiceData) => {
-    const newId = 'inv-' + Date.now();
-    const newInvoiceNo = (get().settings.invoicePrefix || 'INV-') + (get().settings.startingSequenceNumber + get().invoices.length);
-    const newInvoice: IInvoice = {
-      ...invoiceData,
-      id: newId,
-      invoiceNo: invoiceData.invoiceNo || newInvoiceNo,
-    };
+  createInvoice: async (invoiceData) => {
+    const today = new Date().toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
 
-    // Live inventory synchronization: decrement stock for invoiced items
+    const idempotencyKey = `inv-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+    let responseInvoice: IInvoice | null = null;
+
+    // 1. Dispatch to backend API
+    try {
+      const payload = {
+        type: invoiceData.type === 'Bill of Supply' ? 'retail_bill' : 'tax_invoice',
+        customer: {
+          name: invoiceData.customerName || 'Walk-in Retail Customer',
+          phone: invoiceData.customerPhone ? invoiceData.customerPhone.replace(/\D/g, '') || '9999999999' : '9999999999',
+          email: (invoiceData as any).customerEmail || undefined,
+          billingAddress: invoiceData.customerAddress || undefined,
+          state: invoiceData.state || DEFAULT_INDIAN_STATE,
+          gstin: invoiceData.customerGstin || undefined,
+        },
+        items: invoiceData.items.map((it) => ({
+          productId: it.productId || undefined,
+          variantId: (it as any).variantId || undefined,
+          title: it.name,
+          hsnCode: it.hsnSac || '0000',
+          quantity: it.quantity,
+          unit: (it.unit as any) || 'Pcs',
+          unitPrice: it.rate,
+          discountAmount: it.discountPercent ? Math.round((it.rate * it.quantity * it.discountPercent) / 100) : 0,
+          taxRate: it.taxPercent ?? 18,
+        })),
+        placeOfSupply: invoiceData.placeOfSupply || invoiceData.state || DEFAULT_INDIAN_STATE,
+        paymentTerms: invoiceData.paymentTerms || 'Immediate',
+        notes: invoiceData.notes || undefined,
+        payment: {
+          status: invoiceData.status === 'paid' ? 'paid' : invoiceData.status === 'draft' ? 'draft' : 'issued',
+          settlementMode: invoiceData.settlementMode === 'bank_transfer' ? 'net_banking' : (invoiceData.settlementMode || 'cash'),
+          paidAmount: invoiceData.paidAmount,
+        },
+        dates: {
+          invoiceDate: invoiceData.date ? new Date(invoiceData.date).toISOString() : new Date().toISOString(),
+          dueDate: invoiceData.dueDate ? new Date(invoiceData.dueDate).toISOString() : undefined,
+        },
+        idempotencyKey,
+      };
+
+      const res = await billingApi.createInvoice(payload, idempotencyKey);
+      if (res && res.data) {
+        responseInvoice = normalizeBackendInvoice(res.data);
+      }
+    } catch (apiErr) {
+      console.warn('Backend createInvoice API non-blocking fallback to local state:', apiErr);
+    }
+
+    // 2. Synchronize inventory store: decrement stock for invoiced items
     try {
       const inventoryStore = useInventoryStore.getState();
       invoiceData.items.forEach((item) => {
         if (item.productId && item.quantity > 0) {
-          const invItem = inventoryStore.items.find(
-            (i) => i.id === item.productId || i.sku === item.productId
+          inventoryStore.adjustStock(
+            item.productId,
+            'decrease',
+            item.quantity,
+            `Invoiced in ${responseInvoice?.invoiceNo || 'New Invoice'}`,
+            responseInvoice?.invoiceNo,
+            'Deducted upon invoice creation'
           );
-          if (invItem) {
-            inventoryStore.adjustStock(
-              invItem.id,
-              'decrease',
-              item.quantity,
-              `Invoiced in ${newInvoice.invoiceNo}`,
-              newInvoice.invoiceNo,
-              `Deducted upon invoice creation`
-            );
-          }
         }
       });
     } catch (e) {
       console.warn('Inventory sync error:', e);
     }
 
+    // 3. Fallback to local invoice creation if backend was offline
+    if (!responseInvoice) {
+      const newInvoiceNo = (get().settings.invoicePrefix || 'INV-') + (get().settings.startingSequenceNumber + get().invoices.length);
+      responseInvoice = {
+        ...invoiceData,
+        id: 'inv-' + Date.now(),
+        invoiceNo: invoiceData.invoiceNo || newInvoiceNo,
+        date: invoiceData.date || today,
+        dueDate: invoiceData.dueDate || today,
+      };
+    }
+
+    // 4. Prepend to active invoices and close modal
     set((state) => ({
-      invoices: [newInvoice, ...state.invoices],
+      invoices: [responseInvoice!, ...state.invoices.filter((i) => i.id !== responseInvoice!.id)],
       isCreateInvoiceModalOpen: false,
       activeInvoiceForModal: null,
     }));
-    return newInvoice;
+
+    return responseInvoice;
   },
 
   updateInvoiceStatus: (id, status) => {
@@ -1187,7 +1340,8 @@ export const useBillingStore = create<BillingStoreState>((set, get) => ({
     }));
   },
 
-  recordPayment: (id, amount, mode) => {
+  recordPayment: async (id, amount, mode, reference) => {
+    // 1. Optimistic local update
     set((state) => ({
       invoices: state.invoices.map((inv) => {
         if (inv.id !== id) return inv;
@@ -1204,6 +1358,19 @@ export const useBillingStore = create<BillingStoreState>((set, get) => ({
         };
       }),
     }));
+
+    // 2. Dispatch to backend if valid MongoDB ObjectId
+    if (/^[0-9a-fA-F]{24}$/.test(id)) {
+      try {
+        await billingApi.recordPayment(id, {
+          amount,
+          mode: mode === 'bank_transfer' ? 'net_banking' : mode,
+          reference: reference || 'Manual Payment Entry',
+        });
+      } catch (err) {
+        console.warn('Backend recordPayment error (optimistic update retained):', err);
+      }
+    }
   },
 
   cancelInvoice: async (id, reason) => {
@@ -1263,27 +1430,86 @@ export const useBillingStore = create<BillingStoreState>((set, get) => ({
       quotes: state.quotes.map((q) => (q.id === id ? { ...q, status } : q)),
     }));
   },
-  createQuote: (quoteData) => {
-    const newId = 'quote-' + Date.now();
-    const newQuoteNo = 'Q-' + (1001 + get().quotes.length);
-    const newQuote: IQuote = {
-      ...quoteData,
-      id: newId,
-      quoteNo: quoteData.quoteNo || newQuoteNo,
-    };
+  createQuote: async (quoteData) => {
+    let responseQuote: IQuote | null = null;
+
+    try {
+      const payload = {
+        customer: {
+          name: quoteData.customerName || 'Customer',
+          phone: quoteData.customerPhone ? quoteData.customerPhone.replace(/\D/g, '') || '9999999999' : '9999999999',
+          email: quoteData.customerEmail || undefined,
+          billingAddress: quoteData.customerAddress || undefined,
+          state: quoteData.placeOfSupply || DEFAULT_INDIAN_STATE,
+          gstin: quoteData.customerGstin || undefined,
+        },
+        items: quoteData.items.map((it) => ({
+          productId: it.productId || undefined,
+          title: it.name,
+          hsnCode: it.hsnSac || '0000',
+          quantity: it.quantity,
+          unit: (it.unit as any) || 'Pcs',
+          unitPrice: it.rate,
+          discountAmount: it.discountPercent ? Math.round((it.rate * it.quantity * it.discountPercent) / 100) : 0,
+          taxRate: it.taxPercent ?? 18,
+        })),
+        validUntil: quoteData.validUntil ? new Date(quoteData.validUntil).toISOString() : undefined,
+        referenceNumber: quoteData.referenceNo,
+        salesPerson: quoteData.salesPerson,
+        notes: quoteData.notes,
+      };
+
+      const res = await billingApi.createQuote(payload);
+      if (res && res.data) {
+        responseQuote = normalizeBackendQuote(res.data);
+      }
+    } catch (err) {
+      console.warn('Backend createQuote fallback to local:', err);
+    }
+
+    if (!responseQuote) {
+      const newId = 'quote-' + Date.now();
+      const newQuoteNo = 'Q-' + (1001 + get().quotes.length);
+      responseQuote = {
+        ...quoteData,
+        id: newId,
+        quoteNo: quoteData.quoteNo || newQuoteNo,
+      };
+    }
+
     set((state) => ({
-      quotes: [newQuote, ...state.quotes],
+      quotes: [responseQuote!, ...state.quotes.filter((q) => q.id !== responseQuote!.id)],
       activeView: 'list',
     }));
-    return newQuote;
+
+    return responseQuote;
   },
-  convertQuoteToInvoice: (quoteId) => {
+  convertQuoteToInvoice: async (quoteId: string) => {
     const quote = get().quotes.find((q) => q.id === quoteId);
     if (!quote) return;
-    // Mark quote as converted
+
+    // If valid MongoDB ObjectId (24 hex characters), invoke backend conversion endpoint
+    if (/^[0-9a-fA-F]{24}$/.test(quoteId)) {
+      try {
+        const res = await billingApi.convertQuoteToInvoice(quoteId);
+        if (res && res.data) {
+          const convertedInvoice = normalizeBackendInvoice(res.data);
+          set((state) => ({
+            quotes: state.quotes.map((q) => (q.id === quoteId ? { ...q, status: 'converted' } : q)),
+            invoices: [convertedInvoice, ...state.invoices],
+            activeSubTab: 'invoices',
+            activeView: 'list',
+          }));
+          return;
+        }
+      } catch (err) {
+        console.warn('Backend convertQuoteToInvoice error, falling back to modal draft:', err);
+      }
+    }
+
+    // Local / fallback conversion flow: Prepopulate draft and open modal for review
     get().updateQuoteStatus(quoteId, 'converted');
 
-    // Prepopulate invoice draft and open modal
     const invoiceDraft: Partial<IInvoice> = {
       customerName: quote.customerName,
       customerPhone: quote.customerPhone,
@@ -1299,6 +1525,7 @@ export const useBillingStore = create<BillingStoreState>((set, get) => ({
       paidAmount: 0,
       dueAmount: quote.totalAmount,
       status: 'draft',
+      notes: `Converted from Estimate / Quote #${quote.quoteNo}`,
     };
 
     set({
