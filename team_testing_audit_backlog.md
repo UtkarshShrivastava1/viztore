@@ -2,20 +2,20 @@
 
 ## 📊 Global Audit Remediation Progress Tracker
 
-> **Current Status**: Active in **Sprint 2 (Commercial Engines & Operations)**  
-> **Platform Completion**: **19 / 62 Items Completed** (**30.6%**)  
-> **Overall Progress Bar**: `[██████░░░░░░░░░░░░░░] 30.6%`
+> **Current Status**: **Sprint 2 Completed! (12/12 - 100.0%)** ➔ Ready for **Sprint 3 (Storefront Discovery & Merchant Config)**  
+> **Platform Completion**: **21 / 62 Items Completed** (**33.9%**)  
+> **Overall Progress Bar**: `[███████░░░░░░░░░░░░░] 33.9%`
 
 ### Sprint Completion Breakdown
 
 | Sprint | Scope & Focus Area | Done / Total | Progress Bar | % Completed | Status |
 |---|---|:---:|---|:---:|:---:|
 | **Sprint 1** | **Core Architectural Foundations & Critical Blockers** | **9 / 9** | `[████████████████████]` | **100.0%** | `DONE ✅` |
-| **Sprint 2** | **Commercial Engines, Billing, Ledger & Procurement** | **10 / 12** | `[████████████████░░░░]` | **83.3%** | `IN PROGRESS 🟡` |
-| **Sprint 3** | **Storefront Discovery, Merchant Config & Tooling** | **0 / 14** | `[░░░░░░░░░░░░░░░░░░░░]` | **0.0%** | `PENDING ⚪` |
+| **Sprint 2** | **Commercial Engines, Billing, Ledger & Procurement** | **12 / 12** | `[████████████████████]` | **100.0%** | `DONE ✅` |
+| **Sprint 3** | **Storefront Discovery, Merchant Config & Tooling** | **0 / 14** | `[░░░░░░░░░░░░░░░░░░░░]` | **0.0%** | `UP NEXT 🟡` |
 | **Sprint 4** | **Catalog & Merchant Inventory Workflows (Phase 4A)** | **0 / 13** | `[░░░░░░░░░░░░░░░░░░░░]` | **0.0%** | `PENDING ⚪` |
 | **Sprint 5** | **Store Merchandising, Policies & Micro-Polish (Phase 4B)** | **0 / 14** | `[░░░░░░░░░░░░░░░░░░░░]` | **0.0%** | `PENDING ⚪` |
-| **TOTAL** | **Hyperlocal Multi-Vendor Commerce Platform** | **19 / 62** | `[██████░░░░░░░░░░░░░░]` | **30.6%** | **ACTIVE 🚀** |
+| **TOTAL** | **Hyperlocal Multi-Vendor Commerce Platform** | **21 / 62** | `[███████░░░░░░░░░░░░░]` | **33.9%** | **ACTIVE 🚀** |
 
 > *Note: Sprints 4 & 5 correspond to the detailed breakdown of Roadmap Milestone 4 (27 UI/UX Hardening & Visual Excellence deliverables).*
 
@@ -46,10 +46,10 @@ This document serves as the master engineering log for all findings, functional 
 | ID | Title | Layer | Module | Type | Severity | Complexity | Status |
 |---|---|---|---|---|:---:|:---:|:---:|
 | `AUDIT-001` | Broken Product Actions: Wishlist / "Like" Heart Unresponsive | Customer Web | Wishlist / PDP | Bug / Defect | P1 | Medium | Logged 📝 |
-| `AUDIT-002` | Merchant Broadcast Action Timing & Prominence | Merchant Hub | Orders / Fleet | UX / Workflow | P1 | Low | Logged 📝 |
+| `AUDIT-002` | Merchant Broadcast Action Timing & Prominence | Merchant Hub | Orders / Fleet | UX / Workflow | P1 | Low | DONE ✅ |
 | `AUDIT-003` | Customer Storefront Search Bar Not Returning Results | Customer Web | Discovery / Search | Bug / Defect | P0 | Medium | DONE ✅ |
 | `AUDIT-004` | Customer vs. Merchant Account Segregation & Namespace | Backend | Auth / Identity | Architecture | P0 | High | DONE ✅ |
-| `AUDIT-005` | Rider Portal Geolocation Accuracy & Advancement | Rider Portal | Delivery Fleet | Enhancement | P1 | High | Logged 📝 |
+| `AUDIT-005` | Rider Portal Geolocation Accuracy & Advancement | Rider Portal | Delivery Fleet | Enhancement | P1 | High | DONE ✅ |
 | `AUDIT-006` | Customer "Reserve / Hold" In-Store Order Pipeline | Customer Web / Backend | Orders / Reserve | Functional Gap | P1 | Medium | DONE ✅ |
 | `AUDIT-007` | Customer Mobile Homepage Header Icons Inactive | Customer Web | Navigation | Bug / Defect | P1 | Low | Logged 📝 |
 | `AUDIT-008` | Merchant Onboarding GSTIN Auto-Fill & PAN Correlation | Merchant Hub | Onboarding | UX / Validation | P2 | Low | Logged 📝 |
@@ -417,7 +417,7 @@ This document serves as the master engineering log for all findings, functional 
 
 ### Category B: Merchant Hub & Dashboard (`apps/merchant`)
 
-#### [AUDIT-002] Fleet Broadcast Action Timing & Prominent UI Placement
+#### [AUDIT-002] Fleet Broadcast Action Timing & Prominent UI Placement (DONE ✅ - Commit `a85baf5`)
 - **Layer**: Frontend (`apps/merchant`)
 - **Module**: Orders / Fleet Dispatch
 - **Type**: UX / Workflow | **Severity**: P1 | **Complexity**: Low
@@ -830,7 +830,7 @@ This document serves as the master engineering log for all findings, functional 
 
 ### Category C: Rider Portal (`apps/rider` / Fleet Operations)
 
-#### [AUDIT-005] Rider Portal Geolocation Accuracy & Overall Advancement
+#### [AUDIT-005] Rider Portal Geolocation Accuracy & Overall Advancement (DONE ✅ - Commit `6878252`)
 - **Layer**: Rider Portal (`apps/rider` / web) & Socket Engine
 - **Module**: Delivery Fleet
 - **Type**: Enhancement / Polish | **Severity**: P1 | **Complexity**: High
@@ -1424,8 +1424,8 @@ Executing strictly in this order guarantees that **every data model, schema cont
   8. `[AUDIT-061]` Customer Cart & Checkout Single-Store Coherence (clean up multi-store header confusion). (DONE ✅ - Commit `13c3d64`)
   9. `[AUDIT-028]` Merchant One-Click Accept & Print Invoice/KOT (thermal slip generation). (DONE ✅ - Commit `ef33a25`)
   10. `[AUDIT-032]` Customer Order Cancellation Action & Reason Modal. (DONE ✅ - Commit `c824c0c`)
-  11. `[AUDIT-002]` Merchant Fleet Broadcast Action Timing & Prominent UI Placement.
-  12. `[AUDIT-005]` Rider Portal Geolocation Accuracy & Advancement.
+  11. `[AUDIT-002]` Merchant Fleet Broadcast Action Timing & Prominent UI Placement. (DONE ✅ - Commit `a85baf5`)
+  12. `[AUDIT-005]` Rider Portal Geolocation Accuracy & Advancement. (DONE ✅ - Commit `6878252`)
 
 ---
 
