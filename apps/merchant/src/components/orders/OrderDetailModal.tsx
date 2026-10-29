@@ -273,6 +273,11 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                         {item.variant && (
                           <div className="text-[10px] text-slate-400">{item.variant}</div>
                         )}
+                        {(item.shelfLocation || (item as any).location) && (
+                          <div className="inline-flex items-center gap-1 mt-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                            <span>📍 {item.shelfLocation || (item as any).location}</span>
+                          </div>
+                        )}
                       </td>
                       <td className="p-2.5 text-center font-medium">{item.quantity}</td>
                       <td className="p-2.5 text-right text-slate-600">₹{item.price}</td>

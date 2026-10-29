@@ -22,12 +22,13 @@ import {
 import { useAuthStore } from '@/stores/auth.store';
 import { useLocationStore } from '@/stores/location.store';
 import { AccountSidebar } from '@/components/account/AccountSidebar';
-import { userApi } from '@/lib/api/user.js';
+import { useAddressStore } from '@/stores/addressStore';
 import type { CreateAddressDto } from '@repo/shared-types';
 
 export function AddAddressClient() {
   const router = useRouter();
   const { user, isAuthenticated, openAuthModal } = useAuthStore();
+  const { addAddress: storeAddAddress } = useAddressStore();
   const { address: locationAddress, city: locationCity, locality: locationLocality, pincode: locationPincode, isSet: isLocationSet } = useLocationStore();
 
   const [addressType, setAddressType] = useState<'home' | 'work' | 'other'>('home');
@@ -126,7 +127,7 @@ export function AddAddressClient() {
 
     try {
       setIsSubmitting(true);
-      await userApi.addAddress(dto);
+      await storeAddAddress(dto);
       router.push('/account/addresses');
     } catch (err: unknown) {
       console.error('Error saving address:', err);

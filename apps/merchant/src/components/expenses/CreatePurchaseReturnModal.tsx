@@ -23,8 +23,8 @@ export const CreatePurchaseReturnModal: React.FC = () => {
 
   const [vendor, setVendor] = useState('Sharma Enterprises');
   const [billNumber, setBillNumber] = useState('BILL-2024-000127');
-  const [returnDate, setReturnDate] = useState('2024-05-11');
-  const [originalBillDate, setOriginalBillDate] = useState('2024-05-08');
+  const [returnDate, setReturnDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [originalBillDate, setOriginalBillDate] = useState(() => new Date(Date.now() - 3 * 86400000).toISOString().split('T')[0]);
   const [referenceNo, setReferenceNo] = useState('');
   const [warehouse, setWarehouse] = useState('Main Warehouse');
   const [reason, setReason] = useState('');

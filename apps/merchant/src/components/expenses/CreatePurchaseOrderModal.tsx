@@ -20,8 +20,8 @@ export const CreatePurchaseOrderModal: React.FC = () => {
 
   const [vendor, setVendor] = useState('Sharma Enterprises');
   const [poNumber, setPoNumber] = useState('PO-2024-000126');
-  const [poDate, setPoDate] = useState('2024-05-11');
-  const [expectedDate, setExpectedDate] = useState('2024-05-20');
+  const [poDate, setPoDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [expectedDate, setExpectedDate] = useState(() => new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]);
   const [reference, setReference] = useState('');
   const [warehouse, setWarehouse] = useState('Main Warehouse');
   const [notes, setNotes] = useState('');

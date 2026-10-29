@@ -17,6 +17,11 @@ export const PayoutOverviewTab: React.FC = () => {
   const now = new Date();
   const pastWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
   const currentPeriodStr = `${pastWeek.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} - ${now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}`;
+  const formatRecentDate = (daysAgo: number, timeStr: string) => {
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - daysAgo);
+    return `${d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}, ${timeStr}`;
+  };
+
 
   const orderAmount = availableForPayout > 0 ? Math.round(availableForPayout * 1.064 * 100) / 100 : 0;
   const commission = Math.round(orderAmount * 0.05 * 100) / 100;
@@ -27,7 +32,7 @@ export const PayoutOverviewTab: React.FC = () => {
 
   const recentTransactionsList = [
     {
-      dateTime: '18 May 2024, 10:30 AM',
+      dateTime: formatRecentDate(0, '10:30 AM'),
       type: 'Order Credit',
       typeColor: 'bg-emerald-50 text-emerald-700 border-emerald-200',
       orderId: '#ORD10045',
@@ -38,7 +43,7 @@ export const PayoutOverviewTab: React.FC = () => {
       status: 'Completed',
     },
     {
-      dateTime: '18 May 2024, 10:30 AM',
+      dateTime: formatRecentDate(0, '10:30 AM'),
       type: 'Shipping Charge',
       typeColor: 'bg-blue-50 text-blue-700 border-blue-200',
       orderId: '#ORD10045',
@@ -49,7 +54,7 @@ export const PayoutOverviewTab: React.FC = () => {
       status: 'Completed',
     },
     {
-      dateTime: '18 May 2024, 10:30 AM',
+      dateTime: formatRecentDate(0, '10:30 AM'),
       type: 'Commission',
       typeColor: 'bg-amber-50 text-amber-700 border-amber-200',
       orderId: '#ORD10045',
@@ -60,7 +65,7 @@ export const PayoutOverviewTab: React.FC = () => {
       status: 'Completed',
     },
     {
-      dateTime: '17 May 2024, 04:15 PM',
+      dateTime: formatRecentDate(1, '04:15 PM'),
       type: 'Refund',
       typeColor: 'bg-rose-50 text-rose-700 border-rose-200',
       orderId: '#ORD10041',
@@ -71,7 +76,7 @@ export const PayoutOverviewTab: React.FC = () => {
       status: 'Completed',
     },
     {
-      dateTime: '15 May 2024, 11:20 AM',
+      dateTime: formatRecentDate(3, '11:20 AM'),
       type: 'Payout',
       typeColor: 'bg-purple-50 text-purple-700 border-purple-200',
       orderId: '#PAYOUT1234',

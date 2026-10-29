@@ -215,9 +215,12 @@ export const CatalogToolbar: React.FC<CatalogToolbarProps> = ({
                   className="w-full appearance-none pl-3 pr-8 py-1.5 text-xs font-medium text-slate-800 bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:ring-1 focus:ring-blue-500 cursor-pointer"
                 >
                   <option value="All Categories">All Categories</option>
+                  <option value="Fashion">Fashion</option>
                   <option value="Men">Men</option>
                   <option value="Women">Women</option>
                   <option value="Kids">Kids</option>
+                  <option value="Grocery">Grocery</option>
+                  <option value="Electronics">Electronics</option>
                   <option value="Footwear">Footwear</option>
                   <option value="Accessories">Accessories</option>
                 </select>

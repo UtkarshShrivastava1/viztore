@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 import { useCatalogStore, ProductItem } from '../../stores/catalogStore.js';
 import { ProductActionMenu } from './ProductActionMenu.js';
 
@@ -29,17 +29,25 @@ export const ProductsTable: React.FC = () => {
       if (!matchName && !matchSku && !matchBarcode && !matchBrand) return false;
     }
 
-    if (categoryFilter !== 'All Categories' && product.category !== categoryFilter) {
-      return false;
+    if (categoryFilter !== 'All Categories') {
+      const cFilter = categoryFilter.toLowerCase();
+      const pCat = (product.category || '').toLowerCase();
+      if (!pCat.includes(cFilter) && !cFilter.includes(pCat)) return false;
     }
-    if (subCategoryFilter !== 'All Sub-categories' && product.subCategory !== subCategoryFilter) {
-      return false;
+    if (subCategoryFilter !== 'All Sub-categories') {
+      const sFilter = subCategoryFilter.toLowerCase();
+      const pSub = (product.subCategory || '').toLowerCase();
+      if (!pSub.includes(sFilter) && !sFilter.includes(pSub)) return false;
     }
-    if (productTypeFilter !== 'All Product Types' && product.productType !== productTypeFilter) {
-      return false;
+    if (productTypeFilter !== 'All Product Types') {
+      const tFilter = productTypeFilter.toLowerCase();
+      const pType = (product.productType || '').toLowerCase();
+      if (!pType.includes(tFilter) && !tFilter.includes(pType)) return false;
     }
-    if (brandFilter !== 'All Brands' && product.brand !== brandFilter) {
-      return false;
+    if (brandFilter !== 'All Brands') {
+      const bFilter = brandFilter.toLowerCase();
+      const pBrand = (product.brand || '').toLowerCase();
+      if (!pBrand.includes(bFilter) && !bFilter.includes(pBrand)) return false;
     }
     if (statusFilter !== 'All Status') {
       if (statusFilter === 'active' && product.status !== 'active') return false;
@@ -292,6 +300,35 @@ export const ProductsTable: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Floating Bulk Action Bar */}
+      {useCatalogStore.getState().selectedProductIds?.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-4 animate-in fade-in slide-in-from-bottom-4 border border-slate-700">
+          <span className="text-xs font-bold">
+            {useCatalogStore.getState().selectedProductIds.length} products selected
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              const count = useCatalogStore.getState().selectedProductIds.length;
+              if (window.confirm(`Are you sure you want to delete ${count} selected products?`)) {
+                useCatalogStore.getState().bulkDeleteSelectedProducts();
+              }
+            }}
+            className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>Delete Selected</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => useCatalogStore.getState().clearSelectedProducts()}
+            className="text-xs text-slate-400 hover:text-white cursor-pointer"
+          >
+            Cancel
+          </button>
+        </div>
+      )}
     </div>
   );
 };

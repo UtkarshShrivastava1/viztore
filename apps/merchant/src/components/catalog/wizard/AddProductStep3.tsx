@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   Tag,
   Copy,
@@ -33,6 +33,34 @@ interface TaxonomyAttribute {
   isRequired?: boolean;
 }
 
+
+const CATEGORY_HSN_MAP: Record<string, Array<{ code: string; label: string; rate: number }>> = {
+  fashion: [
+    { code: '61091000', label: '6109 - T-Shirts (Cotton)', rate: 5 },
+    { code: '62034200', label: '6203 - Trousers & Jeans', rate: 12 },
+    { code: '62044200', label: '6204 - Dresses & Kurtis', rate: 12 },
+    { code: '64039990', label: '6403 - Shoes & Footwear', rate: 12 },
+  ],
+  grocery: [
+    { code: '07019000', label: '0701 - Fresh Vegetables', rate: 0 },
+    { code: '08109090', label: '0810 - Fresh Fruits', rate: 0 },
+    { code: '10063010', label: '1006 - Rice & Grains', rate: 0 },
+    { code: '19053100', label: '1905 - Biscuits & Bakery', rate: 18 },
+    { code: '21069099', label: '2106 - Packaged Snacks', rate: 12 },
+  ],
+  electronics: [
+    { code: '85171300', label: '8517 - Mobile Phones', rate: 18 },
+    { code: '84713010', label: '8471 - Laptops & Tablets', rate: 18 },
+    { code: '85287200', label: '8528 - Smart TVs & Monitors', rate: 18 },
+    { code: '85044090', label: '8504 - Chargers & Adapters', rate: 18 },
+  ],
+  general: [
+    { code: '48201090', label: '4820 - Books & Stationery', rate: 12 },
+    { code: '95030099', label: '9503 - Toys & Games', rate: 12 },
+    { code: '33049990', label: '3304 - Beauty & Skincare', rate: 18 },
+  ],
+};
+
 const sizeOptions = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 
 export const AddProductStep3: React.FC = () => {
@@ -40,6 +68,7 @@ export const AddProductStep3: React.FC = () => {
 
   const [tagInput, setTagInput] = useState('');
   const [copiedSku, setCopiedSku] = useState(false);
+  const tagInputRef = useRef<HTMLInputElement>(null);
 
   const matchedTaxonomy = React.useMemo(() => {
     const pType = (draftProduct.productType || '').trim().toLowerCase();
@@ -167,7 +196,7 @@ export const AddProductStep3: React.FC = () => {
               </div>
 
               {/* Tag input and active pills */}
-              <div className="min-h-[70px] p-2 bg-slate-50 border border-slate-200 rounded-lg flex flex-wrap gap-1.5 items-center">
+              <div onClick={() => tagInputRef.current?.focus()} className="min-h-[70px] p-2 bg-slate-50 border border-slate-200 rounded-lg flex flex-wrap gap-1.5 items-center cursor-text focus-within:bg-white focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-all">
                 {tags.map((t, idx) => (
                   <span
                     key={idx}
@@ -193,6 +222,7 @@ export const AddProductStep3: React.FC = () => {
                       handleAddTag(tagInput);
                     }
                   }}
+                  ref={tagInputRef}
                   placeholder="+ Add tag (press Enter)"
                   className="text-xs bg-transparent border-none outline-hidden placeholder-slate-400 flex-1 min-w-[120px]"
                 />
@@ -280,66 +310,141 @@ export const AddProductStep3: React.FC = () => {
               ))
             ) : (
               <>
-                <div>
-                  <label className="block text-[11px] font-medium text-slate-600 mb-1">Fit Type</label>
-                  <select
-                    value={attributes.fit || 'Regular'}
-                    onChange={(e) =>
-                      updateDraftProduct({ attributes: { ...attributes, fit: e.target.value } })
-                    }
-                    className="w-full px-2 py-1.5 text-xs bg-white border border-slate-200 rounded-lg cursor-pointer"
-                  >
-                    <option value="Regular">Regular</option>
-                    <option value="Slim Fit">Slim Fit</option>
-                    <option value="Relaxed">Relaxed</option>
-                    <option value="Oversized">Oversized</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-medium text-slate-600 mb-1">Fabric</label>
-                  <select
-                    value={attributes.fabric || 'Cotton'}
-                    onChange={(e) =>
-                      updateDraftProduct({ attributes: { ...attributes, fabric: e.target.value } })
-                    }
-                    className="w-full px-2 py-1.5 text-xs bg-white border border-slate-200 rounded-lg cursor-pointer"
-                  >
-                    <option value="Cotton">Cotton</option>
-                    <option value="Cotton Blend">Cotton Blend</option>
-                    <option value="Polyester">Polyester</option>
-                    <option value="Linen">Linen</option>
-                  </select>
+                {((draftProduct.category || '').toLowerCase().includes('groc') || (draftProduct.category || '').toLowerCase().includes('food')) ? (
+                  <>
+                    <div>
+                      <label className="block text-[11px] font-medium text-slate-600 mb-1">Net Qty / Weight</label>
+                      <select
+                        value={attributes.weight || '500g'}
+                        onChange={(e) => updateDraftProduct({ attributes: { ...attributes, weight: e.target.value } })}
+                        className="w-full px-2 py-1.5 text-xs bg-white border border-slate-200 rounded-lg cursor-pointer"
+                      >
+                        <option value="100g">100g</option>
+                        <option value="250g">250g</option>
+                        <option value="500g">500g</option>
+                        <option value="1kg">1 kg</option>
+                        <option value="2kg">2 kg</option>
+                        <option value="5kg">5 kg</option>
+                        <option value="500ml">500 ml</option>
+                        <option value="1L">1 Litre</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-medium text-slate-600 mb-1">Dietary Type</label>
+                      <select
+                        value={attributes.dietary || 'Vegetarian'}
+                        onChange={(e) => updateDraftProduct({ attributes: { ...attributes, dietary: e.target.value } })}
+                        className="w-full px-2 py-1.5 text-xs bg-white border border-slate-200 rounded-lg cursor-pointer"
+                      >
+                        <option value="Vegetarian">🟢 100% Vegetarian</option>
+                        <option value="Non-Vegetarian">🔴 Non-Vegetarian</option>
+                        <option value="Vegan">🌱 Vegan</option>
+                      </select>
+                    </div>
+                  </>
+                ) : ((draftProduct.category || '').toLowerCase().includes('elect') || (draftProduct.category || '').toLowerCase().includes('gadget') || (draftProduct.category || '').toLowerCase().includes('mobile')) ? (
+                  <>
+                    <div>
+                      <label className="block text-[11px] font-medium text-slate-600 mb-1">Warranty</label>
+                      <select
+                        value={attributes.warranty || '1 Year Brand Warranty'}
+                        onChange={(e) => updateDraftProduct({ attributes: { ...attributes, warranty: e.target.value } })}
+                        className="w-full px-2 py-1.5 text-xs bg-white border border-slate-200 rounded-lg cursor-pointer"
+                      >
+                        <option value="No Warranty">No Warranty</option>
+                        <option value="6 Months Brand Warranty">6 Months Brand Warranty</option>
+                        <option value="1 Year Brand Warranty">1 Year Comprehensive Warranty</option>
+                        <option value="2 Years Brand Warranty">2 Years Brand Warranty</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-medium text-slate-600 mb-1">Power / Specs</label>
+                      <input
+                        type="text"
+                        value={attributes.power || ''}
+                        placeholder="e.g. 65W Fast Charge"
+                        onChange={(e) => updateDraftProduct({ attributes: { ...attributes, power: e.target.value } })}
+                        className="w-full px-2 py-1.5 text-xs bg-white border border-slate-200 rounded-lg"
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <label className="block text-[11px] font-medium text-slate-600 mb-1">Fit Type</label>
+                      <select
+                        value={attributes.fit || 'Regular'}
+                        onChange={(e) => updateDraftProduct({ attributes: { ...attributes, fit: e.target.value } })}
+                        className="w-full px-2 py-1.5 text-xs bg-white border border-slate-200 rounded-lg cursor-pointer"
+                      >
+                        <option value="Regular">Regular</option>
+                        <option value="Slim Fit">Slim Fit</option>
+                        <option value="Relaxed">Relaxed</option>
+                        <option value="Oversized">Oversized</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-medium text-slate-600 mb-1">Fabric</label>
+                      <select
+                        value={attributes.fabric || 'Cotton'}
+                        onChange={(e) => updateDraftProduct({ attributes: { ...attributes, fabric: e.target.value } })}
+                        className="w-full px-2 py-1.5 text-xs bg-white border border-slate-200 rounded-lg cursor-pointer"
+                      >
+                        <option value="Cotton">Cotton</option>
+                        <option value="Cotton Blend">Cotton Blend</option>
+                        <option value="Polyester">Polyester</option>
+                        <option value="Linen">Linen</option>
+                        <option value="Denim">Denim</option>
+                      </select>
+                    </div>
+                  </>
+                )}
+                <div className="col-span-2 pt-1 border-t border-slate-100">
+                  <label className="block text-[11px] font-medium text-slate-600 mb-1">
+                    Physical Shelf / Aisle Location <span className="text-slate-400 font-normal">(For Order Pickers)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={draftProduct.shelfLocation || attributes.shelfLocation || ''}
+                    placeholder="e.g. Aisle 3 - Rack B or Shelf F-12"
+                    onChange={(e) => updateDraftProduct({
+                      shelfLocation: e.target.value,
+                      attributes: { ...attributes, shelfLocation: e.target.value }
+                    })}
+                    className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg placeholder:text-slate-400 focus:outline-hidden focus:border-blue-500 font-medium"
+                  />
                 </div>
               </>
             )}
           </div>
 
-          {/* Size Pills */}
-          <div className="pt-2 border-t border-slate-100">
-            <div className="text-[11px] font-semibold text-slate-600 mb-1.5">Size Options</div>
-            <div className="flex items-center gap-1.5">
-              {sizeOptions.map((sz) => {
-                const isSelected = (attributes.size || 'M') === sz;
-                return (
-                  <button
-                    key={sz}
-                    type="button"
-                    onClick={() =>
-                      updateDraftProduct({ attributes: { ...attributes, size: sz } })
-                    }
-                    className={`w-7 h-7 rounded-md text-xs font-bold transition-all cursor-pointer ${
-                      isSelected
-                        ? 'bg-blue-600 text-white shadow-xs'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }`}
-                  >
-                    {sz}
-                  </button>
-                );
-              })}
+          {/* Size Pills (Only shown for fashion / footwear) */}
+          {!((draftProduct.category || '').toLowerCase().includes('groc') || (draftProduct.category || '').toLowerCase().includes('food') || (draftProduct.category || '').toLowerCase().includes('elect') || (draftProduct.category || '').toLowerCase().includes('gadget')) && (
+            <div className="pt-2 border-t border-slate-100">
+              <div className="text-[11px] font-semibold text-slate-600 mb-1.5">Size Options</div>
+              <div className="flex items-center gap-1.5">
+                {sizeOptions.map((sz) => {
+                  const isSelected = (attributes.size || 'M') === sz;
+                  return (
+                    <button
+                      key={sz}
+                      type="button"
+                      onClick={() =>
+                        updateDraftProduct({ attributes: { ...attributes, size: sz } })
+                      }
+                      className={`w-7 h-7 rounded-md text-xs font-bold transition-all cursor-pointer ${
+                        isSelected
+                          ? 'bg-blue-600 text-white shadow-xs'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      {sz}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Variant Toggle Switch */}
           <div className="pt-2 flex items-center justify-between">
@@ -585,11 +690,33 @@ export const AddProductStep3: React.FC = () => {
               </label>
               <input
                 type="text"
-                value={draftProduct.hsnCode || matchedTaxonomy?.hsnCode || '61091000'}
+                value={draftProduct.hsnCode ?? (matchedTaxonomy?.hsnCode || ((draftProduct.category || '').toLowerCase().includes('groc') ? '07019000' : (draftProduct.category || '').toLowerCase().includes('elect') ? '85171300' : '61091000'))}
                 onChange={(e) => updateDraftProduct({ hsnCode: e.target.value })}
                 placeholder="e.g. 8517, 6109"
                 className="w-full px-2.5 py-1.5 text-xs font-mono font-semibold text-slate-800 bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
               />
+              {/* Category-Specific Dynamic HSN Suggestions */}
+              <div className="mt-1 flex flex-wrap gap-1">
+                {((CATEGORY_HSN_MAP[((draftProduct.category || '').toLowerCase().includes('groc') ? 'grocery' : (draftProduct.category || '').toLowerCase().includes('elect') ? 'electronics' : 'fashion')] || CATEGORY_HSN_MAP.fashion) ?? []).map((sug) => (
+                  <button
+                    key={sug.code}
+                    type="button"
+                    onClick={() => updateDraftProduct({
+                      hsnCode: sug.code,
+                      tax: {
+                        category: `Standard (${sug.rate}%)`,
+                        rate: sug.rate,
+                        inclusive: true,
+                        amount: Number(((Number(draftProduct.price || 599) * sug.rate) / 100).toFixed(2))
+                      }
+                    })}
+                    className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 hover:bg-blue-50 text-slate-600 hover:text-blue-700 border border-slate-200 transition-colors"
+                    title={sug.label}
+                  >
+                    {sug.code.slice(0, 4)} ({sug.rate}%)
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div>

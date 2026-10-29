@@ -16,7 +16,7 @@ export const AddExpenseModal: React.FC = () => {
   const [customType, setCustomType] = useState('');
   const [isAddingCustomType, setIsAddingCustomType] = useState(false);
   const [vendor, setVendor] = useState('');
-  const [date, setDate] = useState('2024-05-11');
+  const [date, setDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [referenceNo, setReferenceNo] = useState('');
   const [notes, setNotes] = useState('');
   const [amount, setAmount] = useState<number | ''>('');

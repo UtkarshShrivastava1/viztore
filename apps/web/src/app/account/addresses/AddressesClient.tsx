@@ -21,6 +21,7 @@ import { useAuthStore } from '@/stores/auth.store';
 import { useLocationStore } from '@/stores/location.store';
 import { AccountSidebar } from '@/components/account/AccountSidebar';
 import { userApi } from '@/lib/api/user.js';
+import { useAddressStore } from '@/stores/addressStore';
 import type { IAddress } from '@repo/shared-types';
 
 interface AddressData {
@@ -38,6 +39,7 @@ export function AddressesClient() {
   const router = useRouter();
   const { user, isAuthenticated } = useAuthStore();
   const { address: locationAddress, city: locationCity, pincode: locationPincode, isSet: isLocationSet } = useLocationStore();
+  const { fetchAddresses, deleteAddress: storeDeleteAddress, setDefaultAddress: storeSetDefaultAddress } = useAddressStore();
   const [addresses, setAddresses] = useState<AddressData[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
@@ -60,6 +62,11 @@ export function AddressesClient() {
     try {
       setIsLoading(true);
       if (isAuthenticated) {
+        const fetched = await fetchAddresses();
+        if (Array.isArray(fetched) && fetched.length > 0) {
+          setAddresses(fetched as any);
+          return;
+        }
         const rawAddresses = await userApi.getAddresses();
         if (Array.isArray(rawAddresses)) {
           setAddresses(rawAddresses.map(mapBackendAddress));
@@ -83,6 +90,7 @@ export function AddressesClient() {
     try {
       setActionLoadingId(id);
       if (isAuthenticated) {
+        await storeSetDefaultAddress(id);
         const updated = await userApi.setDefaultAddress(id);
         if (Array.isArray(updated)) {
           setAddresses(updated.map(mapBackendAddress));
@@ -102,6 +110,7 @@ export function AddressesClient() {
     try {
       setActionLoadingId(id);
       if (isAuthenticated) {
+        await storeDeleteAddress(id);
         const updated = await userApi.deleteAddress(id);
         if (Array.isArray(updated)) {
           setAddresses(updated.map(mapBackendAddress));

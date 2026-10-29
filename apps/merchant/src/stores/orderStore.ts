@@ -31,6 +31,7 @@ export interface OrderItemDetail {
   price: number;
   quantity: number;
   imageUrl?: string;
+  shelfLocation?: string;
 }
 
 export interface MerchantOrderRecord {

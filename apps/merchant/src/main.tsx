@@ -24,3 +24,16 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     </QueryClientProvider>
   </React.StrictMode>,
 );
+
+// Prevent accidental number input mutation on wheel scroll
+if (typeof window !== 'undefined') {
+  window.addEventListener(
+    'wheel',
+    () => {
+      if (document.activeElement instanceof HTMLInputElement && document.activeElement.type === 'number') {
+        document.activeElement.blur();
+      }
+    },
+    { passive: true },
+  );
+}

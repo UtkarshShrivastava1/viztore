@@ -43,6 +43,7 @@ export interface ProductItem {
   productIdentification?: 'new' | 'existing';
   existingSearchTerm?: string;
   hsnCode?: string;
+  shelfLocation?: string;
   description?: string;
   tags?: string[];
   trackInventory?: boolean;
@@ -135,6 +136,8 @@ interface CatalogStoreState {
   toggleProductStatus: (id: string) => Promise<void>;
   updateStock: (id: string, newStock: number, lowStockThreshold?: number) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
+  bulkDeleteSelectedProducts: () => Promise<void>;
+  clearSelectedProducts: () => void;
 
   // Modal controls
   openStockModal: (product: ProductItem) => void;
@@ -807,12 +810,48 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
       },
       wizardStep: 1,
     }),
-  loadProductIntoDraft: (product) =>
+  loadProductIntoDraft: (product) => {
+    const rawImages = Array.isArray(product.images) && product.images.length > 0
+      ? [...product.images]
+      : ((product as any).imageUrl ? [(product as any).imageUrl] : []);
+
+    const normalizedAttributes: Record<string, string> = {};
+    if (product.attributes && typeof product.attributes === 'object') {
+      if (Array.isArray(product.attributes)) {
+        (product.attributes as any[]).forEach((attr: any) => {
+          if (attr.key && attr.value) normalizedAttributes[attr.key] = String(attr.value);
+        });
+      } else {
+        Object.entries(product.attributes).forEach(([k, v]) => {
+          normalizedAttributes[k] = String(v);
+        });
+      }
+    }
+
     set({
-      draftProduct: { ...product },
+      draftProduct: {
+        ...product,
+        price: product.price ?? 0,
+        mrp: product.mrp ?? product.price ?? 0,
+        costPrice: product.costPrice ?? Math.round(Number(product.price || 0) * 0.7),
+        stock: product.stock ?? 0,
+        lowStockThreshold: product.lowStockThreshold ?? 10,
+        images: rawImages,
+        tags: Array.isArray(product.tags) ? [...product.tags] : [],
+        attributes: normalizedAttributes,
+        hsnCode: product.hsnCode || '',
+        barcode: product.barcode || '',
+        sku: product.sku || '',
+        name: product.name || '',
+        category: product.category || 'fashion',
+        subCategory: product.subCategory || '',
+        productType: product.productType || '',
+        brand: product.brand || 'Generic',
+      },
       wizardStep: 1,
       activeView: 'wizard',
-    }),
+    });
+  },
 
   saveDraftAsProduct: async () => {
     const { draftProduct, products } = get();
@@ -1159,6 +1198,31 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
       // safe fallback if inventoryStore not loaded
     }
   },
+
+  
+  bulkDeleteSelectedProducts: async () => {
+    const { selectedProductIds, products } = get();
+    if (selectedProductIds.length === 0) return;
+
+    try {
+      const validBackendIds = selectedProductIds.filter((id) => /^[0-9a-fA-F]{24}$/.test(id));
+      if (validBackendIds.length > 0) {
+        await catalogApi.bulkDeleteProducts(validBackendIds);
+      }
+    } catch (err) {
+      console.warn('Failed to bulk delete products on backend:', err);
+    }
+
+    set((state) => {
+      const updatedList = state.products.filter((p) => !state.selectedProductIds.includes(p.id));
+      return {
+        products: updatedList,
+        kpis: calculateKPIs(updatedList),
+        selectedProductIds: [],
+      };
+    });
+  },
+  clearSelectedProducts: () => set({ selectedProductIds: [] }),
 
   deleteProduct: async (id) => {
     try {

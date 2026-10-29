@@ -66,6 +66,15 @@ catalogRouter.patch(
   catalogController.updateProduct,
 );
 
+
+// Bulk delete products
+catalogRouter.post(
+  '/products/bulk-delete',
+  authGuard,
+  roleGuard(UserRole.MERCHANT, UserRole.ADMIN),
+  catalogController.bulkDeleteProducts,
+);
+
 // Soft-delete a product
 catalogRouter.delete(
   '/products/:id',

@@ -178,3 +178,13 @@ html::-webkit-scrollbar {
   outline-offset: 2px;
   border-radius: var(--radius-sm);
 }
+/* Global Number Input UX: Remove native WebKit & Firefox spinners */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none !important;
+  margin: 0 !important;
+}
+input[type="number"] {
+  -moz-appearance: textfield !important;
+  appearance: textfield !important;
+}

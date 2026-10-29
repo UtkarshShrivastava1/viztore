@@ -2,6 +2,17 @@ import { settlementsApi } from '../lib/api.js';
 import { create } from 'zustand';
 import { downloadCSV } from '../utils/csvExport.js';
 
+function getRelativeDateStr(daysAgo: number, timeStr = '10:30 AM'): string {
+  const d = new Date(Date.now() - daysAgo * 86400000);
+  return `${d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}, ${timeStr}`;
+}
+function getRelativePeriodStr(endDaysAgo: number, startDaysAgo: number): string {
+  const d1 = new Date(Date.now() - startDaysAgo * 86400000);
+  const d2 = new Date(Date.now() - endDaysAgo * 86400000);
+  return `${d1.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} - ${d2.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}`;
+}
+
+
 export interface PayoutRecord {
   id: string;
   payoutId: string;
@@ -120,8 +131,8 @@ export const mockPayoutsList: PayoutRecord[] = [
   {
     id: 'pay-1234',
     payoutId: '#PAYOUT1234',
-    date: '15 May 2024, 10:30 AM',
-    dateTime: '15 May 2024, 10:30 AM',
+    date: getRelativeDateStr(2, '10:30 AM'),
+    dateTime: getRelativeDateStr(2, '10:30 AM'),
     orderCount: 12,
     payoutAccount: 'HDFC Bank ••••5678',
     bankAccount: 'HDFC Bank ••••5678',
@@ -133,8 +144,8 @@ export const mockPayoutsList: PayoutRecord[] = [
   {
     id: 'pay-1233',
     payoutId: '#PAYOUT1233',
-    date: '08 May 2024, 09:15 AM',
-    dateTime: '08 May 2024, 09:15 AM',
+    date: getRelativeDateStr(9, '09:15 AM'),
+    dateTime: getRelativeDateStr(9, '09:15 AM'),
     orderCount: 8,
     payoutAccount: 'HDFC Bank ••••5678',
     bankAccount: 'HDFC Bank ••••5678',
@@ -146,8 +157,8 @@ export const mockPayoutsList: PayoutRecord[] = [
   {
     id: 'pay-1232',
     payoutId: '#PAYOUT1232',
-    date: '01 May 2024, 11:20 AM',
-    dateTime: '01 May 2024, 11:20 AM',
+    date: getRelativeDateStr(16, '11:20 AM'),
+    dateTime: getRelativeDateStr(16, '11:20 AM'),
     orderCount: 11,
     payoutAccount: 'HDFC Bank ••••5678',
     bankAccount: 'HDFC Bank ••••5678',
@@ -159,8 +170,8 @@ export const mockPayoutsList: PayoutRecord[] = [
   {
     id: 'pay-1231',
     payoutId: '#PAYOUT1231',
-    date: '24 Apr 2024, 02:45 PM',
-    dateTime: '24 Apr 2024, 02:45 PM',
+    date: getRelativeDateStr(23, '02:45 PM'),
+    dateTime: getRelativeDateStr(23, '02:45 PM'),
     orderCount: 9,
     payoutAccount: 'HDFC Bank ••••5678',
     bankAccount: 'HDFC Bank ••••5678',
@@ -172,8 +183,8 @@ export const mockPayoutsList: PayoutRecord[] = [
   {
     id: 'pay-1230',
     payoutId: '#PAYOUT1230',
-    date: '17 Apr 2024, 11:10 AM',
-    dateTime: '17 Apr 2024, 11:10 AM',
+    date: getRelativeDateStr(30, '11:10 AM'),
+    dateTime: getRelativeDateStr(30, '11:10 AM'),
     orderCount: 7,
     payoutAccount: 'HDFC Bank ••••5678',
     bankAccount: 'HDFC Bank ••••5678',
@@ -186,8 +197,8 @@ export const mockPayoutsList: PayoutRecord[] = [
   {
     id: 'pay-1229',
     payoutId: '#PAYOUT1229',
-    date: '10 Apr 2024, 10:35 AM',
-    dateTime: '10 Apr 2024, 10:35 AM',
+    date: getRelativeDateStr(37, '10:35 AM'),
+    dateTime: getRelativeDateStr(37, '10:35 AM'),
     orderCount: 10,
     payoutAccount: 'HDFC Bank ••••5678',
     bankAccount: 'HDFC Bank ••••5678',
@@ -199,8 +210,8 @@ export const mockPayoutsList: PayoutRecord[] = [
   {
     id: 'pay-1228',
     payoutId: '#PAYOUT1228',
-    date: '03 Apr 2024, 09:10 AM',
-    dateTime: '03 Apr 2024, 09:10 AM',
+    date: getRelativeDateStr(44, '09:10 AM'),
+    dateTime: getRelativeDateStr(44, '09:10 AM'),
     orderCount: 6,
     payoutAccount: 'HDFC Bank ••••5678',
     bankAccount: 'HDFC Bank ••••5678',
@@ -212,8 +223,8 @@ export const mockPayoutsList: PayoutRecord[] = [
   {
     id: 'pay-1227',
     payoutId: '#PAYOUT1227',
-    date: '27 Mar 2024, 04:20 PM',
-    dateTime: '27 Mar 2024, 04:20 PM',
+    date: getRelativeDateStr(51, '04:20 PM'),
+    dateTime: getRelativeDateStr(51, '04:20 PM'),
     orderCount: 14,
     payoutAccount: 'HDFC Bank ••••5678',
     bankAccount: 'HDFC Bank ••••5678',
@@ -225,8 +236,8 @@ export const mockPayoutsList: PayoutRecord[] = [
   {
     id: 'pay-1226',
     payoutId: '#PAYOUT1226',
-    date: '20 Mar 2024, 12:05 PM',
-    dateTime: '20 Mar 2024, 12:05 PM',
+    date: getRelativeDateStr(58, '12:05 PM'),
+    dateTime: getRelativeDateStr(58, '12:05 PM'),
     orderCount: 9,
     payoutAccount: 'HDFC Bank ••••5678',
     bankAccount: 'HDFC Bank ••••5678',
@@ -238,8 +249,8 @@ export const mockPayoutsList: PayoutRecord[] = [
   {
     id: 'pay-1225',
     payoutId: '#PAYOUT1225',
-    date: '13 Mar 2024, 10:50 AM',
-    dateTime: '13 Mar 2024, 10:50 AM',
+    date: getRelativeDateStr(65, '10:50 AM'),
+    dateTime: getRelativeDateStr(65, '10:50 AM'),
     orderCount: 8,
     payoutAccount: 'HDFC Bank ••••5678',
     bankAccount: 'HDFC Bank ••••5678',
@@ -254,8 +265,8 @@ export const mockSettlementsList: SettlementRecord[] = [
   {
     id: 'sett-00128',
     settlementId: '#SETT00128',
-    settlementDate: '15 May 2024, 10:30 AM',
-    period: '08 May - 14 May 2024',
+    settlementDate: getRelativeDateStr(2, '10:30 AM'),
+    period: getRelativePeriodStr(2, 8),
     orderCount: 42,
     grossAmount: 48520.0,
     deductions: 2425.0,
@@ -268,8 +279,8 @@ export const mockSettlementsList: SettlementRecord[] = [
   {
     id: 'sett-00127',
     settlementId: '#SETT00127',
-    settlementDate: '08 May 2024, 09:15 AM',
-    period: '01 May - 07 May 2024',
+    settlementDate: getRelativeDateStr(9, '09:15 AM'),
+    period: getRelativePeriodStr(9, 15),
     orderCount: 37,
     grossAmount: 39850.0,
     deductions: 1992.5,
@@ -282,8 +293,8 @@ export const mockSettlementsList: SettlementRecord[] = [
   {
     id: 'sett-00126',
     settlementId: '#SETT00126',
-    settlementDate: '01 May 2024, 11:20 AM',
-    period: '24 Apr - 30 Apr 2024',
+    settlementDate: getRelativeDateStr(16, '11:20 AM'),
+    period: getRelativePeriodStr(16, 22),
     orderCount: 32,
     grossAmount: 35620.0,
     deductions: 1781.0,
@@ -296,8 +307,8 @@ export const mockSettlementsList: SettlementRecord[] = [
   {
     id: 'sett-00125',
     settlementId: '#SETT00125',
-    settlementDate: '24 Apr 2024, 02:45 PM',
-    period: '17 Apr - 23 Apr 2024',
+    settlementDate: getRelativeDateStr(23, '02:45 PM'),
+    period: getRelativePeriodStr(23, 29),
     orderCount: 28,
     grossAmount: 28750.0,
     deductions: 1437.5,
@@ -310,8 +321,8 @@ export const mockSettlementsList: SettlementRecord[] = [
   {
     id: 'sett-00124',
     settlementId: '#SETT00124',
-    settlementDate: '17 Apr 2024, 11:10 AM',
-    period: '10 Apr - 16 Apr 2024',
+    settlementDate: getRelativeDateStr(30, '11:10 AM'),
+    period: getRelativePeriodStr(30, 36),
     orderCount: 26,
     grossAmount: 24630.0,
     deductions: 1231.5,
@@ -324,8 +335,8 @@ export const mockSettlementsList: SettlementRecord[] = [
   {
     id: 'sett-00123',
     settlementId: '#SETT00123',
-    settlementDate: '10 Apr 2024, 10:35 AM',
-    period: '03 Apr - 09 Apr 2024',
+    settlementDate: getRelativeDateStr(37, '10:35 AM'),
+    period: getRelativePeriodStr(37, 43),
     orderCount: 21,
     grossAmount: 19420.0,
     deductions: 971.0,
@@ -338,8 +349,8 @@ export const mockSettlementsList: SettlementRecord[] = [
   {
     id: 'sett-00122',
     settlementId: '#SETT00122',
-    settlementDate: '03 Apr 2024, 09:10 AM',
-    period: '27 Mar - 02 Apr 2024',
+    settlementDate: getRelativeDateStr(44, '09:10 AM'),
+    period: getRelativePeriodStr(44, 50),
     orderCount: 19,
     grossAmount: 16300.0,
     deductions: 815.0,
@@ -352,8 +363,8 @@ export const mockSettlementsList: SettlementRecord[] = [
   {
     id: 'sett-00121',
     settlementId: '#SETT00121',
-    settlementDate: '27 Mar 2024, 04:20 PM',
-    period: '20 Mar - 26 Mar 2024',
+    settlementDate: getRelativeDateStr(51, '04:20 PM'),
+    period: getRelativePeriodStr(51, 57),
     orderCount: 17,
     grossAmount: 13850.0,
     deductions: 692.5,
@@ -366,8 +377,8 @@ export const mockSettlementsList: SettlementRecord[] = [
   {
     id: 'sett-00120',
     settlementId: '#SETT00120',
-    settlementDate: '20 Mar 2024, 12:05 PM',
-    period: '13 Mar - 19 Mar 2024',
+    settlementDate: getRelativeDateStr(58, '12:05 PM'),
+    period: getRelativePeriodStr(58, 64),
     orderCount: 14,
     grossAmount: 11900.0,
     deductions: 595.0,
@@ -380,8 +391,8 @@ export const mockSettlementsList: SettlementRecord[] = [
   {
     id: 'sett-00119',
     settlementId: '#SETT00119',
-    settlementDate: '13 Mar 2024, 10:50 AM',
-    period: '06 Mar - 12 Mar 2024',
+    settlementDate: getRelativeDateStr(65, '10:50 AM'),
+    period: getRelativePeriodStr(65, 71),
     orderCount: 11,
     grossAmount: 8420.0,
     deductions: 421.0,
@@ -399,7 +410,7 @@ export const mockTransactionsList: PayoutTransaction[] = [
     transactionId: '#TXN123456',
     orderId: '#ORD10045',
     customer: 'Rahul Sharma',
-    dateTime: '15 May 2024, 10:30 AM',
+    dateTime: getRelativeDateStr(2, '10:30 AM'),
     type: 'Order Payment',
     paymentMethod: 'UPI (PhonePe)',
     description: 'Order amount for #ORD10045',
@@ -416,7 +427,7 @@ export const mockTransactionsList: PayoutTransaction[] = [
     transactionId: '#TXN123455',
     orderId: '#ORD10044',
     customer: 'Priya Verma',
-    dateTime: '15 May 2024, 09:15 AM',
+    dateTime: getRelativeDateStr(2, '09:15 AM'),
     type: 'Order Payment',
     paymentMethod: 'UPI (Google Pay)',
     description: 'Order amount for #ORD10044',
@@ -433,7 +444,7 @@ export const mockTransactionsList: PayoutTransaction[] = [
     transactionId: '#TXN123454',
     orderId: '#ORD10043',
     customer: 'Amit Kumar',
-    dateTime: '14 May 2024, 08:45 PM',
+    dateTime: getRelativeDateStr(3, '08:45 PM'),
     type: 'Refund',
     paymentMethod: 'Original Payment',
     description: 'Refund for order #ORD10043',
@@ -450,7 +461,7 @@ export const mockTransactionsList: PayoutTransaction[] = [
     transactionId: '#TXN123453',
     orderId: '#ORD10042',
     customer: 'Sneha Patel',
-    dateTime: '14 May 2024, 06:20 PM',
+    dateTime: getRelativeDateStr(3, '06:20 PM'),
     type: 'Order Payment',
     paymentMethod: 'Credit Card',
     description: 'Order amount for #ORD10042',
@@ -467,7 +478,7 @@ export const mockTransactionsList: PayoutTransaction[] = [
     transactionId: '#TXN123452',
     orderId: '#ORD10041',
     customer: 'Vikram Singh',
-    dateTime: '13 May 2024, 01:10 PM',
+    dateTime: getRelativeDateStr(4, '01:10 PM'),
     type: 'Order Payment',
     paymentMethod: 'Net Banking',
     description: 'Order amount for #ORD10041',
@@ -484,7 +495,7 @@ export const mockTransactionsList: PayoutTransaction[] = [
     transactionId: '#TXN123451',
     orderId: '#ORD10040',
     customer: 'Neha Jain',
-    dateTime: '12 May 2024, 11:05 AM',
+    dateTime: getRelativeDateStr(5, '11:05 AM'),
     type: 'Order Payment',
     paymentMethod: 'UPI (Paytm)',
     description: 'Order amount for #ORD10040',
@@ -501,7 +512,7 @@ export const mockTransactionsList: PayoutTransaction[] = [
     transactionId: '#TXN123450',
     orderId: '#ORD10039',
     customer: 'Karan Mehta',
-    dateTime: '11 May 2024, 07:30 PM',
+    dateTime: getRelativeDateStr(6, '07:30 PM'),
     type: 'Fee Deduction',
     paymentMethod: 'Platform Fee',
     description: 'Platform commission for #ORD10039',
@@ -518,7 +529,7 @@ export const mockTransactionsList: PayoutTransaction[] = [
     transactionId: '#TXN123449',
     orderId: '#ORD10038',
     customer: 'Anjali Nair',
-    dateTime: '11 May 2024, 06:15 PM',
+    dateTime: getRelativeDateStr(6, '06:15 PM'),
     type: 'Order Payment',
     paymentMethod: 'UPI (PhonePe)',
     description: 'Order amount for #ORD10038',
@@ -535,7 +546,7 @@ export const mockTransactionsList: PayoutTransaction[] = [
     transactionId: '#TXN123448',
     orderId: '#ORD10037',
     customer: 'Rohit Yadav',
-    dateTime: '10 May 2024, 04:20 PM',
+    dateTime: getRelativeDateStr(7, '04:20 PM'),
     type: 'Chargeback',
     paymentMethod: 'Original Payment',
     description: 'Customer dispute chargeback for #ORD10037',
@@ -552,7 +563,7 @@ export const mockTransactionsList: PayoutTransaction[] = [
     transactionId: '#TXN123447',
     orderId: '#ORD10036',
     customer: 'Meera Iyer',
-    dateTime: '10 May 2024, 12:05 PM',
+    dateTime: getRelativeDateStr(7, '12:05 PM'),
     type: 'Order Payment',
     paymentMethod: 'UPI (Google Pay)',
     description: 'Order amount for #ORD10036',

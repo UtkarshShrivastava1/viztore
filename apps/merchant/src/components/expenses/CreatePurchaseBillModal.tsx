@@ -23,12 +23,12 @@ export const CreatePurchaseBillModal: React.FC = () => {
 
   const [vendor, setVendor] = useState('Sharma Enterprises');
   const [billNumber, setBillNumber] = useState('BILL-2024-000127');
-  const [billDate, setBillDate] = useState('2024-05-11');
+  const [billDate, setBillDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [selectedPO, setSelectedPO] = useState('PO-2024-000125');
   const [invoiceRefNo, setInvoiceRefNo] = useState('');
   const [warehouse, setWarehouse] = useState('Main Warehouse');
   const [paymentMethod, setPaymentMethod] = useState('');
-  const [dueDate, setDueDate] = useState('2024-05-25');
+  const [dueDate, setDueDate] = useState(() => new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0]);
   const [notes, setNotes] = useState('');
   const [discount, setDiscount] = useState(0);
   const [taxRate, setTaxRate] = useState(18);

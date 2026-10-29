@@ -23,8 +23,8 @@ export const CreateDirectPurchaseModal: React.FC = () => {
 
   const [vendor, setVendor] = useState('Sharma Enterprises');
   const [billNumber, setBillNumber] = useState('BILL-2024-000128');
-  const [invoiceDate, setInvoiceDate] = useState('2024-05-11');
-  const [expectedDate, setExpectedDate] = useState('2024-05-20');
+  const [invoiceDate, setInvoiceDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [expectedDate, setExpectedDate] = useState(() => new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]);
   const [referenceNo, setReferenceNo] = useState('');
   const [warehouse, setWarehouse] = useState('Main Warehouse');
   const [paymentMethod, setPaymentMethod] = useState('Bank Transfer');

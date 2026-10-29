@@ -631,3 +631,35 @@ export async function restoreStockAtomic(
     await invalidateCache(`catalog:product:${item.productId}`);
   }
 }
+
+export async function bulkDeleteProducts(
+  productIds: string[],
+  ownerId: string,
+): Promise<{ deletedCount: number }> {
+  if (!Array.isArray(productIds) || productIds.length === 0) {
+    return { deletedCount: 0 };
+  }
+
+  const products = await ProductModel.find({ _id: { $in: productIds } });
+  let deletedCount = 0;
+
+  for (const product of products) {
+    try {
+      const store = await findStoreById(product.storeId.toString());
+      if (store && store.ownerId.toString() === ownerId) {
+        product.isActive = false;
+        product.version = (product.version || 1) + 1;
+        await product.save();
+        await invalidateCache(`catalog:product:${product._id}`);
+        if (product.slug) {
+          await invalidateCache(`catalog:slug:${product.slug}`);
+        }
+        deletedCount++;
+      }
+    } catch {
+      // Continue with next
+    }
+  }
+
+  return { deletedCount };
+}

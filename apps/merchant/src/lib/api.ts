@@ -214,6 +214,9 @@ export const catalogApi = {
   deleteProduct: (productId: string) =>
     api.delete<any>(`/catalog/products/${productId}`),
 
+  bulkDeleteProducts: (productIds: string[]) =>
+    api.post<{ deletedCount: number }>('/catalog/products/bulk-delete', { productIds }),
+
   getTaxonomyCategories: () =>
     api.get<Array<{ name: string; subcategoryCount: number; productTypeCount: number }>>('/catalog/taxonomy/categories'),
 
