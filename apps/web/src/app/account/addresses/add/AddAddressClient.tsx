@@ -17,7 +17,6 @@ import {
   ShieldCheck,
   Building2,
   FileSpreadsheet,
-  ChevronRight,
   Loader2
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
@@ -37,11 +36,11 @@ export function AddAddressClient() {
   // Form fields
   const [fullName, setFullName] = useState(user?.fullName || '');
   const [mobileNumber, setMobileNumber] = useState(user?.phone || '');
-  const [pincode, setPincode] = useState('490006');
-  const [locality, setLocality] = useState('');
-  const [streetAddress, setStreetAddress] = useState('');
-  const [city, setCity] = useState('Bhilai');
-  const [state, setState] = useState('Chhattisgarh');
+  const [pincode, setPincode] = useState(locationPincode || '');
+  const [locality, setLocality] = useState(locationLocality || '');
+  const [streetAddress, setStreetAddress] = useState(locationAddress || '');
+  const [city, setCity] = useState(locationCity || '');
+  const [state, setState] = useState('');
   const [landmark, setLandmark] = useState('');
   const [alternatePhone, setAlternatePhone] = useState('');
   const [isDefault, setIsDefault] = useState(true);
@@ -57,7 +56,9 @@ export function AddAddressClient() {
       if (locationLocality) setLocality(locationLocality);
       if (locationCity) setCity(locationCity);
       if (locationPincode) setPincode(locationPincode);
-      setState('Chhattisgarh');
+      const parts = locationAddress.split(',').map((p) => p.trim());
+      const statePart = parts.length > 1 ? parts[parts.length - 1].replace(/\d+/g, '').trim() : '';
+      if (statePart) setState(statePart);
       return;
     }
 
@@ -75,9 +76,9 @@ export function AddAddressClient() {
           const data = await res.json();
           if (data && data.address) {
             if (data.address.postcode) setPincode(data.address.postcode);
-            const rawCity = data.address.city || data.address.town || data.address.village || 'Bhilai';
-            setCity(rawCity.toLowerCase().includes('durg') ? 'Durg' : 'Bhilai');
-            setState('Chhattisgarh');
+            const rawCity = data.address.city || data.address.town || data.address.village || data.address.county || '';
+            if (rawCity) setCity(rawCity);
+            if (data.address.state) setState(data.address.state);
             if (data.address.suburb || data.address.neighbourhood) {
               setLocality(data.address.suburb || data.address.neighbourhood);
             }
@@ -306,24 +307,14 @@ export function AddAddressClient() {
                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                       <Building2 className="w-4 h-4 text-surface-400" />
                     </div>
-                    <select 
+                    <input 
+                      type="text"
                       value={city}
-                      onChange={(e) => {
-                        const newCity = e.target.value;
-                        setCity(newCity);
-                        if (!pincode || pincode === '490006' || pincode === '491001') {
-                          setPincode(newCity === 'Durg' ? '491001' : '490006');
-                        }
-                      }}
+                      onChange={(e) => setCity(e.target.value)}
+                      placeholder="e.g. Mumbai, Delhi, Bhilai"
                       required
-                      className="bg-white w-full pl-10 pr-10 py-3 rounded-lg border border-surface-200 focus:outline-none focus:border-[#1668F6] text-[13px] text-surface-800 appearance-none cursor-pointer font-medium" 
-                    >
-                      <option value="Bhilai">Bhilai</option>
-                      <option value="Durg">Durg</option>
-                    </select>
-                    <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none">
-                      <ChevronRight className="w-4 h-4 text-surface-400 rotate-90" />
-                    </div>
+                      className="bg-white w-full pl-10 pr-4 py-3 rounded-lg border border-surface-200 focus:outline-none focus:border-[#1668F6] text-[13px] text-surface-800 font-medium" 
+                    />
                   </div>
                 </div>
                 <div className="flex flex-col gap-1.5">
@@ -332,16 +323,14 @@ export function AddAddressClient() {
                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                       <FileSpreadsheet className="w-4 h-4 text-surface-400" />
                     </div>
-                    <select 
+                    <input 
+                      type="text"
                       value={state}
                       onChange={(e) => setState(e.target.value)}
-                      className="w-full pl-10 pr-10 py-3 rounded-lg border border-surface-200 focus:outline-none focus:border-[#1668F6] text-[13px] text-surface-800 bg-slate-50/60 appearance-none cursor-pointer font-medium"
-                    >
-                      <option value="Chhattisgarh">Chhattisgarh</option>
-                    </select>
-                    <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none">
-                      <ChevronRight className="w-4 h-4 text-surface-400 rotate-90" />
-                    </div>
+                      placeholder="e.g. Maharashtra, Chhattisgarh"
+                      required
+                      className="bg-white w-full pl-10 pr-4 py-3 rounded-lg border border-surface-200 focus:outline-none focus:border-[#1668F6] text-[13px] text-surface-800 font-medium"
+                    />
                   </div>
                 </div>
               </div>

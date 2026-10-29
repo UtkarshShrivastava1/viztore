@@ -32,6 +32,8 @@ export interface CheckoutState {
   removeCoupon: () => void;
   isPlacingOrder: boolean;
   setIsPlacingOrder: (loading: boolean) => void;
+  isAddressModalOpen: boolean;
+  setIsAddressModalOpen: (open: boolean) => void;
 }
 
 export const useCheckoutStore = create<CheckoutState>()(
@@ -54,6 +56,8 @@ export const useCheckoutStore = create<CheckoutState>()(
       removeCoupon: () => set({ couponCode: null, discountAmount: 0 }),
       isPlacingOrder: false,
       setIsPlacingOrder: (loading) => set({ isPlacingOrder: loading }),
+      isAddressModalOpen: false,
+      setIsAddressModalOpen: (open) => set({ isAddressModalOpen: open }),
     }),
     {
       name: 'platform-checkout-storage',

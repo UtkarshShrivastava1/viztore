@@ -11,10 +11,9 @@ import type { IAddress } from '@repo/shared-types';
 export function DeliveryAddressSection() {
   const { user, isAuthenticated } = useAuthStore();
   const { address: locationAddress, city: locationCity, pincode: locationPincode, isSet: isLocationSet } = useLocationStore();
-  const { shippingAddress, setShippingAddress } = useCheckoutStore();
+  const { shippingAddress, setShippingAddress, isAddressModalOpen, setIsAddressModalOpen } = useCheckoutStore();
 
   const [savedAddresses, setSavedAddresses] = useState<IAddress[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
   // Edit form state
@@ -38,9 +37,9 @@ export function DeliveryAddressSection() {
                 fullName: defaultAddr.recipientName || user?.fullName || 'Customer',
                 phone: defaultAddr.phone || user?.phone || '9876543210',
                 street: `${defaultAddr.street}${defaultAddr.landmark ? `, Near ${defaultAddr.landmark}` : ''}`,
-                city: defaultAddr.city || locationCity || 'Bhilai',
-                state: defaultAddr.state || 'Chhattisgarh',
-                postalCode: defaultAddr.pincode || locationPincode || '490006',
+                city: defaultAddr.city || locationCity || '',
+                state: defaultAddr.state || '',
+                postalCode: defaultAddr.pincode || locationPincode || '',
                 country: 'IN',
               });
               return;
@@ -52,9 +51,9 @@ export function DeliveryAddressSection() {
               fullName: user?.fullName || '',
               phone: user?.phone || '',
               street: locationAddress,
-              city: locationCity || 'Bhilai',
-              state: 'Chhattisgarh',
-              postalCode: locationPincode || '490006',
+              city: locationCity || '',
+              state: '',
+              postalCode: locationPincode || '',
               country: 'IN',
             });
           }
@@ -65,9 +64,9 @@ export function DeliveryAddressSection() {
         fullName: '',
         phone: '',
         street: locationAddress,
-        city: locationCity || 'Bhilai',
-        state: 'Chhattisgarh',
-        postalCode: locationPincode || '490006',
+        city: locationCity || '',
+        state: '',
+        postalCode: locationPincode || '',
         country: 'IN',
       });
     }
@@ -77,11 +76,11 @@ export function DeliveryAddressSection() {
     setFullName(shippingAddress?.fullName || user?.fullName || '');
     setPhone(shippingAddress?.phone || user?.phone || '');
     setStreet(shippingAddress?.street || (isLocationSet ? locationAddress : ''));
-    setCity(shippingAddress?.city && shippingAddress.city !== 'Local City' ? shippingAddress.city : (locationCity || 'Bhilai'));
-    setState(shippingAddress?.state && shippingAddress.state !== 'State' ? shippingAddress.state : 'Chhattisgarh');
-    setPostalCode(shippingAddress?.postalCode && shippingAddress.postalCode !== '452001' ? shippingAddress.postalCode : (locationPincode || '490006'));
+    setCity(shippingAddress?.city && shippingAddress.city !== 'Local City' ? shippingAddress.city : (locationCity || ''));
+    setState(shippingAddress?.state && shippingAddress.state !== 'State' ? shippingAddress.state : '');
+    setPostalCode(shippingAddress?.postalCode && shippingAddress.postalCode !== '452001' ? shippingAddress.postalCode : (locationPincode || ''));
     setIsEditing(true);
-    setIsModalOpen(true);
+    setIsAddressModalOpen(true);
   };
 
   const handleSaveCustomAddress = (e: React.FormEvent) => {
@@ -92,14 +91,14 @@ export function DeliveryAddressSection() {
       fullName: fullName.trim(),
       phone: phone.trim(),
       street: street.trim(),
-      city: city.trim() && city.trim() !== 'Local City' ? city.trim() : (locationCity || 'Bhilai'),
-      state: state.trim() && state.trim() !== 'State' ? state.trim() : 'Chhattisgarh',
-      postalCode: postalCode.trim() && postalCode.trim() !== '452001' ? postalCode.trim() : (locationPincode || '490006'),
+      city: city.trim() && city.trim() !== 'Local City' ? city.trim() : (locationCity || 'Local City'),
+      state: state.trim() && state.trim() !== 'State' ? state.trim() : '',
+      postalCode: postalCode.trim() && postalCode.trim() !== '452001' ? postalCode.trim() : (locationPincode || ''),
       country: 'IN',
     };
 
     setShippingAddress(newAddress);
-    setIsModalOpen(false);
+    setIsAddressModalOpen(false);
     setIsEditing(false);
 
     // Auto-save to customer profile if authenticated
@@ -131,7 +130,7 @@ export function DeliveryAddressSection() {
       postalCode: addr.pincode,
       country: 'IN',
     });
-    setIsModalOpen(false);
+    setIsAddressModalOpen(false);
   };
 
   const hasStreet = Boolean(shippingAddress?.street?.trim());
@@ -141,7 +140,7 @@ export function DeliveryAddressSection() {
   );
 
   return (
-    <div className="mb-6">
+    <div className="mb-6" id="delivery-address-section">
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-sm font-bold text-[#192168]">1. Delivery Address</h2>
         {hasStreet ? (
@@ -169,7 +168,7 @@ export function DeliveryAddressSection() {
             type="button"
             data-testid="add-delivery-address-btn"
             onClick={handleOpenEdit}
-            className="px-4 py-2 bg-[#1668F6] text-white text-xs font-bold rounded-xl hover:bg-blue-700 transition shadow-sm inline-flex items-center gap-1.5"
+            className="px-4 py-2 bg-[#1668F6] text-white text-xs font-bold rounded-xl hover:bg-blue-700 transition shadow-sm inline-flex items-center gap-1.5 cursor-pointer"
           >
             <Edit2 className="w-3.5 h-3.5" />
             <span>Add Delivery Address</span>
@@ -204,14 +203,14 @@ export function DeliveryAddressSection() {
             </p>
             <p className="text-[12px] text-gray-600 leading-snug pr-4">
               {shippingAddress?.street}<br />
-              {(shippingAddress?.city && shippingAddress.city !== 'Local City') ? shippingAddress.city : (locationCity || 'Bhilai')}, {(shippingAddress?.state && shippingAddress.state !== 'State') ? shippingAddress.state : 'Chhattisgarh'} - {(shippingAddress?.postalCode && shippingAddress.postalCode !== '452001') ? shippingAddress.postalCode : (locationPincode || '490006')}
+              {shippingAddress?.city || locationCity || ''}{shippingAddress?.state ? `, ${shippingAddress.state}` : ''}{shippingAddress?.postalCode ? ` - ${shippingAddress.postalCode}` : ''}
             </p>
           </div>
         </div>
       )}
 
       {/* Address Picker / Edit Modal */}
-      {isModalOpen && (
+      {isAddressModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-200">
           <div className="relative w-full max-w-md bg-white rounded-2xl shadow-xl border border-gray-200 p-6 overflow-hidden">
             <div className="flex items-center justify-between pb-3 border-b border-gray-100 mb-4">
@@ -220,8 +219,11 @@ export function DeliveryAddressSection() {
               </h3>
               <button
                 type="button"
-                onClick={() => setIsModalOpen(false)}
-                className="p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                onClick={() => {
+                  setIsAddressModalOpen(false);
+                  setIsEditing(false);
+                }}
+                className="p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -253,106 +255,124 @@ export function DeliveryAddressSection() {
                     </div>
                   </div>
                 ))}
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsEditing(true)}
+                    className="w-full py-2 border border-dashed border-[#1668F6] text-[#1668F6] rounded-xl text-xs font-bold hover:bg-blue-50/50 transition cursor-pointer"
+                  >
+                    + Add New Address
+                  </button>
+                </div>
               </div>
             )}
 
             {/* Form for new/edited address */}
-            <form onSubmit={handleSaveCustomAddress} className="space-y-3">
-              <div>
-                <label className="block text-[11px] font-bold text-gray-700 mb-1">Full Name</label>
-                <input
-                  type="text"
-                  required
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="e.g. Rahul Sharma"
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-gray-200 focus:outline-none focus:border-[#1668F6]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-gray-700 mb-1">10-Digit Mobile Number</label>
-                <input
-                  type="tel"
-                  required
-                  pattern="[0-9]{10}"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="e.g. 9876543210"
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-gray-200 focus:outline-none focus:border-[#1668F6]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-gray-700 mb-1">Street Address / Locality</label>
-                <input
-                  type="text"
-                  required
-                  value={street}
-                  onChange={(e) => setStreet(e.target.value)}
-                  placeholder="House/Flat No., Street, Landmark"
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-gray-200 focus:outline-none focus:border-[#1668F6]"
-                />
-              </div>
-
-              <div className="grid grid-cols-3 gap-2">
+            {(isEditing || savedAddresses.length === 0) && (
+              <form onSubmit={handleSaveCustomAddress} className="space-y-3">
                 <div>
-                  <label className="block text-[10px] font-bold text-gray-700 mb-1">City</label>
-                  <select
-                    value={city || 'Bhilai'}
-                    onChange={(e) => {
-                      const newCity = e.target.value;
-                      setCity(newCity);
-                      if (!postalCode || postalCode === '490006' || postalCode === '491001') {
-                        setPostalCode(newCity === 'Durg' ? '491001' : '490006');
-                      }
-                    }}
-                    className="w-full px-2 py-2 text-xs rounded-xl border border-gray-200 focus:outline-none focus:border-[#1668F6] bg-white cursor-pointer font-medium"
-                  >
-                    <option value="Bhilai">Bhilai</option>
-                    <option value="Durg">Durg</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-gray-700 mb-1">State</label>
-                  <select
-                    value={state || 'Chhattisgarh'}
-                    onChange={(e) => setState(e.target.value)}
-                    className="w-full px-2 py-2 text-xs rounded-xl border border-gray-200 focus:outline-none focus:border-[#1668F6] bg-slate-50 cursor-pointer font-medium"
-                  >
-                    <option value="Chhattisgarh">Chhattisgarh</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-gray-700 mb-1">Pincode</label>
+                  <label className="block text-[11px] font-bold text-gray-700 mb-1">Full Name</label>
                   <input
                     type="text"
                     required
-                    pattern="[0-9]{6}"
-                    value={postalCode}
-                    onChange={(e) => setPostalCode(e.target.value)}
-                    placeholder="490006"
-                    className="w-full px-2 py-2 text-xs rounded-xl border border-gray-200 focus:outline-none focus:border-[#1668F6]"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="e.g. Rahul Sharma"
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-gray-200 focus:outline-none focus:border-[#1668F6]"
                   />
                 </div>
-              </div>
 
-              <div className="pt-2 flex items-center justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 text-xs font-bold text-gray-600 rounded-xl hover:bg-gray-100 transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 text-xs font-bold text-white bg-[#1668F6] hover:bg-blue-700 rounded-xl transition shadow-sm"
-                >
-                  Save & Use Address
-                </button>
-              </div>
-            </form>
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-700 mb-1">10-Digit Mobile Number</label>
+                  <input
+                    type="tel"
+                    required
+                    pattern="[0-9]{10}"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="e.g. 9876543210"
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-gray-200 focus:outline-none focus:border-[#1668F6]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-700 mb-1">Street Address / Locality</label>
+                  <input
+                    type="text"
+                    required
+                    value={street}
+                    onChange={(e) => setStreet(e.target.value)}
+                    placeholder="House/Flat No., Street, Landmark"
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-gray-200 focus:outline-none focus:border-[#1668F6]"
+                  />
+                </div>
+
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-700 mb-1">City</label>
+                    <input
+                      type="text"
+                      required
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      placeholder="e.g. Mumbai"
+                      className="w-full px-2 py-2 text-xs rounded-xl border border-gray-200 focus:outline-none focus:border-[#1668F6]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-700 mb-1">State</label>
+                    <input
+                      type="text"
+                      required
+                      value={state}
+                      onChange={(e) => setState(e.target.value)}
+                      placeholder="e.g. Maharashtra"
+                      className="w-full px-2 py-2 text-xs rounded-xl border border-gray-200 focus:outline-none focus:border-[#1668F6]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-700 mb-1">Pincode</label>
+                    <input
+                      type="text"
+                      required
+                      pattern="[0-9]{6}"
+                      value={postalCode}
+                      onChange={(e) => setPostalCode(e.target.value)}
+                      placeholder="e.g. 400001"
+                      className="w-full px-2 py-2 text-xs rounded-xl border border-gray-200 focus:outline-none focus:border-[#1668F6]"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-2 flex items-center justify-end gap-2">
+                  {savedAddresses.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setIsEditing(false)}
+                      className="px-4 py-2 text-xs font-bold text-gray-600 rounded-xl hover:bg-gray-100 transition cursor-pointer"
+                    >
+                      Back to Saved
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsAddressModalOpen(false);
+                      setIsEditing(false);
+                    }}
+                    className="px-4 py-2 text-xs font-bold text-gray-600 rounded-xl hover:bg-gray-100 transition cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2 text-xs font-bold text-white bg-[#1668F6] hover:bg-blue-700 rounded-xl transition shadow-sm cursor-pointer"
+                  >
+                    Save & Use Address
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}

@@ -120,14 +120,18 @@ export function AddressesClient() {
     if (!locationAddress) return;
     try {
       setActionLoadingId('gps-save');
+      const parts = locationAddress.split(',').map((p) => p.trim());
+      const parsedCity = locationCity || (parts.length > 2 ? parts[parts.length - 2] : 'Local City');
+      const parsedState = parts.length > 1 ? parts[parts.length - 1].replace(/\d+/g, '').trim() : '';
+
       const updated = await userApi.addAddress({
         label: 'Home',
         recipientName: user?.fullName || 'Customer',
         phone: user?.phone || '9876543210',
         street: locationAddress,
-        city: locationCity || 'Bhilai',
-        state: 'Chhattisgarh',
-        pincode: locationPincode || '490006',
+        city: parsedCity,
+        state: parsedState,
+        pincode: locationPincode || '',
         isDefault: addresses.length === 0,
       });
       if (Array.isArray(updated) && updated.length > 0) {

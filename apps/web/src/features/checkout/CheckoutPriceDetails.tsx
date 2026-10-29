@@ -19,6 +19,7 @@ export function CheckoutPriceDetails({ storeId }: { storeId?: string }) {
     isPlacingOrder, 
     setIsPlacingOrder, 
     shippingAddress,
+    setIsAddressModalOpen,
     couponCode,
     discountAmount,
     applyCouponDiscount,
@@ -99,12 +100,11 @@ export function CheckoutPriceDetails({ storeId }: { storeId?: string }) {
     }
 
     if (fulfillmentType === 'deliver') {
-      if (!shippingAddress || !shippingAddress.street || !shippingAddress.phone) {
+      if (!shippingAddress || !shippingAddress.street || !shippingAddress.phone || shippingAddress.street === 'Customer Address') {
+        setIsAddressModalOpen(true);
         const addressEl = document.getElementById('delivery-address-section');
         if (addressEl) {
           addressEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        } else {
-          alert('Please specify your complete delivery address before proceeding.');
         }
         return;
       }
@@ -114,9 +114,9 @@ export function CheckoutPriceDetails({ storeId }: { storeId?: string }) {
       fullName: shippingAddress?.fullName || user?.fullName || 'Customer',
       phone: shippingAddress?.phone || user?.phone || '9876543210',
       street: shippingAddress?.street || (fulfillmentType === 'pickup' ? 'Store Pickup' : fulfillmentType === 'reserve' ? 'In-Store 2h Hold' : 'Customer Address'),
-      city: (shippingAddress?.city && shippingAddress.city !== 'Local City') ? shippingAddress.city : (locationCity || 'Bhilai'),
-      state: (shippingAddress?.state && shippingAddress.state !== 'State') ? shippingAddress.state : 'Chhattisgarh',
-      postalCode: (shippingAddress?.postalCode && shippingAddress.postalCode !== '452001') ? shippingAddress.postalCode : (locationPincode || '490006'),
+      city: (shippingAddress?.city && shippingAddress.city !== 'Local City') ? shippingAddress.city : (locationCity || 'Local City'),
+      state: (shippingAddress?.state && shippingAddress.state !== 'State') ? shippingAddress.state : '',
+      postalCode: (shippingAddress?.postalCode && shippingAddress.postalCode !== '452001') ? shippingAddress.postalCode : (locationPincode || ''),
       country: 'IN',
     };
 
