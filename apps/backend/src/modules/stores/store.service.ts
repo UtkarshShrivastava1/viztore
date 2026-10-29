@@ -97,7 +97,7 @@ export async function findNearbyStores(query: NearbyStoresQueryDto): Promise<ISt
     .limit(query.limit || 20)
     .lean();
 
-  return stores.map((s) => {
+  const mapped = stores.map((s) => {
     const coords = (s as any).location?.coordinates;
     const distanceKm =
       Array.isArray(coords) && coords.length === 2 && lat !== undefined && lng !== undefined
@@ -108,7 +108,15 @@ export async function findNearbyStores(query: NearbyStoresQueryDto): Promise<ISt
       ...s,
       distanceKm,
     };
-  }) as unknown as IStore[];
+  });
+
+  mapped.sort((a, b) => {
+    const distA = typeof a.distanceKm === 'number' ? a.distanceKm : 9999;
+    const distB = typeof b.distanceKm === 'number' ? b.distanceKm : 9999;
+    return distA - distB;
+  });
+
+  return mapped as unknown as IStore[];
 }
 
 /**

@@ -94,3 +94,17 @@ export const logout: RequestHandler = catchAsync(async (req: Request, res: Respo
   }
   return ApiResponse.success(res, null, 'Logged out successfully');
 });
+
+export const getFavoriteStores: RequestHandler = catchAsync(async (req: Request, res: Response) => {
+  if (!req.user) throw AppError.unauthorized();
+  const stores = await authService.getFavoriteStores(req.user.sub);
+  return ApiResponse.success(res, stores);
+});
+
+export const toggleFavoriteStore: RequestHandler = catchAsync(async (req: Request, res: Response) => {
+  if (!req.user) throw AppError.unauthorized();
+  const { storeId } = req.params;
+  if (!storeId) throw AppError.badRequest('Store ID is required');
+  const result = await authService.toggleFavoriteStore(req.user.sub, storeId);
+  return ApiResponse.success(res, result, result.isFavorite ? 'Store added to favorites' : 'Store removed from favorites');
+});

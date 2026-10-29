@@ -100,5 +100,17 @@ router.post(
   authController.logout,
 );
 
+router.get(
+  '/favorite-stores',
+  authGuard,
+  authController.getFavoriteStores,
+);
+
+router.post(
+  '/favorite-stores/:storeId/toggle',
+  authGuard,
+  authController.toggleFavoriteStore,
+);
+
 export const authRouter = router;
 

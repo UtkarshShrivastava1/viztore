@@ -1,65 +1,21 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { 
-  Heart, ArrowLeft, Loader2, Store as StoreIcon 
+  Heart, ArrowLeft, Loader2, Store as StoreIcon, MapPin 
 } from 'lucide-react';
 import { AccountSidebar } from '@/components/account/AccountSidebar';
-import { fetchAllStores } from '@/lib/api/stores.js';
-import type { IStore } from '@repo/shared-types';
-
-interface DisplayStore {
-  id: string;
-  slug: string;
-  name: string;
-  category: string;
-  rating: number;
-  reviews: string;
-  image: string;
-  logoText: string;
-  isFavorite: boolean;
-}
+import { useFavoriteStoresStore } from '@/stores/favoriteStoresStore';
 
 export function StoresClient() {
   const router = useRouter();
-  const [stores, setStores] = useState<DisplayStore[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { favoriteStores, toggleFavorite, fetchFavorites, isLoading } = useFavoriteStoresStore();
 
   useEffect(() => {
-    let isMounted = true;
-    const fetchFavoriteStores = async () => {
-      try {
-        setIsLoading(true);
-        const res = await fetchAllStores({ limit: 12 });
-        if (res && Array.isArray(res.stores) && res.stores.length > 0) {
-          const mapped: DisplayStore[] = res.stores.map((s: IStore) => ({
-            id: s._id || s.slug,
-            slug: s.slug || s._id,
-            name: s.name,
-            category: s.category || 'Local Retailer',
-            rating: typeof s.rating === 'number' ? s.rating : ((s.rating as unknown as { average?: number })?.average || 4.8),
-            reviews: typeof s.rating === 'object' && s.rating !== null ? `${(s.rating as unknown as { count?: number })?.count || 24}` : '24',
-            image: s.bannerUrl || 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&q=80&w=200&h=150',
-            logoText: s.name.slice(0, 2).toUpperCase(),
-            isFavorite: true,
-          }));
-          if (isMounted) setStores(mapped);
-          return;
-        }
-        if (isMounted) setStores([]);
-      } catch (err) {
-        console.warn('Could not load stores from API:', err);
-        if (isMounted) setStores([]);
-      } finally {
-        if (isMounted) setIsLoading(false);
-      }
-    };
-
-    fetchFavoriteStores();
-    return () => { isMounted = false; };
-  }, []);
+    fetchFavorites();
+  }, [fetchFavorites]);
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] pb-24 font-sans">
@@ -72,90 +28,121 @@ export function StoresClient() {
         <div className="flex-1 w-full bg-transparent lg:bg-white lg:rounded-xl lg:shadow-sm lg:border lg:border-surface-200/60 lg:p-6 flex flex-col min-h-screen">
           
           {/* Header */}
-          <div className="px-2 lg:px-0 w-full flex items-start justify-between pb-4 pt-2">
-            <div className="flex items-start gap-3">
-              <button onClick={() => router.back()} className="shrink-0 lg:hidden mt-0.5">
-                <ArrowLeft className="w-6 h-6 text-[#192168]" />
-              </button>
-              <div>
-                <h1 className="text-[20px] lg:text-[28px] font-bold text-[#192168] leading-tight">Favourite Stores</h1>
-                <p className="text-[12px] lg:text-[14px] font-medium text-surface-500 mt-1">Your saved neighbourhood stores for quick access.</p>
-              </div>
-            </div>
-            <div className="text-[12px] font-medium text-[#192168] mt-1 lg:mt-0">
-              {stores.length} {stores.length === 1 ? 'Store' : 'Stores'}
+          <div className="flex items-center gap-3 mb-6">
+            <button 
+              onClick={() => router.back()}
+              className="lg:hidden p-2 -ml-2 rounded-full hover:bg-surface-100 text-surface-600"
+              aria-label="Go back"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-black text-[#192168] tracking-tight">Saved Stores</h1>
+              <p className="text-xs sm:text-sm text-surface-500 font-medium">Your bookmarked and favorite neighborhood shops</p>
             </div>
           </div>
 
-          {/* Stores Grid */}
-          <div className="flex-1 mt-2">
-            {isLoading ? (
-              <div className="py-20 flex flex-col items-center justify-center gap-3 text-surface-400">
-                <Loader2 className="w-8 h-8 animate-spin text-[#1668F6]" />
-                <p className="text-xs font-semibold">Loading stores...</p>
+          {/* Loading State */}
+          {isLoading && favoriteStores.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-24 text-surface-400">
+              <Loader2 className="w-8 h-8 animate-spin text-primary-600 mb-3" />
+              <p className="text-sm font-semibold">Loading your favorite stores...</p>
+            </div>
+          ) : favoriteStores.length === 0 ? (
+            /* Empty State */
+            <div className="flex flex-col items-center justify-center py-20 px-4 text-center border-2 border-dashed border-surface-200 rounded-2xl bg-surface-50/50 my-auto">
+              <div className="w-16 h-16 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center mb-4 shadow-xs">
+                <Heart className="w-8 h-8" />
               </div>
-            ) : stores.length === 0 ? (
-              /* Empty State */
-              <div className="border border-dashed border-[#E5E7EB] bg-white rounded-2xl p-8 lg:p-14 text-center flex flex-col items-center justify-center my-4">
-                <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mb-4">
-                  <StoreIcon className="w-8 h-8 text-[#1668F6]" />
-                </div>
-                <h3 className="text-[16px] lg:text-[18px] font-bold text-[#192168] mb-1">No Saved Stores Yet</h3>
-                <p className="text-[13px] text-surface-500 max-w-md mb-6 leading-relaxed">
-                  Discover local shops delivering in your 3-4km radius and save your favorites for rapid re-ordering.
-                </p>
-                <Link 
-                  href="/stores" 
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-[#1668F6] text-white text-[13px] font-bold rounded-xl shadow-sm hover:bg-blue-700 transition-colors"
-                >
-                  <StoreIcon className="w-4 h-4" /> Explore Nearby Stores
-                </Link>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 lg:gap-6">
-                {stores.map((store) => (
-                  <Link 
-                    href={`/stores/${store.slug}`}
-                    key={store.id} 
-                    className="bg-white rounded-[14px] border border-surface-200 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow relative"
-                  >
-                    
-                    {/* Top Banner */}
-                    <div className="h-[85px] lg:h-[110px] w-full relative bg-[#F8FAFF] overflow-hidden">
-                      <img 
-                        src={store.image} 
-                        alt={store.name} 
-                        className="w-full h-full object-cover mix-blend-multiply opacity-90"
-                      />
-                      <button className="absolute top-2 right-2 w-6 h-6 lg:w-8 lg:h-8 bg-white rounded-full flex items-center justify-center shadow-sm z-20">
-                        <Heart className="w-3.5 h-3.5 lg:w-4 lg:h-4 fill-rose-500 text-rose-500" />
-                      </button>
-                    </div>
+              <h3 className="text-lg font-black text-[#192168] mb-1">No Saved Stores Yet</h3>
+              <p className="text-sm text-surface-500 max-w-sm mb-6">
+                Bookmark your favorite local stores by tapping the heart icon on any store card or store page for quick access.
+              </p>
+              <Link 
+                href="/stores"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-bold text-sm shadow-sm transition-all"
+              >
+                <StoreIcon className="w-4 h-4" />
+                Explore Nearby Stores
+              </Link>
+            </div>
+          ) : (
+            /* Stores Grid */
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {favoriteStores.map((store) => {
+                const storeId = store._id || (store as any).id || store.slug;
+                const banner = store.bannerUrl || 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&q=80&w=600';
+                const dist = typeof store.distanceKm === 'number' && !isNaN(store.distanceKm) ? store.distanceKm : null;
+                const distanceStr = dist !== null ? `${dist.toFixed(1)} km` : null;
 
-                    {/* Content Section */}
-                    <div className="px-2.5 pb-3 lg:px-4 lg:pb-4 flex-1 flex flex-col relative pt-1">
-                      
-                      <div className="flex gap-2">
-                        {/* Circular Logo */}
-                        <div className="w-[44px] h-[44px] lg:w-[56px] lg:h-[56px] rounded-full border-[3px] border-white shrink-0 shadow-sm flex items-center justify-center -mt-[22px] lg:-mt-[28px] relative z-10 bg-[#081028] text-white font-extrabold text-xs">
-                          {store.logoText}
-                        </div>
-                        
-                        {/* Name & Category */}
-                        <div className="pt-0.5 flex-1 min-w-0">
-                          <h4 className="text-[12px] lg:text-[15px] font-extrabold text-[#192168] line-clamp-1">{store.name}</h4>
-                          <p className="text-[9px] lg:text-[11px] font-medium text-surface-500 mt-0.5 line-clamp-1">{store.category}</p>
-                        </div>
+                return (
+                  <div 
+                    key={storeId}
+                    className="group bg-white rounded-2xl border border-surface-200/80 shadow-xs hover:shadow-md transition-all overflow-hidden flex flex-col relative"
+                  >
+                    <Link href={`/stores/${store.slug || storeId}`} className="block relative aspect-[16/9] w-full overflow-hidden bg-surface-100">
+                      <img 
+                        src={banner} 
+                        alt={store.name} 
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                      />
+                      {distanceStr && (
+                        <span className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full bg-white/95 backdrop-blur-xs text-[11px] font-bold text-gray-800 shadow-2xs flex items-center gap-1 leading-none">
+                          <MapPin className="w-3 h-3 text-emerald-600" /> {distanceStr}
+                        </span>
+                      )}
+                    </Link>
+
+                    {/* Unfavorite Heart Button */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        toggleFavorite(store);
+                      }}
+                      className="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-rose-50 text-rose-500 ring-2 ring-rose-200 flex items-center justify-center transition-all z-10 hover:bg-rose-100 shadow-2xs"
+                      title="Remove from favorites"
+                      aria-label="Remove from favorites"
+                    >
+                      <Heart className="w-4 h-4 fill-rose-500 text-rose-500" />
+                    </button>
+
+                    <div className="p-4 flex flex-col gap-1.5 flex-1">
+                      <div className="flex items-center justify-between">
+                        <Link href={`/stores/${store.slug || storeId}`}>
+                          <h3 className="font-extrabold text-[#192168] group-hover:text-primary-600 transition-colors line-clamp-1">
+                            {store.name}
+                          </h3>
+                        </Link>
+                        {store.rating && (
+                          <span className="text-xs font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded">
+                            ★ {store.rating.toFixed(1)}
+                          </span>
+                        )}
                       </div>
 
-                      <div className="flex-1" />
-                    </div>
+                      <p className="text-xs text-surface-500 line-clamp-1">
+                        {store.description || `${store.category || 'Local Retail'} • Open for Orders`}
+                      </p>
 
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
+                      <div className="mt-auto pt-3 flex items-center justify-between border-t border-surface-100 text-xs">
+                        <span className="text-surface-400 font-medium">
+                          {store.address?.city || 'Local Store'}
+                        </span>
+                        <Link 
+                          href={`/stores/${store.slug || storeId}`}
+                          className="font-bold text-primary-600 hover:text-primary-700 hover:underline"
+                        >
+                          Visit Store →
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
         </div>
       </main>

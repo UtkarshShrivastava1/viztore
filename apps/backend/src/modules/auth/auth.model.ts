@@ -81,6 +81,7 @@ const userSchema = new Schema<IUserDocument>(
       enum: ['male', 'female', 'other', 'prefer_not_to_say'],
     },
     addresses: [userAddressSchema],
+    favoriteStores: [{ type: Schema.Types.ObjectId, ref: 'Store' }],
     refreshToken: {
       type: String,
       select: false,

@@ -1,10 +1,19 @@
-import { Heart, Share2, MapPin, Clock, Truck, RotateCcw, ShieldCheck, Headset, CheckCircle2 } from 'lucide-react';
+'use client';
+
+import React, { useState } from 'react';
+import { Heart, Share2, MapPin, Clock, Truck, RotateCcw, ShieldCheck, Headset, CheckCircle2, Check } from 'lucide-react';
 import { IStore } from '@repo/shared-types';
 import { useLocationStore } from '@/stores/location.store';
+import { useFavoriteStoresStore } from '@/stores/favoriteStoresStore';
 import { calculateHaversineDistanceKm, formatDistance, isWithinDeliveryZone } from '@/lib/location/distance';
 
 export function StoreHeroCard({ store }: { store: IStore }) {
   const { lat: userLat, lng: userLng } = useLocationStore();
+  const { isFavorite, toggleFavorite } = useFavoriteStoresStore();
+  const [copied, setCopied] = useState(false);
+
+  const storeId = store._id || (store as any).id || store.slug;
+  const isFav = isFavorite(storeId);
 
   // Dynamic Haversine distance calculation between customer GPS and store coordinates
   let computedDistanceKm = store.distanceKm;
@@ -28,6 +37,27 @@ export function StoreHeroCard({ store }: { store: IStore }) {
   ]
     .filter(Boolean)
     .join(', ');
+
+  const handleShare = async () => {
+    const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({
+          title: store.name,
+          text: store.description || `Check out ${store.name} on our platform!`,
+          url: shareUrl,
+        });
+        return;
+      } catch (err) {
+        // user cancelled or share failed, fallback to clipboard
+      }
+    }
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   return (
     <div className="relative w-full rounded-[24px] overflow-hidden mb-12 shadow-sm bg-white">
@@ -89,11 +119,27 @@ export function StoreHeroCard({ store }: { store: IStore }) {
 
         {/* Action Buttons */}
         <div className="absolute top-6 right-6 md:static md:flex-shrink-0 flex items-center gap-3">
-          <button className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm text-[#192168] hover:bg-gray-50 transition-colors">
-            <Heart className="w-5 h-5" />
+          <button
+            type="button"
+            onClick={() => toggleFavorite(store)}
+            className={`w-10 h-10 rounded-full flex items-center justify-center shadow-sm transition-all duration-200 ${
+              isFav
+                ? 'bg-rose-50 text-rose-500 hover:bg-rose-100 ring-2 ring-rose-200'
+                : 'bg-white text-[#192168] hover:bg-gray-50'
+            }`}
+            title={isFav ? 'Remove from saved stores' : 'Save store to favorites'}
+            aria-label={isFav ? 'Remove from saved stores' : 'Save store to favorites'}
+          >
+            <Heart className={`w-5 h-5 transition-transform duration-150 active:scale-75 ${isFav ? 'fill-rose-500 text-rose-500' : ''}`} />
           </button>
-          <button className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm text-[#192168] hover:bg-gray-50 transition-colors">
-            <Share2 className="w-5 h-5" />
+          <button
+            type="button"
+            onClick={handleShare}
+            className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm text-[#192168] hover:bg-gray-50 transition-colors relative"
+            title={copied ? 'Link copied!' : 'Share store'}
+            aria-label="Share store"
+          >
+            {copied ? <Check className="w-5 h-5 text-emerald-600" /> : <Share2 className="w-5 h-5" />}
           </button>
         </div>
       </div>

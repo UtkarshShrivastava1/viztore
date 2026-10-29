@@ -369,3 +369,44 @@ export async function findUserById(userId: string): Promise<IUser | null> {
   const user = await UserModel.findById(userId).lean();
   return user as unknown as IUser | null;
 }
+
+/**
+ * Get User's Favorite Stores
+ */
+export async function getFavoriteStores(userId: string): Promise<any[]> {
+  const user = await UserModel.findById(userId).populate('favoriteStores').lean();
+  if (!user) {
+    throw AppError.notFound('User not found', 'USER_NOT_FOUND');
+  }
+  return (user as any).favoriteStores || [];
+}
+
+/**
+ * Toggle Favorite Store for User
+ */
+export async function toggleFavoriteStore(
+  userId: string,
+  storeId: string,
+): Promise<{ isFavorite: boolean; favoriteStoreIds: string[] }> {
+  const user = await UserModel.findById(userId);
+  if (!user) {
+    throw AppError.notFound('User not found', 'USER_NOT_FOUND');
+  }
+
+  const favs: string[] = ((user as any).favoriteStores || []).map((id: any) => id.toString());
+  const idx = favs.indexOf(storeId);
+  let isFavorite: boolean;
+
+  if (idx !== -1) {
+    favs.splice(idx, 1);
+    isFavorite = false;
+  } else {
+    favs.push(storeId);
+    isFavorite = true;
+  }
+
+  (user as any).favoriteStores = favs;
+  await user.save();
+
+  return { isFavorite, favoriteStoreIds: favs };
+}
