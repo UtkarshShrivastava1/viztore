@@ -172,12 +172,19 @@ export const App: React.FC = () => {
   useEffect(() => {
     const handleMerchantNavigate = (e: CustomEvent<{ tab?: DashboardTab; view?: string }>) => {
       if (e.detail?.tab) {
-        handleSelectTab(e.detail.tab);
+        if (e.detail.tab === 'orders' && e.detail.view === 'create') {
+          navigate('/dashboard/orders/create');
+        } else if (e.detail.tab === 'catalog' && e.detail.view === 'wizard') {
+          useCatalogStore.getState().setActiveView('wizard');
+          navigate('/dashboard/catalog');
+        } else {
+          handleSelectTab(e.detail.tab);
+        }
       }
     };
     window.addEventListener('merchant:navigate' as any, handleMerchantNavigate);
     return () => window.removeEventListener('merchant:navigate' as any, handleMerchantNavigate);
-  }, [handleSelectTab]);
+  }, [handleSelectTab, navigate]);
 
   // View Resolution:
   // 1. Onboarding / Register

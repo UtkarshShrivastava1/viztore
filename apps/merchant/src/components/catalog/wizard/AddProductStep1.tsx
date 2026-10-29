@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shirt, ListFilter, LayoutGrid, Info, ArrowRight, Search } from 'lucide-react';
+import { Shirt, ListFilter, LayoutGrid, Info, ArrowRight, Search, CheckCircle2 } from 'lucide-react';
 import { useCatalogStore } from '../../../stores/catalogStore.js';
 import { WizardHelpSidebar } from './WizardHelpSidebar.js';
 import { CreatableCombobox } from '../../ui/CreatableCombobox.js';
@@ -148,6 +148,13 @@ export const AddProductStep1: React.FC = () => {
   const productIdentification = draftProduct.productIdentification || 'new';
   const brand = draftProduct.brand || 'Generic / Unbranded';
   const hsnCode = draftProduct.hsnCode || '61091000';
+
+  const matchedHsn = React.useMemo(() => {
+    if (!hsnCode || hsnCode.length < 4) return null;
+    return typedMasterTaxonomies.find(
+      (t) => t.hsnCode === hsnCode || t.hsnCode?.startsWith(hsnCode)
+    );
+  }, [hsnCode]);
 
   // All Brand options = common options + saved custom brands
   const allBrandOptions = React.useMemo(() => {
@@ -471,10 +478,17 @@ export const AddProductStep1: React.FC = () => {
                   className="w-full px-3 py-2 text-xs text-slate-800 bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-mono"
                   required
                 />
-                <div className="flex items-center gap-1.5 mt-1.5 text-[11px] text-blue-600">
-                  <Info className="w-3.5 h-3.5 shrink-0" />
-                  <span>Enter the correct HSN code to ensure smooth compliance and tax calculation.</span>
-                </div>
+                {matchedHsn ? (
+                  <div className="flex items-center gap-1.5 mt-1.5 text-[11px] text-emerald-600 font-medium">
+                    <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-emerald-500" />
+                    <span>Verified HSN {matchedHsn.hsnCode} — Statutory GST {matchedHsn.gstRate ?? 18}% ({matchedHsn.productType})</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5 mt-1.5 text-[11px] text-blue-600">
+                    <Info className="w-3.5 h-3.5 shrink-0" />
+                    <span>Enter the correct HSN code to ensure smooth compliance and tax calculation.</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
