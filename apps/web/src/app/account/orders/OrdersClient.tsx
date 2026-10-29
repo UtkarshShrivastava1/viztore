@@ -26,6 +26,7 @@ interface DisplayOrder {
   total: number;
   image: string;
   reserveTill?: string;
+  rawStatus?: OrderStatus;
 }
 
 export function OrdersClient() {
@@ -68,6 +69,7 @@ export function OrdersClient() {
       id: `#${order.orderNumber || (order._id || order.id || '').slice(-6).toUpperCase()}`,
       rawId: order._id || order.id || order.orderNumber,
       type: isReserve ? 'reserve' : 'regular',
+      rawStatus: order.status,
       status: displayStatus,
       reserveTill,
       date: formattedDate,
@@ -255,12 +257,22 @@ export function OrdersClient() {
                         <div className="text-[12px] font-medium text-surface-600">
                           Total Amount: <span className="font-bold text-[#192168]">₹{order.total.toLocaleString('en-IN')}</span>
                         </div>
-                        <Link 
-                          href={`/account/orders/${order.rawId}`}
-                          className="px-4 py-1.5 rounded-md border border-[#1668F6] text-[#1668F6] text-[12px] font-bold hover:bg-blue-50 transition-colors block text-center"
-                        >
-                          Order Details
-                        </Link>
+                        <div className="flex items-center gap-2">
+                          {(order.rawStatus === OrderStatus.PENDING || order.rawStatus === OrderStatus.CONFIRMED) && (
+                            <Link 
+                              href={`/account/orders/${order.rawId}`}
+                              className="px-3 py-1.5 rounded-md border border-rose-200 text-rose-600 text-[11px] font-semibold hover:bg-rose-50 transition-colors block text-center"
+                            >
+                              Cancel Order
+                            </Link>
+                          )}
+                          <Link 
+                            href={`/account/orders/${order.rawId}`}
+                            className="px-4 py-1.5 rounded-md border border-[#1668F6] text-[#1668F6] text-[12px] font-bold hover:bg-blue-50 transition-colors block text-center"
+                          >
+                            Order Details
+                          </Link>
+                        </div>
                       </div>
 
                     </div>

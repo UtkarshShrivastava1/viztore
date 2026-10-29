@@ -125,8 +125,9 @@ export function createOrderController(service: IOrderService) {
       : req.query.expectedVersion
         ? Number(req.query.expectedVersion)
         : undefined;
+    const reason = req.body?.reason ? String(req.body.reason) : undefined;
 
-    const order = await service.cancelOrder(orderId, userId, isAdmin, expectedVersion);
+    const order = await service.cancelOrder(orderId, userId, isAdmin, expectedVersion, reason);
     if (!order) {
       throw AppError.notFound('Order not found', 'ORDER_NOT_FOUND');
     }

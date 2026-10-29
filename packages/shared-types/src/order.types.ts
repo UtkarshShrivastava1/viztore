@@ -116,6 +116,9 @@ export interface IOrder {
   isReserved?: boolean;
   deliveryOtp?: string;
   deliveredAt?: string;
+  version?: number;
+  cancellationReason?: string;
+  cancelledAt?: string;
   createdAt: string;
   updatedAt: string;
 }

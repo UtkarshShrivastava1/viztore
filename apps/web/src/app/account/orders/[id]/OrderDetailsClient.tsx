@@ -10,6 +10,8 @@ import {
 import { AccountSidebar } from '@/components/account/AccountSidebar';
 import { OrderInvoiceModal } from '@/components/orders/OrderInvoiceModal';
 import { CustomerReturnModal } from '@/components/orders/CustomerReturnModal';
+import { CustomerCancelOrderModal } from '@/components/orders/CustomerCancelOrderModal';
+import { XCircle } from 'lucide-react';
 import { RotateCcw } from 'lucide-react';
 import { ordersApi } from '@/lib/api/orders.js';
 import type { IOrder, IOrderItem } from '@repo/shared-types';
@@ -24,6 +26,7 @@ export function OrderDetailsClient({ id }: OrderDetailsClientProps) {
   const [loading, setLoading] = useState(true);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [showReturnModal, setShowReturnModal] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -55,6 +58,8 @@ export function OrderDetailsClient({ id }: OrderDetailsClientProps) {
   const isPacked = ['PACKED', 'SHIPPED', 'OUT_FOR_DELIVERY', 'DELIVERED'].includes(currentStatus);
   const isOutForDelivery = ['OUT_FOR_DELIVERY', 'DELIVERED'].includes(currentStatus);
   const isDelivered = currentStatus === 'DELIVERED';
+  const isCancelled = currentStatus === 'CANCELLED';
+  const isCancellable = ['PENDING', 'CONFIRMED'].includes(currentStatus);
 
   const orderDate = order?.createdAt 
     ? new Date(order.createdAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
@@ -347,10 +352,42 @@ export function OrderDetailsClient({ id }: OrderDetailsClientProps) {
                   <button
                     type="button"
                     onClick={() => setShowReturnModal(true)}
-                    className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition shadow-xs shrink-0"
+                    className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition shadow-xs shrink-0 cursor-pointer"
                   >
                     Request Return
                   </button>
+                </div>
+              )}
+
+              {/* Cancel Order Action Card (Pending / Confirmed Orders) */}
+              {isCancellable && (
+                <div className="mx-4 lg:mx-0 bg-white rounded-2xl p-4 lg:p-5 shadow-sm border border-rose-200/80 bg-rose-50/20 flex items-center justify-between gap-3">
+                  <div>
+                    <h4 className="text-[13px] font-bold text-gray-900">Need to Cancel?</h4>
+                    <p className="text-[11px] text-gray-500 mt-0.5">Order can be cancelled before packing begins.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowCancelModal(true)}
+                    className="px-4 py-2 border border-rose-300 text-rose-600 hover:bg-rose-50 rounded-xl text-xs font-bold transition-colors cursor-pointer shrink-0"
+                  >
+                    Cancel Order
+                  </button>
+                </div>
+              )}
+
+              {/* Cancelled Banner */}
+              {isCancelled && (
+                <div className="mx-4 lg:mx-0 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center shrink-0 mt-0.5">
+                    <XCircle className="w-4 h-4 text-rose-600" />
+                  </div>
+                  <div>
+                    <h4 className="text-[13px] font-bold">This Order is Cancelled</h4>
+                    <p className="text-[11px] text-rose-600 mt-0.5">
+                      {'This order has been cancelled and inventory was returned to the store catalog.'}
+                    </p>
+                  </div>
                 </div>
               )}
 
@@ -406,6 +443,18 @@ export function OrderDetailsClient({ id }: OrderDetailsClientProps) {
         isOpen={showReturnModal}
         onClose={() => setShowReturnModal(false)}
         order={order}
+      />
+
+      {/* Customer Cancel Order Modal */}
+      <CustomerCancelOrderModal
+        orderId={order?._id || order?.id || id}
+        orderNumber={displayId}
+        expectedVersion={order?.version}
+        isOpen={showCancelModal}
+        onClose={() => setShowCancelModal(false)}
+        onSuccess={(updatedOrder) => {
+          setOrder(updatedOrder);
+        }}
       />
     </div>
   );
