@@ -427,3 +427,10 @@ Every online order placed through `apps/web` generates an authoritative, complia
   - **Dynamic Faceted Search Engine (`/products`)**: Upgraded `ProductsContent` in `apps/web/src/app/products/page.tsx` to read, serialize, and deserialize arbitrary faceted attributes (`sub` / `subcategory`, `brand`, `size`, `color`, `minPrice`, `maxPrice`, `storeId`) directly to/from URL search params, ensuring 100% bookmarkable, shareable deep links and seamless browser Back/Forward history traversal.
   - **Active Filter Dismissal & Reset**: Implemented interactive active filter chips with individual dismiss buttons and one-click 'Clear all filters' resetting all query parameters.
   - **Build Verification**: Clean Next.js 14 production build with 32/32 static and dynamic routes compiled without errors.
+- [x] **Merchant Manual Create Order Pipeline & Customer Search Unblocking (`[AUDIT-014]`) 🟢**:
+  - **Unblocked Customer Autocomplete**: Removed `readOnly` lock from the customer search input in `CreateOrderPage.tsx`; wired real-time debounced autocomplete against `customerStore` querying by name, phone, and email with interactive dropdown selection.
+  - **Inline New Customer Registration**: Added dynamic new customer creation form (Full Name, Phone, Email, Delivery Address) activated seamlessly via the "New Customer" radio toggle.
+  - **Khata Auto-Registration**: Order creation automatically validates and registers newly entered customers into `customerStore` with active billing address and opening ledger balance.
+  - **Dynamic Date Initialization**: Replaced hardcoded May 2024 delivery date with live local dynamic date resolution (`toLocaleDateString`).
+  - **Inventory & Order Pipeline Synchronization**: Submitting a manual order registers the order in `orderStore` and automatically executes `recordSaleDeduction` in `inventoryStore` to decrement catalog stock and log stock adjustment audit trails.
+  - **Build Verification**: Clean production build for `@repo/merchant` (`tsc && vite build` in 10.14s) and 204/204 automated tests passing across 28 test suites.

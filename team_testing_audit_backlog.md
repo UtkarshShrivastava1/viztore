@@ -37,7 +37,7 @@ This document serves as the master engineering log for all findings, functional 
 | `AUDIT-011` | Dynamic Category-Specific Product Attributes | Merchant Hub | Catalog | Functional Gap | P1 | Medium | Logged 📝 |
 | `AUDIT-012` | Order Arrival Product Physical Location / Aisle Tagging | Merchant Hub | Orders / Warehouse | Feature | P2 | Medium | Logged 📝 |
 | `AUDIT-013` | Duplicate Account Prevention on Identity Attributes | Backend | Auth / Identity | Security / Data | P0 | Medium | DONE ✅ |
-| `AUDIT-014` | Merchant Manual "Create Order" Blocker: Customer Search ReadOnly & Form Missing | Merchant Hub | POS / Orders | Bug / Blocker | P0 | Medium | Logged 📝 |
+| `AUDIT-014` | Merchant Manual "Create Order" Blocker: Customer Search ReadOnly & Form Missing | Merchant Hub | POS / Orders | Bug / Blocker | P0 | Medium | DONE ✅ |
 | `AUDIT-015` | Merchant Catalog Filter & Search State Breakdown | Merchant Hub | Catalog | Bug / Defect | P1 | Low | Logged 📝 |
 | `AUDIT-016` | Catalog Edit Product Modal Glitches & Field Binding | Merchant Hub | Catalog | Bug / Defect | P2 | Low | Logged 📝 |
 | `AUDIT-017` | Inventory Module Hardening & Catalog Synchronization | Merchant Hub | Inventory | Bug / UX | P0 | High | DONE ✅ |
@@ -447,7 +447,7 @@ This document serves as the master engineering log for all findings, functional 
 - **Expected**: Products support an optional `shelfLocation` tag (e.g. `Aisle 3 - Rack B` or `Shelf F-12`). This location displays directly on the order item list and printed packing slip for fast picking.
 - **Target Files**: `apps/merchant/src/components/orders/OrderDetailModal.tsx`, `apps/backend/src/modules/catalog/product.model.ts`.
 
-#### [AUDIT-014] Merchant Manual "Create Order" Blocker: Customer Search ReadOnly & Form Missing
+#### [AUDIT-014] Merchant Manual "Create Order" Blocker: Customer Search ReadOnly & Form Missing (DONE ✅)
 - **Layer**: Frontend (`apps/merchant`)
 - **Module**: Orders / Create Order (`CreateOrderPage.tsx`)
 - **Type**: Functional Blocker / Bug | **Severity**: P0 (Blocker) | **Complexity**: Medium
@@ -1379,7 +1379,7 @@ Executing strictly in this order guarantees that **every data model, schema cont
   4. `[AUDIT-017]` Inventory Module Hardening & Catalog Synchronization (single stock source of truth). (DONE ✅)
   5. `[AUDIT-051]` Merchant Hub Route-Based Navigation Overhaul (true URL paths `/dashboard/*`). (DONE ✅)
   6. `[AUDIT-052]` Customer Dynamic Category Route Architecture (`/category/[slug]`). (DONE ✅)
-  7. `[AUDIT-014]` Merchant Manual "Create Order" Blocker (remove `readOnly` lock on customer search).
+  7. `[AUDIT-014]` Merchant Manual "Create Order" Blocker (remove `readOnly` lock on customer search). (DONE ✅)
   8. `[AUDIT-003]` Customer Storefront Search Bar Fix (active input, debounced live query).
   9. `[AUDIT-026]` Global System Date & Timezone Synchronization (UTC storage, IST rendering).
 

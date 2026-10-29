@@ -10,6 +10,8 @@ import {
   X,
 } from 'lucide-react';
 import { useOrderStore } from '../stores/orderStore.js';
+import { useCustomerStore, Customer } from '../stores/customerStore.js';
+import { UserPlus } from 'lucide-react';
 import { useInventoryStore } from '../stores/inventoryStore.js';
 
 interface CreateOrderPageProps {
@@ -36,11 +38,14 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
   const { addManualOrder } = useOrderStore();
 
   // State
+  const customers = useCustomerStore((state) => state.customers);
   const [customerType, setCustomerType] = useState<'existing' | 'new'>('existing');
-  const [customerName, setCustomerName] = useState('Rohan Verma');
-  const [customerEmail, setCustomerEmail] = useState('rohanverma@gmail.com');
-  const [customerPhone, setCustomerPhone] = useState('+91 98765 43210');
+  const [customerName, setCustomerName] = useState(() => customers[0]?.name || 'Rohan Verma');
+  const [customerEmail, setCustomerEmail] = useState(() => customers[0]?.email || 'rohanverma@gmail.com');
+  const [customerPhone, setCustomerPhone] = useState(() => customers[0]?.phone || '+91 98765 43210');
   const [isEditingCustomer, setIsEditingCustomer] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const [deliveryType, setDeliveryType] = useState<'delivery' | 'pickup'>('delivery');
   const [addressList, setAddressList] = useState<string[]>([
@@ -51,7 +56,35 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
   const [isAddingAddress, setIsAddingAddress] = useState(false);
   const [newAddressInput, setNewAddressInput] = useState('');
 
-  const [deliveryDate, setDeliveryDate] = useState('14 May 2024');
+  const [deliveryDate, setDeliveryDate] = useState(() => {
+    const today = new Date();
+    return today.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  });
+
+  const filteredCustomers = React.useMemo(() => {
+    if (!searchQuery.trim()) return customers.slice(0, 5);
+    const q = searchQuery.toLowerCase();
+    return customers.filter(
+      (c) =>
+        c.name.toLowerCase().includes(q) ||
+        c.phone.toLowerCase().includes(q) ||
+        (c.email && c.email.toLowerCase().includes(q))
+    );
+  }, [customers, searchQuery]);
+
+  const handleSelectCustomer = (c: Customer) => {
+    setCustomerName(c.name);
+    setCustomerPhone(c.phone);
+    setCustomerEmail(c.email || `${c.name.toLowerCase().replace(/\s+/g, '')}@example.com`);
+    if (c.billingAddress?.addressLine1) {
+      const fullAddr = `${c.billingAddress.addressLine1}, ${c.billingAddress.city || 'Bhilai'} - ${c.billingAddress.pincode || '490006'}`;
+      setDeliveryAddress(fullAddr);
+      setAddressList((prev) => (prev.includes(fullAddr) ? prev : [fullAddr, ...prev]));
+    }
+    setSearchQuery(c.name);
+    setIsSearchOpen(false);
+    setCustomerType('existing');
+  };
   const [deliveryTimeSlot, setDeliveryTimeSlot] = useState('');
   const [deliveryPartner, setDeliveryPartner] = useState('');
   const [otp] = useState('4827');
@@ -107,6 +140,38 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
     if (items.length === 0) {
       setErrorMessage('Please add at least one item to generate this order.');
       return;
+    }
+
+    if (customerType === 'new') {
+      if (!customerName.trim() || !customerPhone.trim()) {
+        setErrorMessage('Please provide customer name and phone number for the new customer.');
+        return;
+      }
+      if (!deliveryAddress.trim()) {
+        setErrorMessage('Please provide a delivery address for the new customer.');
+        return;
+      }
+      // Register newly created customer in customerStore Khata
+      useCustomerStore.getState().addCustomer({
+        name: customerName.trim(),
+        phone: customerPhone.trim(),
+        email:
+          customerEmail.trim() ||
+          `${customerName.trim().toLowerCase().replace(/\s+/g, '')}@example.com`,
+        customerType: 'Individual',
+        paymentTerms: 'Immediate',
+        creditPeriodDays: 0,
+        status: 'active',
+        location: 'Bhilai, Chhattisgarh',
+        billingAddress: {
+          addressLine1: deliveryAddress.trim(),
+          city: 'Bhilai',
+          state: 'Chhattisgarh',
+          pincode: '490006',
+          country: 'India',
+          sameAsShipping: true,
+        },
+      });
     }
 
     setErrorMessage(null);
@@ -283,19 +348,56 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
               </label>
             </div>
 
-            {/* Customer Search Dropdown */}
-            <div className="relative mb-3.5">
-              <input
-                type="text"
-                readOnly
-                placeholder="Search customer by name, phone or email..."
-                className="w-full pl-3.5 pr-8 py-2 rounded-xl border border-slate-200 text-xs text-slate-700 bg-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 shadow-2xs cursor-pointer"
-              />
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-            </div>
+            {customerType === 'existing' ? (
+              <>
+                {/* Customer Search Dropdown */}
+                <div className="relative mb-3.5">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setIsSearchOpen(true);
+                    }}
+                    onFocus={() => setIsSearchOpen(true)}
+                    placeholder="Search customer by name, phone or email..."
+                    className="w-full pl-3.5 pr-8 py-2 rounded-xl border border-slate-200 text-xs text-slate-700 bg-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 shadow-2xs"
+                  />
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
 
-            {/* Verified / Editable Customer Card */}
-            <div className="p-3.5 rounded-xl border border-slate-200/90 bg-white relative shadow-2xs">
+                  {/* Autocomplete Dropdown List */}
+                  {isSearchOpen && (
+                    <div className="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl border border-slate-200 shadow-xl z-30 max-h-56 overflow-y-auto divide-y divide-slate-100">
+                      {filteredCustomers.length > 0 ? (
+                        filteredCustomers.map((c) => (
+                          <button
+                            key={c.id}
+                            type="button"
+                            onClick={() => handleSelectCustomer(c)}
+                            className="w-full px-3.5 py-2.5 text-left hover:bg-blue-50/50 flex items-center justify-between transition-colors cursor-pointer"
+                          >
+                            <div>
+                              <div className="text-xs font-bold text-slate-900">{c.name}</div>
+                              <div className="text-[11px] text-slate-500">
+                                {c.phone} {c.email ? `• ${c.email}` : ''}
+                              </div>
+                            </div>
+                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-600">
+                              {c.customerType || 'Customer'}
+                            </span>
+                          </button>
+                        ))
+                      ) : (
+                        <div className="p-3 text-center text-xs text-slate-400">
+                          No existing customers match "{searchQuery}"
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Verified / Editable Customer Card */}
+                <div className="p-3.5 rounded-xl border border-slate-200/90 bg-white relative shadow-2xs">
               {isEditingCustomer ? (
                 <div className="space-y-2.5">
                   <div className="text-xs font-bold text-slate-900">Edit Customer Information</div>
@@ -381,6 +483,58 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
                 </div>
               )}
             </div>
+              </>
+            ) : (
+              /* Inline New Customer Registration Form */
+              <div className="p-4 rounded-xl border border-blue-200 bg-blue-50/20 space-y-3 shadow-2xs">
+                <div className="text-xs font-bold text-blue-900 flex items-center gap-1.5 pb-1 border-b border-blue-100">
+                  <UserPlus className="w-4 h-4 text-blue-600" />
+                  <span>New Customer Information</span>
+                </div>
+                <div>
+                  <label className="text-[11px] text-slate-600 font-semibold block mb-1">Full Name *</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Rahul Sharma"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    className="w-full px-3 py-1.5 border border-slate-200 bg-white rounded-lg text-xs focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-[11px] text-slate-600 font-semibold block mb-1">Mobile Number *</label>
+                    <input
+                      type="text"
+                      placeholder="+91 98765 43210"
+                      value={customerPhone}
+                      onChange={(e) => setCustomerPhone(e.target.value)}
+                      className="w-full px-3 py-1.5 border border-slate-200 bg-white rounded-lg text-xs focus:ring-1 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] text-slate-600 font-semibold block mb-1">Email Address</label>
+                    <input
+                      type="email"
+                      placeholder="customer@example.com"
+                      value={customerEmail}
+                      onChange={(e) => setCustomerEmail(e.target.value)}
+                      className="w-full px-3 py-1.5 border border-slate-200 bg-white rounded-lg text-xs focus:ring-1 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[11px] text-slate-600 font-semibold block mb-1">Delivery Address *</label>
+                  <textarea
+                    rows={2}
+                    placeholder="Street, Flat/Building, Locality, Bhilai - 490006"
+                    value={deliveryAddress}
+                    onChange={(e) => setDeliveryAddress(e.target.value)}
+                    className="w-full px-3 py-1.5 border border-slate-200 bg-white rounded-lg text-xs focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
