@@ -17,7 +17,7 @@ function ProductsContent() {
   const query: Partial<ProductQueryDto> = useMemo(() => {
     const rawCategory = searchParams.get('category');
     return {
-      search: searchParams.get('search') || undefined,
+      search: searchParams.get('search') || searchParams.get('q') || undefined,
       category: (rawCategory as ProductCategory) || undefined,
       sort: (searchParams.get('sort') as ProductSortOption) || ProductSortOption.RELEVANCE,
       page: parseInt(searchParams.get('page') || '1'),
@@ -44,6 +44,7 @@ function ProductsContent() {
     } else {
       params.delete(key);
       if (key === 'sub') params.delete('subcategory');
+      if (key === 'search') params.delete('q');
     }
     // Reset to page 1 when changing filters
     if (key !== 'page') params.set('page', '1');
