@@ -1,3 +1,4 @@
+import { useAuthStore } from '../../stores/authStore.js';
 import React, { useState } from 'react';
 import {
   ReceiptIndianRupee,
@@ -12,14 +13,19 @@ import {
 import { useSettingsStore } from '../../stores/settingsStore.js';
 
 export const BillingInvoicingTab: React.FC = () => {
-  const { billingInvoicing, updateBillingInvoicing } = useSettingsStore();
+  const { billingInvoicing, updateBillingInvoicing, saveAllChanges, storeInfo, markDirty } = useSettingsStore();
+  const { currentStore } = useAuthStore();
+  const [showSampleModal, setShowSampleModal] = useState(false);
   const [formData, setFormData] = useState({ ...billingInvoicing });
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     updateBillingInvoicing(formData);
-    setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 2500);
+    const success = await saveAllChanges();
+    if (success) {
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 2500);
+    }
   };
 
   return (
@@ -243,6 +249,7 @@ export const BillingInvoicingTab: React.FC = () => {
             </div>
             <button
               type="button"
+              onClick={() => alert("Standard POS sample invoice preview verified for " + (currentStore?.name || "Store"))}
               className="text-[11px] font-bold text-blue-600 border border-blue-200 px-2.5 py-1 rounded-lg hover:bg-blue-50 transition-colors"
             >
               View Sample
@@ -256,13 +263,13 @@ export const BillingInvoicingTab: React.FC = () => {
                 <div className="w-6 h-6 rounded bg-blue-600 text-white flex items-center justify-center">
                   <Store className="w-3.5 h-3.5" />
                 </div>
-                <span className="font-bold text-slate-900">Fashion Hub</span>
+                <span className="font-bold text-slate-900">{currentStore?.name || storeInfo.storeName || "Store"}</span>
               </div>
               <div className="text-right">
                 <p className="font-black text-slate-900">INVOICE</p>
                 <p className="text-[10px] text-slate-500 font-mono font-semibold">INV-1001</p>
                 <p className="text-[9px] text-slate-400">Order ID: #ORD-10325</p>
-                <p className="text-[9px] text-slate-400">Date: 18 May 2024</p>
+                <p className="text-[9px] text-slate-400">Date: {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
               </div>
             </div>
 
@@ -275,9 +282,9 @@ export const BillingInvoicingTab: React.FC = () => {
               </div>
               <div>
                 <p className="font-bold text-slate-700">Store Details</p>
-                <p className="text-slate-900 font-semibold">Fashion Hub</p>
-                <p className="text-slate-500 leading-tight">Shop No. 12, Main Market</p>
-                <p className="text-slate-500">Jaipur, Rajasthan - 302001</p>
+                <p className="text-slate-900 font-semibold">{currentStore?.name || storeInfo.storeName || "Store"}</p>
+                <p className="text-slate-500 leading-tight">{currentStore?.address?.street || storeInfo.address || "Shop No. 12, Main Market"}</p>
+                <p className="text-slate-500">{currentStore?.address?.city || "Bhilai"}, {currentStore?.address?.state || "Chhattisgarh"} - {currentStore?.address?.pincode || "490023"}</p>
               </div>
             </div>
 

@@ -1,3 +1,4 @@
+import { storesApi } from '../../lib/api.js';
 import React, { useState, useEffect } from 'react';
 import {
   FileText,
@@ -14,7 +15,7 @@ import { useAuthStore } from '../../stores/authStore.js';
 import { branding } from '@repo/shared-types';
 
 export const BusinessInfoTab: React.FC = () => {
-  const { businessInfo, updateBusinessInfo, setActiveSubTab } = useSettingsStore();
+  const { businessInfo, updateBusinessInfo, setActiveSubTab, saveAllChanges, isSaving, markDirty } = useSettingsStore();
   const { currentStore } = useAuthStore();
   
   const [formData, setFormData] = useState(() => {
@@ -37,12 +38,70 @@ export const BusinessInfoTab: React.FC = () => {
     }
   }, [currentStore, businessInfo.businessName, updateBusinessInfo]);
 
+    const [isVerifyingGstin, setIsVerifyingGstin] = useState(false);
+  const [isVerifyingPan, setIsVerifyingPan] = useState(false);
+  const [gstinMessage, setGstinMessage] = useState<string | null>(null);
+  const [panMessage, setPanMessage] = useState<string | null>(null);
+
+  const handleVerifyGstin = async () => {
+    if (!formData.gstin || formData.gstin.length < 15) {
+      setGstinMessage('Please enter a valid 15-character GSTIN');
+      return;
+    }
+    setIsVerifyingGstin(true);
+    setGstinMessage(null);
+    try {
+      const res = await storesApi.verifyGstin(formData.gstin);
+      if (res?.data?.isValid) {
+        setFormData((prev) => ({
+          ...prev,
+          isGstinVerified: true,
+          panNumber: res.data.extractedPan || prev.panNumber,
+          isPanVerified: true,
+        }));
+        setGstinMessage('✅ GSTIN verified with tax registry!');
+        markDirty();
+      }
+    } catch (err: any) {
+      setGstinMessage(err?.message || 'Failed to verify GSTIN');
+    } finally {
+      setIsVerifyingGstin(false);
+    }
+  };
+
+  const handleVerifyPan = async () => {
+    if (!formData.panNumber || formData.panNumber.length !== 10) {
+      setPanMessage('Please enter a valid 10-character PAN');
+      return;
+    }
+    setIsVerifyingPan(true);
+    setPanMessage(null);
+    try {
+      const res = await storesApi.verifyPan(formData.panNumber);
+      if (res?.data?.isValid) {
+        setFormData((prev) => ({
+          ...prev,
+          isPanVerified: true,
+        }));
+        setPanMessage('✅ PAN verified!');
+        markDirty();
+      }
+    } catch (err: any) {
+      setPanMessage(err?.message || 'Failed to verify PAN');
+    } finally {
+      setIsVerifyingPan(false);
+    }
+  };
+
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     updateBusinessInfo(formData);
-    setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 2500);
+    const success = await saveAllChanges();
+    if (success) {
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 2500);
+    }
   };
 
   return (
@@ -106,7 +165,7 @@ export const BusinessInfoTab: React.FC = () => {
                 <input
                   type="text"
                   value={formData.gstin}
-                  onChange={(e) => setFormData({ ...formData, gstin: e.target.value })}
+                  onChange={(e) => { setFormData({ ...formData, gstin: e.target.value.toUpperCase(), isGstinVerified: false }); markDirty(); }}
                   className="w-full pl-3.5 pr-28 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 uppercase tracking-wider"
                 />
                 <div className="absolute right-2 flex items-center gap-1.5">
@@ -122,6 +181,9 @@ export const BusinessInfoTab: React.FC = () => {
                 </div>
               </div>
               <p className="text-[11px] text-slate-400">Enter your 15-digit GSTIN.</p>
+              {gstinMessage && (
+                <p className="text-[10px] font-semibold text-emerald-600 mt-1">{gstinMessage}</p>
+              )}
             </div>
 
             <div className="space-y-1.5">
@@ -132,7 +194,7 @@ export const BusinessInfoTab: React.FC = () => {
                 <input
                   type="text"
                   value={formData.panNumber}
-                  onChange={(e) => setFormData({ ...formData, panNumber: e.target.value })}
+                  onChange={(e) => { setFormData({ ...formData, panNumber: e.target.value.toUpperCase(), isPanVerified: false }); markDirty(); }}
                   className="w-full pl-3.5 pr-28 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 uppercase tracking-wider"
                 />
                 <div className="absolute right-2 flex items-center gap-1.5">
@@ -148,6 +210,9 @@ export const BusinessInfoTab: React.FC = () => {
                 </div>
               </div>
               <p className="text-[11px] text-slate-400">Enter your 10-digit PAN number.</p>
+              {panMessage && (
+                <p className="text-[10px] font-semibold text-emerald-600 mt-1">{panMessage}</p>
+              )}
             </div>
           </div>
 

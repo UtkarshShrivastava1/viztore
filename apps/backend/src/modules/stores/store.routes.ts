@@ -20,6 +20,11 @@ const router = Router();
 // Merchant 6-Step Onboarding Pipeline
 // ==========================================
 router.post(
+  ['/verify-pan', '/onboarding/verify-pan'],
+  storeController.verifyPan,
+);
+
+router.post(
   '/onboarding/verify-gstin',
   onboardingController.verifyGstin,
 );
@@ -90,6 +95,28 @@ router.post(
   roleGuard(UserRole.MERCHANT, UserRole.ADMIN),
   validateRequest({ body: createStoreSchema }),
   storeController.createStore,
+);
+
+
+router.get(
+  '/:id/settings',
+  authGuard,
+  roleGuard(UserRole.MERCHANT, UserRole.ADMIN),
+  storeController.getStoreSettings,
+);
+
+router.patch(
+  '/:id/settings',
+  authGuard,
+  roleGuard(UserRole.MERCHANT, UserRole.ADMIN),
+  storeController.updateStoreSettings,
+);
+
+router.put(
+  '/:id/settings',
+  authGuard,
+  roleGuard(UserRole.MERCHANT, UserRole.ADMIN),
+  storeController.updateStoreSettings,
 );
 
 router.patch(

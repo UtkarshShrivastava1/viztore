@@ -336,3 +336,136 @@ export async function getStoreRatings(storeId: string): Promise<{
   };
 }
 
+
+/**
+ * Verify PAN format and determine entity classification
+ */
+export async function verifyPan(pan: string): Promise<{
+  isValid: boolean;
+  pan: string;
+  entityType: string;
+  message: string;
+}> {
+  const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+  const normalized = pan.toUpperCase().trim();
+  if (!panRegex.test(normalized)) {
+    throw AppError.badRequest('Invalid PAN syntax. Must be 10 alphanumeric characters (e.g. ABCDE1234F)', 'INVALID_PAN_FORMAT');
+  }
+
+  const fourthChar = normalized[3];
+  const entityMap: Record<string, string> = {
+    P: 'Individual / Proprietor',
+    C: 'Company / Private Limited',
+    H: 'Hindu Undivided Family (HUF)',
+    F: 'Partnership Firm / LLP',
+    A: 'Association of Persons (AOP)',
+    T: 'Trust',
+    B: 'Body of Individuals (BOI)',
+    L: 'Local Authority',
+    J: 'Artificial Juridical Person',
+    G: 'Government Agency',
+  };
+
+  const entityType = entityMap[fourthChar] || 'Business Entity';
+
+  return {
+    isValid: true,
+    pan: normalized,
+    entityType,
+    message: `Valid PAN verified for ${entityType}`,
+  };
+}
+
+/**
+ * Fetch complete store configuration and settings
+ */
+export async function getStoreSettings(storeId: string, ownerId: string): Promise<any> {
+  const store = await StoreModel.findById(storeId);
+  if (!store) {
+    throw AppError.notFound('Store not found', 'STORE_NOT_FOUND');
+  }
+
+  if (store.ownerId.toString() !== ownerId) {
+    throw AppError.forbidden('You are not authorized to view settings for this store', 'STORE_ACCESS_DENIED');
+  }
+
+  return {
+    storeId: store.id,
+    name: store.name,
+    description: store.description,
+    category: store.category,
+    logoUrl: store.logoUrl,
+    bannerUrl: store.bannerUrl,
+    address: store.address,
+    location: store.location,
+    operatingHours: store.operatingHours,
+    deliveryRadiusKm: store.deliveryRadiusKm,
+    phone: store.phone,
+    email: store.email,
+    legalDetails: store.legalDetails,
+    bankDetails: store.bankDetails,
+    settings: store.settings || {},
+  };
+}
+
+/**
+ * Persist store configuration and settings
+ */
+export async function updateStoreSettings(
+  storeId: string,
+  ownerId: string,
+  payload: any,
+): Promise<any> {
+  const store = await StoreModel.findById(storeId);
+  if (!store) {
+    throw AppError.notFound('Store not found', 'STORE_NOT_FOUND');
+  }
+
+  if (store.ownerId.toString() !== ownerId) {
+    throw AppError.forbidden('You are not authorized to update settings for this store', 'STORE_ACCESS_DENIED');
+  }
+
+  if (payload.name) store.name = payload.name;
+  if (payload.description !== undefined) store.description = payload.description;
+  if (payload.category) store.category = payload.category;
+  if (payload.logoUrl !== undefined) store.logoUrl = payload.logoUrl;
+  if (payload.bannerUrl !== undefined) store.bannerUrl = payload.bannerUrl;
+  if (payload.address) store.address = { ...store.address, ...payload.address };
+  if (payload.operatingHours) store.operatingHours = { ...store.operatingHours, ...payload.operatingHours };
+  if (payload.deliveryRadiusKm !== undefined) store.deliveryRadiusKm = payload.deliveryRadiusKm;
+  if (payload.phone !== undefined) store.phone = payload.phone;
+  if (payload.email !== undefined) store.email = payload.email;
+  if (payload.legalDetails) store.legalDetails = { ...store.legalDetails, ...payload.legalDetails };
+  if (payload.bankDetails) store.bankDetails = { ...store.bankDetails, ...payload.bankDetails };
+  if (payload.settings) {
+    store.settings = {
+      ...store.settings,
+      ...payload.settings,
+      billing: { ...(store.settings as any)?.billing, ...payload.settings?.billing },
+      tax: { ...(store.settings as any)?.tax, ...payload.settings?.tax },
+      payments: { ...(store.settings as any)?.payments, ...payload.settings?.payments },
+      shipping: { ...(store.settings as any)?.shipping, ...payload.settings?.shipping },
+      notifications: { ...(store.settings as any)?.notifications, ...payload.settings?.notifications },
+    };
+  }
+
+  await store.save();
+
+  return {
+    storeId: store.id,
+    name: store.name,
+    description: store.description,
+    category: store.category,
+    logoUrl: store.logoUrl,
+    bannerUrl: store.bannerUrl,
+    address: store.address,
+    location: store.location,
+    operatingHours: store.operatingHours,
+    deliveryRadiusKm: store.deliveryRadiusKm,
+    phone: store.phone,
+    email: store.email,
+    legalDetails: store.legalDetails,
+    bankDetails: store.bankDetails,
+    settings: store.settings,
+  };
+}

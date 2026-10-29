@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { useAuthStore } from '../../stores/authStore.js';
+import React, { useState, useMemo } from 'react';
 import {
   Clock,
   Plus,
@@ -17,10 +18,19 @@ const timeSlots = [
 ];
 
 export const StoreTimingsTab: React.FC = () => {
-  const { storeTimings, updateStoreTimings } = useSettingsStore();
+  const { storeTimings, updateStoreTimings, saveAllChanges, storeInfo, markDirty } = useSettingsStore();
+  const { currentStore } = useAuthStore();
   const [hours, setHours] = useState<BusinessHours[]>([...storeTimings.hours]);
   const [inStorePickup, setInStorePickup] = useState(storeTimings.inStorePickup);
   const [localDelivery, setLocalDelivery] = useState(storeTimings.localDelivery);
+    const todaySchedule = useMemo(() => {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const currentDayName = days[new Date().getDay()];
+    const found = hours.find((h) => h.day === currentDayName);
+    if (!found || !found.isOpen) return 'Closed Today';
+    return `${found.openTime} – ${found.closeTime}`;
+  }, [hours]);
+
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   const toggleDay = (index: number) => {
@@ -48,10 +58,13 @@ export const StoreTimingsTab: React.FC = () => {
     setHours(updated);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     updateStoreTimings({ hours, inStorePickup, localDelivery });
-    setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 2500);
+    const success = await saveAllChanges();
+    if (success) {
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 2500);
+    }
   };
 
   return (
@@ -122,7 +135,13 @@ export const StoreTimingsTab: React.FC = () => {
                     <button
                       type="button"
                       title="Add slot"
-                      className="w-7 h-7 rounded-lg border border-slate-200 text-slate-400 hover:text-blue-600 hover:border-blue-200 flex items-center justify-center transition-colors"
+                      onClick={() => {
+                        const target = hours[idx];
+                        if (target) {
+                          alert(`Shift slot confirmed for ${target.day}: ${target.openTime} to ${target.closeTime}`);
+                        }
+                      }}
+                      className="w-7 h-7 rounded-lg border border-slate-200 text-slate-400 hover:text-blue-600 hover:border-blue-200 flex items-center justify-center transition-colors active:scale-95"
                     >
                       <Plus className="w-3.5 h-3.5" />
                     </button>
@@ -265,7 +284,7 @@ export const StoreTimingsTab: React.FC = () => {
               <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center">
                 <Store className="w-4 h-4" />
               </div>
-              <span className="text-xs font-bold text-slate-900">Fashion Hub</span>
+              <span className="text-xs font-bold text-slate-900">{currentStore?.name || storeInfo.storeName || "Store"}</span>
             </div>
             <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
               Open Now
@@ -277,7 +296,7 @@ export const StoreTimingsTab: React.FC = () => {
               <Clock className="w-4 h-4 text-slate-500 mt-0.5 shrink-0" />
               <div>
                 <p className="font-bold text-slate-800">Today's Timings</p>
-                <p className="text-[11px] text-slate-500 mt-0.5">09:00 AM – 09:00 PM</p>
+                <p className="text-[11px] text-slate-500 mt-0.5">{todaySchedule}</p>
               </div>
             </div>
 

@@ -84,6 +84,42 @@ const bankDetailsSchema = new Schema<IStoreBankDetails>(
   { _id: false },
 );
 
+const storeSettingsSchema = new Schema(
+  {
+    billing: {
+      invoicePrefix: { type: String, default: 'INV-' },
+      nextInvoiceNumber: { type: Number, default: 1001 },
+      thermalFormat: { type: String, enum: ['80mm', '58mm', 'a4'], default: '80mm' },
+      receiptFooterNote: { type: String, default: 'Thank you for shopping local with us!' },
+      termsAndConditions: { type: String, default: 'Goods once sold can be returned within 48 hours in original condition.' },
+    },
+    tax: {
+      isTaxInclusive: { type: Boolean, default: true },
+      defaultHsnCode: { type: String, default: '' },
+      applicableGstSlabs: { type: [Number], default: [0, 5, 12, 18, 28] },
+      showTaxBreakdownOnBill: { type: Boolean, default: true },
+    },
+    payments: {
+      autoSweepDaily: { type: Boolean, default: true },
+      settlementCycle: { type: String, enum: ['T+1', 'T+2'], default: 'T+1' },
+      upiId: { type: String, default: '' },
+    },
+    shipping: {
+      acceptReturns: { type: Boolean, default: true },
+      returnWindowHours: { type: Number, default: 48 },
+      conditions: { type: [String], default: ['Unused with tags', 'Original receipt required'] },
+    },
+    notifications: {
+      whatsappCustomerUpdates: { type: Boolean, default: true },
+      merchantSmsAlerts: { type: Boolean, default: true },
+      audioChimeEnabled: { type: Boolean, default: true },
+      lowStockEmailThreshold: { type: Number, default: 5 },
+      dailySalesEmail: { type: Boolean, default: true },
+    },
+  },
+  { _id: false },
+);
+
 const storeSectionSchema = new Schema<IStoreSection>(
   {
     id: { type: String, required: true },
@@ -203,6 +239,12 @@ const storeSchema = new Schema<IStoreDocument>(
       brands: [{ type: String, trim: true }],
     },
     sections: [storeSectionSchema],
+    settings: {
+      type: storeSettingsSchema,
+      default: () => ({}),
+    },
+    phone: { type: String, trim: true },
+    email: { type: String, trim: true },
   },
   {
     timestamps: true,

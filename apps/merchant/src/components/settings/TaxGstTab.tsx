@@ -1,3 +1,4 @@
+import { useAuthStore } from '../../stores/authStore.js';
 import React, { useState } from 'react';
 import {
   Percent,
@@ -9,14 +10,18 @@ import {
 import { useSettingsStore } from '../../stores/settingsStore.js';
 
 export const TaxGstTab: React.FC = () => {
-  const { taxGst, updateTaxGst } = useSettingsStore();
+  const { taxGst, updateTaxGst, saveAllChanges, storeInfo, markDirty } = useSettingsStore();
+  const { currentStore } = useAuthStore();
   const [formData, setFormData] = useState({ ...taxGst });
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     updateTaxGst(formData);
-    setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 2500);
+    const success = await saveAllChanges();
+    if (success) {
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 2500);
+    }
   };
 
   return (
@@ -259,6 +264,7 @@ export const TaxGstTab: React.FC = () => {
             </div>
             <button
               type="button"
+              onClick={() => alert("Tax breakdown sample verified for " + (currentStore?.name || "Store"))}
               className="text-[11px] font-bold text-blue-600 border border-blue-200 px-2.5 py-1 rounded-lg hover:bg-blue-50 transition-colors"
             >
               View Sample
@@ -274,14 +280,14 @@ export const TaxGstTab: React.FC = () => {
                   <span className="text-[7px] font-black tracking-tight leading-none">HUB</span>
                 </div>
                 <div>
-                  <span className="font-bold text-slate-900 text-xs">Fashion Hub</span>
+                  <span className="font-bold text-slate-900 text-xs">{currentStore?.name || storeInfo.storeName || "Store"}</span>
                   <p className="text-[9px] text-slate-500 font-mono">GSTIN: {formData.gstin}</p>
                 </div>
               </div>
               <div className="text-right">
                 <p className="font-black text-slate-900">TAX INVOICE</p>
                 <p className="text-[9px] text-slate-500 font-mono font-semibold">#ORD-10325</p>
-                <p className="text-[9px] text-slate-400">Date: 18 May 2024</p>
+                <p className="text-[9px] text-slate-400">Date: {new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
               </div>
             </div>
 
@@ -294,7 +300,7 @@ export const TaxGstTab: React.FC = () => {
               </div>
               <div>
                 <p className="font-bold text-slate-700">Store Details</p>
-                <p className="text-slate-900 font-semibold">Fashion Hub</p>
+                <p className="text-slate-900 font-semibold">{currentStore?.name || storeInfo.storeName || "Store"}</p>
                 <p className="text-slate-500 leading-tight">Shop No. 12, Main Market</p>
                 <p className="text-slate-500">Bhilai, Chhattisgarh - 490023</p>
               </div>

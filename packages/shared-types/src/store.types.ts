@@ -67,6 +67,40 @@ export interface IStoreBankDetails {
   isVerified?: boolean;
 }
 
+export interface IStoreSettings {
+  billing?: {
+    invoicePrefix?: string;
+    nextInvoiceNumber?: number;
+    thermalFormat?: '80mm' | '58mm' | 'a4';
+    receiptFooterNote?: string;
+    termsAndConditions?: string;
+  };
+  tax?: {
+    isTaxInclusive?: boolean;
+    defaultHsnCode?: string;
+    applicableGstSlabs?: number[];
+    showTaxBreakdownOnBill?: boolean;
+  };
+  payments?: {
+    autoSweepDaily?: boolean;
+    settlementCycle?: 'T+1' | 'T+2';
+    upiId?: string;
+  };
+  shipping?: {
+    acceptReturns?: boolean;
+    returnWindowHours?: number;
+    conditions?: string[];
+  };
+  notifications?: {
+    whatsappCustomerUpdates?: boolean;
+    merchantSmsAlerts?: boolean;
+    audioChimeEnabled?: boolean;
+    lowStockEmailThreshold?: number;
+    dailySalesEmail?: boolean;
+  };
+}
+
+
 export interface IStore {
   _id: string;
   ownerId: string;
@@ -87,6 +121,8 @@ export interface IStore {
   reviewCount: number;
   legalDetails?: IStoreLegalDetails;
   bankDetails?: IStoreBankDetails;
+  settings?: IStoreSettings;
+  email?: string;
   customTaxonomy?: IStoreCustomTaxonomy;
   sections?: IStoreSection[];
   createdAt: string;
@@ -185,6 +221,59 @@ export const createStoreSchema = z.object({
   sections: z.array(storeSectionSchema).optional(),
 });
 
+export const storeLegalDetailsSchema = z.object({
+  gstin: z.string().optional(),
+  pan: z.string().optional(),
+  legalBusinessName: z.string().optional(),
+  signatureUrl: z.string().optional(),
+  isGstVerified: z.boolean().optional(),
+});
+
+export const storeBankDetailsSchema = z.object({
+  accountNumber: z.string().optional(),
+  ifscCode: z.string().optional(),
+  accountHolderName: z.string().optional(),
+  bankName: z.string().optional(),
+  isVerified: z.boolean().optional(),
+});
+
+export const storeSettingsSchema = z.object({
+  billing: z.object({
+    invoicePrefix: z.string().optional(),
+    nextInvoiceNumber: z.number().optional(),
+    thermalFormat: z.enum(['80mm', '58mm', 'a4']).optional(),
+    receiptFooterNote: z.string().optional(),
+    termsAndConditions: z.string().optional(),
+  }).optional(),
+  tax: z.object({
+    isTaxInclusive: z.boolean().optional(),
+    defaultHsnCode: z.string().optional(),
+    applicableGstSlabs: z.array(z.number()).optional(),
+    showTaxBreakdownOnBill: z.boolean().optional(),
+  }).optional(),
+  payments: z.object({
+    autoSweepDaily: z.boolean().optional(),
+    settlementCycle: z.enum(['T+1', 'T+2']).optional(),
+    upiId: z.string().optional(),
+  }).optional(),
+  shipping: z.object({
+    acceptReturns: z.boolean().optional(),
+    returnWindowHours: z.number().optional(),
+    conditions: z.array(z.string()).optional(),
+  }).optional(),
+  notifications: z.object({
+    whatsappCustomerUpdates: z.boolean().optional(),
+    merchantSmsAlerts: z.boolean().optional(),
+    audioChimeEnabled: z.boolean().optional(),
+    lowStockEmailThreshold: z.number().optional(),
+    dailySalesEmail: z.boolean().optional(),
+  }).optional(),
+});
+
+export const verifyPanSchema = z.object({
+  pan: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, 'Invalid PAN format. Must be 10 alphanumeric characters (e.g. ABCDE1234F)'),
+});
+
 export const updateStoreSchema = createStoreSchema.partial().extend({
   isActive: z.boolean().optional(),
   isOpen: z.boolean().optional(),
@@ -192,6 +281,11 @@ export const updateStoreSchema = createStoreSchema.partial().extend({
   slug: z.string().min(2).max(100).optional(),
   logoUrl: z.string().optional(),
   bannerUrl: z.string().optional(),
+  legalDetails: storeLegalDetailsSchema.optional(),
+  bankDetails: storeBankDetailsSchema.optional(),
+  settings: storeSettingsSchema.optional(),
+  phone: z.string().optional(),
+  email: z.string().optional(),
 });
 
 export const nearbyStoresQuerySchema = z.object({

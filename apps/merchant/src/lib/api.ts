@@ -241,14 +241,23 @@ export const storesApi = {
   getMyStore: () =>
     api.get<any>('/stores/me'),
 
+  getStoreSettings: (storeId: string) =>
+    api.get<any>(`/stores/${storeId}/settings`),
+
   updateStoreSettings: (storeId: string, data: unknown) =>
-    api.patch<any>(`/stores/${storeId}`, data),
+    api.patch<any>(`/stores/${storeId}/settings`, data),
 
   updateStoreStatus: (storeId: string, isActive: boolean) =>
     api.patch<any>(`/stores/${storeId}`, { isActive, isOpen: isActive }),
 
   toggleOnlineStatus: (storeId: string, isOpen: boolean) =>
     api.patch<any>(`/stores/${storeId}`, { isActive: isOpen, isOpen }),
+
+  verifyGstin: (gstin: string) =>
+    api.post<any>('/stores/onboarding/verify-gstin', { gstin }),
+
+  verifyPan: (pan: string) =>
+    api.post<any>('/stores/onboarding/verify-pan', { pan }),
 };
 
 export const notificationsApi = {

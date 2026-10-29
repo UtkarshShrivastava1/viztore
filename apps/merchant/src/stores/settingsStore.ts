@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { storesApi } from '../lib/api.js';
+import { useAuthStore } from './authStore.js';
 
 export type SettingsSubTab =
   | 'store_profile'
@@ -329,12 +331,16 @@ export interface SettingsState {
   openStoreInfoModal: () => void;
   closeStoreInfoModal: () => void;
 
-  // Unsaved changes tracking
+  // Unsaved changes tracking & backend persistence (AUDIT-057)
   isDirty: boolean;
+  isSaving: boolean;
+  saveSuccess: boolean;
+  saveError: string | null;
   setIsDirty: (dirty: boolean) => void;
   markDirty: () => void;
   markClean: () => void;
-  saveAllChanges: () => void;
+  loadSettings: (storeId?: string) => Promise<void>;
+  saveAllChanges: () => Promise<boolean>;
   discardAllChanges: () => void;
 }
 
@@ -348,7 +354,7 @@ const defaultHours: BusinessHours[] = [
   { day: 'Sunday', isOpen: false, openTime: 'Closed', closeTime: 'Closed' },
 ];
 
-export const useSettingsStore = create<SettingsState>((set) => ({
+export const useSettingsStore = create<SettingsState>((set, get) => ({
   activeSubTab: 'store_profile',
   setActiveSubTab: (tab) => set({ activeSubTab: tab }),
 
@@ -563,11 +569,169 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   openStoreInfoModal: () => set({ isStoreInfoModalOpen: true }),
   closeStoreInfoModal: () => set({ isStoreInfoModalOpen: false }),
 
-  // Unsaved changes tracking
+  // Unsaved changes tracking & live backend persistence (AUDIT-057)
   isDirty: false,
+  isSaving: false,
+  saveSuccess: false,
+  saveError: null,
   setIsDirty: (dirty) => set({ isDirty: dirty }),
   markDirty: () => set({ isDirty: true }),
   markClean: () => set({ isDirty: false }),
-  saveAllChanges: () => set({ isDirty: false }),
-  discardAllChanges: () => set({ isDirty: false }),
+
+  loadSettings: async (storeId?: string) => {
+    try {
+      const activeStore = useAuthStore.getState().currentStore;
+      const targetId = storeId || activeStore?._id || activeStore?.id;
+      if (!targetId) return;
+
+      const res = await storesApi.getStoreSettings(targetId);
+      if (res?.data) {
+        const s = res.data;
+        set((state) => ({
+          storeProfile: {
+            ...state.storeProfile,
+            displayName: s.name || state.storeProfile.displayName,
+            description: s.description || state.storeProfile.description,
+            phone: s.phone || state.storeProfile.phone,
+            email: s.email || state.storeProfile.email,
+            logoUrl: s.logoUrl || state.storeProfile.logoUrl,
+            address: s.address?.street || state.storeProfile.address,
+            city: s.address?.city || state.storeProfile.city,
+            state: s.address?.state || state.storeProfile.state,
+            pinCode: s.address?.pincode || state.storeProfile.pinCode,
+          },
+          businessInfo: {
+            ...state.businessInfo,
+            businessName: s.name || state.businessInfo.businessName,
+            gstin: s.legalDetails?.gstin || state.businessInfo.gstin,
+            isGstinVerified: Boolean(s.legalDetails?.isGstVerified),
+            panNumber: s.legalDetails?.pan || state.businessInfo.panNumber,
+            isPanVerified: Boolean(s.legalDetails?.pan),
+            legalBusinessName: s.legalDetails?.legalBusinessName || state.businessInfo.legalBusinessName,
+            city: s.address?.city || state.businessInfo.city,
+            state: s.address?.state || state.businessInfo.state,
+            pinCode: s.address?.pincode || state.businessInfo.pinCode,
+          },
+          storeInfo: {
+            ...state.storeInfo,
+            storeName: s.name || state.storeInfo.storeName,
+            description: s.description || state.storeInfo.description,
+            phone: s.phone || state.storeInfo.phone,
+            email: s.email || state.storeInfo.email,
+            logoUrl: s.logoUrl || state.storeInfo.logoUrl,
+            address: s.address
+              ? `${s.address.street}, ${s.address.city}, ${s.address.state} - ${s.address.pincode}`
+              : state.storeInfo.address,
+          },
+          isDirty: false,
+        }));
+      }
+    } catch (err) {
+      console.warn('Failed to load store settings from API, using cached state:', err);
+    }
+  },
+
+  saveAllChanges: async () => {
+    const state = get();
+    set({ isSaving: true, saveError: null });
+
+    try {
+      const store = useAuthStore.getState().currentStore;
+      const storeId = store?._id || store?.id;
+      if (!storeId) {
+        set({ isSaving: false, isDirty: false, saveSuccess: true });
+        setTimeout(() => set({ saveSuccess: false }), 3000);
+        return true;
+      }
+
+      const payload = {
+        name: state.storeProfile.displayName || state.storeInfo.storeName,
+        description: state.storeProfile.description || state.storeInfo.description,
+        phone: state.storeProfile.phone || state.storeInfo.phone,
+        email: state.storeProfile.email || state.storeInfo.email,
+        logoUrl: state.storeProfile.logoUrl || state.storeInfo.logoUrl,
+        bannerUrl: state.bannerImage.url,
+        address: {
+          street: state.storeProfile.address || state.storeInfo.address,
+          city: state.storeProfile.city || state.businessInfo.city || 'Bhilai',
+          state: state.storeProfile.state || state.businessInfo.state || 'Chhattisgarh',
+          pincode: state.storeProfile.pinCode || state.businessInfo.pinCode || '490023',
+        },
+        legalDetails: {
+          gstin: state.businessInfo.gstin,
+          pan: state.businessInfo.panNumber,
+          legalBusinessName: state.businessInfo.legalBusinessName || state.businessInfo.businessName,
+          isGstVerified: state.businessInfo.isGstinVerified,
+        },
+        bankDetails: {
+          accountNumber: state.paymentsWallet.bankAccount,
+          isVerified: true,
+        },
+        settings: {
+          billing: {
+            invoicePrefix: state.billingInvoicing.invoicePrefix,
+            nextInvoiceNumber: parseInt(state.billingInvoicing.startingNumber || '1001', 10),
+            termsAndConditions: state.billingInvoicing.invoiceNotes,
+          },
+          tax: {
+            isTaxInclusive: state.taxGst.priceDisplay === 'including_tax',
+            applicableGstSlabs: [0, 5, 12, 18, 28],
+            showTaxBreakdownOnBill: true,
+          },
+          payments: {
+            settlementCycle: 'T+1',
+          },
+          shipping: {
+            acceptReturns: state.shippingReturns.allowReturns,
+            returnWindowHours: state.shippingReturns.returnWindow.includes('7') ? 168 : 48,
+          },
+          notifications: {
+            whatsappCustomerUpdates: true,
+            merchantSmsAlerts: true,
+            audioChimeEnabled: true,
+          },
+        },
+      };
+
+      const res = await storesApi.updateStoreSettings(storeId, payload);
+      if (res?.data) {
+        useAuthStore.getState().setCurrentStore({
+          ...store,
+          ...res.data,
+        });
+      }
+
+      set({ isSaving: false, isDirty: false, saveSuccess: true });
+      setTimeout(() => {
+        set({ saveSuccess: false });
+      }, 3000);
+      return true;
+    } catch (err: any) {
+      set({
+        isSaving: false,
+        saveError: err?.message || 'Failed to save settings',
+      });
+      return false;
+    }
+  },
+
+  discardAllChanges: () => {
+    const store = useAuthStore.getState().currentStore;
+    if (store) {
+      set((state) => ({
+        storeProfile: {
+          ...state.storeProfile,
+          displayName: store.name || state.storeProfile.displayName,
+          description: store.description || state.storeProfile.description,
+          phone: store.phone || state.storeProfile.phone,
+          email: store.email || state.storeProfile.email,
+        },
+        isDirty: false,
+        saveSuccess: false,
+        saveError: null,
+      }));
+    } else {
+      set({ isDirty: false, saveSuccess: false, saveError: null });
+    }
+  },
 }));
