@@ -268,6 +268,15 @@
   - [x] Synchronized `StoreProfileTab` and `BusinessInfoTab` with active authenticated store (`National Retail Store`) and user contact info
   - [x] Seeded `walletStore` with real transactions, bank accounts, and active balances (₹32,450.00)
   - [x] Verified 100% clean production build (`tsc && vite build`) and documented audit in `live_hardening_and_bug_remediation_audit.md`
+- [x] **Sprint 1: Core Architectural Foundations & Critical Blockers (9/9 Completed 🟢)**:
+  - [x] `[AUDIT-041]` Master Taxonomy Engine, Dynamic Attributes & Statutory HSN Lookup (`Categories.xlsx` into `catalog_taxonomies`, commit `3dc8a2e`)
+  - [x] `[AUDIT-004]` & `[AUDIT-013]` Customer vs. Merchant Tenancy Segregation & Session Boundary (compound unique indexes `{email:1, role:1}` & `{phone:1, role:1}`, commit `04ea857`)
+  - [x] `[AUDIT-017]` Inventory Module Hardening & Catalog Synchronization (bidirectional sync, dynamic threshold `lowStockThreshold ?? 10`, commit `94dee05`)
+  - [x] `[AUDIT-051]` Merchant Hub Route-Based Navigation Overhaul (React Router `/dashboard/*`, browser Back/Forward & F5 restore, commit `dbc3243`)
+  - [x] `[AUDIT-052]` Customer Dynamic Category Route Architecture (`/category/[slug]` across 12+ verticals and faceted dynamic query engine on `/products`, commit `577b1a5`)
+  - [x] `[AUDIT-014]` Merchant Manual "Create Order" Blocker (unblocked customer autocomplete search, inline Khata registration, commit `4565f80`)
+  - [x] `[AUDIT-003]` Customer Storefront Search Bar & Discovery Engine (autocomplete dropdown, category shortcuts, voice search, commit `7d8b6c0`)
+  - [x] `[AUDIT-026]` Global System Date & Timezone Synchronization (ISO 8601 UTC storage with Asia/Kolkata IST presentation, commit `b1f9687`)
 
 - [ ] Merchant staff management & role-based access control (Manager, Cashier, Inventory Clerk)
 - [ ] Merchant marketing suite: promotional store banner manager & coupon builder (Post-Launch Phase 2)

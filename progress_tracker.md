@@ -20,7 +20,7 @@
 | ↳ **Merchant & Admin Panel** | 25% | `[████████████████████]` | **100%** | 🟢 Complete Suite | All 7/7 Modules & Settings Merged (`b92a159`) |
 | ↳ **Customer Web Storefront** | 20% | `[████████████████████]` | **100%** | 🟢 Storefront & Cart Engine | All 4/4 Modular Suites Merged (`e942cc9`) |
 | ↳ **Corporate Marketing Website** | 5% | `[████████████████████]` | **100%** | 🟢 Corporate Hub | 13 Routes Prerendered, White-Label (`@repo/company`) |
-| ↳ **Production Readiness & DevOps** | 20% | `[████████████████████]` | **100%** | 🟢 Staging Live | 204/204 Tests Green (28/28 suites), Monorepo Clean Build |
+| ↳ **Production Readiness & DevOps** | 20% | `[████████████████████]` | **100%** | 🟢 Staging Live | 211/211 Tests Green (29/29 suites), Monorepo Clean Build |
 
 
 
@@ -434,3 +434,16 @@ Every online order placed through `apps/web` generates an authoritative, complia
   - **Dynamic Date Initialization**: Replaced hardcoded May 2024 delivery date with live local dynamic date resolution (`toLocaleDateString`).
   - **Inventory & Order Pipeline Synchronization**: Submitting a manual order registers the order in `orderStore` and automatically executes `recordSaleDeduction` in `inventoryStore` to decrement catalog stock and log stock adjustment audit trails.
   - **Build Verification**: Clean production build for `@repo/merchant` (`tsc && vite build` in 10.14s) and 204/204 automated tests passing across 28 test suites.
+- [x] **Customer Storefront Search Bar & Discovery Engine (`[AUDIT-003]`) 🟢**:
+  - **Mobile & Desktop Reactivity**: Overhauled `SearchBar.tsx` (mobile) and `DesktopHeader.tsx` (desktop) from inert mockups to fully interactive, controlled components with `<form>` submission, clear (`X`) buttons, and query execution.
+  - **Autocomplete & Discovery Palette**: Built live debounced autocomplete dropdowns rendering matching category shortcuts (`Fashion`, `Mobiles`, `Electronics`, `Beauty`, `Grocery`), direct search action triggers, and live catalog product suggestions with thumbnails, pricing, and store attribution.
+  - **Trending Searches**: Integrated trending keyword pills ("T-Shirts", "Smartphones", "Running Shoes", etc.) for instantaneous one-click queries on input focus.
+  - **Browser Web Speech Voice Search**: Implemented `useVoiceSearch` hook integrating `window.SpeechRecognition` / `webkitSpeechRecognition` with pulse animations and automatic speech-to-text execution.
+  - **URL Parameter Alignment**: Synchronized `apps/web/src/app/products/page.tsx` to accept both `search` and legacy `q` query parameters with bidirectional dismissal.
+  - **Build Verification**: Clean `@repo/web` production build (Next.js 14, 32/32 routes compiled successfully). Commit `7d8b6c0`.
+- [x] **Global System Date & Timezone Synchronization (`[AUDIT-026]`) 🟢**:
+  - **Shared Timezone Utilities**: Created `packages/shared-types/src/date.utils.ts` establishing `Asia/Kolkata` (IST, UTC+5:30) as the canonical presentation timezone alongside strict ISO 8601 UTC storage (`toUTCISOString`, `formatDateIST`, `formatDateTimeIST`, `formatTimeIST`, `toISTDateInput`, `getISTDayBounds`).
+  - **Merchant Timezone Synchronization**: Created `apps/merchant/src/lib/dateUtils.ts` and updated `orderStore.ts`, `billingStore.ts`, and `CreateOrderPage.tsx` to eliminate local timezone drift and day-shift display bugs.
+  - **Backend IST Query Windows**: Created `apps/backend/src/shared/utils/date.ts` implementing `buildISTDateQuery` and `buildISTDateRangeQuery` computing exact UTC bounds for calendar days in IST.
+  - **Automated Test Coverage**: Added comprehensive test suite in `apps/backend/src/shared/utils/date.test.ts` (7/7 tests passing).
+  - **Build & Test Verification**: **211/211 automated tests passing across 29 test suites** (`pnpm --filter @repo/backend test`); clean `@repo/merchant` build (`10.37s`). Commit `b1f9687`.
