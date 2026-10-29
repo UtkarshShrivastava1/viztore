@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate, useLocation, useSearchParams, Navigate } from 'react-router-dom';
 import { useAuthStore } from './stores/authStore.js';
 import { useOnboardingStore } from './stores/onboardingStore.js';
 import { SellerLoginPage } from './pages/SellerLoginPage.js';
@@ -52,78 +53,33 @@ import { RefundPolicyPage } from './pages/marketing/legal/RefundPolicyPage.js';
 
 export type AppView = 'landing' | 'login' | 'onboarding' | 'dashboard';
 
+const VALID_TABS: DashboardTab[] = [
+  'overview',
+  'orders',
+  'catalog',
+  'inventory',
+  'billing',
+  'customers',
+  'wallet',
+  'expenses',
+  'assets',
+  'returns',
+  'payouts',
+  'analytics',
+  'marketing',
+  'store',
+  'settings',
+  'support',
+];
+
 export const App: React.FC = () => {
   const { isAuthenticated, initialize } = useAuthStore();
   const { isUnderReview } = useOnboardingStore();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
 
-  const getInitialRoute = (): string => {
-    if (typeof window !== 'undefined') {
-      return window.location.pathname.toLowerCase() || '/';
-    }
-    return '/';
-  };
-
-  const [currentRoute, setCurrentRoute] = useState<string>(getInitialRoute);
-
-  // Determine initial view from URL path or subdomain (e.g. register.<domain>)
-  const getInitialView = (): AppView => {
-    if (typeof window !== 'undefined') {
-      const path = window.location.pathname.toLowerCase();
-      const host = window.location.hostname.toLowerCase();
-      const params = new URLSearchParams(window.location.search);
-
-      // Dedicated subdomain routing (e.g. register.<domain> / register.localhost) or path (/register)
-      if (host.startsWith('register.') || path.startsWith('/register')) {
-        return 'onboarding';
-      }
-
-      if (params.get('view') === 'login' || path.endsWith('/login')) return 'login';
-      if (
-        params.get('view') === 'signup' ||
-        params.get('view') === 'onboarding' ||
-        path.endsWith('/signup') ||
-        path.endsWith('/onboarding')
-      ) {
-        return 'onboarding';
-      }
-      if (params.get('view') === 'dashboard' || path.endsWith('/dashboard')) return 'dashboard';
-      if (path === '/' && localStorage.getItem('access_token')) return 'dashboard';
-    }
-    return 'landing';
-  };
-
-  const [currentView, setCurrentView] = useState<AppView>(getInitialView);
-  const getInitialTab = (): DashboardTab => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const tabParam = params.get('tab') as DashboardTab | null;
-      const validTabs: DashboardTab[] = [
-        'overview',
-        'orders',
-        'catalog',
-        'inventory',
-        'billing',
-        'customers',
-        'wallet',
-        'expenses',
-        'assets',
-        'returns',
-        'payouts',
-        'analytics',
-        'marketing',
-        'store',
-        'settings',
-        'support',
-      ];
-      if (tabParam && validTabs.includes(tabParam)) {
-        return tabParam;
-      }
-    }
-    return 'overview';
-  };
-
-  const [currentTab, setCurrentTab] = useState<DashboardTab>(getInitialTab);
-  const [isCreateOrderView, setIsCreateOrderView] = useState(false);
+  // Layout UI State
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -151,18 +107,66 @@ export const App: React.FC = () => {
   // Global modals
   const [isGlobalAddOpen, setIsGlobalAddOpen] = useState(false);
   const [isGlobalBulkOpen, setIsGlobalBulkOpen] = useState(false);
-  // Dashboard tab selector with History and URL sync
-  const handleSelectTab = useCallback((tab: DashboardTab) => {
-    setCurrentTab(tab);
-    setIsCreateOrderView(false);
-    setIsMobileMenuOpen(false);
-    if (typeof window !== 'undefined') {
-      const url = new URL(window.location.href);
-      url.pathname = '/dashboard';
-      url.searchParams.set('tab', tab);
-      window.history.pushState({ tab }, '', url.toString());
+
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
+
+  // Determine view mode based on Route path & hostname
+  const pathname = location.pathname.toLowerCase();
+  const host = typeof window !== 'undefined' ? window.location.hostname.toLowerCase() : '';
+
+  const isRegisterRoute =
+    host.startsWith('register.') ||
+    pathname === '/register' ||
+    pathname === '/signup' ||
+    pathname === '/onboarding';
+
+  const isLoginRoute = pathname === '/login';
+  const isDashboardRoute = pathname === '/dashboard' || pathname.startsWith('/dashboard/');
+
+  // Derive dashboard active tab from URL path and search params
+  const getTabFromPath = (path: string): DashboardTab => {
+    const clean = path.toLowerCase();
+    if (clean === '/dashboard' || clean === '/dashboard/' || clean === '/dashboard/overview') {
+      return 'overview';
     }
-  }, []);
+    const prefix = '/dashboard/';
+    if (clean.startsWith(prefix)) {
+      const sub = clean.slice(prefix.length).split('/')[0] as DashboardTab;
+      if (VALID_TABS.includes(sub)) {
+        return sub;
+      }
+    }
+    const queryTab = searchParams.get('tab') as DashboardTab | null;
+    if (queryTab && VALID_TABS.includes(queryTab)) {
+      return queryTab;
+    }
+    return 'overview';
+  };
+
+  const currentTab = getTabFromPath(location.pathname);
+  const isCreateOrderView = pathname === '/dashboard/orders/create';
+
+  // Navigation handler for dashboard tabs
+  const handleSelectTab = useCallback(
+    (tab: DashboardTab) => {
+      navigate(tab === 'overview' ? '/dashboard' : `/dashboard/${tab}`);
+      setIsMobileMenuOpen(false);
+    },
+    [navigate]
+  );
+
+  // Marketing & Public navigation handler
+  const navigateTo = useCallback(
+    (route: string) => {
+      navigate(route);
+      if (typeof window !== 'undefined') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    },
+    [navigate]
+  );
 
   // Listen for inter-component merchant navigation events
   useEffect(() => {
@@ -175,412 +179,344 @@ export const App: React.FC = () => {
     return () => window.removeEventListener('merchant:navigate' as any, handleMerchantNavigate);
   }, [handleSelectTab]);
 
-
-  useEffect(() => {
-    initialize();
-  }, [initialize]);
-
-  // Handle browser back/forward buttons
-  useEffect(() => {
-    const handlePopState = (event: PopStateEvent) => {
-      const path = window.location.pathname.toLowerCase();
-      setCurrentRoute(path);
-
-      const isAuth = useAuthStore.getState().isAuthenticated || !!localStorage.getItem('access_token');
-
-      if (path === '/login') {
-        setCurrentView(isAuth ? 'dashboard' : 'login');
-      } else if (path === '/register' || path === '/signup' || path === '/onboarding') {
-        setCurrentView('onboarding');
-      } else if (path === '/dashboard' || path.startsWith('/dashboard')) {
-        setCurrentView('dashboard');
-        const stateTab = (event.state as any)?.tab;
-        const urlParams = new URLSearchParams(window.location.search);
-        const queryTab = urlParams.get('tab') as DashboardTab | null;
-        if (stateTab) {
-          setCurrentTab(stateTab);
-        } else if (queryTab) {
-          setCurrentTab(queryTab);
-        }
-      } else {
-        if (isAuth && (path === '/' || path === '')) {
-          setCurrentView('dashboard');
-        } else {
-          setCurrentView('landing');
-        }
-      }
-    };
-
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
-
-  // Navigation handler
-  const navigateTo = useCallback((route: string) => {
-    const cleanRoute = route.toLowerCase();
-    setCurrentRoute(cleanRoute);
-
-    if (typeof window !== 'undefined') {
-      window.history.pushState(null, '', route);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    if (cleanRoute === '/login') {
-      setCurrentView('login');
-    } else if (
-      cleanRoute === '/register' ||
-      cleanRoute === '/signup' ||
-      cleanRoute === '/onboarding'
-    ) {
-      setCurrentView('onboarding');
-    } else if (cleanRoute === '/dashboard') {
-      setCurrentView('dashboard');
-    } else {
-      setCurrentView('landing');
-    }
-  }, []);
-
-  // If already authenticated and on login or default root, transition to dashboard.
-  useEffect(() => {
-    if (isAuthenticated && currentView === 'login') {
-      setCurrentView('dashboard');
-    } else if (!isAuthenticated && currentView === 'dashboard') {
-      setCurrentView('login');
-    }
-  }, [isAuthenticated, currentView]);
-
-  // Public Marketing Website (23 Mockup Screens)
-  if (currentView === 'landing') {
-    let pageContent: React.ReactNode = null;
-
-    if (currentRoute.startsWith('/sell-online')) {
-      const tab: SellOnlineTab = currentRoute.includes('managestore')
-        ? 'managestore'
-        : currentRoute.includes('ordersdelivery')
-        ? 'ordersdelivery'
-        : currentRoute.includes('sellertools')
-        ? 'sellertools'
-        : 'listproducts';
-
-      pageContent = (
-        <SellOnlinePage
-          initialTab={tab}
-          onNavigate={navigateTo}
-          onStartSelling={() => navigateTo('/register')}
-        />
-      );
-    } else if (currentRoute === '/how-it-works') {
-      pageContent = (
-        <HowItWorksPage
-          onNavigate={navigateTo}
-          onStartSelling={() => navigateTo('/register')}
-        />
-      );
-    } else if (
-      currentRoute === '/how-it-works/localdiscovery' ||
-      currentRoute === '/learn/local-discovery'
-    ) {
-      pageContent = (
-        <LocalDiscoveryPage
-          onNavigate={navigateTo}
-          onStartSelling={() => navigateTo('/register')}
-        />
-      );
-    } else if (currentRoute === '/grow-business/localdiscovery') {
-      pageContent = (
-        <GrowLocalDiscoveryPage
-          onNavigate={navigateTo}
-          onStartSelling={() => navigateTo('/register')}
-        />
-      );
-    } else if (currentRoute === '/pricing') {
-      pageContent = (
-        <PricingPage
-          onNavigate={navigateTo}
-          onStartSelling={() => navigateTo('/register')}
-        />
-      );
-    } else if (currentRoute === '/grow-business') {
-      pageContent = (
-        <GrowBusinessPage
-          onNavigate={navigateTo}
-          onStartSelling={() => navigateTo('/register')}
-        />
-      );
-    } else if (currentRoute === '/learn' || currentRoute === '/learn/guides') {
-      pageContent = (
-        <BusinessGuidesPage
-          onNavigate={navigateTo}
-          onSelectGuide={(slug) => navigateTo(`/learn/guides/${slug}`)}
-          onStartSelling={() => navigateTo('/register')}
-        />
-      );
-    } else if (currentRoute.startsWith('/learn/guides/')) {
-      const slug = currentRoute.replace('/learn/guides/', '');
-      pageContent = (
-        <GuideDetailPage
-          slug={slug}
-          onNavigate={navigateTo}
-          onSelectGuide={(s) => navigateTo(`/learn/guides/${s}`)}
-          onStartSelling={() => navigateTo('/register')}
-        />
-      );
-    } else if (currentRoute === '/learn/tutorials') {
-      pageContent = (
-        <VideoTutorialsPage
-          onNavigate={navigateTo}
-          onStartSelling={() => navigateTo('/register')}
-        />
-      );
-    } else if (currentRoute === '/help') {
-      pageContent = (
-        <HelpCentrePage
-          onNavigate={navigateTo}
-          onSelectGuide={(slug) => navigateTo(`/learn/guides/${slug}`)}
-        />
-      );
-    } else if (currentRoute === '/faqs') {
-      pageContent = <FaqPage onNavigate={navigateTo} />;
-    } else if (currentRoute === '/blog') {
-      pageContent = (
-        <SellerBlogPage
-          onNavigate={navigateTo}
-          onSelectPost={(slug) => navigateTo(`/blog/${slug}`)}
-        />
-      );
-    } else if (currentRoute.startsWith('/blog/')) {
-      const slug = currentRoute.replace('/blog/', '');
-      pageContent = (
-        <BlogDetailPage
-          slug={slug}
-          onNavigate={navigateTo}
-          onSelectPost={(s) => navigateTo(`/blog/${s}`)}
-        />
-      );
-    } else if (currentRoute === '/help/contact' || currentRoute === '/contact') {
-      pageContent = <ContactSupportPage onNavigate={navigateTo} />;
-    } else if (currentRoute === '/terms') {
-      pageContent = <TermsPage onNavigate={navigateTo} />;
-    } else if (currentRoute === '/privacy') {
-      pageContent = <PrivacyPage onNavigate={navigateTo} />;
-    } else if (currentRoute === '/refund-policy') {
-      pageContent = <RefundPolicyPage onNavigate={navigateTo} />;
-    } else {
-      // Default: 1.0.png Merchant Landing Homepage
-      pageContent = (
-        <MerchantHomePage
-          onNavigate={navigateTo}
-          onStartSelling={() => navigateTo('/register')}
-        />
-      );
-    }
-
-    return (
-      <MerchantPublicLayout
-        currentRoute={currentRoute}
-        onNavigate={navigateTo}
-        onGoToLogin={() => navigateTo('/login')}
-        onGoToSignup={() => navigateTo('/register')}
-      >
-        {pageContent}
-      </MerchantPublicLayout>
-    );
-  }
-
-  // Screen 4.png: Floating Seller Login Card
-  if (currentView === 'login') {
-    return (
-      <SellerLoginPage
-        onLoginSuccess={() => setCurrentView('dashboard')}
-        onGoToRegister={() => setCurrentView('onboarding')}
-        onGoToHome={() => navigateTo('/')}
-      />
-    );
-  }
-
-  // Screens 3.png, 5.1.png, 2.png, 5.png, 6.png, 8.png, 7.png: Onboarding Wizard
-  if (currentView === 'onboarding') {
+  // View Resolution:
+  // 1. Onboarding / Register
+  if (isRegisterRoute) {
     return (
       <OnboardingPage
-        onEnterDashboard={() => setCurrentView('dashboard')}
-        onGoToLogin={() => setCurrentView('login')}
-        onGoToHome={() => navigateTo('/')}
+        onEnterDashboard={() => navigate('/dashboard')}
+        onGoToLogin={() => navigate('/login')}
+        onGoToHome={() => navigate('/')}
         onNavigate={navigateTo}
       />
     );
   }
 
-  // Main Merchant Dashboard & Functional Modules
+  // 2. Seller Login
+  if (isLoginRoute) {
+    const isAuth = isAuthenticated || !!localStorage.getItem('access_token');
+    if (isAuth) {
+      return <Navigate to="/dashboard" replace />;
+    }
+    return (
+      <SellerLoginPage
+        onLoginSuccess={() => navigate('/dashboard')}
+        onGoToRegister={() => navigate('/register')}
+        onGoToHome={() => navigate('/')}
+      />
+    );
+  }
+
+  // 3. Merchant Dashboard (Protected)
+  if (isDashboardRoute) {
+    const isAuth = isAuthenticated || !!localStorage.getItem('access_token');
+    if (!isAuth) {
+      return <Navigate to="/login" replace state={{ from: location }} />;
+    }
+
+    return (
+      <div
+        style={
+          {
+            '--sidebar-width': isSidebarCollapsed ? '80px' : `${sidebarWidth}px`,
+          } as React.CSSProperties
+        }
+        className="min-h-screen bg-[#f8fafc] text-slate-800 flex flex-col"
+      >
+        {/* Real-time Socket.io Incoming Order Alert & Melodic Chime Engine */}
+        <LiveOrderSocketListener
+          onNavigateToOrder={() => {
+            navigate('/dashboard/orders');
+          }}
+        />
+
+        {/* Desktop & Mobile Sidebar */}
+        <div className={`${isMobileMenuOpen ? 'block' : 'hidden sm:block'}`}>
+          <Sidebar
+            currentTab={currentTab}
+            onSelectTab={handleSelectTab}
+            isCollapsed={isSidebarCollapsed}
+            onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            sidebarWidth={sidebarWidth}
+            onWidthChange={(w) => {
+              setSidebarWidth(w);
+              try {
+                localStorage.setItem('merchant_sidebar_width', String(w));
+              } catch {
+                // ignore
+              }
+            }}
+            isResizing={isResizingSidebar}
+            onResizingChange={setIsResizingSidebar}
+          />
+        </div>
+
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col">
+          <Header
+            isCollapsed={isSidebarCollapsed}
+            isResizing={isResizingSidebar}
+            onToggleMobileMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            onNavigateToWallet={() => handleSelectTab('wallet')}
+            onNavigateToSettings={(subTab) => {
+              if (subTab) {
+                useSettingsStore.getState().setActiveSubTab(subTab as any);
+              }
+              handleSelectTab('settings');
+            }}
+            onNavigateToSupport={() => handleSelectTab('support')}
+          />
+
+          <main
+            className={`flex-1 p-3.5 sm:px-6 sm:py-4 sm:ml-[var(--sidebar-width)] ${
+              isResizingSidebar ? '' : 'transition-[margin] duration-300'
+            }`}
+          >
+            {currentTab === 'overview' && (
+              <DashboardOverviewPage
+                onNavigate={(tab) => handleSelectTab(tab)}
+                onOpenAddProduct={() => setIsGlobalAddOpen(true)}
+                onOpenBulkUpload={() => setIsGlobalBulkOpen(true)}
+              />
+            )}
+
+            {currentTab === 'orders' &&
+              (isCreateOrderView ? (
+                <CreateOrderPage onBack={() => navigate('/dashboard/orders')} />
+              ) : (
+                <OrdersPage onOpenCreateOrder={() => navigate('/dashboard/orders/create')} />
+              ))}
+
+            {currentTab === 'catalog' && <CatalogPage />}
+
+            {currentTab === 'inventory' && <InventoryPage />}
+
+            {currentTab === 'billing' && <BillingPage />}
+
+            {currentTab === 'customers' && <CustomersPage />}
+
+            {currentTab === 'wallet' && (
+              <WalletPage onNavigateHome={() => handleSelectTab('overview')} />
+            )}
+
+            {currentTab === 'expenses' && (
+              <ExpensesPage onNavigateHome={() => handleSelectTab('overview')} />
+            )}
+
+            {currentTab === 'assets' && (
+              <AssetsPage onNavigateHome={() => handleSelectTab('overview')} />
+            )}
+
+            {currentTab === 'returns' && (
+              <ReturnsPage onNavigateHome={() => handleSelectTab('overview')} />
+            )}
+
+            {currentTab === 'payouts' && (
+              <PayoutsPage onNavigateHome={() => handleSelectTab('overview')} />
+            )}
+
+            {currentTab === 'analytics' && (
+              <AnalyticsPage onNavigateHome={() => handleSelectTab('overview')} />
+            )}
+
+            {currentTab === 'marketing' && (
+              <MarketingPage onNavigateHome={() => handleSelectTab('overview')} />
+            )}
+
+            {currentTab === 'store' && <StoreManagementPage />}
+
+            {currentTab === 'settings' && (
+              <SettingsPage
+                onNavigateToBillingSettings={() => {
+                  handleSelectTab('billing');
+                  useBillingStore.getState().setActiveView('settings');
+                }}
+                onNavigateToSupport={() => handleSelectTab('support')}
+              />
+            )}
+
+            {currentTab === 'support' && (
+              <SupportPage onNavigateHome={() => handleSelectTab('overview')} />
+            )}
+
+            {/* Fallback placeholder for other modules */}
+            {!VALID_TABS.includes(currentTab) && (
+              <div className="p-8 text-center bg-white rounded-2xl border border-slate-200/80 shadow-2xs max-w-xl mx-auto mt-8">
+                <h3 className="text-base font-bold text-slate-800 capitalize">
+                  {currentTab.replace(/_/g, ' ')} Module
+                </h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  Operational analytics and live controls active for this merchant vertical.
+                </p>
+              </div>
+            )}
+          </main>
+        </div>
+
+        {/* Global Modals */}
+        <AddProductModal
+          isOpen={isGlobalAddOpen}
+          onClose={() => setIsGlobalAddOpen(false)}
+          onAddProduct={(p) => {
+            useCatalogStore.getState().updateDraftProduct({
+              name: p.name,
+              category: p.category,
+              sku: p.sku,
+              price: p.price,
+              mrp: p.mrp,
+              stock: p.stock,
+              images: p.imageUrl ? [p.imageUrl] : [],
+            });
+            useCatalogStore.getState().saveDraftAsProduct().catch(() => {});
+            setIsGlobalAddOpen(false);
+          }}
+        />
+
+        <BulkUploadModal
+          isOpen={isGlobalBulkOpen}
+          onClose={() => setIsGlobalBulkOpen(false)}
+          onBulkSuccess={(_c) => {
+            setIsGlobalBulkOpen(false);
+            useCatalogStore.getState().fetchProducts().catch(() => {});
+          }}
+        />
+      </div>
+    );
+  }
+
+  // 4. Public Marketing Website (23 Mockup Screens)
+  let pageContent: React.ReactNode = null;
+
+  if (pathname.startsWith('/sell-online')) {
+    const tab: SellOnlineTab = pathname.includes('managestore')
+      ? 'managestore'
+      : pathname.includes('ordersdelivery')
+      ? 'ordersdelivery'
+      : pathname.includes('sellertools')
+      ? 'sellertools'
+      : 'listproducts';
+
+    pageContent = (
+      <SellOnlinePage
+        initialTab={tab}
+        onNavigate={navigateTo}
+        onStartSelling={() => navigate('/register')}
+      />
+    );
+  } else if (pathname === '/how-it-works') {
+    pageContent = (
+      <HowItWorksPage
+        onNavigate={navigateTo}
+        onStartSelling={() => navigate('/register')}
+      />
+    );
+  } else if (
+    pathname === '/how-it-works/localdiscovery' ||
+    pathname === '/learn/local-discovery'
+  ) {
+    pageContent = (
+      <LocalDiscoveryPage
+        onNavigate={navigateTo}
+        onStartSelling={() => navigate('/register')}
+      />
+    );
+  } else if (pathname === '/grow-business/localdiscovery') {
+    pageContent = (
+      <GrowLocalDiscoveryPage
+        onNavigate={navigateTo}
+        onStartSelling={() => navigate('/register')}
+      />
+    );
+  } else if (pathname === '/pricing') {
+    pageContent = (
+      <PricingPage
+        onNavigate={navigateTo}
+        onStartSelling={() => navigate('/register')}
+      />
+    );
+  } else if (pathname === '/grow-business') {
+    pageContent = (
+      <GrowBusinessPage
+        onNavigate={navigateTo}
+        onStartSelling={() => navigate('/register')}
+      />
+    );
+  } else if (pathname === '/learn' || pathname === '/learn/guides') {
+    pageContent = (
+      <BusinessGuidesPage
+        onNavigate={navigateTo}
+        onSelectGuide={(slug) => navigate(`/learn/guides/${slug}`)}
+        onStartSelling={() => navigate('/register')}
+      />
+    );
+  } else if (pathname.startsWith('/learn/guides/')) {
+    const slug = pathname.replace('/learn/guides/', '');
+    pageContent = (
+      <GuideDetailPage
+        slug={slug}
+        onNavigate={navigateTo}
+        onSelectGuide={(s) => navigate(`/learn/guides/${s}`)}
+        onStartSelling={() => navigate('/register')}
+      />
+    );
+  } else if (pathname === '/learn/tutorials') {
+    pageContent = (
+      <VideoTutorialsPage
+        onNavigate={navigateTo}
+        onStartSelling={() => navigate('/register')}
+      />
+    );
+  } else if (pathname === '/help') {
+    pageContent = (
+      <HelpCentrePage
+        onNavigate={navigateTo}
+        onSelectGuide={(slug) => navigate(`/learn/guides/${slug}`)}
+      />
+    );
+  } else if (pathname === '/faqs') {
+    pageContent = <FaqPage onNavigate={navigateTo} />;
+  } else if (pathname === '/blog') {
+    pageContent = (
+      <SellerBlogPage
+        onNavigate={navigateTo}
+        onSelectPost={(slug) => navigate(`/blog/${slug}`)}
+      />
+    );
+  } else if (pathname.startsWith('/blog/')) {
+    const slug = pathname.replace('/blog/', '');
+    pageContent = (
+      <BlogDetailPage
+        slug={slug}
+        onNavigate={navigateTo}
+        onSelectPost={(s) => navigate(`/blog/${s}`)}
+      />
+    );
+  } else if (pathname === '/help/contact' || pathname === '/contact') {
+    pageContent = <ContactSupportPage onNavigate={navigateTo} />;
+  } else if (pathname === '/terms') {
+    pageContent = <TermsPage onNavigate={navigateTo} />;
+  } else if (pathname === '/privacy') {
+    pageContent = <PrivacyPage onNavigate={navigateTo} />;
+  } else if (pathname === '/refund-policy') {
+    pageContent = <RefundPolicyPage onNavigate={navigateTo} />;
+  } else {
+    // Default: 1.0.png Merchant Landing Homepage
+    pageContent = (
+      <MerchantHomePage
+        onNavigate={navigateTo}
+        onStartSelling={() => navigate('/register')}
+      />
+    );
+  }
+
   return (
-    <div
-      style={
-        {
-          '--sidebar-width': isSidebarCollapsed ? '80px' : `${sidebarWidth}px`,
-        } as React.CSSProperties
-      }
-      className="min-h-screen bg-[#f8fafc] text-slate-800 flex flex-col"
+    <MerchantPublicLayout
+      currentRoute={pathname}
+      onNavigate={navigateTo}
+      onGoToLogin={() => navigate('/login')}
+      onGoToSignup={() => navigate('/register')}
     >
-      {/* Real-time Socket.io Incoming Order Alert & Melodic Chime Engine */}
-      <LiveOrderSocketListener
-        onNavigateToOrder={() => {
-          setCurrentTab('orders');
-          setIsCreateOrderView(false);
-        }}
-      />
-
-      {/* Desktop & Mobile Sidebar */}
-      <div className={`${isMobileMenuOpen ? 'block' : 'hidden sm:block'}`}>
-        <Sidebar
-          currentTab={currentTab}
-          onSelectTab={handleSelectTab}
-          isCollapsed={isSidebarCollapsed}
-          onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-          sidebarWidth={sidebarWidth}
-          onWidthChange={(w) => {
-            setSidebarWidth(w);
-            try {
-              localStorage.setItem('merchant_sidebar_width', String(w));
-            } catch {
-              // ignore
-            }
-          }}
-          isResizing={isResizingSidebar}
-          onResizingChange={setIsResizingSidebar}
-        />
-      </div>
-
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col">
-        <Header
-          isCollapsed={isSidebarCollapsed}
-          isResizing={isResizingSidebar}
-          onToggleMobileMenu={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          onNavigateToWallet={() => setCurrentTab('wallet')}
-          onNavigateToSettings={(subTab) => {
-            if (subTab) {
-              useSettingsStore.getState().setActiveSubTab(subTab as any);
-            }
-            setCurrentTab('settings');
-          }}
-          onNavigateToSupport={() => setCurrentTab('support')}
-        />
-
-        <main
-          className={`flex-1 p-3.5 sm:px-6 sm:py-4 sm:ml-[var(--sidebar-width)] ${
-            isResizingSidebar ? '' : 'transition-[margin] duration-300'
-          }`}
-        >
-          {currentTab === 'overview' && (
-            <DashboardOverviewPage
-              onNavigate={(tab) => {
-                setCurrentTab(tab);
-                setIsCreateOrderView(false);
-              }}
-              onOpenAddProduct={() => setIsGlobalAddOpen(true)}
-              onOpenBulkUpload={() => setIsGlobalBulkOpen(true)}
-            />
-          )}
-
-          {currentTab === 'orders' &&
-            (isCreateOrderView ? (
-              <CreateOrderPage onBack={() => setIsCreateOrderView(false)} />
-            ) : (
-              <OrdersPage onOpenCreateOrder={() => setIsCreateOrderView(true)} />
-            ))}
-
-          {currentTab === 'catalog' && <CatalogPage />}
-
-          {currentTab === 'inventory' && <InventoryPage />}
-
-          {currentTab === 'billing' && <BillingPage />}
-
-          {currentTab === 'customers' && <CustomersPage />}
-
-          {currentTab === 'wallet' && (
-            <WalletPage onNavigateHome={() => setCurrentTab('overview')} />
-          )}
-
-          {currentTab === 'expenses' && (
-            <ExpensesPage onNavigateHome={() => setCurrentTab('overview')} />
-          )}
-
-          {currentTab === 'assets' && (
-            <AssetsPage onNavigateHome={() => setCurrentTab('overview')} />
-          )}
-
-          {currentTab === 'returns' && (
-            <ReturnsPage onNavigateHome={() => setCurrentTab('overview')} />
-          )}
-
-          {currentTab === 'payouts' && (
-            <PayoutsPage onNavigateHome={() => setCurrentTab('overview')} />
-          )}
-
-          {currentTab === 'analytics' && (
-            <AnalyticsPage onNavigateHome={() => setCurrentTab('overview')} />
-          )}
-
-          {currentTab === 'marketing' && (
-            <MarketingPage onNavigateHome={() => setCurrentTab('overview')} />
-          )}
-
-          {currentTab === 'store' && <StoreManagementPage />}
-
-          {currentTab === 'settings' && (
-            <SettingsPage
-              onNavigateToBillingSettings={() => {
-                setCurrentTab('billing');
-                useBillingStore.getState().setActiveView('settings');
-              }}
-              onNavigateToSupport={() => setCurrentTab('support')}
-            />
-          )}
-
-          {currentTab === 'support' && (
-            <SupportPage onNavigateHome={() => setCurrentTab('overview')} />
-          )}
-
-          {/* Fallback placeholder for other modules */}
-          {!['overview', 'orders', 'catalog', 'inventory', 'billing', 'customers', 'wallet', 'expenses', 'assets', 'returns', 'payouts', 'analytics', 'marketing', 'store', 'settings', 'support'].includes(currentTab) && (
-            <div className="p-8 text-center bg-white rounded-2xl border border-slate-200/80 shadow-2xs max-w-xl mx-auto mt-8">
-              <h3 className="text-base font-bold text-slate-800 capitalize">
-                {currentTab.replace(/_/g, ' ')} Module
-              </h3>
-              <p className="text-xs text-slate-500 mt-1">
-                Operational analytics and live controls active for this merchant vertical.
-              </p>
-            </div>
-          )}
-        </main>
-      </div>
-
-      {/* Global Modals */}
-      <AddProductModal
-        isOpen={isGlobalAddOpen}
-        onClose={() => setIsGlobalAddOpen(false)}
-        onAddProduct={(p) => {
-          useCatalogStore.getState().updateDraftProduct({
-            name: p.name,
-            category: p.category,
-            sku: p.sku,
-            price: p.price,
-            mrp: p.mrp,
-            stock: p.stock,
-            images: p.imageUrl ? [p.imageUrl] : [],
-          });
-          useCatalogStore.getState().saveDraftAsProduct().catch(() => {});
-          setIsGlobalAddOpen(false);
-        }}
-      />
-
-      <BulkUploadModal
-        isOpen={isGlobalBulkOpen}
-        onClose={() => setIsGlobalBulkOpen(false)}
-        onBulkSuccess={(_c) => {
-          setIsGlobalBulkOpen(false);
-          useCatalogStore.getState().fetchProducts().catch(() => {});
-        }}
-      />
-    </div>
+      {pageContent}
+    </MerchantPublicLayout>
   );
 };
