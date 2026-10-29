@@ -15,12 +15,20 @@ import { DashboardTab } from './Sidebar.js';
 interface QuickAccessPanelProps {
   onNavigate: (tab: DashboardTab) => void;
   onOpenAddProduct: () => void;
-  onOpenBulkUpload: () => void;
+  onOpenBulkUpload?: () => void;
+  onOpenCreateOrder?: () => void;
+  onOpenAddCustomer?: () => void;
+  onOpenCreateInvoice?: () => void;
+  onOpenRefundOrder?: () => void;
 }
 
 export const QuickAccessPanel: React.FC<QuickAccessPanelProps> = ({
   onNavigate,
   onOpenAddProduct,
+  onOpenCreateOrder,
+  onOpenAddCustomer,
+  onOpenCreateInvoice,
+  onOpenRefundOrder,
 }) => {
   const actions = [
     // Row 1
@@ -31,7 +39,7 @@ export const QuickAccessPanel: React.FC<QuickAccessPanelProps> = ({
       color: 'bg-blue-600 text-white',
       borderColor: 'border-blue-600',
       isPrimary: true,
-      onClick: () => onNavigate('billing'),
+      onClick: onOpenCreateInvoice || (() => onNavigate('billing')),
     },
     {
       label: 'Add Product',
@@ -72,24 +80,24 @@ export const QuickAccessPanel: React.FC<QuickAccessPanelProps> = ({
       icon: RotateCcw,
       color: 'text-teal-600 bg-teal-50',
       borderColor: 'border-teal-200/80',
-      onClick: () => onNavigate('returns'),
+      onClick: onOpenRefundOrder || (() => onNavigate('returns')),
     },
     // Row 3
     {
       label: 'Create Order',
-      sublabel: 'Manual order',
+      sublabel: 'Manual counter POS',
       icon: ShoppingCart,
       color: 'text-sky-600 bg-sky-50',
       borderColor: 'border-sky-200/80',
-      onClick: () => onNavigate('orders'),
+      onClick: onOpenCreateOrder || (() => onNavigate('orders')),
     },
     {
       label: 'Add Customer',
-      sublabel: 'Add new customer',
+      sublabel: 'Register customer',
       icon: UserPlus,
       color: 'text-blue-600 bg-blue-50',
       borderColor: 'border-blue-200/80',
-      onClick: () => onNavigate('customers'),
+      onClick: onOpenAddCustomer || (() => onNavigate('customers')),
     },
     {
       label: 'View Reports',
@@ -102,46 +110,47 @@ export const QuickAccessPanel: React.FC<QuickAccessPanelProps> = ({
   ];
 
   return (
-    <div className="p-3.5 sm:p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs space-y-2 h-full">
-      <div className="flex items-center justify-between pb-1.5 border-b border-slate-100">
+    <div className="p-3.5 sm:p-4 rounded-2xl bg-white border border-slate-200/80 shadow-2xs flex flex-col justify-between h-full">
+      <div className="flex items-center justify-between pb-2 border-b border-slate-100 mb-2.5">
         <h3 className="text-xs sm:text-sm font-bold text-slate-900">Quick Actions</h3>
+        <span className="text-[10px] text-slate-400 font-medium">9 shortcuts</span>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
-        {actions.map((action) => {
-          const Icon = action.icon;
+      <div className="grid grid-cols-3 gap-2 flex-1">
+        {actions.map((act) => {
+          const Icon = act.icon;
           return (
             <button
-              key={action.label}
+              key={act.label}
               type="button"
-              onClick={action.onClick}
-              className={`p-1.5 rounded-xl border text-left flex items-center gap-1.5 transition-all hover:shadow-2xs group ${
-                action.isPrimary
-                  ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700'
-                  : `bg-white hover:bg-slate-50/80 ${action.borderColor}`
+              onClick={act.onClick}
+              className={`p-2.5 rounded-xl border text-left transition-all hover:scale-[1.02] flex flex-col justify-between cursor-pointer group shadow-2xs ${
+                act.isPrimary
+                  ? 'bg-blue-600 border-blue-600 text-white hover:bg-blue-700'
+                  : 'bg-white border-slate-200/80 hover:border-slate-300 hover:bg-slate-50/80'
               }`}
             >
               <div
-                className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${
-                  action.isPrimary ? 'bg-white/20 text-white' : action.color
+                className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mb-1.5 transition-transform group-hover:scale-105 ${
+                  act.isPrimary ? 'bg-white/20 text-white' : act.color
                 }`}
               >
-                <Icon className="w-3 h-3" />
+                <Icon className="w-3.5 h-3.5" />
               </div>
-              <div className="min-w-0 flex-1">
+              <div className="min-w-0">
                 <span
-                  className={`text-[10px] font-bold block truncate leading-tight ${
-                    action.isPrimary ? 'text-white' : 'text-slate-900'
+                  className={`text-[11px] font-bold block truncate leading-tight ${
+                    act.isPrimary ? 'text-white' : 'text-slate-800'
                   }`}
                 >
-                  {action.label}
+                  {act.label}
                 </span>
                 <span
-                  className={`text-[8px] block truncate leading-none mt-0.5 ${
-                    action.isPrimary ? 'text-blue-100' : 'text-slate-400'
+                  className={`text-[9px] block truncate mt-0.5 leading-none ${
+                    act.isPrimary ? 'text-blue-100' : 'text-slate-400'
                   }`}
                 >
-                  {action.sublabel}
+                  {act.sublabel}
                 </span>
               </div>
             </button>

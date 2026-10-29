@@ -10,6 +10,15 @@ interface SubcategoryItem {
   isMore?: boolean;
 }
 
+const PASTEL_GRADIENTS = [
+  'bg-gradient-to-br from-rose-50 to-pink-100/60 border-pink-100/80',
+  'bg-gradient-to-br from-sky-50 to-blue-100/60 border-blue-100/80',
+  'bg-gradient-to-br from-emerald-50 to-teal-100/60 border-teal-100/80',
+  'bg-gradient-to-br from-amber-50 to-orange-100/60 border-orange-100/80',
+  'bg-gradient-to-br from-violet-50 to-purple-100/60 border-purple-100/80',
+  'bg-gradient-to-br from-cyan-50 to-indigo-100/60 border-indigo-100/80',
+];
+
 const ITEMS: SubcategoryItem[] = [
   { id: 'mens-fashion', name: "Men's Fashion", imageUrl: 'https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?q=80&w=200&auto=format&fit=crop' },
   { id: 'womens-fashion', name: "Women's Fashion", imageUrl: 'https://images.unsplash.com/photo-1617137968427-85924c400a86?q=80&w=200&auto=format&fit=crop' },
@@ -40,29 +49,37 @@ export function ShopByCategoryGrid() {
   return (
     <div className="mb-10">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-[22px] font-extrabold text-[#061842]">Shop by Category</h2>
-        <Link href="/category" className="text-[14px] font-bold text-[#1668F6] hover:underline">
-          View all
+        <div>
+          <h2 className="text-[20px] sm:text-[22px] font-extrabold text-[#061842] tracking-tight">Shop by Category</h2>
+          <p className="text-xs text-gray-500 mt-0.5">Explore curated styles and collections</p>
+        </div>
+        <Link 
+          href="/category" 
+          className="text-[13px] font-bold text-[#1668F6] hover:text-blue-700 hover:underline flex items-center gap-1 transition-colors"
+        >
+          View all <span>&rarr;</span>
         </Link>
       </div>
 
-      <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-4 snap-x">
-        {ITEMS.map((item) => {
+      <div className="flex gap-3.5 overflow-x-auto scrollbar-hide pb-4 snap-x select-none">
+        {ITEMS.map((item, idx) => {
+          const gradientClass = PASTEL_GRADIENTS[idx % PASTEL_GRADIENTS.length];
+
           if (item.isMore) {
             return (
               <Link 
                 key={item.id} 
                 href="/category" 
-                className="flex flex-col items-center group shrink-0 snap-start w-[84px]"
+                className="flex flex-col items-center group shrink-0 snap-start w-[88px] transition-transform duration-200"
               >
-                <div className="w-[84px] h-[100px] bg-[#F1F5F9] rounded-2xl flex items-center justify-center transition-transform group-hover:scale-105 mb-2 shadow-sm border border-gray-100">
-                  <div className="flex gap-1">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#1668F6]"></div>
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#1668F6]"></div>
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#1668F6]"></div>
+                <div className="w-[88px] h-[106px] bg-slate-100/80 rounded-2xl flex items-center justify-center transition-all duration-200 group-hover:-translate-y-1 group-hover:shadow-md mb-2 border border-slate-200/80 shadow-2xs">
+                  <div className="flex gap-1.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#1668F6] animate-pulse"></div>
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#1668F6] animate-pulse delay-75"></div>
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#1668F6] animate-pulse delay-150"></div>
                   </div>
                 </div>
-                <span className="text-[12px] font-bold text-[#061842] text-center px-1 leading-tight">{item.name}</span>
+                <span className="text-[11.5px] font-bold text-[#061842] text-center px-1 leading-tight group-hover:text-[#1668F6] transition-colors">{item.name}</span>
               </Link>
             );
           }
@@ -71,16 +88,17 @@ export function ShopByCategoryGrid() {
             <Link 
               key={item.id} 
               href={`/category/${item.id}`} 
-              className="flex flex-col items-center group shrink-0 snap-start w-[84px]"
+              className="flex flex-col items-center group shrink-0 snap-start w-[88px] transition-transform duration-200"
             >
-              <div className="w-[84px] h-[100px] bg-[#FFF2F2] rounded-2xl overflow-hidden transition-transform group-hover:scale-105 mb-2 shadow-sm border border-gray-100 flex items-end justify-center pt-2">
+              <div className={`w-[88px] h-[106px] ${gradientClass} rounded-2xl overflow-hidden transition-all duration-200 group-hover:-translate-y-1 group-hover:shadow-md mb-2 shadow-2xs border flex items-end justify-center pt-2 relative`}>
                 <img 
                   src={item.imageUrl} 
                   alt={item.name} 
-                  className="w-[90%] h-[90%] object-contain object-bottom drop-shadow-sm mix-blend-multiply"
+                  className="w-[90%] h-[90%] object-contain object-bottom drop-shadow-sm mix-blend-multiply transition-transform duration-300 group-hover:scale-105"
+                  loading="lazy"
                 />
               </div>
-              <span className="text-[12px] font-bold text-[#061842] text-center px-1 leading-tight">{item.name}</span>
+              <span className="text-[11.5px] font-bold text-[#061842] text-center px-1 leading-tight group-hover:text-[#1668F6] transition-colors">{item.name}</span>
             </Link>
           );
         })}

@@ -285,6 +285,7 @@ export const App: React.FC = () => {
                 onNavigate={(tab) => handleSelectTab(tab)}
                 onOpenAddProduct={() => setIsGlobalAddOpen(true)}
                 onOpenBulkUpload={() => setIsGlobalBulkOpen(true)}
+                onOpenCreateOrder={() => navigate('/dashboard/orders/create')}
               />
             )}
 

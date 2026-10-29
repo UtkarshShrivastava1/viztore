@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { fetchProductBySlug } from '@/lib/api/catalog';
+import { fetchProductBySlug, fetchProducts } from '@/lib/api/catalog';
 import { useCartStore } from '@/stores/cart.store';
 import { useWishlistFlyoutStore } from '@/stores/wishlistFlyoutStore';
 import { 
@@ -145,6 +145,37 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
     ? (rawStoreId as { _id?: string })._id || String(rawStoreId)
     : String(rawStoreId || 'store-main');
   const storeName = product.storeName || (typeof rawStoreId === 'object' && (rawStoreId as { name?: string })?.name) || 'Official Store';
+
+  // Fetch store products for "More Products from this Store"
+  const { data: storeProducts = [] } = useQuery({
+    queryKey: ['store-products-recommendations', storeId, product?._id],
+    queryFn: async () => {
+      if (!storeId || storeId === 'store-main') return [];
+      try {
+        const res = await fetchProducts({ storeId, limit: 8 });
+        return (res.products || []).filter((p: any) => p._id !== product?._id);
+      } catch {
+        return [];
+      }
+    },
+    enabled: !!storeId && !!product?._id,
+  });
+
+  // Fetch category products for "You May Also Like"
+  const categoryParam = typeof product?.category === 'string' ? product.category : (product?.category as any)?.name;
+  const { data: categoryProducts = [] } = useQuery({
+    queryKey: ['category-products-recommendations', categoryParam, product?._id],
+    queryFn: async () => {
+      if (!categoryParam) return [];
+      try {
+        const res = await fetchProducts({ category: categoryParam, limit: 8 });
+        return (res.products || []).filter((p: any) => p._id !== product?._id);
+      } catch {
+        return [];
+      }
+    },
+    enabled: !!categoryParam && !!product?._id,
+  });
 
   const handleAddToCart = () => {
     if (!product || !selectedVariant) return;
@@ -462,8 +493,16 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
 
         {/* ── RELATED PRODUCTS ── */}
         <div className="mt-8 space-y-8 px-4 md:px-0">
-          <CrossSellRails title="More Products For You" products={[product, product]} />
-          <CrossSellRails title="You May Also Like" products={[product, product]} />
+          <CrossSellRails 
+            title="More Products from this Store" 
+            products={storeProducts} 
+            viewAllHref={storeId && storeId !== 'store-main' ? `/stores/${storeId}` : '/products'}
+          />
+          <CrossSellRails 
+            title="You May Also Like" 
+            products={categoryProducts} 
+            viewAllHref={categoryParam ? `/category/${categoryParam}` : '/products'}
+          />
         </div>
       </main>
 

@@ -21,6 +21,21 @@ export const MerchantNavbar: React.FC<MerchantNavbarProps> = ({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navRef = useRef<HTMLDivElement>(null);
+  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleMouseEnter = (type: 'sell' | 'learn') => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    hoverTimeoutRef.current = setTimeout(() => {
+      setOpenDropdown(type);
+    }, 150);
+  };
+
+  const handleMouseLeave = () => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    hoverTimeoutRef.current = setTimeout(() => {
+      setOpenDropdown(null);
+    }, 150);
+  };
 
   // Close dropdown on click outside
   useEffect(() => {
