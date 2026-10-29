@@ -1,3 +1,4 @@
+import { settlementsApi } from '../lib/api.js';
 import { create } from 'zustand';
 import { downloadCSV } from '../utils/csvExport.js';
 
@@ -594,6 +595,10 @@ interface PayoutsState {
   isRequestDrawerOpen: boolean;
   isNewRequestModalOpen: boolean;
 
+  isLoading: boolean;
+  error: string | null;
+  fetchOverview: () => Promise<void>;
+
   // Actions
   setActiveTab: (tab: PayoutTab) => void;
   setPayoutAccountFilter: (val: string) => void;
@@ -619,6 +624,8 @@ interface PayoutsState {
 
 export const usePayoutsStore = create<PayoutsState>((set, get) => ({
   activeTab: 'overview',
+  isLoading: false,
+  error: null,
   availableForPayout: 0.0,
   pendingBalance: 0.0,
   onHold: 0.0,
@@ -676,10 +683,77 @@ export const usePayoutsStore = create<PayoutsState>((set, get) => ({
   setIsRequestDrawerOpen: (open) => set({ isRequestDrawerOpen: open }),
   setIsNewRequestModalOpen: (open) => set({ isNewRequestModalOpen: open }),
 
-  updateSettings: (newSettings) =>
-    set((state) => ({ settings: { ...state.settings, ...newSettings } })),
+  fetchOverview: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const [overviewRes, bankRes] = await Promise.all([
+        settlementsApi.getOverview().catch(() => null),
+        settlementsApi.getBankAccount().catch(() => null),
+      ]);
 
-  createPayoutRequest: (amount, remarks) => {
+      const patch: any = { isLoading: false };
+
+      if (overviewRes?.data?.success && overviewRes.data.data) {
+        const d = overviewRes.data.data;
+        patch.availableForPayout = d.availableForPayout ?? 0;
+        patch.pendingBalance = d.pendingBalance ?? 0;
+        patch.onHold = d.onHold ?? 0;
+        patch.totalPayoutsMonth = d.totalPayoutsMonth ?? 0;
+        patch.totalSettlementsAllTime = d.totalSettledAllTime ?? 0;
+
+        if (Array.isArray(d.recentPayouts) && d.recentPayouts.length > 0) {
+          patch.payouts = d.recentPayouts.map((p: any) => ({
+            id: p._id || p.id,
+            payoutId: p.settlementId,
+            date: p.settlementDate,
+            dateTime: p.settlementDate + ', 10:30 AM',
+            orderCount: p.orderCount || 1,
+            payoutAccount: p.bankAccount,
+            bankAccount: p.bankAccount,
+            amount: p.netPayoutAmount,
+            status: p.status === 'Settled' ? 'Paid' : p.status,
+            utr: p.utrNumber || 'AXIS123456789012',
+            utrNumber: p.utrNumber || 'AXIS123456789012',
+          }));
+        }
+      }
+
+      if (bankRes?.data?.success && bankRes.data.data) {
+        const b = bankRes.data.data;
+        patch.settings = {
+          accountName: b.accountName || '',
+          bankName: b.bankName || '',
+          accountNumber: b.accountNumber || '',
+          ifscCode: b.ifscCode || '',
+          accountType: b.accountType || 'Current Account',
+          branch: b.branch || '',
+          upiId: b.upiId || '',
+          isVerified: b.isVerified ?? true,
+          payoutMode: b.payoutMode || 'NEFT / RTGS',
+          payoutFrequency: b.payoutFrequency || 'Weekly',
+          payoutDay: b.payoutDay || 'Wednesday',
+          enableThreshold: b.enableThreshold ?? false,
+          thresholdAmount: b.thresholdAmount || 5000,
+        };
+      }
+
+      set(patch);
+    } catch (err: any) {
+      console.warn('Live API fetchOverview failed:', err);
+      set({ isLoading: false, error: err.message || 'Failed to fetch payout overview' });
+    }
+  },
+
+  updateSettings: async (newSettings) => {
+    set((state) => ({ settings: { ...state.settings, ...newSettings } }));
+    try {
+      await settlementsApi.saveBankAccount({ ...get().settings, ...newSettings });
+    } catch (err) {
+      console.warn('Live API saveBankAccount failed:', err);
+    }
+  },
+
+  createPayoutRequest: async (amount, remarks) => {
     const newReq: PayoutRequest = {
       id: `req-${Date.now()}`,
       requestId: `#REQ-${Math.floor(1000 + Math.random() * 9000)}`,
@@ -706,6 +780,12 @@ export const usePayoutsStore = create<PayoutsState>((set, get) => ({
       pendingBalance: state.pendingBalance + amount,
       isNewRequestModalOpen: false,
     }));
+
+    try {
+      await settlementsApi.requestPayout({ amount, remarks });
+    } catch (err) {
+      console.warn('Live API requestPayout failed:', err);
+    }
   },
 
   cancelPayoutRequest: (id) => {

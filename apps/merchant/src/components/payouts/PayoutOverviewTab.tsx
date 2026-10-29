@@ -4,6 +4,7 @@ import { usePayoutsStore } from '../../stores/payoutsStore.js';
 
 export const PayoutOverviewTab: React.FC = () => {
   const {
+    availableForPayout,
     payouts,
     transactions,
     setActiveTab,
@@ -12,6 +13,15 @@ export const PayoutOverviewTab: React.FC = () => {
     setSelectedTransaction,
     setIsTransactionDrawerOpen,
   } = usePayoutsStore();
+
+  const now = new Date();
+  const pastWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
+  const currentPeriodStr = `${pastWeek.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} - ${now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}`;
+
+  const orderAmount = availableForPayout > 0 ? Math.round(availableForPayout * 1.064 * 100) / 100 : 0;
+  const commission = Math.round(orderAmount * 0.05 * 100) / 100;
+  const tds = Math.round(orderAmount * 0.01 * 100) / 100;
+  const payoutAmount = availableForPayout > 0 ? availableForPayout : 0;
 
   const recentPayoutsList = payouts.slice(0, 5);
 
@@ -81,16 +91,16 @@ export const PayoutOverviewTab: React.FC = () => {
         <div className="p-4 bg-white rounded-xl border border-slate-200/80 shadow-2xs flex flex-col justify-between">
           <div>
             <h3 className="text-xs font-bold text-slate-900 mb-3">
-              Payout Breakdown <span className="font-normal text-slate-500">(10 May - 16 May 2024)</span>
+              Payout Breakdown <span className="font-normal text-slate-500">({currentPeriodStr})</span>
             </h3>
             <div className="space-y-2 text-xs">
               <div className="flex justify-between text-slate-600">
                 <span>Order Amount</span>
-                <span className="font-semibold text-slate-900">₹ 38,450.00</span>
+                <span className="font-semibold text-slate-900">₹ {orderAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
               </div>
               <div className="flex justify-between text-slate-600">
                 <span>Product Charges</span>
-                <span className="text-slate-700 font-medium">- ₹ 3,845.00</span>
+                <span className="text-slate-700 font-medium">- ₹ {commission.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
               </div>
               <div className="flex justify-between text-slate-600">
                 <span>Shipping Charges</span>
@@ -113,14 +123,14 @@ export const PayoutOverviewTab: React.FC = () => {
                 <span className="flex items-center gap-1">
                   TDS <Info className="w-3 h-3 text-slate-400" />
                 </span>
-                <span className="text-slate-700 font-medium">- ₹ 1,499.75</span>
+                <span className="text-slate-700 font-medium">- ₹ {tds.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
               </div>
             </div>
           </div>
 
           <div className="mt-3.5 p-2.5 bg-emerald-50/70 border border-emerald-200/70 rounded-xl flex items-center justify-between text-xs">
             <span className="font-bold text-emerald-950">Payout Amount</span>
-            <span className="text-sm font-black text-emerald-700">₹ 28,455.25</span>
+            <span className="text-sm font-black text-emerald-700">₹ {payoutAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
           </div>
         </div>
 

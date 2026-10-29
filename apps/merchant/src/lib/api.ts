@@ -496,3 +496,22 @@ export const returnsApi = {
   processRefund: (id: string, data?: { refundAmount?: number; refundMethod?: string; internalNote?: string }) =>
     api.post<any>(`/returns/${id}/refund`, data || {}),
 };
+
+export const settlementsApi = {
+  getOverview: (storeId?: string) => {
+    const url = storeId ? `/settlements/store/${storeId}/overview` : '/settlements/overview';
+    return api.get<any>(url);
+  },
+  getHistory: (params?: Record<string, string>) => {
+    const qs = params ? '?' + new URLSearchParams(params).toString() : '';
+    return api.get<any>(`/settlements${qs}`);
+  },
+  getById: (id: string) =>
+    api.get<any>(`/settlements/${id}`),
+  getBankAccount: () =>
+    api.get<any>('/settlements/bank-account'),
+  saveBankAccount: (data: unknown) =>
+    api.post<any>('/settlements/bank-account', data),
+  requestPayout: (data: { amount: number; remarks?: string }) =>
+    api.post<any>('/settlements/request', data),
+};

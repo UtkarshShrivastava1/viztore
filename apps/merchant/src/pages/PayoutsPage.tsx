@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Download,
   ChevronDown,
@@ -49,7 +49,12 @@ export const PayoutsPage: React.FC<PayoutsPageProps> = ({ onNavigateHome }) => {
     selectedTransaction,
     isTransactionDrawerOpen,
     setIsTransactionDrawerOpen,
+    fetchOverview,
   } = usePayoutsStore();
+
+  useEffect(() => {
+    fetchOverview();
+  }, [fetchOverview]);
 
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
 
