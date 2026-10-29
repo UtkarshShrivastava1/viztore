@@ -277,10 +277,10 @@
   - [x] `[AUDIT-014]` Merchant Manual "Create Order" Blocker (unblocked customer autocomplete search, inline Khata registration, commit `4565f80`)
   - [x] `[AUDIT-003]` Customer Storefront Search Bar & Discovery Engine (autocomplete dropdown, category shortcuts, voice search, commit `7d8b6c0`)
   - [x] `[AUDIT-026]` Global System Date & Timezone Synchronization (ISO 8601 UTC storage with Asia/Kolkata IST presentation, commit `b1f9687`)
-- [ ] **Sprint 2: Commercial & Transaction Engines (2/12 Completed 🟡)**:
+- [ ] **Sprint 2: Commercial & Transaction Engines (3/12 Completed 🟡)**:
   - [x] `[AUDIT-055]` Merchant Billing & Invoicing Engine (`BillingInvoiceModel`, persistent bills, credit/debit notes ledger, commit `74abb82`)
   - [x] `[AUDIT-054]` Merchant Customer CRM & Khata Ledger Engine (`CustomerModel`, live persistence, store credit & ledger adjustments, commit `8452e9e`)
-  - [ ] `[AUDIT-053]` Platform Returns & Refunds Lifecycle (`ReturnModel`, pickup tasks, refund dispatch)
+  - [x] `[AUDIT-053]` Platform Returns & Refunds Lifecycle (`ReturnModel`, pickup tasks, refund dispatch, commit `5a13943`)
   - [ ] `[AUDIT-056]` Merchant Payouts & Settlement Engine (automated cron, net balance, bank UTRs)
   - [ ] `[AUDIT-058]` Purchase & Expense Procurement Engine (`PurchaseOrderModel`, stock increment on receipt)
   - [ ] `[AUDIT-050]` Customer Coupons & Offers Pipeline (backend discount validation)

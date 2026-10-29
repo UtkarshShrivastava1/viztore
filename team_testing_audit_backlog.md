@@ -76,7 +76,7 @@ This document serves as the master engineering log for all findings, functional 
 | `AUDIT-050` | Customer & Platform End-to-End Coupons & Offers Pipeline Breakdown: Mock Customer Page, Browser Prompt Checkout & Missing Backend Engine | Customer Web / Cross-Cutting | Coupons / Checkout / Marketing | Bug / Architectural Pipeline | P1 | Medium | Logged 📝 |
 | `AUDIT-051` | Merchant Hub Route-Based Navigation Overhaul: Browser Back Button, Deep Linking & Refresh State Recovery | Merchant Hub | Routing & Architecture | Architecture / UX Blocker | P0 | High | DONE ✅ |
 | `AUDIT-052` | Customer Dynamic Category Route Architecture (`/category/[slug]`), Faceted Query Parameters & Deep Linking Hardening | Customer Web | Catalog Discovery / Routing | Architecture / Enhancement | P1 | Medium | DONE ✅ |
-| `AUDIT-053` | Platform End-to-End Returns & Refunds Pipeline Breakdown: Mock Merchant Table, Dead Action Modals & Missing Backend Return Engine | Cross-Cutting | Returns & Refunds / Orders | Bug / Architectural Pipeline | P1 | High | Logged 📝 |
+| `AUDIT-053` | Platform End-to-End Returns & Refunds Pipeline Breakdown: Mock Merchant Table, Dead Action Modals & Missing Backend Return Engine | Cross-Cutting | Returns & Refunds / Orders | Bug / Architectural Pipeline | P1 | High | DONE ✅ |
 | `AUDIT-054` | Merchant Customer CRM & Khata Ledger Pipeline Breakdown: Mock Customer Seed Data, Stale May 2024 Ledgers & Missing Backend Customer Engine | Cross-Cutting | Customers / CRM / Khata Ledger | Bug / Architectural Pipeline | P1 | High | DONE ✅ |
 | `AUDIT-055` | Merchant Billing & Invoicing End-to-End Pipeline Breakdown: Unwired Backend APIs, In-Memory Mutations & Date Filter Disconnection | Merchant Hub | Billing & Invoicing | Bug / Architectural Pipeline | P1 | High | DONE ✅ |
 | `AUDIT-056` | Merchant Payouts & Settlements Pipeline Breakdown: Hardcoded May 2024 Overview, Inconsistent Zero Balances & Missing Backend Settlement Engine | Merchant Hub | Payouts & Settlements | Bug / Architectural Pipeline | P1 | High | Logged 📝 |
@@ -909,6 +909,7 @@ This document serves as the master engineering log for all findings, functional 
   - `scripts/ingest-categories.ts`
 
 #### [AUDIT-053] Platform End-to-End Returns & Refunds Pipeline Breakdown: Mock Merchant Table, Dead Action Modals & Missing Backend Return Engine
+- **Status**: DONE ✅ (Commit `5a13943`)
 - **Layer**: Cross-Cutting (`apps/merchant`, `apps/backend`, `apps/web`)
 - **Module**: Returns & Refunds (`ReturnsPage.tsx`, `returnsStore.ts`, `ReturnDetailsModal.tsx`, `ReturnDetailsDrawer.tsx`, `RejectReturnModal.tsx`, `ReturnSlipModal.tsx`, `NewReturnView.tsx`, Backend Returns Engine, Customer Order Details)
 - **Type**: Bug / Architectural Pipeline Breakdown | **Severity**: P1 | **Complexity**: High
@@ -1393,7 +1394,7 @@ Executing strictly in this order guarantees that **every data model, schema cont
 * **Items**:
   1. `[AUDIT-055]` Merchant Billing & Invoicing Engine (`BillingInvoiceModel`, live POS bills). (DONE ✅ - Commit `74abb82`)
   2. `[AUDIT-054]` Merchant Customer CRM & Khata Ledger Engine (`CustomerModel`, credit adjustments). (DONE ✅ - Commit `8452e9e`)
-  3. `[AUDIT-053]` Platform Returns & Refunds Lifecycle (`ReturnModel`, pickup tasks, refund dispatch).
+  3. `[AUDIT-053]` Platform Returns & Refunds Lifecycle (`ReturnModel`, pickup tasks, refund dispatch). (DONE ✅ - Commit `5a13943`)
   4. `[AUDIT-056]` Merchant Payouts & Settlement Engine (automated cron, net balance, bank UTRs).
   5. `[AUDIT-058]` Purchase & Expense Procurement Engine (`PurchaseOrderModel`, stock increment on receipt).
   6. `[AUDIT-050]` Customer Coupons & Offers Pipeline (backend discount validation).
