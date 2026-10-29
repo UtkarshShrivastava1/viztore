@@ -3,19 +3,19 @@
 ## 📊 Global Audit Remediation Progress Tracker
 
 > **Current Status**: Active in **Sprint 2 (Commercial Engines & Operations)**  
-> **Platform Completion**: **17 / 62 Items Completed** (**27.4%**)  
-> **Overall Progress Bar**: `[█████░░░░░░░░░░░░░░░] 27.4%`
+> **Platform Completion**: **18 / 62 Items Completed** (**29.0%**)  
+> **Overall Progress Bar**: `[██████░░░░░░░░░░░░░░] 29.0%`
 
 ### Sprint Completion Breakdown
 
 | Sprint | Scope & Focus Area | Done / Total | Progress Bar | % Completed | Status |
 |---|---|:---:|---|:---:|:---:|
 | **Sprint 1** | **Core Architectural Foundations & Critical Blockers** | **9 / 9** | `[████████████████████]` | **100.0%** | `DONE ✅` |
-| **Sprint 2** | **Commercial Engines, Billing, Ledger & Procurement** | **8 / 12** | `[█████████████░░░░░░░]` | **66.7%** | `IN PROGRESS 🟡` |
+| **Sprint 2** | **Commercial Engines, Billing, Ledger & Procurement** | **9 / 12** | `[███████████████░░░░░]` | **75.0%** | `IN PROGRESS 🟡` |
 | **Sprint 3** | **Storefront Discovery, Merchant Config & Tooling** | **0 / 14** | `[░░░░░░░░░░░░░░░░░░░░]` | **0.0%** | `PENDING ⚪` |
 | **Sprint 4** | **Catalog & Merchant Inventory Workflows (Phase 4A)** | **0 / 13** | `[░░░░░░░░░░░░░░░░░░░░]` | **0.0%** | `PENDING ⚪` |
 | **Sprint 5** | **Store Merchandising, Policies & Micro-Polish (Phase 4B)** | **0 / 14** | `[░░░░░░░░░░░░░░░░░░░░]` | **0.0%** | `PENDING ⚪` |
-| **TOTAL** | **Hyperlocal Multi-Vendor Commerce Platform** | **17 / 62** | `[█████░░░░░░░░░░░░░░░]` | **27.4%** | **ACTIVE 🚀** |
+| **TOTAL** | **Hyperlocal Multi-Vendor Commerce Platform** | **18 / 62** | `[██████░░░░░░░░░░░░░░]` | **29.0%** | **ACTIVE 🚀** |
 
 > *Note: Sprints 4 & 5 correspond to the detailed breakdown of Roadmap Milestone 4 (27 UI/UX Hardening & Visual Excellence deliverables).*
 
@@ -72,7 +72,7 @@ This document serves as the master engineering log for all findings, functional 
 | `AUDIT-025` | Expense Module: New Vendor, Date Default & Amount Glitch | Merchant Hub | Expenses | Bug / Defect | P1 | Medium | Logged 📝 |
 | `AUDIT-026` | Global System Date & Timezone Synchronization | Cross-Cutting | Core / Runtime | Reliability | P1 | Medium | DONE ✅ |
 | `AUDIT-027` | "Stores Near You" Ascending Distance Proximity Sorting | Customer Web | Discovery | Algorithm / UX | P1 | Medium | Logged 📝 |
-| `AUDIT-028` | Merchant Order Management: One-Click Accept & Print Invoice/KOT | Merchant Hub | Orders | Workflow | P1 | Low | Logged 📝 |
+| `AUDIT-028` | Merchant Order Management: One-Click Accept & Print Invoice/KOT | Merchant Hub | Orders | Workflow | P1 | Low | DONE ✅ |
 | `AUDIT-029` | "Shop by Category" Visual Polish & Card Layout Upgrade | Customer Web | Discovery / Home | UI/UX Polish | P2 | Low | Logged 📝 |
 | `AUDIT-030` | Header "My Orders" & "Cart" Navigation / Quick View Triggers | Customer Web | Header Nav | Bug / Defect | P1 | Low | Logged 📝 |
 | `AUDIT-031` | Broken Product Actions: PDP & Card "Share" Button Inactive | Customer Web | Social / PDP | Bug / Defect | P1 | Low | Logged 📝 |
@@ -1422,7 +1422,7 @@ Executing strictly in this order guarantees that **every data model, schema cont
   6. `[AUDIT-050]` Customer Coupons & Offers Pipeline (backend discount validation). (DONE ✅ - Commit `dbe210e`)
   7. `[AUDIT-006]` Customer "Reserve / Hold" In-Store Order Pipeline (2-hour hold state machine). (DONE ✅ - Commit `3dfa475`)
   8. `[AUDIT-061]` Customer Cart & Checkout Single-Store Coherence (clean up multi-store header confusion). (DONE ✅ - Commit `13c3d64`)
-  9. `[AUDIT-028]` Merchant One-Click Accept & Print Invoice/KOT (thermal slip generation).
+  9. `[AUDIT-028]` Merchant One-Click Accept & Print Invoice/KOT (thermal slip generation). (DONE ✅ - Commit `ef33a25`)
   10. `[AUDIT-032]` Customer Order Cancellation Action & Reason Modal.
   11. `[AUDIT-002]` Merchant Fleet Broadcast Action Timing & Prominent UI Placement.
   12. `[AUDIT-005]` Rider Portal Geolocation Accuracy & Advancement.
