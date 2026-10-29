@@ -78,7 +78,7 @@ This document serves as the master engineering log for all findings, functional 
 | `AUDIT-052` | Customer Dynamic Category Route Architecture (`/category/[slug]`), Faceted Query Parameters & Deep Linking Hardening | Customer Web | Catalog Discovery / Routing | Architecture / Enhancement | P1 | Medium | DONE ✅ |
 | `AUDIT-053` | Platform End-to-End Returns & Refunds Pipeline Breakdown: Mock Merchant Table, Dead Action Modals & Missing Backend Return Engine | Cross-Cutting | Returns & Refunds / Orders | Bug / Architectural Pipeline | P1 | High | Logged 📝 |
 | `AUDIT-054` | Merchant Customer CRM & Khata Ledger Pipeline Breakdown: Mock Customer Seed Data, Stale May 2024 Ledgers & Missing Backend Customer Engine | Cross-Cutting | Customers / CRM / Khata Ledger | Bug / Architectural Pipeline | P1 | High | Logged 📝 |
-| `AUDIT-055` | Merchant Billing & Invoicing End-to-End Pipeline Breakdown: Unwired Backend APIs, In-Memory Mutations & Date Filter Disconnection | Merchant Hub | Billing & Invoicing | Bug / Architectural Pipeline | P1 | High | Logged 📝 |
+| `AUDIT-055` | Merchant Billing & Invoicing End-to-End Pipeline Breakdown: Unwired Backend APIs, In-Memory Mutations & Date Filter Disconnection | Merchant Hub | Billing & Invoicing | Bug / Architectural Pipeline | P1 | High | DONE ✅ |
 | `AUDIT-056` | Merchant Payouts & Settlements Pipeline Breakdown: Hardcoded May 2024 Overview, Inconsistent Zero Balances & Missing Backend Settlement Engine | Merchant Hub | Payouts & Settlements | Bug / Architectural Pipeline | P1 | High | Logged 📝 |
 | `AUDIT-057` | Merchant Settings & Store Configuration Breakdown: In-Memory "Save Changes", Hardcoded "Fashion Hub" Previews, Dual Verified/Verify Badges & Zero Backend Persistence | Merchant Hub | Settings & Profile | Bug / Architectural Pipeline | P1 | High | Logged 📝 |
 | `AUDIT-058` | Merchant Purchase & Expense Procurement Breakdown: Hardcoded May 2024 Cards & Seed Ledger, Silent In-Memory API Fallbacks & Missing Backend Purchase Order/E-Way Engine | Merchant Hub | Purchase & Expense | Bug / Architectural Pipeline | P1 | High | Logged 📝 |
@@ -676,6 +676,7 @@ This document serves as the master engineering log for all findings, functional 
   - `apps/merchant/package.json`
 
 #### [AUDIT-055] Merchant Billing & Invoicing End-to-End Pipeline Breakdown: Unwired Backend APIs, In-Memory Mutations & Date Filter Disconnection
+- **Status**: DONE ✅ (Commit `74abb82`)
 - **Layer**: Merchant Hub (`apps/merchant`) & Backend API (`apps/backend`)
 - **Module**: Billing & Invoicing (`BillingPage.tsx`, `billingStore.ts`, `InvoicesTableView.tsx`, `CreateInvoiceModal.tsx`, `QuotesTableView.tsx`, `BillingSettingsView.tsx`, `CounterPOSView.tsx`, Backend Billing Engine)
 - **Type**: Bug / Architectural Pipeline Breakdown | **Severity**: P1 | **Complexity**: High
@@ -993,6 +994,7 @@ This document serves as the master engineering log for all findings, functional 
   - `apps/merchant/src/components/customers/{CustomerTable, AddCustomerView, CustomerDetailsDrawer, CustomerStatementDrawer, AddStoreCreditModal, CustomerKPIBar}.tsx`
 
 #### [AUDIT-055] Merchant Billing & Invoicing End-to-End Pipeline Breakdown: Unwired Backend APIs, In-Memory Mutations & Date Filter Disconnection
+- **Status**: DONE ✅ (Commit `74abb82`)
 - **Layer**: Merchant Hub (`apps/merchant`) & Backend API (`apps/backend`)
 - **Module**: Billing & Invoicing (`BillingPage.tsx`, `billingStore.ts`, `InvoicesTable.tsx`, `billingApi`, `backend/modules/billing`)
 - **Type**: Bug / Architectural Pipeline Breakdown | **Severity**: P1 | **Complexity**: High
@@ -1388,7 +1390,7 @@ Executing strictly in this order guarantees that **every data model, schema cont
 ### Sprint 2: Commercial & Transaction Engines (12 Items)
 * **Goal**: Replace in-memory mock datasets with live MongoDB persistence across billing, khata ledgers, returns, settlements, and procurement.
 * **Items**:
-  1. `[AUDIT-055]` Merchant Billing & Invoicing Engine (`BillingInvoiceModel`, live POS bills).
+  1. `[AUDIT-055]` Merchant Billing & Invoicing Engine (`BillingInvoiceModel`, live POS bills). (DONE ✅ - Commit `74abb82`)
   2. `[AUDIT-054]` Merchant Customer CRM & Khata Ledger Engine (`CustomerModel`, credit adjustments).
   3. `[AUDIT-053]` Platform Returns & Refunds Lifecycle (`ReturnModel`, pickup tasks, refund dispatch).
   4. `[AUDIT-056]` Merchant Payouts & Settlement Engine (automated cron, net balance, bank UTRs).
