@@ -1398,7 +1398,7 @@ Executing strictly in this order guarantees that **every data model, schema cont
   3. `[AUDIT-053]` Platform Returns & Refunds Lifecycle (`ReturnModel`, pickup tasks, refund dispatch). (DONE ✅ - Commit `5a13943`)
   4. `[AUDIT-056]` Merchant Payouts & Settlement Engine (automated cron, net balance, bank UTRs). (DONE ✅ - Commit `48161e6`)
   5. `[AUDIT-058]` Purchase & Expense Procurement Engine (`PurchaseOrderModel`, stock increment on receipt). (DONE ✅ - Commit `cf71c44`)
-  6. `[AUDIT-050]` Customer Coupons & Offers Pipeline (backend discount validation).
+  6. `[AUDIT-050]` Customer Coupons & Offers Pipeline (backend discount validation). (DONE ✅ - Commit `dbe210e`)
   7. `[AUDIT-006]` Customer "Reserve / Hold" In-Store Order Pipeline (2-hour hold state machine).
   8. `[AUDIT-061]` Customer Cart & Checkout Single-Store Coherence (clean up multi-store header confusion).
   9. `[AUDIT-028]` Merchant One-Click Accept & Print Invoice/KOT (thermal slip generation).

@@ -268,13 +268,13 @@
   - [x] Synchronized `StoreProfileTab` and `BusinessInfoTab` with active authenticated store (`National Retail Store`) and user contact info
   - [x] Seeded `walletStore` with real transactions, bank accounts, and active balances (₹32,450.00)
   - [x] Verified 100% clean production build (`tsc && vite build`) and documented audit in `live_hardening_and_bug_remediation_audit.md`
-- [ ] **Sprint 2: Commercial Engines, Billing, Ledger & Procurement Lifecycle (5/12 In Progress 🟡)**:
+- [ ] **Sprint 2: Commercial Engines, Billing, Ledger & Procurement Lifecycle (6/12 In Progress 🟡)**:
   - [x] `[AUDIT-055]` Merchant Billing & Invoicing Engine (Persistent MongoDB invoices, POS bills, credit/debit notes ledger, dynamic date filtering, commit `74abb82`, `cf372da`)
   - [x] `[AUDIT-054]` Merchant Customer CRM & Khata Ledger Engine (`CustomerModel` & `CustomerTransactionModel`, `customersApi`, live Zustand store sync, dynamic date ranges, commit `8452e9e`, `c3b9ab8`)
   - [x] `[AUDIT-053]` Platform Returns & Refunds Lifecycle Engine (`ReturnModel`, `return.service.ts`, `return.routes.ts`, `returnsApi`, `ReturnDetailsDrawer.tsx`, `RejectReturnModal.tsx`, `ReturnSlipModal.tsx`, `NewReturnView.tsx`, `CustomerReturnModal.tsx`, commit `5a13943`, `78b92f8`)
   - [x] `[AUDIT-056]` Merchant Payouts & Settlement Engine (`SettlementModel`, `BankAccountModel`, `SettlementService`, `settlementsApi`, live fee calculation 5% commission + 1% TDS, commit `48161e6`, `bc2c867`)
   - [x] `[AUDIT-058]` Merchant Purchase & Expense Procurement Engine (Persistent MongoDB procurement schemas, live overview KPI aggregates, automatic stock increment on PO receipt via `catalogModule.restoreStock`, dynamic financial month filtering, commit `cf71c44`)
-  - [ ] `[AUDIT-050]` Customer Coupons & Offers Pipeline
+  - [x] `[AUDIT-050]` Customer Coupons & Offers Pipeline (Persistent CouponModel, coupon validation engine, server discount calculation during order placement, checkout coupon selection drawer, white-label compliance, commit `dbe210e`)
   - [ ] `[AUDIT-006]` Customer "Reserve / Hold" In-Store Order Pipeline
   - [ ] `[AUDIT-061]` Customer Cart & Checkout Single-Store Coherence
   - [ ] `[AUDIT-028]` Merchant One-Click Accept & Print Invoice/KOT
