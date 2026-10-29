@@ -67,6 +67,7 @@ const orderSchema = new Schema<OrderDocument>(
 orderSchema.index({ storeId: 1, status: 1, createdAt: -1 });
 orderSchema.index({ userId: 1, createdAt: -1 });
 orderSchema.index({ status: 1, createdAt: 1 });
+orderSchema.index({ fulfilmentMode: 1, status: 1, reserveExpiresAt: 1 });
 
 export const OrderModel =
   (mongoose.models.Order as mongoose.Model<OrderDocument>) ||

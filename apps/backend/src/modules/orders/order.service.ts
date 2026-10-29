@@ -576,6 +576,66 @@ export function createOrderService(
     };
   }
 
+  async function claimReservation(orderId: string, actorId: string): Promise<OrderResponse> {
+    const order = await repo.findById(orderId);
+    if (!order) {
+      throw AppError.notFound('Order not found', 'ORDER_NOT_FOUND');
+    }
+    if (order.fulfilmentMode !== 'reserve') {
+      throw AppError.badRequest('Order is not an in-store reservation', 'NOT_A_RESERVATION');
+    }
+    if (order.status !== OrderStatus.PENDING && order.status !== OrderStatus.CONFIRMED && order.status !== OrderStatus.PACKED) {
+      throw AppError.badRequest(`Cannot claim reservation with status ${order.status}`, 'INVALID_STATUS');
+    }
+
+    if (order.reserveExpiresAt && new Date(order.reserveExpiresAt) < new Date()) {
+      throw AppError.badRequest('Reservation has expired and can no longer be claimed', 'RESERVATION_EXPIRED');
+    }
+
+    const auditEntry: IOrderStatusHistoryEntry = {
+      status: OrderStatus.DELIVERED,
+      changedBy: actorId,
+      reason: 'Reservation claimed and fulfilled in-store',
+      timestamp: new Date(),
+    };
+    const updated = await repo.updateStatusWithVersion(
+      order.id,
+      order.version,
+      order.status,
+      OrderStatus.DELIVERED,
+      auditEntry,
+    );
+    if (!updated) {
+      throw AppError.internal('Failed to update reservation status');
+    }
+
+    logger.info(`✅ [ReservePipeline] Reservation ${order.orderNumber} claimed and fulfilled by actor ${actorId}`);
+    return updated;
+  }
+
+  async function releaseReservation(orderId: string, actorId: string, reason?: string): Promise<OrderResponse> {
+    const order = await repo.findById(orderId);
+    if (!order) {
+      throw AppError.notFound('Order not found', 'ORDER_NOT_FOUND');
+    }
+    if (order.fulfilmentMode !== 'reserve') {
+      throw AppError.badRequest('Order is not an in-store reservation', 'NOT_A_RESERVATION');
+    }
+
+    const cancelReason = reason || 'Reservation manually released by merchant or customer';
+    const cancelled = await cancelOrder(order.id, actorId, true, order.version, cancelReason);
+    if (!cancelled) {
+      throw AppError.internal('Failed to release reservation');
+    }
+
+    logger.info(`🔓 [ReservePipeline] Reservation ${order.orderNumber} released and inventory returned by actor ${actorId}`);
+    return cancelled;
+  }
+
+  async function expireStaleReservations(batchLimit = 50): Promise<{ processed: number; cancelled: number; failed: number }> {
+    return autoCancelStaleOrders(30, batchLimit);
+  }
+
   return {
     createOrder,
     getOrderById,
@@ -587,5 +647,8 @@ export function createOrderService(
     verifyDeliveryOtp,
     cancelOrder,
     autoCancelStaleOrders,
+    claimReservation,
+    releaseReservation,
+    expireStaleReservations,
   };
 }

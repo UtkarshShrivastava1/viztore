@@ -18,6 +18,9 @@ function buildFakeService(): IOrderService {
     verifyDeliveryOtp: vi.fn(),
     cancelOrder: vi.fn(),
     autoCancelStaleOrders: vi.fn(),
+    claimReservation: vi.fn(),
+    releaseReservation: vi.fn(),
+    expireStaleReservations: vi.fn(),
   };
 }
 

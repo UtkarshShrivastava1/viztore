@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { 
-  ShoppingBag, CheckCircle2, Truck, XCircle, ChevronRight, Loader2, ArrowLeft 
+  ShoppingBag, CheckCircle2, Truck, XCircle, ChevronRight, Loader2, ArrowLeft, Calendar
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
 import { AccountSidebar } from '@/components/account/AccountSidebar';
@@ -12,7 +12,7 @@ import { ordersApi } from '@/lib/api/orders.js';
 import type { IOrder } from '@repo/shared-types';
 import { OrderStatus } from '@repo/shared-types';
 
-const tabs = ['All Orders', 'Delivered', 'To Be Delivered', 'Cancelled', 'Returns'];
+const tabs = ['All Orders', 'In-Store Holds', 'Delivered', 'To Be Delivered', 'Cancelled', 'Returns'];
 
 interface DisplayOrder {
   id: string;
@@ -36,12 +36,19 @@ export function OrdersClient() {
   const [isLoading, setIsLoading] = useState(true);
 
   const mapBackendOrder = (order: IOrder): DisplayOrder => {
+    const isReserve = order.fulfilmentMode === 'reserve' || order.orderNumber?.toUpperCase().includes('RES-') || Boolean((order as any).isReserved);
     let displayStatus: DisplayOrder['status'] = 'To Be Delivered';
     if (order.status === OrderStatus.DELIVERED) {
       displayStatus = 'Delivered';
     } else if (order.status === OrderStatus.CANCELLED) {
       displayStatus = 'Cancelled';
+    } else if (isReserve) {
+      displayStatus = 'Reserved';
     }
+
+    const reserveTill = order.reserveExpiresAt
+      ? new Date(order.reserveExpiresAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+      : undefined;
 
     const firstItem = order.items?.[0];
     const totalItems = order.items?.reduce((acc, curr) => acc + (curr.quantity || 1), 0) || 1;
@@ -60,8 +67,9 @@ export function OrdersClient() {
     return {
       id: `#${order.orderNumber || (order._id || order.id || '').slice(-6).toUpperCase()}`,
       rawId: order._id || order.id || order.orderNumber,
-      type: 'regular',
+      type: isReserve ? 'reserve' : 'regular',
       status: displayStatus,
+      reserveTill,
       date: formattedDate,
       productName: firstItem ? `${firstItem.name}${additionalCount}` : 'Marketplace Item',
       variants: firstItem ? `Qty: ${firstItem.quantity} • Unit: ₹${firstItem.unitPrice}` : `Total items: ${totalItems}`,
@@ -98,9 +106,10 @@ export function OrdersClient() {
 
   const filteredOrders = orders.filter((order) => {
     if (activeTab === 'All Orders') return true;
+    if (activeTab === 'In-Store Holds') return order.type === 'reserve' || order.status === 'Reserved';
     if (activeTab === 'Delivered') return order.status === 'Delivered';
     if (activeTab === 'Cancelled') return order.status === 'Cancelled';
-    if (activeTab === 'To Be Delivered') return order.status === 'To Be Delivered';
+    if (activeTab === 'To Be Delivered') return order.status === 'To Be Delivered' && order.type !== 'reserve';
     if (activeTab === 'Returns') return order.status === 'Returns';
     return true;
   });
@@ -194,7 +203,10 @@ export function OrdersClient() {
                   let statusColor = 'text-emerald-600';
                   let StatusIcon = CheckCircle2;
 
-                  if (order.status === 'To Be Delivered') {
+                  if (order.status === 'Reserved') {
+                    statusColor = 'text-indigo-600';
+                    StatusIcon = Calendar;
+                  } else if (order.status === 'To Be Delivered') {
                     statusColor = 'text-orange-500';
                     StatusIcon = Truck;
                   } else if (order.status === 'Cancelled') {

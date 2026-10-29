@@ -82,6 +82,8 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
     markReadyToShip,
     dispatchOrder,
     deliverOrder,
+    claimReservation,
+    releaseReservation,
   } = useOrderStore();
 
   const [otpModalOrder, setOtpModalOrder] = useState<MerchantOrderRecord | null>(null);
@@ -110,6 +112,9 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
         break;
       case 'cancelled':
         matchesTab = order.status === 'cancelled';
+        break;
+      case 'reserves':
+        matchesTab = order.orderType === 'In-Store Hold (2h)' || String(order.orderNumber || '').toUpperCase().includes('RES-');
         break;
       case 'returns':
         matchesTab = order.status === 'return_requested' || order.status === 'returned';

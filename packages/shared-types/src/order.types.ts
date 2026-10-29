@@ -54,7 +54,8 @@ export const shippingAddressSchema = z.object({
 export const createOrderSchema = z.object({
   storeId: z.string().min(1, 'Store ID is required'),
   items: z.array(createOrderItemSchema).min(1, 'Order must contain at least one item'),
-  shippingAddress: shippingAddressSchema,
+  shippingAddress: shippingAddressSchema.optional(),
+  fulfilmentMode: z.nativeEnum(FulfilmentMode).default(FulfilmentMode.DELIVER).optional(),
   couponCode: z.string().optional(),
 });
 
@@ -109,6 +110,10 @@ export interface IOrder {
   shippingFee: number;
   grandTotal: number;
   status: OrderStatus;
+  fulfilmentMode?: FulfilmentMode | string;
+  reserveCode?: string | null;
+  reserveExpiresAt?: string | null;
+  isReserved?: boolean;
   deliveryOtp?: string;
   deliveredAt?: string;
   createdAt: string;

@@ -3,19 +3,19 @@
 ## 📊 Global Audit Remediation Progress Tracker
 
 > **Current Status**: Active in **Sprint 2 (Commercial Engines & Operations)**  
-> **Platform Completion**: **15 / 62 Items Completed** (**24.2%**)  
-> **Overall Progress Bar**: `[█████░░░░░░░░░░░░░░░] 24.2%`
+> **Platform Completion**: **16 / 62 Items Completed** (**25.8%**)  
+> **Overall Progress Bar**: `[█████░░░░░░░░░░░░░░░] 25.8%`
 
 ### Sprint Completion Breakdown
 
 | Sprint | Scope & Focus Area | Done / Total | Progress Bar | % Completed | Status |
 |---|---|:---:|---|:---:|:---:|
 | **Sprint 1** | **Core Architectural Foundations & Critical Blockers** | **9 / 9** | `[████████████████████]` | **100.0%** | `DONE ✅` |
-| **Sprint 2** | **Commercial Engines, Billing, Ledger & Procurement** | **6 / 12** | `[██████████░░░░░░░░░░]` | **50.0%** | `IN PROGRESS 🟡` |
+| **Sprint 2** | **Commercial Engines, Billing, Ledger & Procurement** | **7 / 12** | `[████████████░░░░░░░░]` | **58.3%** | `IN PROGRESS 🟡` |
 | **Sprint 3** | **Storefront Discovery, Merchant Config & Tooling** | **0 / 14** | `[░░░░░░░░░░░░░░░░░░░░]` | **0.0%** | `PENDING ⚪` |
 | **Sprint 4** | **Catalog & Merchant Inventory Workflows (Phase 4A)** | **0 / 13** | `[░░░░░░░░░░░░░░░░░░░░]` | **0.0%** | `PENDING ⚪` |
 | **Sprint 5** | **Store Merchandising, Policies & Micro-Polish (Phase 4B)** | **0 / 14** | `[░░░░░░░░░░░░░░░░░░░░]` | **0.0%** | `PENDING ⚪` |
-| **TOTAL** | **Hyperlocal Multi-Vendor Commerce Platform** | **15 / 62** | `[█████░░░░░░░░░░░░░░░]` | **24.2%** | **ACTIVE 🚀** |
+| **TOTAL** | **Hyperlocal Multi-Vendor Commerce Platform** | **16 / 62** | `[█████░░░░░░░░░░░░░░░]` | **25.8%** | **ACTIVE 🚀** |
 
 > *Note: Sprints 4 & 5 correspond to the detailed breakdown of Roadmap Milestone 4 (27 UI/UX Hardening & Visual Excellence deliverables).*
 
@@ -50,7 +50,7 @@ This document serves as the master engineering log for all findings, functional 
 | `AUDIT-003` | Customer Storefront Search Bar Not Returning Results | Customer Web | Discovery / Search | Bug / Defect | P0 | Medium | DONE ✅ |
 | `AUDIT-004` | Customer vs. Merchant Account Segregation & Namespace | Backend | Auth / Identity | Architecture | P0 | High | DONE ✅ |
 | `AUDIT-005` | Rider Portal Geolocation Accuracy & Advancement | Rider Portal | Delivery Fleet | Enhancement | P1 | High | Logged 📝 |
-| `AUDIT-006` | Customer "Reserve / Hold" In-Store Order Pipeline | Customer Web / Backend | Orders / Reserve | Functional Gap | P1 | Medium | Logged 📝 |
+| `AUDIT-006` | Customer "Reserve / Hold" In-Store Order Pipeline | Customer Web / Backend | Orders / Reserve | Functional Gap | P1 | Medium | DONE ✅ |
 | `AUDIT-007` | Customer Mobile Homepage Header Icons Inactive | Customer Web | Navigation | Bug / Defect | P1 | Low | Logged 📝 |
 | `AUDIT-008` | Merchant Onboarding GSTIN Auto-Fill & PAN Correlation | Merchant Hub | Onboarding | UX / Validation | P2 | Low | Logged 📝 |
 | `AUDIT-009` | Merchant Catalog Bulk Product Deletion Action | Merchant Hub | Catalog | Functional Gap | P1 | Medium | Logged 📝 |
@@ -133,7 +133,7 @@ This document serves as the master engineering log for all findings, functional 
 - **Expected**: Debounced search query triggers live dropdown suggestions (stores, categories, products) and pressing Enter navigates to search results page with matching items sorted by relevance; mobile SearchBar input is fully interactive with route navigation.
 - **Target Files**: `apps/web/src/components/layout/SearchBar.tsx`, `apps/web/src/components/layout/Header.tsx`, `apps/web/src/app/search/page.tsx`, `apps/backend/src/modules/catalog/catalog.service.ts`.
 
-#### [AUDIT-006] Customer "Reserve / Hold" In-Store Order Pipeline
+#### [AUDIT-006] Customer "Reserve / Hold" In-Store Order Pipeline (DONE ✅ - Commit `Pending`)
 - **Layer**: Frontend (`apps/web`) & Backend (`apps/backend`)
 - **Module**: Orders / Checkout / Reserve Mode
 - **Type**: Functional Gap | **Severity**: P1 | **Complexity**: Medium
@@ -1420,7 +1420,7 @@ Executing strictly in this order guarantees that **every data model, schema cont
   4. `[AUDIT-056]` Merchant Payouts & Settlement Engine (automated cron, net balance, bank UTRs). (DONE ✅ - Commit `48161e6`)
   5. `[AUDIT-058]` Purchase & Expense Procurement Engine (`PurchaseOrderModel`, stock increment on receipt). (DONE ✅ - Commit `cf71c44`)
   6. `[AUDIT-050]` Customer Coupons & Offers Pipeline (backend discount validation). (DONE ✅ - Commit `dbe210e`)
-  7. `[AUDIT-006]` Customer "Reserve / Hold" In-Store Order Pipeline (2-hour hold state machine).
+  7. `[AUDIT-006]` Customer "Reserve / Hold" In-Store Order Pipeline (2-hour hold state machine). (DONE ✅ - Commit `Pending`)
   8. `[AUDIT-061]` Customer Cart & Checkout Single-Store Coherence (clean up multi-store header confusion).
   9. `[AUDIT-028]` Merchant One-Click Accept & Print Invoice/KOT (thermal slip generation).
   10. `[AUDIT-032]` Customer Order Cancellation Action & Reason Modal.

@@ -160,6 +160,31 @@ export function createOrderController(service: IOrderService) {
     return res.status(200).send(html);
   });
 
+  const claimReservation: RequestHandler = catchAsync(async (req: Request, res: Response) => {
+    const authReq = req as AuthenticatedRequest;
+    const actorId = getUserId(authReq) || 'system';
+    const orderId = req.params.id as string;
+
+    const order = await service.claimReservation(orderId, actorId);
+    return ApiResponse.success(res, order, 'Reservation claimed and fulfilled successfully');
+  });
+
+  const releaseReservation: RequestHandler = catchAsync(async (req: Request, res: Response) => {
+    const authReq = req as AuthenticatedRequest;
+    const actorId = getUserId(authReq) || 'system';
+    const orderId = req.params.id as string;
+    const reason = req.body?.reason;
+
+    const order = await service.releaseReservation(orderId, actorId, reason);
+    return ApiResponse.success(res, order, 'Reservation released and inventory returned successfully');
+  });
+
+  const reclaimStaleReservations: RequestHandler = catchAsync(async (req: Request, res: Response) => {
+    const batchLimit = req.query.limit ? Number(req.query.limit) : 50;
+    const result = await service.expireStaleReservations(batchLimit);
+    return ApiResponse.success(res, result, 'Stale reservations swept successfully');
+  });
+
   return {
     createOrder,
     getOrder,
@@ -171,6 +196,9 @@ export function createOrderController(service: IOrderService) {
     updateStatus,
     verifyOtp,
     cancel,
+    claimReservation,
+    releaseReservation,
+    reclaimStaleReservations,
   };
 }
 

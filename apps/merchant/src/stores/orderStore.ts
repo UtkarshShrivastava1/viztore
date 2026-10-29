@@ -11,7 +11,8 @@ export type OrderTab =
   | 'delivered'
   | 'all_orders'
   | 'cancelled'
-  | 'returns';
+  | 'returns'
+  | 'reserves';
 
 export type OrderStatus =
   | 'new'
@@ -35,7 +36,7 @@ export interface OrderItemDetail {
 export interface MerchantOrderRecord {
   id: string;
   orderNumber: string;
-  orderType: 'Online Order' | 'Manual In-Store' | 'Express Delivery';
+  orderType: 'Online Order' | 'Manual In-Store' | 'Express Delivery' | 'In-Store Hold (2h)';
   status: OrderStatus;
   customer: {
     name: string;
@@ -132,6 +133,8 @@ interface OrderStoreState {
   markReadyToShip: (orderId: string) => void;
   dispatchOrder: (orderId: string) => void;
   deliverOrder: (orderId: string, otp: string) => Promise<boolean>;
+  claimReservation: (orderId: string) => Promise<void>;
+  releaseReservation: (orderId: string, reason?: string) => Promise<void>;
   addManualOrder: (newOrder: Partial<MerchantOrderRecord>) => void;
 }
 
@@ -183,10 +186,12 @@ export function mapApiOrderToMerchantRecord(apiOrder: any): MerchantOrderRecord 
   const resolvedCity = (extractedCity && extractedCity.toLowerCase() !== 'local city') ? extractedCity : 'Bhilai';
   const resolvedLocality = streetLocality || resolvedCity;
 
+  const isReserve = apiOrder.fulfilmentMode === 'reserve' || String(apiOrder.orderNumber || '').toUpperCase().includes('RES-') || Boolean(apiOrder.isReserved);
+
   return {
     id: apiOrder._id || apiOrder.id,
-    orderNumber: apiOrder.orderNumber || `#ORD-${(apiOrder._id || '').slice(-5)}`,
-    orderType: 'Online Order',
+    orderNumber: apiOrder.orderNumber || (isReserve ? `#RES-${(apiOrder._id || '').slice(-5).toUpperCase()}` : `#ORD-${(apiOrder._id || '').slice(-5)}`),
+    orderType: isReserve ? 'In-Store Hold (2h)' : 'Online Order',
     status: mappedStatus,
     customer: {
       name: customerName,
@@ -246,7 +251,7 @@ export function mapApiOrderToMerchantRecord(apiOrder: any): MerchantOrderRecord 
         apiOrder.status === 'out_for_delivery'
           ? 'Paid'
           : 'Pending',
-      paymentMethod: 'Online Paid',
+      paymentMethod: isReserve ? ('Pay at Store' as any) : 'Online Paid',
       mode: 'UPI',
     },
     otp: apiOrder.deliveryOtp || '0000',
@@ -544,6 +549,42 @@ export const useOrderStore = create<OrderStoreState>((set, get) => {
         ),
       }));
       return true;
+    },
+
+    claimReservation: async (orderId: string) => {
+      try {
+        await api.post(`/orders/${orderId}/claim-reservation`, {});
+      } catch (err) {
+        console.warn('API claimReservation error, applying optimistic fallback:', err);
+      }
+      set((state) => ({
+        orders: state.orders.map((o) =>
+          o.id === orderId
+            ? {
+                ...o,
+                status: 'delivered',
+                currentStageName: 'Delivered (Claimed)',
+                payment: { ...o.payment, status: 'Paid' },
+                timestamps: { ...o.timestamps, deliveredAt: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) },
+              }
+            : o
+        ),
+      }));
+    },
+
+    releaseReservation: async (orderId: string, reason?: string) => {
+      try {
+        await api.post(`/orders/${orderId}/release-reservation`, { reason });
+      } catch (err) {
+        console.warn('API releaseReservation error, applying optimistic fallback:', err);
+      }
+      set((state) => ({
+        orders: state.orders.map((o) =>
+          o.id === orderId
+            ? { ...o, status: 'cancelled', currentStageName: 'Cancelled (Released)' }
+            : o
+        ),
+      }));
     },
 
     addManualOrder: (newOrder) => {

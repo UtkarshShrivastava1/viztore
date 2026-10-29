@@ -113,7 +113,7 @@ export function CheckoutPriceDetails({ storeId }: { storeId?: string }) {
     const finalAddress = {
       fullName: shippingAddress?.fullName || user?.fullName || 'Customer',
       phone: shippingAddress?.phone || user?.phone || '9876543210',
-      street: shippingAddress?.street || (fulfillmentType === 'pickup' ? 'Store Pickup' : 'Customer Address'),
+      street: shippingAddress?.street || (fulfillmentType === 'pickup' ? 'Store Pickup' : fulfillmentType === 'reserve' ? 'In-Store 2h Hold' : 'Customer Address'),
       city: (shippingAddress?.city && shippingAddress.city !== 'Local City') ? shippingAddress.city : (locationCity || 'Bhilai'),
       state: (shippingAddress?.state && shippingAddress.state !== 'State') ? shippingAddress.state : 'Chhattisgarh',
       postalCode: (shippingAddress?.postalCode && shippingAddress.postalCode !== '452001') ? shippingAddress.postalCode : (locationPincode || '490006'),
@@ -131,6 +131,7 @@ export function CheckoutPriceDetails({ storeId }: { storeId?: string }) {
         storeId: targetStoreId,
       })),
       shippingAddress: finalAddress,
+      fulfilmentMode: (fulfillmentType as any) || 'deliver',
       couponCode: couponCode || undefined,
     };
 

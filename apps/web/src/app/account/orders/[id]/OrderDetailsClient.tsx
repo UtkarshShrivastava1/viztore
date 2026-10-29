@@ -47,7 +47,8 @@ export function OrderDetailsClient({ id }: OrderDetailsClientProps) {
   }, [id]);
 
   const currentStatus = order?.status ? String(order.status).toUpperCase() : 'CONFIRMED';
-  const displayId = order?.orderNumber ? `#${order.orderNumber}` : (id ? `#${id.slice(-6).toUpperCase()}` : '#ORD-98214');
+  const isReserve = order?.fulfilmentMode === 'reserve' || order?.orderNumber?.toUpperCase().includes('RES-') || Boolean((order as any)?.isReserved);
+  const displayId = order?.orderNumber ? (order.orderNumber.startsWith('#') ? order.orderNumber : `#${order.orderNumber}`) : (id ? (isReserve ? `#RES-${id.slice(-5).toUpperCase()}` : `#ORD-${id.slice(-6).toUpperCase()}`) : '#ORD-98214');
 
   // Derive status progression from real order status
   const isConfirmed = ['CONFIRMED', 'PROCESSING', 'PACKED', 'SHIPPED', 'OUT_FOR_DELIVERY', 'DELIVERED'].includes(currentStatus);
