@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { ChevronRight, ArrowRight, Volume2, VolumeX, Sparkles } from 'lucide-react';
+import { ChevronRight, ArrowRight, Volume2, VolumeX, Sparkles, Printer } from 'lucide-react';
+import { printMerchantInvoice } from '../../lib/printInvoice.js';
 import { useOrderStore } from '../../stores/orderStore.js';
 import { playOrderAlertChime, isAudioAlertMuted, toggleAudioAlertMuted } from '../../lib/audioAlert.js';
 import { merchantSocket } from '../../lib/socket.js';
@@ -119,10 +120,26 @@ export const LiveOrderAlerts: React.FC<LiveOrderAlertsProps> = ({ onNavigateOrde
                 <span className="font-bold text-slate-900 text-xs truncate">
                   ₹{order.pricing?.totalAmount?.toLocaleString('en-IN') || 0}
                 </span>
-                <div className="flex items-center justify-between gap-1.5 pl-1 shrink-0">
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200/60 uppercase whitespace-nowrap">
-                    {order.status.replace('_', ' ')}
-                  </span>
+                <div className="flex items-center justify-end gap-1.5 pl-1 shrink-0">
+                  {order.status === 'new' ? (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        useOrderStore.getState().acceptOrder(order.id);
+                        printMerchantInvoice(order);
+                      }}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold shadow-2xs transition-colors cursor-pointer"
+                      title="Accept & Print Order in 1 click"
+                    >
+                      <Printer className="w-2.5 h-2.5" />
+                      <span>Accept</span>
+                    </button>
+                  ) : (
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200/60 uppercase whitespace-nowrap">
+                      {order.status.replace('_', ' ')}
+                    </span>
+                  )}
                   <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-600 transition-colors shrink-0" />
                 </div>
               </div>

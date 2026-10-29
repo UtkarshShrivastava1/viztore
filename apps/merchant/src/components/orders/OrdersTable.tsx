@@ -486,24 +486,51 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
                     {/* Actions Column matching 2.0.png through 2.7.png */}
                     <td className="py-3.5 px-3.5 text-right">
                       <div className="flex items-center justify-end gap-1.5">
-                        {/* New Orders: Accept Order (blue) + Reject (red text) */}
+                        {/* New Orders: Accept & Print (emerald primary) + Accept + Reject */}
                         {activeTab === 'new_orders' && (
                           <>
                             <button
                               type="button"
-                              onClick={() => acceptOrder(order.id)}
-                              className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition-colors shadow-2xs whitespace-nowrap cursor-pointer"
+                              onClick={() => {
+                                acceptOrder(order.id);
+                                onPrintOrder(order);
+                              }}
+                              className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs transition-colors shadow-2xs whitespace-nowrap cursor-pointer flex items-center gap-1.5"
+                              title="Accept order and print KOT invoice slip in 1 click"
                             >
-                              Accept Order
+                              <Printer className="w-3.5 h-3.5" />
+                              <span>Accept & Print</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => acceptOrder(order.id)}
+                              className="px-2.5 py-1.5 rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50 font-semibold text-xs transition-colors shadow-2xs whitespace-nowrap cursor-pointer"
+                            >
+                              Accept
                             </button>
                             <button
                               type="button"
                               onClick={() => rejectOrder(order.id)}
-                              className="px-2.5 py-1.5 rounded-lg text-rose-600 hover:bg-rose-50 font-semibold text-xs transition-colors whitespace-nowrap cursor-pointer"
+                              className="px-2 py-1.5 rounded-lg text-rose-600 hover:bg-rose-50 font-semibold text-xs transition-colors whitespace-nowrap cursor-pointer"
                             >
                               Reject
                             </button>
                           </>
+                        )}
+                        {/* All Orders Tab: Quick Accept & Print if still new */}
+                        {activeTab === 'all_orders' && order.status === 'new' && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              acceptOrder(order.id);
+                              onPrintOrder(order);
+                            }}
+                            className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs transition-colors shadow-2xs whitespace-nowrap cursor-pointer flex items-center gap-1"
+                            title="Accept order and print KOT invoice slip in 1 click"
+                          >
+                            <Printer className="w-3 h-3" />
+                            <span>Accept & Print</span>
+                          </button>
                         )}
 
                         {/* Accepted: Ready to Ship */}
