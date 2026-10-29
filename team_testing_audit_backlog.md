@@ -2,9 +2,9 @@
 
 ## 📊 Global Audit Remediation Progress Tracker
 
-> **Current Status**: **Sprint 3 In Progress! (4/14 - 28.6%)** — Storefront Discovery, Merchant Config & Tooling  
-> **Platform Completion**: **25 / 62 Items Completed** (**40.3%**)  
-> **Overall Progress Bar**: `[████████░░░░░░░░░░░░] 40.3%`
+> **Current Status**: **Sprint 3 In Progress! (6/14 - 42.9%)** — Storefront Discovery, Merchant Config & Tooling  
+> **Platform Completion**: **27 / 62 Items Completed** (**43.5%**)  
+> **Overall Progress Bar**: `[█████████░░░░░░░░░░░] 43.5%`
 
 ### Sprint Completion Breakdown
 
@@ -12,10 +12,10 @@
 |---|---|:---:|---|:---:|:---:|
 | **Sprint 1** | **Core Architectural Foundations & Critical Blockers** | **9 / 9** | `[████████████████████]` | **100.0%** | `DONE ✅` |
 | **Sprint 2** | **Commercial Engines, Billing, Ledger & Procurement** | **12 / 12** | `[████████████████████]` | **100.0%** | `DONE ✅` |
-| **Sprint 3** | **Storefront Discovery, Merchant Config & Tooling** | **4 / 14** | `[██████░░░░░░░░░░░░░░]` | **28.6%** | `IN PROGRESS 🟡` |
+| **Sprint 3** | **Storefront Discovery, Merchant Config & Tooling** | **6 / 14** | `[█████████░░░░░░░░░░░]` | **42.9%** | `IN PROGRESS 🟡` |
 | **Sprint 4** | **Catalog & Merchant Inventory Workflows (Phase 4A)** | **0 / 13** | `[░░░░░░░░░░░░░░░░░░░░]` | **0.0%** | `PENDING ⚪` |
 | **Sprint 5** | **Store Merchandising, Policies & Micro-Polish (Phase 4B)** | **0 / 14** | `[░░░░░░░░░░░░░░░░░░░░]` | **0.0%** | `PENDING ⚪` |
-| **TOTAL** | **Hyperlocal Multi-Vendor Commerce Platform** | **25 / 62** | `[████████░░░░░░░░░░░░]` | **40.3%** | **ACTIVE 🚀** |
+| **TOTAL** | **Hyperlocal Multi-Vendor Commerce Platform** | **27 / 62** | `[█████████░░░░░░░░░░░]` | **43.5%** | **ACTIVE 🚀** |
 
 > *Note: Sprints 4 & 5 correspond to the detailed breakdown of Roadmap Milestone 4 (27 UI/UX Hardening & Visual Excellence deliverables).*
 
@@ -71,7 +71,7 @@ This document serves as the master engineering log for all findings, functional 
 | `AUDIT-024` | Marketing Website "Sell Online" Nav Tab Hover Activation | Merchant Hub | Marketing Nav | UI/UX Polish | P3 | Low | Logged 📝 |
 | `AUDIT-025` | Expense Module: New Vendor, Date Default & Amount Glitch | Merchant Hub | Expenses | Bug / Defect | P1 | Medium | Logged 📝 |
 | `AUDIT-026` | Global System Date & Timezone Synchronization | Cross-Cutting | Core / Runtime | Reliability | P1 | Medium | DONE ✅ |
-| `AUDIT-027` | "Stores Near You" Ascending Distance Proximity Sorting | Customer Web | Discovery | Algorithm / UX | P1 | Medium | Logged 📝 |
+| `AUDIT-027` | "Stores Near You" Ascending Distance Proximity Sorting | Customer Web | Discovery | Algorithm / UX | P1 | Medium | DONE ✅ |
 | `AUDIT-028` | Merchant Order Management: One-Click Accept & Print Invoice/KOT | Merchant Hub | Orders | Workflow | P1 | Low | DONE ✅ |
 | `AUDIT-029` | "Shop by Category" Visual Polish & Card Layout Upgrade | Customer Web | Discovery / Home | UI/UX Polish | P2 | Low | Logged 📝 |
 | `AUDIT-030` | Header "My Orders" & "Cart" Navigation / Quick View Triggers | Customer Web | Header Nav | Bug / Defect | P1 | Low | Logged 📝 |
@@ -92,7 +92,7 @@ This document serves as the master engineering log for all findings, functional 
 | `AUDIT-045` | Delivery Location Modal Background Bleed, Stacking Context Glitch & Saved Address Search | Customer Web | Location / Modal | Bug / Stacking | P0 | Medium | Logged 📝 |
 | `AUDIT-046` | Merchant Dashboard "Create New Bill" Quick Action Buttons Routing & Intent Wiring | Merchant Hub | Billing / Dashboard | UX / Workflow | P1 | Low | Logged 📝 |
 | `AUDIT-047` | Merchant Dashboard Overview Full Interactive Hardening: Quick Actions, Date Filters & Chart CTAs | Merchant Hub | Dashboard Overview | UX / Interactive | P1 | Medium | Logged 📝 |
-| `AUDIT-048` | Customer "Favourite Stores" Pipeline Broken: Auto-Favoriting All Stores, Missing Heart Action & Zero Persistence | Customer Web | Account / Stores Discovery | Bug / Pipeline Breakdown | P1 | Medium | Logged 📝 |
+| `AUDIT-048` | Customer "Favourite Stores" Pipeline Broken: Auto-Favoriting All Stores, Missing Heart Action & Zero Persistence | Customer Web | Account / Stores Discovery | Bug / Pipeline Breakdown | P1 | Medium | DONE ✅ |
 | `AUDIT-049` | Customer & Platform End-to-End Notification Pipeline Breakdown: Backend Event ID Mismatch, Unwired Store & Permanent Empty State | Customer Web / Backend | Account & Header Notifications | Bug / Architectural Pipeline | P1 | Medium | Logged 📝 |
 | `AUDIT-050` | Customer & Platform End-to-End Coupons & Offers Pipeline Breakdown: Mock Customer Page, Browser Prompt Checkout & Missing Backend Engine | Customer Web / Cross-Cutting | Coupons / Checkout / Marketing | Bug / Architectural Pipeline | P1 | Medium | DONE ✅ |
 | `AUDIT-051` | Merchant Hub Route-Based Navigation Overhaul: Browser Back Button, Deep Linking & Refresh State Recovery | Merchant Hub | Routing & Architecture | Architecture / UX Blocker | P0 | High | DONE ✅ |
@@ -1436,8 +1436,8 @@ Executing strictly in this order guarantees that **every data model, schema cont
   2. `[AUDIT-019]` Store Management Logo & Banner Media Persistence (DONE ✅ - Commit `3710d9e`).
   3. `[AUDIT-023]` Store Management "Manage Sections" Persistence in MongoDB (DONE ✅ - Commit `3710d9e`).
   4. `[AUDIT-020]` "Your Store Link" 404 Route Handler (`/stores/:slug`) (DONE ✅ - Commit `3710d9e`).
-  5. `[AUDIT-027]` "Stores Near You" Ascending Distance Proximity Sort (2dsphere haversine query).
-  6. `[AUDIT-048]` Customer "Favourite Stores" Pipeline & Persistence.
+  5. `[AUDIT-027]` "Stores Near You" Ascending Distance Proximity Sort (2dsphere haversine query) (DONE ✅ - Commit `104da0d`).
+  6. `[AUDIT-048]` Customer "Favourite Stores" Pipeline & Persistence (DONE ✅ - Commit `104da0d`).
   7. `[AUDIT-060]` Customer Profile & Feedback Persistence (wire `handleSave` and feedback API).
   8. `[AUDIT-049]` Customer & Platform End-to-End Notification Pipeline (Socket.io event sync).
   9. `[AUDIT-059]` Platform Support & Help Desk Ticketing Engine (`SupportTicketModel`, Cloudinary attachments).
