@@ -272,6 +272,7 @@ export const App: React.FC = () => {
               handleSelectTab('settings');
             }}
             onNavigateToSupport={() => handleSelectTab('support')}
+            onNavigate={(tab) => handleSelectTab(tab)}
           />
 
           <main
