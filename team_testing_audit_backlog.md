@@ -2,9 +2,9 @@
 
 ## 📊 Global Audit Remediation Progress Tracker
 
-> **Current Status**: **Sprint 3 In Progress! (7/14 - 50.0%)** — Storefront Discovery, Merchant Config & Tooling  
-> **Platform Completion**: **28 / 62 Items Completed** (**45.2%**)  
-> **Overall Progress Bar**: `[█████████░░░░░░░░░░░] 45.2%`
+> **Current Status**: **Sprint 3 In Progress! (8/14 - 57.1%)** — Storefront Discovery, Merchant Config & Tooling  
+> **Platform Completion**: **29 / 62 Items Completed** (**46.8%**)  
+> **Overall Progress Bar**: `[█████████░░░░░░░░░░░] 46.8%`
 
 ### Sprint Completion Breakdown
 
@@ -12,10 +12,10 @@
 |---|---|:---:|---|:---:|:---:|
 | **Sprint 1** | **Core Architectural Foundations & Critical Blockers** | **9 / 9** | `[████████████████████]` | **100.0%** | `DONE ✅` |
 | **Sprint 2** | **Commercial Engines, Billing, Ledger & Procurement** | **12 / 12** | `[████████████████████]` | **100.0%** | `DONE ✅` |
-| **Sprint 3** | **Storefront Discovery, Merchant Config & Tooling** | **7 / 14** | `[██████████░░░░░░░░░░]` | **50.0%** | `IN PROGRESS 🟡` |
+| **Sprint 3** | **Storefront Discovery, Merchant Config & Tooling** | **8 / 14** | `[███████████░░░░░░░░░]` | **57.1%** | `IN PROGRESS 🟡` |
 | **Sprint 4** | **Catalog & Merchant Inventory Workflows (Phase 4A)** | **0 / 13** | `[░░░░░░░░░░░░░░░░░░░░]` | **0.0%** | `PENDING ⚪` |
 | **Sprint 5** | **Store Merchandising, Policies & Micro-Polish (Phase 4B)** | **0 / 14** | `[░░░░░░░░░░░░░░░░░░░░]` | **0.0%** | `PENDING ⚪` |
-| **TOTAL** | **Hyperlocal Multi-Vendor Commerce Platform** | **28 / 62** | `[█████████░░░░░░░░░░░]` | **45.2%** | **ACTIVE 🚀** |
+| **TOTAL** | **Hyperlocal Multi-Vendor Commerce Platform** | **29 / 62** | `[█████████░░░░░░░░░░░]` | **46.8%** | **ACTIVE 🚀** |
 
 > *Note: Sprints 4 & 5 correspond to the detailed breakdown of Roadmap Milestone 4 (27 UI/UX Hardening & Visual Excellence deliverables).*
 
@@ -93,7 +93,7 @@ This document serves as the master engineering log for all findings, functional 
 | `AUDIT-046` | Merchant Dashboard "Create New Bill" Quick Action Buttons Routing & Intent Wiring | Merchant Hub | Billing / Dashboard | UX / Workflow | P1 | Low | Logged 📝 |
 | `AUDIT-047` | Merchant Dashboard Overview Full Interactive Hardening: Quick Actions, Date Filters & Chart CTAs | Merchant Hub | Dashboard Overview | UX / Interactive | P1 | Medium | Logged 📝 |
 | `AUDIT-048` | Customer "Favourite Stores" Pipeline Broken: Auto-Favoriting All Stores, Missing Heart Action & Zero Persistence | Customer Web | Account / Stores Discovery | Bug / Pipeline Breakdown | P1 | Medium | DONE ✅ |
-| `AUDIT-049` | Customer & Platform End-to-End Notification Pipeline Breakdown: Backend Event ID Mismatch, Unwired Store & Permanent Empty State | Customer Web / Backend | Account & Header Notifications | Bug / Architectural Pipeline | P1 | Medium | Logged 📝 |
+| `AUDIT-049` | Customer & Platform End-to-End Notification Pipeline Breakdown: Backend Event ID Mismatch, Unwired Store & Permanent Empty State | Customer Web / Backend | Account & Header Notifications | Bug / Architectural Pipeline | P1 | Medium | DONE ✅ |
 | `AUDIT-050` | Customer & Platform End-to-End Coupons & Offers Pipeline Breakdown: Mock Customer Page, Browser Prompt Checkout & Missing Backend Engine | Customer Web / Cross-Cutting | Coupons / Checkout / Marketing | Bug / Architectural Pipeline | P1 | Medium | DONE ✅ |
 | `AUDIT-051` | Merchant Hub Route-Based Navigation Overhaul: Browser Back Button, Deep Linking & Refresh State Recovery | Merchant Hub | Routing & Architecture | Architecture / UX Blocker | P0 | High | DONE ✅ |
 | `AUDIT-052` | Customer Dynamic Category Route Architecture (`/category/[slug]`), Faceted Query Parameters & Deep Linking Hardening | Customer Web | Catalog Discovery / Routing | Architecture / Enhancement | P1 | Medium | DONE ✅ |
@@ -1439,7 +1439,7 @@ Executing strictly in this order guarantees that **every data model, schema cont
   5. `[AUDIT-027]` "Stores Near You" Ascending Distance Proximity Sort (2dsphere haversine query) (DONE ✅ - Commit `104da0d`).
   6. `[AUDIT-048]` Customer "Favourite Stores" Pipeline & Persistence (DONE ✅ - Commit `104da0d`).
   7. `[AUDIT-060]` Customer Profile & Feedback Persistence (wire `handleSave` and feedback API) (DONE ✅ - Commit `27b49ba`).
-  8. `[AUDIT-049]` Customer & Platform End-to-End Notification Pipeline (Socket.io event sync).
+  8. `[AUDIT-049]` Customer & Platform End-to-End Notification Pipeline (Socket.io event sync) (DONE ✅ - Commit `db7f087`).
   9. `[AUDIT-059]` Platform Support & Help Desk Ticketing Engine (`SupportTicketModel`, Cloudinary attachments).
   10. `[AUDIT-062]` Merchant Global Header Search Bar & `Ctrl+K` Command Palette.
   11. `[AUDIT-001]` Customer Wishlist / "Like" Heart Action & Persistence.
