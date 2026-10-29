@@ -32,6 +32,8 @@ export interface CreateOrderDTO {
   storeId: string;
   items: OrderItemDTO[];
   shippingAddress: ShippingAddressDTO;
+  couponCode?: string;
+  discount?: number;
 }
 
 export interface UpdateOrderStatusDTO {
@@ -47,6 +49,8 @@ export interface OrderResponse {
   items: OrderItemDTO[];
   shippingAddress: ShippingAddressDTO;
   subtotal: number;
+  discount?: number;
+  couponCode?: string | null;
   tax: number;
   shippingFee: number;
   grandTotal: number;

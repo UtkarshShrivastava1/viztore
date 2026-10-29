@@ -1,3 +1,4 @@
+import { couponService } from '../coupons/coupon.service.js';
 import {
   OrderStatus,
   type CreateOrderDTO,
@@ -115,6 +116,14 @@ export function createOrderService(
       authoritativeItems.push(...dto.items);
     }
 
+    // 4.5. Coupon validation and discount computation
+    let couponDiscount = 0;
+    if (dto.couponCode) {
+      const calculatedSubtotal = authoritativeItems.reduce((acc, it) => acc + it.quantity * it.unitPrice, 0);
+      const val = await couponService.validateCoupon(dto.couponCode, calculatedSubtotal, dto.storeId);
+      couponDiscount = val.discountAmount;
+    }
+
     // 5. ACID Transaction: Atomic stock deduction + Order creation + Outbox event insertion
     const normalizedShippingAddress = normalizeAddress(dto.shippingAddress);
 
@@ -132,6 +141,8 @@ export function createOrderService(
         items: authoritativeItems,
         userId,
         shippingAddress: normalizedShippingAddress,
+        discount: couponDiscount,
+        couponCode: dto.couponCode || undefined,
       };
 
       const created = session
@@ -162,6 +173,12 @@ export function createOrderService(
 
       return created;
     });
+
+    if (dto.couponCode) {
+      void couponService.incrementCouponUsage(dto.couponCode).catch((e) => {
+        logger.warn('Failed to increment coupon usage count', { error: e, code: dto.couponCode });
+      });
+    }
 
     // 6. Post-commit asynchronous dispatch triggers
     void processPendingOutboxEvents().catch((error) => {

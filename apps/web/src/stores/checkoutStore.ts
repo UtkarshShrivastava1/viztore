@@ -27,6 +27,7 @@ export interface CheckoutState {
   setReserveDateTime: (dt: string | null) => void;
   couponCode: string | null;
   discountAmount: number;
+  applyCouponDiscount: (code: string, discount: number) => void;
   applyCoupon: (code: string) => void;
   removeCoupon: () => void;
   isPlacingOrder: boolean;
@@ -48,7 +49,8 @@ export const useCheckoutStore = create<CheckoutState>()(
       setReserveDateTime: (dt) => set({ reserveDateTime: dt }),
       couponCode: null,
       discountAmount: 0,
-      applyCoupon: (code) => set({ couponCode: code, discountAmount: 100 }), // Mock discount for now
+      applyCouponDiscount: (code, discount) => set({ couponCode: code, discountAmount: discount }),
+      applyCoupon: (code) => set({ couponCode: code, discountAmount: 100 }),
       removeCoupon: () => set({ couponCode: null, discountAmount: 0 }),
       isPlacingOrder: false,
       setIsPlacingOrder: (loading) => set({ isPlacingOrder: loading }),
@@ -61,6 +63,8 @@ export const useCheckoutStore = create<CheckoutState>()(
         shippingAddress: state.shippingAddress,
         paymentMethod: state.paymentMethod,
         reserveDateTime: state.reserveDateTime,
+        couponCode: state.couponCode,
+        discountAmount: state.discountAmount,
       }),
     }
   )

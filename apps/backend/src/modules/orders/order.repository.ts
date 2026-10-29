@@ -31,6 +31,8 @@ export function createOrderRepository(
       items: raw.items,
       shippingAddress: raw.shippingAddress,
       subtotal: raw.subtotal,
+      discount: (raw as any).discount || 0,
+      couponCode: (raw as any).couponCode || null,
       tax: raw.tax,
       shippingFee: raw.shippingFee,
       grandTotal: raw.grandTotal,
@@ -51,7 +53,9 @@ export function createOrderRepository(
     const subtotal = calculateSubtotal(dto.items);
     const tax = calculateTax(subtotal);
     const shippingFee = calculateShippingFee(subtotal);
-    const grandTotal = calculateGrandTotal(subtotal, tax, shippingFee);
+    const discount = dto.discount && dto.discount > 0 ? dto.discount : 0;
+    const rawTotal = calculateGrandTotal(subtotal, tax, shippingFee);
+    const grandTotal = Number(Math.max(0, rawTotal - discount).toFixed(2));
 
     const initialStatusHistory: IOrderStatusHistoryEntry[] = [
       {
@@ -67,6 +71,8 @@ export function createOrderRepository(
       orderNumber: generateOrderNumber(),
       deliveryOtp: generateDeliveryOtp(),
       subtotal,
+      discount,
+      couponCode: dto.couponCode || null,
       tax,
       shippingFee,
       grandTotal,

@@ -15,3 +15,4 @@ export * from './date.utils.js';
 export * from './customer.types.js';
 export * from './return.types.js';
 export * from './settlement.types.js';
+export * from './coupon.types.js';

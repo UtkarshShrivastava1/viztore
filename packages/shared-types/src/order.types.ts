@@ -55,6 +55,7 @@ export const createOrderSchema = z.object({
   storeId: z.string().min(1, 'Store ID is required'),
   items: z.array(createOrderItemSchema).min(1, 'Order must contain at least one item'),
   shippingAddress: shippingAddressSchema,
+  couponCode: z.string().optional(),
 });
 
 export const updateOrderStatusSchema = z.object({
@@ -102,6 +103,8 @@ export interface IOrder {
   items: IOrderItem[];
   shippingAddress: ShippingAddressDto;
   subtotal: number;
+  discount?: number;
+  couponCode?: string | null;
   tax: number;
   shippingFee: number;
   grandTotal: number;

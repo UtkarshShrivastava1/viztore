@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Tag,
   Clock,
@@ -24,9 +24,13 @@ interface DiscountsCouponsTabProps {
 }
 
 export const DiscountsCouponsTab: React.FC<DiscountsCouponsTabProps> = ({ onCreateCoupon }) => {
-  const { coupons, openCreateCouponWizard } = useMarketingStore();
+  const { coupons, openCreateCouponWizard, fetchCoupons, deleteCoupon } = useMarketingStore();
 
   const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    fetchCoupons();
+  }, []);
   const [selectedType, setSelectedType] = useState<string>('All Types');
   const [selectedStatus, setSelectedStatus] = useState<string>('All Status');
   const [selectedApplicable, setSelectedApplicable] = useState<string>('All Products');

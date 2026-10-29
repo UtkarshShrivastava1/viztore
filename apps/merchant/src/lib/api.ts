@@ -362,6 +362,12 @@ export const expensesApi = {
     api.post<any>('/expenses/eway-bills', data),
 };
 
+export const couponsApi = {
+  getCoupons: () => api.get<any[]>('/coupons'),
+  createCoupon: (data: unknown) => api.post<any>('/coupons', data),
+  deleteCoupon: (id: string) => api.delete<any>(`/coupons/${id}`),
+};
+
 export const mediaApi = {
   uploadImage: async (file: File, folder = 'products') => {
     const formData = new FormData();
