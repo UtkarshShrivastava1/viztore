@@ -13,6 +13,7 @@ import { useOrderStore } from '../stores/orderStore.js';
 import { useCustomerStore, Customer } from '../stores/customerStore.js';
 import { UserPlus } from 'lucide-react';
 import { useInventoryStore } from '../stores/inventoryStore.js';
+import { formatDateIST } from '@repo/shared-types';
 
 interface CreateOrderPageProps {
   onBack?: () => void;
@@ -56,10 +57,7 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
   const [isAddingAddress, setIsAddingAddress] = useState(false);
   const [newAddressInput, setNewAddressInput] = useState('');
 
-  const [deliveryDate, setDeliveryDate] = useState(() => {
-    const today = new Date();
-    return today.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-  });
+  const [deliveryDate, setDeliveryDate] = useState(() => formatDateIST(new Date()));
 
   const filteredCustomers = React.useMemo(() => {
     if (!searchQuery.trim()) return customers.slice(0, 5);

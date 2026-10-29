@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { api, ordersApi } from '../lib/api.js';
 import { useAuthStore } from './authStore.js';
+import { formatDateTimeIST } from '@repo/shared-types';
 
 export type OrderTab =
   | 'new_orders'
@@ -250,18 +251,18 @@ export function mapApiOrderToMerchantRecord(apiOrder: any): MerchantOrderRecord 
     },
     otp: apiOrder.deliveryOtp || '0000',
     timestamps: {
-      createdAt: apiOrder.createdAt
-        ? new Date(apiOrder.createdAt).toLocaleString('en-IN', {
-            day: 'numeric',
-            month: 'short',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-          })
-        : 'Recent',
-      deliveredAt: apiOrder.deliveredAt
-        ? new Date(apiOrder.deliveredAt).toLocaleString('en-IN')
-        : undefined,
+      createdAt: apiOrder.createdAt ? formatDateTimeIST(apiOrder.createdAt) : 'Recent',
+
+
+
+
+
+
+
+
+      deliveredAt: apiOrder.deliveredAt ? formatDateTimeIST(apiOrder.deliveredAt) : undefined,
+
+
     },
     currentStageName:
       mappedStatus === 'new'
