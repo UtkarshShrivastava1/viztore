@@ -2,9 +2,9 @@
 
 ## 📊 Global Audit Remediation Progress Tracker
 
-> **Current Status**: **Sprint 3 Completed! (14/14 - 100.0%)** — Storefront Discovery, Merchant Config & Tooling  
-> **Platform Completion**: **35 / 62 Items Completed** (**56.5%**)  
-> **Overall Progress Bar**: `[███████████░░░░░░░░░] 56.5%`
+> **Current Status**: **Sprint 4 Completed! (13/13 - 100.0%)** — Catalog & Merchant Inventory Workflows  
+> **Platform Completion**: **48 / 62 Items Completed** (**77.4%**)  
+> **Overall Progress Bar**: `[███████████████░░░░░] 77.4%`
 
 ### Sprint Completion Breakdown
 
@@ -13,9 +13,9 @@
 | **Sprint 1** | **Core Architectural Foundations & Critical Blockers** | **9 / 9** | `[████████████████████]` | **100.0%** | `DONE ✅` |
 | **Sprint 2** | **Commercial Engines, Billing, Ledger & Procurement** | **12 / 12** | `[████████████████████]` | **100.0%** | `DONE ✅` |
 | **Sprint 3** | **Storefront Discovery, Merchant Config & Tooling** | **14 / 14** | `[████████████████████]` | **100.0%** | `DONE ✅` |
-| **Sprint 4** | **Catalog & Merchant Inventory Workflows (Phase 4A)** | **0 / 13** | `[░░░░░░░░░░░░░░░░░░░░]` | **0.0%** | `PENDING ⚪` |
+| **Sprint 4** | **Catalog & Merchant Inventory Workflows (Phase 4A)** | **13 / 13** | `[████████████████████]` | **100.0%** | `DONE ✅` |
 | **Sprint 5** | **Store Merchandising, Policies & Micro-Polish (Phase 4B)** | **0 / 14** | `[░░░░░░░░░░░░░░░░░░░░]` | **0.0%** | `PENDING ⚪` |
-| **TOTAL** | **Hyperlocal Multi-Vendor Commerce Platform** | **35 / 62** | `[███████████░░░░░░░░░]` | **56.5%** | **ACTIVE 🚀** |
+| **TOTAL** | **Hyperlocal Multi-Vendor Commerce Platform** | **48 / 62** | `[███████████████░░░░░]` | **77.4%** | **ACTIVE 🚀** |
 
 > *Note: Sprints 4 & 5 correspond to the detailed breakdown of Roadmap Milestone 4 (27 UI/UX Hardening & Visual Excellence deliverables).*
 
@@ -1449,36 +1449,42 @@ Executing strictly in this order guarantees that **every data model, schema cont
 
 ---
 
-### Sprint 4: Global UI/UX Hardening & Visual Excellence (27 Items)
-* **Goal**: Eliminate visual clunkiness, polish forms, inputs, accordions, and carousels, and achieve pixel-level aesthetic excellence across both portals.
+### Sprint 4: Catalog & Merchant Inventory Workflows (13 Items) - COMPLETED ✅ (13/13)
+* **Goal**: Harden merchant product creation, bulk operations, category attributes, HSN mapping, order item shelf locations, and location/address sync.
 * **Items**:
-  1. `[AUDIT-038]` Global Number Input UX Polish (remove native WebKit `⌃⌄` spinners, lock scroll wheel).
-  2. `[AUDIT-040]` Stale May 2024 Date Defaults & Duplicate Calendar Icon Removal.
-  3. `[AUDIT-045]` Delivery Location Modal Background Bleed & Stacking Context Glitch.
-  4. `[AUDIT-022]` Store Management Radio Button Direct Click Event.
-  5. `[AUDIT-037]` Store Management "Section Preview Order" Sleek Scrollbar.
-  6. `[AUDIT-039]` Merchant Catalog Tags / Keywords Container Click-to-Focus.
-  7. `[AUDIT-044]` Customer Web Trust Badges Horizontal Alignment.
-  8. `[AUDIT-042]` Customer Web Mobile Top Header Redundant Profile Icon Removal.
-  9. `[AUDIT-029]` "Shop by Category" Visual Polish & Card Layout Upgrade.
-  10. `[AUDIT-034]` Fashion & Promotional Hero Banner Carousel Polish.
-  11. `[AUDIT-033]` Terms & Conditions / FAQ Collapsible Accordions.
-  12. `[AUDIT-024]` Marketing Website "Sell Online" Nav Tab Hover Activation.
-  13. `[AUDIT-018]` Store Management "New Arrivals" Section Sequencing.
-  14. `[AUDIT-010]` Flexible Category-Specific HSN Code Mapping.
-  15. `[AUDIT-011]` Dynamic Category-Specific Product Attributes.
-  16. `[AUDIT-008]` Merchant Onboarding GSTIN Auto-Fill & PAN Correlation.
-  17. `[AUDIT-009]` Merchant Catalog Bulk Product Deletion Action.
-  18. `[AUDIT-012]` Order Arrival Product Physical Location / Aisle Tagging.
-  19. `[AUDIT-015]` Merchant Catalog Filter & Search State Breakdown.
-  20. `[AUDIT-016]` Catalog Edit Product Modal Glitches & Field Binding.
-  21. `[AUDIT-021]` Store QR Code Generation.
-  22. `[AUDIT-025]` Expense Module Form Polish (vendor modal & amount).
-  23. `[AUDIT-035]` Customer `/stores` Page Category Filter Tabs.
-  24. `[AUDIT-036]` Recommendation Duplication in "More Products For You".
-  25. `[AUDIT-043]` Customer Web Mobile Search Row Notification Bell & Profile Navigation.
-  26. `[AUDIT-046]` & `[AUDIT-047]` Merchant Dashboard Overview Quick Actions & Date Filters.
-  27. `SellClient.tsx` White-Label Sanitize: Replace hardcoded "V" emblem with generic store icon.
+  1. `[AUDIT-038]` Global Number Input UX Polish (remove native WebKit spinners, lock mousewheel scroll). (DONE ✅ - Commit `d074160`)
+  2. `[AUDIT-040]` Stale May 2024 Date Defaults & Duplicate Calendar Indicator Fix. (DONE ✅ - Commit `d074160`)
+  3. `[AUDIT-045]` Delivery Location Modal Background Bleed, Stacking Portal & Customer Address Store Pipeline. (DONE ✅ - Commit `d074160`)
+  4. `[AUDIT-022]` Store Management Radio Button Direct Click Event (`cursor-pointer !important`). (DONE ✅ - Commit `d074160`)
+  5. `[AUDIT-037]` Store Management "Section Preview Order" Sleek Scrollbar (`scrollbar-none`). (DONE ✅ - Commit `d074160`)
+  6. `[AUDIT-039]` Merchant Catalog Tags / Keywords Container Click-to-Focus & Focus Ring. (DONE ✅ - Commit `d074160`)
+  7. `[AUDIT-010]` Flexible Category-Specific HSN Code Mapping (`CATEGORY_HSN_MAP` & suggestion pills). (DONE ✅ - Commit `d074160`)
+  8. `[AUDIT-011]` Dynamic Category-Specific Product Attributes (Grocery, Electronics, Fashion). (DONE ✅ - Commit `d074160`)
+  9. `[AUDIT-008]` Merchant Onboarding GSTIN Auto-Fill & PAN Correlation. (DONE ✅ - Commit `d074160`)
+  10. `[AUDIT-009]` Merchant Catalog Bulk Product Deletion Action (`POST /api/v1/catalog/products/bulk-delete`). (DONE ✅ - Commit `d074160`)
+  11. `[AUDIT-012]` Order Arrival Product Physical Location / Aisle Tagging (`shelfLocation`). (DONE ✅ - Commit `d074160`)
+  12. `[AUDIT-015]` Merchant Catalog Filter & Search State Breakdown (case-insensitive substring filter). (DONE ✅ - Commit `d074160`)
+  13. `[AUDIT-016]` Catalog Edit Product Modal Glitches & Field Binding (`loadProductIntoDraft` normalization). (DONE ✅ - Commit `d074160`)
+
+---
+
+### Sprint 5: Store Merchandising, Policies & Micro-Polish (14 Items) - UP NEXT 🚀
+* **Goal**: Refine storefront banners, accordion FAQ/terms, mobile headers, customer trust badges, merchant dashboard quick actions, and micro-interactions.
+* **Items**:
+  1. `[AUDIT-044]` Customer Web Trust Badges Horizontal Alignment.
+  2. `[AUDIT-042]` Customer Web Mobile Top Header Redundant Profile Icon Removal.
+  3. `[AUDIT-029]` "Shop by Category" Visual Polish & Card Layout Upgrade.
+  4. `[AUDIT-034]` Fashion & Promotional Hero Banner Carousel Polish.
+  5. `[AUDIT-033]` Terms & Conditions / FAQ Collapsible Accordions.
+  6. `[AUDIT-024]` Marketing Website "Sell Online" Nav Tab Hover Activation.
+  7. `[AUDIT-018]` Store Management "New Arrivals" Section Sequencing.
+  8. `[AUDIT-021]` Store QR Code Generation.
+  9. `[AUDIT-025]` Expense Module Form Polish (vendor modal & amount).
+  10. `[AUDIT-035]` Customer `/stores` Page Category Filter Tabs.
+  11. `[AUDIT-036]` Recommendation Duplication in "More Products For You".
+  12. `[AUDIT-043]` Customer Web Mobile Search Row Notification Bell & Profile Navigation.
+  13. `[AUDIT-046]` Merchant Dashboard "Create New Bill" Quick Action Buttons Routing & Intent Wiring.
+  14. `[AUDIT-047]` Merchant Dashboard Overview Full Interactive Hardening: Quick Actions, Date Filters & Chart CTAs.
 
 ---
 
