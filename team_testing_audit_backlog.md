@@ -133,7 +133,7 @@ This document serves as the master engineering log for all findings, functional 
 - **Expected**: Debounced search query triggers live dropdown suggestions (stores, categories, products) and pressing Enter navigates to search results page with matching items sorted by relevance; mobile SearchBar input is fully interactive with route navigation.
 - **Target Files**: `apps/web/src/components/layout/SearchBar.tsx`, `apps/web/src/components/layout/Header.tsx`, `apps/web/src/app/search/page.tsx`, `apps/backend/src/modules/catalog/catalog.service.ts`.
 
-#### [AUDIT-006] Customer "Reserve / Hold" In-Store Order Pipeline (DONE ✅ - Commit `Pending`)
+#### [AUDIT-006] Customer "Reserve / Hold" In-Store Order Pipeline (DONE ✅ - Commit `3dfa475`)
 - **Layer**: Frontend (`apps/web`) & Backend (`apps/backend`)
 - **Module**: Orders / Checkout / Reserve Mode
 - **Type**: Functional Gap | **Severity**: P1 | **Complexity**: Medium
@@ -1420,7 +1420,7 @@ Executing strictly in this order guarantees that **every data model, schema cont
   4. `[AUDIT-056]` Merchant Payouts & Settlement Engine (automated cron, net balance, bank UTRs). (DONE ✅ - Commit `48161e6`)
   5. `[AUDIT-058]` Purchase & Expense Procurement Engine (`PurchaseOrderModel`, stock increment on receipt). (DONE ✅ - Commit `cf71c44`)
   6. `[AUDIT-050]` Customer Coupons & Offers Pipeline (backend discount validation). (DONE ✅ - Commit `dbe210e`)
-  7. `[AUDIT-006]` Customer "Reserve / Hold" In-Store Order Pipeline (2-hour hold state machine). (DONE ✅ - Commit `Pending`)
+  7. `[AUDIT-006]` Customer "Reserve / Hold" In-Store Order Pipeline (2-hour hold state machine). (DONE ✅ - Commit `3dfa475`)
   8. `[AUDIT-061]` Customer Cart & Checkout Single-Store Coherence (clean up multi-store header confusion).
   9. `[AUDIT-028]` Merchant One-Click Accept & Print Invoice/KOT (thermal slip generation).
   10. `[AUDIT-032]` Customer Order Cancellation Action & Reason Modal.
