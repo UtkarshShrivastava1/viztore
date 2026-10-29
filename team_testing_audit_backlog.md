@@ -101,7 +101,7 @@ This document serves as the master engineering log for all findings, functional 
 - **Expected**: One-tap optimistic UI toggle on heart icon with lively red fill animation, persistent sync across customer sessions, and single-click "Move to Cart".
 - **Target Files**: `apps/web/src/components/product/ProductCard.tsx`, `apps/web/src/stores/wishlistStore.ts`, `apps/backend/src/modules/users/user.controller.ts`.
 
-#### [AUDIT-003] Customer Storefront Search Bar Inactive & Non-Responsive
+#### [AUDIT-003] Customer Storefront Search Bar Inactive & Non-Responsive (DONE ✅ - Commit `7d8b6c0`)
 - **Layer**: Frontend (`apps/web`) & Backend API (`/api/v1/catalog/search`)
 - **Module**: Discovery / Search Header
 - **Type**: Bug / Defect | **Severity**: P0 | **Complexity**: Medium
@@ -367,7 +367,7 @@ This document serves as the master engineering log for all findings, functional 
   - `packages/shared-types/src/order.types.ts`
   - `apps/merchant/src/stores/marketingStore.ts`
 
-#### [AUDIT-052] Customer Dynamic Category Route Architecture (`/category/[slug]`), Faceted Query Parameters & Deep Linking Hardening (DONE ✅)
+#### [AUDIT-052] Customer Dynamic Category Route Architecture (`/category/[slug]`), Faceted Query Parameters & Deep Linking Hardening (DONE ✅ - Commit `577b1a5`) (DONE ✅)
 - **Layer**: Customer Web (`apps/web`)
 - **Module**: Catalog Discovery / Category Routing (`/category/[slug]`, `/products`, Header Category Bar)
 - **Type**: Architecture & Navigation Enhancement | **Severity**: P1 | **Complexity**: Medium
@@ -447,7 +447,7 @@ This document serves as the master engineering log for all findings, functional 
 - **Expected**: Products support an optional `shelfLocation` tag (e.g. `Aisle 3 - Rack B` or `Shelf F-12`). This location displays directly on the order item list and printed packing slip for fast picking.
 - **Target Files**: `apps/merchant/src/components/orders/OrderDetailModal.tsx`, `apps/backend/src/modules/catalog/product.model.ts`.
 
-#### [AUDIT-014] Merchant Manual "Create Order" Blocker: Customer Search ReadOnly & Form Missing (DONE ✅)
+#### [AUDIT-014] Merchant Manual "Create Order" Blocker: Customer Search ReadOnly & Form Missing (DONE ✅ - Commit `4565f80`)
 - **Layer**: Frontend (`apps/merchant`)
 - **Module**: Orders / Create Order (`CreateOrderPage.tsx`)
 - **Type**: Functional Blocker / Bug | **Severity**: P0 (Blocker) | **Complexity**: Medium
@@ -479,7 +479,7 @@ This document serves as the master engineering log for all findings, functional 
 - **Expected**: Clean form pre-population from selected item, proper validation, and optimistic store update.
 - **Target Files**: `apps/merchant/src/components/catalog/EditProductModal.tsx`.
 
-#### [AUDIT-017] Inventory Module Hardening & Catalog Synchronization (DONE ✅)
+#### [AUDIT-017] Inventory Module Hardening & Catalog Synchronization (DONE ✅ - Commit `94dee05`)
 - **Layer**: Frontend (`apps/merchant`)
 - **Module**: Inventory & Stock History
 - **Type**: Bug / Architectural | **Severity**: P0 | **Complexity**: High
@@ -635,7 +635,7 @@ This document serves as the master engineering log for all findings, functional 
   - `apps/merchant/src/components/dashboard/{QuickAccessPanel, SalesOverview, RevenueChart, LowStockWarnings, TopProducts}.tsx`
   - `apps/merchant/src/stores/{orderStore, catalogStore, customerStore, billingStore}.ts`
 
-#### [AUDIT-051] Merchant Hub Route-Based Navigation Overhaul: Browser Back Button, Deep Linking & Refresh State Recovery (DONE ✅)
+#### [AUDIT-051] Merchant Hub Route-Based Navigation Overhaul: Browser Back Button, Deep Linking & Refresh State Recovery (DONE ✅ - Commit `dbc3243`) (DONE ✅)
 - **Layer**: Frontend (`apps/merchant`)
 - **Module**: Navigation & Routing Architecture (`App.tsx`, `Sidebar.tsx`, `Header.tsx`, React Router / Route Layout)
 - **Type**: Architecture & Critical UX Defect | **Severity**: P0 (Architecture / UX Blocker) | **Complexity**: High
@@ -819,7 +819,7 @@ This document serves as the master engineering log for all findings, functional 
 
 ### Category D: Backend & Core Data Architecture (`apps/backend`)
 
-#### [AUDIT-004] Customer vs. Merchant Account Segregation & Namespace
+#### [AUDIT-004] Customer vs. Merchant Account Segregation & Namespace (DONE ✅ - Commit `04ea857`)
 - **Layer**: Backend (`apps/backend`) & Shared Types
 - **Module**: Auth / User Identity
 - **Type**: Architecture | **Severity**: P0 | **Complexity**: High
@@ -827,7 +827,7 @@ This document serves as the master engineering log for all findings, functional 
 - **Expected**: Clean role-based tenancy segregation: either compound unique index on `{ email: 1, role: 1 }` or unified single-sign-on allowing one identity to switch between customer profile and merchant store owner seamlessly.
 - **Target Files**: `apps/backend/src/modules/auth/auth.service.ts`, `apps/backend/src/modules/users/user.model.ts`.
 
-#### [AUDIT-013] Duplicate Account Prevention on Identity Attributes
+#### [AUDIT-013] Duplicate Account Prevention on Identity Attributes (DONE ✅ - Commit `04ea857`)
 - **Layer**: Backend (`apps/backend`)
 - **Module**: Auth / Identity
 - **Type**: Security / Data Integrity | **Severity**: P0 | **Complexity**: Medium
@@ -839,7 +839,7 @@ This document serves as the master engineering log for all findings, functional 
 
 ### Category E: Cross-Cutting & Global System Synchronization
 
-#### [AUDIT-026] Global System Date & Timezone Synchronization
+#### [AUDIT-026] Global System Date & Timezone Synchronization (DONE ✅ - Commit `b1f9687`)
 - **Layer**: Cross-Cutting (Backend + Frontend)
 - **Module**: Core Runtime / Timezone
 - **Type**: Reliability | **Severity**: P1 | **Complexity**: Medium
@@ -883,7 +883,7 @@ This document serves as the master engineering log for all findings, functional 
   - `apps/merchant/src/stores/{payoutsStore, walletStore, customerStore, supportStore}.ts`
   - `apps/web/src/app/account/coupons/CouponsClient.tsx`
 
-#### [AUDIT-041] Enterprise Master Taxonomy Pipeline, Dynamic Schema-Driven Attributes & HSN Lookup Engine
+#### [AUDIT-041] Enterprise Master Taxonomy Pipeline, Dynamic Schema-Driven Attributes & HSN Lookup Engine (DONE ✅ - Commit `3dc8a2e`)
 - **Layer**: Cross-Cutting / Core Platform (`apps/backend`, `apps/merchant`, `apps/web`)
 - **Module**: Catalog Core / Master Taxonomy, Product Wizard & Discovery
 - **Type**: Architectural Overhaul | **Severity**: P0 (Critical Architecture) | **Complexity**: High
