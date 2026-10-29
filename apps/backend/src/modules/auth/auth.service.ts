@@ -44,24 +44,43 @@ export function generateTokenPair(user: { _id: string; role: UserRole; email: st
 
 /**
  * Register a new User (Customer, Merchant, or Admin)
+ * Enforces role-scoped tenancy: the same individual can register as both customer
+ * and merchant without namespace collisions (AUDIT-004 & AUDIT-013).
  */
 export async function registerUser(dto: RegisterUserDto): Promise<AuthSessionResponse> {
-  const existingEmail = await UserModel.findOne({ email: dto.email.toLowerCase() });
+  const targetRole = dto.role || UserRole.CUSTOMER;
+  const normalizedEmail = dto.email.toLowerCase().trim();
+  const normalizedPhone = dto.phone.trim();
+
+  // Role-scoped duplicate prevention checks (AUDIT-004 & AUDIT-013)
+  const existingEmail = await UserModel.findOne({
+    email: normalizedEmail,
+    role: targetRole,
+  });
   if (existingEmail) {
-    throw AppError.conflict('An account with this email address already exists', 'EMAIL_EXISTS');
+    throw AppError.conflict(
+      `An account with email ${dto.email} already exists for role: ${targetRole}. Please sign in or use another email.`,
+      'EMAIL_EXISTS',
+    );
   }
 
-  const existingPhone = await UserModel.findOne({ phone: dto.phone });
+  const existingPhone = await UserModel.findOne({
+    phone: normalizedPhone,
+    role: targetRole,
+  });
   if (existingPhone) {
-    throw AppError.conflict('An account with this mobile number already exists', 'PHONE_EXISTS');
+    throw AppError.conflict(
+      `An account with mobile number ${dto.phone} already exists for role: ${targetRole}. Please sign in or use another number.`,
+      'PHONE_EXISTS',
+    );
   }
 
   const user = new UserModel({
-    fullName: dto.fullName,
-    email: dto.email.toLowerCase(),
-    phone: dto.phone,
+    fullName: dto.fullName.trim(),
+    email: normalizedEmail,
+    phone: normalizedPhone,
     password: dto.password,
-    role: dto.role || UserRole.CUSTOMER,
+    role: targetRole,
     isVerified: false,
     isActive: true,
   });
@@ -84,16 +103,57 @@ export async function registerUser(dto: RegisterUserDto): Promise<AuthSessionRes
 
 /**
  * Authenticate User by email/phone & password
+ * Supports role-scoped authentication for customer and merchant portals,
+ * gracefully resolving identities and providing informative diagnostics (AUDIT-004).
  */
 export async function loginUser(dto: LoginUserDto): Promise<AuthSessionResponse> {
   const identifier = dto.identifier.trim();
   const isEmail = identifier.includes('@');
+  const normalizedIdentifier = isEmail ? identifier.toLowerCase() : identifier;
 
-  const query = isEmail ? { email: identifier.toLowerCase() } : { phone: identifier };
+  const baseQuery: Record<string, unknown> = isEmail
+    ? { email: normalizedIdentifier }
+    : { phone: normalizedIdentifier };
 
-  const user = await UserModel.findOne(query).select('+password +refreshToken');
-  if (!user) {
-    throw AppError.unauthorized('Invalid email/phone or password', 'INVALID_CREDENTIALS');
+  let user: IUserDocument | null = null;
+
+  if (dto.role) {
+    // Explicit role target (e.g. logging into merchant panel or customer web)
+    user = await UserModel.findOne({ ...baseQuery, role: dto.role }).select('+password +refreshToken');
+    if (!user) {
+      // Diagnostic check: Does this user exist under a different role?
+      const otherRoleUser = await UserModel.findOne(baseQuery);
+      if (otherRoleUser) {
+        throw AppError.unauthorized(
+          `No ${dto.role} account found for this ${isEmail ? 'email' : 'phone number'}. An active account exists as '${otherRoleUser.role}'. Please register as a ${dto.role} or sign in through the correct portal.`,
+          'ROLE_MISMATCH',
+        );
+      }
+      throw AppError.unauthorized('Invalid email/phone or password', 'INVALID_CREDENTIALS');
+    }
+  } else {
+    // Ambiguous role login: retrieve all accounts matching this identifier
+    const matchedUsers = await UserModel.find(baseQuery).select('+password +refreshToken');
+    if (!matchedUsers || matchedUsers.length === 0) {
+      throw AppError.unauthorized('Invalid email/phone or password', 'INVALID_CREDENTIALS');
+    }
+
+    if (matchedUsers.length === 1) {
+      user = matchedUsers[0];
+    } else {
+      // Multiple accounts found for same identifier across roles (e.g. customer & merchant)
+      // Test password against each account to resolve intended identity
+      for (const candidate of matchedUsers) {
+        const isMatch = await candidate.comparePassword(dto.password);
+        if (isMatch) {
+          user = candidate;
+          break;
+        }
+      }
+      if (!user) {
+        user = matchedUsers[0]; // fallback to first; will fail password check below
+      }
+    }
   }
 
   if (!user.isActive) {

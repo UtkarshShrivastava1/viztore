@@ -72,6 +72,7 @@ export const loginUserSchema = z
     identifier: z.string().min(3, 'Email or phone number is required').optional(),
     email: z.string().email('Invalid email address').optional(),
     password: z.string().min(1, 'Password is required'),
+    role: z.nativeEnum(UserRole).optional(),
   })
   .refine((data) => Boolean(data.identifier || data.email), {
     message: 'Email or phone number identifier is required',
@@ -80,6 +81,7 @@ export const loginUserSchema = z
   .transform((data) => ({
     identifier: (data.identifier || data.email) as string,
     password: data.password,
+    role: data.role,
   }));
 
 export const refreshTokenSchema = z.object({
@@ -117,4 +119,3 @@ export type CreateAddressDto = UserAddressDto;
 export type UpdateAddressDto = z.infer<typeof updateAddressSchema>;
 export type UpdateProfileDto = z.infer<typeof updateProfileSchema>;
 export type IUserProfile = IUser;
-

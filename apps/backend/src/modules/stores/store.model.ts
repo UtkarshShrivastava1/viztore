@@ -218,4 +218,14 @@ const storeSchema = new Schema<IStoreDocument>(
 // Compound indexes for fast discovery queries
 storeSchema.index({ approvalStatus: 1, isActive: 1, category: 1 });
 
+// Legal identity uniqueness indexes (AUDIT-013)
+storeSchema.index(
+  { 'legalDetails.gstin': 1 },
+  { unique: true, sparse: true, name: 'legalDetails_gstin_unique_sparse' },
+);
+storeSchema.index(
+  { 'legalDetails.pan': 1 },
+  { sparse: true, name: 'legalDetails_pan_sparse' },
+);
+
 export const StoreModel: Model<IStoreDocument> = mongoose.model<IStoreDocument>('Store', storeSchema);

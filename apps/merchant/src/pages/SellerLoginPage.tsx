@@ -81,6 +81,7 @@ export const SellerLoginPage: React.FC<SellerLoginPageProps> = ({
       const res = await api.post<any>('/auth/login', {
         identifier: identifier.trim(),
         password,
+        role: 'merchant',
       });
 
       // Role-Based Access Control: ensure user has merchant or admin privileges
@@ -135,6 +136,7 @@ export const SellerLoginPage: React.FC<SellerLoginPageProps> = ({
           authRes = await api.post('/auth/login', {
             identifier: regEmail.toLowerCase().trim(),
             password: regPassword,
+            role: 'merchant',
           });
         } else {
           throw regErr;

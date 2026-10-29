@@ -27,7 +27,7 @@ This document serves as the master engineering log for all findings, functional 
 | `AUDIT-001` | Broken Product Actions: Wishlist / "Like" Heart Unresponsive | Customer Web | Wishlist / PDP | Bug / Defect | P1 | Medium | Logged 📝 |
 | `AUDIT-002` | Merchant Broadcast Action Timing & Prominence | Merchant Hub | Orders / Fleet | UX / Workflow | P1 | Low | Logged 📝 |
 | `AUDIT-003` | Customer Storefront Search Bar Not Returning Results | Customer Web | Discovery / Search | Bug / Defect | P0 | Medium | Logged 📝 |
-| `AUDIT-004` | Customer vs. Merchant Account Segregation & Namespace | Backend | Auth / Identity | Architecture | P0 | High | Logged 📝 |
+| `AUDIT-004` | Customer vs. Merchant Account Segregation & Namespace | Backend | Auth / Identity | Architecture | P0 | High | DONE ✅ |
 | `AUDIT-005` | Rider Portal Geolocation Accuracy & Advancement | Rider Portal | Delivery Fleet | Enhancement | P1 | High | Logged 📝 |
 | `AUDIT-006` | Customer "Reserve / Hold" In-Store Order Pipeline | Customer Web / Backend | Orders / Reserve | Functional Gap | P1 | Medium | Logged 📝 |
 | `AUDIT-007` | Customer Mobile Homepage Header Icons Inactive | Customer Web | Navigation | Bug / Defect | P1 | Low | Logged 📝 |
@@ -36,7 +36,7 @@ This document serves as the master engineering log for all findings, functional 
 | `AUDIT-010` | Flexible Category-Specific HSN Code Mapping | Merchant Hub | Catalog / Billing | Improvement | P2 | Low | Logged 📝 |
 | `AUDIT-011` | Dynamic Category-Specific Product Attributes | Merchant Hub | Catalog | Functional Gap | P1 | Medium | Logged 📝 |
 | `AUDIT-012` | Order Arrival Product Physical Location / Aisle Tagging | Merchant Hub | Orders / Warehouse | Feature | P2 | Medium | Logged 📝 |
-| `AUDIT-013` | Duplicate Account Prevention on Identity Attributes | Backend | Auth / Identity | Security / Data | P0 | Medium | Logged 📝 |
+| `AUDIT-013` | Duplicate Account Prevention on Identity Attributes | Backend | Auth / Identity | Security / Data | P0 | Medium | DONE ✅ |
 | `AUDIT-014` | Merchant Manual "Create Order" Blocker: Customer Search ReadOnly & Form Missing | Merchant Hub | POS / Orders | Bug / Blocker | P0 | Medium | Logged 📝 |
 | `AUDIT-015` | Merchant Catalog Filter & Search State Breakdown | Merchant Hub | Catalog | Bug / Defect | P1 | Low | Logged 📝 |
 | `AUDIT-016` | Catalog Edit Product Modal Glitches & Field Binding | Merchant Hub | Catalog | Bug / Defect | P2 | Low | Logged 📝 |
@@ -1374,8 +1374,8 @@ Executing strictly in this order guarantees that **every data model, schema cont
 * **Goal**: Establish the master catalog taxonomy, secure identity separation, overhaul merchant URL routing, unblock manual POS order creation, and restore storefront search.
 * **Items**:
   1. `[AUDIT-041]` Master Taxonomy Engine, Dynamic Schema-Driven Attributes & HSN Ingestion (`Categories.xlsx` into `catalog_taxonomies`).
-  2. `[AUDIT-004]` Customer vs. Merchant Account Segregation & Namespace Guard.
-  3. `[AUDIT-013]` Duplicate Account Prevention on Identity Attributes (compound phone/email index).
+  2. `[AUDIT-004]` Customer vs. Merchant Account Segregation & Namespace Guard. (DONE ✅)
+  3. `[AUDIT-013]` Duplicate Account Prevention on Identity Attributes (compound phone/email index). (DONE ✅)
   4. `[AUDIT-017]` Inventory Module Hardening & Catalog Synchronization (single stock source of truth).
   5. `[AUDIT-051]` Merchant Hub Route-Based Navigation Overhaul (true URL paths `/dashboard/*`).
   6. `[AUDIT-052]` Customer Dynamic Category Route Architecture (`/category/[slug]`).

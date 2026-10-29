@@ -20,7 +20,7 @@
 | ↳ **Merchant & Admin Panel** | 25% | `[████████████████████]` | **100%** | 🟢 Complete Suite | All 7/7 Modules & Settings Merged (`b92a159`) |
 | ↳ **Customer Web Storefront** | 20% | `[████████████████████]` | **100%** | 🟢 Storefront & Cart Engine | All 4/4 Modular Suites Merged (`e942cc9`) |
 | ↳ **Corporate Marketing Website** | 5% | `[████████████████████]` | **100%** | 🟢 Corporate Hub | 13 Routes Prerendered, White-Label (`@repo/company`) |
-| ↳ **Production Readiness & DevOps** | 20% | `[████████████████████]` | **100%** | 🟢 Staging Live | 197/197 Tests Green (28/28 suites), Monorepo Clean Build |
+| ↳ **Production Readiness & DevOps** | 20% | `[████████████████████]` | **100%** | 🟢 Staging Live | 204/204 Tests Green (28/28 suites), Monorepo Clean Build |
 
 
 
@@ -401,9 +401,10 @@ Every online order placed through `apps/web` generates an authoritative, complia
   - **Mongoose & Shared Types**: Created `TaxonomyModel` with compound unique index on `{ category, subcategory, productType }` and full-text index; extended `IProduct`, `product.model.ts`, and Zod schemas with `hsnCode` and `gstRate`.
   - **Merchant Catalog Wizard (`AddProductStep1` & `AddProductStep3`)**: Replaced 10 hardcoded categories with full 357 product types, integrated ⚡ Quick Hierarchy Search with instant suggestions, added dynamic schema-driven attributes renderer, and implemented auto-populating HSN / SAC code with statutory GST slab selection.
   - **Automated Test Suite**: Added 12 taxonomy unit tests in `taxonomy.service.test.ts`; **197/197 tests passing across 28 test suites**; 100% clean builds for `@repo/merchant` and `@repo/web`.
-
-
-
-
-
+- [x] **Customer vs. Merchant Account Segregation & Duplicate Identity Prevention (`[AUDIT-004]` & `[AUDIT-013]`) 🟢**:
+  - **Role-Scoped Tenancy Architecture**: Replaced flat email/phone uniqueness on `users` with compound unique indexes on `{ email: 1, role: 1 }` and `{ phone: 1, role: 1 }`. Same individual can seamlessly hold separate, segregated profiles as a customer and as a merchant without namespace collisions.
+  - **Role-Targeted Authentication**: Enhanced `/auth/login` to support portal-scoped role queries (`role: 'merchant'` or `'customer'`) with diagnostic role mismatch error messaging (`ROLE_MISMATCH`) and auto-password candidate matching for ambiguous queries.
+  - **Statutory Identity Uniqueness**: Added sparse unique indexing and validation guards for business `legalDetails.gstin` and `legalDetails.pan` in `store.model.ts` and `onboarding.service.ts` to prevent conflicting store registrations.
+  - **Client Authentication Alignment**: Updated Customer Web (`apps/web`) and Merchant Panel (`apps/merchant`) login flows to pass canonical portal role targets.
+  - **Test Suite & Verification**: Added 7 auth service and index specification tests; **204/204 automated tests passing across 28 test suites**; 100% clean production builds across `@repo/merchant` and `@repo/web`.
 

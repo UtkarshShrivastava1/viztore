@@ -39,7 +39,6 @@ const userSchema = new Schema<IUserDocument>(
     email: {
       type: String,
       required: [true, 'Email is required'],
-      unique: true,
       lowercase: true,
       trim: true,
       index: true,
@@ -47,7 +46,6 @@ const userSchema = new Schema<IUserDocument>(
     phone: {
       type: String,
       required: [true, 'Phone number is required'],
-      unique: true,
       trim: true,
       index: true,
     },
@@ -100,6 +98,11 @@ const userSchema = new Schema<IUserDocument>(
     },
   },
 );
+
+// Role-scoped tenancy uniqueness compound indexes (AUDIT-004 & AUDIT-013)
+// Guarantees one account per email/phone per role namespace (Customer vs Merchant vs Admin)
+userSchema.index({ email: 1, role: 1 }, { unique: true, name: 'email_role_unique' });
+userSchema.index({ phone: 1, role: 1 }, { unique: true, name: 'phone_role_unique' });
 
 // Pre-save password hashing hook
 userSchema.pre('save', async function (next) {
