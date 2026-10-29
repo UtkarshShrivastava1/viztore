@@ -46,6 +46,7 @@ export interface OrderStatusChangedPayload {
   actorUserId?: string;
   customerPhone?: string;
   storeId?: string;
+  userId?: string;
 }
 
 export interface PaymentSucceededPayload {
@@ -63,6 +64,7 @@ export interface DeliveryAssignedPayload {
   dispatchMessage?: string;
   customerPhone?: string;
   deliveryOtp?: string;
+  userId?: string;
 }
 
 export interface ProductOutOfStockPayload {
@@ -140,4 +142,3 @@ export interface EventPayloadMap {
   [EVENTS.INVOICE_PAID]: InvoiceEventPayload;
   [EVENTS.INVOICE_CANCELLED]: InvoiceEventPayload;
 }
-

@@ -419,6 +419,7 @@ export function createOrderService(
 
     // Emit domain events
     if (bus && updated) {
+      const resolvedUserId = (updated as any).userId || (current as any).userId;
       const payload = {
         orderId: updated.id,
         orderNumber: updated.orderNumber,
@@ -426,6 +427,7 @@ export function createOrderService(
         newStatus: status,
         actorUserId,
         storeId: updated.storeId,
+        userId: resolvedUserId ? resolvedUserId.toString() : undefined,
       };
 
       if (status === OrderStatus.CONFIRMED || status === OrderStatus.PACKED) bus.emit(EVENTS.ORDER_CONFIRMED, payload);
@@ -523,12 +525,15 @@ export function createOrderService(
     });
 
     if (bus) {
+      const resolvedUserId = (cancelled as any).userId || (current as any).userId || userId;
       bus.emit(EVENTS.ORDER_CANCELLED, {
         orderId: cancelled.id,
         orderNumber: cancelled.orderNumber,
         previousStatus: current.status,
         newStatus: OrderStatus.CANCELLED,
         actorUserId: userId,
+        storeId: cancelled.storeId,
+        userId: resolvedUserId ? resolvedUserId.toString() : undefined,
       });
     }
 

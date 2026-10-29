@@ -89,8 +89,15 @@ export function DesktopHeader({
   const setStoreLocation = useLocationStore((state) => state.setLocation);
   const rawCartCount = useCartStore((state) => state.items.reduce((sum, item) => sum + item.quantity, 0));
   
-  const notificationCount = useNotificationStore((state) => state.unreadCount);
+  const { unreadCount: notificationCount, fetchUnreadSummary, fetchNotifications } = useNotificationStore();
   const wishlistCount = useWishlistFlyoutStore((state) => state.items.length);
+
+  useEffect(() => {
+    if (authIsAuthenticated) {
+      fetchUnreadSummary();
+      fetchNotifications();
+    }
+  }, [authIsAuthenticated, fetchUnreadSummary, fetchNotifications]);
 
   useEffect(() => {
     setMounted(true);
