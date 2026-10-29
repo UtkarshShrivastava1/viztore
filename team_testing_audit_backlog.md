@@ -75,7 +75,7 @@ This document serves as the master engineering log for all findings, functional 
 | `AUDIT-049` | Customer & Platform End-to-End Notification Pipeline Breakdown: Backend Event ID Mismatch, Unwired Store & Permanent Empty State | Customer Web / Backend | Account & Header Notifications | Bug / Architectural Pipeline | P1 | Medium | Logged 📝 |
 | `AUDIT-050` | Customer & Platform End-to-End Coupons & Offers Pipeline Breakdown: Mock Customer Page, Browser Prompt Checkout & Missing Backend Engine | Customer Web / Cross-Cutting | Coupons / Checkout / Marketing | Bug / Architectural Pipeline | P1 | Medium | Logged 📝 |
 | `AUDIT-051` | Merchant Hub Route-Based Navigation Overhaul: Browser Back Button, Deep Linking & Refresh State Recovery | Merchant Hub | Routing & Architecture | Architecture / UX Blocker | P0 | High | DONE ✅ |
-| `AUDIT-052` | Customer Dynamic Category Route Architecture (`/category/[slug]`), Faceted Query Parameters & Deep Linking Hardening | Customer Web | Catalog Discovery / Routing | Architecture / Enhancement | P1 | Medium | Logged 📝 |
+| `AUDIT-052` | Customer Dynamic Category Route Architecture (`/category/[slug]`), Faceted Query Parameters & Deep Linking Hardening | Customer Web | Catalog Discovery / Routing | Architecture / Enhancement | P1 | Medium | DONE ✅ |
 | `AUDIT-053` | Platform End-to-End Returns & Refunds Pipeline Breakdown: Mock Merchant Table, Dead Action Modals & Missing Backend Return Engine | Cross-Cutting | Returns & Refunds / Orders | Bug / Architectural Pipeline | P1 | High | Logged 📝 |
 | `AUDIT-054` | Merchant Customer CRM & Khata Ledger Pipeline Breakdown: Mock Customer Seed Data, Stale May 2024 Ledgers & Missing Backend Customer Engine | Cross-Cutting | Customers / CRM / Khata Ledger | Bug / Architectural Pipeline | P1 | High | Logged 📝 |
 | `AUDIT-055` | Merchant Billing & Invoicing End-to-End Pipeline Breakdown: Unwired Backend APIs, In-Memory Mutations & Date Filter Disconnection | Merchant Hub | Billing & Invoicing | Bug / Architectural Pipeline | P1 | High | Logged 📝 |
@@ -367,7 +367,7 @@ This document serves as the master engineering log for all findings, functional 
   - `packages/shared-types/src/order.types.ts`
   - `apps/merchant/src/stores/marketingStore.ts`
 
-#### [AUDIT-052] Customer Dynamic Category Route Architecture (`/category/[slug]`), Faceted Query Parameters & Deep Linking Hardening
+#### [AUDIT-052] Customer Dynamic Category Route Architecture (`/category/[slug]`), Faceted Query Parameters & Deep Linking Hardening (DONE ✅)
 - **Layer**: Customer Web (`apps/web`)
 - **Module**: Catalog Discovery / Category Routing (`/category/[slug]`, `/products`, Header Category Bar)
 - **Type**: Architecture & Navigation Enhancement | **Severity**: P1 | **Complexity**: Medium
@@ -1378,7 +1378,7 @@ Executing strictly in this order guarantees that **every data model, schema cont
   3. `[AUDIT-013]` Duplicate Account Prevention on Identity Attributes (compound phone/email index). (DONE ✅)
   4. `[AUDIT-017]` Inventory Module Hardening & Catalog Synchronization (single stock source of truth). (DONE ✅)
   5. `[AUDIT-051]` Merchant Hub Route-Based Navigation Overhaul (true URL paths `/dashboard/*`). (DONE ✅)
-  6. `[AUDIT-052]` Customer Dynamic Category Route Architecture (`/category/[slug]`).
+  6. `[AUDIT-052]` Customer Dynamic Category Route Architecture (`/category/[slug]`). (DONE ✅)
   7. `[AUDIT-014]` Merchant Manual "Create Order" Blocker (remove `readOnly` lock on customer search).
   8. `[AUDIT-003]` Customer Storefront Search Bar Fix (active input, debounced live query).
   9. `[AUDIT-026]` Global System Date & Timezone Synchronization (UTC storage, IST rendering).
