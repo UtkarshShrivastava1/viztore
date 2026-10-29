@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { MerchantOrderRecord, useOrderStore } from '../../stores/orderStore.js';
 import { printMerchantInvoice } from '../../lib/printInvoice.js';
+import { buildFleetBroadcastText, broadcastOrderToFleet } from '../../lib/fleetBroadcast.js';
 import { useAuthStore } from '../../stores/authStore.js';
 import { branding } from '../../lib/branding.js';
 
@@ -53,68 +54,12 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
     return `${getWebUrl()}/rider/run/${order.id || order.orderNumber}`;
   };
 
-  const buildFleetBroadcastText = () => {
-    const store = useAuthStore.getState().currentStore;
-    const storeName = store?.name || 'Store Partner';
-    const storeLocality = store?.address?.locality || store?.address?.city || '';
-    const pickupDisplay = storeLocality ? `${storeName} (${storeLocality})` : storeName;
-
-    const street = order.deliveryAddress?.street || '';
-    const streetParts = street.split(',').map((p) => p.trim()).filter(Boolean);
-    const streetLocality = streetParts[0] || '';
-    let streetCity = '';
-    for (let i = streetParts.length - 1; i >= 0; i--) {
-      const rawPart = streetParts[i];
-      if (!rawPart) continue;
-      const part = rawPart.replace(/-\s*\d+$/, '').trim();
-      if (!/^\d+$/.test(part) && !/chhattisgarh|state|india/i.test(part) && part.length > 2) {
-        streetCity = part;
-        break;
-      }
-    }
-
-    let locality = order.deliveryAddress?.locality?.trim() || '';
-    let city = order.deliveryAddress?.city?.trim() || '';
-    if (locality.toLowerCase() === 'local city' || locality.toLowerCase() === 'city') locality = '';
-    if (city.toLowerCase() === 'local city' || city.toLowerCase() === 'city') city = '';
-
-    const resolvedLocality = locality || streetLocality;
-    const resolvedCity = city || streetCity || 'Local Area';
-
-    const dropArea = (resolvedLocality && resolvedCity && resolvedLocality.toLowerCase() === resolvedCity.toLowerCase())
-      ? resolvedCity
-      : [resolvedLocality, resolvedCity].filter(Boolean).filter((v, idx, arr) => arr.indexOf(v) === idx).join(', ') || street || 'Local Customer Area';
-
-    const itemsCount = order.itemsSummary?.count || order.items?.length || 1;
-    const itemsTitle = order.itemsSummary?.title || order.items?.[0]?.name || 'Packaged parcel';
-
-    const isCod = order.payment?.paymentMethod === 'Cash on Delivery';
-    const paymentText = isCod
-      ? `Cash on Delivery (Collect ₹${order.pricing.totalAmount.toLocaleString('en-IN')} cash)`
-      : 'Prepaid Online (₹0 cash to collect)';
-
-    return [
-      `🛵 *NEW DELIVERY RUN — #${order.orderNumber}*`,
-      `━━━━━━━━━━━━━━━━━━━━━━`,
-      `🏪 *Pickup Store:* ${pickupDisplay}`,
-      `🏠 *Drop Area:* ${dropArea}`,
-      `📦 *Items:* ${itemsCount} item${itemsCount > 1 ? 's' : ''} (${itemsTitle})`,
-      `💰 *Rider Payout:* ₹40`,
-      `💳 *Payment:* ${paymentText}`,
-      `━━━━━━━━━━━━━━━━━━━━━━`,
-      `👉 *Tap to Accept & Claim Run:*`,
-      `${getRunUrl()}`,
-    ].join('\n');
-  };
-
   const handleBroadcastToFleet = () => {
-    const text = buildFleetBroadcastText();
-    const waUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
-    window.open(waUrl, '_blank');
+    broadcastOrderToFleet(order);
   };
 
   const handleCopyRunLink = () => {
-    const text = buildFleetBroadcastText();
+    const text = buildFleetBroadcastText(order);
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
@@ -166,15 +111,17 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                 <span>Accept & Print</span>
               </button>
             )}
-            <button
-              type="button"
-              onClick={handleBroadcastToFleet}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#25D366] hover:bg-[#1EBE5D] text-white text-xs font-bold transition-all shadow-sm"
-              title="Broadcast Run to WhatsApp Fleet Group"
-            >
-              <MessageCircle className="w-3.5 h-3.5 fill-current" />
-              <span>Broadcast Run</span>
-            </button>
+            {['ready_to_ship', 'shipped'].includes(order.status) && (
+              <button
+                type="button"
+                onClick={handleBroadcastToFleet}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#25D366] hover:bg-[#1EBE5D] text-white text-xs font-bold transition-all shadow-sm cursor-pointer"
+                title="Broadcast Run to WhatsApp Fleet Group"
+              >
+                <MessageCircle className="w-3.5 h-3.5 fill-current" />
+                <span>Broadcast Run</span>
+              </button>
+            )}
 
             <button
               type="button"
@@ -211,6 +158,32 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
 
         {/* Modal Scrollable Body */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-5">
+          {/* Fleet Broadcast Banner for Ready-to-Ship Orders */}
+          {order.status === 'ready_to_ship' && (
+            <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+                  <Truck className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-emerald-900">Parcel Packed & Ready for Dispatch</h4>
+                  <p className="text-[10px] text-emerald-700">
+                    Order is packed and ready for runner pickup. Broadcast now to your rider fleet group.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleBroadcastToFleet}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#25D366] hover:bg-[#1EBE5D] text-white text-xs font-bold transition-all shadow-sm cursor-pointer shrink-0"
+              >
+                <MessageCircle className="w-4 h-4 fill-current" />
+                <span>Broadcast to Fleet</span>
+              </button>
+            </div>
+          )}
+
           {/* OTP Runner Verification Banner */}
           <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200/80 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
