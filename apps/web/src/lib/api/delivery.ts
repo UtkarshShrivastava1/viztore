@@ -5,6 +5,7 @@ import type {
   DeliveryStatus,
   ClaimResultDto,
   DeliveryResponseDto,
+  UpdateRiderLocationDto,
 } from '@repo/shared-types';
 
 export const deliveryApi = {
@@ -51,6 +52,17 @@ export const deliveryApi = {
       status,
       note,
     });
+    return res.data;
+  },
+
+  updateLocation: async (
+    orderId: string,
+    location: UpdateRiderLocationDto,
+  ): Promise<{ success: boolean; timestamp: string }> => {
+    const res = await api.post<{ success: boolean; timestamp: string }>(
+      `/delivery/orders/${orderId}/location`,
+      location,
+    );
     return res.data;
   },
 

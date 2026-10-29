@@ -9,6 +9,7 @@ export const EVENTS = {
   DELIVERY_COMPLETED: 'delivery.completed',
   DELIVERY_BROADCAST: 'delivery.broadcast',
   DELIVERY_CLAIMED: 'delivery.claimed',
+  DELIVERY_LOCATION_UPDATED: 'delivery.location_updated',
   PRODUCT_OUT_OF_STOCK: 'product.outOfStock',
   NOTIFICATION_CREATED: 'notification.created',
   INVOICE_ISSUED: 'invoice.issued',
@@ -111,6 +112,16 @@ export interface DeliveryClaimedPayload {
   claimedAt: string;
 }
 
+export interface DeliveryLocationPayload {
+  orderId: string;
+  latitude: number;
+  longitude: number;
+  heading?: number;
+  speed?: number;
+  accuracy?: number;
+  timestamp: string;
+}
+
 export interface EventPayloadMap {
   [EVENTS.USER_REGISTERED]: UserRegisteredPayload;
   [EVENTS.ORDER_PLACED]: OrderPlacedPayload;
@@ -122,6 +133,7 @@ export interface EventPayloadMap {
   [EVENTS.DELIVERY_COMPLETED]: OrderStatusChangedPayload;
   [EVENTS.DELIVERY_BROADCAST]: DeliveryBroadcastPayload;
   [EVENTS.DELIVERY_CLAIMED]: DeliveryClaimedPayload;
+  [EVENTS.DELIVERY_LOCATION_UPDATED]: DeliveryLocationPayload;
   [EVENTS.PRODUCT_OUT_OF_STOCK]: ProductOutOfStockPayload;
   [EVENTS.NOTIFICATION_CREATED]: NotificationCreatedPayload;
   [EVENTS.INVOICE_ISSUED]: InvoiceEventPayload;

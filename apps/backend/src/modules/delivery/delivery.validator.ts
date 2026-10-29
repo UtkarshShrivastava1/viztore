@@ -7,4 +7,5 @@ export {
   updateDeliveryStatusSchema,
   verifyDeliveryOtpSchema,
   deliveryQuerySchema,
+  updateRiderLocationSchema,
 } from '@repo/shared-types';

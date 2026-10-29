@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   Navigation,
   Phone,
@@ -18,6 +18,9 @@ import {
   MessageCircle,
   PackageCheck,
   RefreshCw,
+  Compass,
+  Radio,
+  LocateFixed,
 } from 'lucide-react';
 import { deliveryApi } from '@/lib/api/delivery';
 import { ApiError } from '@/lib/api/client';
@@ -33,6 +36,43 @@ interface RiderRunClientProps {
   orderId: string;
 }
 
+interface RiderCoordinates {
+  latitude: number;
+  longitude: number;
+  accuracy: number;
+  heading: number | null;
+  speed: number | null;
+}
+
+type GpsStatus = 'searching' | 'active' | 'denied' | 'unsupported';
+
+// Helper: Haversine distance in meters
+function calculateDistanceMeters(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number,
+): number {
+  const R = 6371e3; // Earth radius in meters
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return Math.round(R * c);
+}
+
+function formatDistance(meters: number): string {
+  if (meters < 1000) {
+    return `${meters} m`;
+  }
+  return `${(meters / 1000).toFixed(1)} km`;
+}
+
 export function RiderRunClient({ orderId }: RiderRunClientProps) {
   const [selectedRider, setSelectedRider] = useState<PilotRider | null>(null);
   const [pilotRoster, setPilotRoster] = useState<PilotRider[]>(PILOT_RIDERS);
@@ -42,6 +82,11 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isAlreadyClaimedByOther, setIsAlreadyClaimedByOther] = useState(false);
   const [claimedByName, setClaimedByName] = useState<string>('Another Partner');
+
+  // Geolocation & Live Telemetry State
+  const [gpsStatus, setGpsStatus] = useState<GpsStatus>('searching');
+  const [riderCoords, setRiderCoords] = useState<RiderCoordinates | null>(null);
+  const lastTelemetrySyncRef = useRef<number>(0);
 
   // OTP Inputs (4 digits)
   const [otpDigits, setOtpDigits] = useState(['', '', '', '']);
@@ -53,9 +98,9 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
     useRef<HTMLInputElement>(null),
   ];
 
-  // 1. Load active pilot rider from localStorage or initialize
+  // 1. Load active pilot rider from localStorage or initialize (Brand-Agnostic Key)
   useEffect(() => {
-    const savedRiderId = localStorage.getItem('viztore_rider_id');
+    const savedRiderId = localStorage.getItem('rider_partner_id');
     if (savedRiderId) {
       const found = pilotRoster.find((r) => r.id === savedRiderId);
       if (found) {
@@ -65,7 +110,6 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
       setSelectedRider(pilotRoster[0] || null);
     }
 
-    // Attempt to load fresh roster from API
     deliveryApi
       .getPilotRoster()
       .then((roster) => {
@@ -92,7 +136,7 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
 
       const isClaimedByMe = Boolean(
         details.isClaimedByCaller ||
-        (details.isClaimed && riderId && details.claimedByRider?.id === riderId)
+        (details.isClaimed && riderId && details.claimedByRider?.id === riderId),
       );
 
       if (details.isClaimed && !isClaimedByMe) {
@@ -123,12 +167,69 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
     const found = pilotRoster.find((r) => r.id === riderId);
     if (found) {
       setSelectedRider(found);
-      localStorage.setItem('viztore_rider_id', found.id);
+      localStorage.setItem('rider_partner_id', found.id);
       fetchRun(found.id);
     }
   };
 
-  // 3. Claim Action
+  // 3. High-Accuracy HTML5 Geolocation Tracking & Watcher (AUDIT-005)
+  useEffect(() => {
+    if (typeof window === 'undefined' || !navigator.geolocation) {
+      setGpsStatus('unsupported');
+      return;
+    }
+
+    const geoOptions: PositionOptions = {
+      enableHighAccuracy: true,
+      maximumAge: 4000,
+      timeout: 12000,
+    };
+
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        const coords: RiderCoordinates = {
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude,
+          accuracy: Math.round(pos.coords.accuracy),
+          heading: pos.coords.heading,
+          speed: pos.coords.speed,
+        };
+        setRiderCoords(coords);
+        setGpsStatus('active');
+
+        // Send throttled telemetry update to backend every ~8 seconds while on active run
+        const now = Date.now();
+        if (now - lastTelemetrySyncRef.current >= 8000) {
+          lastTelemetrySyncRef.current = now;
+          deliveryApi
+            .updateLocation(orderId, {
+              latitude: coords.latitude,
+              longitude: coords.longitude,
+              heading: coords.heading ?? undefined,
+              speed: coords.speed ?? undefined,
+              accuracy: coords.accuracy,
+            })
+            .catch(() => {
+              // Non-blocking telemetry failover
+            });
+        }
+      },
+      (err) => {
+        if (err.code === err.PERMISSION_DENIED) {
+          setGpsStatus('denied');
+        } else {
+          setGpsStatus('searching');
+        }
+      },
+      geoOptions,
+    );
+
+    return () => {
+      navigator.geolocation.clearWatch(watchId);
+    };
+  }, [orderId]);
+
+  // 4. Claim Action
   const handleClaimRun = async () => {
     if (!selectedRider) return;
     setIsSubmitting(true);
@@ -136,7 +237,6 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
 
     try {
       await deliveryApi.claimRun(orderId, selectedRider);
-      // Refresh run details to unlock full store and customer data
       await fetchRun(selectedRider.id);
     } catch (err: any) {
       if (err instanceof ApiError && (err.statusCode === 409 || err.code === 'DELIVERY_ALREADY_CLAIMED')) {
@@ -149,7 +249,7 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
     }
   };
 
-  // 4. Mark Picked Up Action
+  // 5. Mark Picked Up Action
   const handleMarkPickedUp = async () => {
     setIsSubmitting(true);
     try {
@@ -162,7 +262,7 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
     }
   };
 
-  // 5. OTP input handlers
+  // 6. OTP input handlers
   const handleOtpChange = (index: number, value: string) => {
     const char = value.slice(-1);
     if (!/^\d*$/.test(char)) return;
@@ -172,7 +272,6 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
     setOtpDigits(nextDigits);
     setOtpError(null);
 
-    // Auto-focus next input
     if (char && index < 3) {
       otpInputRefs[index + 1].current?.focus();
     }
@@ -184,7 +283,7 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
     }
   };
 
-  // 6. Verify OTP and Complete Delivery
+  // 7. Verify OTP and Complete Delivery
   const handleVerifyOtp = async () => {
     const otp = otpDigits.join('');
     if (otp.length !== 4) {
@@ -205,6 +304,51 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
       setIsSubmitting(false);
     }
   };
+
+  const isDelivered = runDetails?.status === DeliveryStatus.DELIVERED;
+  const isPickedUp =
+    runDetails?.status === DeliveryStatus.PICKED_UP ||
+    runDetails?.status === DeliveryStatus.IN_TRANSIT ||
+    runDetails?.status === DeliveryStatus.ARRIVED ||
+    isDelivered;
+
+  const isClaimedByCaller = Boolean(
+    runDetails?.isClaimedByCaller ||
+    (runDetails?.isClaimed && selectedRider?.id && runDetails?.claimedByRider?.id === selectedRider?.id),
+  );
+
+  // Dynamic distance to current step's destination
+  const activeDistanceMeters = useMemo(() => {
+    if (!riderCoords || !runDetails) return null;
+    if (!isPickedUp && runDetails.pickupCoordinates) {
+      const [lng, lat] = runDetails.pickupCoordinates;
+      return calculateDistanceMeters(riderCoords.latitude, riderCoords.longitude, lat, lng);
+    }
+    if (isPickedUp && runDetails.dropoffCoordinates) {
+      const [lng, lat] = runDetails.dropoffCoordinates;
+      return calculateDistanceMeters(riderCoords.latitude, riderCoords.longitude, lat, lng);
+    }
+    return null;
+  }, [riderCoords, runDetails, isPickedUp]);
+
+  // Dynamic turn-by-turn navigation URLs originating from rider's live coordinates
+  const livePickupNavUrl = useMemo(() => {
+    if (riderCoords && runDetails?.pickupCoordinates) {
+      const [lng, lat] = runDetails.pickupCoordinates;
+      return `https://www.google.com/maps/dir/?api=1&origin=${riderCoords.latitude},${riderCoords.longitude}&destination=${lat},${lng}&travelmode=two-wheeler`;
+    }
+    return runDetails?.pickupDetails?.navigationUrl;
+  }, [riderCoords, runDetails]);
+
+  const liveDropoffNavUrl = useMemo(() => {
+    if (riderCoords && runDetails?.dropoffCoordinates) {
+      const [lng, lat] = runDetails.dropoffCoordinates;
+      return `https://www.google.com/maps/dir/?api=1&origin=${riderCoords.latitude},${riderCoords.longitude}&destination=${lat},${lng}&travelmode=two-wheeler`;
+    }
+    return runDetails?.dropoffDetails?.navigationUrl;
+  }, [riderCoords, runDetails]);
+
+  const isNearTarget = activeDistanceMeters !== null && activeDistanceMeters <= 80;
 
   // Render Skeleton
   if (isLoading) {
@@ -236,29 +380,17 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
     );
   }
 
-  const isDelivered = runDetails?.status === DeliveryStatus.DELIVERED;
-  const isPickedUp =
-    runDetails?.status === DeliveryStatus.PICKED_UP ||
-    runDetails?.status === DeliveryStatus.IN_TRANSIT ||
-    runDetails?.status === DeliveryStatus.ARRIVED ||
-    isDelivered;
-
-  const isClaimedByCaller = Boolean(
-    runDetails?.isClaimedByCaller ||
-    (runDetails?.isClaimed && selectedRider?.id && runDetails?.claimedByRider?.id === selectedRider?.id)
-  );
-
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center">
       {/* Top Mobile App Bar */}
       <header className="w-full bg-slate-900/90 backdrop-blur-md border-b border-slate-800/80 sticky top-0 z-40 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+          <div className="w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shadow-inner">
             <Navigation className="w-4 h-4" />
           </div>
           <div>
             <h1 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              {branding.appName} Fleet Portal
+              {branding.appName} Fleet
             </h1>
             <p className="text-sm font-extrabold text-white">
               Run: {runDetails?.orderNumber || orderId}
@@ -288,6 +420,43 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
 
       {/* Main Content Area */}
       <main className="w-full max-w-md p-4 space-y-4 pb-12 flex-1">
+        {/* GPS Live Telemetry Pill */}
+        <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-900 border border-slate-800/80 text-[11px]">
+          <div className="flex items-center gap-2">
+            {gpsStatus === 'active' ? (
+              <>
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                </span>
+                <span className="text-slate-300 font-semibold flex items-center gap-1">
+                  <LocateFixed className="w-3 h-3 text-emerald-400" />
+                  GPS Active {riderCoords?.accuracy ? `(±${riderCoords.accuracy}m)` : ''}
+                </span>
+              </>
+            ) : gpsStatus === 'denied' ? (
+              <span className="text-rose-400 font-semibold flex items-center gap-1">
+                <AlertCircle className="w-3 h-3" />
+                GPS Permission Denied
+              </span>
+            ) : (
+              <span className="text-amber-400 font-semibold flex items-center gap-1">
+                <Radio className="w-3 h-3 animate-pulse" />
+                Acquiring GPS Signal...
+              </span>
+            )}
+          </div>
+
+          {activeDistanceMeters !== null && !isDelivered && (
+            <div className="text-right">
+              <span className="text-slate-400 text-[10px] mr-1">Remaining:</span>
+              <span className="font-extrabold text-emerald-400">
+                {formatDistance(activeDistanceMeters)}
+              </span>
+            </div>
+          )}
+        </div>
+
         {/* Error Alert if any */}
         {errorMessage && (
           <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2.5">
@@ -446,6 +615,23 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
         {/* ── STATE 3: ACTIVE DELIVERY RUN (CLAIMED BY CALLER) ──────────── */}
         {runDetails && isClaimedByCaller && !isDelivered && (
           <div className="space-y-4 animate-in fade-in duration-200">
+            {/* Arrival Alert Banner when Rider is within 80m */}
+            {isNearTarget && (
+              <div className="p-3.5 rounded-xl bg-emerald-500/20 border-2 border-emerald-500/60 text-emerald-300 flex items-center gap-3 animate-pulse">
+                <Compass className="w-5 h-5 text-emerald-400 shrink-0" />
+                <div className="text-xs">
+                  <p className="font-extrabold text-white">
+                    {!isPickedUp ? '📍 Arrived at Pickup Store!' : '🎉 Arrived at Customer Doorstep!'}
+                  </p>
+                  <p className="text-[11px] text-emerald-200/90 mt-0.5">
+                    {!isPickedUp
+                      ? 'Collect package and verify items with shopkeeper.'
+                      : 'Request 4-digit Delivery OTP from customer to complete order.'}
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Step Progress Tracker */}
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-3 flex items-center justify-between text-xs font-bold">
               <div
@@ -527,21 +713,25 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
                     <span>Post "Claimed" to Fleet Group</span>
                   </a>
 
-                  <a
-                    href={runDetails.pickupDetails?.navigationUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-md"
-                  >
-                    <Navigation className="w-4 h-4" />
-                    <span>Navigate to Store (Google Maps)</span>
-                  </a>
+                  {livePickupNavUrl && (
+                    <a
+                      href={livePickupNavUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-md"
+                    >
+                      <Navigation className="w-4 h-4" />
+                      <span>
+                        Navigate to Store {activeDistanceMeters ? `(${formatDistance(activeDistanceMeters)})` : ''}
+                      </span>
+                    </a>
+                  )}
 
                   <button
                     type="button"
                     disabled={isSubmitting}
                     onClick={handleMarkPickedUp}
-                    className="w-full py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-emerald-400 font-bold text-xs flex items-center justify-center gap-2 transition-all"
+                    className="w-full py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-emerald-400 font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-98"
                   >
                     <PackageCheck className="w-4 h-4" />
                     <span>I Have Picked Up the Package</span>
@@ -588,15 +778,23 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
 
                 {/* Action Buttons */}
                 <div className="grid grid-cols-2 gap-2">
-                  <a
-                    href={runDetails.dropoffDetails?.navigationUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-md"
-                  >
-                    <Navigation className="w-3.5 h-3.5" />
-                    <span>Navigate</span>
-                  </a>
+                  {liveDropoffNavUrl ? (
+                    <a
+                      href={liveDropoffNavUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-md"
+                    >
+                      <Navigation className="w-3.5 h-3.5" />
+                      <span>
+                        Navigate {activeDistanceMeters ? `(${formatDistance(activeDistanceMeters)})` : ''}
+                      </span>
+                    </a>
+                  ) : (
+                    <div className="py-2.5 px-3 rounded-xl bg-slate-800 text-slate-400 text-xs text-center">
+                      No coordinates
+                    </div>
+                  )}
 
                   {runDetails.dropoffDetails?.customerPhone ? (
                     <a
@@ -652,7 +850,7 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
                     type="button"
                     disabled={isSubmitting || otpDigits.join('').length !== 4}
                     onClick={handleVerifyOtp}
-                    className="w-full py-3.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 text-slate-950 font-black text-xs uppercase tracking-wider transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"
+                    className="w-full py-3.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 text-slate-950 font-black text-xs uppercase tracking-wider transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 active:scale-98"
                   >
                     {isSubmitting ? (
                       <>

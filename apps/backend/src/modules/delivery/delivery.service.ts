@@ -14,6 +14,7 @@ import {
   type PilotRider,
   PILOT_RIDERS,
   type RiderRunDetailsDto,
+  type UpdateRiderLocationDto,
 } from './delivery.types.js';
 import { IEventBus } from '../../shared/events/eventBus.js';
 import { EVENTS } from '../../shared/events/eventTypes.js';
@@ -554,6 +555,8 @@ export function createDeliveryService(
     };
 
     if (isClaimedByCaller) {
+      result.pickupCoordinates = delivery.pickupLocation.coordinates;
+      result.dropoffCoordinates = delivery.dropoffLocation.coordinates;
       result.pickupDetails = {
         storeName: storeDisplayName,
         storePhone: orderInfo?.pickupPhone || '',
@@ -572,6 +575,29 @@ export function createDeliveryService(
     return result;
   }
 
+    async function updateLocation(
+    orderId: string,
+    dto: UpdateRiderLocationDto,
+  ): Promise<{ success: boolean; timestamp: string }> {
+    const delivery = await repository.findByOrderId(orderId);
+    if (!delivery) {
+      throw AppError.notFound('Delivery record not found for this order', 'DELIVERY_NOT_FOUND');
+    }
+
+    const timestamp = new Date().toISOString();
+    eventBus.emit(EVENTS.DELIVERY_LOCATION_UPDATED, {
+      orderId,
+      latitude: dto.latitude,
+      longitude: dto.longitude,
+      heading: dto.heading,
+      speed: dto.speed,
+      accuracy: dto.accuracy,
+      timestamp,
+    });
+
+    return { success: true, timestamp };
+  }
+
   return {
     initializeDelivery,
     getTracking,
@@ -584,6 +610,7 @@ export function createDeliveryService(
     calculateEta,
     getPilotRoster,
     getRunDetails,
+    updateLocation,
   };
 }
 
