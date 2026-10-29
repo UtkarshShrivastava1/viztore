@@ -8,3 +8,4 @@ export * from './delivery';
 export * from './returns';
 export * from './user';
 export * from './notifications';
+export * from './support';

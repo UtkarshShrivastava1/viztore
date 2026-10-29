@@ -533,3 +533,20 @@ export const settlementsApi = {
   requestPayout: (data: { amount: number; remarks?: string }) =>
     api.post<any>('/settlements/request', data),
 };
+
+export const supportApi = {
+  getTickets: (params?: Record<string, string | number>) => {
+    const qs = params ? '?' + new URLSearchParams(params as Record<string, string>).toString() : '';
+    return api.get<{ tickets: any[]; total: number }>(`/support/tickets${qs}`);
+  },
+  getTicketById: (id: string) =>
+    api.get<any>(`/support/tickets/${id}`),
+  createTicket: (data: any) =>
+    api.post<any>('/support/tickets', data),
+  addMessage: (id: string, data: { text: string; attachments?: string[] }) =>
+    api.post<any>(`/support/tickets/${id}/messages`, data),
+  updateStatus: (id: string, status: string) =>
+    api.patch<any>(`/support/tickets/${id}/status`, { status }),
+  requestCallback: (data: { contactName: string; phoneNumber: string; preferredTime?: string; topic?: string; notes?: string }) =>
+    api.post<any>('/support/callback-requests', data),
+};

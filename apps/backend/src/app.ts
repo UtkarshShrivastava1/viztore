@@ -31,6 +31,7 @@ import { customerRouter } from './modules/customers/index.js';
 import { returnRoutes } from './modules/returns/index.js';
 import { settlementRoutes } from './modules/settlements/index.js';
 import { couponRouter } from './modules/coupons/index.js';
+import { supportRouter } from './modules/support/index.js';
 
 export function createApp(): Express {
   const app: Express = express();
@@ -164,6 +165,7 @@ export function createApp(): Express {
   apiV1.use('/returns', returnRoutes);
   apiV1.use('/settlements', settlementRoutes);
   apiV1.use('/coupons', couponRouter);
+  apiV1.use('/support', supportRouter);
 
 
   app.use(`/api/${env.API_VERSION}`, apiV1);

@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { supportApi } from '../lib/api.js';
 
 export type SupportSubTab = 'overview' | 'tickets' | 'help_center' | 'contact';
 export type TicketStatus = 'open' | 'in_progress' | 'resolved' | 'closed';
@@ -175,8 +176,10 @@ interface SupportState {
   searchQuery: string;
   statusFilter: string;
   priorityFilter: string;
+  isLoading: boolean;
 
   // Actions
+  fetchTickets: () => Promise<void>;
   setActiveView: (view: SupportViewMode) => void;
   setActiveTab: (tab: SupportSubTab) => void;
   setSelectedTicketId: (id: string | null) => void;
@@ -190,9 +193,9 @@ interface SupportState {
     orderRef?: string;
     initialMessage: string;
     attachments?: { name: string; size: string; type: string }[];
-  }) => void;
-  addTicketMessage: (ticketId: string, text: string, sender?: 'merchant' | 'support') => void;
-  updateTicketStatus: (ticketId: string, status: TicketStatus) => void;
+  }) => Promise<void>;
+  addTicketMessage: (ticketId: string, text: string, sender?: 'merchant' | 'support') => Promise<void>;
+  updateTicketStatus: (ticketId: string, status: TicketStatus) => Promise<void>;
   setSearchQuery: (query: string) => void;
   setStatusFilter: (status: string) => void;
   setPriorityFilter: (priority: string) => void;
@@ -209,6 +212,45 @@ export const useSupportStore = create<SupportState>((set) => ({
   searchQuery: '',
   statusFilter: 'all',
   priorityFilter: 'all',
+  isLoading: false,
+
+  fetchTickets: async () => {
+    set({ isLoading: true });
+    try {
+      const res = await supportApi.getTickets();
+      const ticketList = res?.tickets || (res as any)?.data?.tickets;
+      if (Array.isArray(ticketList) && ticketList.length > 0) {
+        const mapped: SupportTicket[] = ticketList.map((t: any) => ({
+          id: t.ticketId || t._id,
+          subject: t.subject,
+          category: t.category,
+          status: t.status,
+          priority: t.priority,
+          lastUpdated: new Date(t.updatedAt || t.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+          createdAt: new Date(t.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+          orderRef: t.orderRef,
+          messages: (t.messages || []).map((m: any, idx: number) => ({
+            id: m._id || `msg-${idx}`,
+            sender: m.sender === 'customer' ? 'merchant' : m.sender,
+            senderName: m.senderName || 'Merchant Admin',
+            text: m.text,
+            timestamp: new Date(m.createdAt || Date.now()).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+          })),
+          attachments: (t.attachments || []).map((att: string) => ({
+            name: att,
+            size: 'N/A',
+            type: 'attachment',
+          })),
+        }));
+        set({ tickets: mapped, isLoading: false });
+      } else {
+        set({ isLoading: false });
+      }
+    } catch (err) {
+      console.warn('Live API fetchTickets fallback:', err);
+      set({ isLoading: false });
+    }
+  },
 
   setActiveView: (view) => set({ activeView: view }),
   setActiveTab: (tab) => set({ activeTab: tab }),
@@ -216,74 +258,105 @@ export const useSupportStore = create<SupportState>((set) => ({
   setSelectedHelpTopicId: (id) => set({ selectedHelpTopicId: id }),
   setIsCreateTicketModalOpen: (isOpen) => set({ isCreateTicketModalOpen: isOpen }),
 
-  addTicket: ({ subject, category, priority, status, orderRef, initialMessage, attachments }) =>
-    set((state) => {
-      const now = new Date();
-      const dateStr = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-      const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-      const newId = `#TKT${1257 + state.tickets.length}`;
+  addTicket: async ({ subject, category, priority, status, orderRef, initialMessage, attachments }) => {
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    const newId = `#TKT${Math.floor(1000 + Math.random() * 9000)}`;
 
-      const newTicket: SupportTicket = {
-        id: newId,
+    const newTicket: SupportTicket = {
+      id: newId,
+      subject,
+      category,
+      priority,
+      status: status || 'open',
+      lastUpdated: dateStr,
+      createdAt: `${dateStr}, ${timeStr}`,
+      orderRef,
+      attachments: attachments || [],
+      messages: [
+        {
+          id: `msg-${Date.now()}`,
+          sender: 'merchant',
+          senderName: 'Merchant Admin',
+          text: initialMessage,
+          timestamp: `${dateStr}, ${timeStr}`,
+        },
+      ],
+    };
+
+    set((state) => ({
+      tickets: [newTicket, ...state.tickets],
+      isCreateTicketModalOpen: false,
+      activeView: 'hub',
+      selectedTicketId: newId,
+    }));
+
+    try {
+      const res = await supportApi.createTicket({
         subject,
         category,
         priority,
-        status: status || 'open',
-        lastUpdated: dateStr,
-        createdAt: `${dateStr}, ${timeStr}`,
         orderRef,
-        attachments: attachments || [],
-        messages: [
-          {
-            id: `msg-${Date.now()}`,
-            sender: 'merchant',
-            senderName: 'Merchant Admin',
-            text: initialMessage,
-            timestamp: `${dateStr}, ${timeStr}`,
-          },
-        ],
-      };
+        initialMessage,
+        attachments: attachments?.map((a) => a.name) || [],
+      });
+      const createdTicketId = (res as any)?.ticketId || (res as any)?.data?.ticketId;
+      if (createdTicketId) {
+        set((state) => ({
+          tickets: state.tickets.map((t) => (t.id === newId ? { ...t, id: createdTicketId } : t)),
+          selectedTicketId: createdTicketId,
+        }));
+      }
+    } catch (err) {
+      console.warn('Live API createTicket fallback:', err);
+    }
+  },
 
-      return {
-        tickets: [newTicket, ...state.tickets],
-        isCreateTicketModalOpen: false,
-        activeView: 'hub',
-        selectedTicketId: newId,
-      };
-    }),
+  addTicketMessage: async (ticketId, text, sender = 'merchant') => {
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
-  addTicketMessage: (ticketId, text, sender = 'merchant') =>
-    set((state) => {
-      const now = new Date();
-      const dateStr = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-      const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    set((state) => ({
+      tickets: state.tickets.map((t) => {
+        if (t.id !== ticketId) return t;
+        const newMsg: TicketMessage = {
+          id: `msg-${Date.now()}`,
+          sender,
+          senderName: sender === 'merchant' ? 'Merchant Admin' : 'Support Specialist',
+          text,
+          timestamp: `${dateStr}, ${timeStr}`,
+        };
+        return {
+          ...t,
+          lastUpdated: dateStr,
+          status: sender === 'merchant' && t.status === 'resolved' ? 'in_progress' : t.status,
+          messages: [...t.messages, newMsg],
+        };
+      }),
+    }));
 
-      return {
-        tickets: state.tickets.map((t) => {
-          if (t.id !== ticketId) return t;
-          const newMsg: TicketMessage = {
-            id: `msg-${Date.now()}`,
-            sender,
-            senderName: sender === 'merchant' ? 'Merchant Admin' : 'Support Specialist',
-            text,
-            timestamp: `${dateStr}, ${timeStr}`,
-          };
-          return {
-            ...t,
-            lastUpdated: dateStr,
-            status: sender === 'merchant' && t.status === 'resolved' ? 'in_progress' : t.status,
-            messages: [...t.messages, newMsg],
-          };
-        }),
-      };
-    }),
+    try {
+      await supportApi.addMessage(ticketId, { text });
+    } catch (err) {
+      console.warn('Live API addTicketMessage fallback:', err);
+    }
+  },
 
-  updateTicketStatus: (ticketId, status) =>
+  updateTicketStatus: async (ticketId, status) => {
     set((state) => ({
       tickets: state.tickets.map((t) =>
         t.id === ticketId ? { ...t, status, lastUpdated: 'Today' } : t
       ),
-    })),
+    }));
+
+    try {
+      await supportApi.updateStatus(ticketId, status);
+    } catch (err) {
+      console.warn('Live API updateTicketStatus fallback:', err);
+    }
+  },
 
   setSearchQuery: (query) => set({ searchQuery: query }),
   setStatusFilter: (status) => set({ statusFilter: status }),
