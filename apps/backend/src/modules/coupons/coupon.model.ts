@@ -58,3 +58,4 @@ couponSchema.index({ storeId: 1, isActive: 1 });
 export const CouponModel: Model<ICouponDocument> =
   (mongoose.models.Coupon as Model<ICouponDocument>) ||
   mongoose.model<ICouponDocument>('Coupon', couponSchema);
+

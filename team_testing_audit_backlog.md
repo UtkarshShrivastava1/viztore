@@ -1,5 +1,26 @@
 # Comprehensive Team Testing Audit & Remediation Backlog
 
+## 📊 Global Audit Remediation Progress Tracker
+
+> **Current Status**: Active in **Sprint 2 (Commercial Engines & Operations)**  
+> **Platform Completion**: **15 / 62 Items Completed** (**24.2%**)  
+> **Overall Progress Bar**: `[█████░░░░░░░░░░░░░░░] 24.2%`
+
+### Sprint Completion Breakdown
+
+| Sprint | Scope & Focus Area | Done / Total | Progress Bar | % Completed | Status |
+|---|---|:---:|---|:---:|:---:|
+| **Sprint 1** | **Core Architectural Foundations & Critical Blockers** | **9 / 9** | `[████████████████████]` | **100.0%** | `DONE ✅` |
+| **Sprint 2** | **Commercial Engines, Billing, Ledger & Procurement** | **6 / 12** | `[██████████░░░░░░░░░░]` | **50.0%** | `IN PROGRESS 🟡` |
+| **Sprint 3** | **Storefront Discovery, Merchant Config & Tooling** | **0 / 14** | `[░░░░░░░░░░░░░░░░░░░░]` | **0.0%** | `PENDING ⚪` |
+| **Sprint 4** | **Catalog & Merchant Inventory Workflows (Phase 4A)** | **0 / 13** | `[░░░░░░░░░░░░░░░░░░░░]` | **0.0%** | `PENDING ⚪` |
+| **Sprint 5** | **Store Merchandising, Policies & Micro-Polish (Phase 4B)** | **0 / 14** | `[░░░░░░░░░░░░░░░░░░░░]` | **0.0%** | `PENDING ⚪` |
+| **TOTAL** | **Hyperlocal Multi-Vendor Commerce Platform** | **15 / 62** | `[█████░░░░░░░░░░░░░░░]` | **24.2%** | **ACTIVE 🚀** |
+
+> *Note: Sprints 4 & 5 correspond to the detailed breakdown of Roadmap Milestone 4 (27 UI/UX Hardening & Visual Excellence deliverables).*
+
+---
+
 ## 1. Overview & Triage Protocol
 This document serves as the master engineering log for all findings, functional gaps, and UI/UX defects uncovered during the team's full-day testing session.
 
@@ -73,7 +94,7 @@ This document serves as the master engineering log for all findings, functional 
 | `AUDIT-047` | Merchant Dashboard Overview Full Interactive Hardening: Quick Actions, Date Filters & Chart CTAs | Merchant Hub | Dashboard Overview | UX / Interactive | P1 | Medium | Logged 📝 |
 | `AUDIT-048` | Customer "Favourite Stores" Pipeline Broken: Auto-Favoriting All Stores, Missing Heart Action & Zero Persistence | Customer Web | Account / Stores Discovery | Bug / Pipeline Breakdown | P1 | Medium | Logged 📝 |
 | `AUDIT-049` | Customer & Platform End-to-End Notification Pipeline Breakdown: Backend Event ID Mismatch, Unwired Store & Permanent Empty State | Customer Web / Backend | Account & Header Notifications | Bug / Architectural Pipeline | P1 | Medium | Logged 📝 |
-| `AUDIT-050` | Customer & Platform End-to-End Coupons & Offers Pipeline Breakdown: Mock Customer Page, Browser Prompt Checkout & Missing Backend Engine | Customer Web / Cross-Cutting | Coupons / Checkout / Marketing | Bug / Architectural Pipeline | P1 | Medium | Logged 📝 |
+| `AUDIT-050` | Customer & Platform End-to-End Coupons & Offers Pipeline Breakdown: Mock Customer Page, Browser Prompt Checkout & Missing Backend Engine | Customer Web / Cross-Cutting | Coupons / Checkout / Marketing | Bug / Architectural Pipeline | P1 | Medium | DONE ✅ |
 | `AUDIT-051` | Merchant Hub Route-Based Navigation Overhaul: Browser Back Button, Deep Linking & Refresh State Recovery | Merchant Hub | Routing & Architecture | Architecture / UX Blocker | P0 | High | DONE ✅ |
 | `AUDIT-052` | Customer Dynamic Category Route Architecture (`/category/[slug]`), Faceted Query Parameters & Deep Linking Hardening | Customer Web | Catalog Discovery / Routing | Architecture / Enhancement | P1 | Medium | DONE ✅ |
 | `AUDIT-053` | Platform End-to-End Returns & Refunds Pipeline Breakdown: Mock Merchant Table, Dead Action Modals & Missing Backend Return Engine | Cross-Cutting | Returns & Refunds / Orders | Bug / Architectural Pipeline | P1 | High | DONE ✅ |
@@ -81,7 +102,7 @@ This document serves as the master engineering log for all findings, functional 
 | `AUDIT-055` | Merchant Billing & Invoicing End-to-End Pipeline Breakdown: Unwired Backend APIs, In-Memory Mutations & Date Filter Disconnection | Merchant Hub | Billing & Invoicing | Bug / Architectural Pipeline | P1 | High | DONE ✅ |
 | `AUDIT-056` | Merchant Payouts & Settlements Pipeline Breakdown: Hardcoded May 2024 Overview, Inconsistent Zero Balances & Missing Backend Settlement Engine | Merchant Hub | Payouts & Settlements | Bug / Architectural Pipeline | P1 | High | DONE ✅ |
 | `AUDIT-057` | Merchant Settings & Store Configuration Breakdown: In-Memory "Save Changes", Hardcoded "Fashion Hub" Previews, Dual Verified/Verify Badges & Zero Backend Persistence | Merchant Hub | Settings & Profile | Bug / Architectural Pipeline | P1 | High | Logged 📝 |
-| `AUDIT-058` | Merchant Purchase & Expense Procurement Breakdown: Hardcoded May 2024 Cards & Seed Ledger, Silent In-Memory API Fallbacks & Missing Backend Purchase Order/E-Way Engine | Merchant Hub | Purchase & Expense | Bug / Architectural Pipeline | P1 | High | Logged 📝 |
+| `AUDIT-058` | Merchant Purchase & Expense Procurement Breakdown: Hardcoded May 2024 Cards & Seed Ledger, Silent In-Memory API Fallbacks & Missing Backend Purchase Order/E-Way Engine | Merchant Hub | Purchase & Expense | Bug / Architectural Pipeline | P1 | High | DONE ✅ |
 | `AUDIT-059` | Platform Support & Help Desk Pipeline Breakdown: Mock May 2024 Tickets, Dead Customer Action Cards, Discarded Attachments & Missing Backend Support Engine | Cross-Cutting | Support & Help Desk | Bug / Architectural Pipeline | P1 | High | Logged 📝 |
 | `AUDIT-060` | Customer Profile & Account Management Breakdown: Unsaved Profile Mutations, Mocked Feedback Submissions & Dead "Sell Online" CTA | Customer Web | Account Hub | Bug / Functional Gap | P1 | Medium | Logged 📝 |
 | `AUDIT-061` | Customer Cart & Checkout Multi-Store Layout Inconsistency & Fragile Address Validation | Customer Web | Cart & Checkout | Bug / UX Fragility | P1 | Medium | Logged 📝 |

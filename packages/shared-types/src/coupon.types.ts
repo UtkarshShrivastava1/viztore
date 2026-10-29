@@ -49,3 +49,4 @@ export const validateCouponSchema = z.object({
 
 export type CreateCouponDto = z.infer<typeof createCouponSchema>;
 export type ValidateCouponDto = z.infer<typeof validateCouponSchema>;
+
