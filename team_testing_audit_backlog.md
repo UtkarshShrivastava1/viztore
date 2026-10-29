@@ -3,19 +3,19 @@
 ## 📊 Global Audit Remediation Progress Tracker
 
 > **Current Status**: Active in **Sprint 2 (Commercial Engines & Operations)**  
-> **Platform Completion**: **16 / 62 Items Completed** (**25.8%**)  
-> **Overall Progress Bar**: `[█████░░░░░░░░░░░░░░░] 25.8%`
+> **Platform Completion**: **17 / 62 Items Completed** (**27.4%**)  
+> **Overall Progress Bar**: `[█████░░░░░░░░░░░░░░░] 27.4%`
 
 ### Sprint Completion Breakdown
 
 | Sprint | Scope & Focus Area | Done / Total | Progress Bar | % Completed | Status |
 |---|---|:---:|---|:---:|:---:|
 | **Sprint 1** | **Core Architectural Foundations & Critical Blockers** | **9 / 9** | `[████████████████████]` | **100.0%** | `DONE ✅` |
-| **Sprint 2** | **Commercial Engines, Billing, Ledger & Procurement** | **7 / 12** | `[████████████░░░░░░░░]` | **58.3%** | `IN PROGRESS 🟡` |
+| **Sprint 2** | **Commercial Engines, Billing, Ledger & Procurement** | **8 / 12** | `[█████████████░░░░░░░]` | **66.7%** | `IN PROGRESS 🟡` |
 | **Sprint 3** | **Storefront Discovery, Merchant Config & Tooling** | **0 / 14** | `[░░░░░░░░░░░░░░░░░░░░]` | **0.0%** | `PENDING ⚪` |
 | **Sprint 4** | **Catalog & Merchant Inventory Workflows (Phase 4A)** | **0 / 13** | `[░░░░░░░░░░░░░░░░░░░░]` | **0.0%** | `PENDING ⚪` |
 | **Sprint 5** | **Store Merchandising, Policies & Micro-Polish (Phase 4B)** | **0 / 14** | `[░░░░░░░░░░░░░░░░░░░░]` | **0.0%** | `PENDING ⚪` |
-| **TOTAL** | **Hyperlocal Multi-Vendor Commerce Platform** | **16 / 62** | `[█████░░░░░░░░░░░░░░░]` | **25.8%** | **ACTIVE 🚀** |
+| **TOTAL** | **Hyperlocal Multi-Vendor Commerce Platform** | **17 / 62** | `[█████░░░░░░░░░░░░░░░]` | **27.4%** | **ACTIVE 🚀** |
 
 > *Note: Sprints 4 & 5 correspond to the detailed breakdown of Roadmap Milestone 4 (27 UI/UX Hardening & Visual Excellence deliverables).*
 
@@ -105,7 +105,7 @@ This document serves as the master engineering log for all findings, functional 
 | `AUDIT-058` | Merchant Purchase & Expense Procurement Breakdown: Hardcoded May 2024 Cards & Seed Ledger, Silent In-Memory API Fallbacks & Missing Backend Purchase Order/E-Way Engine | Merchant Hub | Purchase & Expense | Bug / Architectural Pipeline | P1 | High | DONE ✅ |
 | `AUDIT-059` | Platform Support & Help Desk Pipeline Breakdown: Mock May 2024 Tickets, Dead Customer Action Cards, Discarded Attachments & Missing Backend Support Engine | Cross-Cutting | Support & Help Desk | Bug / Architectural Pipeline | P1 | High | Logged 📝 |
 | `AUDIT-060` | Customer Profile & Account Management Breakdown: Unsaved Profile Mutations, Mocked Feedback Submissions & Dead "Sell Online" CTA | Customer Web | Account Hub | Bug / Functional Gap | P1 | Medium | Logged 📝 |
-| `AUDIT-061` | Customer Cart & Checkout Multi-Store Layout Inconsistency & Fragile Address Validation | Customer Web | Cart & Checkout | Bug / UX Fragility | P1 | Medium | Logged 📝 |
+| `AUDIT-061` | Customer Cart & Checkout Multi-Store Layout Inconsistency & Fragile Address Validation | Customer Web | Cart & Checkout | Bug / UX Fragility | P1 | Medium | DONE ✅ |
 | `AUDIT-062` | Merchant Global Header Search Bar Inactivity (`Ctrl+K`) & Disconnected Query Pipeline | Merchant Hub | Header Navigation | Bug / Defect | P1 | Low | Logged 📝 |
 
 ---
@@ -1421,7 +1421,7 @@ Executing strictly in this order guarantees that **every data model, schema cont
   5. `[AUDIT-058]` Purchase & Expense Procurement Engine (`PurchaseOrderModel`, stock increment on receipt). (DONE ✅ - Commit `cf71c44`)
   6. `[AUDIT-050]` Customer Coupons & Offers Pipeline (backend discount validation). (DONE ✅ - Commit `dbe210e`)
   7. `[AUDIT-006]` Customer "Reserve / Hold" In-Store Order Pipeline (2-hour hold state machine). (DONE ✅ - Commit `3dfa475`)
-  8. `[AUDIT-061]` Customer Cart & Checkout Single-Store Coherence (clean up multi-store header confusion).
+  8. `[AUDIT-061]` Customer Cart & Checkout Single-Store Coherence (clean up multi-store header confusion). (DONE ✅ - Commit `13c3d64`)
   9. `[AUDIT-028]` Merchant One-Click Accept & Print Invoice/KOT (thermal slip generation).
   10. `[AUDIT-032]` Customer Order Cancellation Action & Reason Modal.
   11. `[AUDIT-002]` Merchant Fleet Broadcast Action Timing & Prominent UI Placement.
