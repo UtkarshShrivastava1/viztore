@@ -34,7 +34,8 @@ export const StoreQrLinkView: React.FC = () => {
       ? branding.domain
       : `${branding.appName.toLowerCase().replace(/\s+/g, '')}.in`;
 
-  const storeUrl = `https://${displayDomain}/${storeSlug || 'fashionhub'}`;
+  const isDev = typeof window !== 'undefined' && window.location.hostname === 'localhost';
+  const storeUrl = isDev ? `${window.location.protocol}//${window.location.hostname}:3000/stores/${storeSlug || 'fashionhub'}` : `https://${displayDomain}/stores/${storeSlug || 'fashionhub'}`;
   const qrRef = useRef<SVGSVGElement>(null);
 
   const handleCopy = () => {

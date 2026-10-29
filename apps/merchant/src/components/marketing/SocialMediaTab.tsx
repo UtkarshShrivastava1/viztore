@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Share2, Instagram, Facebook, MessageCircle, ExternalLink, Copy, Check } from 'lucide-react';
 import { branding } from '../../lib/branding.js';
+import { useAuthStore } from '../../stores/authStore.js';
 
 export const SocialMediaTab: React.FC = () => {
   const [copiedLink, setCopiedLink] = useState(false);

@@ -111,6 +111,7 @@ export interface IStore {
   phone?: string;
   logoUrl?: string;
   bannerUrl?: string;
+  mobileBannerUrl?: string;
   location: IGeoPoint;
   address: IStoreAddress;
   operatingHours?: IStoreOperatingHours;
@@ -217,6 +218,7 @@ export const createStoreSchema = z.object({
   deliveryRadiusKm: z.number().min(0.5).max(15).default(4),
   logoUrl: z.string().optional(),
   bannerUrl: z.string().optional(),
+  mobileBannerUrl: z.string().optional(),
   customTaxonomy: storeCustomTaxonomySchema.optional(),
   sections: z.array(storeSectionSchema).optional(),
 });
@@ -281,6 +283,7 @@ export const updateStoreSchema = createStoreSchema.partial().extend({
   slug: z.string().min(2).max(100).optional(),
   logoUrl: z.string().optional(),
   bannerUrl: z.string().optional(),
+  mobileBannerUrl: z.string().optional(),
   legalDetails: storeLegalDetailsSchema.optional(),
   bankDetails: storeBankDetailsSchema.optional(),
   settings: storeSettingsSchema.optional(),

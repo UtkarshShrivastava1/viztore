@@ -186,6 +186,7 @@ const storeSchema = new Schema<IStoreDocument>(
     },
     logoUrl: { type: String },
     bannerUrl: { type: String },
+    mobileBannerUrl: { type: String },
     location: {
       type: geoPointSchema,
       required: true,

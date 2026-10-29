@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  RefreshCw,
   Camera,
   Trash2,
   Upload,
@@ -25,13 +26,16 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { useStoreManagementStore } from '../../stores/storeManagementStore.js';
+import { mediaApi } from '../../lib/api.js';
 
 export const ManageBannerLogoView: React.FC = () => {
   const {
     storeLogo,
     storeBanner,
+    storeMobileBanner,
     setStoreLogo,
     setStoreBanner,
+    setStoreMobileBanner,
     setActiveSubTab,
   } = useStoreManagementStore();
 
@@ -42,39 +46,90 @@ export const ManageBannerLogoView: React.FC = () => {
     storeBanner || 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1200&auto=format&fit=crop&q=80'
   );
   const [mobileBannerPreview, setMobileBannerPreview] = useState(
-    'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800&auto=format&fit=crop&q=80'
+    storeMobileBanner || 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800&auto=format&fit=crop&q=80'
   );
   const [isSavedNotice, setIsSavedNotice] = useState(false);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const [isUploadingWebBanner, setIsUploadingWebBanner] = useState(false);
+  const [isUploadingMobileBanner, setIsUploadingMobileBanner] = useState(false);
 
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  React.useEffect(() => {
+    if (storeLogo) setLogoPreview(storeLogo);
+  }, [storeLogo]);
+
+  React.useEffect(() => {
+    if (storeBanner) setWebBannerPreview(storeBanner);
+  }, [storeBanner]);
+
+  React.useEffect(() => {
+    if (storeMobileBanner) setMobileBannerPreview(storeMobileBanner);
+  }, [storeMobileBanner]);
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const url = URL.createObjectURL(file);
-      setLogoPreview(url);
-      setStoreLogo(url);
-      showNotice();
+      setIsUploadingLogo(true);
+      try {
+        const res = await mediaApi.uploadImage(file, 'stores');
+        const cdnUrl = res?.url || URL.createObjectURL(file);
+        setLogoPreview(cdnUrl);
+        setStoreLogo(cdnUrl);
+        showNotice();
+      } catch (err) {
+        console.error('Failed to upload store logo:', err);
+        const url = URL.createObjectURL(file);
+        setLogoPreview(url);
+        setStoreLogo(url);
+        showNotice();
+      } finally {
+        setIsUploadingLogo(false);
+      }
     }
   };
 
-  const handleWebBannerUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleWebBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const url = URL.createObjectURL(file);
-      setWebBannerPreview(url);
-      setStoreBanner(url);
-      showNotice();
+      setIsUploadingWebBanner(true);
+      try {
+        const res = await mediaApi.uploadImage(file, 'stores');
+        const cdnUrl = res?.url || URL.createObjectURL(file);
+        setWebBannerPreview(cdnUrl);
+        setStoreBanner(cdnUrl);
+        showNotice();
+      } catch (err) {
+        console.error('Failed to upload web banner:', err);
+        const url = URL.createObjectURL(file);
+        setWebBannerPreview(url);
+        setStoreBanner(url);
+        showNotice();
+      } finally {
+        setIsUploadingWebBanner(false);
+      }
     }
   };
 
-  const handleMobileBannerUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMobileBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const url = URL.createObjectURL(file);
-      setMobileBannerPreview(url);
-      showNotice();
+      setIsUploadingMobileBanner(true);
+      try {
+        const res = await mediaApi.uploadImage(file, 'stores');
+        const cdnUrl = res?.url || URL.createObjectURL(file);
+        setMobileBannerPreview(cdnUrl);
+        setStoreMobileBanner(cdnUrl);
+        showNotice();
+      } catch (err) {
+        console.error('Failed to upload mobile banner:', err);
+        const url = URL.createObjectURL(file);
+        setMobileBannerPreview(url);
+        setStoreMobileBanner(url);
+        showNotice();
+      } finally {
+        setIsUploadingMobileBanner(false);
+      }
     }
   };
-
   const showNotice = () => {
     setIsSavedNotice(true);
     setTimeout(() => setIsSavedNotice(false), 2500);
@@ -305,6 +360,7 @@ export const ManageBannerLogoView: React.FC = () => {
                       type="button"
                       onClick={() => {
                         setMobileBannerPreview('');
+                        setStoreMobileBanner('');
                         showNotice();
                       }}
                       className="p-1 border border-rose-200 text-rose-500 hover:bg-rose-50 rounded-xl"

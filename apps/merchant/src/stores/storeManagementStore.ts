@@ -68,10 +68,12 @@ interface StoreManagementState {
   // Store Appearance
   storeLogo: string;
   storeBanner: string;
+  storeMobileBanner: string;
   storeDescription: string;
   storeSlug: string;
   setStoreLogo: (url: string) => void;
   setStoreBanner: (url: string) => void;
+  setStoreMobileBanner: (url: string) => void;
   setStoreDescription: (desc: string) => void;
   setStoreSlug: (slug: string) => void;
 
@@ -351,6 +353,7 @@ export const useStoreManagementStore = create<StoreManagementState>((set, get) =
   // Store Appearance
   storeLogo: '',
   storeBanner: '',
+  storeMobileBanner: '',
   storeDescription: '',
   storeSlug: '',
 
@@ -428,6 +431,7 @@ export const useStoreManagementStore = create<StoreManagementState>((set, get) =
         curatedProducts: mappedProducts,
         storeLogo: storeData?.logoUrl || '',
         storeBanner: storeData?.bannerUrl || '',
+        storeMobileBanner: storeData?.mobileBannerUrl || '',
         storeDescription: storeData?.description || '',
         storeSlug: storeData?.slug || '',
         kpis: {
@@ -447,7 +451,7 @@ export const useStoreManagementStore = create<StoreManagementState>((set, get) =
   },
 
   persistStoreData: async () => {
-    const { currentStoreId, sections, storeLogo, storeBanner, storeDescription, storeSlug } = get();
+    const { currentStoreId, sections, storeLogo, storeBanner, storeMobileBanner, storeDescription, storeSlug } = get();
     let targetId = currentStoreId;
     if (!targetId) {
       const raw = localStorage.getItem('current_store');
@@ -466,6 +470,7 @@ export const useStoreManagementStore = create<StoreManagementState>((set, get) =
         sections,
         logoUrl: storeLogo,
         bannerUrl: storeBanner,
+        mobileBannerUrl: storeMobileBanner,
         description: storeDescription,
         slug: storeSlug,
       });
@@ -484,6 +489,10 @@ export const useStoreManagementStore = create<StoreManagementState>((set, get) =
   },
   setStoreBanner: (url) => {
     set({ storeBanner: url });
+    get().persistStoreData();
+  },
+  setStoreMobileBanner: (url) => {
+    set({ storeMobileBanner: url });
     get().persistStoreData();
   },
   setStoreDescription: (desc) => {

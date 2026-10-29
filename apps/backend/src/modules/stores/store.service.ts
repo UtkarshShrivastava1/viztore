@@ -132,7 +132,17 @@ export async function getStoreById(storeId: string): Promise<IStore> {
  * Fetch Store by Slug
  */
 export async function getStoreBySlug(slug: string): Promise<IStore> {
-  const store = await StoreModel.findOne({ slug, isActive: true });
+  const query: any = { isActive: true };
+  if (mongoose.isValidObjectId(slug)) {
+    query.$or = [{ slug }, { _id: slug }];
+  } else {
+    query.$or = [{ slug }, { slug: new RegExp(`^${slug}$`, 'i') }];
+  }
+  let store = await StoreModel.findOne(query);
+  if (!store) {
+    const normalizedName = slug.replace(/[-_]/g, ' ');
+    store = await StoreModel.findOne({ name: new RegExp(`^${normalizedName}$`, 'i'), isActive: true });
+  }
   if (!store) {
     throw AppError.notFound('Store not found', 'STORE_NOT_FOUND');
   }
@@ -396,6 +406,9 @@ export async function getStoreSettings(storeId: string, ownerId: string): Promis
     category: store.category,
     logoUrl: store.logoUrl,
     bannerUrl: store.bannerUrl,
+    mobileBannerUrl: (store as any).mobileBannerUrl,
+    slug: store.slug,
+    sections: store.sections || [],
     address: store.address,
     location: store.location,
     operatingHours: store.operatingHours,
@@ -430,6 +443,9 @@ export async function updateStoreSettings(
   if (payload.category) store.category = payload.category;
   if (payload.logoUrl !== undefined) store.logoUrl = payload.logoUrl;
   if (payload.bannerUrl !== undefined) store.bannerUrl = payload.bannerUrl;
+  if (payload.mobileBannerUrl !== undefined) (store as any).mobileBannerUrl = payload.mobileBannerUrl;
+  if (payload.slug !== undefined) (store as any).slug = payload.slug;
+  if (payload.sections !== undefined) store.sections = payload.sections;
   if (payload.address) store.address = { ...store.address, ...payload.address };
   if (payload.operatingHours) store.operatingHours = { ...store.operatingHours, ...payload.operatingHours };
   if (payload.deliveryRadiusKm !== undefined) store.deliveryRadiusKm = payload.deliveryRadiusKm;
@@ -458,6 +474,9 @@ export async function updateStoreSettings(
     category: store.category,
     logoUrl: store.logoUrl,
     bannerUrl: store.bannerUrl,
+    mobileBannerUrl: (store as any).mobileBannerUrl,
+    slug: store.slug,
+    sections: store.sections || [],
     address: store.address,
     location: store.location,
     operatingHours: store.operatingHours,

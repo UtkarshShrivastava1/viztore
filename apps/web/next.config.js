@@ -25,6 +25,14 @@ const nextConfig = {
 
     return config;
   },
+  async rewrites() {
+    return [
+      {
+        source: '/store/:slug*',
+        destination: '/stores/:slug*',
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       {
