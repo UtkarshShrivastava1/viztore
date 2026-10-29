@@ -20,6 +20,7 @@ export interface InventoryItem {
   imageUrl: string;
   size: string;
   color: string;
+  lowStockThreshold?: number;
 }
 
 export interface StockTransaction {
@@ -111,6 +112,16 @@ interface InventoryStoreState {
   openDetailModal: (item: InventoryItem) => void;
   closeDetailModal: () => void;
 
+  syncProductStock: (
+    productId: string,
+    newStock: number,
+    options?: {
+      reason?: string;
+      reference?: string;
+      notes?: string;
+      lowStockThreshold?: number;
+    }
+  ) => void;
   adjustStock: (
     productId: string,
     adjustmentType: 'increase' | 'decrease' | 'set',
@@ -349,7 +360,7 @@ export const useInventoryStore = create<InventoryStoreState>((set, get) => ({
       const stock = p.stock || 0;
       const reserved = defaultReservedBySku[p.sku] ?? Math.min(stock, Math.floor(stock * 0.1));
       const available = Math.max(0, stock - reserved);
-      const lowThresh = p.lowStockThreshold || 30;
+      const lowThresh = p.lowStockThreshold ?? 10;
       const status: 'in_stock' | 'low_stock' | 'out_of_stock' =
         stock <= 0 ? 'out_of_stock' : stock <= lowThresh ? 'low_stock' : 'in_stock';
       return {
@@ -365,6 +376,7 @@ export const useInventoryStore = create<InventoryStoreState>((set, get) => ({
         reserved,
         available,
         status,
+        lowStockThreshold: lowThresh,
         stockValue: Math.round(stock * (p.price || 500)),
         lastUpdated: p.updatedAt || 'Recent',
         imageUrl: p.images[0] || '',
@@ -440,6 +452,57 @@ export const useInventoryStore = create<InventoryStoreState>((set, get) => ({
   openDetailModal: (item) => set({ detailModalItem: item }),
   closeDetailModal: () => set({ detailModalItem: null }),
 
+  syncProductStock: (productId, newStock, options) => {
+    const state = get();
+    const item = state.items.find((i) => i.id === productId);
+    if (!item) return;
+
+    const delta = newStock - item.stock;
+    if (delta === 0) return;
+
+    const threshold = options?.lowStockThreshold ?? item.lowStockThreshold ?? 10;
+    const newAvailable = Math.max(0, newStock - item.reserved);
+    const unitValue = item.stock > 0 ? item.stockValue / item.stock : 500;
+    const newStockValue = Math.round(newStock * unitValue);
+    const newStatus: 'in_stock' | 'low_stock' | 'out_of_stock' =
+      newStock <= 0 ? 'out_of_stock' : newStock <= threshold ? 'low_stock' : 'in_stock';
+
+    const updatedItems = state.items.map((i) =>
+      i.id === productId
+        ? {
+            ...i,
+            stock: newStock,
+            available: newAvailable,
+            stockValue: newStockValue,
+            status: newStatus,
+            lowStockThreshold: threshold,
+            lastUpdated: 'Just now',
+          }
+        : i
+    );
+
+    const newTx: StockTransaction = {
+      id: 'tx-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+      productId: item.id,
+      productName: item.name,
+      sku: item.sku,
+      date: 'Just now',
+      type: delta >= 0 ? 'stock_in' : 'stock_out',
+      referenceType: 'Stock Adjustment',
+      referenceNo: options?.reference || 'ADJ-' + Math.floor(1000 + Math.random() * 9000),
+      quantity: delta,
+      stockBefore: item.stock,
+      stockAfter: newStock,
+      notes: options?.notes || options?.reason || 'Catalog sync adjustment',
+      performedBy: 'Store Staff',
+    };
+
+    set({
+      items: updatedItems,
+      transactions: [newTx, ...state.transactions],
+    });
+  },
+
   adjustStock: async (productId, adjustmentType, quantity, reason, reference, notes) => {
     const state = get();
     const item = state.items.find((i) => i.id === productId);
@@ -474,7 +537,7 @@ export const useInventoryStore = create<InventoryStoreState>((set, get) => ({
     const unitValue = item.stock > 0 ? item.stockValue / item.stock : 500;
     const newStockValue = Math.round(newStock * unitValue);
     const newStatus: 'in_stock' | 'low_stock' | 'out_of_stock' =
-      newStock <= 0 ? 'out_of_stock' : newStock <= 30 ? 'low_stock' : 'in_stock';
+      newStock <= 0 ? 'out_of_stock' : newStock <= (item.lowStockThreshold ?? 10) ? 'low_stock' : 'in_stock';
 
     const updatedItems = get().items.map((i) =>
       i.id === productId
@@ -528,7 +591,7 @@ export const useInventoryStore = create<InventoryStoreState>((set, get) => ({
       const unitValue = currentItem.stock > 0 ? currentItem.stockValue / currentItem.stock : 500;
       const newStockValue = Math.round(newStock * unitValue);
       const newStatus: 'in_stock' | 'low_stock' | 'out_of_stock' =
-        newStock <= 0 ? 'out_of_stock' : newStock <= 30 ? 'low_stock' : 'in_stock';
+        newStock <= 0 ? 'out_of_stock' : newStock <= (currentItem.lowStockThreshold ?? 10) ? 'low_stock' : 'in_stock';
 
       try {
         await useCatalogStore.getState().updateStock(adj.productId, newStock);
@@ -627,7 +690,7 @@ export const useInventoryStore = create<InventoryStoreState>((set, get) => ({
       const unitValue = current.stock > 0 ? current.stockValue / current.stock : 500;
       const newStockValue = Math.round(newStock * unitValue);
       const newStatus: 'in_stock' | 'low_stock' | 'out_of_stock' =
-        newStock <= 0 ? 'out_of_stock' : newStock <= 30 ? 'low_stock' : 'in_stock';
+        newStock <= 0 ? 'out_of_stock' : newStock <= (current.lowStockThreshold ?? 10) ? 'low_stock' : 'in_stock';
 
       updatedItems[idx] = {
         ...current,

@@ -40,7 +40,7 @@ This document serves as the master engineering log for all findings, functional 
 | `AUDIT-014` | Merchant Manual "Create Order" Blocker: Customer Search ReadOnly & Form Missing | Merchant Hub | POS / Orders | Bug / Blocker | P0 | Medium | Logged 📝 |
 | `AUDIT-015` | Merchant Catalog Filter & Search State Breakdown | Merchant Hub | Catalog | Bug / Defect | P1 | Low | Logged 📝 |
 | `AUDIT-016` | Catalog Edit Product Modal Glitches & Field Binding | Merchant Hub | Catalog | Bug / Defect | P2 | Low | Logged 📝 |
-| `AUDIT-017` | Inventory Module Hardening & Catalog Synchronization | Merchant Hub | Inventory | Bug / UX | P0 | High | Logged 📝 |
+| `AUDIT-017` | Inventory Module Hardening & Catalog Synchronization | Merchant Hub | Inventory | Bug / UX | P0 | High | DONE ✅ |
 | `AUDIT-018` | Store Management "New Arrivals" Section Sequencing | Merchant Hub | Storefront CMS | Bug / Defect | P1 | Medium | Logged 📝 |
 | `AUDIT-019` | Store Management Logo, Banner & Mobile Banner Saving | Merchant Hub | Media / Settings | Bug / Defect | P0 | Medium | Logged 📝 |
 | `AUDIT-020` | "Your Store Link" 404 Routing on Public Storefront | Merchant Hub / Web | Storefront URLs | Bug / Defect | P0 | Low | Logged 📝 |
@@ -479,7 +479,7 @@ This document serves as the master engineering log for all findings, functional 
 - **Expected**: Clean form pre-population from selected item, proper validation, and optimistic store update.
 - **Target Files**: `apps/merchant/src/components/catalog/EditProductModal.tsx`.
 
-#### [AUDIT-017] Inventory Module Hardening & Catalog Synchronization
+#### [AUDIT-017] Inventory Module Hardening & Catalog Synchronization (DONE ✅)
 - **Layer**: Frontend (`apps/merchant`)
 - **Module**: Inventory & Stock History
 - **Type**: Bug / Architectural | **Severity**: P0 | **Complexity**: High
@@ -1376,7 +1376,7 @@ Executing strictly in this order guarantees that **every data model, schema cont
   1. `[AUDIT-041]` Master Taxonomy Engine, Dynamic Schema-Driven Attributes & HSN Ingestion (`Categories.xlsx` into `catalog_taxonomies`).
   2. `[AUDIT-004]` Customer vs. Merchant Account Segregation & Namespace Guard. (DONE ✅)
   3. `[AUDIT-013]` Duplicate Account Prevention on Identity Attributes (compound phone/email index). (DONE ✅)
-  4. `[AUDIT-017]` Inventory Module Hardening & Catalog Synchronization (single stock source of truth).
+  4. `[AUDIT-017]` Inventory Module Hardening & Catalog Synchronization (single stock source of truth). (DONE ✅)
   5. `[AUDIT-051]` Merchant Hub Route-Based Navigation Overhaul (true URL paths `/dashboard/*`).
   6. `[AUDIT-052]` Customer Dynamic Category Route Architecture (`/category/[slug]`).
   7. `[AUDIT-014]` Merchant Manual "Create Order" Blocker (remove `readOnly` lock on customer search).

@@ -1148,6 +1148,16 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
       );
       return { products: updatedList, kpis: calculateKPIs(updatedList) };
     });
+
+    try {
+      const { useInventoryStore } = await import('./inventoryStore.js');
+      useInventoryStore.getState().syncProductStock(id, newStock, {
+        reason: 'Catalog stock update',
+        lowStockThreshold,
+      });
+    } catch {
+      // safe fallback if inventoryStore not loaded
+    }
   },
 
   deleteProduct: async (id) => {

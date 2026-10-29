@@ -407,4 +407,10 @@ Every online order placed through `apps/web` generates an authoritative, complia
   - **Statutory Identity Uniqueness**: Added sparse unique indexing and validation guards for business `legalDetails.gstin` and `legalDetails.pan` in `store.model.ts` and `onboarding.service.ts` to prevent conflicting store registrations.
   - **Client Authentication Alignment**: Updated Customer Web (`apps/web`) and Merchant Panel (`apps/merchant`) login flows to pass canonical portal role targets.
   - **Test Suite & Verification**: Added 7 auth service and index specification tests; **204/204 automated tests passing across 28 test suites**; 100% clean production builds across `@repo/merchant` and `@repo/web`.
-
+- [x] **Inventory Module Hardening & Catalog Synchronization (`[AUDIT-017]`) 🟢**:
+  - **Bidirectional Stock Sync**: Implemented `syncProductStock` in `inventoryStore.ts` and wired `catalogStore.updateStock` to immediately synchronize inventory state and prepend an immutable `StockTransaction` in the inventory ledger with zero circular loops.
+  - **Dynamic Threshold Evaluation**: Replaced hardcoded stock threshold (`30`) with `item.lowStockThreshold ?? 10` across stock adjustments, batch adjustments, and POS deductions, harmonizing status tags between catalog and inventory.
+  - **Genuine KPI Calculations**: Eliminated dummy fallback numbers (`'78'`, `'38'`, `'12,842'`) in `InventoryKPICards.tsx`, displaying authentic zero and calculated values.
+  - **Action Menu Routing**: Repaired duplicate modals in `InventoryActionMenu.tsx`; "Edit Product" now populates the draft product directly into `catalogStore` and triggers navigation into the 3-step catalog wizard, while "View Details" retains read-only inspection.
+  - **History & Session Hardening**: Fortified `App.tsx` popstate handling and URL query parameters (`?tab=...`), ensuring browser back/forward buttons stay within the authenticated merchant dashboard session without logout regressions.
+  - **Build & Test Verification**: **204/204 automated tests passing across 28 test suites** (`pnpm --filter @repo/backend test`); 100% clean production build for `@repo/merchant` (`tsc && vite build` in 10.20s).

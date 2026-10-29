@@ -93,7 +93,36 @@ export const App: React.FC = () => {
   };
 
   const [currentView, setCurrentView] = useState<AppView>(getInitialView);
-  const [currentTab, setCurrentTab] = useState<DashboardTab>('overview');
+  const getInitialTab = (): DashboardTab => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get('tab') as DashboardTab | null;
+      const validTabs: DashboardTab[] = [
+        'overview',
+        'orders',
+        'catalog',
+        'inventory',
+        'billing',
+        'customers',
+        'wallet',
+        'expenses',
+        'assets',
+        'returns',
+        'payouts',
+        'analytics',
+        'marketing',
+        'store',
+        'settings',
+        'support',
+      ];
+      if (tabParam && validTabs.includes(tabParam)) {
+        return tabParam;
+      }
+    }
+    return 'overview';
+  };
+
+  const [currentTab, setCurrentTab] = useState<DashboardTab>(getInitialTab);
   const [isCreateOrderView, setIsCreateOrderView] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -122,6 +151,30 @@ export const App: React.FC = () => {
   // Global modals
   const [isGlobalAddOpen, setIsGlobalAddOpen] = useState(false);
   const [isGlobalBulkOpen, setIsGlobalBulkOpen] = useState(false);
+  // Dashboard tab selector with History and URL sync
+  const handleSelectTab = useCallback((tab: DashboardTab) => {
+    setCurrentTab(tab);
+    setIsCreateOrderView(false);
+    setIsMobileMenuOpen(false);
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.pathname = '/dashboard';
+      url.searchParams.set('tab', tab);
+      window.history.pushState({ tab }, '', url.toString());
+    }
+  }, []);
+
+  // Listen for inter-component merchant navigation events
+  useEffect(() => {
+    const handleMerchantNavigate = (e: CustomEvent<{ tab?: DashboardTab; view?: string }>) => {
+      if (e.detail?.tab) {
+        handleSelectTab(e.detail.tab);
+      }
+    };
+    window.addEventListener('merchant:navigate' as any, handleMerchantNavigate);
+    return () => window.removeEventListener('merchant:navigate' as any, handleMerchantNavigate);
+  }, [handleSelectTab]);
+
 
   useEffect(() => {
     initialize();
@@ -129,18 +182,32 @@ export const App: React.FC = () => {
 
   // Handle browser back/forward buttons
   useEffect(() => {
-    const handlePopState = () => {
+    const handlePopState = (event: PopStateEvent) => {
       const path = window.location.pathname.toLowerCase();
       setCurrentRoute(path);
 
+      const isAuth = useAuthStore.getState().isAuthenticated || !!localStorage.getItem('access_token');
+
       if (path === '/login') {
-        setCurrentView('login');
+        setCurrentView(isAuth ? 'dashboard' : 'login');
       } else if (path === '/register' || path === '/signup' || path === '/onboarding') {
         setCurrentView('onboarding');
-      } else if (path === '/dashboard') {
+      } else if (path === '/dashboard' || path.startsWith('/dashboard')) {
         setCurrentView('dashboard');
+        const stateTab = (event.state as any)?.tab;
+        const urlParams = new URLSearchParams(window.location.search);
+        const queryTab = urlParams.get('tab') as DashboardTab | null;
+        if (stateTab) {
+          setCurrentTab(stateTab);
+        } else if (queryTab) {
+          setCurrentTab(queryTab);
+        }
       } else {
-        setCurrentView('landing');
+        if (isAuth && (path === '/' || path === '')) {
+          setCurrentView('dashboard');
+        } else {
+          setCurrentView('landing');
+        }
       }
     };
 
@@ -365,11 +432,7 @@ export const App: React.FC = () => {
       <div className={`${isMobileMenuOpen ? 'block' : 'hidden sm:block'}`}>
         <Sidebar
           currentTab={currentTab}
-          onSelectTab={(tab) => {
-            setCurrentTab(tab);
-            setIsCreateOrderView(false);
-            setIsMobileMenuOpen(false);
-          }}
+          onSelectTab={handleSelectTab}
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
           sidebarWidth={sidebarWidth}

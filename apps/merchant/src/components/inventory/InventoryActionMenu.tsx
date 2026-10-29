@@ -71,7 +71,50 @@ export const InventoryActionMenu: React.FC<InventoryActionMenuProps> = ({ item }
             type="button"
             onClick={() => {
               setIsOpen(false);
-              openDetailModal(item);
+              const catalogProducts = useCatalogStore.getState().products;
+              const matchingProduct = catalogProducts.find((p) => p.id === item.id || p.sku === item.sku);
+              if (matchingProduct) {
+                useCatalogStore.getState().loadProductIntoDraft(matchingProduct);
+              } else {
+                useCatalogStore.getState().loadProductIntoDraft({
+                  id: item.id,
+                  name: item.name,
+                  sku: item.sku,
+                  barcode: item.barcode,
+                  category: item.category,
+                  subCategory: item.subcategory,
+                  productType: item.productType,
+                  brand: item.brand,
+                  stock: item.stock,
+                  lowStockThreshold: item.lowStockThreshold ?? 10,
+                  status: item.status === 'out_of_stock' ? 'out_of_stock' : 'active',
+                  price: item.stockValue && item.stock > 0 ? Math.round(item.stockValue / item.stock) : 599,
+                  costPrice: 350,
+                  mrp: item.stockValue && item.stock > 0 ? Math.round((item.stockValue / item.stock) * 1.3) : 799,
+                  images: item.imageUrl ? [item.imageUrl] : [],
+                  attributes: {
+                    size: item.size || 'M',
+                    color: item.color || 'Black',
+                  },
+                  storageLocation: {
+                    warehouse: 'Main Warehouse',
+                    rack: 'R-01',
+                    shelf: 'S-01',
+                  },
+                  tax: {
+                    category: 'Standard GST (18%)',
+                    rate: 18,
+                    inclusive: true,
+                    amount: 0,
+                  },
+                  updatedAt: 'Just now',
+                });
+              }
+              window.dispatchEvent(
+                new CustomEvent('merchant:navigate', {
+                  detail: { tab: 'catalog', view: 'wizard' },
+                })
+              );
             }}
             className="w-full px-3 py-1.5 flex items-center gap-2.5 hover:bg-slate-50 hover:text-blue-600 transition-colors text-left cursor-pointer"
           >
