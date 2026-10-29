@@ -12,6 +12,17 @@ import { AccountSidebar } from '@/components/account/AccountSidebar';
 export function SellClient() {
   const router = useRouter();
 
+  const handleGetStarted = () => {
+    const isLocal = typeof window !== 'undefined' && window.location.hostname.includes('localhost');
+    const merchantUrl = isLocal
+      ? 'http://localhost:3001'
+      : (process.env.NEXT_PUBLIC_MERCHANT_URL || '/merchant');
+    
+    if (typeof window !== 'undefined') {
+      window.open(merchantUrl, '_blank', 'noopener,noreferrer');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#ffffff] font-sans relative pb-24">
       <main className="max-w-[1680px] mx-auto px-4 lg:px-8 py-4 relative z-10 flex flex-col lg:flex-row gap-6 items-start">
@@ -43,7 +54,7 @@ export function SellClient() {
                   <div className="h-3 flex-1 bg-white rounded-b-full mx-px"></div>
                 </div>
                 <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center mt-3">
-                  <span className="text-yellow-500 font-black text-xl italic">V</span>
+                  <span className="text-yellow-500 font-black text-xl italic">{branding.appName.charAt(0) || 'S'}</span>
                 </div>
               </div>
               
@@ -97,7 +108,11 @@ export function SellClient() {
               <h3 className="text-[13px] font-bold text-[#192168] leading-tight">Grow your business with {branding.appName}</h3>
               <p className="text-[10px] text-surface-600 mt-0.5">Reach more local customers and boost your sales</p>
             </div>
-            <button className="px-3.5 py-2 bg-[#10B981] text-white rounded-lg text-[11px] font-bold hover:bg-emerald-600 transition-colors shadow-sm flex items-center justify-center gap-1 z-10 shrink-0">
+            <button 
+              type="button"
+              onClick={handleGetStarted}
+              className="px-3.5 py-2 bg-[#10B981] text-white rounded-lg text-[11px] font-bold hover:bg-emerald-600 transition-colors shadow-sm flex items-center justify-center gap-1 z-10 shrink-0 cursor-pointer"
+            >
               Get Started <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -219,16 +234,19 @@ export function SellClient() {
 
           {/* Need Help CTA */}
           <div className="bg-white border-t border-surface-200 -mx-4 px-4 py-4 mt-2 mb-[-96px]">
-            <div className="flex items-center justify-between group cursor-pointer">
+            <div 
+              onClick={() => router.push('/account/support')}
+              className="flex items-center justify-between group cursor-pointer"
+            >
               <div className="flex items-center gap-3">
-                <HeadphonesIcon className="w-6 h-6 text-[#192168]" />
+                <HeadphonesIcon className="w-6 h-6 text-[#192168] group-hover:text-blue-600 transition" />
                 <div>
-                  <h4 className="text-[13px] font-extrabold text-[#192168]">Need Help?</h4>
+                  <h4 className="text-[13px] font-extrabold text-[#192168] group-hover:text-blue-600 transition">Need Help?</h4>
                   <p className="text-[11px] text-surface-500">Our team is here to help you at every step.</p>
                 </div>
               </div>
-              <div className="flex items-center text-[#192168] text-[12px] font-bold">
-                Contact Support <ChevronRight className="w-4 h-4 ml-1" />
+              <div className="flex items-center text-[#192168] text-[12px] font-bold group-hover:text-blue-600 transition">
+                Contact Support <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-0.5 transition-transform" />
               </div>
             </div>
           </div>
@@ -238,4 +256,3 @@ export function SellClient() {
     </div>
   );
 }
-

@@ -11,8 +11,10 @@ import {
   UserAddressDto,
   UpdateAddressDto,
   UpdateProfileDto,
+  CreateFeedbackDto,
 } from '@repo/shared-types';
 import { UserModel, IUserDocument } from './auth.model.js';
+import { FeedbackModel, IFeedbackDocument } from './feedback.model.js';
 import { env } from '../../shared/config/env.config.js';
 import { AppError } from '../../shared/utils/AppError.js';
 
@@ -230,7 +232,7 @@ export async function getUserProfile(userId: string): Promise<IUser> {
  */
 export async function updateUserProfile(
   userId: string,
-  updates: Partial<Pick<IUser, 'fullName' | 'avatarUrl' | 'dateOfBirth' | 'gender'>>,
+  updates: Partial<Pick<IUser, 'fullName' | 'avatarUrl' | 'dateOfBirth' | 'gender' | 'phone'>>,
 ): Promise<IUser> {
   const user = await UserModel.findByIdAndUpdate(
     userId,
@@ -409,4 +411,21 @@ export async function toggleFavoriteStore(
   await user.save();
 
   return { isFavorite, favoriteStoreIds: favs };
+}
+
+/**
+ * Submit Platform & App Feedback
+ */
+export async function submitFeedback(
+  data: CreateFeedbackDto & { userId?: string },
+): Promise<IFeedbackDocument> {
+  const feedback = await FeedbackModel.create({
+    userId: data.userId || undefined,
+    experience: data.experience,
+    topic: data.topic,
+    text: data.text || '',
+    nps: data.nps ?? 10,
+  });
+
+  return feedback;
 }

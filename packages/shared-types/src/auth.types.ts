@@ -111,6 +111,13 @@ export const updateProfileSchema = z.object({
   gender: z.enum(['male', 'female', 'other', 'prefer_not_to_say']).optional(),
 });
 
+export const createFeedbackSchema = z.object({
+  experience: z.number().int().min(1).max(5),
+  topic: z.string().min(1).max(50),
+  text: z.string().max(2000).optional().default(''),
+  nps: z.number().int().min(0).max(10).optional(),
+});
+
 export type RegisterUserDto = z.infer<typeof registerUserSchema>;
 export type LoginUserDto = z.infer<typeof loginUserSchema>;
 export type RefreshTokenDto = z.infer<typeof refreshTokenSchema>;
@@ -118,4 +125,5 @@ export type UserAddressDto = z.infer<typeof userAddressSchema>;
 export type CreateAddressDto = UserAddressDto;
 export type UpdateAddressDto = z.infer<typeof updateAddressSchema>;
 export type UpdateProfileDto = z.infer<typeof updateProfileSchema>;
+export type CreateFeedbackDto = z.infer<typeof createFeedbackSchema>;
 export type IUserProfile = IUser;

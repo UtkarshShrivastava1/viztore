@@ -4,6 +4,7 @@ import type {
   CreateAddressDto,
   UpdateAddressDto,
   UpdateProfileDto,
+  CreateFeedbackDto,
   IUserProfile,
 } from '@repo/shared-types';
 
@@ -71,6 +72,14 @@ export const userApi = {
    */
   updateProfile: async (dto: UpdateProfileDto): Promise<IUserProfile> => {
     const res = await api.patch<IUserProfile>('/users/me', dto);
+    return res.data;
+  },
+
+  /**
+   * Submit Customer Platform Feedback
+   */
+  submitFeedback: async (dto: CreateFeedbackDto): Promise<{ success: boolean; message: string }> => {
+    const res = await api.post<{ success: boolean; message: string }>('/users/feedback', dto);
     return res.data;
   },
 };

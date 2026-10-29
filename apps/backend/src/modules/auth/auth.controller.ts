@@ -108,3 +108,12 @@ export const toggleFavoriteStore: RequestHandler = catchAsync(async (req: Reques
   const result = await authService.toggleFavoriteStore(req.user.sub, storeId);
   return ApiResponse.success(res, result, result.isFavorite ? 'Store added to favorites' : 'Store removed from favorites');
 });
+
+export const submitFeedback: RequestHandler = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.user?.sub;
+  const feedback = await authService.submitFeedback({
+    ...req.body,
+    userId,
+  });
+  return ApiResponse.created(res, feedback, 'Feedback submitted successfully');
+});

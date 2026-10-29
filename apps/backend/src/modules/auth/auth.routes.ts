@@ -6,9 +6,10 @@ import {
   userAddressSchema,
   updateAddressSchema,
   updateProfileSchema,
+  createFeedbackSchema,
 } from '@repo/shared-types';
 import { validateRequest } from '../../shared/middlewares/validateRequest.js';
-import { authGuard } from '../../shared/middlewares/authGuard.js';
+import { authGuard, optionalAuthGuard } from '../../shared/middlewares/authGuard.js';
 import { authRateLimiter } from '../../shared/middlewares/rateLimiter.js';
 import * as authController from './auth.controller.js';
 
@@ -112,5 +113,12 @@ router.post(
   authController.toggleFavoriteStore,
 );
 
-export const authRouter = router;
+// Customer Platform & App Feedback Endpoint
+router.post(
+  '/feedback',
+  optionalAuthGuard,
+  validateRequest({ body: createFeedbackSchema }),
+  authController.submitFeedback,
+);
 
+export const authRouter = router;
