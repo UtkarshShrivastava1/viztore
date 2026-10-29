@@ -440,3 +440,42 @@ export const analyticsApi = {
     document.body.removeChild(a);
   },
 };
+
+export const customersApi = {
+  getCustomers: (params?: Record<string, string>) => {
+    const qs = params ? '?' + new URLSearchParams(params).toString() : '';
+    return api.get<any>(`/customers${qs}`);
+  },
+  getAll: (params?: Record<string, string>) => {
+    const qs = params ? '?' + new URLSearchParams(params).toString() : '';
+    return api.get<any>(`/customers${qs}`);
+  },
+
+  getCustomerById: (id: string) =>
+    api.get<any>(`/customers/${id}`),
+  getById: (id: string) =>
+    api.get<any>(`/customers/${id}`),
+
+  createCustomer: (data: unknown) =>
+    api.post<any>('/customers', data),
+  create: (data: unknown) =>
+    api.post<any>('/customers', data),
+
+  updateCustomer: (id: string, data: unknown) =>
+    api.patch<any>(`/customers/${id}`, data),
+  update: (id: string, data: unknown) =>
+    api.patch<any>(`/customers/${id}`, data),
+
+  deleteCustomer: (id: string) =>
+    api.delete<any>(`/customers/${id}`),
+  delete: (id: string) =>
+    api.delete<any>(`/customers/${id}`),
+
+  adjustCredit: (id: string, data: { amount: number; type: 'add' | 'deduct'; reason: string }) =>
+    api.post<any>(`/customers/${id}/credit`, data),
+  addCredit: (id: string, data: { amount: number; type: 'add' | 'deduct'; reason: string }) =>
+    api.post<any>(`/customers/${id}/credit`, data),
+
+  recordPayment: (id: string, data: { amount: number; paymentMethod: string; notes?: string; referenceNo?: string }) =>
+    api.post<any>(`/customers/${id}/payments`, data),
+};

@@ -101,6 +101,13 @@ export const CANONICAL_INDEX_SPECIFICATIONS: ModelIndexSpecification[] = [
       { fields: { phone: 1, role: 1 }, options: { unique: true } }, // Strict mobile uniqueness per role (AUDIT-013)
     ],
   },
+  {
+    modelName: 'Customer',
+    criticalRules: [
+      { fields: { storeId: 1, phone: 1 } },
+      { fields: { storeId: 1, customerCode: 1 }, options: { unique: true } },
+    ],
+  },
 ];
 
 /**

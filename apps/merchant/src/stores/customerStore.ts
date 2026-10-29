@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { customersApi } from '../lib/api.js';
 
 export type CustomerType = 'Individual' | 'Business' | 'Retailer' | 'Wholesaler';
 export type CustomerStatus = 'active' | 'inactive';
@@ -119,6 +120,9 @@ interface CustomerState {
   statementCustomer: Customer | null;
   activeStatementTab: 'history' | 'aging';
 
+  isLoadingCustomers: boolean;
+  error: string | null;
+
   // Actions
   setSearchQuery: (query: string) => void;
   setStatusFilter: (status: string) => void;
@@ -135,12 +139,13 @@ interface CustomerState {
   closeCustomerStatement: () => void;
   setActiveStatementTab: (tab: 'history' | 'aging') => void;
 
-  addCustomer: (customer: Omit<Customer, 'id' | 'recentOrders' | 'creditHistory' | 'outstandingAmount' | 'totalSales' | 'storeCredit' | 'loyaltyPoints' | 'totalOrders' | 'returnsCount' | 'tier' | 'lastOrderDate' | 'location'> & { location?: string; openingBalance?: number }) => void;
-  updateCustomer: (id: string, updates: Partial<Customer>) => void;
-  deleteCustomer: (id: string) => void;
-  addStoreCredit: (customerId: string, amount: number, reason: string) => void;
-  deductStoreCredit: (customerId: string, amount: number, reason: string) => void;
-  recordPayment: (customerId: string, amount: number, paymentMethod: string, notes?: string) => void;
+  fetchCustomers: () => Promise<void>;
+  addCustomer: (customer: Omit<Customer, 'id' | 'recentOrders' | 'creditHistory' | 'outstandingAmount' | 'totalSales' | 'storeCredit' | 'loyaltyPoints' | 'totalOrders' | 'returnsCount' | 'tier' | 'lastOrderDate' | 'location'> & { location?: string; openingBalance?: number }) => Promise<void>;
+  updateCustomer: (id: string, updates: Partial<Customer>) => Promise<void>;
+  deleteCustomer: (id: string) => Promise<void>;
+  addStoreCredit: (customerId: string, amount: number, reason: string) => Promise<void>;
+  deductStoreCredit: (customerId: string, amount: number, reason: string) => Promise<void>;
+  recordPayment: (customerId: string, amount: number, paymentMethod: string, notes?: string) => Promise<void>;
   syncFromStoreData: (invoices: any[], orders: any[]) => void;
 }
 
@@ -420,7 +425,7 @@ const seedCustomers: Customer[] = [
   },
 ];
 
-export const useCustomerStore = create<CustomerState>((set) => ({
+export const useCustomerStore = create<CustomerState>((set, get) => ({
   customers: seedCustomers,
   kpis: computeCustomerKPIs(seedCustomers),
   searchQuery: '',
@@ -436,6 +441,8 @@ export const useCustomerStore = create<CustomerState>((set) => ({
   isStatementDrawerOpen: false,
   statementCustomer: null,
   activeStatementTab: 'history',
+  isLoadingCustomers: false,
+  error: null,
 
   setSearchQuery: (searchQuery) => set({ searchQuery }),
   setStatusFilter: (statusFilter) => set({ statusFilter }),
@@ -467,54 +474,112 @@ export const useCustomerStore = create<CustomerState>((set) => ({
     }),
   setActiveStatementTab: (activeStatementTab) => set({ activeStatementTab }),
 
-  addCustomer: (customerData) =>
-    set((state) => {
-      const nextIdNum = 1000 + state.customers.length + 1;
-      const newCustomer: Customer = {
-        id: `CUS-${nextIdNum}`,
-        name: customerData.name,
-        customerType: customerData.customerType,
-        phone: customerData.phone,
-        email: customerData.email,
-        displayName: customerData.displayName || customerData.name,
-        gstin: customerData.gstin,
-        pan: customerData.pan,
-        customerCode: customerData.customerCode || `CUS-${nextIdNum}`,
-        creditLimit: customerData.creditLimit || 0,
-        paymentTerms: customerData.paymentTerms || '15 Days',
-        creditPeriodDays: customerData.creditPeriodDays || 15,
-        outstandingAmount: customerData.openingBalance || 0,
-        totalSales: 0,
-        storeCredit: 0,
-        loyaltyPoints: 0,
-        totalOrders: 0,
-        returnsCount: 0,
-        status: customerData.status || 'active',
-        tier: 'New',
-        lastOrderDate: 'Just now',
-        location: customerData.billingAddress.city
-          ? `${customerData.billingAddress.city}, ${customerData.billingAddress.state.slice(0, 2).toUpperCase()}`
-          : 'Local',
-        billingAddress: customerData.billingAddress,
-        notes: customerData.notes,
-        recentOrders: [],
-        creditHistory: [],
-        statementTransactions: customerData.openingBalance
-          ? [
-              {
-                id: `st-${Date.now()}`,
-                date: 'Opening Balance',
-                type: 'Invoice',
-                referenceNo: 'OPENING',
-                amount: customerData.openingBalance,
-                balance: customerData.openingBalance,
-              },
-            ]
-          : [],
-        agingBuckets: defaultAgingBuckets,
-        overdueInvoices: [],
-      };
+  fetchCustomers: async () => {
+    set({ isLoadingCustomers: true, error: null });
+    try {
+      const res = await customersApi.getCustomers();
+      if (res.data?.success && Array.isArray(res.data.data)) {
+        const liveCustomers: Customer[] = res.data.data.map((raw: any) => ({
+          id: raw._id || raw.id,
+          name: raw.name,
+          customerType: raw.customerType,
+          phone: raw.phone,
+          email: raw.email || '',
+          displayName: raw.displayName || raw.name,
+          gstin: raw.gstin || '',
+          pan: raw.pan || '',
+          customerCode: raw.customerCode || raw._id || raw.id,
+          creditLimit: raw.creditLimit || 0,
+          paymentTerms: raw.paymentTerms || '15 Days',
+          creditPeriodDays: raw.creditPeriodDays || 15,
+          outstandingAmount: raw.outstandingAmount || 0,
+          totalSales: raw.totalSales || 0,
+          storeCredit: raw.storeCredit || 0,
+          loyaltyPoints: raw.loyaltyPoints || 0,
+          totalOrders: raw.totalOrders || 0,
+          returnsCount: raw.returnsCount || 0,
+          status: raw.status || 'active',
+          tier: raw.tier || 'Regular',
+          lastOrderDate: raw.lastOrderDate
+            ? new Date(raw.lastOrderDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+            : 'Never',
+          location: raw.billingAddress?.city
+            ? `${raw.billingAddress.city}, ${(raw.billingAddress.state || '').slice(0, 2).toUpperCase()}`
+            : 'Local',
+          billingAddress: raw.billingAddress || { addressLine1: '', city: '', state: '', pincode: '' },
+          notes: raw.notes || '',
+          recentOrders: [],
+          creditHistory: [],
+          statementTransactions: [],
+          agingBuckets: defaultAgingBuckets,
+          overdueInvoices: [],
+        }));
 
+        if (liveCustomers.length > 0) {
+          set({
+            customers: liveCustomers,
+            kpis: computeCustomerKPIs(liveCustomers),
+            isLoadingCustomers: false,
+          });
+          return;
+        }
+      }
+      set({ isLoadingCustomers: false });
+    } catch (err: any) {
+      console.warn('Live API fetch customers failed, keeping local state:', err);
+      set({ isLoadingCustomers: false, error: err.message || 'Failed to fetch customers' });
+    }
+  },
+
+  addCustomer: async (customerData) => {
+    const nextIdNum = 1000 + (get().customers.length || 0) + 1;
+    const optimisticId = `CUS-${nextIdNum}`;
+    const newCustomer: Customer = {
+      id: optimisticId,
+      name: customerData.name,
+      customerType: customerData.customerType,
+      phone: customerData.phone,
+      email: customerData.email,
+      displayName: customerData.displayName || customerData.name,
+      gstin: customerData.gstin,
+      pan: customerData.pan,
+      customerCode: customerData.customerCode || `CUS-${nextIdNum}`,
+      creditLimit: customerData.creditLimit || 0,
+      paymentTerms: customerData.paymentTerms || '15 Days',
+      creditPeriodDays: customerData.creditPeriodDays || 15,
+      outstandingAmount: customerData.openingBalance || 0,
+      totalSales: 0,
+      storeCredit: 0,
+      loyaltyPoints: 0,
+      totalOrders: 0,
+      returnsCount: 0,
+      status: customerData.status || 'active',
+      tier: 'New',
+      lastOrderDate: 'Just now',
+      location: customerData.billingAddress.city
+        ? `${customerData.billingAddress.city}, ${customerData.billingAddress.state.slice(0, 2).toUpperCase()}`
+        : 'Local',
+      billingAddress: customerData.billingAddress,
+      notes: customerData.notes,
+      recentOrders: [],
+      creditHistory: [],
+      statementTransactions: customerData.openingBalance
+        ? [
+            {
+              id: `st-${Date.now()}`,
+              date: 'Opening Balance',
+              type: 'Invoice',
+              referenceNo: 'OPENING',
+              amount: customerData.openingBalance,
+              balance: customerData.openingBalance,
+            },
+          ]
+        : [],
+      agingBuckets: defaultAgingBuckets,
+      overdueInvoices: [],
+    };
+
+    set((state) => {
       const updatedCustomers = [newCustomer, ...state.customers];
       return {
         customers: updatedCustomers,
@@ -522,9 +587,41 @@ export const useCustomerStore = create<CustomerState>((set) => ({
         editingCustomer: null,
         kpis: computeCustomerKPIs(updatedCustomers),
       };
-    }),
+    });
 
-  updateCustomer: (id, updates) =>
+    try {
+      const res = await customersApi.create({
+        name: customerData.name,
+        customerType: customerData.customerType,
+        phone: customerData.phone,
+        email: customerData.email,
+        displayName: customerData.displayName,
+        gstin: customerData.gstin,
+        pan: customerData.pan,
+        customerCode: customerData.customerCode,
+        creditLimit: customerData.creditLimit,
+        paymentTerms: customerData.paymentTerms,
+        creditPeriodDays: customerData.creditPeriodDays,
+        openingBalance: customerData.openingBalance,
+        status: customerData.status,
+        billingAddress: customerData.billingAddress,
+        notes: customerData.notes,
+      });
+      if (res.data?.success && res.data.data) {
+        const saved = res.data.data;
+        set((state) => {
+          const updated = state.customers.map((c) =>
+            c.id === optimisticId ? { ...c, id: saved._id, customerCode: saved.customerCode } : c
+          );
+          return { customers: updated, kpis: computeCustomerKPIs(updated) };
+        });
+      }
+    } catch (err) {
+      console.warn('Live API create failed, preserved optimistic state:', err);
+    }
+  },
+
+  updateCustomer: async (id, updates) => {
     set((state) => {
       const updatedCustomers = state.customers.map((c) =>
         c.id === id ? { ...c, ...updates } : c
@@ -535,9 +632,16 @@ export const useCustomerStore = create<CustomerState>((set) => ({
         viewMode: 'list',
         kpis: computeCustomerKPIs(updatedCustomers),
       };
-    }),
+    });
 
-  deleteCustomer: (id) =>
+    try {
+      await customersApi.update(id, updates);
+    } catch (err) {
+      console.warn('Live API update failed, preserved optimistic state:', err);
+    }
+  },
+
+  deleteCustomer: async (id) => {
     set((state) => {
       const updatedCustomers = state.customers.filter((c) => c.id !== id);
       return {
@@ -546,9 +650,16 @@ export const useCustomerStore = create<CustomerState>((set) => ({
         statementCustomer: state.statementCustomer?.id === id ? null : state.statementCustomer,
         kpis: computeCustomerKPIs(updatedCustomers),
       };
-    }),
+    });
 
-  addStoreCredit: (customerId, amount, reason) =>
+    try {
+      await customersApi.delete(id);
+    } catch (err) {
+      console.warn('Live API delete failed:', err);
+    }
+  },
+
+  addStoreCredit: async (customerId, amount, reason) => {
     set((state) => {
       const updated = state.customers.map((c) => {
         if (c.id === customerId) {
@@ -570,9 +681,16 @@ export const useCustomerStore = create<CustomerState>((set) => ({
         return c;
       });
       return { customers: updated };
-    }),
+    });
 
-  deductStoreCredit: (customerId, amount, reason) =>
+    try {
+      await customersApi.addCredit(customerId, { type: 'add', amount, reason });
+    } catch (err) {
+      console.warn('Live API addStoreCredit failed:', err);
+    }
+  },
+
+  deductStoreCredit: async (customerId, amount, reason) => {
     set((state) => {
       const updated = state.customers.map((c) => {
         if (c.id === customerId) {
@@ -594,17 +712,24 @@ export const useCustomerStore = create<CustomerState>((set) => ({
         return c;
       });
       return { customers: updated };
-    }),
+    });
 
-  recordPayment: (customerId, amount, paymentMethod, notes) =>
+    try {
+      await customersApi.addCredit(customerId, { type: 'deduct', amount, reason });
+    } catch (err) {
+      console.warn('Live API deductStoreCredit failed:', err);
+    }
+  },
+
+  recordPayment: async (customerId, amount, paymentMethod, notes) => {
+    const refNo = `PAY-${Date.now().toString().slice(-4)}`;
+    const dateStr = new Date().toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
+
     set((state) => {
-      const refNo = `PAY-${Date.now().toString().slice(-4)}`;
-      const dateStr = new Date().toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      });
-
       const updated = state.customers.map((c) => {
         if (c.id === customerId) {
           const newOutstanding = Math.max(0, c.outstandingAmount - amount);
@@ -636,7 +761,19 @@ export const useCustomerStore = create<CustomerState>((set) => ({
         statementCustomer: updatedStatementCustomer,
         kpis: computeCustomerKPIs(updated),
       };
-    }),
+    });
+
+    try {
+      await customersApi.recordPayment(customerId, {
+        amount,
+        paymentMethod,
+        referenceNo: refNo,
+        notes,
+      });
+    } catch (err) {
+      console.warn('Live API recordPayment failed:', err);
+    }
+  },
 
   syncFromStoreData: (invoices = [], orders = []) =>
     set((state) => {

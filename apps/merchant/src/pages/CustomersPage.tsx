@@ -24,6 +24,8 @@ export const CustomersPage: React.FC = () => {
     closeCustomerStatement,
     addCustomer,
     syncFromStoreData,
+    fetchCustomers,
+    isLoadingCustomers,
   } = useCustomerStore();
 
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
@@ -35,14 +37,15 @@ export const CustomersPage: React.FC = () => {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Sync customers from live invoices & orders on mount
+  // Fetch live customers from MongoDB and sync invoices/orders on mount
   useEffect(() => {
+    fetchCustomers();
     const invoices = useBillingStore.getState().invoices;
     const orders = useOrderStore.getState().orders;
     if (invoices.length > 0 || orders.length > 0) {
       syncFromStoreData(invoices, orders);
     }
-  }, [syncFromStoreData]);
+  }, [fetchCustomers, syncFromStoreData]);
 
   const handleSelectCustomer = (customer: Customer) => {
     setSelectedCustomer(customer);
