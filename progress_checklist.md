@@ -268,6 +268,20 @@
   - [x] Synchronized `StoreProfileTab` and `BusinessInfoTab` with active authenticated store (`National Retail Store`) and user contact info
   - [x] Seeded `walletStore` with real transactions, bank accounts, and active balances (₹32,450.00)
   - [x] Verified 100% clean production build (`tsc && vite build`) and documented audit in `live_hardening_and_bug_remediation_audit.md`
+- [ ] **Sprint 2: Commercial Engines, Billing, Ledger & Procurement Lifecycle (5/12 In Progress 🟡)**:
+  - [x] `[AUDIT-055]` Merchant Billing & Invoicing Engine (Persistent MongoDB invoices, POS bills, credit/debit notes ledger, dynamic date filtering, commit `74abb82`, `cf372da`)
+  - [x] `[AUDIT-054]` Merchant Customer CRM & Khata Ledger Engine (`CustomerModel` & `CustomerTransactionModel`, `customersApi`, live Zustand store sync, dynamic date ranges, commit `8452e9e`, `c3b9ab8`)
+  - [x] `[AUDIT-053]` Platform Returns & Refunds Lifecycle Engine (`ReturnModel`, `return.service.ts`, `return.routes.ts`, `returnsApi`, `ReturnDetailsDrawer.tsx`, `RejectReturnModal.tsx`, `ReturnSlipModal.tsx`, `NewReturnView.tsx`, `CustomerReturnModal.tsx`, commit `5a13943`, `78b92f8`)
+  - [x] `[AUDIT-056]` Merchant Payouts & Settlement Engine (`SettlementModel`, `BankAccountModel`, `SettlementService`, `settlementsApi`, live fee calculation 5% commission + 1% TDS, commit `48161e6`, `bc2c867`)
+  - [x] `[AUDIT-058]` Merchant Purchase & Expense Procurement Engine (Persistent MongoDB procurement schemas, live overview KPI aggregates, automatic stock increment on PO receipt via `catalogModule.restoreStock`, dynamic financial month filtering, commit `cf71c44`)
+  - [ ] `[AUDIT-050]` Customer Coupons & Offers Pipeline
+  - [ ] `[AUDIT-006]` Customer "Reserve / Hold" In-Store Order Pipeline
+  - [ ] `[AUDIT-061]` Customer Cart & Checkout Single-Store Coherence
+  - [ ] `[AUDIT-028]` Merchant One-Click Accept & Print Invoice/KOT
+  - [ ] `[AUDIT-032]` Customer Order Cancellation Action & Reason Modal
+  - [ ] `[AUDIT-002]` Merchant Fleet Broadcast Action Timing & Prominent UI Placement
+  - [ ] `[AUDIT-005]` Rider Portal Geolocation Accuracy & Advancement
+
 - [x] **Sprint 1: Core Architectural Foundations & Critical Blockers (9/9 Completed 🟢)**:
   - [x] `[AUDIT-041]` Master Taxonomy Engine, Dynamic Attributes & Statutory HSN Lookup (`Categories.xlsx` into `catalog_taxonomies`, commit `3dc8a2e`)
   - [x] `[AUDIT-004]` & `[AUDIT-013]` Customer vs. Merchant Tenancy Segregation & Session Boundary (compound unique indexes `{email:1, role:1}` & `{phone:1, role:1}`, commit `04ea857`)
@@ -277,19 +291,6 @@
   - [x] `[AUDIT-014]` Merchant Manual "Create Order" Blocker (unblocked customer autocomplete search, inline Khata registration, commit `4565f80`)
   - [x] `[AUDIT-003]` Customer Storefront Search Bar & Discovery Engine (autocomplete dropdown, category shortcuts, voice search, commit `7d8b6c0`)
   - [x] `[AUDIT-026]` Global System Date & Timezone Synchronization (ISO 8601 UTC storage with Asia/Kolkata IST presentation, commit `b1f9687`)
-- [ ] **Sprint 2: Commercial & Transaction Engines (4/12 Completed 🟡)**:
-  - [x] `[AUDIT-055]` Merchant Billing & Invoicing Engine (`BillingInvoiceModel`, persistent bills, credit/debit notes ledger, commit `74abb82`)
-  - [x] `[AUDIT-054]` Merchant Customer CRM & Khata Ledger Engine (`CustomerModel`, live persistence, store credit & ledger adjustments, commit `8452e9e`)
-  - [x] `[AUDIT-053]` Platform Returns & Refunds Lifecycle (`ReturnModel`, pickup tasks, refund dispatch, commit `5a13943`)
-  - [x] `[AUDIT-056]` Merchant Payouts & Settlement Engine (automated cron, net balance, bank UTRs, commit `48161e6`)
-  - [ ] `[AUDIT-058]` Purchase & Expense Procurement Engine (`PurchaseOrderModel`, stock increment on receipt)
-  - [ ] `[AUDIT-050]` Customer Coupons & Offers Pipeline (backend discount validation)
-  - [ ] `[AUDIT-006]` Customer "Reserve / Hold" In-Store Order Pipeline (2-hour hold state machine)
-  - [ ] `[AUDIT-061]` Customer Cart & Checkout Single-Store Coherence
-  - [ ] `[AUDIT-028]` Merchant One-Click Accept & Print Invoice/KOT
-  - [ ] `[AUDIT-032]` Customer Order Cancellation Action & Reason Modal
-  - [ ] `[AUDIT-002]` Merchant Fleet Broadcast Action Timing & Prominent UI Placement
-  - [ ] `[AUDIT-005]` Rider Portal Geolocation Accuracy & Advancement
 
 - [ ] Merchant staff management & role-based access control (Manager, Cashier, Inventory Clerk)
 - [ ] Merchant marketing suite: promotional store banner manager & coupon builder (Post-Launch Phase 2)
