@@ -108,6 +108,14 @@ export const CANONICAL_INDEX_SPECIFICATIONS: ModelIndexSpecification[] = [
       { fields: { storeId: 1, customerCode: 1 }, options: { unique: true } },
     ],
   },
+  {
+    modelName: 'Return',
+    criticalRules: [
+      { fields: { storeId: 1, status: 1 } },
+      { fields: { storeId: 1, createdAt: -1 } },
+      { fields: { returnNumber: 1 }, options: { unique: true } },
+    ],
+  },
 ];
 
 /**

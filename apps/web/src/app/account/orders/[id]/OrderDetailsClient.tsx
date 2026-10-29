@@ -9,6 +9,8 @@ import {
 } from 'lucide-react';
 import { AccountSidebar } from '@/components/account/AccountSidebar';
 import { OrderInvoiceModal } from '@/components/orders/OrderInvoiceModal';
+import { CustomerReturnModal } from '@/components/orders/CustomerReturnModal';
+import { RotateCcw } from 'lucide-react';
 import { ordersApi } from '@/lib/api/orders.js';
 import type { IOrder, IOrderItem } from '@repo/shared-types';
 
@@ -21,6 +23,7 @@ export function OrderDetailsClient({ id }: OrderDetailsClientProps) {
   const [order, setOrder] = useState<IOrder | null>(null);
   const [loading, setLoading] = useState(true);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+  const [showReturnModal, setShowReturnModal] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -328,6 +331,28 @@ export function OrderDetailsClient({ id }: OrderDetailsClientProps) {
                 </div>
               </div>
 
+              {/* Return / Exchange Action Card (Delivered Orders) */}
+              {isDelivered && (
+                <div className="mx-4 lg:mx-0 bg-white rounded-2xl p-4 lg:p-5 shadow-sm border border-emerald-200/80 bg-gradient-to-r from-emerald-50/40 to-blue-50/30 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-100/80 text-emerald-700 flex items-center justify-center shrink-0">
+                      <RotateCcw className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-[14px] font-bold text-[#192168]">Return or Exchange</h4>
+                      <p className="text-[12px] text-surface-500 mt-0.5">Eligible within 7 days of delivery</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowReturnModal(true)}
+                    className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition shadow-xs shrink-0"
+                  >
+                    Request Return
+                  </button>
+                </div>
+              )}
+
               {/* Bottom Actions */}
               <div className="mx-4 lg:mx-0 space-y-3 lg:space-y-4 mb-6">
                 <Link 
@@ -373,6 +398,13 @@ export function OrderDetailsClient({ id }: OrderDetailsClientProps) {
         isOpen={showInvoiceModal}
         onClose={() => setShowInvoiceModal(false)}
         orderId={order?.id || order?._id || id}
+      />
+
+      {/* Customer Return & Exchange Modal */}
+      <CustomerReturnModal
+        isOpen={showReturnModal}
+        onClose={() => setShowReturnModal(false)}
+        order={order}
       />
     </div>
   );

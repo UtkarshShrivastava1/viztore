@@ -1,3 +1,4 @@
+import { returnsApi } from '../lib/api.js';
 import { create } from 'zustand';
 
 export interface ReturnCustomer {
@@ -358,12 +359,16 @@ interface ReturnsState {
   closeRaiseModal: () => void;
   submitRaiseRequest: (payload: RaiseRequestPayload) => void;
 
+  isLoading: boolean;
+  error: string | null;
+  fetchReturns: () => Promise<void>;
+
   // Workflow actions
-  addReturn: (data: any) => void;
-  approveReturn: (id: string) => void;
-  rejectReturn: (id: string, reason: string) => void;
-  initiateRefund: (id: string) => void;
-  markAsRefunded: (id: string) => void;
+  addReturn: (data: any) => Promise<void>;
+  approveReturn: (id: string, data?: { pickupDate?: string; pickupTime?: string; internalNote?: string }) => Promise<void>;
+  rejectReturn: (id: string, reason: string) => Promise<void>;
+  initiateRefund: (id: string, data?: { refundAmount?: number; refundMethod?: string }) => Promise<void>;
+  markAsRefunded: (id: string) => Promise<void>;
 }
 
 export const useReturnsStore = create<ReturnsState>((set, get) => ({
@@ -376,6 +381,8 @@ export const useReturnsStore = create<ReturnsState>((set, get) => ({
   selectedReturnIds: [],
   selectedReturn: null,
   activeView: 'overview',
+  isLoading: false,
+  error: null,
 
   isDetailsModalOpen: false,
   isDetailsDrawerOpen: false,
@@ -448,50 +455,170 @@ export const useReturnsStore = create<ReturnsState>((set, get) => ({
     }));
   },
 
-  addReturn: (data) => {
+  fetchReturns: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const res = await returnsApi.getReturns();
+      if (res.data?.success && res.data.data?.returns && Array.isArray(res.data.data.returns)) {
+        const liveItems: ReturnRecord[] = res.data.data.returns.map((raw: any) => ({
+          id: raw._id || raw.id,
+          returnNumber: raw.returnNumber,
+          orderNumber: raw.orderNumber,
+          customer: {
+            name: raw.customer?.name || 'Customer',
+            email: raw.customer?.email || '',
+            phone: raw.customer?.phone || '',
+            address: raw.customer?.address || '',
+          },
+          product: {
+            name: raw.product?.name || 'Item',
+            variant: raw.product?.variant || 'Standard',
+            sku: raw.product?.sku || 'SKU-001',
+            price: raw.product?.price || raw.amount || 0,
+            quantity: raw.product?.quantity || 1,
+            returnQuantity: raw.product?.returnQuantity || 1,
+            imageUrl: raw.product?.imageUrl || 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=120&auto=format&fit=crop&q=80',
+          },
+          returnType: raw.returnType || 'Return',
+          reason: raw.reason || 'General Return',
+          amount: raw.amount || 0,
+          status: raw.status || 'Pending',
+          returnDate: raw.returnDate || new Date(raw.createdAt || Date.now()).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+          returnTime: raw.returnTime || '10:30 AM',
+          refundMethod: raw.refundMethod || 'Original Payment',
+          refundAmount: raw.refundAmount || raw.amount || 0,
+          pickupDate: raw.pickupDate || '',
+          pickupTime: raw.pickupTime || '',
+          pickupAddress: raw.pickupAddress || '',
+          comments: raw.comments || '',
+          internalNote: raw.internalNote || '',
+          rejectionReason: raw.rejectionReason || '',
+        }));
+
+        if (liveItems.length > 0) {
+          set({ returns: liveItems, isLoading: false });
+          return;
+        }
+      }
+      set({ isLoading: false });
+    } catch (err: any) {
+      console.warn('Live API fetchReturns failed, falling back to cached list:', err);
+      set({ isLoading: false, error: err.message || 'Failed to fetch returns' });
+    }
+  },
+
+  addReturn: async (data) => {
     const nextNum = Math.floor(10026 + Math.random() * 900);
+    const now = new Date();
+    const returnDate = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    const returnTime = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+
     const newRecord: ReturnRecord = {
       ...data,
       id: `rtn-${nextNum}`,
       returnNumber: `#RTN${nextNum}`,
-      returnDate: '18 May 2024',
-      returnTime: '10:30 AM',
+      returnDate,
+      returnTime,
     };
+
     set((state) => ({
       returns: [newRecord, ...state.returns],
       activeView: 'overview',
     }));
+
+    try {
+      const res = await returnsApi.createReturn({
+        orderId: data.orderNumber || `ORD-${nextNum}`,
+        orderNumber: data.orderNumber || `#ORD${nextNum}`,
+        customer: data.customer,
+        product: data.product,
+        returnType: data.returnType || 'Return',
+        reason: data.reason || 'Return requested',
+        amount: data.amount || 0,
+        refundMethod: data.refundMethod || 'Original Payment',
+        comments: data.comments,
+      });
+
+      if (res.data?.success && res.data.data) {
+        const saved = res.data.data;
+        set((state) => ({
+          returns: state.returns.map((r) =>
+            r.id === newRecord.id ? { ...r, id: saved._id, returnNumber: saved.returnNumber } : r
+          ),
+        }));
+      }
+    } catch (err) {
+      console.warn('Failed to persist return to live backend:', err);
+    }
   },
 
-  approveReturn: (id) => {
+  approveReturn: async (id, data) => {
     set((state) => ({
       returns: state.returns.map((r) =>
-        r.id === id ? { ...r, status: 'Approved' } : r
+        r.id === id ? { ...r, status: 'Approved', pickupDate: data?.pickupDate || r.pickupDate, pickupTime: data?.pickupTime || r.pickupTime } : r
       ),
+      selectedReturn: state.selectedReturn?.id === id
+        ? { ...state.selectedReturn, status: 'Approved', pickupDate: data?.pickupDate || state.selectedReturn.pickupDate }
+        : state.selectedReturn,
     }));
+
+    try {
+      await returnsApi.approveReturn(id, data);
+    } catch (err) {
+      console.warn('Live API approveReturn failed:', err);
+    }
   },
 
-  rejectReturn: (id, reason) => {
+  rejectReturn: async (id, reason) => {
     set((state) => ({
       returns: state.returns.map((r) =>
         r.id === id ? { ...r, status: 'Rejected', rejectionReason: reason } : r
       ),
+      selectedReturn: state.selectedReturn?.id === id
+        ? { ...state.selectedReturn, status: 'Rejected', rejectionReason: reason }
+        : state.selectedReturn,
+      isRejectModalOpen: false,
+      returnToReject: null,
     }));
+
+    try {
+      await returnsApi.rejectReturn(id, reason);
+    } catch (err) {
+      console.warn('Live API rejectReturn failed:', err);
+    }
   },
 
-  initiateRefund: (id) => {
+  initiateRefund: async (id, data) => {
+    set((state) => ({
+      returns: state.returns.map((r) =>
+        r.id === id ? { ...r, status: 'Refunded', refundAmount: data?.refundAmount || r.refundAmount } : r
+      ),
+      selectedReturn: state.selectedReturn?.id === id
+        ? { ...state.selectedReturn, status: 'Refunded' }
+        : state.selectedReturn,
+    }));
+
+    try {
+      await returnsApi.processRefund(id, data);
+    } catch (err) {
+      console.warn('Live API processRefund failed:', err);
+    }
+  },
+
+  markAsRefunded: async (id) => {
     set((state) => ({
       returns: state.returns.map((r) =>
         r.id === id ? { ...r, status: 'Refunded' } : r
       ),
+      selectedReturn: state.selectedReturn?.id === id
+        ? { ...state.selectedReturn, status: 'Refunded' }
+        : state.selectedReturn,
     }));
-  },
 
-  markAsRefunded: (id) => {
-    set((state) => ({
-      returns: state.returns.map((r) =>
-        r.id === id ? { ...r, status: 'Refunded' } : r
-      ),
-    }));
+    try {
+      await returnsApi.processRefund(id);
+    } catch (err) {
+      console.warn('Live API markAsRefunded failed:', err);
+    }
   },
 }));

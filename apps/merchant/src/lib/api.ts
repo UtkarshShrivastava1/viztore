@@ -479,3 +479,20 @@ export const customersApi = {
   recordPayment: (id: string, data: { amount: number; paymentMethod: string; notes?: string; referenceNo?: string }) =>
     api.post<any>(`/customers/${id}/payments`, data),
 };
+
+export const returnsApi = {
+  getReturns: (params?: Record<string, string>) => {
+    const qs = params ? '?' + new URLSearchParams(params).toString() : '';
+    return api.get<any>(`/returns${qs}`);
+  },
+  getReturnById: (id: string) =>
+    api.get<any>(`/returns/${id}`),
+  createReturn: (data: unknown) =>
+    api.post<any>('/returns', data),
+  approveReturn: (id: string, data?: { pickupDate?: string; pickupTime?: string; internalNote?: string }) =>
+    api.patch<any>(`/returns/${id}/approve`, data || {}),
+  rejectReturn: (id: string, reason: string) =>
+    api.patch<any>(`/returns/${id}/reject`, { reason }),
+  processRefund: (id: string, data?: { refundAmount?: number; refundMethod?: string; internalNote?: string }) =>
+    api.post<any>(`/returns/${id}/refund`, data || {}),
+};
