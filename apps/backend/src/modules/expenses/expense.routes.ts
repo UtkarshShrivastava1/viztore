@@ -35,6 +35,7 @@ export function createExpenseRouter(guard = authGuard): Router {
   // Purchase Bills & POs
   router.get('/purchases', expenseController.getPurchases);
   router.post('/purchases', validateBody(createPurchaseBillSchema), expenseController.createPurchase);
+  router.post('/purchases/:id/receive', expenseController.receivePurchase);
 
   // Credit Notes
   router.get('/credit-notes', expenseController.getCreditNotes);

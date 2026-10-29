@@ -346,6 +346,9 @@ export const expensesApi = {
   createPurchase: (data: unknown) =>
     api.post<any>('/expenses/purchases', data),
 
+  receivePurchase: (id: string) =>
+    api.post<any>('/expenses/purchases/' + id + '/receive'),
+
   getCreditNotes: () =>
     api.get<any[]>('/expenses/credit-notes'),
 

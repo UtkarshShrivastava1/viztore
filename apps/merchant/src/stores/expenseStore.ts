@@ -224,6 +224,7 @@ interface PurchaseExpenseState {
   createCreditNoteRecord: (data: any) => Promise<boolean>;
   createEWayBillRecord: (data: any) => Promise<boolean>;
   deleteExpenseRecord: (id: string) => Promise<boolean>;
+  receivePurchaseRecord: (id: string) => Promise<boolean>;
 
   // Vendor & Procurement Hub States (TASK-ABH-14)
   selectedVendor: Vendor | null;
@@ -1345,6 +1346,13 @@ const initialVendors: Vendor[] = [
   }
 ];
 
+const computeCurrentDateRange = () => {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), 1);
+  const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  return `${fmt(start)} - ${fmt(now)}`;
+};
+
 export const useExpenseStore = create<PurchaseExpenseState>((set, get) => ({
   activeSubTab: 'all',
   setActiveSubTab: (activeSubTab) => set({ activeSubTab }),
@@ -1354,12 +1362,12 @@ export const useExpenseStore = create<PurchaseExpenseState>((set, get) => ({
   error: null,
 
   overviewKPIs: {
-    totalPurchase: 185600.0,
-    totalExpense: 28450.0,
-    totalCreditNote: 12450.0,
-    openPurchaseOrders: 65000.0,
-    openPOCount: 3,
-    eWayBillsCount: 12,
+    totalPurchase: 0,
+    totalExpense: 0,
+    totalCreditNote: 0,
+    openPurchaseOrders: 0,
+    openPOCount: 0,
+    eWayBillsCount: 0,
   },
 
   allTransactions: initialTransactions,
@@ -1371,7 +1379,7 @@ export const useExpenseStore = create<PurchaseExpenseState>((set, get) => ({
   vendors: initialVendors,
 
   searchQuery: '',
-  dateRange: '01 May 2024 - 31 May 2024',
+  dateRange: computeCurrentDateRange(),
   typeFilter: 'All Types',
   categoryFilter: 'All Categories',
   statusFilter: 'All Statuses',
@@ -1388,7 +1396,7 @@ export const useExpenseStore = create<PurchaseExpenseState>((set, get) => ({
   clearFilters: () =>
     set({
       searchQuery: '',
-      dateRange: '01 May 2024 - 31 May 2024',
+      dateRange: computeCurrentDateRange(),
       typeFilter: 'All Types',
       categoryFilter: 'All Categories',
       statusFilter: 'All Statuses',
@@ -1637,9 +1645,7 @@ export const useExpenseStore = create<PurchaseExpenseState>((set, get) => ({
       const updates: Partial<PurchaseExpenseState> = { isLoading: false };
 
       if (kpis.status === 'fulfilled' && kpis.value && kpis.value.totalPurchase !== undefined) {
-        if (kpis.value.totalPurchase > 0 || kpis.value.totalExpense > 0) {
-          updates.overviewKPIs = kpis.value;
-        }
+        updates.overviewKPIs = kpis.value;
       }
 
       if (txns.status === 'fulfilled' && Array.isArray(txns.value) && txns.value.length > 0) {
@@ -1744,7 +1750,7 @@ export const useExpenseStore = create<PurchaseExpenseState>((set, get) => ({
   },
 
   createExpenseRecord: async (data: any) => {
-    set({ isSubmitting: true });
+    set({ isSubmitting: true, error: null });
     try {
       await expensesApi.createExpense(data);
       await get().fetchExpenseData();
@@ -1752,14 +1758,13 @@ export const useExpenseStore = create<PurchaseExpenseState>((set, get) => ({
       return true;
     } catch (err: any) {
       console.error('Failed to create expense:', err);
-      get().addExpense(data);
-      set({ isSubmitting: false, isAddExpenseModalOpen: false, viewMode: 'list' });
-      return true;
+      set({ isSubmitting: false, error: err.message || 'Failed to create expense' });
+      return false;
     }
   },
 
   createVendorRecord: async (data: any) => {
-    set({ isSubmitting: true });
+    set({ isSubmitting: true, error: null });
     try {
       await expensesApi.createVendor(data);
       await get().fetchExpenseData();
@@ -1767,34 +1772,13 @@ export const useExpenseStore = create<PurchaseExpenseState>((set, get) => ({
       return true;
     } catch (err: any) {
       console.error('Failed to create vendor:', err);
-      set((state) => ({
-        vendors: [
-          {
-            id: `VND-${Date.now()}`,
-            vendorCode: `VND-${String(state.vendors.length + 1).padStart(3, '0')}`,
-            vendorName: data.vendorName || data.companyName,
-            contactPerson: data.contactPerson || '—',
-            phone: data.phone || '—',
-            email: data.email || '',
-            city: data.city || 'Raipur',
-            totalPurchases: 0,
-            status: 'Active',
-            category: data.category || 'General',
-            paymentTerms: data.paymentTerms || 'Due on Receipt',
-            creditLimit: Number(data.creditLimit || 0),
-            openingBalance: Number(data.openingBalance || 0),
-          },
-          ...state.vendors,
-        ],
-        isSubmitting: false,
-        isAddVendorOpen: false,
-      }));
-      return true;
+      set({ isSubmitting: false, error: err.message || 'Failed to create vendor' });
+      return false;
     }
   },
 
   createPurchaseRecord: async (data: any) => {
-    set({ isSubmitting: true });
+    set({ isSubmitting: true, error: null });
     try {
       await expensesApi.createPurchase(data);
       await get().fetchExpenseData();
@@ -1809,16 +1793,28 @@ export const useExpenseStore = create<PurchaseExpenseState>((set, get) => ({
       console.error('Failed to create purchase:', err);
       set({
         isSubmitting: false,
-        isCreateBillModalOpen: false,
-        isCreatePOModalOpen: false,
-        isCreateDirectPurchaseOpen: false,
+        error: err.message || 'Failed to create purchase',
       });
+      return false;
+    }
+  },
+
+  receivePurchaseRecord: async (id: string) => {
+    set({ isSubmitting: true, error: null });
+    try {
+      await expensesApi.receivePurchase(id);
+      await get().fetchExpenseData();
+      set({ isSubmitting: false });
       return true;
+    } catch (err: any) {
+      console.error('Failed to receive purchase:', err);
+      set({ isSubmitting: false, error: err.message || 'Failed to receive purchase' });
+      return false;
     }
   },
 
   createCreditNoteRecord: async (data: any) => {
-    set({ isSubmitting: true });
+    set({ isSubmitting: true, error: null });
     try {
       await expensesApi.createCreditNote(data);
       await get().fetchExpenseData();
@@ -1826,13 +1822,13 @@ export const useExpenseStore = create<PurchaseExpenseState>((set, get) => ({
       return true;
     } catch (err: any) {
       console.error('Failed to create credit note:', err);
-      set({ isSubmitting: false, isCreateCreditNoteOpen: false, isCreateReturnModalOpen: false });
-      return true;
+      set({ isSubmitting: false, error: err.message || 'Failed to create credit note' });
+      return false;
     }
   },
 
   createEWayBillRecord: async (data: any) => {
-    set({ isSubmitting: true });
+    set({ isSubmitting: true, error: null });
     try {
       await expensesApi.createEWayBill(data);
       await get().fetchExpenseData();
@@ -1840,8 +1836,8 @@ export const useExpenseStore = create<PurchaseExpenseState>((set, get) => ({
       return true;
     } catch (err: any) {
       console.error('Failed to create e-way bill:', err);
-      set({ isSubmitting: false, isGenerateEWayBillOpen: false });
-      return true;
+      set({ isSubmitting: false, error: err.message || 'Failed to create e-way bill' });
+      return false;
     }
   },
 

@@ -33,6 +33,14 @@ export interface IPurchaseOrder {
   status: 'Pending' | 'Partially Received' | 'Received' | 'Cancelled';
 }
 
+export interface IPurchaseItem {
+  productId?: string;
+  name?: string;
+  sku?: string;
+  quantity: number;
+  unitPrice?: number;
+}
+
 export interface IPurchaseBill {
   id: string;
   billNumber: string;
@@ -43,6 +51,9 @@ export interface IPurchaseBill {
   totalAmount: number;
   paymentStatus: 'Paid' | 'Partially Paid' | 'Unpaid';
   dueDate: string;
+  type?: string;
+  status?: 'Pending' | 'Partially Received' | 'Received' | 'Cancelled';
+  items?: IPurchaseItem[];
 }
 
 export interface IExpenseItem {
@@ -124,13 +135,23 @@ export const createVendorSchema = z.object({
   status: z.enum(['Active', 'Inactive', 'Blocked']).default('Active'),
 });
 
+export const purchaseItemSchema = z.object({
+  productId: z.string().optional(),
+  name: z.string().optional(),
+  sku: z.string().optional(),
+  quantity: z.number().positive().default(1),
+  unitPrice: z.number().nonnegative().optional(),
+});
+
 export const createPurchaseBillSchema = z.object({
   vendor: z.string().min(2, 'Vendor is required'),
   itemsCount: z.string().default('1 item'),
   totalAmount: z.number().positive('Total amount must be greater than zero'),
   paymentStatus: z.enum(['Paid', 'Partially Paid', 'Unpaid']).default('Unpaid'),
+  status: z.enum(['Pending', 'Partially Received', 'Received', 'Cancelled']).optional(),
   dueDate: z.string().optional(),
   type: z.enum(['Purchase', 'Purchase Order', 'Direct Purchase']).default('Purchase'),
+  items: z.array(purchaseItemSchema).optional(),
 });
 
 export const createCreditNoteSchema = z.object({
@@ -148,6 +169,7 @@ export const createEWayBillSchema = z.object({
   validTill: z.string().optional(),
 });
 
+export type PurchaseItemDto = z.infer<typeof purchaseItemSchema>;
 export type CreateExpenseDto = z.infer<typeof createExpenseSchema>;
 export type CreateVendorDto = z.infer<typeof createVendorSchema>;
 export type CreatePurchaseBillDto = z.infer<typeof createPurchaseBillSchema>;

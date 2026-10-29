@@ -29,7 +29,7 @@ export const PurchaseDetailsDrawer: React.FC<PurchaseDetailsDrawerProps> = ({
   onEdit,
 }) => {
   useBodyScrollLock(isOpen, onClose);
-  const { setActiveSubTab } = useExpenseStore();
+  const { setActiveSubTab, receivePurchaseRecord } = useExpenseStore();
 
   const [activeTab, setActiveTab] = useState<'overview' | 'items' | 'payments' | 'eway' | 'notes' | 'activity'>('overview');
 
@@ -78,6 +78,23 @@ export const PurchaseDetailsDrawer: React.FC<PurchaseDetailsDrawerProps> = ({
 
         {/* Action Buttons Toolbar */}
         <div className="px-6 py-2.5 border-b border-slate-100 flex items-center gap-2 bg-slate-50/50">
+          {purchase.status !== 'Received' && (
+            <button
+              type="button"
+              onClick={async () => {
+                const targetId = purchase.id || purchase._id;
+                if (targetId) {
+                  await receivePurchaseRecord(targetId);
+                  onClose();
+                }
+              }}
+              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
+            >
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-100" />
+              <span>Receive & Update Stock</span>
+            </button>
+          )}
+
           <button
             type="button"
             onClick={onEdit}

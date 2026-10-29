@@ -135,6 +135,22 @@ const ExpenseRowActionMenu: React.FC<{
 
         <button
           type="button"
+          onClick={async () => {
+            onClose();
+            const { receivePurchaseRecord } = useExpenseStore.getState();
+            const targetId = item.id || item._id;
+            if (targetId) {
+              await receivePurchaseRecord(targetId);
+            }
+          }}
+          className="w-full px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer"
+        >
+          <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
+          <span>Receive & Update Stock</span>
+        </button>
+
+        <button
+          type="button"
           onClick={() => {
             onClose();
             useExpenseStore.setState((s) => ({
