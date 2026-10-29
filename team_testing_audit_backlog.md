@@ -2,9 +2,9 @@
 
 ## 📊 Global Audit Remediation Progress Tracker
 
-> **Current Status**: **Sprint 2 Completed! (12/12 - 100.0%)** ➔ Ready for **Sprint 3 (Storefront Discovery & Merchant Config)**  
-> **Platform Completion**: **21 / 62 Items Completed** (**33.9%**)  
-> **Overall Progress Bar**: `[███████░░░░░░░░░░░░░] 33.9%`
+> **Current Status**: **Sprint 3 In Progress! (1/14 - 7.1%)** — Storefront Discovery, Merchant Config & Tooling  
+> **Platform Completion**: **22 / 62 Items Completed** (**35.5%**)  
+> **Overall Progress Bar**: `[███████░░░░░░░░░░░░░] 35.5%`
 
 ### Sprint Completion Breakdown
 
@@ -12,10 +12,10 @@
 |---|---|:---:|---|:---:|:---:|
 | **Sprint 1** | **Core Architectural Foundations & Critical Blockers** | **9 / 9** | `[████████████████████]` | **100.0%** | `DONE ✅` |
 | **Sprint 2** | **Commercial Engines, Billing, Ledger & Procurement** | **12 / 12** | `[████████████████████]` | **100.0%** | `DONE ✅` |
-| **Sprint 3** | **Storefront Discovery, Merchant Config & Tooling** | **0 / 14** | `[░░░░░░░░░░░░░░░░░░░░]` | **0.0%** | `UP NEXT 🟡` |
+| **Sprint 3** | **Storefront Discovery, Merchant Config & Tooling** | **1 / 14** | `[██░░░░░░░░░░░░░░░░░░]` | **7.1%** | `IN PROGRESS 🟡` |
 | **Sprint 4** | **Catalog & Merchant Inventory Workflows (Phase 4A)** | **0 / 13** | `[░░░░░░░░░░░░░░░░░░░░]` | **0.0%** | `PENDING ⚪` |
 | **Sprint 5** | **Store Merchandising, Policies & Micro-Polish (Phase 4B)** | **0 / 14** | `[░░░░░░░░░░░░░░░░░░░░]` | **0.0%** | `PENDING ⚪` |
-| **TOTAL** | **Hyperlocal Multi-Vendor Commerce Platform** | **21 / 62** | `[███████░░░░░░░░░░░░░]` | **33.9%** | **ACTIVE 🚀** |
+| **TOTAL** | **Hyperlocal Multi-Vendor Commerce Platform** | **22 / 62** | `[███████░░░░░░░░░░░░░]` | **35.5%** | **ACTIVE 🚀** |
 
 > *Note: Sprints 4 & 5 correspond to the detailed breakdown of Roadmap Milestone 4 (27 UI/UX Hardening & Visual Excellence deliverables).*
 
@@ -101,7 +101,7 @@ This document serves as the master engineering log for all findings, functional 
 | `AUDIT-054` | Merchant Customer CRM & Khata Ledger Pipeline Breakdown: Mock Customer Seed Data, Stale May 2024 Ledgers & Missing Backend Customer Engine | Cross-Cutting | Customers / CRM / Khata Ledger | Bug / Architectural Pipeline | P1 | High | DONE ✅ |
 | `AUDIT-055` | Merchant Billing & Invoicing End-to-End Pipeline Breakdown: Unwired Backend APIs, In-Memory Mutations & Date Filter Disconnection | Merchant Hub | Billing & Invoicing | Bug / Architectural Pipeline | P1 | High | DONE ✅ |
 | `AUDIT-056` | Merchant Payouts & Settlements Pipeline Breakdown: Hardcoded May 2024 Overview, Inconsistent Zero Balances & Missing Backend Settlement Engine | Merchant Hub | Payouts & Settlements | Bug / Architectural Pipeline | P1 | High | DONE ✅ |
-| `AUDIT-057` | Merchant Settings & Store Configuration Breakdown: In-Memory "Save Changes", Hardcoded "Fashion Hub" Previews, Dual Verified/Verify Badges & Zero Backend Persistence | Merchant Hub | Settings & Profile | Bug / Architectural Pipeline | P1 | High | Logged 📝 |
+| `AUDIT-057` | Merchant Settings & Store Configuration Breakdown: In-Memory "Save Changes", Hardcoded "Fashion Hub" Previews, Dual Verified/Verify Badges & Zero Backend Persistence | Merchant Hub | Settings & Profile | Bug / Architectural Pipeline | P1 | High | DONE ✅ |
 | `AUDIT-058` | Merchant Purchase & Expense Procurement Breakdown: Hardcoded May 2024 Cards & Seed Ledger, Silent In-Memory API Fallbacks & Missing Backend Purchase Order/E-Way Engine | Merchant Hub | Purchase & Expense | Bug / Architectural Pipeline | P1 | High | DONE ✅ |
 | `AUDIT-059` | Platform Support & Help Desk Pipeline Breakdown: Mock May 2024 Tickets, Dead Customer Action Cards, Discarded Attachments & Missing Backend Support Engine | Cross-Cutting | Support & Help Desk | Bug / Architectural Pipeline | P1 | High | Logged 📝 |
 | `AUDIT-060` | Customer Profile & Account Management Breakdown: Unsaved Profile Mutations, Mocked Feedback Submissions & Dead "Sell Online" CTA | Customer Web | Account Hub | Bug / Functional Gap | P1 | Medium | Logged 📝 |
@@ -1432,7 +1432,7 @@ Executing strictly in this order guarantees that **every data model, schema cont
 ### Sprint 3: Storefront Discovery, Merchant Config & Tooling (14 Items)
 * **Goal**: Connect store settings to live APIs, enable distance-sorted hyperlocal discovery, wire customer wishlist/share actions, and activate merchant command palette.
 * **Items**:
-  1. `[AUDIT-057]` Merchant Settings & Store Configuration Backend Persistence (`PATCH /api/v1/stores/:id`).
+  1. `[AUDIT-057]` Merchant Settings & Store Configuration Backend Persistence (`PATCH /api/v1/stores/:id`) (DONE ✅ - Commit `68a2b1d`).
   2. `[AUDIT-019]` Store Management Logo & Banner Media Persistence (Cloudinary multipart upload).
   3. `[AUDIT-023]` Store Management "Manage Sections" Persistence in MongoDB.
   4. `[AUDIT-020]` "Your Store Link" 404 Route Handler (`/stores/:slug`).
