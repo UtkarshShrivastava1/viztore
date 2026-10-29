@@ -5,6 +5,8 @@ import { IUser, IUserAddress, UserRole } from '@repo/shared-types';
 export interface IUserDocument extends Omit<IUser, '_id'>, Document {
   password?: string;
   refreshToken?: string;
+  favoriteStores?: mongoose.Types.ObjectId[];
+  wishlist?: mongoose.Types.ObjectId[];
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
@@ -82,6 +84,7 @@ const userSchema = new Schema<IUserDocument>(
     },
     addresses: [userAddressSchema],
     favoriteStores: [{ type: Schema.Types.ObjectId, ref: 'Store' }],
+    wishlist: [{ type: Schema.Types.ObjectId, ref: 'Product' }],
     refreshToken: {
       type: String,
       select: false,

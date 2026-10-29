@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { Heart, Store, Plus, Minus, Star, Zap } from 'lucide-react';
 import type { IProduct } from '@repo/shared-types';
 import { useCartStore } from '@/stores/cart.store';
+import { useWishlistFlyoutStore } from '@/stores/wishlistFlyoutStore';
 
 interface ProductCardProps {
   product: IProduct;
@@ -17,7 +18,10 @@ export function ProductCard({ product, badge }: ProductCardProps) {
   const updateQuantity = useCartStore((state) => state.updateQuantity);
   const removeItem = useCartStore((state) => state.removeItem);
 
-  const [isWishlisted, setIsWishlisted] = useState(false);
+  const isWishlisted = useWishlistFlyoutStore((state) =>
+    state.items.some((i) => i.id === product._id || i.productId === product._id)
+  );
+  const toggleWishlistStore = useWishlistFlyoutStore((state) => state.toggleItem);
 
   const cartItem = items.find((i) => i.productId === product._id);
   const quantity = cartItem?.quantity || 0;
@@ -75,7 +79,24 @@ export function ProductCard({ product, badge }: ProductCardProps) {
   const toggleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsWishlisted((prev) => !prev);
+    const rawStoreId = product.storeId;
+    const storeId = typeof rawStoreId === 'object' && rawStoreId !== null
+      ? (rawStoreId as { _id?: string })._id || String(rawStoreId)
+      : String(rawStoreId || 'store-main');
+    const storeName = product.storeName || (typeof rawStoreId === 'object' && (rawStoreId as { name?: string })?.name) || 'Official Store';
+    const firstVariant = product.variants?.[0];
+
+    toggleWishlistStore({
+      id: product._id,
+      productId: product._id,
+      title: product.name,
+      storeId,
+      storeName,
+      price: firstVariant?.price || product.basePrice,
+      originalPrice: product.baseMrp,
+      imageUrl: firstImage || '',
+      slug: product.slug,
+    });
   };
 
   return (

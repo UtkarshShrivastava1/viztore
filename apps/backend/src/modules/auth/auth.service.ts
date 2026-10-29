@@ -414,6 +414,47 @@ export async function toggleFavoriteStore(
 }
 
 /**
+ * Get User's Wishlist Products
+ */
+export async function getWishlist(userId: string): Promise<any[]> {
+  const user = await UserModel.findById(userId).populate('wishlist').lean();
+  if (!user) {
+    throw AppError.notFound('User not found', 'USER_NOT_FOUND');
+  }
+  return (user as any).wishlist || [];
+}
+
+/**
+ * Toggle Wishlist Product for User
+ */
+export async function toggleWishlist(
+  userId: string,
+  productId: string,
+): Promise<{ isWishlisted: boolean; wishlistProductIds: string[] }> {
+  const user = await UserModel.findById(userId);
+  if (!user) {
+    throw AppError.notFound('User not found', 'USER_NOT_FOUND');
+  }
+
+  const list: string[] = ((user as any).wishlist || []).map((id: any) => id.toString());
+  const idx = list.indexOf(productId);
+  let isWishlisted: boolean;
+
+  if (idx !== -1) {
+    list.splice(idx, 1);
+    isWishlisted = false;
+  } else {
+    list.push(productId);
+    isWishlisted = true;
+  }
+
+  (user as any).wishlist = list;
+  await user.save();
+
+  return { isWishlisted, wishlistProductIds: list };
+}
+
+/**
  * Submit Platform & App Feedback
  */
 export async function submitFeedback(

@@ -113,6 +113,18 @@ router.post(
   authController.toggleFavoriteStore,
 );
 
+router.get(
+  '/wishlist',
+  authGuard,
+  authController.getWishlist,
+);
+
+router.post(
+  '/wishlist/:productId/toggle',
+  authGuard,
+  authController.toggleWishlist,
+);
+
 // Customer Platform & App Feedback Endpoint
 router.post(
   '/feedback',

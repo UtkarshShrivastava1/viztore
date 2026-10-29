@@ -1,6 +1,6 @@
 "use client";
 
-import { Heart, ShoppingCart, Search, Mic, Bell, CircleUserRound, MapPin, ChevronDown, X, TrendingUp, ArrowRight, Loader2 } from "lucide-react";
+import { Heart, ShoppingCart, Search, Mic, Bell, CircleUserRound, MapPin, ChevronDown, X, TrendingUp, ArrowRight, Loader2, Package } from "lucide-react";
 import Logo from '@/components/layout/Logo';
 import { useRouter, usePathname } from 'next/navigation';
 import DesktopCategoryStrip from '@/components/layout/DesktopCategoryStrip';
@@ -88,6 +88,7 @@ export function DesktopHeader({
   const locationIsSet = useLocationStore((state) => state.isSet);
   const setStoreLocation = useLocationStore((state) => state.setLocation);
   const rawCartCount = useCartStore((state) => state.items.reduce((sum, item) => sum + item.quantity, 0));
+  const openCart = useCartStore((state) => state.openCart);
   
   const { unreadCount: notificationCount, fetchUnreadSummary, fetchNotifications } = useNotificationStore();
   const wishlistCount = useWishlistFlyoutStore((state) => state.items.length);
@@ -490,8 +491,20 @@ export function DesktopHeader({
                 </span>
               </button>
               
+              {/* Orders */}
+              {isAuthenticated && (
+                <button
+                  type="button"
+                  className="group relative flex flex-col items-center justify-center gap-1 text-white hover:opacity-85 transition-opacity cursor-pointer"
+                  onClick={() => router.push('/account/orders')}
+                >
+                  <Package className="h-[22px] w-[22px]" strokeWidth={1.8} />
+                  <span className="text-[10px] font-medium tracking-wide">Orders</span>
+                </button>
+              )}
+
               {/* Cart */}
-              <button type="button" className="group relative flex flex-col items-center justify-center gap-1 text-white hover:opacity-85 transition-opacity cursor-pointer" onClick={() => router.push('/cart')}>
+              <button type="button" className="group relative flex flex-col items-center justify-center gap-1 text-white hover:opacity-85 transition-opacity cursor-pointer" onClick={openCart}>
                 <div className="relative">
                   <ShoppingCart className="h-[22px] w-[22px]" strokeWidth={1.8} />
                   {cartCount > 0 && (

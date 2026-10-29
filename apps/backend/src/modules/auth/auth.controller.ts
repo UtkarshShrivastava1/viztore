@@ -109,6 +109,20 @@ export const toggleFavoriteStore: RequestHandler = catchAsync(async (req: Reques
   return ApiResponse.success(res, result, result.isFavorite ? 'Store added to favorites' : 'Store removed from favorites');
 });
 
+export const getWishlist: RequestHandler = catchAsync(async (req: Request, res: Response) => {
+  if (!req.user) throw AppError.unauthorized();
+  const products = await authService.getWishlist(req.user.sub);
+  return ApiResponse.success(res, products);
+});
+
+export const toggleWishlist: RequestHandler = catchAsync(async (req: Request, res: Response) => {
+  if (!req.user) throw AppError.unauthorized();
+  const { productId } = req.params;
+  if (!productId) throw AppError.badRequest('Product ID is required');
+  const result = await authService.toggleWishlist(req.user.sub, productId);
+  return ApiResponse.success(res, result, result.isWishlisted ? 'Product added to wishlist' : 'Product removed from wishlist');
+});
+
 export const submitFeedback: RequestHandler = catchAsync(async (req: Request, res: Response) => {
   const userId = req.user?.sub;
   const feedback = await authService.submitFeedback({

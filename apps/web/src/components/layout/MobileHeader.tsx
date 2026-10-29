@@ -51,6 +51,7 @@ export function MobileHeader({
   const isHome = isHomePage !== undefined ? isHomePage : currentPathname === '/';
   const [mounted, setMounted] = useState(false);
   const rawCartCount = useCartStore((state) => state.items.reduce((sum, item) => sum + item.quantity, 0));
+  const openCart = useCartStore((state) => state.openCart);
   const rawWishlistCount = useWishlistFlyoutStore((state) => state.items.length);
   const rawNotificationCount = useNotificationStore((state) => state.unreadCount);
 
@@ -133,7 +134,7 @@ export function MobileHeader({
                 type="button"
                 aria-label="Shopping Cart"
                 className="relative text-white hover:text-white/80 transition-opacity cursor-pointer p-0.5"
-                onClick={() => router.push('/cart')}
+                onClick={openCart}
               >
                 <ShoppingCart className="h-6 w-6 text-white" strokeWidth={1.75} />
                 {cartCount > 0 && (
