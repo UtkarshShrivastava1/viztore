@@ -1,7 +1,7 @@
 import mongoose, { Document, Model, Schema } from 'mongoose';
 import { ISupportTicket, ISupportMessage, ISupportAttachment } from '@repo/shared-types';
 
-export interface ISupportTicketDocument extends Omit<ISupportTicket, '_id'>, Document {}
+export interface ISupportTicketDocument extends Omit<ISupportTicket, '_id' | 'id'>, Document {}
 
 const attachmentSchema = new Schema<ISupportAttachment>(
   {

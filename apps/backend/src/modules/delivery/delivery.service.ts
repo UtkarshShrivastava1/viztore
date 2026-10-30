@@ -575,25 +575,27 @@ export function createDeliveryService(
     return result;
   }
 
-    async function updateLocation(
+  async function updateLocation(
     orderId: string,
     dto: UpdateRiderLocationDto,
   ): Promise<{ success: boolean; timestamp: string }> {
-    const delivery = await repository.findByOrderId(orderId);
+    const delivery = await repo.findByOrderId(orderId);
     if (!delivery) {
       throw AppError.notFound('Delivery record not found for this order', 'DELIVERY_NOT_FOUND');
     }
 
     const timestamp = new Date().toISOString();
-    eventBus.emit(EVENTS.DELIVERY_LOCATION_UPDATED, {
-      orderId,
-      latitude: dto.latitude,
-      longitude: dto.longitude,
-      heading: dto.heading,
-      speed: dto.speed,
-      accuracy: dto.accuracy,
-      timestamp,
-    });
+    if (bus) {
+      bus.emit(EVENTS.DELIVERY_LOCATION_UPDATED, {
+        orderId,
+        latitude: dto.latitude,
+        longitude: dto.longitude,
+        heading: dto.heading,
+        speed: dto.speed,
+        accuracy: dto.accuracy,
+        timestamp,
+      });
+    }
 
     return { success: true, timestamp };
   }

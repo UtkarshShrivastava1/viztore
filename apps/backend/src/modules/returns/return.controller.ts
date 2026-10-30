@@ -77,7 +77,7 @@ export class ReturnController {
       // Allow customers to fetch their return by ID without merchant store context
     }
 
-    const returnItem = await ReturnService.getReturnById(req.params.id, storeId);
+    const returnItem = await ReturnService.getReturnById((req.params.id || ''), storeId);
     return ApiResponse.success(res, returnItem);
   });
 
@@ -86,7 +86,7 @@ export class ReturnController {
    */
   static approveReturn = catchAsync(async (req: Request, res: Response) => {
     const storeId = await extractStoreId(req);
-    const approved = await ReturnService.approveReturn(req.params.id, storeId, req.body);
+    const approved = await ReturnService.approveReturn((req.params.id || ''), storeId, req.body);
     return ApiResponse.success(res, approved, 'Return request approved successfully');
   });
 
@@ -95,7 +95,7 @@ export class ReturnController {
    */
   static rejectReturn = catchAsync(async (req: Request, res: Response) => {
     const storeId = await extractStoreId(req);
-    const rejected = await ReturnService.rejectReturn(req.params.id, storeId, req.body.reason);
+    const rejected = await ReturnService.rejectReturn((req.params.id || ''), storeId, req.body.reason);
     return ApiResponse.success(res, rejected, 'Return request rejected successfully');
   });
 
@@ -104,7 +104,7 @@ export class ReturnController {
    */
   static processRefund = catchAsync(async (req: Request, res: Response) => {
     const storeId = await extractStoreId(req);
-    const refunded = await ReturnService.processRefund(req.params.id, storeId, req.body);
+    const refunded = await ReturnService.processRefund((req.params.id || ''), storeId, req.body);
     return ApiResponse.success(res, refunded, 'Refund processed successfully');
   });
 

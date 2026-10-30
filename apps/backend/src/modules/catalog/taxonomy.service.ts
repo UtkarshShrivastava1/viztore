@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import { ITaxonomyNode, IHSNLookupResult, ITaxonomySearchMatch } from '@repo/shared-types';
 import { TaxonomyModel } from './taxonomy.model.js';
 import { resolveHSNAndGST } from './hsn.service.js';
-import staticTaxonomies from './taxonomies.data.json' assert { type: 'json' };
+import staticTaxonomies from './taxonomies.data.json' with { type: 'json' };
 
 const fallbackTaxonomies: ITaxonomyNode[] = staticTaxonomies as ITaxonomyNode[];
 

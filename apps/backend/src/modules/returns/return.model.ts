@@ -151,6 +151,6 @@ ReturnSchema.index({ storeId: 1, status: 1 });
 ReturnSchema.index({ storeId: 1, createdAt: -1 });
 ReturnSchema.index({ 'customer.phone': 1 });
 
-export const ReturnModel =
+export const ReturnModel: mongoose.Model<IReturnDoc> = (mongoose.models.Return as mongoose.Model<IReturnDoc>) ||
   mongoose.models.Return || mongoose.model<IReturnDoc>('Return', ReturnSchema);
 

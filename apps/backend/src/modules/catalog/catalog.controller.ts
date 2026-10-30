@@ -117,6 +117,7 @@ export const bulkDeleteProducts: RequestHandler = catchAsync(async (req: Request
     throw AppError.badRequest('productIds array is required');
   }
 
-  const result = await catalogService.bulkDeleteProducts(productIds, req.user!.id);
+  const userId = req.user?.id || (req.user as any)?._id?.toString() || '';
+  const result = await catalogService.bulkDeleteProducts(productIds, userId);
   return ApiResponse.success(res, result, `${result.deletedCount} products deleted successfully`);
 });

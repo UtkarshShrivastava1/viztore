@@ -307,9 +307,9 @@ export function createOrderService(
         gstin: storeGstin,
       },
       customer: {
-        name: order.shippingAddress.fullName,
-        phone: order.shippingAddress.phone,
-        address: `${order.shippingAddress.street}, ${order.shippingAddress.city}, ${order.shippingAddress.state} - ${order.shippingAddress.postalCode}`,
+        name: order.shippingAddress?.fullName || 'Customer',
+        phone: order.shippingAddress?.phone || '',
+        address: order.shippingAddress ? `${order.shippingAddress.street}, ${order.shippingAddress.city}, ${order.shippingAddress.state} - ${order.shippingAddress.postalCode}` : 'In-Store Pickup',
       },
       items,
       pricing: {

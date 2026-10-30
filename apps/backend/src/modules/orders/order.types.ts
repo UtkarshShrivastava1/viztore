@@ -31,7 +31,7 @@ export interface ShippingAddressDTO {
 export interface CreateOrderDTO {
   storeId: string;
   items: OrderItemDTO[];
-  shippingAddress: ShippingAddressDTO;
+  shippingAddress?: ShippingAddressDTO;
   couponCode?: string;
   discount?: number;
 }
@@ -47,7 +47,10 @@ export interface OrderResponse {
   userId: string;
   storeId: string;
   items: OrderItemDTO[];
-  shippingAddress: ShippingAddressDTO;
+  shippingAddress?: ShippingAddressDTO;
+  fulfilmentMode?: string;
+  reserveCode?: string;
+  reserveExpiresAt?: Date | string;
   subtotal: number;
   discount?: number;
   couponCode?: string | null;
@@ -68,7 +71,12 @@ export interface OrderDocument extends Document {
   storeId: string;
   orderNumber: string;
   items: OrderItemDTO[];
-  shippingAddress: ShippingAddressDTO;
+  shippingAddress?: ShippingAddressDTO;
+  discount?: number;
+  couponCode?: string | null;
+  fulfilmentMode?: string;
+  reserveCode?: string;
+  reserveExpiresAt?: Date;
   subtotal: number;
   tax: number;
   shippingFee: number;
@@ -168,6 +176,9 @@ export interface IOrderService {
   verifyDeliveryOtp(id: string, otp: string): Promise<boolean>;
   cancelOrder(id: string, userId: string, isAdmin: boolean, expectedVersion?: number, reason?: string): Promise<OrderResponse | null>;
   autoCancelStaleOrders(olderThanMinutes?: number, batchLimit?: number): Promise<{ processed: number; cancelled: number; failed: number }>;
+  claimReservation(orderId: string, actorUserId: string): Promise<OrderResponse | null>;
+  releaseReservation(orderId: string, actorUserId: string, reason?: string): Promise<OrderResponse | null>;
+  expireStaleReservations(batchLimit?: number): Promise<{ processed: number; cancelled: number; failed: number }>;
 }
 
 export interface IOrderFacade {

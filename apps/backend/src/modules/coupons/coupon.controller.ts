@@ -1,3 +1,4 @@
+import { AppError } from '../../shared/utils/AppError.js';
 import { Request, Response } from 'express';
 import { AuthenticatedRequest } from '../../shared/types/authenticated-request.js';
 import { ApiResponse } from '../../shared/utils/ApiResponse.js';
@@ -28,6 +29,9 @@ export const couponController = {
     const authReq = req as AuthenticatedRequest;
     const storeId = authReq.user?.storeId;
     const { id } = req.params;
+    if (!id) {
+      throw AppError.badRequest('Coupon ID is required');
+    }
     const result = await couponService.deleteCoupon(id, storeId);
     return ApiResponse.success(res, result, 'Coupon deleted successfully');
   }),

@@ -62,7 +62,7 @@ export class SettlementController {
    */
   static getById = catchAsync(async (req: Request, res: Response) => {
     const storeId = await extractStoreId(req);
-    const settlement = await SettlementService.getSettlementById(req.params.id, storeId);
+    const settlement = await SettlementService.getSettlementById((req.params.id || ''), storeId);
     return ApiResponse.success(res, settlement);
   });
 

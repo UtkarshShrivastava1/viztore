@@ -9,7 +9,7 @@ export const createTicket: RequestHandler = catchAsync(async (req: Request, res:
     ? {
         userId: req.user.sub,
         role: req.user.role,
-        storeId: req.user.storeId,
+        storeId: (req.user as any).storeId,
         name: (req.user as any).name || (req.user as any).fullName,
       }
     : undefined;
@@ -23,7 +23,7 @@ export const getTickets: RequestHandler = catchAsync(async (req: Request, res: R
     ? {
         userId: req.user.sub,
         role: req.user.role,
-        storeId: req.user.storeId,
+        storeId: (req.user as any).storeId,
       }
     : undefined;
 
@@ -32,7 +32,7 @@ export const getTickets: RequestHandler = catchAsync(async (req: Request, res: R
 });
 
 export const getTicketById: RequestHandler = catchAsync(async (req: Request, res: Response) => {
-  const ticket = await supportService.getTicketById(req.params.id);
+  const ticket = await supportService.getTicketById((req.params.id || ''));
   return ApiResponse.success(res, ticket);
 });
 
@@ -45,12 +45,12 @@ export const addMessage: RequestHandler = catchAsync(async (req: Request, res: R
       }
     : undefined;
 
-  const ticket = await supportService.addTicketMessage(req.params.id, req.body, actor);
+  const ticket = await supportService.addTicketMessage((req.params.id || ''), req.body, actor);
   return ApiResponse.created(res, ticket, 'Message sent successfully');
 });
 
 export const updateStatus: RequestHandler = catchAsync(async (req: Request, res: Response) => {
-  const ticket = await supportService.updateTicketStatus(req.params.id, req.body);
+  const ticket = await supportService.updateTicketStatus((req.params.id || ''), req.body);
   return ApiResponse.success(res, ticket, 'Ticket status updated');
 });
 

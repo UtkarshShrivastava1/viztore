@@ -114,7 +114,7 @@ const SettlementSchema = new Schema<ISettlementDoc>(
 SettlementSchema.index({ storeId: 1, status: 1 });
 SettlementSchema.index({ storeId: 1, createdAt: -1 });
 
-export const SettlementModel =
+export const SettlementModel: mongoose.Model<ISettlementDoc> =
   mongoose.models.Settlement ||
   mongoose.model<ISettlementDoc>('Settlement', SettlementSchema);
 
@@ -193,7 +193,7 @@ const BankAccountSchema = new Schema<IBankAccountDoc>(
   }
 );
 
-export const BankAccountModel =
+export const BankAccountModel: mongoose.Model<IBankAccountDoc> =
   mongoose.models.BankAccount ||
   mongoose.model<IBankAccountDoc>('BankAccount', BankAccountSchema);
 

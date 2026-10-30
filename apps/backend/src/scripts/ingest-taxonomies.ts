@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import { TaxonomyModel } from '../modules/catalog/taxonomy.model.js';
 import { resolveHSNAndGST } from '../modules/catalog/hsn.service.js';
-import { logger } from '../shared/logger.js';
+import { logger } from '../shared/utils/logger.js';
 
 export async function ingestTaxonomies(mongoUri?: string): Promise<{ total: number; inserted: number; updated: number }> {
   const uri = mongoUri || process.env.MONGODB_URI || 'mongodb://localhost:27017/platform-db';

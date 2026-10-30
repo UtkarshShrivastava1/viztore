@@ -140,7 +140,7 @@ export async function loginUser(dto: LoginUserDto): Promise<AuthSessionResponse>
       throw AppError.unauthorized('Invalid email/phone or password', 'INVALID_CREDENTIALS');
     }
 
-    if (matchedUsers.length === 1) {
+    if (matchedUsers.length === 1 && matchedUsers[0]) {
       user = matchedUsers[0];
     } else {
       // Multiple accounts found for same identifier across roles (e.g. customer & merchant)
@@ -152,10 +152,14 @@ export async function loginUser(dto: LoginUserDto): Promise<AuthSessionResponse>
           break;
         }
       }
-      if (!user) {
+      if (!user && matchedUsers[0]) {
         user = matchedUsers[0]; // fallback to first; will fail password check below
       }
     }
+  }
+
+  if (!user) {
+    throw AppError.unauthorized('Invalid email/phone or password', 'INVALID_CREDENTIALS');
   }
 
   if (!user.isActive) {

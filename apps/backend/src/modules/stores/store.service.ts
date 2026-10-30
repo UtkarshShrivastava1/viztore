@@ -384,7 +384,7 @@ export async function verifyPan(pan: string): Promise<{
     G: 'Government Agency',
   };
 
-  const entityType = entityMap[fourthChar] || 'Business Entity';
+  const entityType = (fourthChar && entityMap[fourthChar]) || 'Business Entity';
 
   return {
     isValid: true,

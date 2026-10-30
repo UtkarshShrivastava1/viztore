@@ -1,7 +1,7 @@
 import mongoose, { Document, Model, Schema } from 'mongoose';
 import { ICoupon } from '@repo/shared-types';
 
-export interface ICouponDocument extends Document, Omit<ICoupon, 'id'> {
+export interface ICouponDocument extends Document, Omit<ICoupon, 'id' | 'storeId'> {
   storeId?: mongoose.Types.ObjectId | null;
 }
 
