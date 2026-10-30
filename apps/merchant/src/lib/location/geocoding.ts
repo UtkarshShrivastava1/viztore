@@ -2,6 +2,7 @@
  * Hyperlocal Geocoding & Locality Resolution Utility for Merchant Hub
  * Provides reverse geocoding (GPS / Pin Drop -> Address Fields Auto-fill)
  * and forward geocoding / autocomplete for Indian local retail stores.
+ * Precision-tuned for Chhattisgarh launch markets (Bhilai, Durg, Raipur).
  */
 
 export interface GeocodedLocation {
@@ -26,15 +27,149 @@ export interface LocationSearchResult {
   pincode?: string;
 }
 
+interface PrecisionZone {
+  name: string;
+  roadOrArea: string;
+  landmark?: string;
+  city: string;
+  state: string;
+  pincode: string;
+  minLat: number;
+  maxLat: number;
+  minLng: number;
+  maxLng: number;
+}
+
+// Bounding box zones for micro-neighborhoods to fix inaccurate OSM boundary tags (e.g. Durg Tahsil -> Borsi 491001)
+export const PRECISION_ZONES: PrecisionZone[] = [
+  // Borsi & Borsi Extension (Durg - 491001)
+  {
+    name: 'Borsi',
+    roadOrArea: 'Borsi Colony, Borsi Extension',
+    landmark: 'Near Kadam Plaza / Bhole Kirana',
+    city: 'Durg',
+    state: 'Chhattisgarh',
+    pincode: '491001',
+    minLat: 21.1450,
+    maxLat: 21.1730,
+    minLng: 81.2950,
+    maxLng: 81.3250,
+  },
+  // Padmanabhpur (Durg - 491001)
+  {
+    name: 'Padmanabhpur',
+    roadOrArea: 'Padmanabhpur Colony',
+    landmark: 'Near Padmanabhpur Square',
+    city: 'Durg',
+    state: 'Chhattisgarh',
+    pincode: '491001',
+    minLat: 21.1730,
+    maxLat: 21.1860,
+    minLng: 81.2850,
+    maxLng: 81.3150,
+  },
+  // Potia Kala (Durg - 491001)
+  {
+    name: 'Potia Kala',
+    roadOrArea: 'Potia Kala Main Road',
+    landmark: 'Near Potia Square',
+    city: 'Durg',
+    state: 'Chhattisgarh',
+    pincode: '491001',
+    minLat: 21.1600,
+    maxLat: 21.1850,
+    minLng: 81.2650,
+    maxLng: 81.2880,
+  },
+  // Malviya Nagar & Station Road (Durg - 491001)
+  {
+    name: 'Malviya Nagar',
+    roadOrArea: 'Malviya Nagar Commercial Square',
+    landmark: 'Near Indira Market / Railway Station',
+    city: 'Durg',
+    state: 'Chhattisgarh',
+    pincode: '491001',
+    minLat: 21.1860,
+    maxLat: 21.2050,
+    minLng: 81.2700,
+    maxLng: 81.2950,
+  },
+  // Ganjpara (Durg - 491001)
+  {
+    name: 'Ganjpara',
+    roadOrArea: 'Ganjpara Main Bazaar',
+    landmark: 'Old Grain Market',
+    city: 'Durg',
+    state: 'Chhattisgarh',
+    pincode: '491001',
+    minLat: 21.1800,
+    maxLat: 21.1920,
+    minLng: 81.2650,
+    maxLng: 81.2820,
+  },
+  // Supela Market & Akashganga (Bhilai - 490023)
+  {
+    name: 'Supela',
+    roadOrArea: 'Akashganga, Supela Market',
+    landmark: 'Near GE Road',
+    city: 'Bhilai',
+    state: 'Chhattisgarh',
+    pincode: '490023',
+    minLat: 21.1980,
+    maxLat: 21.2150,
+    minLng: 81.3400,
+    maxLng: 81.3650,
+  },
+  // Civic Centre & Sector 6 (Bhilai - 490006)
+  {
+    name: 'Civic Centre',
+    roadOrArea: 'Civic Centre Commercial Complex',
+    landmark: 'Near Central Avenue',
+    city: 'Bhilai',
+    state: 'Chhattisgarh',
+    pincode: '490006',
+    minLat: 21.1820,
+    maxLat: 21.2000,
+    minLng: 81.3600,
+    maxLng: 81.3850,
+  },
+  // Nehru Nagar (Bhilai - 490020)
+  {
+    name: 'Nehru Nagar',
+    roadOrArea: 'Nehru Nagar East / West',
+    landmark: 'Near Commercial Complex',
+    city: 'Bhilai',
+    state: 'Chhattisgarh',
+    pincode: '490020',
+    minLat: 21.2100,
+    maxLat: 21.2280,
+    minLng: 81.3300,
+    maxLng: 81.3550,
+  },
+  // Smriti Nagar (Bhilai - 490020)
+  {
+    name: 'Smriti Nagar',
+    roadOrArea: 'Smriti Nagar Residential Colony',
+    landmark: 'Near Junwani Road',
+    city: 'Bhilai',
+    state: 'Chhattisgarh',
+    pincode: '490020',
+    minLat: 21.2120,
+    maxLat: 21.2280,
+    minLng: 81.3150,
+    maxLng: 81.3350,
+  },
+];
+
 const DEFAULT_HUB = {
-  lat: 21.2050,
-  lng: 81.3540,
-  roadOrArea: 'Akashganga, Supela Market',
-  landmark: 'Near GE Road',
-  city: 'Bhilai',
+  lat: 21.1595,
+  lng: 81.3090,
+  roadOrArea: 'Borsi Colony, Borsi Extension',
+  landmark: 'Near Kadam Plaza / Bhole Kirana',
+  city: 'Durg',
   state: 'Chhattisgarh',
-  pincode: '490023',
-  formattedAddress: 'Akashganga, Supela Market, Near GE Road, Bhilai, Chhattisgarh - 490023',
+  pincode: '491001',
+  formattedAddress: 'Borsi Colony, Borsi Extension, Durg, Chhattisgarh - 491001',
 };
 
 // Pre-cached rich coordinates and full addresses for Chhattisgarh launch hubs & major metros
@@ -48,8 +183,71 @@ export const REGIONAL_HUBS: Record<string, {
   pincode: string;
   formattedAddress: string;
 }> = {
+  // Durg - Borsi & Padmanabhpur (491001)
+  'borsi': DEFAULT_HUB,
+  'borsi colony': DEFAULT_HUB,
+  'borsi market': {
+    lat: 21.1655,
+    lng: 81.3097,
+    roadOrArea: 'Borsi Main Market',
+    landmark: 'Utai Road',
+    city: 'Durg',
+    state: 'Chhattisgarh',
+    pincode: '491001',
+    formattedAddress: 'Borsi Main Market, Utai Road, Durg, Chhattisgarh - 491001',
+  },
+  'padmanabhpur': {
+    lat: 21.1780,
+    lng: 81.2950,
+    roadOrArea: 'Padmanabhpur Commercial Area',
+    landmark: 'Near Police Line',
+    city: 'Durg',
+    state: 'Chhattisgarh',
+    pincode: '491001',
+    formattedAddress: 'Padmanabhpur Commercial Area, Durg, Chhattisgarh - 491001',
+  },
+  'durg': {
+    lat: 21.1904,
+    lng: 81.2849,
+    roadOrArea: 'Station Road, City Centre',
+    landmark: 'Near Durg Junction',
+    city: 'Durg',
+    state: 'Chhattisgarh',
+    pincode: '491001',
+    formattedAddress: 'Station Road, Near Durg Junction, Durg, Chhattisgarh - 491001',
+  },
+  'malviya nagar': {
+    lat: 21.1950,
+    lng: 81.2820,
+    roadOrArea: 'Malviya Nagar Commercial Square',
+    landmark: 'Near Indira Market',
+    city: 'Durg',
+    state: 'Chhattisgarh',
+    pincode: '491001',
+    formattedAddress: 'Malviya Nagar Commercial Square, Durg, Chhattisgarh - 491001',
+  },
+  'ganjpara': {
+    lat: 21.1880,
+    lng: 81.2790,
+    roadOrArea: 'Ganjpara Main Bazaar',
+    landmark: 'Old Grain Market',
+    city: 'Durg',
+    state: 'Chhattisgarh',
+    pincode: '491001',
+    formattedAddress: 'Ganjpara Main Bazaar, Durg, Chhattisgarh - 491001',
+  },
+
   // Bhilai
-  'supela': DEFAULT_HUB,
+  'supela': {
+    lat: 21.2050,
+    lng: 81.3540,
+    roadOrArea: 'Akashganga, Supela Market',
+    landmark: 'Near GE Road',
+    city: 'Bhilai',
+    state: 'Chhattisgarh',
+    pincode: '490023',
+    formattedAddress: 'Akashganga, Supela Market, Near GE Road, Bhilai, Chhattisgarh - 490023',
+  },
   'sector 6': {
     lat: 21.1890,
     lng: 81.3650,
@@ -100,47 +298,7 @@ export const REGIONAL_HUBS: Record<string, {
     pincode: '490011',
     formattedAddress: 'Power House Market, Station Road, Bhilai, Chhattisgarh - 490011',
   },
-  // Durg
-  'durg': {
-    lat: 21.1904,
-    lng: 81.2849,
-    roadOrArea: 'Station Road, City Centre',
-    landmark: 'Near Durg Junction',
-    city: 'Durg',
-    state: 'Chhattisgarh',
-    pincode: '491001',
-    formattedAddress: 'Station Road, Near Durg Junction, Durg, Chhattisgarh - 491001',
-  },
-  'durg rural': {
-    lat: 21.1594,
-    lng: 81.3101,
-    roadOrArea: 'Anda Road, Durg Tahsil',
-    landmark: 'Cross Street 4',
-    city: 'Durg',
-    state: 'Chhattisgarh',
-    pincode: '491002',
-    formattedAddress: 'Cross Street 4, Anda Road, Durg Tahsil, Durg, Chhattisgarh - 491002',
-  },
-  'malviya nagar': {
-    lat: 21.1950,
-    lng: 81.2820,
-    roadOrArea: 'Malviya Nagar Commercial Square',
-    landmark: 'Near Indira Market',
-    city: 'Durg',
-    state: 'Chhattisgarh',
-    pincode: '491001',
-    formattedAddress: 'Malviya Nagar Commercial Square, Durg, Chhattisgarh - 491001',
-  },
-  'ganjpara': {
-    lat: 21.1880,
-    lng: 81.2790,
-    roadOrArea: 'Ganjpara Main Bazaar',
-    landmark: 'Old Grain Market',
-    city: 'Durg',
-    state: 'Chhattisgarh',
-    pincode: '491001',
-    formattedAddress: 'Ganjpara Main Bazaar, Durg, Chhattisgarh - 491001',
-  },
+
   // Raipur
   'jaistambh chowk': {
     lat: 21.2514,
@@ -175,6 +333,23 @@ export const REGIONAL_HUBS: Record<string, {
 };
 
 /**
+ * Finds precision zone for given coordinates
+ */
+export function getZoneForCoordinates(lat: number, lng: number): PrecisionZone | null {
+  for (const zone of PRECISION_ZONES) {
+    if (
+      lat >= zone.minLat &&
+      lat <= zone.maxLat &&
+      lng >= zone.minLng &&
+      lng <= zone.maxLng
+    ) {
+      return zone;
+    }
+  }
+  return null;
+}
+
+/**
  * Normalizes Indian city names to known list if possible
  */
 export function normalizeCityName(rawCity: string): string {
@@ -196,12 +371,15 @@ export function normalizeCityName(rawCity: string): string {
 /**
  * Reverse Geocodes a GPS coordinate pair (lat, lng) to a structured Indian street address.
  * Multi-tier strategy:
- * 1. OpenStreetMap Nominatim API (with timeout & fallback)
- * 2. BigDataCloud Reverse Geocoding Client API
- * 3. Proximity-matched nearest regional hub in Chhattisgarh
+ * 1. Precision Zone Matching (fixes known inaccurate boundary tags like Durg Tahsil -> Borsi 491001)
+ * 2. OpenStreetMap Nominatim API (with sanitation of administrative terms like "Durg Tahsil")
+ * 3. BigDataCloud Reverse Geocoding Client API
+ * 4. Proximity-matched nearest regional hub in Chhattisgarh
  */
 export async function reverseGeocode(lat: number, lng: number): Promise<GeocodedLocation> {
-  // 1. Try OpenStreetMap Nominatim
+  const matchedZone = getZoneForCoordinates(lat, lng);
+
+  // 1. Try OpenStreetMap Nominatim for street/building level granularity
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 3500);
@@ -220,14 +398,34 @@ export async function reverseGeocode(lat: number, lng: number): Promise<Geocoded
       if (data && data.address) {
         const addr = data.address;
         const road = addr.road || addr.street || addr.pedestrian || addr.footway || '';
-        const suburb = addr.suburb || addr.neighbourhood || addr.residential || addr.subdivision || addr.county || '';
-        const roadOrArea = [road, suburb].filter(Boolean).join(', ') || addr.city_district || addr.state_district || 'Main Road Area';
+        let suburb = addr.suburb || addr.neighbourhood || addr.residential || addr.subdivision || '';
+        
+        // Cleanse administrative county term "Durg Tahsil"
+        if (suburb.toLowerCase().includes('tahsil') || suburb.toLowerCase().includes('tehsil')) {
+          suburb = matchedZone ? matchedZone.name : '';
+        }
 
-        const rawCity = addr.city || addr.town || addr.village || addr.county || 'Bhilai';
-        const city = normalizeCityName(rawCity);
+        let roadOrArea = [road, suburb].filter(Boolean).join(', ');
+        
+        // If roadOrArea is empty or generic, use precision zone if available
+        if (!roadOrArea || roadOrArea.toLowerCase().includes('tahsil')) {
+          roadOrArea = matchedZone ? matchedZone.roadOrArea : 'Main Road Area';
+        } else if (matchedZone && !roadOrArea.toLowerCase().includes(matchedZone.name.toLowerCase())) {
+          roadOrArea = `${roadOrArea}, ${matchedZone.name}`;
+        }
+
+        const rawCity = addr.city || addr.town || addr.village || 'Durg';
+        const city = matchedZone ? matchedZone.city : normalizeCityName(rawCity);
         const state = addr.state || 'Chhattisgarh';
-        const pincode = addr.postcode ? addr.postcode.replace(/\D/g, '').slice(0, 6) : '';
+        
+        // Pincode resolution: ensure Durg urban / Borsi uses 491001
+        let pincode = matchedZone ? matchedZone.pincode : (addr.postcode ? addr.postcode.replace(/\D/g, '').slice(0, 6) : '');
+        if (city === 'Durg' && pincode === '491002') {
+          pincode = '491001';
+        }
+
         const shopOrBuilding = addr.building || addr.house_number || addr.shop || '';
+        const landmark = matchedZone?.landmark || (suburb && road && suburb !== road ? `Near ${suburb}` : undefined);
 
         const fullParts = [
           shopOrBuilding,
@@ -243,7 +441,7 @@ export async function reverseGeocode(lat: number, lng: number): Promise<Geocoded
           lng,
           shopOrBuilding: shopOrBuilding || undefined,
           roadOrArea,
-          landmark: suburb && road && suburb !== road ? `Near ${suburb}` : undefined,
+          landmark,
           city,
           state,
           pincode: pincode || undefined,
@@ -252,7 +450,21 @@ export async function reverseGeocode(lat: number, lng: number): Promise<Geocoded
       }
     }
   } catch {
-    // Fallback to Tier 2
+    // Fallback to zone / tier 2
+  }
+
+  // If precision zone matched, return rich zone address directly
+  if (matchedZone) {
+    return {
+      lat,
+      lng,
+      roadOrArea: matchedZone.roadOrArea,
+      landmark: matchedZone.landmark,
+      city: matchedZone.city,
+      state: matchedZone.state,
+      pincode: matchedZone.pincode,
+      formattedAddress: matchedZone.roadOrArea + ', ' + matchedZone.city + ', ' + matchedZone.state + ' - ' + matchedZone.pincode,
+    };
   }
 
   // 2. Try BigDataCloud Reverse Geocode
@@ -269,11 +481,17 @@ export async function reverseGeocode(lat: number, lng: number): Promise<Geocoded
     if (res.ok) {
       const data = await res.json();
       if (data && (data.locality || data.city)) {
-        const rawCity = data.city || data.locality || 'Bhilai';
+        const rawCity = data.city || data.locality || 'Durg';
         const city = normalizeCityName(rawCity);
         const state = data.principalSubdivision || 'Chhattisgarh';
-        const pincode = data.postcode ? data.postcode.replace(/\D/g, '').slice(0, 6) : '';
-        const roadOrArea = data.locality && data.locality !== city ? data.locality : `${city} Market Area`;
+        let pincode = data.postcode ? data.postcode.replace(/\D/g, '').slice(0, 6) : '491001';
+        if (city === 'Durg' && pincode === '491002') {
+          pincode = '491001';
+        }
+        let roadOrArea = data.locality && data.locality !== city ? data.locality : `${city} Area`;
+        if (roadOrArea.toLowerCase().includes('tahsil') || roadOrArea.toLowerCase().includes('tehsil')) {
+          roadOrArea = `${city} Area`;
+        }
 
         const formattedAddress = `${roadOrArea}, ${city}, ${state}${pincode ? ' - ' + pincode : ''}`;
 
@@ -364,19 +582,22 @@ export async function searchLocations(query: string): Promise<LocationSearchResu
             const isDuplicate = localMatches.some(m => Math.hypot(m.lat - lat, m.lng - lng) < 0.005);
             if (!isDuplicate) {
               const parts = (item.display_name || '').split(',').map((s: string) => s.trim());
-              const roadOrArea = parts.slice(0, 2).join(', ');
-              const city = parts.find((p: string) => Object.values(REGIONAL_HUBS).some(h => h.city.toLowerCase() === p.toLowerCase())) || parts[1] || 'Bhilai';
+              const roadOrArea = parts.slice(0, 2).filter((p: string) => !p.toLowerCase().includes('tahsil')).join(', ') || 'Borsi Area';
+              const city = parts.find((p: string) => Object.values(REGIONAL_HUBS).some(h => h.city.toLowerCase() === p.toLowerCase())) || parts[1] || 'Durg';
               const state = parts.find((p: string) => p.toLowerCase().includes('chhattisgarh') || p.toLowerCase().includes('pradesh')) || 'Chhattisgarh';
-              const pincodeMatch = (item.display_name || '').match(/\b\d{6}\b/);
+              let pincode = (item.display_name || '').match(/\b\d{6}\b/)?.[0] || '491001';
+              if (city === 'Durg' && pincode === '491002') {
+                pincode = '491001';
+              }
 
               localMatches.push({
                 lat,
                 lng,
-                displayName: item.display_name,
+                displayName: `${roadOrArea}, ${city}, ${state} - ${pincode}`,
                 roadOrArea,
                 city: normalizeCityName(city),
                 state,
-                pincode: pincodeMatch ? pincodeMatch[0] : undefined,
+                pincode,
               });
             }
           }
