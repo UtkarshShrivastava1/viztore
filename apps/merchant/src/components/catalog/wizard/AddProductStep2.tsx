@@ -12,6 +12,8 @@ import {
 import { useCatalogStore } from '../../../stores/catalogStore.js';
 import { WizardHelpSidebar } from './WizardHelpSidebar.js';
 import { mediaApi } from '../../../lib/api.js';
+import { CameraBarcodeScannerModal } from '../CameraBarcodeScannerModal.js';
+import { lookupMasterProduct } from '../../../lib/masterCatalogService.js';
 
 const samplePerspectiveViews = [
   {
@@ -49,6 +51,7 @@ export const AddProductStep2: React.FC = () => {
   const [imageUrlInput, setImageUrlInput] = useState('');
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<string | null>(null);
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
 
   const handleFilesSelected = async (files: FileList | null) => {
     if (!files) return;
@@ -119,7 +122,29 @@ export const AddProductStep2: React.FC = () => {
   };
 
   return (
-    <form onSubmit={handleContinue} className="space-y-5">
+    <>
+      <CameraBarcodeScannerModal
+        isOpen={isCameraOpen}
+        onClose={() => setIsCameraOpen(false)}
+        onDetected={(code) => {
+          updateDraftProduct({ barcode: code });
+          const match = lookupMasterProduct(code);
+          if (match) {
+            updateDraftProduct({
+              barcode: code,
+              name: draftProduct.name && draftProduct.name !== 'New Product' ? draftProduct.name : match.name,
+              brand: draftProduct.brand && draftProduct.brand !== 'Generic / Unbranded' ? draftProduct.brand : match.brand,
+              description: draftProduct.description || match.description,
+              images: draftProduct.images?.length ? draftProduct.images : match.images,
+              mrp: draftProduct.mrp || match.mrp,
+              price: draftProduct.price || match.suggestedPrice,
+              costPrice: draftProduct.costPrice || match.costPrice,
+            });
+          }
+        }}
+      />
+
+      <form onSubmit={handleContinue} className="space-y-5">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         {/* Left Column (8 cols): Main Form Cards */}
         <div className="lg:col-span-8 space-y-4">
@@ -320,8 +345,16 @@ export const AddProductStep2: React.FC = () => {
 
               {/* Barcode (Optional) */}
               <div className="md:col-span-4">
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  Barcode <span className="font-normal text-slate-400">(Optional)</span>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center justify-between">
+                  <span>Barcode <span className="font-normal text-slate-400">(Optional)</span></span>
+                  <button
+                    type="button"
+                    onClick={() => setIsCameraOpen(true)}
+                    className="text-[11px] text-blue-600 hover:text-blue-700 font-semibold flex items-center gap-1 cursor-pointer"
+                  >
+                    <ScanBarcode className="w-3 h-3" />
+                    <span>Camera Scan</span>
+                  </button>
                 </label>
                 <div className="relative">
                   <input
@@ -331,9 +364,14 @@ export const AddProductStep2: React.FC = () => {
                     placeholder="Enter barcode or SKU"
                     className="w-full pl-3 pr-9 py-2 text-xs font-mono text-slate-800 bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                   />
-                  <div className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                  <button
+                    type="button"
+                    onClick={() => setIsCameraOpen(true)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-blue-600 rounded-md transition-colors cursor-pointer"
+                    title="Scan Barcode with Camera"
+                  >
                     <ScanBarcode className="w-4 h-4" />
-                  </div>
+                  </button>
                 </div>
               </div>
             </div>
@@ -394,5 +432,6 @@ export const AddProductStep2: React.FC = () => {
         </div>
       </div>
     </form>
+    </>
   );
 };
