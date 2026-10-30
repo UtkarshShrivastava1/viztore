@@ -104,9 +104,8 @@ export const Step3StoreDetails: React.FC<Step3StoreDetailsProps> = ({
     } else if (!building.trim()) {
       setBuilding('Shop 1, Ground Floor');
     }
-    if (loc.landmark) {
-      setLandmark(loc.landmark);
-    }
+    // Always update landmark dynamically on every pin drop so stale text from previous locations does not linger
+    setLandmark(loc.landmark || (loc.roadOrArea ? `Near ${loc.roadOrArea}` : ''));
     if (loc.city) {
       if (CHHATTISGARH_CITIES.includes(loc.city)) {
         setCity(loc.city);

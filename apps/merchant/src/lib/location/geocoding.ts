@@ -40,9 +40,9 @@ interface PrecisionZone {
   maxLng: number;
 }
 
-// Bounding box zones for micro-neighborhoods to fix inaccurate OSM boundary tags (e.g. Durg Tahsil -> Borsi 491001)
+// Bounding box zones for micro-neighborhoods to fix inaccurate OSM boundary tags
 export const PRECISION_ZONES: PrecisionZone[] = [
-  // Borsi & Borsi Extension (Durg - 491001)
+  // Borsi & Borsi Extension (Durg - 491001) - west of canal
   {
     name: 'Borsi',
     roadOrArea: 'Borsi Colony, Borsi Extension',
@@ -53,7 +53,20 @@ export const PRECISION_ZONES: PrecisionZone[] = [
     minLat: 21.1450,
     maxLat: 21.1730,
     minLng: 81.2950,
-    maxLng: 81.3250,
+    maxLng: 81.3180,
+  },
+  // Risali, Maitri Kunj & Ashish Nagar (Bhilai - 490006) - east of canal
+  {
+    name: 'Risali',
+    roadOrArea: 'Maitri Kunj, Risali',
+    landmark: 'Near BSP Market / Ashish Nagar',
+    city: 'Bhilai',
+    state: 'Chhattisgarh',
+    pincode: '490006',
+    minLat: 21.1500,
+    maxLat: 21.1780,
+    minLng: 81.3180,
+    maxLng: 81.3550,
   },
   // Padmanabhpur (Durg - 491001)
   {
@@ -128,10 +141,10 @@ export const PRECISION_ZONES: PrecisionZone[] = [
     city: 'Bhilai',
     state: 'Chhattisgarh',
     pincode: '490006',
-    minLat: 21.1820,
-    maxLat: 21.2000,
-    minLng: 81.3600,
-    maxLng: 81.3850,
+    minLat: 21.1780,
+    maxLat: 21.2050,
+    minLng: 81.3500,
+    maxLng: 81.3950,
   },
   // Nehru Nagar (Bhilai - 490020)
   {
@@ -195,6 +208,26 @@ export const REGIONAL_HUBS: Record<string, {
     state: 'Chhattisgarh',
     pincode: '491001',
     formattedAddress: 'Borsi Main Market, Utai Road, Durg, Chhattisgarh - 491001',
+  },
+  'risali': {
+    lat: 21.1626,
+    lng: 81.3255,
+    roadOrArea: 'Maitri Kunj, Risali',
+    landmark: 'Near BSP Market / Ashish Nagar',
+    city: 'Bhilai',
+    state: 'Chhattisgarh',
+    pincode: '490006',
+    formattedAddress: 'Maitri Kunj, Risali, Bhilai, Chhattisgarh - 490006',
+  },
+  'maitri kunj': {
+    lat: 21.1626,
+    lng: 81.3255,
+    roadOrArea: 'Maitri Kunj, Risali',
+    landmark: 'Near BSP Market',
+    city: 'Bhilai',
+    state: 'Chhattisgarh',
+    pincode: '490006',
+    formattedAddress: 'Maitri Kunj, Risali, Bhilai, Chhattisgarh - 490006',
   },
   'padmanabhpur': {
     lat: 21.1780,
@@ -371,7 +404,7 @@ export function normalizeCityName(rawCity: string): string {
 /**
  * Reverse Geocodes a GPS coordinate pair (lat, lng) to a structured Indian street address.
  * Multi-tier strategy:
- * 1. Precision Zone Matching (fixes known inaccurate boundary tags like Durg Tahsil -> Borsi 491001)
+ * 1. Precision Zone Matching (fixes known inaccurate boundary tags like Durg Tahsil -> Borsi 491001, Risali -> Bhilai 490006)
  * 2. OpenStreetMap Nominatim API (with sanitation of administrative terms like "Durg Tahsil")
  * 3. BigDataCloud Reverse Geocoding Client API
  * 4. Proximity-matched nearest regional hub in Chhattisgarh
@@ -415,17 +448,43 @@ export async function reverseGeocode(lat: number, lng: number): Promise<Geocoded
         }
 
         const rawCity = addr.city || addr.town || addr.village || 'Durg';
-        const city = matchedZone ? matchedZone.city : normalizeCityName(rawCity);
+        let city = matchedZone ? matchedZone.city : normalizeCityName(rawCity);
+        
+        // If road/suburb/display_name mentions Bhilai, enforce Bhilai
+        if (
+          roadOrArea.toLowerCase().includes('bhilai') ||
+          (data.display_name && data.display_name.toLowerCase().includes('bhilai'))
+        ) {
+          city = 'Bhilai';
+        }
+
         const state = addr.state || 'Chhattisgarh';
         
-        // Pincode resolution: ensure Durg urban / Borsi uses 491001
+        // Pincode resolution: ensure Durg urban / Borsi uses 491001, and Bhilai uses 490006/490020/490023
         let pincode = matchedZone ? matchedZone.pincode : (addr.postcode ? addr.postcode.replace(/\D/g, '').slice(0, 6) : '');
-        if (city === 'Durg' && pincode === '491002') {
-          pincode = '491001';
+        if (city === 'Bhilai') {
+          if (!pincode || pincode.startsWith('491')) {
+            pincode = '490006';
+          }
+        } else if (city === 'Durg') {
+          if (!pincode || pincode === '491002') {
+            pincode = '491001';
+          }
         }
 
         const shopOrBuilding = addr.building || addr.house_number || addr.shop || '';
-        const landmark = matchedZone?.landmark || (suburb && road && suburb !== road ? `Near ${suburb}` : undefined);
+        
+        // Dynamic landmark: derived from zone or nearby street/colony
+        let landmark = matchedZone?.landmark;
+        if (!landmark) {
+          if (suburb && road && suburb !== road) {
+            landmark = `Near ${suburb}`;
+          } else if (roadOrArea) {
+            landmark = `Near ${roadOrArea}`;
+          } else {
+            landmark = `Near ${city} Market`;
+          }
+        }
 
         const fullParts = [
           shopOrBuilding,
@@ -482,23 +541,31 @@ export async function reverseGeocode(lat: number, lng: number): Promise<Geocoded
       const data = await res.json();
       if (data && (data.locality || data.city)) {
         const rawCity = data.city || data.locality || 'Durg';
-        const city = normalizeCityName(rawCity);
+        let city = normalizeCityName(rawCity);
         const state = data.principalSubdivision || 'Chhattisgarh';
-        let pincode = data.postcode ? data.postcode.replace(/\D/g, '').slice(0, 6) : '491001';
-        if (city === 'Durg' && pincode === '491002') {
-          pincode = '491001';
-        }
         let roadOrArea = data.locality && data.locality !== city ? data.locality : `${city} Area`;
         if (roadOrArea.toLowerCase().includes('tahsil') || roadOrArea.toLowerCase().includes('tehsil')) {
           roadOrArea = `${city} Area`;
         }
+        if (roadOrArea.toLowerCase().includes('bhilai')) {
+          city = 'Bhilai';
+        }
 
+        let pincode = data.postcode ? data.postcode.replace(/\D/g, '').slice(0, 6) : (city === 'Bhilai' ? '490006' : '491001');
+        if (city === 'Durg' && pincode === '491002') {
+          pincode = '491001';
+        } else if (city === 'Bhilai' && pincode.startsWith('491')) {
+          pincode = '490006';
+        }
+
+        const landmark = `Near ${roadOrArea}`;
         const formattedAddress = `${roadOrArea}, ${city}, ${state}${pincode ? ' - ' + pincode : ''}`;
 
         return {
           lat,
           lng,
           roadOrArea,
+          landmark,
           city,
           state,
           pincode: pincode || undefined,
@@ -583,11 +650,16 @@ export async function searchLocations(query: string): Promise<LocationSearchResu
             if (!isDuplicate) {
               const parts = (item.display_name || '').split(',').map((s: string) => s.trim());
               const roadOrArea = parts.slice(0, 2).filter((p: string) => !p.toLowerCase().includes('tahsil')).join(', ') || 'Borsi Area';
-              const city = parts.find((p: string) => Object.values(REGIONAL_HUBS).some(h => h.city.toLowerCase() === p.toLowerCase())) || parts[1] || 'Durg';
+              let city = parts.find((p: string) => Object.values(REGIONAL_HUBS).some(h => h.city.toLowerCase() === p.toLowerCase())) || parts[1] || 'Durg';
+              if (roadOrArea.toLowerCase().includes('bhilai') || item.display_name.toLowerCase().includes('bhilai')) {
+                city = 'Bhilai';
+              }
               const state = parts.find((p: string) => p.toLowerCase().includes('chhattisgarh') || p.toLowerCase().includes('pradesh')) || 'Chhattisgarh';
-              let pincode = (item.display_name || '').match(/\b\d{6}\b/)?.[0] || '491001';
+              let pincode = (item.display_name || '').match(/\b\d{6}\b/)?.[0] || (city === 'Bhilai' ? '490006' : '491001');
               if (city === 'Durg' && pincode === '491002') {
                 pincode = '491001';
+              } else if (city === 'Bhilai' && pincode.startsWith('491')) {
+                pincode = '490006';
               }
 
               localMatches.push({
