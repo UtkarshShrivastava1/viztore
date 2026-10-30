@@ -81,7 +81,7 @@ async function seedUsers() {
     if (merchantUser) {
       await storesCol.updateOne(
         { _id: store._id },
-        { $set: { merchantId: merchantUser._id } }
+        { $set: { merchantId: merchantUser._id, ownerId: merchantUser._id } }
       );
       console.log(`Linked store ${store.slug || store._id} to merchant ${merchantUser.email}`);
     }
