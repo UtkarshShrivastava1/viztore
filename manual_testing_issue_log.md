@@ -5,8 +5,8 @@
 > **Active Phase**: Founder / User End-to-End Manual Commerce Verification  
 > **Testing Scope**: Merchant Onboarding ➔ Catalog Management ➔ Customer Discovery ➔ Cart & Checkout ➔ Real-Time Audio & Order Fulfillment ➔ 4-Digit Handshake OTP ➔ Counter POS Walk-in Sale  
 > **Environment**: Local Monolith (`apps/backend` on `:5000`, `apps/merchant` on `:3001`, `apps/web` on `:3000`) — Fresh 100% Blank Slate Atlas DB  
-> **Status**: **4 ISSUES RESOLVED (100.0%)** 🟢  
-> **Items Logged**: **4 Total** | **0 Open** | **0 In Progress** | **4 Resolved**  
+> **Status**: **5 ISSUES RESOLVED (100.0%)** 🟢  
+> **Items Logged**: **5 Total** | **0 Open** | **0 In Progress** | **5 Resolved**  
 > **Remediation Progress**: `[████████████████████] 100.0%`
 
 ---
@@ -15,11 +15,11 @@
 
 | Application Layer | Total Logged | Critical (P0) | High (P1) | Medium (P2) | Polish (P3) | Resolved | Status |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **Merchant Hub (`apps/merchant` :3001)** | 4 | 0 | 3 | 1 | 0 | 4 | 🟢 All Remediated |
+| **Merchant Hub (`apps/merchant` :3001)** | 5 | 0 | 4 | 1 | 0 | 5 | 🟢 All Remediated |
 | **Customer Web (`apps/web` :3000)** | 0 | 0 | 0 | 0 | 0 | 0 | Ready 🟢 |
 | **Backend API Monolith (`apps/backend` :5000)** | 0 | 0 | 0 | 0 | 0 | 0 | Ready 🟢 |
 | **Cross-Cutting (Sockets, Redis, DB, Print)** | 0 | 0 | 0 | 0 | 0 | 0 | Ready 🟢 |
-| **TOTAL** | **4** | **0** | **3** | **1** | **0** | **4** | **100.0%** |
+| **TOTAL** | **5** | **0** | **4** | **1** | **0** | **5** | **100.0%** |
 
 ---
 
@@ -31,6 +31,7 @@
 | `ISSUE-002` | Merchant Geocoding Inaccurate Locality & Pincode: Durg Borsi (491001) Mapped to "Durg Tahsil 491002" | Merchant Hub & Web | Geocoding & Onboarding | Bug / Accuracy | P1 | Phase 1 (`/register`) | `RESOLVED ✅` |
 | `ISSUE-003` | Stale Landmark Retained on Subsequent Pin Drops (e.g. Borsi Landmark Remained When Pin Moved to Bhilai Sectors) | Merchant Hub (:3001) | Onboarding / Step 3 | Bug / State Sync | P1 | Phase 1 (`/register`) | `RESOLVED ✅` |
 | `ISSUE-004` | Step 3 Onboarding: Category Names Truncated with Ellipsis (`...`) on Narrow 4-Column Grid | Merchant Hub (:3001) | Onboarding / Step 3 | UI / Readability | P2 | Phase 1 (`/register`) | `RESOLVED ✅` |
+| `ISSUE-005` | Add Product Wizard: Category Dropdown Confusing Defaults (`Men` vs `Men's`) & Broken Hierarchy Falling Back to `General`/`Standard` | Merchant Hub (:3001) | Catalog / Add Product Wizard | Data & UX Hierarchy | P1 | Phase 2 (`/catalog/new`) | `RESOLVED ✅` |
 
 ---
 
@@ -59,7 +60,7 @@
   1. In `Step3StoreDetails.tsx`, `applyResolvedLocation` had a guard `if (loc.landmark) { setLandmark(loc.landmark); }`. Whenever the new location's geocoded response did not have an explicit landmark attribute, `setLandmark` was skipped, leaving the stale text from the previous pin position forever.
   2. The Borsi bounding box was overly wide (`maxLng: 81.3250`), overlapping into Risali / Bhilai (`81.3255`), which caused city to stay `"Durg"` and PIN to stay `"491001"` instead of `"Bhilai"` and `"490006"`.
 - **Engineering Remediation:**
-  1. **Dynamic Landmark State Update:** In [`Step3StoreDetails.tsx`](file:///d:/UTKARSH/Live%20Projects/Vercel-live-Website/platform-root-vz/apps/merchant/src/components/onboarding/Step3StoreDetails.tsx), replaced the conditional guard with `setLandmark(loc.landmark || (loc.roadOrArea ? 'Near ' + loc.roadOrArea : ''))`. Every pin drop now immediately clears the previous landmark and calculates the fresh landmark dynamically.
+  1. **Dynamic Landmark State Update:** In [`Step3StoreDetails.tsx`](file:///d:/UTKARSH/Live%20Projects/Vercel-live-Website\platform-root-vz\apps\merchant\src\components\onboarding\Step3StoreDetails.tsx), replaced the conditional guard with `setLandmark(loc.landmark || (loc.roadOrArea ? 'Near ' + loc.roadOrArea : ''))`. Every pin drop now immediately clears the previous landmark and calculates the fresh landmark dynamically.
   2. **Calibrated Micro-Zones & City/PIN Disambiguation:**
      - Borsi zone bounded strictly to `lng 81.2950–81.3180` (Durg - 491001).
      - Added Risali / Maitri Kunj zone (`lng 81.3180–81.3550`, `lat 21.1500–21.1780`): `city: Bhilai`, `pincode: 490006`, `landmark: Near BSP Market / Ashish Nagar`.
@@ -84,7 +85,7 @@
 - **Reported URL:** `http://localhost:3001/register` (Step 3: Business Category & Operating Hours)
 - **Symptom:** Long category labels (`"Home & Living"`, `"Beauty & Personal Care"`, `"Gifts & Lifestyle"`, `"Sports & Fitness"`) were truncated with ellipsis (`...`) like `"Home & ..."`, `"Beauty &..."`, `"Gifts & Li..."`, and `"Sports & ..."`.
 - **Root Cause Analysis:**
-  1. Inside [`Step3BusinessInfo.tsx`](file:///d:/UTKARSH/Live%20Projects/Vercel-live-Website/platform-root-vz/apps/merchant/src/components/onboarding/Step3BusinessInfo.tsx), the category selector cards were arranged in a cramped 4-column grid (`grid grid-cols-2 sm:grid-cols-4 gap-2.5`).
+  1. Inside [`Step3BusinessInfo.tsx`](file:///d:/UTKARSH/Live%20Projects/Vercel-live-Website\platform-root-vz\apps\merchant\src\components\onboarding\Step3BusinessInfo.tsx), the category selector cards were arranged in a cramped 4-column grid (`grid grid-cols-2 sm:grid-cols-4 gap-2.5`).
   2. The text span had a strict `truncate` utility class, leaving only ~59px for label text between the left icon and the right checkbox, cutting off any name longer than 8-10 characters.
 - **Engineering Remediation:**
   1. **Eliminated Ellipsis Truncation:** Removed `truncate` and applied `break-words leading-snug text-xs sm:text-[13px] font-bold` allowing clean, natural multi-line wrapping for long names.
@@ -97,7 +98,27 @@
 - **Verification:**
   - `pnpm --filter=@repo/merchant exec tsc --noEmit`: 0 errors.
   - `pnpm --filter=@repo/merchant build`: Built cleanly in 11.77s.
-- **Commit:** `cfb3a3f`
+- **Commit:** `cfb3a3f` & `1fb8e77`
+
+---
+
+### [ISSUE-005] Add Product Wizard: Category Dropdown Confusing Defaults (`Men` vs `Men's`) & Broken Hierarchy Falling Back to `General`/`Standard` (`RESOLVED ✅`)
+- **Reported URL:** `http://localhost:3001/catalog/new` (Add Product Wizard Step 1)
+- **Symptom:** Category dropdown defaulted to raw `'Men'`, contained duplicate options (`"Men"`, `"Men's"`, and `"Women's"`), and failed to populate real subcategories or product types, falling back to `'General'` and `'Standard'`.
+- **Root Cause Analysis:**
+  1. In `AddProductStep1.tsx`, `draftProduct.category || 'Men'` defaulted to `'Men'` (missing apostrophe), which failed to match `"Men's"` in `taxonomies.json`.
+  2. The taxonomy tree lookup returned `undefined`, forcing sub-category and product type to generic fallbacks (`General` / `Standard`) and hiding all 350+ master retail types.
+  3. Mined taxonomy extracted `'Men'` from mock data, adding it alongside `"Men's"` in the dropdown list.
+  4. The wizard did not adapt to the merchant's registered store category.
+- **Engineering Remediation:**
+  1. **Canonical Taxonomy Normalization**: Implemented `normalizeCategoryName` across `customTaxonomyStorage.ts` and `AddProductStep1.tsx`, mapping raw scraped keys to clear, professional labels: `"Men's Fashion"`, `"Women's Fashion"`, `"Baby & Kids"`, `"Electronics"`, `"Food Essentials"`, eliminating the duplicate `'Men'`.
+  2. **Smart Subcategory Ordering**: Prioritized `'Clothing'` at the top of the subcategory list for fashion categories, ensuring that choosing `"Men's Fashion"` or `"Women's Fashion"` immediately auto-populates `Clothing` and rich product types (`T-Shirts`, `Jeans`, `Kurtas`, etc.) along with HSN and GST.
+  3. **Store-Aware Category Selection**: Introduced `getStoreDefaultCategory(currentStore?.category)` so opening the wizard dynamically matches the merchant's business type (Electronics stores default to Electronics, Grocery to Food Essentials, Fashion to Men's Fashion).
+  4. **Updated Mock Data**: Cleaned mock catalog items from `'Men'` to `"Men's Fashion"`.
+- **Verification:**
+  - `pnpm --filter=@repo/merchant exec tsc --noEmit`: 0 errors.
+  - `pnpm --filter=@repo/merchant build`: Built cleanly in 12.24s.
+- **Commit:** *Pending local commit*
 
 ---
 

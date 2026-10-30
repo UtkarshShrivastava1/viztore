@@ -8,6 +8,7 @@ import {
   recordCustomCategory,
   recordCustomBrand,
   mineTaxonomyFromProducts,
+  normalizeCategoryName,
 } from '../../../lib/customTaxonomyStorage.js';
 import { useAuthStore } from '../../../stores/authStore.js';
 
@@ -32,7 +33,8 @@ const typedMasterTaxonomies = masterTaxonomies as unknown as TaxonomyItem[];
 const buildMasterCategoryTree = (): Record<string, CategoryDefinition> => {
   const tree: Record<string, CategoryDefinition> = {};
   for (const item of typedMasterTaxonomies) {
-    const cat = item.category.trim();
+    const rawCat = item.category.trim();
+    const cat = normalizeCategoryName(rawCat);
     const sub = item.subcategory.trim();
     const pt = item.productType.trim();
     if (!cat || !sub || !pt) continue;
@@ -41,7 +43,11 @@ const buildMasterCategoryTree = (): Record<string, CategoryDefinition> => {
       tree[cat] = { subCategories: [], productTypes: {} };
     }
     if (!tree[cat].subCategories.includes(sub)) {
-      tree[cat].subCategories.push(sub);
+      if (sub === 'Clothing') {
+        tree[cat].subCategories.unshift(sub);
+      } else {
+        tree[cat].subCategories.push(sub);
+      }
     }
     if (!tree[cat].productTypes[sub]) {
       tree[cat].productTypes[sub] = [];
@@ -51,6 +57,19 @@ const buildMasterCategoryTree = (): Record<string, CategoryDefinition> => {
     }
   }
   return tree;
+};
+
+const getStoreDefaultCategory = (storeCategory?: string): string => {
+  if (!storeCategory) return "Men's Fashion";
+  const cat = storeCategory.toLowerCase();
+  if (cat.includes('elect')) return 'Electronics';
+  if (cat.includes('groc') || cat.includes('food')) return 'Food Essentials';
+  if (cat.includes('home') || cat.includes('furn')) return 'Home & Furniture';
+  if (cat.includes('sport') || cat.includes('fit')) return 'Sports';
+  if (cat.includes('book') || cat.includes('station')) return 'Books';
+  if (cat.includes('toy') || cat.includes('baby')) return 'Baby & Kids';
+  if (cat.includes('beauty')) return "Women's Fashion";
+  return "Men's Fashion";
 };
 
 const categoryCatalogTree: Record<string, CategoryDefinition> = buildMasterCategoryTree();
@@ -108,7 +127,12 @@ export const AddProductStep1: React.FC = () => {
     });
   }, [storeId, products]);
 
-  const category = draftProduct.category || 'Men';
+  const defaultCategory = React.useMemo(() => {
+    return getStoreDefaultCategory(currentStore?.category);
+  }, [currentStore?.category]);
+
+  const rawCat = draftProduct.category;
+  const category = rawCat ? normalizeCategoryName(rawCat) : defaultCategory;
 
   // All Category options = built-in keys + saved custom categories
   const allCategoryOptions = React.useMemo(() => {
@@ -122,7 +146,11 @@ export const AddProductStep1: React.FC = () => {
     const base = categoryCatalogTree[category] || { subCategories: [], productTypes: {} };
     const savedSubs = customTax.subCategories[category] || [];
     const mergedSubs = Array.from(
-      new Set([...base.subCategories, ...savedSubs, draftProduct.subCategory || 'General']),
+      new Set([
+        ...base.subCategories,
+        ...savedSubs,
+        ...(draftProduct.subCategory && draftProduct.subCategory !== 'General' ? [draftProduct.subCategory] : []),
+      ]),
     ).filter(Boolean);
 
     const mergedTypesMap: Record<string, string[]> = { ...base.productTypes };
@@ -139,12 +167,17 @@ export const AddProductStep1: React.FC = () => {
   }, [category, customTax, draftProduct.subCategory]);
 
   const subCategory =
-    draftProduct.subCategory || currentCategoryData.subCategories[0] || 'General';
+    draftProduct.subCategory && draftProduct.subCategory !== 'General'
+      ? draftProduct.subCategory
+      : (currentCategoryData.subCategories[0] || 'General');
   const availableProductTypes =
     (subCategory && currentCategoryData.productTypes[subCategory]) ||
     currentCategoryData.productTypes[currentCategoryData.subCategories[0] || ''] ||
     [draftProduct.productType || 'Standard'];
-  const productType = draftProduct.productType || availableProductTypes[0] || 'Standard';
+  const productType =
+    draftProduct.productType && draftProduct.productType !== 'Standard'
+      ? draftProduct.productType
+      : (availableProductTypes[0] || 'Standard');
   const productIdentification = draftProduct.productIdentification || 'new';
   const brand = draftProduct.brand || 'Generic / Unbranded';
   const hsnCode = draftProduct.hsnCode || '61091000';
@@ -164,8 +197,9 @@ export const AddProductStep1: React.FC = () => {
   }, [customTax.brands]);
 
   const handleCategoryChange = (newCat: string) => {
-    const nextCatData = categoryCatalogTree[newCat];
-    const savedSubs = customTax.subCategories[newCat] || [];
+    const normCat = normalizeCategoryName(newCat);
+    const nextCatData = categoryCatalogTree[normCat];
+    const savedSubs = customTax.subCategories[normCat] || [];
     const nextSub = nextCatData ? (nextCatData.subCategories[0] || 'General') : (savedSubs[0] || 'General');
     const nextTypes =
       (nextCatData && nextCatData.productTypes[nextSub]) ||
@@ -173,14 +207,14 @@ export const AddProductStep1: React.FC = () => {
       ['Standard'];
 
     updateDraftProduct({
-      category: newCat,
+      category: normCat,
       subCategory: nextSub,
       productType: nextTypes[0] || 'Standard',
     });
 
     // Record custom category if not in static tree
-    if (!categoryCatalogTree[newCat]) {
-      const updated = recordCustomCategory(storeId, newCat, nextSub, nextTypes[0]);
+    if (!categoryCatalogTree[normCat]) {
+      const updated = recordCustomCategory(storeId, normCat, nextSub, nextTypes[0]);
       setCustomTax(updated);
     }
   };
@@ -204,7 +238,7 @@ export const AddProductStep1: React.FC = () => {
     const match = typedMasterTaxonomies.find(
       (t) =>
         t.productType.toLowerCase() === newPt.toLowerCase() &&
-        (!category || t.category.toLowerCase() === category.toLowerCase()),
+        (!category || normalizeCategoryName(t.category).toLowerCase() === category.toLowerCase()),
     );
 
     updateDraftProduct({
@@ -212,7 +246,7 @@ export const AddProductStep1: React.FC = () => {
       hsnCode: match?.hsnCode || draftProduct.hsnCode || '61091000',
       tax: match?.gstRate
         ? {
-            category: match.category,
+            category: normalizeCategoryName(match.category),
             rate: match.gstRate,
             inclusive: true,
           }
@@ -231,19 +265,21 @@ export const AddProductStep1: React.FC = () => {
         (t) =>
           t.productType.toLowerCase().includes(q) ||
           t.subcategory.toLowerCase().includes(q) ||
-          t.category.toLowerCase().includes(q),
+          t.category.toLowerCase().includes(q) ||
+          normalizeCategoryName(t.category).toLowerCase().includes(q),
       )
       .slice(0, 6);
   }, [quickSearch]);
 
   const selectHierarchy = (t: TaxonomyItem) => {
+    const normCat = normalizeCategoryName(t.category);
     updateDraftProduct({
-      category: t.category,
+      category: normCat,
       subCategory: t.subcategory,
       productType: t.productType,
       hsnCode: t.hsnCode || '61091000',
       tax: {
-        category: t.category,
+        category: normCat,
         rate: t.gstRate ?? 18,
         inclusive: true,
       },

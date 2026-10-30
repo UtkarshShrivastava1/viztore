@@ -35,7 +35,7 @@ export const CatalogWizardStepper: React.FC = () => {
 
   const getCompletedSummary = (stepNum: WizardStep) => {
     if (stepNum === 1) {
-      const cat = draftProduct.category || 'Men';
+      const cat = draftProduct.category || "Men's Fashion";
       const sub = draftProduct.subCategory || 'T-Shirts';
       const type = draftProduct.productType || 'Round Neck T-Shirt';
       const brand = draftProduct.brand || 'Roadster';

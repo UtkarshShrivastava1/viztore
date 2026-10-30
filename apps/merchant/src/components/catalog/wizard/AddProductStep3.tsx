@@ -77,7 +77,10 @@ export const AddProductStep3: React.FC = () => {
       (masterTaxonomies as any[]).find(
         (t) =>
           t.productType.toLowerCase() === pType &&
-          (!cat || t.category.toLowerCase() === cat),
+          (!cat ||
+            t.category.toLowerCase() === cat ||
+            (cat.includes('men') && t.category.toLowerCase().includes('men')) ||
+            (cat.includes('women') && t.category.toLowerCase().includes('women'))),
       ) ||
       (masterTaxonomies as any[]).find(
         (t) => t.productType.toLowerCase() === pType,
