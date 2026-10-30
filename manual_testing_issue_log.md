@@ -34,6 +34,7 @@
 | `ISSUE-005` | Add Product Wizard: Category Dropdown Confusing Defaults (`Men` vs `Men's`) & Broken Hierarchy Falling Back to `General`/`Standard` | Merchant Hub (:3001) | Catalog / Add Product Wizard | Data & UX Hierarchy | P1 | Phase 2 (`/catalog/new`) | `RESOLVED ✅` |
 | `ISSUE-006` | Inventory Table Broken Squished Formatting (Product Title 12 Lines, SKU Overlap, Raw Enum Category) & Table Modernization | Merchant Hub (:3001) | Inventory / Catalog Tables | UI / Layout & Responsiveness | P1 | Phase 2 (`/inventory`) | `RESOLVED ✅` |
 | `ISSUE-007` | Static & Buggy Filter Dropdowns in Catalog & Inventory (Hardcoded Fake Options, Broken Cascades, Disjointed Counts) | Merchant Hub (:3001) | Catalog & Inventory Toolbars | Dynamic Data & State Flow | P1 | Phase 2 (`/catalog` & `/inventory`) | `RESOLVED ✅` |
+| `ISSUE-008` | Stale Dummy Seed Data & Static Pagination Totals Across Merchant Modules (Purchases, Payouts, Customers, Wallet, Returns) | Merchant Hub (:3001) | All Merchant Modules | Data Integrity & Clean State | P1 | Phases 1–5 | `RESOLVED ✅` |
 
 ---
 
@@ -182,6 +183,33 @@
   - `pnpm --filter=@repo/merchant exec tsc --noEmit`: 0 errors.
   - `pnpm --filter=@repo/merchant build`: Built cleanly in 11.14s.
 - **Commit:** `c6f7286`
+
+---
+
+### [ISSUE-008] Stale Dummy Seed Data & Static Pagination Totals Across Merchant Modules (Purchases, Payouts, Customers, Wallet, Returns) (`RESOLVED ✅`)
+- **Reported Screens:**
+  1. `Purchase / Expense` tab (`/purchases`): Displayed 48 dummy transactions from 11 May 2024 (`BILL-2024-000123`, `EXP-2024-000122`, `PO-2024-000021`, Sharma Enterprises, etc.) while top KPIs displayed ₹0.00.
+  2. `Payouts / Settlements` tab (`/payouts`): Displayed hardcoded breakdown (`Total Earnings: ₹ 29,955.00`, `Total: ₹ 16,800.00`) and dummy orders (`#ORD10045`, `#ORD10041`, `#PAYOUT1234`).
+  3. `Customers` tab (`/customers`): Displayed 6 fake customers (`Rajesh Kumar`, `Sharma General Store`, `Priya Verma`, etc.) with fake sales (`₹5,96,200`) and fake outstandings (`₹63,000`).
+- **Root Cause Analysis:**
+  1. Early UI prototype Zustand stores initialized state with static dummy arrays (`initialTransactions`, `seedCustomers`, `mockPayoutsList`, `mockReturnsList`, `initialBankAccounts`).
+  2. When a newly registered or active merchant accessed these tabs, stores retained the static mock data unless overwritten by live backend payloads. For modules where the merchant had zero records, the frontend stores fell back to or retained the static dummy records.
+  3. Components like `ExpensesTable.tsx`, `PayoutOverviewTab.tsx`, `PaymentHistoryTab.tsx`, `SettlementsTab.tsx`, `TransactionsTab.tsx`, `WalletTransactionTable.tsx`, and `AddEditSectionView.tsx` had hardcoded text strings (e.g. `'48 purchase orders'`, `'Showing 1 to 5 of 25 transactions'`, `'Showing 1 to X of 248 transactions'`) and lacked clean empty state handling for zero-record states.
+- **Engineering Remediation:**
+  1. **Purged Mock Arrays Across Stores**:
+     - `expenseStore.ts`: Cleared `allTransactions`, `purchaseOrders`, `purchaseBills`, `expenses`, `creditNotes`, `ewayBills`, and `vendors` to empty arrays (`[]`), and zeroed out overview KPIs (`totalExpenses: 0`, `thisMonth: 0`, `thisWeek: 0`).
+     - `customerStore.ts`: Cleared `seedCustomers` to `[]`, ensuring `computeCustomerKPIs` dynamically yields 0 customers, ₹0.00 total sales, and ₹0.00 outstanding.
+     - `payoutsStore.ts`: Cleared `mockPayoutsList`, `mockSettlementsList`, and `mockTransactionsList` to empty arrays (`[]`).
+     - `billingStore.ts`: Cleared `creditNotes: []` and `debitNotes: []`.
+     - `returnsStore.ts`: Cleared `mockReturnsList: []` and `initialAvailableOrders: []`.
+     - `walletStore.ts`: Cleared `initialTransactions: []`, `initialBankAccounts: []`, and zeroed out initial balances (`currentBalance: 0`, `usedThisMonth: 0`, `totalAdded: 0`, `totalUsed: 0`).
+  2. **Dynamic UI Metrics & Clean Empty States**:
+     - `PayoutOverviewTab.tsx`: Column 1 breakdown and Column 2 donut chart now compute dynamically from store balances; center circle and legend cleanly display ₹0.00 and 0% when no payout history exists. Both recent payouts and recent transactions tables render clean empty state rows.
+     - `ExpensesTable.tsx`: Added dedicated empty state illustrations across all 7 subtabs (`allTransactions`, `purchaseOrders`, `purchaseBills`, `expenses`, `creditNotes`, `ewayBills`, `vendors`), and converted pagination counters to dynamic calculations.
+     - `PaymentHistoryTab.tsx`, `SettlementsTab.tsx`, `TransactionsTab.tsx`, and `WalletTransactionTable.tsx`: Replaced hardcoded total strings (`28 payouts`, `248 transactions`) with dynamic counts (`Showing 0 to 0 of 0`).
+- **Verification:**
+  - `pnpm --filter=@repo/merchant exec tsc --noEmit`: 0 errors.
+  - `pnpm --filter=@repo/merchant build`: Built cleanly in 10.57s.
 
 ---
 

@@ -605,7 +605,7 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
 
           {/* Pagination */}
           <div className="flex items-center justify-between text-xs text-slate-500 pt-1">
-            <span className="text-[11px]">Showing 1 to 8 of 248 products</span>
+            <span className="text-[11px]">Showing {products.length === 0 ? 0 : 1} to {products.length} of {products.length} products</span>
             <div className="flex items-center gap-1">
               <button type="button" disabled className="p-1 rounded border border-slate-200 opacity-40">
                 <ChevronLeft className="w-3.5 h-3.5" />

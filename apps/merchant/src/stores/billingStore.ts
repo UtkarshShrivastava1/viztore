@@ -1021,14 +1021,14 @@ export const useBillingStore = create<BillingStoreState>((set, get) => ({
   quoteCurrentTab: 'All Quotes',
 
   // Credit Notes State
-  creditNotes: initialCreditNotes,
+  creditNotes: [],
   creditNoteSearchQuery: '',
   creditNoteStatusFilter: 'All Status',
   creditNoteDateRange: 'This Month',
   creditNoteCurrentTab: 'All',
 
   // Debit Notes State
-  debitNotes: initialDebitNotes,
+  debitNotes: [],
   debitNoteSearchQuery: '',
   debitNoteStatusFilter: 'All Status',
   debitNoteDateRange: 'This Month',

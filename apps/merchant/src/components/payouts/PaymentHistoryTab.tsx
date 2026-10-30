@@ -130,7 +130,14 @@ export const PaymentHistoryTab: React.FC = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 text-slate-700 text-[11px]">
-            {filteredPayouts.map((p) => (
+            {filteredPayouts.length === 0 ? (
+              <tr>
+                <td colSpan={8} className="py-10 text-center text-slate-400 text-xs">
+                  No payouts found
+                </td>
+              </tr>
+            ) : (
+              filteredPayouts.map((p) => (
               <tr key={p.id} className="hover:bg-slate-50/70 transition-colors">
                 <td className="py-2 px-3 font-bold text-slate-900 whitespace-nowrap">
                   {p.payoutId}
@@ -171,7 +178,8 @@ export const PaymentHistoryTab: React.FC = () => {
                   </button>
                 </td>
               </tr>
-            ))}
+            ))
+            )}
           </tbody>
         </table>
       </div>
@@ -179,7 +187,7 @@ export const PaymentHistoryTab: React.FC = () => {
       {/* Pagination Matching 10.1.png */}
       <div className="p-3.5 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
         <div>
-          Showing 1 to {filteredPayouts.length} of 28 payouts
+          Showing {filteredPayouts.length === 0 ? 0 : 1} to {filteredPayouts.length} of {filteredPayouts.length} payouts
         </div>
         <div className="flex items-center gap-1">
           <button

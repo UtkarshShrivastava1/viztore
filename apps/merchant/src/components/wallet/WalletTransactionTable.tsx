@@ -519,7 +519,7 @@ export const WalletTransactionTable: React.FC<WalletTransactionTableProps> = ({
           </div>
 
           <span className="text-[11px] text-slate-500">
-            Showing 1 to {filteredTransactions.length} of 248 transactions
+            Showing {filteredTransactions.length === 0 ? 0 : 1} to {filteredTransactions.length} of {filteredTransactions.length} transactions
           </span>
         </div>
 

@@ -5,6 +5,9 @@ import { usePayoutsStore } from '../../stores/payoutsStore.js';
 export const PayoutOverviewTab: React.FC = () => {
   const {
     availableForPayout,
+    pendingBalance,
+    onHold,
+    totalPayoutsMonth,
     payouts,
     transactions,
     setActiveTab,
@@ -17,76 +20,34 @@ export const PayoutOverviewTab: React.FC = () => {
   const now = new Date();
   const pastWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
   const currentPeriodStr = `${pastWeek.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} - ${now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}`;
-  const formatRecentDate = (daysAgo: number, timeStr: string) => {
-    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - daysAgo);
-    return `${d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}, ${timeStr}`;
-  };
-
 
   const orderAmount = availableForPayout > 0 ? Math.round(availableForPayout * 1.064 * 100) / 100 : 0;
   const commission = Math.round(orderAmount * 0.05 * 100) / 100;
+  const shippingCharges = 0;
+  const taxCollected = 0;
+  const refunds = 0;
+  const totalEarnings = availableForPayout > 0 ? availableForPayout : 0;
   const tds = Math.round(orderAmount * 0.01 * 100) / 100;
   const payoutAmount = availableForPayout > 0 ? availableForPayout : 0;
 
-  const recentPayoutsList = payouts.slice(0, 5);
+  const paidAmount = totalPayoutsMonth || 0;
+  const pendingAmount = pendingBalance || 0;
+  const onHoldAmount = onHold || 0;
+  const failedAmount = 0;
+  const totalPayoutStatus = paidAmount + pendingAmount + onHoldAmount + failedAmount;
 
-  const recentTransactionsList = [
-    {
-      dateTime: formatRecentDate(0, '10:30 AM'),
-      type: 'Order Credit',
-      typeColor: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-      orderId: '#ORD10045',
-      description: 'Order amount for #ORD10045',
-      debit: '-',
-      credit: '1,049.00',
-      balance: '12,450.00',
-      status: 'Completed',
-    },
-    {
-      dateTime: formatRecentDate(0, '10:30 AM'),
-      type: 'Shipping Charge',
-      typeColor: 'bg-blue-50 text-blue-700 border-blue-200',
-      orderId: '#ORD10045',
-      description: 'Shipping charge for #ORD10045',
-      debit: '-',
-      credit: '50.00',
-      balance: '12,450.00',
-      status: 'Completed',
-    },
-    {
-      dateTime: formatRecentDate(0, '10:30 AM'),
-      type: 'Commission',
-      typeColor: 'bg-amber-50 text-amber-700 border-amber-200',
-      orderId: '#ORD10045',
-      description: 'Platform commission for #ORD10045',
-      debit: '115.39',
-      credit: '-',
-      balance: '11,351.00',
-      status: 'Completed',
-    },
-    {
-      dateTime: formatRecentDate(1, '04:15 PM'),
-      type: 'Refund',
-      typeColor: 'bg-rose-50 text-rose-700 border-rose-200',
-      orderId: '#ORD10041',
-      description: 'Refund for order #ORD10041',
-      debit: '899.00',
-      credit: '-',
-      balance: '11,466.39',
-      status: 'Completed',
-    },
-    {
-      dateTime: formatRecentDate(3, '11:20 AM'),
-      type: 'Payout',
-      typeColor: 'bg-purple-50 text-purple-700 border-purple-200',
-      orderId: '#PAYOUT1234',
-      description: 'Payout to HDFC Bank - 50200012345678',
-      debit: '12,450.00',
-      credit: '-',
-      balance: '12,366.39',
-      status: 'Completed',
-    },
-  ];
+  const paidPct = totalPayoutStatus > 0 ? (paidAmount / totalPayoutStatus) * 100 : 0;
+  const pendingPct = totalPayoutStatus > 0 ? (pendingAmount / totalPayoutStatus) * 100 : 0;
+  const onHoldPct = totalPayoutStatus > 0 ? (onHoldAmount / totalPayoutStatus) * 100 : 0;
+  const failedPct = totalPayoutStatus > 0 ? (failedAmount / totalPayoutStatus) * 100 : 0;
+
+  const circumference = 238.76;
+  const paidOffset = circumference - (circumference * paidPct) / 100;
+  const pendingOffset = paidOffset - (circumference * pendingPct) / 100;
+  const onHoldOffset = pendingOffset - (circumference * onHoldPct) / 100;
+
+  const recentPayoutsList = payouts.slice(0, 5);
+  const recentTransactionsList = transactions.slice(0, 5);
 
   return (
     <div className="space-y-3.5">
@@ -109,20 +70,20 @@ export const PayoutOverviewTab: React.FC = () => {
               </div>
               <div className="flex justify-between text-slate-600">
                 <span>Shipping Charges</span>
-                <span className="text-slate-700 font-medium">- ₹ 1,250.00</span>
+                <span className="text-slate-700 font-medium">- ₹ {shippingCharges.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
               </div>
               <div className="flex justify-between text-slate-600">
                 <span>Tax Collected</span>
-                <span className="text-slate-700 font-medium">- ₹ 2,300.00</span>
+                <span className="text-slate-700 font-medium">- ₹ {taxCollected.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
               </div>
               <div className="flex justify-between text-slate-600">
                 <span>Refunds</span>
-                <span className="text-slate-700 font-medium">- ₹ 1,100.00</span>
+                <span className="text-slate-700 font-medium">- ₹ {refunds.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
               </div>
 
               <div className="border-t border-slate-100 pt-2 flex justify-between font-bold text-slate-900">
                 <span>Total Earnings</span>
-                <span>₹ 29,955.00</span>
+                <span>₹ {totalEarnings.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
               </div>
               <div className="flex justify-between text-slate-600 items-center">
                 <span className="flex items-center gap-1">
@@ -156,43 +117,53 @@ export const PayoutOverviewTab: React.FC = () => {
                   strokeWidth="14"
                   fill="transparent"
                 />
-                {/* Paid Segment (74.11%) - Green */}
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="38"
-                  stroke="#10b981"
-                  strokeWidth="14"
-                  strokeDasharray="238.76"
-                  strokeDashoffset="61.8"
-                  fill="transparent"
-                />
-                {/* Pending Segment (19.35%) - Amber */}
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="38"
-                  stroke="#f59e0b"
-                  strokeWidth="14"
-                  strokeDasharray="238.76"
-                  strokeDashoffset="192.5"
-                  fill="transparent"
-                />
-                {/* On Hold Segment (6.54%) - Blue */}
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="38"
-                  stroke="#3b82f6"
-                  strokeWidth="14"
-                  strokeDasharray="238.76"
-                  strokeDashoffset="223.1"
-                  fill="transparent"
-                />
+                {totalPayoutStatus > 0 && (
+                  <>
+                    {/* Paid Segment - Green */}
+                    {paidPct > 0 && (
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="38"
+                        stroke="#10b981"
+                        strokeWidth="14"
+                        strokeDasharray={circumference}
+                        strokeDashoffset={paidOffset}
+                        fill="transparent"
+                      />
+                    )}
+                    {/* Pending Segment - Amber */}
+                    {pendingPct > 0 && (
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="38"
+                        stroke="#f59e0b"
+                        strokeWidth="14"
+                        strokeDasharray={circumference}
+                        strokeDashoffset={pendingOffset}
+                        fill="transparent"
+                      />
+                    )}
+                    {/* On Hold Segment - Blue */}
+                    {onHoldPct > 0 && (
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="38"
+                        stroke="#3b82f6"
+                        strokeWidth="14"
+                        strokeDasharray={circumference}
+                        strokeDashoffset={onHoldOffset}
+                        fill="transparent"
+                      />
+                    )}
+                  </>
+                )}
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
                 <span className="text-[10px] uppercase font-semibold text-slate-400">Total</span>
-                <span className="text-sm font-black text-slate-900">₹ 16,800.00</span>
+                <span className="text-sm font-black text-slate-900">₹ {totalPayoutStatus.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
               </div>
             </div>
 
@@ -202,28 +173,28 @@ export const PayoutOverviewTab: React.FC = () => {
                 <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
                 <div>
                   <span className="text-[11px] font-semibold text-slate-700 block">Paid</span>
-                  <span className="text-[10px] text-slate-400">₹ 12,450.00 (74.11%)</span>
+                  <span className="text-[10px] text-slate-400">₹ {paidAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })} ({paidPct.toFixed(1)}%)</span>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" />
                 <div>
                   <span className="text-[11px] font-semibold text-slate-700 block">Pending</span>
-                  <span className="text-[10px] text-slate-400">₹ 3,250.00 (19.35%)</span>
+                  <span className="text-[10px] text-slate-400">₹ {pendingAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })} ({pendingPct.toFixed(1)}%)</span>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shrink-0" />
                 <div>
                   <span className="text-[11px] font-semibold text-slate-700 block">On Hold</span>
-                  <span className="text-[10px] text-slate-400">₹ 1,100.00 (6.54%)</span>
+                  <span className="text-[10px] text-slate-400">₹ {onHoldAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })} ({onHoldPct.toFixed(1)}%)</span>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-2.5 h-2.5 rounded-full bg-rose-400 shrink-0" />
                 <div>
                   <span className="text-[11px] font-semibold text-slate-700 block">Failed</span>
-                  <span className="text-[10px] text-slate-400">₹ 0.00 (0%)</span>
+                  <span className="text-[10px] text-slate-400">₹ {failedAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })} (0%)</span>
                 </div>
               </div>
             </div>
@@ -254,35 +225,43 @@ export const PayoutOverviewTab: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50 text-[11px]">
-                  {recentPayoutsList.map((p) => (
-                    <tr
-                      key={p.id}
-                      onClick={() => {
-                        setSelectedPayout(p);
-                        setIsPayoutDrawerOpen(true);
-                      }}
-                      className="hover:bg-slate-50/70 cursor-pointer transition-colors"
-                    >
-                      <td className="py-2 px-2 font-bold text-slate-900">{p.payoutId}</td>
-                      <td className="py-2 px-2 text-slate-500 whitespace-nowrap">
-                        {p.date.split(',')[0]}
-                      </td>
-                      <td className="py-2 px-2 font-semibold text-slate-800">
-                        ₹ {p.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                      </td>
-                      <td className="py-2 px-2 text-right">
-                        <span
-                          className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-                            p.status === 'Paid'
-                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                              : 'bg-rose-50 text-rose-700 border border-rose-200'
-                          }`}
-                        >
-                          {p.status}
-                        </span>
+                  {recentPayoutsList.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="py-6 text-center text-slate-400">
+                        No recent payouts
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    recentPayoutsList.map((p) => (
+                      <tr
+                        key={p.id}
+                        onClick={() => {
+                          setSelectedPayout(p);
+                          setIsPayoutDrawerOpen(true);
+                        }}
+                        className="hover:bg-slate-50/70 cursor-pointer transition-colors"
+                      >
+                        <td className="py-2 px-2 font-bold text-slate-900">{p.payoutId}</td>
+                        <td className="py-2 px-2 text-slate-500 whitespace-nowrap">
+                          {p.date.split(',')[0]}
+                        </td>
+                        <td className="py-2 px-2 font-semibold text-slate-800">
+                          ₹ {p.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                        </td>
+                        <td className="py-2 px-2 text-right">
+                          <span
+                            className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                              p.status === 'Paid'
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                : 'bg-rose-50 text-rose-700 border border-rose-200'
+                            }`}
+                          >
+                            {p.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -317,44 +296,52 @@ export const PayoutOverviewTab: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700 text-[11px]">
-              {recentTransactionsList.map((t, idx) => (
-                <tr key={idx} className="hover:bg-slate-50/70 transition-colors">
-                  <td className="py-2 px-2.5 text-slate-600 whitespace-nowrap">{t.dateTime}</td>
-                  <td className="py-2 px-2 whitespace-nowrap">
-                    <span
-                      className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold border ${t.typeColor}`}
-                    >
-                      {t.type}
-                    </span>
-                  </td>
-                  <td className="py-2 px-2 font-semibold text-slate-900 whitespace-nowrap">
-                    {t.orderId}
-                  </td>
-                  <td className="py-2 px-3 text-slate-600 truncate max-w-[280px]" title={t.description}>
-                    {t.description}
-                  </td>
-                  <td className="py-2 px-2 font-medium text-slate-800 whitespace-nowrap">
-                    {t.debit}
-                  </td>
-                  <td className="py-2 px-2 font-medium text-slate-800 whitespace-nowrap">
-                    {t.credit}
-                  </td>
-                  <td className="py-2 px-2 font-bold text-slate-900 whitespace-nowrap">
-                    {t.balance}
-                  </td>
-                  <td className="py-2 px-2.5 text-center whitespace-nowrap">
-                    <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                      {t.status}
-                    </span>
+              {recentTransactionsList.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="py-8 text-center text-slate-400">
+                    No recent transactions found
                   </td>
                 </tr>
-              ))}
+              ) : (
+                recentTransactionsList.map((t, idx) => (
+                  <tr key={idx} className="hover:bg-slate-50/70 transition-colors">
+                    <td className="py-2 px-2.5 text-slate-600 whitespace-nowrap">{t.dateTime}</td>
+                    <td className="py-2 px-2 whitespace-nowrap">
+                      <span
+                        className="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold border bg-slate-50 text-slate-700 border-slate-200"
+                      >
+                        {t.type}
+                      </span>
+                    </td>
+                    <td className="py-2 px-2 font-semibold text-slate-900 whitespace-nowrap">
+                      {t.orderId}
+                    </td>
+                    <td className="py-2 px-3 text-slate-600 truncate max-w-[280px]" title={t.description}>
+                      {t.description}
+                    </td>
+                    <td className="py-2 px-2 font-medium text-slate-800 whitespace-nowrap">
+                      {typeof t.fee === 'number' && t.fee > 0 ? t.fee.toFixed(2) : '-'}
+                    </td>
+                    <td className="py-2 px-2 font-medium text-slate-800 whitespace-nowrap">
+                      {t.amount > 0 ? t.amount.toFixed(2) : '-'}
+                    </td>
+                    <td className="py-2 px-2 font-bold text-slate-900 whitespace-nowrap">
+                      {typeof t.netAmount === 'number' ? t.netAmount.toFixed(2) : '-'}
+                    </td>
+                    <td className="py-2 px-2.5 text-center whitespace-nowrap">
+                      <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        {t.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
 
         <div className="mt-3 text-[11px] text-slate-400">
-          Showing 1 to 5 of 25 transactions
+          Showing {recentTransactionsList.length > 0 ? `1 to ${recentTransactionsList.length} of ${transactions.length}` : '0'} transactions
         </div>
       </div>
     </div>

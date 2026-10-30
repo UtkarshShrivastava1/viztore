@@ -617,7 +617,15 @@ export const ExpensesTable: React.FC<ExpensesTableProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {allTransactions.map((txn) => {
+              {allTransactions.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="py-12 text-center text-slate-400">
+                    <p className="text-sm font-semibold text-slate-600">No transactions recorded yet</p>
+                    <p className="text-xs text-slate-400 mt-1">Add a new purchase or expense to get started.</p>
+                  </td>
+                </tr>
+              ) : (
+                allTransactions.map((txn) => {
                 const isSelected = selectedIds.includes(txn.id);
                 const isMenuOpen = activeMenuId === txn.id;
                 return (
@@ -712,7 +720,7 @@ export const ExpensesTable: React.FC<ExpensesTableProps> = ({
                     </td>
                   </tr>
                 );
-              })}
+              }))}
             </tbody>
           </table>
         )}
@@ -749,7 +757,15 @@ export const ExpensesTable: React.FC<ExpensesTableProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {purchaseOrders.map((po) => {
+              {purchaseOrders.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="py-12 text-center text-slate-400">
+                    <p className="text-sm font-semibold text-slate-600">No purchase orders found</p>
+                    <p className="text-xs text-slate-400 mt-1">Create your first purchase order to replenish stock.</p>
+                  </td>
+                </tr>
+              ) : (
+                purchaseOrders.map((po) => {
                 const isSelected = selectedIds.includes(po.id);
                 const isMenuOpen = activeMenuId === po.id;
                 return (
@@ -819,7 +835,7 @@ export const ExpensesTable: React.FC<ExpensesTableProps> = ({
                     </td>
                   </tr>
                 );
-              })}
+              }))}
             </tbody>
           </table>
         )}
@@ -856,7 +872,15 @@ export const ExpensesTable: React.FC<ExpensesTableProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {purchaseBills.map((bill) => {
+              {purchaseBills.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="py-12 text-center text-slate-400">
+                    <p className="text-sm font-semibold text-slate-600">No purchase bills recorded</p>
+                    <p className="text-xs text-slate-400 mt-1">Record vendor bills to track payables.</p>
+                  </td>
+                </tr>
+              ) : (
+                purchaseBills.map((bill) => {
                 const isSelected = selectedIds.includes(bill.id);
                 const isMenuOpen = activeMenuId === bill.id;
                 return (
@@ -924,7 +948,7 @@ export const ExpensesTable: React.FC<ExpensesTableProps> = ({
                     </td>
                   </tr>
                 );
-              })}
+              }))}
             </tbody>
           </table>
         )}
@@ -959,7 +983,15 @@ export const ExpensesTable: React.FC<ExpensesTableProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {expenses.map((exp) => {
+              {expenses.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="py-12 text-center text-slate-400">
+                    <p className="text-sm font-semibold text-slate-600">No expense vouchers recorded</p>
+                    <p className="text-xs text-slate-400 mt-1">Log store operations and operating expenses.</p>
+                  </td>
+                </tr>
+              ) : (
+                expenses.map((exp) => {
                 const isSelected = selectedIds.includes(exp.id);
                 const isMenuOpen = activeMenuId === exp.id;
                 return (
@@ -1029,7 +1061,7 @@ export const ExpensesTable: React.FC<ExpensesTableProps> = ({
                     </td>
                   </tr>
                 );
-              })}
+              }))}
             </tbody>
           </table>
         )}
@@ -1066,7 +1098,14 @@ export const ExpensesTable: React.FC<ExpensesTableProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {creditNotes.map((cn) => {
+              {creditNotes.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="py-12 text-center text-slate-400">
+                    <p className="text-sm font-semibold text-slate-600">No credit notes found</p>
+                  </td>
+                </tr>
+              ) : (
+                creditNotes.map((cn) => {
                 const isSelected = selectedIds.includes(cn.id);
                 const isMenuOpen = activeMenuId === cn.id;
                 return (
@@ -1134,7 +1173,7 @@ export const ExpensesTable: React.FC<ExpensesTableProps> = ({
                     </td>
                   </tr>
                 );
-              })}
+              }))}
             </tbody>
           </table>
         )}
@@ -1172,7 +1211,14 @@ export const ExpensesTable: React.FC<ExpensesTableProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {ewayBills.map((ewb) => {
+              {ewayBills.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="py-12 text-center text-slate-400">
+                    <p className="text-sm font-semibold text-slate-600">No e-way bills generated</p>
+                  </td>
+                </tr>
+              ) : (
+                ewayBills.map((ewb) => {
                 const isSelected = selectedIds.includes(ewb.id);
                 const isMenuOpen = activeMenuId === ewb.id;
                 return (
@@ -1245,7 +1291,7 @@ export const ExpensesTable: React.FC<ExpensesTableProps> = ({
                     </td>
                   </tr>
                 );
-              })}
+              }))}
             </tbody>
           </table>
         )}
@@ -1281,7 +1327,15 @@ export const ExpensesTable: React.FC<ExpensesTableProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {vendors.map((v) => {
+              {vendors.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="py-12 text-center text-slate-400">
+                    <p className="text-sm font-semibold text-slate-600">No vendors added yet</p>
+                    <p className="text-xs text-slate-400 mt-1">Add wholesale suppliers and vendors to manage inventory procurement.</p>
+                  </td>
+                </tr>
+              ) : (
+                vendors.map((v) => {
                 const isSelected = selectedIds.includes(v.id);
                 const isMenuOpen = activeMenuId === v.id;
                 return (
@@ -1351,7 +1405,7 @@ export const ExpensesTable: React.FC<ExpensesTableProps> = ({
                     </td>
                   </tr>
                 );
-              })}
+              }))}
             </tbody>
           </table>
         )}

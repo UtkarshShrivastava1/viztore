@@ -138,7 +138,14 @@ export const SettlementsTab: React.FC = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 text-slate-700 text-[11px]">
-            {filteredSettlements.map((s) => (
+            {filteredSettlements.length === 0 ? (
+              <tr>
+                <td colSpan={8} className="py-10 text-center text-slate-400 text-xs">
+                  No settlements found
+                </td>
+              </tr>
+            ) : (
+              filteredSettlements.map((s) => (
               <tr key={s.id} className="hover:bg-slate-50/70 transition-colors">
                 <td className="py-2 px-3 font-bold text-slate-900 whitespace-nowrap">
                   {s.settlementId}
@@ -179,7 +186,8 @@ export const SettlementsTab: React.FC = () => {
                   </button>
                 </td>
               </tr>
-            ))}
+            ))
+            )}
           </tbody>
         </table>
       </div>
@@ -187,7 +195,7 @@ export const SettlementsTab: React.FC = () => {
       {/* Pagination Matching 10.2.png */}
       <div className="p-3.5 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
         <div>
-          Showing 1 to {filteredSettlements.length} of 28 settlements
+          Showing {filteredSettlements.length === 0 ? 0 : 1} to {filteredSettlements.length} of {filteredSettlements.length} settlements
         </div>
         <div className="flex items-center gap-1">
           <button
