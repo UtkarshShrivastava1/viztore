@@ -67,6 +67,7 @@ timeline
 
 
 | **T-03** | **WhatsApp Notification Failover & Payload Audit** | `P1` | Low | `whatsapp.service.ts` | **DONE ✅** | Verified live Meta Graph API payload structure against Indian phone formats (`91XXXXXXXXXX`), extracted modular message builders (`buildOrderConfirmationMessage`, `buildRiderDispatchMessage`, `buildOutForDeliveryMessage`, `buildDeliveryCompletedMessage`) with zero brand leaks, and built 1-click `wa.me` fallback URL generator embedding full invoice totals and OTP handshakes. 159/159 tests green (`commit 8e50b12`). |
+| **T-04** | **Master API Testing Suite for Postman & Thunder Client** | `P0` | Medium | `postman/platform_master_api_collection.json`, `postman/thunder_client_collection.json`, `postman/README.md` | **DONE ✅** | Generated comprehensive 71-request Master API Test Suite structured into System Health, Authentication, Customer Workflows, Merchant Operations, Rider Fleet, and Notifications. Includes automated Post-Response token/variable chaining (`customerToken`, `merchantToken`, `orderId`, `deliveryOtp`), JSON schema validations, universal Postman v2.1.0 format (automatable via Newman CLI), and native Thunder Client format (`commit c0a9573`). |
 
 
 
