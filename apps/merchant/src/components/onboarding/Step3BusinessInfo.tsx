@@ -8,6 +8,10 @@ import {
   Sparkles,
   Gift,
   Dumbbell,
+  ShoppingBasket,
+  Baby,
+  BookOpen,
+  Check,
   ArrowRight,
   ArrowLeft,
   ChevronDown,
@@ -36,8 +40,11 @@ export const Step3BusinessInfo: React.FC<Step3BusinessInfoProps> = ({
     { id: 'electronics', label: 'Electronics', icon: Cpu },
     { id: 'home_living', label: 'Home & Living', icon: Armchair },
     { id: 'beauty_care', label: 'Beauty & Personal Care', icon: Sparkles },
+    { id: 'grocery_staples', label: 'Grocery & Staples', icon: ShoppingBasket },
     { id: 'gifts', label: 'Gifts & Lifestyle', icon: Gift },
     { id: 'sports_fitness', label: 'Sports & Fitness', icon: Dumbbell },
+    { id: 'toys_baby', label: 'Toys & Baby Care', icon: Baby },
+    { id: 'books_stationery', label: 'Books & Stationery', icon: BookOpen },
   ];
 
   const [selectedCategories, setSelectedCategories] = useState<string[]>(
@@ -271,7 +278,7 @@ const DAY_KEY_MAP: Record<DayName, 'monday' | 'tuesday' | 'wednesday' | 'thursda
             Select all categories that best describe your business.
           </span>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {categories.map((cat) => {
               const Icon = cat.icon;
               const isSelected = selectedCategories.includes(cat.id);
@@ -280,31 +287,49 @@ const DAY_KEY_MAP: Record<DayName, 'monday' | 'tuesday' | 'wednesday' | 'thursda
                 <div
                   key={cat.id}
                   onClick={() => toggleCategory(cat.id)}
-                  className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${
+                  role="checkbox"
+                  aria-checked={isSelected}
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === ' ' || e.key === 'Enter') {
+                      e.preventDefault();
+                      toggleCategory(cat.id);
+                    }
+                  }}
+                  className={`group relative p-3 sm:p-3.5 rounded-2xl border flex items-center justify-between cursor-pointer transition-all duration-150 min-h-[64px] select-none ${
                     isSelected
-                      ? 'border-[#0038ed] bg-blue-50/50 ring-1 ring-[#0038ed]'
-                      : 'border-slate-200 bg-white hover:border-slate-300'
+                      ? 'border-[#0038ed] bg-blue-50/70 shadow-sm shadow-blue-500/10 ring-1.5 ring-[#0038ed]'
+                      : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/60 shadow-xs'
                   }`}
                 >
-                  <div className="flex items-center gap-2 min-w-0">
+                  <div className="flex items-center gap-2.5 min-w-0 pr-1.5 flex-1">
                     <div
-                      className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${
-                        isSelected ? 'bg-[#0038ed] text-white' : 'bg-slate-100 text-slate-600'
+                      className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
+                        isSelected
+                          ? 'bg-[#0038ed] text-white shadow-sm shadow-blue-600/30'
+                          : 'bg-slate-100 text-slate-600 group-hover:bg-slate-200/80 group-hover:text-slate-800'
                       }`}
                     >
-                      <Icon className="w-3.5 h-3.5" />
+                      <Icon className="w-4 h-4" />
                     </div>
-                    <span className="text-xs font-semibold text-slate-800 truncate">
+                    <span
+                      className={`text-xs sm:text-[13px] font-bold leading-snug break-words transition-colors ${
+                        isSelected ? 'text-[#002bb5]' : 'text-slate-800 group-hover:text-slate-900'
+                      }`}
+                    >
                       {cat.label}
                     </span>
                   </div>
 
-                  <input
-                    type="checkbox"
-                    checked={isSelected}
-                    onChange={() => {}}
-                    className="w-3.5 h-3.5 rounded text-[#0038ed] focus:ring-[#0038ed] border-slate-300 pointer-events-none ml-1.5"
-                  />
+                  <div
+                    className={`w-4 h-4 rounded-md flex items-center justify-center shrink-0 transition-all ${
+                      isSelected
+                        ? 'bg-[#0038ed] text-white shadow-xs'
+                        : 'border border-slate-300 bg-white group-hover:border-slate-400'
+                    }`}
+                  >
+                    {isSelected && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                  </div>
                 </div>
               );
             })}
