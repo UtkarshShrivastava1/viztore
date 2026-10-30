@@ -19,6 +19,21 @@ export interface TaxConfig {
   amount?: number;
 }
 
+export interface ProductVariantItem {
+  id: string;
+  sku: string;
+  barcode?: string;
+  color?: string;
+  colorHex?: string;
+  size?: string;
+  price: number;
+  costPrice?: number;
+  mrp: number;
+  stock: number;
+  isActive: boolean;
+  image?: string;
+}
+
 export interface ProductItem {
   id: string;
   name: string;
@@ -60,6 +75,7 @@ export interface ProductItem {
   careInstructions?: string;
   metaTitle?: string;
   metaDescription?: string;
+  variants?: ProductVariantItem[];
 }
 
 export interface CatalogKPIs {

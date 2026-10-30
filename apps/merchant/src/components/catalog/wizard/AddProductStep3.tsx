@@ -12,6 +12,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { useCatalogStore } from '../../../stores/catalogStore.js';
+import { VariantMatrixBuilder } from './VariantMatrixBuilder.js';
 
 const popularTagSuggestions = [
   'Cotton',
@@ -518,6 +519,13 @@ export const AddProductStep3: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Row 1.5: Amazon / Flipkart Multi-SKU Variant Matrix Generator (Conditional) */}
+      {hasVariants && (
+        <div className="bg-white rounded-xl border border-blue-200/90 p-5 shadow-2xs">
+          <VariantMatrixBuilder />
+        </div>
+      )}
 
       {/* Row 2: Card 4 (Storage Location), Card 5 (Pricing), Card 6 (Tax) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
