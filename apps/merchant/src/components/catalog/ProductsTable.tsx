@@ -1,7 +1,15 @@
 import React from 'react';
-import { ChevronDown, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  Trash2,
+} from 'lucide-react';
 import { useCatalogStore, ProductItem } from '../../stores/catalogStore.js';
 import { ProductActionMenu } from './ProductActionMenu.js';
+import { formatCategoryTitle, formatDateTime } from '../../utils/formatters.js';
 
 export const ProductsTable: React.FC = () => {
   const {
@@ -15,7 +23,7 @@ export const ProductsTable: React.FC = () => {
     currentPage,
     pageSize,
     setCurrentPage,
-    kpis,
+    setPageSize,
   } = useCatalogStore();
 
   // Filter products based on live criteria
@@ -61,10 +69,10 @@ export const ProductsTable: React.FC = () => {
 
   const totalFiltered = filteredProducts.length;
   const totalPages = Math.max(1, Math.ceil(totalFiltered / pageSize));
-  const paginatedProducts = filteredProducts.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
+  const safePage = Math.min(Math.max(1, currentPage), totalPages);
+  const startIndex = totalFiltered === 0 ? 0 : (safePage - 1) * pageSize;
+  const endIndex = Math.min(safePage * pageSize, totalFiltered);
+  const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
 
   const getStockStatusBadge = (stock: number, lowThreshold: number) => {
     if (stock <= 0) {
@@ -105,46 +113,50 @@ export const ProductsTable: React.FC = () => {
     }
   };
 
-  const renderUpdatedOn = (val: string) => {
-    const parts = val.split(/ (?=\d{2}:\d{2})/);
-    if (parts.length === 2) {
-      return (
-        <div className="leading-tight">
-          <div className="text-slate-600 whitespace-nowrap">{parts[0]}</div>
-          <div className="text-[10px] text-slate-400 whitespace-nowrap">{parts[1]}</div>
-        </div>
-      );
-    }
-    return <span className="text-slate-600 whitespace-nowrap">{val}</span>;
-  };
-
   return (
     <div className="bg-white rounded-xl border border-slate-200/80 shadow-2xs overflow-hidden flex flex-col">
       <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse table-auto">
+        <table className="w-full text-left border-collapse table-auto min-w-[1150px]">
           <thead>
             <tr className="border-b border-slate-200/80 bg-slate-50/60 text-[11px] font-semibold text-slate-500 uppercase tracking-wider select-none">
               <th className="py-2.5 px-3 w-8 text-center">
                 <input
                   type="checkbox"
-                  checked={paginatedProducts.length > 0 && paginatedProducts.every((p) => (useCatalogStore.getState().selectedProductIds || []).includes(p.id))}
+                  checked={
+                    paginatedProducts.length > 0 &&
+                    paginatedProducts.every((p) =>
+                      (useCatalogStore.getState().selectedProductIds || []).includes(p.id)
+                    )
+                  }
                   onChange={() => useCatalogStore.getState().toggleSelectAll()}
                   className="rounded-sm border-slate-300 text-blue-600 focus:ring-blue-500/20 cursor-pointer"
                   title="Select All"
                 />
               </th>
-              <th className="py-2.5 px-3 font-semibold text-slate-600">Product</th>
-              <th className="py-2.5 px-2 font-semibold text-slate-600 whitespace-nowrap">SKU</th>
-              <th className="py-2.5 px-2 font-semibold text-slate-600 whitespace-nowrap">Barcode</th>
-              <th className="py-2.5 px-2.5 font-semibold text-slate-600 whitespace-nowrap">
+              <th className="py-2.5 px-3 font-semibold text-slate-600 min-w-[240px]">Product</th>
+              <th className="py-2.5 px-2 font-semibold text-slate-600 whitespace-nowrap min-w-[140px]">
+                SKU
+              </th>
+              <th className="py-2.5 px-2 font-semibold text-slate-600 whitespace-nowrap min-w-[110px]">
+                Barcode
+              </th>
+              <th className="py-2.5 px-2.5 font-semibold text-slate-600 whitespace-nowrap min-w-[170px]">
                 Category &amp; Type
               </th>
-              <th className="py-2.5 px-2 font-semibold text-slate-600 whitespace-nowrap">Brand</th>
-              <th className="py-2.5 px-2 font-semibold text-slate-600 whitespace-nowrap">Stock</th>
-              <th className="py-2.5 px-2 font-semibold text-slate-600 whitespace-nowrap">Status</th>
-              <th className="py-2.5 px-2 font-semibold text-slate-600 whitespace-nowrap">Price</th>
-              <th className="py-2.5 px-2 font-semibold text-slate-600 whitespace-nowrap">
-                <div className="flex items-center gap-1 cursor-pointer hover:text-slate-800">
+              <th className="py-2.5 px-2 font-semibold text-slate-600 whitespace-nowrap min-w-[100px]">
+                Brand
+              </th>
+              <th className="py-2.5 px-2 font-semibold text-slate-600 whitespace-nowrap min-w-[90px]">
+                Stock
+              </th>
+              <th className="py-2.5 px-2 font-semibold text-slate-600 whitespace-nowrap min-w-[90px]">
+                Status
+              </th>
+              <th className="py-2.5 px-2 font-semibold text-slate-600 whitespace-nowrap min-w-[90px]">
+                Price
+              </th>
+              <th className="py-2.5 px-2 font-semibold text-slate-600 whitespace-nowrap min-w-[95px]">
+                <div className="flex items-center gap-1 cursor-pointer hover:text-slate-800 uppercase tracking-wider">
                   <span>Updated</span>
                   <ChevronDown className="w-3 h-3" />
                 </div>
@@ -171,12 +183,17 @@ export const ProductsTable: React.FC = () => {
                 const mainImg =
                   product.images?.[0] ||
                   'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=150&q=80';
-                const isSelected = (useCatalogStore.getState().selectedProductIds || []).includes(product.id);
+                const isSelected = (
+                  useCatalogStore.getState().selectedProductIds || []
+                ).includes(product.id);
+                const { date, time } = formatDateTime(product.updatedAt);
 
                 return (
                   <tr
                     key={product.id}
-                    className={`hover:bg-slate-50/70 transition-colors ${isSelected ? 'bg-blue-50/30' : ''}`}
+                    className={`hover:bg-slate-50/70 transition-colors ${
+                      isSelected ? 'bg-blue-50/30' : ''
+                    }`}
                   >
                     {/* Checkbox */}
                     <td className="py-2.5 px-3 w-8 text-center">
@@ -189,7 +206,7 @@ export const ProductsTable: React.FC = () => {
                     </td>
 
                     {/* Product */}
-                    <td className="py-2.5 px-3">
+                    <td className="py-2.5 px-3 min-w-[240px]">
                       <div className="flex items-center gap-2.5">
                         <img
                           src={mainImg}
@@ -222,13 +239,14 @@ export const ProductsTable: React.FC = () => {
                       {product.barcode}
                     </td>
 
-                    {/* Hierarchy & Type */}
+                    {/* Hierarchy & Type with clean Title Case */}
                     <td className="py-2.5 px-2.5 text-[11px] leading-tight whitespace-nowrap">
                       <div className="font-medium text-slate-700">
-                        {product.category} &gt; {product.subCategory}
+                        {formatCategoryTitle(product.category)} &gt;{' '}
+                        {formatCategoryTitle(product.subCategory)}
                       </div>
                       <div className="text-[10px] text-slate-400 mt-0.5">
-                        {product.productType}
+                        {formatCategoryTitle(product.productType)}
                       </div>
                     </td>
 
@@ -239,7 +257,9 @@ export const ProductsTable: React.FC = () => {
 
                     {/* Stock */}
                     <td className="py-2.5 px-2 whitespace-nowrap">
-                      <div className="font-semibold text-slate-800 leading-tight">{product.stock}</div>
+                      <div className="font-semibold text-slate-800 leading-tight">
+                        {product.stock}
+                      </div>
                       <div>{getStockStatusBadge(product.stock, product.lowStockThreshold)}</div>
                     </td>
 
@@ -253,7 +273,10 @@ export const ProductsTable: React.FC = () => {
 
                     {/* Updated On */}
                     <td className="py-2.5 px-2 text-slate-500 text-[11px] whitespace-nowrap">
-                      {renderUpdatedOn(product.updatedAt)}
+                      <div className="text-slate-600 font-medium whitespace-nowrap">{date}</div>
+                      {time && (
+                        <div className="text-[10px] text-slate-400 whitespace-nowrap">{time}</div>
+                      )}
                     </td>
 
                     {/* Actions Trigger */}
@@ -268,41 +291,81 @@ export const ProductsTable: React.FC = () => {
         </table>
       </div>
 
-      {/* Footer Bar: Total count label and pagination controls */}
+      {/* Footer Bar: Total count label and unified pagination controls */}
       <div className="px-4 py-2.5 border-t border-slate-200/80 bg-slate-50/50 flex flex-col sm:flex-row items-center justify-between gap-2.5 text-xs">
         <div className="text-slate-600 font-medium">
           Total{' '}
-          <span className="font-bold text-blue-600">{kpis.totalProducts.toLocaleString()}</span>{' '}
+          <span className="font-bold text-blue-600">{totalFiltered.toLocaleString()}</span>{' '}
           products
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="text-slate-500 text-[11px]">
-            Page {currentPage} of {totalPages}
+        <div className="flex items-center gap-4">
+          {/* Rows per page selector */}
+          <div className="flex items-center gap-2 text-slate-500 text-[11px]">
+            <span>Rows per page:</span>
+            <div className="relative">
+              <select
+                value={pageSize}
+                onChange={(e) => setPageSize(Number(e.target.value))}
+                className="appearance-none bg-white border border-slate-200 rounded-md px-2 py-0.5 pr-5 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+              >
+                <option value={8}>8</option>
+                <option value={15}>15</option>
+                <option value={30}>30</option>
+                <option value={50}>50</option>
+              </select>
+              <ChevronDown className="w-3 h-3 text-slate-400 absolute right-1 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
+          </div>
+
+          <span className="text-slate-500 text-[11px] tabular-nums">
+            {totalFiltered === 0 ? 0 : startIndex + 1}-{endIndex} of{' '}
+            {totalFiltered.toLocaleString()}
           </span>
+
           <div className="inline-flex rounded-md shadow-2xs">
             <button
               type="button"
-              disabled={currentPage <= 1}
-              onClick={() => setCurrentPage(currentPage - 1)}
+              disabled={safePage <= 1}
+              onClick={() => setCurrentPage(1)}
               className="p-1.5 rounded-l-md border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              title="First Page"
+            >
+              <ChevronsLeft className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              disabled={safePage <= 1}
+              onClick={() => setCurrentPage(safePage - 1)}
+              className="p-1.5 border-y border-r border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              title="Previous Page"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
             </button>
             <button
               type="button"
-              disabled={currentPage >= totalPages}
-              onClick={() => setCurrentPage(currentPage + 1)}
-              className="p-1.5 rounded-r-md border-y border-r border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              disabled={safePage >= totalPages}
+              onClick={() => setCurrentPage(safePage + 1)}
+              className="p-1.5 border-y border-r border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              title="Next Page"
             >
               <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              disabled={safePage >= totalPages}
+              onClick={() => setCurrentPage(totalPages)}
+              className="p-1.5 rounded-r-md border-y border-r border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              title="Last Page"
+            >
+              <ChevronsRight className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
       </div>
 
       {/* Floating Bulk Action Bar */}
-      {useCatalogStore.getState().selectedProductIds?.length > 0 && (
+      {(useCatalogStore.getState().selectedProductIds || []).length > 0 && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-4 animate-in fade-in slide-in-from-bottom-4 border border-slate-700">
           <span className="text-xs font-bold">
             {useCatalogStore.getState().selectedProductIds.length} products selected

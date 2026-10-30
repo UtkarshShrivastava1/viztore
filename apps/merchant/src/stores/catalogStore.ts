@@ -139,6 +139,7 @@ interface CatalogStoreState {
   toggleSelectProduct: (id: string) => void;
   toggleSelectAll: () => void;
   setCurrentPage: (page: number) => void;
+  setPageSize: (size: number) => void;
 
   setActiveView: (view: CatalogViewMode) => void;
   setWizardStep: (step: WizardStep) => void;
@@ -808,6 +809,7 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
       return { selectedProductIds: state.products.map((p) => p.id) };
     }),
   setCurrentPage: (currentPage) => set({ currentPage }),
+  setPageSize: (pageSize) => set({ pageSize, currentPage: 1 }),
 
   setActiveView: (activeView) => set({ activeView }),
   setWizardStep: (wizardStep) => set({ wizardStep }),

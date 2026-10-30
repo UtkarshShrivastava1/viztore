@@ -5,8 +5,8 @@
 > **Active Phase**: Founder / User End-to-End Manual Commerce Verification  
 > **Testing Scope**: Merchant Onboarding ➔ Catalog Management ➔ Customer Discovery ➔ Cart & Checkout ➔ Real-Time Audio & Order Fulfillment ➔ 4-Digit Handshake OTP ➔ Counter POS Walk-in Sale  
 > **Environment**: Local Monolith (`apps/backend` on `:5000`, `apps/merchant` on `:3001`, `apps/web` on `:3000`) — Fresh 100% Blank Slate Atlas DB  
-> **Status**: **5 ISSUES RESOLVED (100.0%)** 🟢  
-> **Items Logged**: **5 Total** | **0 Open** | **0 In Progress** | **5 Resolved**  
+> **Status**: **6 ISSUES RESOLVED (100.0%)** 🟢  
+> **Items Logged**: **6 Total** | **0 Open** | **0 In Progress** | **6 Resolved**  
 > **Remediation Progress**: `[████████████████████] 100.0%`
 
 ---
@@ -15,11 +15,11 @@
 
 | Application Layer | Total Logged | Critical (P0) | High (P1) | Medium (P2) | Polish (P3) | Resolved | Status |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **Merchant Hub (`apps/merchant` :3001)** | 5 | 0 | 4 | 1 | 0 | 5 | 🟢 All Remediated |
+| **Merchant Hub (`apps/merchant` :3001)** | 6 | 0 | 5 | 1 | 0 | 6 | 🟢 All Remediated |
 | **Customer Web (`apps/web` :3000)** | 0 | 0 | 0 | 0 | 0 | 0 | Ready 🟢 |
 | **Backend API Monolith (`apps/backend` :5000)** | 0 | 0 | 0 | 0 | 0 | 0 | Ready 🟢 |
 | **Cross-Cutting (Sockets, Redis, DB, Print)** | 0 | 0 | 0 | 0 | 0 | 0 | Ready 🟢 |
-| **TOTAL** | **5** | **0** | **4** | **1** | **0** | **5** | **100.0%** |
+| **TOTAL** | **6** | **0** | **5** | **1** | **0** | **6** | **100.0%** |
 
 ---
 
@@ -32,6 +32,7 @@
 | `ISSUE-003` | Stale Landmark Retained on Subsequent Pin Drops (e.g. Borsi Landmark Remained When Pin Moved to Bhilai Sectors) | Merchant Hub (:3001) | Onboarding / Step 3 | Bug / State Sync | P1 | Phase 1 (`/register`) | `RESOLVED ✅` |
 | `ISSUE-004` | Step 3 Onboarding: Category Names Truncated with Ellipsis (`...`) on Narrow 4-Column Grid | Merchant Hub (:3001) | Onboarding / Step 3 | UI / Readability | P2 | Phase 1 (`/register`) | `RESOLVED ✅` |
 | `ISSUE-005` | Add Product Wizard: Category Dropdown Confusing Defaults (`Men` vs `Men's`) & Broken Hierarchy Falling Back to `General`/`Standard` | Merchant Hub (:3001) | Catalog / Add Product Wizard | Data & UX Hierarchy | P1 | Phase 2 (`/catalog/new`) | `RESOLVED ✅` |
+| `ISSUE-006` | Inventory Table Broken Squished Formatting (Product Title 12 Lines, SKU Overlap, Raw Enum Category) & Table Modernization | Merchant Hub (:3001) | Inventory / Catalog Tables | UI / Layout & Responsiveness | P1 | Phase 2 (`/inventory`) | `RESOLVED ✅` |
 
 ---
 
@@ -119,6 +120,39 @@
   - `pnpm --filter=@repo/merchant exec tsc --noEmit`: 0 errors.
   - `pnpm --filter=@repo/merchant build`: Built cleanly in 12.24s.
 - **Commit:** `fc68215`
+
+---
+
+### [ISSUE-006] Inventory Table Broken Squished Formatting (Product Title 12 Lines, SKU Overlap, Raw Enum Category) & Table Modernization (`RESOLVED ✅`)
+- **Reported URL:** `http://localhost:3001/inventory` vs `http://localhost:3001/catalog`
+- **Symptom:**
+  - Product title wrapped into 12 single-word vertical lines crushing into a 60px cell.
+  - SKU value collided with the product text and wrapped the suffix `-S` onto a new line.
+  - Category breadcrumb rendered raw database enum values with snake_case and underscores in bright blue (`men's_fashion > Clothing > formal_shirts`).
+  - Table header and cell styling diverged completely from the catalog table (plain white headers vs sleek tracking slate headers, mismatched status badges, unaligned tabular numbers).
+- **Root Cause Analysis:**
+  1. In `InventoryTable.tsx`, the 14-column table was contained inside an unconstrained `<table className="w-full">` without `min-w-[1240px]` or `table-auto`. The product name cell had no minimum width (`min-w-[240px]`) and no truncation constraint (`max-w-[220px] truncate`), so the browser layout engine shrunk it to accommodate rigid columns.
+  2. SKU had no monospace styling or `whitespace-nowrap font-mono text-[11px]`.
+  3. No string sanitation utility was in place to convert raw database snake_case values to clean Title Case.
+- **Engineering Remediation:**
+  1. **New Formatting Engine:** Created [`formatters.ts`](file:///d:/UTKARSH/Live%20Projects/Vercel-live-Website/platform-root-vz/apps/merchant/src/utils/formatters.ts) providing:
+     - `formatCategoryTitle`: Dynamically transforms raw database identifiers (e.g. `men's_fashion`, `formal_shirts`, `casual_trousers`) into clean, human-readable Title Case (`Men's Fashion`, `Formal Shirts`, `Casual Trousers`) while preserving apostrophes.
+     - `formatDateTime`: Stacks date (`30 Oct 2026`) and time (`02:30 PM`) cleanly into two lines.
+  2. **Harmonized `InventoryTable.tsx` Layout:**
+     - Enforced `min-w-[1240px]` on table with smooth horizontal scroll wrapper (`overflow-x-auto`).
+     - Product column upgraded to `min-w-[240px]` with `max-w-[200px] xl:max-w-[240px] truncate`, 10x10 rounded image, interactive detail modal trigger, and size/color attribute summary.
+     - Styled SKU with `font-mono text-[11px] font-medium text-slate-600 whitespace-nowrap min-w-[140px]`.
+     - Styled Barcode with `font-mono text-[11px] text-slate-500 whitespace-nowrap min-w-[110px]`.
+     - Category & Type rendered cleanly in 2 stacked lines with Title Case.
+     - Replaced custom bulky badges with sleek border status pills matching `ProductsTable` (`bg-emerald-50 text-emerald-700 border border-emerald-200/80`, `bg-amber-50 text-amber-700`, `bg-rose-50 text-rose-700`).
+     - Enforced `tabular-nums` for Stock, Reserved, Available, and Stock Value (`₹...`).
+     - Replaced raw pagination with the unified pagination bar: total product count badge, rows per page dropdown (10, 20, 50), record range indicator (`1-10 of 12`), and first/prev/next/last steppers (`ChevronsLeft`, `ChevronLeft`, `ChevronRight`, `ChevronsRight`).
+  3. **Polished `ProductsTable.tsx`:**
+     - Integrated `formatCategoryTitle` and `formatDateTime` across all product rows.
+     - Added `min-w-[1150px]` and synchronized rows per page selector (8, 15, 30, 50) and full page navigation steppers.
+- **Verification:**
+  - `pnpm --filter=@repo/merchant exec tsc --noEmit`: 0 errors.
+  - `pnpm --filter=@repo/merchant build`: Production bundle built cleanly in 10.86s.
 
 ---
 
