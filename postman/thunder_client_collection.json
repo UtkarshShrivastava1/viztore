@@ -2,126 +2,126 @@
   "clientName": "Thunder Client",
   "collectionName": "Platform Master API Engine — Comprehensive Test Suite",
   "collectionId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
-  "dateExported": "2026-10-30T05:37:57.382Z",
+  "dateExported": "2026-10-30T06:06:49.713Z",
   "version": "1.2",
   "folders": [
     {
       "_id": "f_1_60ffe410",
       "name": "00. System Health & Probes",
       "containerId": "",
-      "created": "2026-10-30T05:37:57.382Z",
+      "created": "2026-10-30T06:06:49.713Z",
       "sortNum": 10000
     },
     {
       "_id": "f_2_1637bfc1",
       "name": "01. Authentication & Identity",
       "containerId": "",
-      "created": "2026-10-30T05:37:57.382Z",
+      "created": "2026-10-30T06:06:49.713Z",
       "sortNum": 20000
     },
     {
       "_id": "f_3_73bbe521",
       "name": "02. Customer Storefront Workflows",
       "containerId": "",
-      "created": "2026-10-30T05:37:57.382Z",
+      "created": "2026-10-30T06:06:49.713Z",
       "sortNum": 30000
     },
     {
       "_id": "f_4_455121bf",
       "name": "02.1 Catalog Discovery & Search",
       "containerId": "f_3_73bbe521",
-      "created": "2026-10-30T05:37:57.382Z",
+      "created": "2026-10-30T06:06:49.713Z",
       "sortNum": 40000
     },
     {
       "_id": "f_5_7902f115",
       "name": "02.2 Hyperlocal Store Discovery",
       "containerId": "f_3_73bbe521",
-      "created": "2026-10-30T05:37:57.382Z",
+      "created": "2026-10-30T06:06:49.713Z",
       "sortNum": 50000
     },
     {
       "_id": "f_6_738ce6fb",
       "name": "02.3 Account, Address Book & Profile",
       "containerId": "f_3_73bbe521",
-      "created": "2026-10-30T05:37:57.382Z",
+      "created": "2026-10-30T06:06:49.713Z",
       "sortNum": 60000
     },
     {
       "_id": "f_7_498ee8ba",
       "name": "02.4 Orders, Checkout & Live Tracking",
       "containerId": "f_3_73bbe521",
-      "created": "2026-10-30T05:37:57.382Z",
+      "created": "2026-10-30T06:06:49.713Z",
       "sortNum": 70000
     },
     {
       "_id": "f_8_920bf4be",
       "name": "02.5 Coupons & Promotions",
       "containerId": "f_3_73bbe521",
-      "created": "2026-10-30T05:37:57.382Z",
+      "created": "2026-10-30T06:06:49.713Z",
       "sortNum": 80000
     },
     {
       "_id": "f_9_060d867e",
       "name": "02.6 Customer Returns & Help Desk",
       "containerId": "f_3_73bbe521",
-      "created": "2026-10-30T05:37:57.382Z",
+      "created": "2026-10-30T06:06:49.713Z",
       "sortNum": 90000
     },
     {
       "_id": "f_10_c8c56c90",
       "name": "03. Merchant Operational Hubs",
       "containerId": "",
-      "created": "2026-10-30T05:37:57.382Z",
+      "created": "2026-10-30T06:06:49.713Z",
       "sortNum": 100000
     },
     {
       "_id": "f_11_490a4e37",
       "name": "03.1 Store Onboarding & Settings",
       "containerId": "f_10_c8c56c90",
-      "created": "2026-10-30T05:37:57.382Z",
+      "created": "2026-10-30T06:06:49.713Z",
       "sortNum": 110000
     },
     {
       "_id": "f_12_69ffe463",
       "name": "03.2 Catalog & Live Stock Management",
       "containerId": "f_10_c8c56c90",
-      "created": "2026-10-30T05:37:57.382Z",
+      "created": "2026-10-30T06:06:49.713Z",
       "sortNum": 120000
     },
     {
       "_id": "f_13_25f7d4a0",
       "name": "03.3 Order Processing & Fleet Dispatch",
       "containerId": "f_10_c8c56c90",
-      "created": "2026-10-30T05:37:57.382Z",
+      "created": "2026-10-30T06:06:49.713Z",
       "sortNum": 130000
     },
     {
       "_id": "f_14_3c000221",
       "name": "03.4 Counter POS, Invoicing & Khata CRM",
       "containerId": "f_10_c8c56c90",
-      "created": "2026-10-30T05:37:57.382Z",
+      "created": "2026-10-30T06:06:49.713Z",
       "sortNum": 140000
     },
     {
       "_id": "f_15_6bccff6b",
       "name": "03.5 Procurement, Settlements & Analytics",
       "containerId": "f_10_c8c56c90",
-      "created": "2026-10-30T05:37:57.382Z",
+      "created": "2026-10-30T06:06:49.713Z",
       "sortNum": 150000
     },
     {
       "_id": "f_16_f7f1af05",
       "name": "04. Rider Portal & Delivery Fleet",
       "containerId": "",
-      "created": "2026-10-30T05:37:57.382Z",
+      "created": "2026-10-30T06:06:49.713Z",
       "sortNum": 160000
     },
     {
       "_id": "f_17_da2a5d57",
       "name": "05. Notifications & Media Hub",
       "containerId": "",
-      "created": "2026-10-30T05:37:57.382Z",
+      "created": "2026-10-30T06:06:49.713Z",
       "sortNum": 170000
     }
   ],
@@ -131,11 +131,11 @@
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_1_60ffe410",
       "name": "Liveness Probe (/healthz)",
-      "url": "{{baseUrl}}/../../healthz",
+      "url": "{{baseUrl}}/healthz",
       "method": "GET",
       "sortNum": 1000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
       "headers": [],
       "body": {
         "type": "json",
@@ -154,11 +154,11 @@
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_1_60ffe410",
       "name": "Readiness Probe (/readyz)",
-      "url": "{{baseUrl}}/../../readyz",
+      "url": "{{baseUrl}}/readyz",
       "method": "GET",
       "sortNum": 2000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
       "headers": [],
       "body": {
         "type": "json",
@@ -177,11 +177,11 @@
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_1_60ffe410",
       "name": "OpenAPI Documentation JSON (/api-docs.json)",
-      "url": "{{baseUrl}}/../../api-docs.json",
+      "url": "{{baseUrl}}/api-docs.json",
       "method": "GET",
       "sortNum": 3000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
       "headers": [],
       "body": {
         "type": "json",
@@ -203,8 +203,8 @@
       "url": "{{baseUrl}}/auth/register",
       "method": "POST",
       "sortNum": 4000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
       "headers": [
         {
           "name": "Content-Type",
@@ -213,13 +213,13 @@
       ],
       "body": {
         "type": "json",
-        "raw": "{\n  \"fullName\": \"Ananya Sharma\",\n  \"email\": \"ananya.customer@example.com\",\n  \"phone\": \"9876543299\",\n  \"password\": \"Password@123\",\n  \"role\": \"customer\"\n}",
+        "raw": "{\n  \"fullName\": \"Test Shopper\",\n  \"email\": \"{{regEmail}}\",\n  \"phone\": \"{{regPhone}}\",\n  \"password\": \"Password@123\",\n  \"role\": \"customer\"\n}",
         "form": []
       },
       "tests": [
         {
           "type": "custom",
-          "script": "if (pm.response.code >= 200 && pm.response.code < 300) {\n    const res = pm.response.json();\n    if (res.data && res.data.tokens) { pm.collectionVariables.set('customerToken', res.data.tokens.accessToken); }\n}"
+          "script": "if (pm.response.code >= 200 && pm.response.code < 300) {\n    const res = pm.response.json();\n    const token = res.data?.tokens?.accessToken || res.data?.accessToken;\n    if (token) {\n        pm.collectionVariables.set('customerToken', token);\n        pm.environment.set('customerToken', token);\n    }\n}"
         }
       ]
     },
@@ -231,8 +231,8 @@
       "url": "{{baseUrl}}/auth/login",
       "method": "POST",
       "sortNum": 5000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
       "headers": [
         {
           "name": "Content-Type",
@@ -241,13 +241,13 @@
       ],
       "body": {
         "type": "json",
-        "raw": "{\n  \"identifier\": \"ananya.customer@example.com\",\n  \"password\": \"Password@123\",\n  \"role\": \"customer\"\n}",
+        "raw": "{\n  \"identifier\": \"arjun.customer@example.com\",\n  \"password\": \"Password@123\",\n  \"role\": \"customer\"\n}",
         "form": []
       },
       "tests": [
         {
           "type": "custom",
-          "script": "if (pm.response.code >= 200 && pm.response.code < 300) {\n    const res = pm.response.json();\n    if (res.data && (res.data.tokens?.accessToken || res.data.accessToken)) { pm.collectionVariables.set('customerToken', res.data.tokens?.accessToken || res.data.accessToken); }\n}"
+          "script": "if (pm.response.code >= 200 && pm.response.code < 300) {\n    const res = pm.response.json();\n    const token = res.data?.tokens?.accessToken || res.data?.accessToken;\n    if (token) {\n        pm.collectionVariables.set('customerToken', token);\n        pm.environment.set('customerToken', token);\n    }\n}"
         }
       ]
     },
@@ -259,8 +259,8 @@
       "url": "{{baseUrl}}/auth/login",
       "method": "POST",
       "sortNum": 6000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
       "headers": [
         {
           "name": "Content-Type",
@@ -275,7 +275,7 @@
       "tests": [
         {
           "type": "custom",
-          "script": "if (pm.response.code >= 200 && pm.response.code < 300) {\n    const res = pm.response.json();\n    if (res.data && (res.data.tokens?.accessToken || res.data.accessToken)) { pm.collectionVariables.set('merchantToken', res.data.tokens?.accessToken || res.data.accessToken); if (res.data.user?.storeId) { pm.collectionVariables.set('storeId', res.data.user.storeId); } }\n}"
+          "script": "if (pm.response.code >= 200 && pm.response.code < 300) {\n    const res = pm.response.json();\n    const token = res.data?.tokens?.accessToken || res.data?.accessToken;\n    if (token) {\n        pm.collectionVariables.set('merchantToken', token);\n        pm.environment.set('merchantToken', token);\n    }\n    const sId = res.data?.user?.storeId || res.data?.store?.id;\n    if (sId) {\n        pm.collectionVariables.set('storeId', sId);\n        pm.environment.set('storeId', sId);\n    }\n}"
         }
       ]
     },
@@ -287,8 +287,8 @@
       "url": "{{baseUrl}}/auth/login",
       "method": "POST",
       "sortNum": 7000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
       "headers": [
         {
           "name": "Content-Type",
@@ -303,20 +303,48 @@
       "tests": [
         {
           "type": "custom",
-          "script": "if (pm.response.code >= 200 && pm.response.code < 300) {\n    const res = pm.response.json();\n    if (res.data && (res.data.tokens?.accessToken || res.data.accessToken)) { pm.collectionVariables.set('adminToken', res.data.tokens?.accessToken || res.data.accessToken); }\n}"
+          "script": "if (pm.response.code >= 200 && pm.response.code < 300) {\n    const res = pm.response.json();\n    const token = res.data?.tokens?.accessToken || res.data?.accessToken;\n    if (token) {\n        pm.collectionVariables.set('adminToken', token);\n        pm.environment.set('adminToken', token);\n    }\n}"
         }
       ]
     },
     {
-      "_id": "r_8_da763f40",
+      "_id": "r_8_fd47fffd",
+      "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
+      "containerId": "f_2_1637bfc1",
+      "name": "Rider Login (Target Role: rider)",
+      "url": "{{baseUrl}}/auth/login",
+      "method": "POST",
+      "sortNum": 8000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"identifier\": \"rider@example.com\",\n  \"password\": \"Password@123\",\n  \"role\": \"rider\"\n}",
+        "form": []
+      },
+      "tests": [
+        {
+          "type": "custom",
+          "script": "if (pm.response.code >= 200 && pm.response.code < 300) {\n    const res = pm.response.json();\n    const token = res.data?.tokens?.accessToken || res.data?.accessToken;\n    if (token) {\n        pm.collectionVariables.set('riderToken', token);\n        pm.environment.set('riderToken', token);\n    }\n}"
+        }
+      ]
+    },
+    {
+      "_id": "r_9_da763f40",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_2_1637bfc1",
       "name": "Refresh Token Flow",
       "url": "{{baseUrl}}/auth/refresh-token",
       "method": "POST",
-      "sortNum": 8000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
+      "sortNum": 9000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
       "headers": [
         {
           "name": "Content-Type",
@@ -331,20 +359,20 @@
       "tests": [
         {
           "type": "custom",
-          "script": "if (pm.response.code >= 200 && pm.response.code < 300) {\n    const res = pm.response.json();\n    if (res.data && res.data.accessToken) { pm.collectionVariables.set('customerToken', res.data.accessToken); }\n}"
+          "script": "if (pm.response.code >= 200 && pm.response.code < 300) {\n    const res = pm.response.json();\n    if (res.data && res.data.accessToken) { pm.collectionVariables.set('customerToken', res.data.accessToken); }\npm.environment.set('customerToken', res.data.accessToken);\n}"
         }
       ]
     },
     {
-      "_id": "r_9_0ad77c2b",
+      "_id": "r_10_0ad77c2b",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_2_1637bfc1",
       "name": "Logout & Session Invalidation",
       "url": "{{baseUrl}}/auth/logout",
       "method": "POST",
-      "sortNum": 9000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
+      "sortNum": 10000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
       "headers": [],
       "body": {
         "type": "json",
@@ -354,15 +382,15 @@
       "tests": []
     },
     {
-      "_id": "r_10_b7253669",
+      "_id": "r_11_b7253669",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_4_455121bf",
       "name": "Master Categories Hierarchy",
       "url": "{{baseUrl}}/catalog/taxonomy/categories",
       "method": "GET",
-      "sortNum": 10000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
+      "sortNum": 11000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
       "headers": [],
       "body": {
         "type": "json",
@@ -372,15 +400,15 @@
       "tests": []
     },
     {
-      "_id": "r_11_07b57afb",
+      "_id": "r_12_07b57afb",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_4_455121bf",
       "name": "Dynamic Category Search & Suggestions",
       "url": "{{baseUrl}}/catalog/taxonomy/search",
       "method": "GET",
-      "sortNum": 11000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
+      "sortNum": 12000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
       "headers": [],
       "body": {
         "type": "json",
@@ -390,15 +418,15 @@
       "tests": []
     },
     {
-      "_id": "r_12_2848ff67",
+      "_id": "r_13_2848ff67",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_4_455121bf",
       "name": "Faceted Products Search (Filter & Sort)",
       "url": "{{baseUrl}}/catalog/products",
       "method": "GET",
-      "sortNum": 12000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
+      "sortNum": 13000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
       "headers": [],
       "body": {
         "type": "json",
@@ -408,15 +436,15 @@
       "tests": []
     },
     {
-      "_id": "r_13_ad3dc32b",
+      "_id": "r_14_ad3dc32b",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_4_455121bf",
       "name": "Featured Products for Homepage",
       "url": "{{baseUrl}}/catalog/products/featured",
       "method": "GET",
-      "sortNum": 13000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
+      "sortNum": 14000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
       "headers": [],
       "body": {
         "type": "json",
@@ -426,15 +454,15 @@
       "tests": []
     },
     {
-      "_id": "r_14_b24c62fb",
+      "_id": "r_15_b24c62fb",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_4_455121bf",
       "name": "Product Detail by ID or Slug",
       "url": "{{baseUrl}}/catalog/products/{{productSlug}}",
       "method": "GET",
-      "sortNum": 14000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
+      "sortNum": 15000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
       "headers": [],
       "body": {
         "type": "json",
@@ -444,20 +472,20 @@
       "tests": [
         {
           "type": "custom",
-          "script": "if (pm.response.code >= 200 && pm.response.code < 300) {\n    const res = pm.response.json();\n    if (res.data && res.data.id) { pm.collectionVariables.set('productId', res.data.id); }\n}"
+          "script": "if (pm.response.code >= 200 && pm.response.code < 300) {\n    const res = pm.response.json();\n    const pid = res.data?.id || res.data?._id;\n    if (pid) {\n        pm.collectionVariables.set('productId', pid);\n        pm.environment.set('productId', pid);\n    }\n}"
         }
       ]
     },
     {
-      "_id": "r_15_501de44f",
+      "_id": "r_16_501de44f",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_5_7902f115",
       "name": "Nearby Stores (2dsphere Proximity Sort)",
       "url": "{{baseUrl}}/stores/nearby",
       "method": "GET",
-      "sortNum": 15000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
+      "sortNum": 16000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
       "headers": [],
       "body": {
         "type": "json",
@@ -467,15 +495,15 @@
       "tests": []
     },
     {
-      "_id": "r_16_31b18dcf",
+      "_id": "r_17_31b18dcf",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_5_7902f115",
       "name": "Store Public Profile by Slug",
       "url": "{{baseUrl}}/stores/slug/{{storeSlug}}",
       "method": "GET",
-      "sortNum": 16000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
+      "sortNum": 17000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
       "headers": [],
       "body": {
         "type": "json",
@@ -485,20 +513,20 @@
       "tests": [
         {
           "type": "custom",
-          "script": "if (pm.response.code >= 200 && pm.response.code < 300) {\n    const res = pm.response.json();\n    if (res.data && res.data.id) { pm.collectionVariables.set('storeId', res.data.id); }\n}"
+          "script": "if (pm.response.code >= 200 && pm.response.code < 300) {\n    const res = pm.response.json();\n    const sid = res.data?.id || res.data?._id;\n    if (sid) {\n        pm.collectionVariables.set('storeId', sid);\n        pm.environment.set('storeId', sid);\n    }\n}"
         }
       ]
     },
     {
-      "_id": "r_17_18fbade4",
+      "_id": "r_18_18fbade4",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_5_7902f115",
       "name": "Store Catalog Products",
       "url": "{{baseUrl}}/catalog/stores/{{storeId}}/products",
       "method": "GET",
-      "sortNum": 17000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
+      "sortNum": 18000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
       "headers": [],
       "body": {
         "type": "json",
@@ -508,19 +536,23 @@
       "tests": []
     },
     {
-      "_id": "r_18_4b2d608b",
+      "_id": "r_19_4b2d608b",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_5_7902f115",
       "name": "Submit Store Rating & Review",
       "url": "{{baseUrl}}/stores/{{storeId}}/rating",
       "method": "POST",
-      "sortNum": 18000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
+      "sortNum": 19000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
       "headers": [
         {
           "name": "Content-Type",
           "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{customerToken}}"
         }
       ],
       "body": {
@@ -531,16 +563,21 @@
       "tests": []
     },
     {
-      "_id": "r_19_1c6951af",
+      "_id": "r_20_1c6951af",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_6_738ce6fb",
       "name": "Get Customer Profile",
       "url": "{{baseUrl}}/auth/me",
       "method": "GET",
-      "sortNum": 19000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
-      "headers": [],
+      "sortNum": 20000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{customerToken}}"
+        }
+      ],
       "body": {
         "type": "json",
         "raw": "",
@@ -549,19 +586,23 @@
       "tests": []
     },
     {
-      "_id": "r_20_fa0c5e8b",
+      "_id": "r_21_fa0c5e8b",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_6_738ce6fb",
       "name": "Update Customer Profile",
       "url": "{{baseUrl}}/auth/profile",
       "method": "PATCH",
-      "sortNum": 20000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
+      "sortNum": 21000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
       "headers": [
         {
           "name": "Content-Type",
           "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{customerToken}}"
         }
       ],
       "body": {
@@ -572,16 +613,21 @@
       "tests": []
     },
     {
-      "_id": "r_21_40c79a8a",
+      "_id": "r_22_40c79a8a",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_6_738ce6fb",
       "name": "Get Saved Delivery Addresses",
       "url": "{{baseUrl}}/auth/addresses",
       "method": "GET",
-      "sortNum": 21000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
-      "headers": [],
+      "sortNum": 22000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{customerToken}}"
+        }
+      ],
       "body": {
         "type": "json",
         "raw": "",
@@ -590,24 +636,28 @@
       "tests": [
         {
           "type": "custom",
-          "script": "if (pm.response.code >= 200 && pm.response.code < 300) {\n    const res = pm.response.json();\n    if (res.data && res.data.length > 0) { pm.collectionVariables.set('addressId', res.data[0].id || res.data[0]._id); }\n}"
+          "script": "if (pm.response.code >= 200 && pm.response.code < 300) {\n    const res = pm.response.json();\n    if (Array.isArray(res.data) && res.data.length > 0) {\n        const aid = res.data[0].id || res.data[0]._id;\n        if (aid) {\n            pm.collectionVariables.set('addressId', aid);\n            pm.environment.set('addressId', aid);\n        }\n    }\n}"
         }
       ]
     },
     {
-      "_id": "r_22_76b44043",
+      "_id": "r_23_76b44043",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_6_738ce6fb",
       "name": "Add Delivery Address",
       "url": "{{baseUrl}}/auth/addresses",
       "method": "POST",
-      "sortNum": 22000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
+      "sortNum": 23000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
       "headers": [
         {
           "name": "Content-Type",
           "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{customerToken}}"
         }
       ],
       "body": {
@@ -618,21 +668,26 @@
       "tests": [
         {
           "type": "custom",
-          "script": "if (pm.response.code >= 200 && pm.response.code < 300) {\n    const res = pm.response.json();\n    if (res.data && (res.data.id || res.data._id)) { pm.collectionVariables.set('addressId', res.data.id || res.data._id); }\n}"
+          "script": "if (pm.response.code >= 200 && pm.response.code < 300) {\n    const res = pm.response.json();\n    const aid = res.data?.id || res.data?._id;\n    if (aid) {\n        pm.collectionVariables.set('addressId', aid);\n        pm.environment.set('addressId', aid);\n    }\n}"
         }
       ]
     },
     {
-      "_id": "r_23_c512d288",
+      "_id": "r_24_c512d288",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_6_738ce6fb",
       "name": "Toggle Favorite Store",
       "url": "{{baseUrl}}/auth/favorite-stores/{{storeId}}/toggle",
       "method": "POST",
-      "sortNum": 23000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
-      "headers": [],
+      "sortNum": 24000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{customerToken}}"
+        }
+      ],
       "body": {
         "type": "json",
         "raw": "",
@@ -641,16 +696,21 @@
       "tests": []
     },
     {
-      "_id": "r_24_f9064b1b",
+      "_id": "r_25_f9064b1b",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_6_738ce6fb",
       "name": "Get Favorite Stores",
       "url": "{{baseUrl}}/auth/favorite-stores",
       "method": "GET",
-      "sortNum": 24000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
-      "headers": [],
+      "sortNum": 25000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{customerToken}}"
+        }
+      ],
       "body": {
         "type": "json",
         "raw": "",
@@ -659,16 +719,21 @@
       "tests": []
     },
     {
-      "_id": "r_25_9d350aee",
+      "_id": "r_26_9d350aee",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_6_738ce6fb",
       "name": "Toggle Wishlist Product",
       "url": "{{baseUrl}}/auth/wishlist/{{productId}}/toggle",
       "method": "POST",
-      "sortNum": 25000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
-      "headers": [],
+      "sortNum": 26000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{customerToken}}"
+        }
+      ],
       "body": {
         "type": "json",
         "raw": "",
@@ -677,16 +742,21 @@
       "tests": []
     },
     {
-      "_id": "r_26_8946bf3e",
+      "_id": "r_27_8946bf3e",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_6_738ce6fb",
       "name": "Get Customer Wishlist",
       "url": "{{baseUrl}}/auth/wishlist",
       "method": "GET",
-      "sortNum": 26000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
-      "headers": [],
+      "sortNum": 27000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{customerToken}}"
+        }
+      ],
       "body": {
         "type": "json",
         "raw": "",
@@ -695,70 +765,82 @@
       "tests": []
     },
     {
-      "_id": "r_27_f17fe3d8",
+      "_id": "r_28_f17fe3d8",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_6_738ce6fb",
       "name": "Submit Customer App Feedback",
       "url": "{{baseUrl}}/auth/feedback",
       "method": "POST",
-      "sortNum": 27000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
+      "sortNum": 28000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
       "headers": [
         {
           "name": "Content-Type",
           "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{customerToken}}"
         }
       ],
       "body": {
         "type": "json",
-        "raw": "{\n  \"category\": \"Experience\",\n  \"rating\": 5,\n  \"feedbackText\": \"Super fast 15-minute delivery from my neighborhood shop!\",\n  \"deviceInfo\": \"Chrome 128 / Windows 11\"\n}",
+        "raw": "{\n  \"rating\": 5,\n  \"feedbackType\": \"general\",\n  \"comment\": \"Excellent hyperlocal store experience and ultra-fast delivery!\"\n}",
         "form": []
       },
       "tests": []
     },
     {
-      "_id": "r_28_33d2b5c5",
+      "_id": "r_29_33d2b5c5",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_7_498ee8ba",
       "name": "Place Single-Store Hyperlocal Order",
       "url": "{{baseUrl}}/orders/",
       "method": "POST",
-      "sortNum": 28000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
+      "sortNum": 29000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
       "headers": [
         {
           "name": "Content-Type",
           "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{customerToken}}"
         }
       ],
       "body": {
         "type": "json",
-        "raw": "{\n  \"storeId\": \"{{storeId}}\",\n  \"items\": [\n    {\n      \"productId\": \"{{productId}}\",\n      \"name\": \"Men Classic Linen Shirt\",\n      \"quantity\": 1,\n      \"unitPrice\": 799,\n      \"storeId\": \"{{storeId}}\"\n    }\n  ],\n  \"shippingAddress\": {\n    \"fullName\": \"Ananya Sharma\",\n    \"phone\": \"9876543299\",\n    \"street\": \"Flat 402, Green Valley Towers, Nehru Nagar\",\n    \"city\": \"Bhilai\",\n    \"state\": \"Chhattisgarh\",\n    \"postalCode\": \"490020\",\n    \"country\": \"IN\"\n  },\n  \"couponCode\": \"{{couponCode}}\",\n  \"fulfilmentMode\": \"deliver\"\n}",
+        "raw": "{\n  \"storeId\": \"{{storeId}}\",\n  \"items\": [\n    {\n      \"productId\": \"{{productId}}\",\n      \"name\": \"Men Classic Linen Shirt\",\n      \"quantity\": 1,\n      \"unitPrice\": 799,\n      \"storeId\": \"{{storeId}}\"\n    }\n  ],\n  \"shippingAddress\": {\n    \"fullName\": \"Ananya Sharma\",\n    \"phone\": \"9876543299\",\n    \"street\": \"Flat 402, Green Valley Towers, Nehru Nagar\",\n    \"city\": \"Bhilai\",\n    \"state\": \"Chhattisgarh\",\n    \"postalCode\": \"490020\",\n    \"country\": \"IN\"\n  },\n  \"fulfilmentMode\": \"deliver\"\n}",
         "form": []
       },
       "tests": [
         {
           "type": "custom",
-          "script": "if (pm.response.code >= 200 && pm.response.code < 300) {\n    const res = pm.response.json();\n    if (res.data) { pm.collectionVariables.set('orderId', res.data.id); pm.collectionVariables.set('orderNumber', res.data.orderNumber); pm.collectionVariables.set('deliveryOtp', res.data.deliveryOtp); }\n}"
+          "script": "if (pm.response.code >= 200 && pm.response.code < 300) {\n    const res = pm.response.json();\n    if (res.data) {\n        const oid = res.data.id || res.data._id;\n        if (oid) {\n            pm.collectionVariables.set('orderId', oid);\n            pm.environment.set('orderId', oid);\n        }\n        if (res.data.orderNumber) {\n            pm.collectionVariables.set('orderNumber', res.data.orderNumber);\n            pm.environment.set('orderNumber', res.data.orderNumber);\n        }\n        if (res.data.deliveryOtp) {\n            pm.collectionVariables.set('deliveryOtp', res.data.deliveryOtp);\n            pm.environment.set('deliveryOtp', res.data.deliveryOtp);\n        }\n    }\n}"
         }
       ]
     },
     {
-      "_id": "r_29_02669b0a",
+      "_id": "r_30_02669b0a",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_7_498ee8ba",
       "name": "Place In-Store Reservation (Hold 2-Hours)",
       "url": "{{baseUrl}}/orders/",
       "method": "POST",
-      "sortNum": 29000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
+      "sortNum": 30000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
       "headers": [
         {
           "name": "Content-Type",
           "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{customerToken}}"
         }
       ],
       "body": {
@@ -766,19 +848,29 @@
         "raw": "{\n  \"storeId\": \"{{storeId}}\",\n  \"items\": [\n    {\n      \"productId\": \"{{productId}}\",\n      \"name\": \"Men Classic Linen Shirt\",\n      \"quantity\": 1,\n      \"unitPrice\": 799,\n      \"storeId\": \"{{storeId}}\"\n    }\n  ],\n  \"fulfilmentMode\": \"reserve\"\n}",
         "form": []
       },
-      "tests": []
+      "tests": [
+        {
+          "type": "custom",
+          "script": "if (pm.response.code >= 200 && pm.response.code < 300) {\n    const res = pm.response.json();\n    if (res.data) {\n        const oid = res.data.id || res.data._id;\n        if (oid) {\n            pm.collectionVariables.set('orderId', oid);\n            pm.environment.set('orderId', oid);\n        }\n        if (res.data.orderNumber) {\n            pm.collectionVariables.set('orderNumber', res.data.orderNumber);\n            pm.environment.set('orderNumber', res.data.orderNumber);\n        }\n        if (res.data.deliveryOtp) {\n            pm.collectionVariables.set('deliveryOtp', res.data.deliveryOtp);\n            pm.environment.set('deliveryOtp', res.data.deliveryOtp);\n        }\n    }\n}"
+        }
+      ]
     },
     {
-      "_id": "r_30_9db8a49e",
+      "_id": "r_31_9db8a49e",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_7_498ee8ba",
       "name": "Get My Orders History",
       "url": "{{baseUrl}}/orders/my-orders",
       "method": "GET",
-      "sortNum": 30000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
-      "headers": [],
+      "sortNum": 31000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{customerToken}}"
+        }
+      ],
       "body": {
         "type": "json",
         "raw": "",
@@ -787,16 +879,21 @@
       "tests": []
     },
     {
-      "_id": "r_31_6339d12b",
+      "_id": "r_32_6339d12b",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_7_498ee8ba",
       "name": "Get Order Details by ID",
       "url": "{{baseUrl}}/orders/{{orderId}}",
       "method": "GET",
-      "sortNum": 31000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
-      "headers": [],
+      "sortNum": 32000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{customerToken}}"
+        }
+      ],
       "body": {
         "type": "json",
         "raw": "",
@@ -805,16 +902,21 @@
       "tests": []
     },
     {
-      "_id": "r_32_423d1e46",
+      "_id": "r_33_423d1e46",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_7_498ee8ba",
       "name": "Get Order Tax Invoice Data",
       "url": "{{baseUrl}}/orders/{{orderId}}/invoice",
       "method": "GET",
-      "sortNum": 32000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
-      "headers": [],
+      "sortNum": 33000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{customerToken}}"
+        }
+      ],
       "body": {
         "type": "json",
         "raw": "",
@@ -823,16 +925,21 @@
       "tests": []
     },
     {
-      "_id": "r_33_02742550",
+      "_id": "r_34_02742550",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_7_498ee8ba",
       "name": "Print Order Tax Invoice (A4 / Thermal)",
       "url": "{{baseUrl}}/orders/{{orderId}}/invoice/print",
       "method": "GET",
-      "sortNum": 33000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
-      "headers": [],
+      "sortNum": 34000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{customerToken}}"
+        }
+      ],
       "body": {
         "type": "json",
         "raw": "",
@@ -841,19 +948,23 @@
       "tests": []
     },
     {
-      "_id": "r_34_4b9ddade",
+      "_id": "r_35_4b9ddade",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_7_498ee8ba",
       "name": "Cancel Order (Before Dispatch)",
       "url": "{{baseUrl}}/orders/{{orderId}}/cancel",
       "method": "POST",
-      "sortNum": 34000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
+      "sortNum": 35000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
       "headers": [
         {
           "name": "Content-Type",
           "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{customerToken}}"
         }
       ],
       "body": {
@@ -864,16 +975,21 @@
       "tests": []
     },
     {
-      "_id": "r_35_07f487bb",
+      "_id": "r_36_07f487bb",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_7_498ee8ba",
       "name": "Live Rider GPS Tracking Stream",
       "url": "{{baseUrl}}/delivery/orders/{{orderId}}/track",
       "method": "GET",
-      "sortNum": 35000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
-      "headers": [],
+      "sortNum": 36000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{customerToken}}"
+        }
+      ],
       "body": {
         "type": "json",
         "raw": "",
@@ -882,16 +998,21 @@
       "tests": []
     },
     {
-      "_id": "r_36_40a741fc",
+      "_id": "r_37_40a741fc",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_8_920bf4be",
       "name": "Get Active Available Coupons",
       "url": "{{baseUrl}}/coupons/",
       "method": "GET",
-      "sortNum": 36000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
-      "headers": [],
+      "sortNum": 37000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{customerToken}}"
+        }
+      ],
       "body": {
         "type": "json",
         "raw": "",
@@ -900,19 +1021,23 @@
       "tests": []
     },
     {
-      "_id": "r_37_716c7bed",
+      "_id": "r_38_716c7bed",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_8_920bf4be",
       "name": "Validate Coupon Code at Checkout",
       "url": "{{baseUrl}}/coupons/validate",
       "method": "POST",
-      "sortNum": 37000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
+      "sortNum": 38000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
       "headers": [
         {
           "name": "Content-Type",
           "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{customerToken}}"
         }
       ],
       "body": {
@@ -923,19 +1048,23 @@
       "tests": []
     },
     {
-      "_id": "r_38_99493013",
+      "_id": "r_39_99493013",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_9_060d867e",
       "name": "Create Order Return Request",
       "url": "{{baseUrl}}/returns/",
       "method": "POST",
-      "sortNum": 38000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
+      "sortNum": 39000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
       "headers": [
         {
           "name": "Content-Type",
           "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{customerToken}}"
         }
       ],
       "body": {
@@ -946,21 +1075,26 @@
       "tests": [
         {
           "type": "custom",
-          "script": "if (pm.response.code >= 200 && pm.response.code < 300) {\n    const res = pm.response.json();\n    if (res.data && res.data.id) { pm.collectionVariables.set('returnId', res.data.id); }\n}"
+          "script": "if (pm.response.code >= 200 && pm.response.code < 300) {\n    const res = pm.response.json();\n    const rid = res.data?.id || res.data?._id;\n    if (rid) {\n        pm.collectionVariables.set('returnId', rid);\n        pm.environment.set('returnId', rid);\n    }\n}"
         }
       ]
     },
     {
-      "_id": "r_39_43f2806b",
+      "_id": "r_40_43f2806b",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_9_060d867e",
       "name": "Get Customer's Return Requests",
       "url": "{{baseUrl}}/returns/my-returns",
       "method": "GET",
-      "sortNum": 39000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
-      "headers": [],
+      "sortNum": 40000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{customerToken}}"
+        }
+      ],
       "body": {
         "type": "json",
         "raw": "",
@@ -969,19 +1103,23 @@
       "tests": []
     },
     {
-      "_id": "r_40_d157eb45",
+      "_id": "r_41_d157eb45",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_9_060d867e",
       "name": "Create Support Help Desk Ticket",
       "url": "{{baseUrl}}/support/tickets",
       "method": "POST",
-      "sortNum": 40000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
+      "sortNum": 41000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
       "headers": [
         {
           "name": "Content-Type",
           "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{customerToken}}"
         }
       ],
       "body": {
@@ -992,24 +1130,28 @@
       "tests": [
         {
           "type": "custom",
-          "script": "if (pm.response.code >= 200 && pm.response.code < 300) {\n    const res = pm.response.json();\n    if (res.data && (res.data.id || res.data._id)) { pm.collectionVariables.set('ticketId', res.data.id || res.data._id); }\n}"
+          "script": "if (pm.response.code >= 200 && pm.response.code < 300) {\n    const res = pm.response.json();\n    const tid = res.data?.id || res.data?._id;\n    if (tid) {\n        pm.collectionVariables.set('ticketId', tid);\n        pm.environment.set('ticketId', tid);\n    }\n}"
         }
       ]
     },
     {
-      "_id": "r_41_0e0a976a",
+      "_id": "r_42_0e0a976a",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_9_060d867e",
       "name": "Request Instant Customer Callback",
       "url": "{{baseUrl}}/support/callback-requests",
       "method": "POST",
-      "sortNum": 41000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
+      "sortNum": 42000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
       "headers": [
         {
           "name": "Content-Type",
           "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{customerToken}}"
         }
       ],
       "body": {
@@ -1020,19 +1162,23 @@
       "tests": []
     },
     {
-      "_id": "r_42_6f85bc09",
+      "_id": "r_43_6f85bc09",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_11_490a4e37",
       "name": "Verify GSTIN / PAN Online",
       "url": "{{baseUrl}}/stores/onboarding/verify-gstin",
       "method": "POST",
-      "sortNum": 42000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
+      "sortNum": 43000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
       "headers": [
         {
           "name": "Content-Type",
           "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{merchantToken}}"
         }
       ],
       "body": {
@@ -1043,19 +1189,23 @@
       "tests": []
     },
     {
-      "_id": "r_43_e7431d5c",
+      "_id": "r_44_e7431d5c",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_11_490a4e37",
       "name": "Submit 6-Step Merchant Onboarding",
       "url": "{{baseUrl}}/stores/onboarding/submit",
       "method": "POST",
-      "sortNum": 43000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
+      "sortNum": 44000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
       "headers": [
         {
           "name": "Content-Type",
           "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{merchantToken}}"
         }
       ],
       "body": {
@@ -1066,16 +1216,21 @@
       "tests": []
     },
     {
-      "_id": "r_44_9f17c7bc",
+      "_id": "r_45_9f17c7bc",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_11_490a4e37",
       "name": "Get Store Operational Settings",
       "url": "{{baseUrl}}/stores/{{storeId}}/settings",
       "method": "GET",
-      "sortNum": 44000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
-      "headers": [],
+      "sortNum": 45000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{merchantToken}}"
+        }
+      ],
       "body": {
         "type": "json",
         "raw": "",
@@ -1084,19 +1239,23 @@
       "tests": []
     },
     {
-      "_id": "r_45_b6f9d725",
+      "_id": "r_46_b6f9d725",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_11_490a4e37",
       "name": "Update Store Settings & Profile",
       "url": "{{baseUrl}}/stores/{{storeId}}/settings",
       "method": "PATCH",
-      "sortNum": 45000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
+      "sortNum": 46000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
       "headers": [
         {
           "name": "Content-Type",
           "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{merchantToken}}"
         }
       ],
       "body": {
@@ -1107,16 +1266,21 @@
       "tests": []
     },
     {
-      "_id": "r_46_98b040f3",
+      "_id": "r_47_98b040f3",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_12_69ffe463",
       "name": "Statutory HSN & GST Lookup",
       "url": "{{baseUrl}}/catalog/taxonomy/hsn-lookup",
       "method": "GET",
-      "sortNum": 46000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
-      "headers": [],
+      "sortNum": 47000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{merchantToken}}"
+        }
+      ],
       "body": {
         "type": "json",
         "raw": "",
@@ -1125,19 +1289,23 @@
       "tests": []
     },
     {
-      "_id": "r_47_05dde828",
+      "_id": "r_48_05dde828",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_12_69ffe463",
       "name": "Create Product (Wizard Step 3)",
       "url": "{{baseUrl}}/catalog/products",
       "method": "POST",
-      "sortNum": 47000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
+      "sortNum": 48000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
       "headers": [
         {
           "name": "Content-Type",
           "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{merchantToken}}"
         }
       ],
       "body": {
@@ -1148,24 +1316,28 @@
       "tests": [
         {
           "type": "custom",
-          "script": "if (pm.response.code >= 200 && pm.response.code < 300) {\n    const res = pm.response.json();\n    if (res.data && res.data.id) { pm.collectionVariables.set('productId', res.data.id); }\n}"
+          "script": "if (pm.response.code >= 200 && pm.response.code < 300) {\n    const res = pm.response.json();\n    if (res.data && res.data.id) { pm.collectionVariables.set('productId', res.data.id); }\npm.environment.set('productId', res.data.id);\n}"
         }
       ]
     },
     {
-      "_id": "r_48_cf368ca8",
+      "_id": "r_49_cf368ca8",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_12_69ffe463",
       "name": "Update Product Stock & Price",
       "url": "{{baseUrl}}/catalog/products/{{productId}}",
       "method": "PATCH",
-      "sortNum": 48000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
+      "sortNum": 49000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
       "headers": [
         {
           "name": "Content-Type",
           "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{merchantToken}}"
         }
       ],
       "body": {
@@ -1176,19 +1348,23 @@
       "tests": []
     },
     {
-      "_id": "r_49_7e62a98b",
+      "_id": "r_50_7e62a98b",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_12_69ffe463",
       "name": "Bulk Delete Products",
       "url": "{{baseUrl}}/catalog/products/bulk-delete",
       "method": "POST",
-      "sortNum": 49000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
+      "sortNum": 50000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
       "headers": [
         {
           "name": "Content-Type",
           "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{merchantToken}}"
         }
       ],
       "body": {
@@ -1199,16 +1375,21 @@
       "tests": []
     },
     {
-      "_id": "r_50_5727f6af",
+      "_id": "r_51_5727f6af",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_13_25f7d4a0",
       "name": "Get Store Active Orders",
       "url": "{{baseUrl}}/orders/store/{{storeId}}",
       "method": "GET",
-      "sortNum": 50000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
-      "headers": [],
+      "sortNum": 51000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{merchantToken}}"
+        }
+      ],
       "body": {
         "type": "json",
         "raw": "",
@@ -1217,19 +1398,23 @@
       "tests": []
     },
     {
-      "_id": "r_51_5c3f9f78",
+      "_id": "r_52_5c3f9f78",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_13_25f7d4a0",
       "name": "Update Order Status (Accept / Pack / Ship)",
       "url": "{{baseUrl}}/orders/{{orderId}}/status",
       "method": "PATCH",
-      "sortNum": 51000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
+      "sortNum": 52000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
       "headers": [
         {
           "name": "Content-Type",
           "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{merchantToken}}"
         }
       ],
       "body": {
@@ -1240,16 +1425,21 @@
       "tests": []
     },
     {
-      "_id": "r_52_5035e814",
+      "_id": "r_53_5035e814",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_13_25f7d4a0",
       "name": "Broadcast Delivery Job to Rider Pool",
       "url": "{{baseUrl}}/delivery/orders/{{orderId}}/broadcast",
       "method": "POST",
-      "sortNum": 52000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
-      "headers": [],
+      "sortNum": 53000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{merchantToken}}"
+        }
+      ],
       "body": {
         "type": "json",
         "raw": "",
@@ -1258,19 +1448,23 @@
       "tests": []
     },
     {
-      "_id": "r_53_534e6bac",
+      "_id": "r_54_534e6bac",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_13_25f7d4a0",
       "name": "Assign Specific Pilot Rider",
       "url": "{{baseUrl}}/delivery/orders/{{orderId}}/assign",
       "method": "POST",
-      "sortNum": 53000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
+      "sortNum": 54000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
       "headers": [
         {
           "name": "Content-Type",
           "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{merchantToken}}"
         }
       ],
       "body": {
@@ -1281,16 +1475,21 @@
       "tests": []
     },
     {
-      "_id": "r_54_95605967",
+      "_id": "r_55_95605967",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_13_25f7d4a0",
       "name": "Fulfill In-Store Order Reservation",
       "url": "{{baseUrl}}/orders/{{orderId}}/claim-reservation",
       "method": "POST",
-      "sortNum": 54000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
-      "headers": [],
+      "sortNum": 55000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{merchantToken}}"
+        }
+      ],
       "body": {
         "type": "json",
         "raw": "",
@@ -1299,19 +1498,23 @@
       "tests": []
     },
     {
-      "_id": "r_55_96294acb",
+      "_id": "r_56_96294acb",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_14_3c000221",
       "name": "Record Counter POS Walk-In Sale",
       "url": "{{baseUrl}}/billing/pos/sale",
       "method": "POST",
-      "sortNum": 55000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
+      "sortNum": 56000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
       "headers": [
         {
           "name": "Content-Type",
           "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{merchantToken}}"
         }
       ],
       "body": {
@@ -1322,19 +1525,23 @@
       "tests": []
     },
     {
-      "_id": "r_56_663929ca",
+      "_id": "r_57_663929ca",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_14_3c000221",
       "name": "Generate Tax Invoice",
       "url": "{{baseUrl}}/billing/invoices",
       "method": "POST",
-      "sortNum": 56000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
+      "sortNum": 57000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
       "headers": [
         {
           "name": "Content-Type",
           "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{merchantToken}}"
         }
       ],
       "body": {
@@ -1345,21 +1552,26 @@
       "tests": [
         {
           "type": "custom",
-          "script": "if (pm.response.code >= 200 && pm.response.code < 300) {\n    const res = pm.response.json();\n    if (res.data && res.data.id) { pm.collectionVariables.set('invoiceId', res.data.id); }\n}"
+          "script": "if (pm.response.code >= 200 && pm.response.code < 300) {\n    const res = pm.response.json();\n    const iid = res.data?.id || res.data?._id;\n    if (iid) {\n        pm.collectionVariables.set('invoiceId', iid);\n        pm.environment.set('invoiceId', iid);\n    }\n}"
         }
       ]
     },
     {
-      "_id": "r_57_8602183f",
+      "_id": "r_58_8602183f",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_14_3c000221",
       "name": "Print POS Invoice (Thermal / A4)",
       "url": "{{baseUrl}}/billing/invoices/{{invoiceId}}/print",
       "method": "GET",
-      "sortNum": 57000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
-      "headers": [],
+      "sortNum": 58000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{merchantToken}}"
+        }
+      ],
       "body": {
         "type": "json",
         "raw": "",
@@ -1368,19 +1580,23 @@
       "tests": []
     },
     {
-      "_id": "r_58_e3d1b531",
+      "_id": "r_59_e3d1b531",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_14_3c000221",
       "name": "Add Khata Customer",
       "url": "{{baseUrl}}/customers/",
       "method": "POST",
-      "sortNum": 58000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
+      "sortNum": 59000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
       "headers": [
         {
           "name": "Content-Type",
           "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{merchantToken}}"
         }
       ],
       "body": {
@@ -1391,24 +1607,28 @@
       "tests": [
         {
           "type": "custom",
-          "script": "if (pm.response.code >= 200 && pm.response.code < 300) {\n    const res = pm.response.json();\n    if (res.data && res.data.id) { pm.collectionVariables.set('customerId', res.data.id); }\n}"
+          "script": "if (pm.response.code >= 200 && pm.response.code < 300) {\n    const res = pm.response.json();\n    const cid = res.data?.id || res.data?._id;\n    if (cid) {\n        pm.collectionVariables.set('customerId', cid);\n        pm.environment.set('customerId', cid);\n    }\n}"
         }
       ]
     },
     {
-      "_id": "r_59_a131582c",
+      "_id": "r_60_a131582c",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_14_3c000221",
       "name": "Record Khata Credit / Debit Adjustment",
       "url": "{{baseUrl}}/customers/{{customerId}}/credit",
       "method": "POST",
-      "sortNum": 59000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
+      "sortNum": 60000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
       "headers": [
         {
           "name": "Content-Type",
           "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{merchantToken}}"
         }
       ],
       "body": {
@@ -1419,19 +1639,23 @@
       "tests": []
     },
     {
-      "_id": "r_60_a8e0d610",
+      "_id": "r_61_a8e0d610",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_15_6bccff6b",
       "name": "Create Vendor & Purchase Order",
       "url": "{{baseUrl}}/expenses/purchases",
       "method": "POST",
-      "sortNum": 60000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
+      "sortNum": 61000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
       "headers": [
         {
           "name": "Content-Type",
           "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{merchantToken}}"
         }
       ],
       "body": {
@@ -1442,21 +1666,26 @@
       "tests": [
         {
           "type": "custom",
-          "script": "if (pm.response.code >= 200 && pm.response.code < 300) {\n    const res = pm.response.json();\n    if (res.data && res.data.id) { pm.collectionVariables.set('purchaseId', res.data.id); }\n}"
+          "script": "if (pm.response.code >= 200 && pm.response.code < 300) {\n    const res = pm.response.json();\n    const pid = res.data?.id || res.data?._id;\n    if (pid) {\n        pm.collectionVariables.set('purchaseId', pid);\n        pm.environment.set('purchaseId', pid);\n    }\n}"
         }
       ]
     },
     {
-      "_id": "r_61_2393e551",
+      "_id": "r_62_2393e551",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_15_6bccff6b",
       "name": "Get Merchant Settlements Overview",
       "url": "{{baseUrl}}/settlements/overview",
       "method": "GET",
-      "sortNum": 61000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
-      "headers": [],
+      "sortNum": 62000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{merchantToken}}"
+        }
+      ],
       "body": {
         "type": "json",
         "raw": "",
@@ -1465,19 +1694,23 @@
       "tests": []
     },
     {
-      "_id": "r_62_523d8363",
+      "_id": "r_63_523d8363",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_15_6bccff6b",
       "name": "Request Instant Payout",
       "url": "{{baseUrl}}/settlements/request",
       "method": "POST",
-      "sortNum": 62000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
+      "sortNum": 63000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
       "headers": [
         {
           "name": "Content-Type",
           "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{merchantToken}}"
         }
       ],
       "body": {
@@ -1488,16 +1721,21 @@
       "tests": []
     },
     {
-      "_id": "r_63_c166c048",
+      "_id": "r_64_c166c048",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_15_6bccff6b",
       "name": "Get Business Analytics Overview",
       "url": "{{baseUrl}}/analytics/overview",
       "method": "GET",
-      "sortNum": 63000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
-      "headers": [],
+      "sortNum": 64000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{merchantToken}}"
+        }
+      ],
       "body": {
         "type": "json",
         "raw": "",
@@ -1506,16 +1744,21 @@
       "tests": []
     },
     {
-      "_id": "r_64_f8232697",
+      "_id": "r_65_f8232697",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_16_f7f1af05",
       "name": "Get Available Open Delivery Jobs",
       "url": "{{baseUrl}}/delivery/jobs/available",
       "method": "GET",
-      "sortNum": 64000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
-      "headers": [],
+      "sortNum": 65000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{riderToken}}"
+        }
+      ],
       "body": {
         "type": "json",
         "raw": "",
@@ -1524,19 +1767,23 @@
       "tests": []
     },
     {
-      "_id": "r_65_f92a1b23",
+      "_id": "r_66_f92a1b23",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_16_f7f1af05",
       "name": "Claim Delivery Run (Atomic Mutex)",
       "url": "{{baseUrl}}/delivery/orders/{{orderId}}/claim",
       "method": "POST",
-      "sortNum": 65000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
+      "sortNum": 66000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
       "headers": [
         {
           "name": "Content-Type",
           "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{riderToken}}"
         }
       ],
       "body": {
@@ -1547,16 +1794,21 @@
       "tests": []
     },
     {
-      "_id": "r_66_8872c02f",
+      "_id": "r_67_8872c02f",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_16_f7f1af05",
       "name": "Get Rider Run Navigation Details",
       "url": "{{baseUrl}}/delivery/orders/{{orderId}}/run-details",
       "method": "GET",
-      "sortNum": 66000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
-      "headers": [],
+      "sortNum": 67000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{riderToken}}"
+        }
+      ],
       "body": {
         "type": "json",
         "raw": "",
@@ -1565,19 +1817,23 @@
       "tests": []
     },
     {
-      "_id": "r_67_88f374f9",
+      "_id": "r_68_88f374f9",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_16_f7f1af05",
       "name": "Push Rider Live GPS Location",
       "url": "{{baseUrl}}/delivery/orders/{{orderId}}/location",
       "method": "POST",
-      "sortNum": 67000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
+      "sortNum": 68000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
       "headers": [
         {
           "name": "Content-Type",
           "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{riderToken}}"
         }
       ],
       "body": {
@@ -1588,19 +1844,23 @@
       "tests": []
     },
     {
-      "_id": "r_68_d5aa55ce",
+      "_id": "r_69_d5aa55ce",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_16_f7f1af05",
       "name": "Verify 4-Digit Handshake OTP (Complete)",
       "url": "{{baseUrl}}/delivery/orders/{{orderId}}/verify-otp",
       "method": "POST",
-      "sortNum": 68000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
+      "sortNum": 69000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
       "headers": [
         {
           "name": "Content-Type",
           "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {{riderToken}}"
         }
       ],
       "body": {
@@ -1611,16 +1871,21 @@
       "tests": []
     },
     {
-      "_id": "r_69_7687c2c3",
+      "_id": "r_70_7687c2c3",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_17_da2a5d57",
       "name": "Get Unread Notifications Summary",
       "url": "{{baseUrl}}/notifications/unread-summary",
       "method": "GET",
-      "sortNum": 69000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
-      "headers": [],
+      "sortNum": 70000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{customerToken}}"
+        }
+      ],
       "body": {
         "type": "json",
         "raw": "",
@@ -1629,16 +1894,21 @@
       "tests": []
     },
     {
-      "_id": "r_70_66024bb9",
+      "_id": "r_71_66024bb9",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_17_da2a5d57",
       "name": "List Notifications",
       "url": "{{baseUrl}}/notifications/",
       "method": "GET",
-      "sortNum": 70000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
-      "headers": [],
+      "sortNum": 71000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{customerToken}}"
+        }
+      ],
       "body": {
         "type": "json",
         "raw": "",
@@ -1647,16 +1917,21 @@
       "tests": []
     },
     {
-      "_id": "r_71_66be92b1",
+      "_id": "r_72_66be92b1",
       "colId": "e2f59a4c-8114-432a-bc91-ec0672199b01",
       "containerId": "f_17_da2a5d57",
       "name": "Mark All Notifications as Read",
       "url": "{{baseUrl}}/notifications/read-all",
       "method": "PATCH",
-      "sortNum": 71000,
-      "created": "2026-10-30T05:37:57.382Z",
-      "modified": "2026-10-30T05:37:57.382Z",
-      "headers": [],
+      "sortNum": 72000,
+      "created": "2026-10-30T06:06:49.713Z",
+      "modified": "2026-10-30T06:06:49.713Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{customerToken}}"
+        }
+      ],
       "body": {
         "type": "json",
         "raw": "",

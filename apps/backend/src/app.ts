@@ -104,7 +104,7 @@ export function createApp(): Express {
 
   // Health & Liveness / Readiness Probes (structure.md Section 6.4)
   // Liveness probe: Is the node process alive and responsive?
-  app.get(['/health', '/healthz'], (_req: Request, res: Response) => {
+  app.get(['/health', '/healthz', `/api/${env.API_VERSION}/health`, `/api/${env.API_VERSION}/healthz`], (_req: Request, res: Response) => {
     ApiResponse.success(res, {
       status: 'healthy',
       uptime: process.uptime(),
@@ -115,7 +115,7 @@ export function createApp(): Express {
   });
 
   // Readiness probe: Are database, redis, and system resources ready to accept traffic?
-  app.get('/readyz', (_req: Request, res: Response) => {
+  app.get(['/readyz', `/api/${env.API_VERSION}/readyz`], (_req: Request, res: Response) => {
     const isDbConnected = mongoose.connection.readyState === 1;
     const isRedisHealthy = checkRedisHealth();
     const memory = process.memoryUsage();
@@ -171,7 +171,7 @@ export function createApp(): Express {
   app.use(`/api/${env.API_VERSION}`, apiV1);
 
   // OpenAPI / Swagger Interactive Documentation
-  app.get(['/api-docs.json', '/docs.json', `/api/${env.API_VERSION}/docs.json`], (_req: Request, res: Response) => {
+  app.get(['/api-docs.json', '/docs.json', `/api/${env.API_VERSION}/docs.json`, `/api/${env.API_VERSION}/api-docs.json`], (_req: Request, res: Response) => {
     res.setHeader('Content-Type', 'application/json');
     res.send(swaggerSpec);
   });

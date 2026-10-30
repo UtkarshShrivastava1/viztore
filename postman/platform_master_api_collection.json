@@ -38,25 +38,25 @@
     },
     {
       "key": "storeId",
-      "value": "6ae044094cd443d317eafc45",
+      "value": "6acf505183256911d14c43cc",
       "type": "string",
       "description": "Target active store ID"
     },
     {
       "key": "storeSlug",
-      "value": "shree-rama-dress",
+      "value": "national-retail-store-oqrk",
       "type": "string",
       "description": "Target store slug"
     },
     {
       "key": "productId",
-      "value": "6ae044c44cd443d317eafcd7",
+      "value": "6acf6c0583256911d14c4a07",
       "type": "string",
       "description": "Target product ID"
     },
     {
       "key": "productSlug",
-      "value": "mens-classic-linen-shirt",
+      "value": "classic-cotton-polo-t-shirt-yas6y",
       "type": "string",
       "description": "Target product slug"
     },
@@ -131,13 +131,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/../../healthz",
+              "raw": "{{baseUrl}}/healthz",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "..",
-                "..",
                 "healthz"
               ]
             },
@@ -164,13 +162,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/../../readyz",
+              "raw": "{{baseUrl}}/readyz",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "..",
-                "..",
                 "readyz"
               ]
             },
@@ -197,13 +193,11 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/../../api-docs.json",
+              "raw": "{{baseUrl}}/api-docs.json",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "..",
-                "..",
                 "api-docs.json"
               ]
             },
@@ -255,10 +249,21 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"fullName\": \"Ananya Sharma\",\n  \"email\": \"ananya.customer@example.com\",\n  \"phone\": \"9876543299\",\n  \"password\": \"Password@123\",\n  \"role\": \"customer\"\n}"
+              "raw": "{\n  \"fullName\": \"Test Shopper\",\n  \"email\": \"{{regEmail}}\",\n  \"phone\": \"{{regPhone}}\",\n  \"password\": \"Password@123\",\n  \"role\": \"customer\"\n}"
             }
           },
           "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const ts = Date.now().toString().slice(-6);",
+                  "pm.variables.set('regEmail', 'user_' + ts + '@example.com');",
+                  "pm.variables.set('regPhone', '98' + ts + Math.floor(Math.random() * 90 + 10));"
+                ]
+              }
+            },
             {
               "listen": "test",
               "script": {
@@ -266,7 +271,11 @@
                 "exec": [
                   "if (pm.response.code >= 200 && pm.response.code < 300) {",
                   "    const res = pm.response.json();",
-                  "    if (res.data && res.data.tokens) { pm.collectionVariables.set('customerToken', res.data.tokens.accessToken); }",
+                  "    const token = res.data?.tokens?.accessToken || res.data?.accessToken;",
+                  "    if (token) {",
+                  "        pm.collectionVariables.set('customerToken', token);",
+                  "        pm.environment.set('customerToken', token);",
+                  "    }",
                   "}"
                 ]
               }
@@ -299,7 +308,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"identifier\": \"ananya.customer@example.com\",\n  \"password\": \"Password@123\",\n  \"role\": \"customer\"\n}"
+              "raw": "{\n  \"identifier\": \"arjun.customer@example.com\",\n  \"password\": \"Password@123\",\n  \"role\": \"customer\"\n}"
             }
           },
           "event": [
@@ -310,7 +319,11 @@
                 "exec": [
                   "if (pm.response.code >= 200 && pm.response.code < 300) {",
                   "    const res = pm.response.json();",
-                  "    if (res.data && (res.data.tokens?.accessToken || res.data.accessToken)) { pm.collectionVariables.set('customerToken', res.data.tokens?.accessToken || res.data.accessToken); }",
+                  "    const token = res.data?.tokens?.accessToken || res.data?.accessToken;",
+                  "    if (token) {",
+                  "        pm.collectionVariables.set('customerToken', token);",
+                  "        pm.environment.set('customerToken', token);",
+                  "    }",
                   "}"
                 ]
               }
@@ -354,7 +367,16 @@
                 "exec": [
                   "if (pm.response.code >= 200 && pm.response.code < 300) {",
                   "    const res = pm.response.json();",
-                  "    if (res.data && (res.data.tokens?.accessToken || res.data.accessToken)) { pm.collectionVariables.set('merchantToken', res.data.tokens?.accessToken || res.data.accessToken); if (res.data.user?.storeId) { pm.collectionVariables.set('storeId', res.data.user.storeId); } }",
+                  "    const token = res.data?.tokens?.accessToken || res.data?.accessToken;",
+                  "    if (token) {",
+                  "        pm.collectionVariables.set('merchantToken', token);",
+                  "        pm.environment.set('merchantToken', token);",
+                  "    }",
+                  "    const sId = res.data?.user?.storeId || res.data?.store?.id;",
+                  "    if (sId) {",
+                  "        pm.collectionVariables.set('storeId', sId);",
+                  "        pm.environment.set('storeId', sId);",
+                  "    }",
                   "}"
                 ]
               }
@@ -398,7 +420,56 @@
                 "exec": [
                   "if (pm.response.code >= 200 && pm.response.code < 300) {",
                   "    const res = pm.response.json();",
-                  "    if (res.data && (res.data.tokens?.accessToken || res.data.accessToken)) { pm.collectionVariables.set('adminToken', res.data.tokens?.accessToken || res.data.accessToken); }",
+                  "    const token = res.data?.tokens?.accessToken || res.data?.accessToken;",
+                  "    if (token) {",
+                  "        pm.collectionVariables.set('adminToken', token);",
+                  "        pm.environment.set('adminToken', token);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rider Login (Target Role: rider)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"rider@example.com\",\n  \"password\": \"Password@123\",\n  \"role\": \"rider\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Authenticates a Delivery Pilot Rider and captures {{riderToken}} for fleet dispatch operations."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "    const res = pm.response.json();",
+                  "    const token = res.data?.tokens?.accessToken || res.data?.accessToken;",
+                  "    if (token) {",
+                  "        pm.collectionVariables.set('riderToken', token);",
+                  "        pm.environment.set('riderToken', token);",
+                  "    }",
                   "}"
                 ]
               }
@@ -443,6 +514,7 @@
                   "if (pm.response.code >= 200 && pm.response.code < 300) {",
                   "    const res = pm.response.json();",
                   "    if (res.data && res.data.accessToken) { pm.collectionVariables.set('customerToken', res.data.accessToken); }",
+                  "pm.environment.set('customerToken', res.data.accessToken);",
                   "}"
                 ]
               }
@@ -629,7 +701,11 @@
                     "exec": [
                       "if (pm.response.code >= 200 && pm.response.code < 300) {",
                       "    const res = pm.response.json();",
-                      "    if (res.data && res.data.id) { pm.collectionVariables.set('productId', res.data.id); }",
+                      "    const pid = res.data?.id || res.data?._id;",
+                      "    if (pid) {",
+                      "        pm.collectionVariables.set('productId', pid);",
+                      "        pm.environment.set('productId', pid);",
+                      "    }",
                       "}"
                     ]
                   }
@@ -705,7 +781,11 @@
                     "exec": [
                       "if (pm.response.code >= 200 && pm.response.code < 300) {",
                       "    const res = pm.response.json();",
-                      "    if (res.data && res.data.id) { pm.collectionVariables.set('storeId', res.data.id); }",
+                      "    const sid = res.data?.id || res.data?._id;",
+                      "    if (sid) {",
+                      "        pm.collectionVariables.set('storeId', sid);",
+                      "        pm.environment.set('storeId', sid);",
+                      "    }",
                       "}"
                     ]
                   }
@@ -743,6 +823,11 @@
                   {
                     "key": "Content-Type",
                     "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
                   }
                 ],
                 "url": {
@@ -782,7 +867,13 @@
               "name": "Get Customer Profile",
               "request": {
                 "method": "GET",
-                "header": [],
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
+                  }
+                ],
                 "url": {
                   "raw": "{{baseUrl}}/auth/me",
                   "host": [
@@ -814,6 +905,11 @@
                   {
                     "key": "Content-Type",
                     "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
                   }
                 ],
                 "url": {
@@ -847,7 +943,13 @@
               "name": "Get Saved Delivery Addresses",
               "request": {
                 "method": "GET",
-                "header": [],
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
+                  }
+                ],
                 "url": {
                   "raw": "{{baseUrl}}/auth/addresses",
                   "host": [
@@ -878,7 +980,13 @@
                     "exec": [
                       "if (pm.response.code >= 200 && pm.response.code < 300) {",
                       "    const res = pm.response.json();",
-                      "    if (res.data && res.data.length > 0) { pm.collectionVariables.set('addressId', res.data[0].id || res.data[0]._id); }",
+                      "    if (Array.isArray(res.data) && res.data.length > 0) {",
+                      "        const aid = res.data[0].id || res.data[0]._id;",
+                      "        if (aid) {",
+                      "            pm.collectionVariables.set('addressId', aid);",
+                      "            pm.environment.set('addressId', aid);",
+                      "        }",
+                      "    }",
                       "}"
                     ]
                   }
@@ -893,6 +1001,11 @@
                   {
                     "key": "Content-Type",
                     "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
                   }
                 ],
                 "url": {
@@ -929,7 +1042,11 @@
                     "exec": [
                       "if (pm.response.code >= 200 && pm.response.code < 300) {",
                       "    const res = pm.response.json();",
-                      "    if (res.data && (res.data.id || res.data._id)) { pm.collectionVariables.set('addressId', res.data.id || res.data._id); }",
+                      "    const aid = res.data?.id || res.data?._id;",
+                      "    if (aid) {",
+                      "        pm.collectionVariables.set('addressId', aid);",
+                      "        pm.environment.set('addressId', aid);",
+                      "    }",
                       "}"
                     ]
                   }
@@ -940,7 +1057,13 @@
               "name": "Toggle Favorite Store",
               "request": {
                 "method": "POST",
-                "header": [],
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
+                  }
+                ],
                 "url": {
                   "raw": "{{baseUrl}}/auth/favorite-stores/{{storeId}}/toggle",
                   "host": [
@@ -970,7 +1093,13 @@
               "name": "Get Favorite Stores",
               "request": {
                 "method": "GET",
-                "header": [],
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
+                  }
+                ],
                 "url": {
                   "raw": "{{baseUrl}}/auth/favorite-stores",
                   "host": [
@@ -998,7 +1127,13 @@
               "name": "Toggle Wishlist Product",
               "request": {
                 "method": "POST",
-                "header": [],
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
+                  }
+                ],
                 "url": {
                   "raw": "{{baseUrl}}/auth/wishlist/{{productId}}/toggle",
                   "host": [
@@ -1028,7 +1163,13 @@
               "name": "Get Customer Wishlist",
               "request": {
                 "method": "GET",
-                "header": [],
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
+                  }
+                ],
                 "url": {
                   "raw": "{{baseUrl}}/auth/wishlist",
                   "host": [
@@ -1060,6 +1201,11 @@
                   {
                     "key": "Content-Type",
                     "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
                   }
                 ],
                 "url": {
@@ -1085,7 +1231,7 @@
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"category\": \"Experience\",\n  \"rating\": 5,\n  \"feedbackText\": \"Super fast 15-minute delivery from my neighborhood shop!\",\n  \"deviceInfo\": \"Chrome 128 / Windows 11\"\n}"
+                  "raw": "{\n  \"rating\": 5,\n  \"feedbackType\": \"general\",\n  \"comment\": \"Excellent hyperlocal store experience and ultra-fast delivery!\"\n}"
                 }
               }
             }
@@ -1102,6 +1248,11 @@
                   {
                     "key": "Content-Type",
                     "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
                   }
                 ],
                 "url": {
@@ -1127,7 +1278,7 @@
                 },
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"storeId\": \"{{storeId}}\",\n  \"items\": [\n    {\n      \"productId\": \"{{productId}}\",\n      \"name\": \"Men Classic Linen Shirt\",\n      \"quantity\": 1,\n      \"unitPrice\": 799,\n      \"storeId\": \"{{storeId}}\"\n    }\n  ],\n  \"shippingAddress\": {\n    \"fullName\": \"Ananya Sharma\",\n    \"phone\": \"9876543299\",\n    \"street\": \"Flat 402, Green Valley Towers, Nehru Nagar\",\n    \"city\": \"Bhilai\",\n    \"state\": \"Chhattisgarh\",\n    \"postalCode\": \"490020\",\n    \"country\": \"IN\"\n  },\n  \"couponCode\": \"{{couponCode}}\",\n  \"fulfilmentMode\": \"deliver\"\n}"
+                  "raw": "{\n  \"storeId\": \"{{storeId}}\",\n  \"items\": [\n    {\n      \"productId\": \"{{productId}}\",\n      \"name\": \"Men Classic Linen Shirt\",\n      \"quantity\": 1,\n      \"unitPrice\": 799,\n      \"storeId\": \"{{storeId}}\"\n    }\n  ],\n  \"shippingAddress\": {\n    \"fullName\": \"Ananya Sharma\",\n    \"phone\": \"9876543299\",\n    \"street\": \"Flat 402, Green Valley Towers, Nehru Nagar\",\n    \"city\": \"Bhilai\",\n    \"state\": \"Chhattisgarh\",\n    \"postalCode\": \"490020\",\n    \"country\": \"IN\"\n  },\n  \"fulfilmentMode\": \"deliver\"\n}"
                 }
               },
               "event": [
@@ -1138,7 +1289,21 @@
                     "exec": [
                       "if (pm.response.code >= 200 && pm.response.code < 300) {",
                       "    const res = pm.response.json();",
-                      "    if (res.data) { pm.collectionVariables.set('orderId', res.data.id); pm.collectionVariables.set('orderNumber', res.data.orderNumber); pm.collectionVariables.set('deliveryOtp', res.data.deliveryOtp); }",
+                      "    if (res.data) {",
+                      "        const oid = res.data.id || res.data._id;",
+                      "        if (oid) {",
+                      "            pm.collectionVariables.set('orderId', oid);",
+                      "            pm.environment.set('orderId', oid);",
+                      "        }",
+                      "        if (res.data.orderNumber) {",
+                      "            pm.collectionVariables.set('orderNumber', res.data.orderNumber);",
+                      "            pm.environment.set('orderNumber', res.data.orderNumber);",
+                      "        }",
+                      "        if (res.data.deliveryOtp) {",
+                      "            pm.collectionVariables.set('deliveryOtp', res.data.deliveryOtp);",
+                      "            pm.environment.set('deliveryOtp', res.data.deliveryOtp);",
+                      "        }",
+                      "    }",
                       "}"
                     ]
                   }
@@ -1153,6 +1318,11 @@
                   {
                     "key": "Content-Type",
                     "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
                   }
                 ],
                 "url": {
@@ -1180,13 +1350,47 @@
                   "mode": "raw",
                   "raw": "{\n  \"storeId\": \"{{storeId}}\",\n  \"items\": [\n    {\n      \"productId\": \"{{productId}}\",\n      \"name\": \"Men Classic Linen Shirt\",\n      \"quantity\": 1,\n      \"unitPrice\": 799,\n      \"storeId\": \"{{storeId}}\"\n    }\n  ],\n  \"fulfilmentMode\": \"reserve\"\n}"
                 }
-              }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                      "    const res = pm.response.json();",
+                      "    if (res.data) {",
+                      "        const oid = res.data.id || res.data._id;",
+                      "        if (oid) {",
+                      "            pm.collectionVariables.set('orderId', oid);",
+                      "            pm.environment.set('orderId', oid);",
+                      "        }",
+                      "        if (res.data.orderNumber) {",
+                      "            pm.collectionVariables.set('orderNumber', res.data.orderNumber);",
+                      "            pm.environment.set('orderNumber', res.data.orderNumber);",
+                      "        }",
+                      "        if (res.data.deliveryOtp) {",
+                      "            pm.collectionVariables.set('deliveryOtp', res.data.deliveryOtp);",
+                      "            pm.environment.set('deliveryOtp', res.data.deliveryOtp);",
+                      "        }",
+                      "    }",
+                      "}"
+                    ]
+                  }
+                }
+              ]
             },
             {
               "name": "Get My Orders History",
               "request": {
                 "method": "GET",
-                "header": [],
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
+                  }
+                ],
                 "url": {
                   "raw": "{{baseUrl}}/orders/my-orders",
                   "host": [
@@ -1224,7 +1428,13 @@
               "name": "Get Order Details by ID",
               "request": {
                 "method": "GET",
-                "header": [],
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
+                  }
+                ],
                 "url": {
                   "raw": "{{baseUrl}}/orders/{{orderId}}",
                   "host": [
@@ -1252,7 +1462,13 @@
               "name": "Get Order Tax Invoice Data",
               "request": {
                 "method": "GET",
-                "header": [],
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
+                  }
+                ],
                 "url": {
                   "raw": "{{baseUrl}}/orders/{{orderId}}/invoice",
                   "host": [
@@ -1281,7 +1497,13 @@
               "name": "Print Order Tax Invoice (A4 / Thermal)",
               "request": {
                 "method": "GET",
-                "header": [],
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
+                  }
+                ],
                 "url": {
                   "raw": "{{baseUrl}}/orders/{{orderId}}/invoice/print",
                   "host": [
@@ -1325,6 +1547,11 @@
                   {
                     "key": "Content-Type",
                     "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
                   }
                 ],
                 "url": {
@@ -1359,7 +1586,13 @@
               "name": "Live Rider GPS Tracking Stream",
               "request": {
                 "method": "GET",
-                "header": [],
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
+                  }
+                ],
                 "url": {
                   "raw": "{{baseUrl}}/delivery/orders/{{orderId}}/track",
                   "host": [
@@ -1394,7 +1627,13 @@
               "name": "Get Active Available Coupons",
               "request": {
                 "method": "GET",
-                "header": [],
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
+                  }
+                ],
                 "url": {
                   "raw": "{{baseUrl}}/coupons/",
                   "host": [
@@ -1425,6 +1664,11 @@
                   {
                     "key": "Content-Type",
                     "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
                   }
                 ],
                 "url": {
@@ -1467,6 +1711,11 @@
                   {
                     "key": "Content-Type",
                     "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
                   }
                 ],
                 "url": {
@@ -1503,7 +1752,11 @@
                     "exec": [
                       "if (pm.response.code >= 200 && pm.response.code < 300) {",
                       "    const res = pm.response.json();",
-                      "    if (res.data && res.data.id) { pm.collectionVariables.set('returnId', res.data.id); }",
+                      "    const rid = res.data?.id || res.data?._id;",
+                      "    if (rid) {",
+                      "        pm.collectionVariables.set('returnId', rid);",
+                      "        pm.environment.set('returnId', rid);",
+                      "    }",
                       "}"
                     ]
                   }
@@ -1514,7 +1767,13 @@
               "name": "Get Customer's Return Requests",
               "request": {
                 "method": "GET",
-                "header": [],
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
+                  }
+                ],
                 "url": {
                   "raw": "{{baseUrl}}/returns/my-returns",
                   "host": [
@@ -1546,6 +1805,11 @@
                   {
                     "key": "Content-Type",
                     "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
                   }
                 ],
                 "url": {
@@ -1582,7 +1846,11 @@
                     "exec": [
                       "if (pm.response.code >= 200 && pm.response.code < 300) {",
                       "    const res = pm.response.json();",
-                      "    if (res.data && (res.data.id || res.data._id)) { pm.collectionVariables.set('ticketId', res.data.id || res.data._id); }",
+                      "    const tid = res.data?.id || res.data?._id;",
+                      "    if (tid) {",
+                      "        pm.collectionVariables.set('ticketId', tid);",
+                      "        pm.environment.set('ticketId', tid);",
+                      "    }",
                       "}"
                     ]
                   }
@@ -1597,6 +1865,11 @@
                   {
                     "key": "Content-Type",
                     "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
                   }
                 ],
                 "url": {
@@ -1637,6 +1910,11 @@
                   {
                     "key": "Content-Type",
                     "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{merchantToken}}",
+                    "type": "text"
                   }
                 ],
                 "url": {
@@ -1668,6 +1946,11 @@
                   {
                     "key": "Content-Type",
                     "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{merchantToken}}",
+                    "type": "text"
                   }
                 ],
                 "url": {
@@ -1695,7 +1978,13 @@
               "name": "Get Store Operational Settings",
               "request": {
                 "method": "GET",
-                "header": [],
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{merchantToken}}",
+                    "type": "text"
+                  }
+                ],
                 "url": {
                   "raw": "{{baseUrl}}/stores/{{storeId}}/settings",
                   "host": [
@@ -1728,6 +2017,11 @@
                   {
                     "key": "Content-Type",
                     "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{merchantToken}}",
+                    "type": "text"
                   }
                 ],
                 "url": {
@@ -1767,7 +2061,13 @@
               "name": "Statutory HSN & GST Lookup",
               "request": {
                 "method": "GET",
-                "header": [],
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{merchantToken}}",
+                    "type": "text"
+                  }
+                ],
                 "url": {
                   "raw": "{{baseUrl}}/catalog/taxonomy/hsn-lookup",
                   "host": [
@@ -1803,6 +2103,11 @@
                   {
                     "key": "Content-Type",
                     "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{merchantToken}}",
+                    "type": "text"
                   }
                 ],
                 "url": {
@@ -1840,6 +2145,7 @@
                       "if (pm.response.code >= 200 && pm.response.code < 300) {",
                       "    const res = pm.response.json();",
                       "    if (res.data && res.data.id) { pm.collectionVariables.set('productId', res.data.id); }",
+                      "pm.environment.set('productId', res.data.id);",
                       "}"
                     ]
                   }
@@ -1854,6 +2160,11 @@
                   {
                     "key": "Content-Type",
                     "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{merchantToken}}",
+                    "type": "text"
                   }
                 ],
                 "url": {
@@ -1892,6 +2203,11 @@
                   {
                     "key": "Content-Type",
                     "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{merchantToken}}",
+                    "type": "text"
                   }
                 ],
                 "url": {
@@ -1931,7 +2247,13 @@
               "name": "Get Store Active Orders",
               "request": {
                 "method": "GET",
-                "header": [],
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{merchantToken}}",
+                    "type": "text"
+                  }
+                ],
                 "url": {
                   "raw": "{{baseUrl}}/orders/store/{{storeId}}",
                   "host": [
@@ -1974,6 +2296,11 @@
                   {
                     "key": "Content-Type",
                     "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{merchantToken}}",
+                    "type": "text"
                   }
                 ],
                 "url": {
@@ -2008,7 +2335,13 @@
               "name": "Broadcast Delivery Job to Rider Pool",
               "request": {
                 "method": "POST",
-                "header": [],
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{merchantToken}}",
+                    "type": "text"
+                  }
+                ],
                 "url": {
                   "raw": "{{baseUrl}}/delivery/orders/{{orderId}}/broadcast",
                   "host": [
@@ -2042,6 +2375,11 @@
                   {
                     "key": "Content-Type",
                     "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{merchantToken}}",
+                    "type": "text"
                   }
                 ],
                 "url": {
@@ -2077,7 +2415,13 @@
               "name": "Fulfill In-Store Order Reservation",
               "request": {
                 "method": "POST",
-                "header": [],
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{merchantToken}}",
+                    "type": "text"
+                  }
+                ],
                 "url": {
                   "raw": "{{baseUrl}}/orders/{{orderId}}/claim-reservation",
                   "host": [
@@ -2115,6 +2459,11 @@
                   {
                     "key": "Content-Type",
                     "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{merchantToken}}",
+                    "type": "text"
                   }
                 ],
                 "url": {
@@ -2153,6 +2502,11 @@
                   {
                     "key": "Content-Type",
                     "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{merchantToken}}",
+                    "type": "text"
                   }
                 ],
                 "url": {
@@ -2189,7 +2543,11 @@
                     "exec": [
                       "if (pm.response.code >= 200 && pm.response.code < 300) {",
                       "    const res = pm.response.json();",
-                      "    if (res.data && res.data.id) { pm.collectionVariables.set('invoiceId', res.data.id); }",
+                      "    const iid = res.data?.id || res.data?._id;",
+                      "    if (iid) {",
+                      "        pm.collectionVariables.set('invoiceId', iid);",
+                      "        pm.environment.set('invoiceId', iid);",
+                      "    }",
                       "}"
                     ]
                   }
@@ -2200,7 +2558,13 @@
               "name": "Print POS Invoice (Thermal / A4)",
               "request": {
                 "method": "GET",
-                "header": [],
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{merchantToken}}",
+                    "type": "text"
+                  }
+                ],
                 "url": {
                   "raw": "{{baseUrl}}/billing/invoices/{{invoiceId}}/print",
                   "host": [
@@ -2240,6 +2604,11 @@
                   {
                     "key": "Content-Type",
                     "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{merchantToken}}",
+                    "type": "text"
                   }
                 ],
                 "url": {
@@ -2276,7 +2645,11 @@
                     "exec": [
                       "if (pm.response.code >= 200 && pm.response.code < 300) {",
                       "    const res = pm.response.json();",
-                      "    if (res.data && res.data.id) { pm.collectionVariables.set('customerId', res.data.id); }",
+                      "    const cid = res.data?.id || res.data?._id;",
+                      "    if (cid) {",
+                      "        pm.collectionVariables.set('customerId', cid);",
+                      "        pm.environment.set('customerId', cid);",
+                      "    }",
                       "}"
                     ]
                   }
@@ -2291,6 +2664,11 @@
                   {
                     "key": "Content-Type",
                     "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{merchantToken}}",
+                    "type": "text"
                   }
                 ],
                 "url": {
@@ -2334,6 +2712,11 @@
                   {
                     "key": "Content-Type",
                     "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{merchantToken}}",
+                    "type": "text"
                   }
                 ],
                 "url": {
@@ -2370,7 +2753,11 @@
                     "exec": [
                       "if (pm.response.code >= 200 && pm.response.code < 300) {",
                       "    const res = pm.response.json();",
-                      "    if (res.data && res.data.id) { pm.collectionVariables.set('purchaseId', res.data.id); }",
+                      "    const pid = res.data?.id || res.data?._id;",
+                      "    if (pid) {",
+                      "        pm.collectionVariables.set('purchaseId', pid);",
+                      "        pm.environment.set('purchaseId', pid);",
+                      "    }",
                       "}"
                     ]
                   }
@@ -2381,7 +2768,13 @@
               "name": "Get Merchant Settlements Overview",
               "request": {
                 "method": "GET",
-                "header": [],
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{merchantToken}}",
+                    "type": "text"
+                  }
+                ],
                 "url": {
                   "raw": "{{baseUrl}}/settlements/overview",
                   "host": [
@@ -2413,6 +2806,11 @@
                   {
                     "key": "Content-Type",
                     "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{merchantToken}}",
+                    "type": "text"
                   }
                 ],
                 "url": {
@@ -2446,7 +2844,13 @@
               "name": "Get Business Analytics Overview",
               "request": {
                 "method": "GET",
-                "header": [],
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{merchantToken}}",
+                    "type": "text"
+                  }
+                ],
                 "url": {
                   "raw": "{{baseUrl}}/analytics/overview",
                   "host": [
@@ -2481,7 +2885,13 @@
           "name": "Get Available Open Delivery Jobs",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{riderToken}}",
+                "type": "text"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/delivery/jobs/available",
               "host": [
@@ -2507,6 +2917,11 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{riderToken}}",
+                "type": "text"
               }
             ],
             "url": {
@@ -2535,7 +2950,13 @@
           "name": "Get Rider Run Navigation Details",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{riderToken}}",
+                "type": "text"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/delivery/orders/{{orderId}}/run-details",
               "host": [
@@ -2562,6 +2983,11 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{riderToken}}",
+                "type": "text"
               }
             ],
             "url": {
@@ -2594,6 +3020,11 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{riderToken}}",
+                "type": "text"
               }
             ],
             "url": {
@@ -2627,7 +3058,13 @@
           "name": "Get Unread Notifications Summary",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{customerToken}}",
+                "type": "text"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/notifications/unread-summary",
               "host": [
@@ -2655,7 +3092,13 @@
           "name": "List Notifications",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{customerToken}}",
+                "type": "text"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/notifications/",
               "host": [
@@ -2683,7 +3126,13 @@
           "name": "Mark All Notifications as Read",
           "request": {
             "method": "PATCH",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{customerToken}}",
+                "type": "text"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/notifications/read-all",
               "host": [
