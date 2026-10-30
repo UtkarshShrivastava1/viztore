@@ -122,7 +122,30 @@
 
 ---
 
-## 3. How to Report an Issue in Chat
+## 3. High-Velocity Cataloging Engine: 1-Click Barcode & Master Catalog Piggybacking (Phase 1)
+
+### Features Delivered:
+- **National Master Product Database**: Pre-seeded with authentic Indian retail items (`apps/merchant/src/data/masterProducts.json`) across FMCG, Grocery, Electronics, and Branded Apparel.
+- **Webcam / Smartphone Camera Barcode Scanner**: Built-in HUD viewfinder, laser scan animation, Web Audio beep confirmation, and camera switcher.
+- **Hardware USB Barcode Gun Listener**: Automatically intercepts rapid keyboard wedge scans from physical retail barcode guns on Step 1.
+- **Fast-Track 5-Second Listing Flow**: Pre-populates Title, Brand, Images, Category, Subcategory, Product Type, HSN, and GST, and jumps straight to Step 3 so the merchant only confirms their selling price and stock.
+
+### Quick Test Barcodes Available for Instant Verification:
+| Category | Product Name | EAN-13 Barcode | Master Pre-fills |
+|---|---|---|---|
+| **Staples** | Tata Salt Vacuum Evaporated (1 kg) | `8901499009845` | HSN 25010010 • GST 0% • MRP ₹28 |
+| **Grocery** | Maggi 2-Minute Masala Noodles (70g) | `8901058852394` | HSN 19023010 • GST 12% • MRP ₹14 |
+| **Dairy** | Amul Pure Butter (500g) | `8901262010054` | HSN 04051000 • GST 12% • MRP ₹275 |
+| **Electronics** | boAt Rockerz 450 Wireless Headphones | `8906145620018` | HSN 85183000 • GST 18% • MRP ₹3,990 |
+| **Electronics** | Apple 20W USB-C Adapter | `194252033005` | HSN 85044030 • GST 18% • MRP ₹1,900 |
+| **Apparel** | Peter England Men Slim Fit Formal Shirt | `8907861001234` | HSN 62052000 • GST 5% • MRP ₹1,699 |
+| **Footwear** | Sparx Breathable Mesh Running Shoes | `8905140012345` | HSN 64041190 • GST 12% • MRP ₹1,499 |
+
+- **Commit**: `ad375cc`
+
+---
+
+## 4. How to Report an Issue in Chat
 
 When you encounter any problem during manual testing, simply describe it in chat (or paste a screenshot/error message). Helpful details to include:
 - **Screen / URL**: e.g., `http://localhost:3001/register` or `http://localhost:3000/cart`
