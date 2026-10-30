@@ -152,7 +152,8 @@
      - Added `min-w-[1150px]` and synchronized rows per page selector (8, 15, 30, 50) and full page navigation steppers.
 - **Verification:**
   - `pnpm --filter=@repo/merchant exec tsc --noEmit`: 0 errors.
-  - `pnpm --filter=@repo/merchant build`: Production bundle built cleanly in 10.86s.
+  - `pnpm --filter=@repo/merchant build`: Production bundle built cleanly in 10.86s and 11.23s.
+- **Commit:** `da59b4e` & `8302a58`
 
 ---
 
