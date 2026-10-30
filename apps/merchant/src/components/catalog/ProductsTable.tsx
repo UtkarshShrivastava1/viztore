@@ -133,7 +133,7 @@ export const ProductsTable: React.FC = () => {
                   title="Select All"
                 />
               </th>
-              <th className="py-2.5 px-3 font-semibold text-slate-600 min-w-[240px]">Product</th>
+              <th className="py-2.5 px-3 font-semibold text-slate-600 min-w-[240px] max-w-[280px]">Product</th>
               <th className="py-2.5 px-2 font-semibold text-slate-600 whitespace-nowrap min-w-[140px]">
                 SKU
               </th>
@@ -206,7 +206,7 @@ export const ProductsTable: React.FC = () => {
                     </td>
 
                     {/* Product */}
-                    <td className="py-2.5 px-3 min-w-[240px]">
+                    <td className="py-2.5 px-3 min-w-[240px] max-w-[280px]">
                       <div className="flex items-center gap-2.5">
                         <img
                           src={mainImg}
@@ -214,9 +214,9 @@ export const ProductsTable: React.FC = () => {
                           className="w-10 h-10 rounded-lg object-cover bg-slate-100 border border-slate-200/80 shrink-0"
                           loading="lazy"
                         />
-                        <div className="min-w-0 max-w-[200px] xl:max-w-[240px]">
+                        <div className="min-w-0 max-w-[200px] xl:max-w-[240px] overflow-hidden">
                           <div
-                            className="font-semibold text-slate-800 text-xs truncate"
+                            className="font-semibold text-slate-800 text-xs truncate block"
                             title={product.name}
                           >
                             {product.name}

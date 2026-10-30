@@ -148,7 +148,9 @@ export const InventoryTable: React.FC = () => {
                 <th className="py-2.5 px-2 w-8 text-center font-semibold text-slate-400">#</th>
 
                 {/* Product */}
-                <th className="py-2.5 px-3 font-semibold text-slate-600 min-w-[240px]">Product</th>
+                <th className="py-2.5 px-3 font-semibold text-slate-600 min-w-[240px] max-w-[280px]">
+                  Product
+                </th>
 
                 {/* SKU */}
                 <th className="py-2.5 px-2 font-semibold text-slate-600 whitespace-nowrap min-w-[140px]">
@@ -283,7 +285,7 @@ export const InventoryTable: React.FC = () => {
                       </td>
 
                       {/* Product */}
-                      <td className="py-2.5 px-3 min-w-[240px]">
+                      <td className="py-2.5 px-3 min-w-[240px] max-w-[280px]">
                         <div className="flex items-center gap-2.5">
                           <img
                             src={
@@ -294,15 +296,22 @@ export const InventoryTable: React.FC = () => {
                             className="w-10 h-10 rounded-lg object-cover bg-slate-100 border border-slate-200/80 shrink-0"
                             loading="lazy"
                           />
-                          <div className="min-w-0 max-w-[200px] xl:max-w-[240px]">
-                            <button
-                              type="button"
+                          <div className="min-w-0 max-w-[200px] xl:max-w-[240px] overflow-hidden">
+                            <div
+                              role="button"
+                              tabIndex={0}
                               onClick={() => openDetailModal(item)}
-                              className="font-semibold text-slate-800 text-xs truncate block hover:text-blue-600 transition-colors text-left"
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  openDetailModal(item);
+                                }
+                              }}
+                              className="font-semibold text-slate-800 text-xs truncate block hover:text-blue-600 transition-colors text-left cursor-pointer"
                               title={item.name}
                             >
                               {item.name}
-                            </button>
+                            </div>
                             <div className="text-[11px] text-slate-400 mt-0.5 truncate">
                               Size: <span className="font-medium text-slate-600">{item.size || 'M'}</span> • Color:{' '}
                               <span className="font-medium text-slate-600">{item.color || 'Black'}</span>
