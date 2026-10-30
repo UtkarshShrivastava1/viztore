@@ -1,7 +1,7 @@
 # 🧪 Manual End-to-End Commerce Testing Guide
 **Document Purpose:** Complete founder's walk-through guide for verifying the platform locally before production launch.  
 **Scope Covered:** Merchant Onboarding ➔ Cataloging ➔ Customer Discovery ➔ Cart & Checkout ➔ Audio Alerts ➔ Order Fulfillment ➔ 4-Digit OTP Delivery Handshake ➔ Counter POS Walk-in Billing.  
-**Target Runtime:** Localhost Monolith (`apps/backend` on `:5000`, `apps/merchant` on `:5173`, `apps/web` on `:3000`).
+**Target Runtime:** Localhost Monolith (`apps/backend` on `:5000`, `apps/merchant` on `:3001`, `apps/web` on `:3000`).
 
 ---
 
@@ -17,12 +17,12 @@ pnpm dev
 | Service | Local URL | Purpose |
 |---|---|---|
 | **Backend API Monolith** | `http://localhost:5000` | Express REST, Socket.io, MongoDB Atlas |
-| **Merchant & Admin Hub** | `http://localhost:5173` | Vite React SPA for Retail Merchants |
+| **Merchant & Admin Hub** | `http://localhost:3001` | Vite React SPA for Retail Merchants |
 | **Customer Web Storefront** | `http://localhost:3000` | Next.js 14 Customer Marketplace |
 
 > [!IMPORTANT]
 > **Use Two Separate Browser Windows:**  
-> Open **Window A (Regular Browser)** for the **Merchant Panel** (`:5173`), and **Window B (Incognito / Private Window)** for the **Customer Storefront** (`:3000`).  
+> Open **Window A (Regular Browser)** for the **Merchant Panel** (`:3001`), and **Window B (Incognito / Private Window)** for the **Customer Storefront** (`:3000`).  
 > This ensures that customer and merchant JWTs/cookies never conflict in local storage.
 
 ---
@@ -31,7 +31,7 @@ pnpm dev
 
 ```mermaid
 flowchart TD
-    subgraph Merchant_Flow["Window A: Merchant Hub (:5173)"]
+    subgraph Merchant_Flow["Window A: Merchant Hub (:3001)"]
         M1["1. Register & 6-Step Store Setup"]
         M2["2. Add Test Product (Stock: 10)"]
         M3["5. Audio Bell Chimes & Order Arrives"]
@@ -59,10 +59,10 @@ flowchart TD
 
 ## 🚀 Step-by-Step Testing Checklist
 
-### Phase 1: Merchant Registration & Store Setup (Window A — `:5173`)
+### Phase 1: Merchant Registration & Store Setup (Window A — `:3001`)
 
 - [ ] **1.1 Register New Merchant Account**
-  - Navigate to: `http://localhost:5173/register`
+  - Navigate to: `http://localhost:3001/register`
   - Enter:
     - **Full Name:** `Vikram Retailer`
     - **Email:** `vikram.store@example.com`
@@ -89,14 +89,14 @@ flowchart TD
     - Bank Name: `HDFC Bank`, Account: `50100234567890`, IFSC: `HDFC0001234`.
   - **Step 6 (Review & Submit):**
     - Click **Submit Store for Approval**.
-    - Notice instant transition into your live Merchant Dashboard (`http://localhost:5173/dashboard`)!
+    - Notice instant transition into your live Merchant Dashboard (`http://localhost:3001/dashboard`)!
 
 ---
 
-### Phase 2: Add Test Product to Catalog (Window A — `:5173`)
+### Phase 2: Add Test Product to Catalog (Window A — `:3001`)
 
 - [ ] **2.1 Navigate to Catalog Management**
-  - In the left sidebar, click **Catalog / Products** (or go to `http://localhost:5173/catalog`).
+  - In the left sidebar, click **Catalog / Products** (or go to `http://localhost:3001/catalog`).
   - Click the **+ Add Product** button.
 
 - [ ] **2.2 Fill in Product Details**
@@ -158,10 +158,10 @@ flowchart TD
 
 ---
 
-### Phase 4: Merchant Real-time Order Processing (Window A — `:5173`)
+### Phase 4: Merchant Real-time Order Processing (Window A — `:3001`)
 
 - [ ] **4.1 Verify Real-time Order Arrival**
-  - Switch back to **Window A** (`http://localhost:5173/orders`).
+  - Switch back to **Window A** (`http://localhost:3001/orders`).
   - **Audio Check:** Listen for the order notification chime!
   - **Visual Check:** The **"New Orders"** tab badge updates to `(1)`.
   - The customer's order appears at the top of the list with status `NEW`.
@@ -191,15 +191,15 @@ flowchart TD
   - **Merchant Panel:** Order status immediately transitions to **`DELIVERED`** 🟢.
   - **Customer Screen (Window B):** The live progress timeline updates in real time to **`Delivered`** with timestamp!
   - **Inventory Check (Window A ➔ Catalog):**
-    - Go back to `http://localhost:5173/catalog`.
+    - Go back to `http://localhost:3001/catalog`.
     - Check the `Classic Oxford Cotton Shirt`: stock has decremented from **`10` ➔ `9`**!
 
 ---
 
-### Phase 6: Retail Walk-In Counter POS (Window A — `:5173`)
+### Phase 6: Retail Walk-In Counter POS (Window A — `:3001`)
 
 - [ ] **6.1 Navigate to In-Store Counter POS**
-  - In the Merchant sidebar, click **Counter POS / Invoicing** (`http://localhost:5173/billing/pos`).
+  - In the Merchant sidebar, click **Counter POS / Invoicing** (`http://localhost:3001/billing/pos`).
 
 - [ ] **6.2 Add Walk-in Sale Items**
   - Use the quick search or 1-tap product grid to add `Classic Oxford Cotton Shirt` to the POS cart.
@@ -218,9 +218,9 @@ flowchart TD
 | Symptom | Cause | Resolution |
 |---|---|---|
 | Order bell doesn't chime in Merchant Panel | Browser autoplay policy blocked audio | Click anywhere on the Merchant panel once after opening to enable audio context. |
-| Customer cart says *"Store is currently closed"* | Store operating hours or `isActive` toggle | Go to `http://localhost:5173/settings` and ensure store is marked **Active** and operating hours include current time. |
+| Customer cart says *"Store is currently closed"* | Store operating hours or `isActive` toggle | Go to `http://localhost:3001/settings` and ensure store is marked **Active** and operating hours include current time. |
 | OTP verification fails with `INVALID_OTP` | Typing error or stale order OTP | Check the exact 4-digit code shown in the customer's active order tracking header. |
-| Port 5000 / 3000 / 5173 in use | Old background process | Run `Get-NetTCPConnection -LocalPort <port>` in PowerShell and kill PID, then restart `pnpm dev`. |
+| Port 5000 / 3000 / 3001 in use | Old background process | Run `Get-NetTCPConnection -LocalPort <port>` in PowerShell and kill PID, then restart `pnpm dev`. |
 
 ---
 
@@ -235,3 +235,4 @@ flowchart TD
 | **Section 5** | Merchant Real-time Order Bell & Invoicing | Founder / User | Oct 30, 2026 | [ ] |
 | **Section 6** | 4-Digit Handshake OTP & Stock Decrement | Founder / User | Oct 30, 2026 | [ ] |
 | **Section 7** | Walk-in Counter POS Billing & Thermal Print | Founder / User | Oct 30, 2026 | [ ] |
+
