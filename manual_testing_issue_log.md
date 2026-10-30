@@ -145,7 +145,25 @@
 
 ---
 
-## 4. How to Report an Issue in Chat
+## 4. Smart ERP / POS Importer & Amazon-Style Variant Matrix (Phases 2 & 3)
+
+### Phase 2: 1-Click Indian Retail ERP Ingestion
+- **Automated Signature Detection**: Intelligently identifies headers from **Vyapar App**, **Tally Prime / ERP 9**, **Marg ERP 9+**, **Busy**, and Universal CSV exports.
+- **Visual Confidence Column Mapping**: Automatically correlates local item descriptions, purchase rates, MRP, closing balances, and HSN codes into standard catalog fields.
+- **Pre-Import Review Table**: Summary metrics showing total items, cumulative stock count, total catalog inventory valuation, and validation warnings before database ingestion.
+- **Instant Demo Templates**: Downloadable or 1-click loadable sample files for Vyapar (`vyapar_inventory_sample.csv`), Tally (`tally_prime_stock_sample.csv`), Marg (`marg_erp_catalog_sample.csv`), and Universal store catalogs.
+
+### Phase 3: Amazon / Flipkart Multi-SKU Variant Matrix Generator
+- **Multi-Dimension Matrix**: Interactive pickers for **Sizes** (Apparel, Footwear UK, Waist, Weight packs) and **Colors** (with visual hex swatches + custom color pickers).
+- **1-Click Cartesian Combinations**: Generates all color × size SKU variants (e.g., 3 colors × 4 sizes = 12 variants) with auto-generated unique SKUs and barcodes.
+- **Bulk Quick-Apply Controls**: 1-click **Apply Price to All**, **Apply MRP to All**, and **Apply Stock to All** directly across all generated variant rows.
+- **Real-Time Inventory Summation**: Automatically aggregates variant stocks into parent inventory count and persists structured variant rows in `draftProduct.variants`.
+
+- **Commit**: `cc3eb05`
+
+---
+
+## 5. How to Report an Issue in Chat
 
 When you encounter any problem during manual testing, simply describe it in chat (or paste a screenshot/error message). Helpful details to include:
 - **Screen / URL**: e.g., `http://localhost:3001/register` or `http://localhost:3000/cart`
