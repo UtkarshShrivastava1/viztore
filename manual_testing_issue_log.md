@@ -5,8 +5,8 @@
 > **Active Phase**: Founder / User End-to-End Manual Commerce Verification  
 > **Testing Scope**: Merchant Onboarding ➔ Catalog Management ➔ Customer Discovery ➔ Cart & Checkout ➔ Real-Time Audio & Order Fulfillment ➔ 4-Digit Handshake OTP ➔ Counter POS Walk-in Sale  
 > **Environment**: Local Monolith (`apps/backend` on `:5000`, `apps/merchant` on `:3001`, `apps/web` on `:3000`) — Fresh 100% Blank Slate Atlas DB  
-> **Status**: **6 ISSUES RESOLVED (100.0%)** 🟢  
-> **Items Logged**: **6 Total** | **0 Open** | **0 In Progress** | **6 Resolved**  
+> **Status**: **7 ISSUES RESOLVED (100.0%)** 🟢  
+> **Items Logged**: **7 Total** | **0 Open** | **0 In Progress** | **7 Resolved**  
 > **Remediation Progress**: `[████████████████████] 100.0%`
 
 ---
@@ -15,11 +15,11 @@
 
 | Application Layer | Total Logged | Critical (P0) | High (P1) | Medium (P2) | Polish (P3) | Resolved | Status |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| **Merchant Hub (`apps/merchant` :3001)** | 6 | 0 | 5 | 1 | 0 | 6 | 🟢 All Remediated |
+| **Merchant Hub (`apps/merchant` :3001)** | 7 | 0 | 6 | 1 | 0 | 7 | 🟢 All Remediated |
 | **Customer Web (`apps/web` :3000)** | 0 | 0 | 0 | 0 | 0 | 0 | Ready 🟢 |
 | **Backend API Monolith (`apps/backend` :5000)** | 0 | 0 | 0 | 0 | 0 | 0 | Ready 🟢 |
 | **Cross-Cutting (Sockets, Redis, DB, Print)** | 0 | 0 | 0 | 0 | 0 | 0 | Ready 🟢 |
-| **TOTAL** | **6** | **0** | **5** | **1** | **0** | **6** | **100.0%** |
+| **TOTAL** | **7** | **0** | **6** | **1** | **0** | **7** | **100.0%** |
 
 ---
 
@@ -33,6 +33,7 @@
 | `ISSUE-004` | Step 3 Onboarding: Category Names Truncated with Ellipsis (`...`) on Narrow 4-Column Grid | Merchant Hub (:3001) | Onboarding / Step 3 | UI / Readability | P2 | Phase 1 (`/register`) | `RESOLVED ✅` |
 | `ISSUE-005` | Add Product Wizard: Category Dropdown Confusing Defaults (`Men` vs `Men's`) & Broken Hierarchy Falling Back to `General`/`Standard` | Merchant Hub (:3001) | Catalog / Add Product Wizard | Data & UX Hierarchy | P1 | Phase 2 (`/catalog/new`) | `RESOLVED ✅` |
 | `ISSUE-006` | Inventory Table Broken Squished Formatting (Product Title 12 Lines, SKU Overlap, Raw Enum Category) & Table Modernization | Merchant Hub (:3001) | Inventory / Catalog Tables | UI / Layout & Responsiveness | P1 | Phase 2 (`/inventory`) | `RESOLVED ✅` |
+| `ISSUE-007` | Static & Buggy Filter Dropdowns in Catalog & Inventory (Hardcoded Fake Options, Broken Cascades, Disjointed Counts) | Merchant Hub (:3001) | Catalog & Inventory Toolbars | Dynamic Data & State Flow | P1 | Phase 2 (`/catalog` & `/inventory`) | `RESOLVED ✅` |
 
 ---
 
@@ -154,6 +155,32 @@
   - `pnpm --filter=@repo/merchant exec tsc --noEmit`: 0 errors.
   - `pnpm --filter=@repo/merchant build`: Production bundle built cleanly in 10.86s and 11.23s.
 - **Commit:** `da59b4e` & `8302a58`
+
+---
+
+### [ISSUE-007] Static & Buggy Filter Dropdowns in Catalog & Inventory (Hardcoded Fake Options, Broken Cascades, Disjointed Counts) (`RESOLVED ✅`)
+- **Reported URL:** `http://localhost:3001/catalog` and `http://localhost:3001/inventory`
+- **Symptom:**
+  - Category, Sub-category, Product Type, and Brand dropdowns contained hardcoded static dummy values (e.g. `Men`, `Women`, `T-Shirts`, `Roadster`, `PUMA`, `HRX`) rather than reflecting the merchant's actual inventory items (`Peter England`, `Generic`, etc.).
+  - Selecting a Category did not cascade or reset the Sub-category or Product Type dropdowns.
+  - Selecting `Men` in the dropdown failed to match items stored under `men's_fashion` due to raw string comparison differences.
+- **Root Cause Analysis:**
+  1. Both [`CatalogToolbar.tsx`](file:///d:/UTKARSH/Live%20Projects/Vercel-live-Website/platform-root-vz/apps/merchant/src/components/catalog/CatalogToolbar.tsx) and [`InventoryFilterBar.tsx`](file:///d:/UTKARSH/Live%20Projects/Vercel-live-Website/platform-root-vz/apps/merchant/src/components/inventory/InventoryFilterBar.tsx) used hardcoded `<option>` lists dating back to initial mock prototypes.
+  2. Filter setters in `catalogStore.ts` and `inventoryStore.ts` did not cascade reset child taxonomy filters when a parent filter changed.
+  3. No normalized matching function was in place, causing snake_case database identifiers to mismatch dropdown strings.
+- **Engineering Remediation:**
+  1. **Dynamic Data Extraction**: Replaced static options with `useMemo` hooks extracting unique, title-cased values and live item count badges directly from `products` and `items`:
+     - **Categories**: All unique categories present in the merchant's catalog (e.g. `Men's Fashion (2)`).
+     - **Sub-categories**: Cascades dynamically to show only subcategories belonging to the active Category.
+     - **Product Types**: Cascades dynamically based on both selected Category and Sub-category.
+     - **Brands**: Dynamically extracts actual active brands (`Peter England (1)`, `Generic (1)`).
+  2. **Cascading State Reset**:
+     - Selecting a new Category automatically resets `subCategoryFilter` to `'All Sub-categories'` and `productTypeFilter` to `'All Product Types'`.
+     - Selecting a new Sub-category automatically resets `productTypeFilter` to `'All Product Types'`.
+  3. **Robust Taxonomy Matching**: Integrated `matchesCategory` across `ProductsTable.tsx` and `InventoryTable.tsx`, ensuring resilient case-insensitive and underscore-insensitive matching (`men's_fashion` matches `Men's Fashion`).
+- **Verification:**
+  - `pnpm --filter=@repo/merchant exec tsc --noEmit`: 0 errors.
+  - `pnpm --filter=@repo/merchant build`: Built cleanly in 11.14s.
 
 ---
 

@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { useCatalogStore, ProductItem } from '../../stores/catalogStore.js';
 import { ProductActionMenu } from './ProductActionMenu.js';
-import { formatCategoryTitle, formatDateTime } from '../../utils/formatters.js';
+import { formatCategoryTitle, formatDateTime, matchesCategory } from '../../utils/formatters.js';
 
 export const ProductsTable: React.FC = () => {
   const {
@@ -37,25 +37,17 @@ export const ProductsTable: React.FC = () => {
       if (!matchName && !matchSku && !matchBarcode && !matchBrand) return false;
     }
 
-    if (categoryFilter !== 'All Categories') {
-      const cFilter = categoryFilter.toLowerCase();
-      const pCat = (product.category || '').toLowerCase();
-      if (!pCat.includes(cFilter) && !cFilter.includes(pCat)) return false;
+    if (categoryFilter !== 'All Categories' && !matchesCategory(product.category, categoryFilter)) {
+      return false;
     }
-    if (subCategoryFilter !== 'All Sub-categories') {
-      const sFilter = subCategoryFilter.toLowerCase();
-      const pSub = (product.subCategory || '').toLowerCase();
-      if (!pSub.includes(sFilter) && !sFilter.includes(pSub)) return false;
+    if (subCategoryFilter !== 'All Sub-categories' && !matchesCategory(product.subCategory, subCategoryFilter)) {
+      return false;
     }
-    if (productTypeFilter !== 'All Product Types') {
-      const tFilter = productTypeFilter.toLowerCase();
-      const pType = (product.productType || '').toLowerCase();
-      if (!pType.includes(tFilter) && !tFilter.includes(pType)) return false;
+    if (productTypeFilter !== 'All Product Types' && !matchesCategory(product.productType, productTypeFilter)) {
+      return false;
     }
-    if (brandFilter !== 'All Brands') {
-      const bFilter = brandFilter.toLowerCase();
-      const pBrand = (product.brand || '').toLowerCase();
-      if (!pBrand.includes(bFilter) && !bFilter.includes(pBrand)) return false;
+    if (brandFilter !== 'All Brands' && !matchesCategory(product.brand, brandFilter)) {
+      return false;
     }
     if (statusFilter !== 'All Status') {
       if (statusFilter === 'active' && product.status !== 'active') return false;

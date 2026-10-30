@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
   Upload,
   Download,
@@ -6,10 +6,10 @@ import {
   ChevronDown,
   Search,
   Filter,
-  Layers,
   FileSpreadsheet,
 } from 'lucide-react';
 import { useCatalogStore } from '../../stores/catalogStore.js';
+import { formatCategoryTitle, matchesCategory } from '../../utils/formatters.js';
 
 interface CatalogToolbarProps {
   onOpenBulkUpload?: () => void;
@@ -21,6 +21,7 @@ export const CatalogToolbar: React.FC<CatalogToolbarProps> = ({
   onExportCsv,
 }) => {
   const {
+    products,
     searchQuery,
     setSearchQuery,
     categoryFilter,
@@ -51,6 +52,81 @@ export const CatalogToolbar: React.FC<CatalogToolbarProps> = ({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Dynamic unique categories extracted from live products
+  const availableCategories = useMemo(() => {
+    const map = new Map<string, { raw: string; label: string; count: number }>();
+    products.forEach((p) => {
+      if (p.category) {
+        const label = formatCategoryTitle(p.category);
+        const existing = map.get(label);
+        if (existing) {
+          existing.count += 1;
+        } else {
+          map.set(label, { raw: p.category, label, count: 1 });
+        }
+      }
+    });
+    return Array.from(map.values()).sort((a, b) => a.label.localeCompare(b.label));
+  }, [products]);
+
+  // Dynamic subcategories cascading from selected category
+  const availableSubCategories = useMemo(() => {
+    const map = new Map<string, { raw: string; label: string; count: number }>();
+    products.forEach((p) => {
+      const matchCat =
+        categoryFilter === 'All Categories' || matchesCategory(p.category, categoryFilter);
+      if (matchCat && p.subCategory) {
+        const label = formatCategoryTitle(p.subCategory);
+        const existing = map.get(label);
+        if (existing) {
+          existing.count += 1;
+        } else {
+          map.set(label, { raw: p.subCategory, label, count: 1 });
+        }
+      }
+    });
+    return Array.from(map.values()).sort((a, b) => a.label.localeCompare(b.label));
+  }, [products, categoryFilter]);
+
+  // Dynamic product types cascading from selected category & subcategory
+  const availableProductTypes = useMemo(() => {
+    const map = new Map<string, { raw: string; label: string; count: number }>();
+    products.forEach((p) => {
+      const matchCat =
+        categoryFilter === 'All Categories' || matchesCategory(p.category, categoryFilter);
+      const matchSub =
+        subCategoryFilter === 'All Sub-categories' ||
+        matchesCategory(p.subCategory, subCategoryFilter);
+      if (matchCat && matchSub && p.productType) {
+        const label = formatCategoryTitle(p.productType);
+        const existing = map.get(label);
+        if (existing) {
+          existing.count += 1;
+        } else {
+          map.set(label, { raw: p.productType, label, count: 1 });
+        }
+      }
+    });
+    return Array.from(map.values()).sort((a, b) => a.label.localeCompare(b.label));
+  }, [products, categoryFilter, subCategoryFilter]);
+
+  // Dynamic brands extracted from live products
+  const availableBrands = useMemo(() => {
+    const map = new Map<string, { raw: string; label: string; count: number }>();
+    products.forEach((p) => {
+      if (p.brand) {
+        const label = p.brand;
+        const existing = map.get(label);
+        if (existing) {
+          existing.count += 1;
+        } else {
+          map.set(label, { raw: p.brand, label, count: 1 });
+        }
+      }
+    });
+    return Array.from(map.values()).sort((a, b) => a.label.localeCompare(b.label));
+  }, [products]);
 
   const activeFilterCount = [
     categoryFilter !== 'All Categories',
@@ -202,12 +278,12 @@ export const CatalogToolbar: React.FC<CatalogToolbarProps> = ({
           </div>
         </div>
 
-        {/* Row 2: 5 Filter Dropdowns matching 3.0.png */}
+        {/* Row 2: 5 Dynamic Filter Dropdowns */}
         {showFiltersBar && (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-2.5 pt-1 border-t border-slate-100">
-            {/* Category */}
+            {/* Category Dropdown */}
             <div>
-              <label className="block text-[11px] font-medium text-slate-500 mb-1">Category</label>
+              <label className="block text-[11px] font-semibold text-slate-600 mb-1">Category</label>
               <div className="relative">
                 <select
                   value={categoryFilter}
@@ -215,22 +291,21 @@ export const CatalogToolbar: React.FC<CatalogToolbarProps> = ({
                   className="w-full appearance-none pl-3 pr-8 py-1.5 text-xs font-medium text-slate-800 bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:ring-1 focus:ring-blue-500 cursor-pointer"
                 >
                   <option value="All Categories">All Categories</option>
-                  <option value="Fashion">Fashion</option>
-                  <option value="Men">Men</option>
-                  <option value="Women">Women</option>
-                  <option value="Kids">Kids</option>
-                  <option value="Grocery">Grocery</option>
-                  <option value="Electronics">Electronics</option>
-                  <option value="Footwear">Footwear</option>
-                  <option value="Accessories">Accessories</option>
+                  {availableCategories.map((c) => (
+                    <option key={c.label} value={c.label}>
+                      {c.label} ({c.count})
+                    </option>
+                  ))}
                 </select>
                 <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
             </div>
 
-            {/* Sub-category */}
+            {/* Sub-category Dropdown */}
             <div>
-              <label className="block text-[11px] font-medium text-slate-500 mb-1">Sub-category</label>
+              <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                Sub-category
+              </label>
               <div className="relative">
                 <select
                   value={subCategoryFilter}
@@ -238,19 +313,21 @@ export const CatalogToolbar: React.FC<CatalogToolbarProps> = ({
                   className="w-full appearance-none pl-3 pr-8 py-1.5 text-xs font-medium text-slate-800 bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:ring-1 focus:ring-blue-500 cursor-pointer"
                 >
                   <option value="All Sub-categories">All Sub-categories</option>
-                  <option value="T-Shirts">T-Shirts</option>
-                  <option value="Shirts">Shirts</option>
-                  <option value="Jeans">Jeans</option>
-                  <option value="Trousers">Trousers</option>
-                  <option value="Shorts">Shorts</option>
+                  {availableSubCategories.map((sc) => (
+                    <option key={sc.label} value={sc.label}>
+                      {sc.label} ({sc.count})
+                    </option>
+                  ))}
                 </select>
                 <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
             </div>
 
-            {/* Product Type */}
+            {/* Product Type Dropdown */}
             <div>
-              <label className="block text-[11px] font-medium text-slate-500 mb-1">Product Type</label>
+              <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+                Product Type
+              </label>
               <div className="relative">
                 <select
                   value={productTypeFilter}
@@ -258,18 +335,19 @@ export const CatalogToolbar: React.FC<CatalogToolbarProps> = ({
                   className="w-full appearance-none pl-3 pr-8 py-1.5 text-xs font-medium text-slate-800 bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:ring-1 focus:ring-blue-500 cursor-pointer"
                 >
                   <option value="All Product Types">All Product Types</option>
-                  <option value="Round Neck T-Shirt">Round Neck T-Shirt</option>
-                  <option value="Polo T-Shirt">Polo T-Shirt</option>
-                  <option value="Henley T-Shirt">Henley T-Shirt</option>
-                  <option value="V-Neck T-Shirt">V-Neck T-Shirt</option>
+                  {availableProductTypes.map((pt) => (
+                    <option key={pt.label} value={pt.label}>
+                      {pt.label} ({pt.count})
+                    </option>
+                  ))}
                 </select>
                 <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
             </div>
 
-            {/* Brand */}
+            {/* Brand Dropdown */}
             <div>
-              <label className="block text-[11px] font-medium text-slate-500 mb-1">Brand</label>
+              <label className="block text-[11px] font-semibold text-slate-600 mb-1">Brand</label>
               <div className="relative">
                 <select
                   value={brandFilter}
@@ -277,19 +355,19 @@ export const CatalogToolbar: React.FC<CatalogToolbarProps> = ({
                   className="w-full appearance-none pl-3 pr-8 py-1.5 text-xs font-medium text-slate-800 bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:ring-1 focus:ring-blue-500 cursor-pointer"
                 >
                   <option value="All Brands">All Brands</option>
-                  <option value="Roadster">Roadster</option>
-                  <option value="PUMA">PUMA</option>
-                  <option value="Nike">Nike</option>
-                  <option value="Levis">Levis</option>
-                  <option value="HRX">HRX</option>
+                  {availableBrands.map((b) => (
+                    <option key={b.label} value={b.label}>
+                      {b.label} ({b.count})
+                    </option>
+                  ))}
                 </select>
                 <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
             </div>
 
-            {/* Status */}
+            {/* Status Dropdown */}
             <div>
-              <label className="block text-[11px] font-medium text-slate-500 mb-1">Status</label>
+              <label className="block text-[11px] font-semibold text-slate-600 mb-1">Status</label>
               <div className="relative">
                 <select
                   value={statusFilter}

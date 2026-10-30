@@ -12,7 +12,7 @@ import { useInventoryStore, InventoryItem } from '../../stores/inventoryStore.js
 import { useCatalogStore } from '../../stores/catalogStore.js';
 import { InventoryActionMenu } from './InventoryActionMenu.js';
 import { ReservedStockPopover } from './ReservedStockPopover.js';
-import { formatCategoryTitle, formatDateTime } from '../../utils/formatters.js';
+import { formatCategoryTitle, formatDateTime, matchesCategory } from '../../utils/formatters.js';
 
 export const InventoryTable: React.FC = () => {
   const {
@@ -48,16 +48,16 @@ export const InventoryTable: React.FC = () => {
       if (!matchName && !matchSku && !matchBarcode && !matchBrand) return false;
     }
 
-    if (categoryFilter !== 'All Categories' && item.category !== categoryFilter) {
+    if (categoryFilter !== 'All Categories' && !matchesCategory(item.category, categoryFilter)) {
       return false;
     }
-    if (subcategoryFilter !== 'All Sub-categories' && item.subcategory !== subcategoryFilter) {
+    if (subcategoryFilter !== 'All Sub-categories' && !matchesCategory(item.subcategory, subcategoryFilter)) {
       return false;
     }
-    if (productTypeFilter !== 'All Product Types' && item.productType !== productTypeFilter) {
+    if (productTypeFilter !== 'All Product Types' && !matchesCategory(item.productType, productTypeFilter)) {
       return false;
     }
-    if (brandFilter !== 'All Brands' && item.brand !== brandFilter) {
+    if (brandFilter !== 'All Brands' && !matchesCategory(item.brand, brandFilter)) {
       return false;
     }
     if (statusFilter !== 'All Statuses') {

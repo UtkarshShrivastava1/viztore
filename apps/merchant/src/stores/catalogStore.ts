@@ -775,8 +775,19 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
   },
 
   setSearchQuery: (searchQuery) => set({ searchQuery, currentPage: 1 }),
-  setCategoryFilter: (categoryFilter) => set({ categoryFilter, currentPage: 1 }),
-  setSubCategoryFilter: (subCategoryFilter) => set({ subCategoryFilter, currentPage: 1 }),
+  setCategoryFilter: (categoryFilter) =>
+    set({
+      categoryFilter,
+      subCategoryFilter: 'All Sub-categories',
+      productTypeFilter: 'All Product Types',
+      currentPage: 1,
+    }),
+  setSubCategoryFilter: (subCategoryFilter) =>
+    set({
+      subCategoryFilter,
+      productTypeFilter: 'All Product Types',
+      currentPage: 1,
+    }),
   setProductTypeFilter: (productTypeFilter) => set({ productTypeFilter, currentPage: 1 }),
   setBrandFilter: (brandFilter) => set({ brandFilter, currentPage: 1 }),
   setStatusFilter: (statusFilter) => set({ statusFilter, currentPage: 1 }),

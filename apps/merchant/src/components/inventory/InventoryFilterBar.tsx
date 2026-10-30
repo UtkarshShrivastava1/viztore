@@ -1,13 +1,17 @@
-import React from 'react';
-import { Search, ChevronDown, SlidersHorizontal, X } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { Search, ChevronDown, X } from 'lucide-react';
 import { useInventoryStore } from '../../stores/inventoryStore.js';
+import { formatCategoryTitle, matchesCategory } from '../../utils/formatters.js';
 
 interface InventoryFilterBarProps {
   showProductType?: boolean;
 }
 
-export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({ showProductType = true }) => {
+export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({
+  showProductType = true,
+}) => {
   const {
+    items,
     searchQuery,
     categoryFilter,
     subcategoryFilter,
@@ -22,6 +26,81 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({ showProd
     setStatusFilter,
     clearFilters,
   } = useInventoryStore();
+
+  // Dynamic unique categories extracted from live inventory items
+  const availableCategories = useMemo(() => {
+    const map = new Map<string, { raw: string; label: string; count: number }>();
+    items.forEach((item) => {
+      if (item.category) {
+        const label = formatCategoryTitle(item.category);
+        const existing = map.get(label);
+        if (existing) {
+          existing.count += 1;
+        } else {
+          map.set(label, { raw: item.category, label, count: 1 });
+        }
+      }
+    });
+    return Array.from(map.values()).sort((a, b) => a.label.localeCompare(b.label));
+  }, [items]);
+
+  // Dynamic subcategories cascading from selected category
+  const availableSubcategories = useMemo(() => {
+    const map = new Map<string, { raw: string; label: string; count: number }>();
+    items.forEach((item) => {
+      const matchCat =
+        categoryFilter === 'All Categories' || matchesCategory(item.category, categoryFilter);
+      if (matchCat && item.subcategory) {
+        const label = formatCategoryTitle(item.subcategory);
+        const existing = map.get(label);
+        if (existing) {
+          existing.count += 1;
+        } else {
+          map.set(label, { raw: item.subcategory, label, count: 1 });
+        }
+      }
+    });
+    return Array.from(map.values()).sort((a, b) => a.label.localeCompare(b.label));
+  }, [items, categoryFilter]);
+
+  // Dynamic product types cascading from selected category & subcategory
+  const availableProductTypes = useMemo(() => {
+    const map = new Map<string, { raw: string; label: string; count: number }>();
+    items.forEach((item) => {
+      const matchCat =
+        categoryFilter === 'All Categories' || matchesCategory(item.category, categoryFilter);
+      const matchSub =
+        subcategoryFilter === 'All Sub-categories' ||
+        matchesCategory(item.subcategory, subcategoryFilter);
+      if (matchCat && matchSub && item.productType) {
+        const label = formatCategoryTitle(item.productType);
+        const existing = map.get(label);
+        if (existing) {
+          existing.count += 1;
+        } else {
+          map.set(label, { raw: item.productType, label, count: 1 });
+        }
+      }
+    });
+    return Array.from(map.values()).sort((a, b) => a.label.localeCompare(b.label));
+  }, [items, categoryFilter, subcategoryFilter]);
+
+  // Dynamic brands extracted from live inventory items
+  const availableBrands = useMemo(() => {
+    const map = new Map<string, { raw: string; label: string; count: number }>();
+    items.forEach((item) => {
+      if (item.brand) {
+        const label = item.brand;
+        const existing = map.get(label);
+        if (existing) {
+          existing.count += 1;
+        } else {
+          map.set(label, { raw: item.brand, label, count: 1 });
+        }
+      }
+    });
+    return Array.from(map.values()).sort((a, b) => a.label.localeCompare(b.label));
+  }, [items]);
 
   const isFiltered =
     Boolean(searchQuery) ||
@@ -40,7 +119,7 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({ showProd
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search by product name, SKU, barcode..."
-          className="w-full h-[38px] pl-3.5 pr-9 rounded-lg bg-white border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors shadow-2xs"
+          className="w-full h-[38px] pl-3.5 pr-9 rounded-lg bg-white border border-slate-200 text-xs text-slate-800 placeholder-slate-400 focus:outline-hidden focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors shadow-2xs"
         />
         {searchQuery ? (
           <button
@@ -66,13 +145,14 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({ showProd
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="appearance-none h-[38px] bg-white border border-slate-200 rounded-lg pl-3 pr-8 text-xs font-medium text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 cursor-pointer min-w-[130px] shadow-2xs"
+            className="appearance-none h-[38px] bg-white border border-slate-200 rounded-lg pl-3 pr-8 text-xs font-medium text-slate-800 focus:outline-hidden focus:border-blue-500 focus:ring-1 focus:ring-blue-500 cursor-pointer min-w-[130px] shadow-2xs"
           >
-            <option>All Categories</option>
-            <option>Men</option>
-            <option>Women</option>
-            <option>Kids</option>
-            <option>Accessories</option>
+            <option value="All Categories">All Categories</option>
+            {availableCategories.map((c) => (
+              <option key={c.label} value={c.label}>
+                {c.label} ({c.count})
+              </option>
+            ))}
           </select>
           <ChevronDown className="w-3.5 h-3.5 text-blue-600 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none stroke-[2.5]" />
         </div>
@@ -87,13 +167,14 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({ showProd
           <select
             value={subcategoryFilter}
             onChange={(e) => setSubcategoryFilter(e.target.value)}
-            className="appearance-none h-[38px] bg-white border border-slate-200 rounded-lg pl-3 pr-8 text-xs font-medium text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 cursor-pointer min-w-[135px] shadow-2xs"
+            className="appearance-none h-[38px] bg-white border border-slate-200 rounded-lg pl-3 pr-8 text-xs font-medium text-slate-800 focus:outline-hidden focus:border-blue-500 focus:ring-1 focus:ring-blue-500 cursor-pointer min-w-[135px] shadow-2xs"
           >
-            <option>All Sub-categories</option>
-            <option>T-Shirts</option>
-            <option>Shirts</option>
-            <option>Jeans</option>
-            <option>Trousers</option>
+            <option value="All Sub-categories">All Sub-categories</option>
+            {availableSubcategories.map((sc) => (
+              <option key={sc.label} value={sc.label}>
+                {sc.label} ({sc.count})
+              </option>
+            ))}
           </select>
           <ChevronDown className="w-3.5 h-3.5 text-blue-600 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none stroke-[2.5]" />
         </div>
@@ -109,12 +190,14 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({ showProd
             <select
               value={productTypeFilter}
               onChange={(e) => setProductTypeFilter(e.target.value)}
-              className="appearance-none h-[38px] bg-white border border-slate-200 rounded-lg pl-3 pr-8 text-xs font-medium text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 cursor-pointer min-w-[130px] shadow-2xs"
+              className="appearance-none h-[38px] bg-white border border-slate-200 rounded-lg pl-3 pr-8 text-xs font-medium text-slate-800 focus:outline-hidden focus:border-blue-500 focus:ring-1 focus:ring-blue-500 cursor-pointer min-w-[130px] shadow-2xs"
             >
-              <option>All Product Types</option>
-              <option>Round Neck T-Shirt</option>
-              <option>Polo T-Shirt</option>
-              <option>Henley T-Shirt</option>
+              <option value="All Product Types">All Product Types</option>
+              {availableProductTypes.map((pt) => (
+                <option key={pt.label} value={pt.label}>
+                  {pt.label} ({pt.count})
+                </option>
+              ))}
             </select>
             <ChevronDown className="w-3.5 h-3.5 text-blue-600 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none stroke-[2.5]" />
           </div>
@@ -130,13 +213,14 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({ showProd
           <select
             value={brandFilter}
             onChange={(e) => setBrandFilter(e.target.value)}
-            className="appearance-none h-[38px] bg-white border border-slate-200 rounded-lg pl-3 pr-8 text-xs font-medium text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 cursor-pointer min-w-[110px] shadow-2xs"
+            className="appearance-none h-[38px] bg-white border border-slate-200 rounded-lg pl-3 pr-8 text-xs font-medium text-slate-800 focus:outline-hidden focus:border-blue-500 focus:ring-1 focus:ring-blue-500 cursor-pointer min-w-[110px] shadow-2xs"
           >
-            <option>All Brands</option>
-            <option>Roadster</option>
-            <option>HRX</option>
-            <option>WROGN</option>
-            <option>Puma</option>
+            <option value="All Brands">All Brands</option>
+            {availableBrands.map((b) => (
+              <option key={b.label} value={b.label}>
+                {b.label} ({b.count})
+              </option>
+            ))}
           </select>
           <ChevronDown className="w-3.5 h-3.5 text-blue-600 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none stroke-[2.5]" />
         </div>
@@ -151,9 +235,9 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({ showProd
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="appearance-none h-[38px] bg-white border border-slate-200 rounded-lg pl-3 pr-8 text-xs font-medium text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 cursor-pointer min-w-[115px] shadow-2xs"
+            className="appearance-none h-[38px] bg-white border border-slate-200 rounded-lg pl-3 pr-8 text-xs font-medium text-slate-800 focus:outline-hidden focus:border-blue-500 focus:ring-1 focus:ring-blue-500 cursor-pointer min-w-[115px] shadow-2xs"
           >
-            <option>All Statuses</option>
+            <option value="All Statuses">All Statuses</option>
             <option value="in_stock">In Stock</option>
             <option value="low_stock">Low Stock</option>
             <option value="out_of_stock">Out of Stock</option>
@@ -162,34 +246,16 @@ export const InventoryFilterBar: React.FC<InventoryFilterBarProps> = ({ showProd
         </div>
       </div>
 
-      {/* Filters Button & Clear All */}
-      <div className="flex items-center gap-3 ml-auto self-end h-[38px]">
+      {/* Clear Filters Button */}
+      {isFiltered && (
         <button
           type="button"
-          onClick={() => {
-            if (isFiltered) clearFilters();
-          }}
-          className={`h-[38px] px-3.5 rounded-lg border text-xs font-semibold flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer ${
-            isFiltered
-              ? 'border-blue-300 bg-blue-50/70 text-blue-700'
-              : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
-          }`}
-          title={isFiltered ? 'Active filters applied - click to reset' : 'Filter by category, brand, and stock status'}
+          onClick={clearFilters}
+          className="h-[38px] px-3 rounded-lg border border-slate-200 text-xs font-semibold text-slate-600 hover:text-blue-600 hover:border-blue-300 hover:bg-blue-50/50 transition-colors cursor-pointer shadow-2xs"
         >
-          <SlidersHorizontal className="w-3.5 h-3.5 text-blue-600" />
-          <span>Filters {isFiltered ? '(Active)' : ''}</span>
+          Clear All
         </button>
-
-        {isFiltered && (
-          <button
-            type="button"
-            onClick={clearFilters}
-            className="text-xs font-semibold text-blue-600 hover:text-blue-700 hover:underline transition-colors cursor-pointer"
-          >
-            Clear All
-          </button>
-        )}
-      </div>
+      )}
     </div>
   );
 };

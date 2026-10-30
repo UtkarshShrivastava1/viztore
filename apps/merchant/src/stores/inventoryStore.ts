@@ -409,8 +409,8 @@ export const useInventoryStore = create<InventoryStoreState>((set, get) => ({
     }),
 
   setSearchQuery: (q) => set({ searchQuery: q, currentPage: 1 }),
-  setCategoryFilter: (cat) => set({ categoryFilter: cat, currentPage: 1 }),
-  setSubcategoryFilter: (sub) => set({ subcategoryFilter: sub, currentPage: 1 }),
+  setCategoryFilter: (cat) => set({ categoryFilter: cat, subcategoryFilter: 'All Sub-categories', productTypeFilter: 'All Product Types', currentPage: 1 }),
+  setSubcategoryFilter: (sub) => set({ subcategoryFilter: sub, productTypeFilter: 'All Product Types', currentPage: 1 }),
   setProductTypeFilter: (type) => set({ productTypeFilter: type, currentPage: 1 }),
   setBrandFilter: (brand) => set({ brandFilter: brand, currentPage: 1 }),
   setStatusFilter: (status) => set({ statusFilter: status, currentPage: 1 }),

@@ -27,6 +27,29 @@ export function formatCategoryTitle(text?: string | null): string {
 }
 
 /**
+ * Case-insensitive, underscore-insensitive matching for table filters.
+ */
+export function matchesCategory(itemVal?: string | null, filterVal?: string | null): boolean {
+  if (
+    !filterVal ||
+    filterVal === 'All' ||
+    filterVal === 'All Categories' ||
+    filterVal === 'All Sub-categories' ||
+    filterVal === 'All Product Types' ||
+    filterVal === 'All Brands' ||
+    filterVal === 'All Status' ||
+    filterVal === 'All Statuses'
+  ) {
+    return true;
+  }
+  if (!itemVal) return false;
+  if (itemVal === filterVal) return true;
+  const normItem = itemVal.replace(/[_-]+/g, ' ').trim().toLowerCase();
+  const normFilter = filterVal.replace(/[_-]+/g, ' ').trim().toLowerCase();
+  return normItem === normFilter;
+}
+
+/**
  * Parses and displays timestamp into clean stacked date and time.
  */
 export function formatDateTime(val?: string | null): { date: string; time: string } {
