@@ -97,7 +97,7 @@
 - **Verification:**
   - `pnpm --filter=@repo/merchant exec tsc --noEmit`: 0 errors.
   - `pnpm --filter=@repo/merchant build`: Built cleanly in 11.77s.
-- **Commit:** *Pending local commit*
+- **Commit:** `cfb3a3f`
 
 ---
 
