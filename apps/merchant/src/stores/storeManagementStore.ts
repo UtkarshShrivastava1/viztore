@@ -27,6 +27,11 @@ export interface CuratedProduct {
   isActive: boolean;
   image: string;
   category: string;
+  subCategory?: string;
+  productType?: string;
+  brand?: string;
+  size?: string;
+  color?: string;
 }
 
 export interface StoreKPIs {
@@ -410,24 +415,51 @@ export const useStoreManagementStore = create<StoreManagementState>((set, get) =
             : [];
 
           if (prodList.length > 0) {
-            mappedProducts = prodList.map((p: any) => ({
-              id: p._id || p.id,
-              name: p.name,
-              sku: p.sku || `PRD-${(p._id || '').slice(-6).toUpperCase()}`,
-              price: p.pricing?.sellingPrice || p.price || 0,
-              originalPrice: p.pricing?.mrp || p.originalPrice,
-              discount:
-                p.pricing?.mrp && p.pricing?.sellingPrice
-                  ? `${Math.round(((p.pricing.mrp - p.pricing.sellingPrice) / p.pricing.mrp) * 100)}% OFF`
-                  : undefined,
-              stock: p.inventory?.stockOnHand ?? p.stock ?? 0,
-              isActive: p.isActive ?? true,
-              image:
-                p.images?.[0]?.url ||
+            mappedProducts = prodList.map((p: any) => {
+              const variant = p.variants?.[0] || {};
+              const img =
+                (Array.isArray(variant.images) && variant.images[0]) ||
+                (Array.isArray(p.images) && (typeof p.images[0] === 'string' ? p.images[0] : p.images[0]?.url)) ||
                 p.image ||
-                'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=400&q=80',
-              category: p.category || 'General',
-            }));
+                'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=400&q=80';
+
+              const price = p.basePrice || variant.price || p.pricing?.sellingPrice || p.price || 0;
+              const mrp = p.baseMrp || variant.mrp || p.pricing?.mrp || p.originalPrice || price;
+              const stock =
+                typeof p.totalStock === 'number'
+                  ? p.totalStock
+                  : variant.stock ?? p.inventory?.stockOnHand ?? p.stock ?? 0;
+              const sku = variant.sku || p.sku || `PRD-${(p._id || '').slice(-6).toUpperCase()}`;
+
+              const catName = p.category
+                ? String(p.category).replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+                : 'General';
+              const subCat = p.subCategory
+                ? String(p.subCategory).replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+                : '';
+              const displayCategory = subCat ? `${catName} > ${subCat}` : catName;
+
+              return {
+                id: p._id || p.id,
+                name: p.name,
+                sku,
+                price,
+                originalPrice: mrp,
+                discount:
+                  mrp > price
+                    ? `${Math.round(((mrp - price) / mrp) * 100)}% OFF`
+                    : undefined,
+                stock,
+                isActive: p.isActive ?? true,
+                image: img,
+                category: displayCategory,
+                subCategory: p.subCategory,
+                productType: p.subType || p.productType,
+                brand: p.brand || 'Store In-House Brand',
+                size: variant.size || 'M',
+                color: variant.color || 'Standard',
+              };
+            });
           }
         } catch (err) {
           console.warn('Could not fetch store products for placement view:', err);
