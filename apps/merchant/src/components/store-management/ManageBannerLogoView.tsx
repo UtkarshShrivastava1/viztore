@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { useStoreManagementStore } from '../../stores/storeManagementStore.js';
 import { mediaApi } from '../../lib/api.js';
+import { getOptimizedImageUrl } from '../../lib/imageUtils.js';
 
 export const ManageBannerLogoView: React.FC = () => {
   const {
@@ -70,17 +71,12 @@ export const ManageBannerLogoView: React.FC = () => {
     if (file) {
       setIsUploadingLogo(true);
       try {
-        const res = await mediaApi.uploadImage(file, 'stores');
-        const cdnUrl = res?.url || URL.createObjectURL(file);
-        setLogoPreview(cdnUrl);
-        setStoreLogo(cdnUrl);
-        showNotice();
-      } catch (err) {
-        console.error('Failed to upload store logo:', err);
-        const url = URL.createObjectURL(file);
+        const url = await getOptimizedImageUrl(file, 'stores');
         setLogoPreview(url);
         setStoreLogo(url);
         showNotice();
+      } catch (err) {
+        console.error('Failed to upload store logo:', err);
       } finally {
         setIsUploadingLogo(false);
       }
@@ -92,17 +88,12 @@ export const ManageBannerLogoView: React.FC = () => {
     if (file) {
       setIsUploadingWebBanner(true);
       try {
-        const res = await mediaApi.uploadImage(file, 'stores');
-        const cdnUrl = res?.url || URL.createObjectURL(file);
-        setWebBannerPreview(cdnUrl);
-        setStoreBanner(cdnUrl);
-        showNotice();
-      } catch (err) {
-        console.error('Failed to upload web banner:', err);
-        const url = URL.createObjectURL(file);
+        const url = await getOptimizedImageUrl(file, 'stores');
         setWebBannerPreview(url);
         setStoreBanner(url);
         showNotice();
+      } catch (err) {
+        console.error('Failed to upload web banner:', err);
       } finally {
         setIsUploadingWebBanner(false);
       }
@@ -114,17 +105,12 @@ export const ManageBannerLogoView: React.FC = () => {
     if (file) {
       setIsUploadingMobileBanner(true);
       try {
-        const res = await mediaApi.uploadImage(file, 'stores');
-        const cdnUrl = res?.url || URL.createObjectURL(file);
-        setMobileBannerPreview(cdnUrl);
-        setStoreMobileBanner(cdnUrl);
-        showNotice();
-      } catch (err) {
-        console.error('Failed to upload mobile banner:', err);
-        const url = URL.createObjectURL(file);
+        const url = await getOptimizedImageUrl(file, 'stores');
         setMobileBannerPreview(url);
         setStoreMobileBanner(url);
         showNotice();
+      } catch (err) {
+        console.error('Failed to upload mobile banner:', err);
       } finally {
         setIsUploadingMobileBanner(false);
       }

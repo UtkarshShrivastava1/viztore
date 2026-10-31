@@ -21,6 +21,7 @@ import {
   Camera,
 } from 'lucide-react';
 import { useStoreManagementStore, StoreSection } from '../../stores/storeManagementStore.js';
+import { getOptimizedImageUrl } from '../../lib/imageUtils.js';
 
 export const StoreOverviewView: React.FC = () => {
   const {
@@ -55,21 +56,29 @@ export const StoreOverviewView: React.FC = () => {
     if (storeBanner) setBannerPreview(storeBanner);
   }, [storeBanner]);
 
-  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const url = URL.createObjectURL(file);
-      setLogoPreview(url);
-      setStoreLogo(url);
+      try {
+        const url = await getOptimizedImageUrl(file, 'stores');
+        setLogoPreview(url);
+        setStoreLogo(url);
+      } catch (err) {
+        console.error('Failed to update logo:', err);
+      }
     }
   };
 
-  const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBannerChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const url = URL.createObjectURL(file);
-      setBannerPreview(url);
-      setStoreBanner(url);
+      try {
+        const url = await getOptimizedImageUrl(file, 'stores');
+        setBannerPreview(url);
+        setStoreBanner(url);
+      } catch (err) {
+        console.error('Failed to update banner:', err);
+      }
     }
   };
 

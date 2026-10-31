@@ -62,21 +62,40 @@ export function StoreHeroCard({ store }: { store: IStore }) {
   return (
     <div className="relative w-full rounded-[24px] overflow-hidden mb-12 shadow-sm bg-white">
       {/* Background Banner */}
-      <div className="absolute inset-0 z-0">
+      <div className="absolute inset-0 z-0 overflow-hidden bg-slate-100">
         {store.bannerUrl ? (
-          <img src={store.bannerUrl} alt={store.name} className="w-full h-full object-cover object-right" />
+          <img
+            src={store.bannerUrl}
+            alt={store.name}
+            className="w-full h-full object-cover object-right"
+            onError={(e) => {
+              (e.currentTarget as HTMLElement).style.display = 'none';
+            }}
+          />
         ) : (
-          <div className="w-full h-full bg-slate-200" />
+          <div className="w-full h-full bg-gradient-to-r from-slate-100 to-slate-200" />
         )}
-        {/* Gradient overlay to make text readable on the left */}
-        <div className="absolute inset-0 bg-gradient-to-r from-white via-white/90 to-black/20" />
+        {/* Soft gradient overlay to keep store info readable on the left while keeping banner artwork visible */}
+        <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/80 to-black/10 pointer-events-none" />
       </div>
 
       {/* Main Content Area */}
       <div className="relative z-10 p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center gap-6">
-        {/* Profile Picture */}
-        <div className="flex-shrink-0 w-24 h-24 md:w-32 md:h-32 rounded-full bg-black flex items-center justify-center border-4 border-white shadow-md overflow-hidden">
-          <span className="text-white font-bold text-xl md:text-2xl text-center leading-tight px-2">{store.name}</span>
+        {/* Profile Picture / Store Logo */}
+        <div className="flex-shrink-0 w-24 h-24 md:w-32 md:h-32 rounded-full bg-slate-900 flex items-center justify-center border-4 border-white shadow-md overflow-hidden relative">
+          {store.logoUrl ? (
+            <img
+              src={store.logoUrl}
+              alt={store.name}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                (e.currentTarget as HTMLElement).style.display = 'none';
+              }}
+            />
+          ) : null}
+          <span className="text-white font-bold text-xl md:text-2xl text-center leading-tight px-2 pointer-events-none">
+            {store.name}
+          </span>
         </div>
 
         {/* Store Details */}
