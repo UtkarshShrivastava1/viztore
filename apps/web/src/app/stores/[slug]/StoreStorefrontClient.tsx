@@ -178,28 +178,11 @@ export function StoreStorefrontClient({ slug }: StoreStorefrontClientProps) {
     // Filter / Sort by active tab & merchant curated sections
     const activeSection = storeSections.find((s: any) => s.name === activeTab);
     if (activeSection && activeSection.name.toLowerCase() !== 'all products') {
-      const explicitMatches =
-        activeSection.productIds && activeSection.productIds.length > 0
-          ? result.filter((p) => {
-              const pId = String((p as any)._id || (p as any).id);
-              return activeSection.productIds.includes(pId);
-            })
-          : [];
-
-      if (explicitMatches.length > 0) {
-        result = explicitMatches;
-      } else {
-        // Dynamic smart section fallback if no products explicitly match the stored IDs (e.g. automatic/seed section)
-        const nameLower = activeSection.name.toLowerCase();
-        if (nameLower.includes('arrival') || nameLower.includes('new')) {
-          result.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
-        } else if (nameLower.includes('deal') || nameLower.includes('discount')) {
-          result = result.filter((p) => (p.baseMrp && p.baseMrp > p.basePrice) || (p.maxDiscount && p.maxDiscount > 0));
-          result.sort((a, b) => (b.maxDiscount || 0) - (a.maxDiscount || 0) || (a.basePrice || 0) - (b.basePrice || 0));
-        } else if (nameLower.includes('top') || nameLower.includes('best') || nameLower.includes('rated') || nameLower.includes('popular')) {
-          result.sort((a, b) => (b.rating || 0) - (a.rating || 0) || (b.basePrice || 0) - (a.basePrice || 0));
-        }
-      }
+      const sectionProductIds = Array.isArray(activeSection.productIds) ? activeSection.productIds : [];
+      result = result.filter((p) => {
+        const pId = String((p as any)._id || (p as any).id);
+        return sectionProductIds.includes(pId);
+      });
     }
 
     // Apply explicit sort option
@@ -504,7 +487,7 @@ export function StoreStorefrontClient({ slug }: StoreStorefrontClientProps) {
                           sec.productIds.includes(String((p as any)._id || (p as any).id))
                         ).length
                       : 0;
-                  const count = isAll ? rawProducts.length : (explicitCount > 0 ? explicitCount : null);
+                  const count = isAll ? rawProducts.length : explicitCount;
 
                   return (
                     <button
@@ -618,16 +601,31 @@ export function StoreStorefrontClient({ slug }: StoreStorefrontClientProps) {
             ) : (
               <div className="py-16 text-center bg-white border border-surface-200 rounded-[24px]">
                 <Store className="w-12 h-12 mx-auto text-surface-300 mb-4" />
-                <p className="text-[15px] text-surface-600 font-extrabold">No products match your active search or filters.</p>
-                <p className="text-xs text-surface-400 mt-1 max-w-sm mx-auto">
-                  Try checking for spelling errors or clearing your search term to see all store products.
+                <p className="text-[15px] text-surface-600 font-extrabold">
+                  {activeTab.toLowerCase() !== 'all products'
+                    ? `No products in "${activeTab}" yet`
+                    : 'No products match your active search or filters'}
                 </p>
-                <button
-                  onClick={clearAllFilters}
-                  className="mt-4 px-5 py-2.5 bg-blue-600 text-white text-xs font-bold rounded-xl hover:bg-blue-700 transition-colors shadow-sm"
-                >
-                  Clear all filters & search
-                </button>
+                <p className="text-xs text-surface-400 mt-1 max-w-sm mx-auto">
+                  {activeTab.toLowerCase() !== 'all products'
+                    ? `The merchant has not added any products to this section yet.`
+                    : 'Try checking for spelling errors or clearing your search term to see all store products.'}
+                </p>
+                {activeTab.toLowerCase() !== 'all products' ? (
+                  <button
+                    onClick={() => setActiveTab('All Products')}
+                    className="mt-4 px-5 py-2.5 bg-blue-600 text-white text-xs font-bold rounded-xl hover:bg-blue-700 transition-colors shadow-sm"
+                  >
+                    View All Products ({rawProducts.length})
+                  </button>
+                ) : (
+                  <button
+                    onClick={clearAllFilters}
+                    className="mt-4 px-5 py-2.5 bg-blue-600 text-white text-xs font-bold rounded-xl hover:bg-blue-700 transition-colors shadow-sm"
+                  >
+                    Clear all filters & search
+                  </button>
+                )}
               </div>
             )}
           </div>

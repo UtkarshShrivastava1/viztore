@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   ArrowLeft,
   Search,
@@ -153,6 +153,17 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
     }
     return [];
   });
+
+  // Sanitize selectedProductIds to only retain IDs that exist in the loaded store catalog
+  useEffect(() => {
+    if (products.length > 0 && selectedProductIds.length > 0) {
+      const validIds = new Set(products.map((p) => p.id));
+      const filtered = selectedProductIds.filter((id) => validIds.has(id));
+      if (filtered.length !== selectedProductIds.length) {
+        setSelectedProductIds(filtered);
+      }
+    }
+  }, [products, selectedProductIds]);
 
   const availableCategories = useMemo(() => {
     const set = new Set<string>();

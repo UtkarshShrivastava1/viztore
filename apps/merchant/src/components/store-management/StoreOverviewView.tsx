@@ -26,6 +26,7 @@ import { getOptimizedImageUrl } from '../../lib/imageUtils.js';
 export const StoreOverviewView: React.FC = () => {
   const {
     sections,
+    curatedProducts,
     kpis,
     storeLogo,
     storeBanner,
@@ -280,7 +281,9 @@ export const StoreOverviewView: React.FC = () => {
                       </td>
 
                       <td className="py-2.5 px-2.5 text-center font-bold text-slate-800">
-                        {sec.productCount}
+                        {isLastAlwaysOn
+                          ? (curatedProducts.length || sec.productCount)
+                          : (Array.isArray(sec.productIds) ? sec.productIds.length : sec.productCount)}
                       </td>
 
                       <td className="py-2.5 px-2.5 text-slate-600 font-medium">

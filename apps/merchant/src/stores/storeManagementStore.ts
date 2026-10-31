@@ -125,12 +125,12 @@ const initialSections: StoreSection[] = [
     badge: 'Special',
     type: 'Automatic',
     sectionType: 'product',
-    productCount: 12,
+    productCount: 0,
     isActive: true,
     displayOn: 'Home',
     priority: 1,
     description: 'Limited time offers on top picks',
-    productIds: ['prd-1', 'prd-2', 'prd-3', 'prd-4', 'prd-5'],
+    productIds: [],
   },
   {
     id: 'sec-2',
@@ -138,12 +138,12 @@ const initialSections: StoreSection[] = [
     badge: 'New',
     type: 'Manual',
     sectionType: 'product',
-    productCount: 24,
+    productCount: 0,
     isActive: true,
     displayOn: 'Home',
     priority: 2,
     description: 'Check out the latest products',
-    productIds: ['prd-6', 'prd-7', 'prd-8'],
+    productIds: [],
   },
   {
     id: 'sec-3',
@@ -151,12 +151,12 @@ const initialSections: StoreSection[] = [
     badge: 'Popular',
     type: 'Automatic',
     sectionType: 'product',
-    productCount: 20,
+    productCount: 0,
     isActive: true,
     displayOn: 'Home',
     priority: 3,
     description: 'Most loved by our customers',
-    productIds: ['prd-9', 'prd-10', 'prd-11'],
+    productIds: [],
   },
   {
     id: 'sec-4',
@@ -164,7 +164,7 @@ const initialSections: StoreSection[] = [
     badge: 'Category',
     type: 'Manual',
     sectionType: 'category',
-    productCount: 8,
+    productCount: 0,
     isActive: true,
     displayOn: 'Home',
     priority: 4,
@@ -177,7 +177,7 @@ const initialSections: StoreSection[] = [
     badge: 'Popular',
     type: 'Automatic',
     sectionType: 'product',
-    productCount: 16,
+    productCount: 0,
     isActive: true,
     displayOn: 'Home',
     priority: 5,
@@ -190,7 +190,7 @@ const initialSections: StoreSection[] = [
     badge: 'Brand',
     type: 'Manual',
     sectionType: 'brand',
-    productCount: 10,
+    productCount: 0,
     isActive: true,
     displayOn: 'Home',
     priority: 6,
@@ -203,7 +203,7 @@ const initialSections: StoreSection[] = [
     badge: 'Default',
     type: 'Automatic',
     sectionType: 'product',
-    productCount: 110,
+    productCount: 0,
     isActive: true,
     isAlwaysOn: true,
     displayOn: 'Home',
@@ -466,11 +466,32 @@ export const useStoreManagementStore = create<StoreManagementState>((set, get) =
         }
       }
 
-      const activeCount = loadedSections.filter((s) => s.isActive && !s.isAlwaysOn).length;
+      // Sanitize loadedSections against real catalog product IDs
+      const validProductIds = new Set(mappedProducts.map((p) => String(p.id)));
+
+      const sanitizedSections = loadedSections.map((sec) => {
+        const isAll = sec.name.toLowerCase() === 'all products' || sec.isAlwaysOn;
+        if (isAll) {
+          return {
+            ...sec,
+            productCount: mappedProducts.length,
+            productIds: mappedProducts.map((p) => String(p.id)),
+          };
+        }
+        // Filter out any stale/seed product IDs that don't exist in the store's current catalog
+        const cleanIds = (sec.productIds || []).filter((id: string) => validProductIds.has(String(id)));
+        return {
+          ...sec,
+          productIds: cleanIds,
+          productCount: cleanIds.length,
+        };
+      });
+
+      const activeCount = sanitizedSections.filter((s) => s.isActive && !s.isAlwaysOn).length;
 
       set({
         currentStoreId: storeId || null,
-        sections: loadedSections,
+        sections: sanitizedSections,
         curatedProducts: mappedProducts,
         storeLogo: storeData?.logoUrl || '',
         storeBanner: storeData?.bannerUrl || '',
@@ -478,7 +499,7 @@ export const useStoreManagementStore = create<StoreManagementState>((set, get) =
         storeDescription: storeData?.description || '',
         storeSlug: storeData?.slug || '',
         kpis: {
-          totalSections: loadedSections.length,
+          totalSections: sanitizedSections.length,
           activeSections: activeCount,
           totalProducts: mappedProducts.length,
           impressions: 12450,
@@ -664,7 +685,15 @@ export const useStoreManagementStore = create<StoreManagementState>((set, get) =
 
   updateSection: (id, updates) => {
     set((state) => ({
-      sections: state.sections.map((s) => (s.id === id ? { ...s, ...updates } : s)),
+      sections: state.sections.map((s) => {
+        if (s.id !== id) return s;
+        const newProductIds = updates.productIds !== undefined ? updates.productIds : s.productIds;
+        const productCount =
+          updates.productCount !== undefined
+            ? updates.productCount
+            : (newProductIds ? newProductIds.length : s.productCount);
+        return { ...s, ...updates, productIds: newProductIds, productCount };
+      }),
     }));
     get().persistStoreData();
   },

@@ -22,6 +22,7 @@ import { AddEditSectionView } from './AddEditSectionView.js';
 export const StoreSectionsView: React.FC = () => {
   const {
     sections,
+    curatedProducts,
     kpis,
     toggleSectionStatus,
     moveSectionPriority,
@@ -237,7 +238,9 @@ export const StoreSectionsView: React.FC = () => {
 
                     {/* Products Count */}
                     <td className="py-2.5 px-3 text-center font-bold text-slate-800">
-                      {sec.productCount}
+                      {isLastAlwaysOn
+                        ? (curatedProducts.length || sec.productCount)
+                        : (Array.isArray(sec.productIds) ? sec.productIds.length : sec.productCount)}
                     </td>
 
                     {/* Display Order */}
