@@ -61,3 +61,6 @@ Merchant_Website/
 PROJECT_BRAIN_MANIFEST.md
 *.docx
 *.xlsx
+ 
+scripts/test-screenshots/
+scripts/test-results.json
