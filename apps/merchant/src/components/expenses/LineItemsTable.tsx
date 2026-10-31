@@ -296,3 +296,4 @@ export const LineItemsTable: React.FC<LineItemsTableProps> = ({
     </div>
   );
 };
+

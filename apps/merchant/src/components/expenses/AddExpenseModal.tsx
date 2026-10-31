@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Plus, Calendar } from 'lucide-react';
 import { useExpenseStore } from '../../stores/expenseStore.js';
@@ -8,6 +8,7 @@ export const AddExpenseModal: React.FC = () => {
     isAddExpenseModalOpen,
     setIsAddExpenseModalOpen,
     setIsAddVendorOpen,
+    vendors,
     createExpenseRecord,
     isSubmitting,
   } = useExpenseStore();
@@ -23,6 +24,16 @@ export const AddExpenseModal: React.FC = () => {
   const [tax, setTax] = useState<number | ''>('');
   const [paymentMethod, setPaymentMethod] = useState('');
   const [paymentTerms, setPaymentTerms] = useState('Immediate');
+
+  const prevVendorsLen = useRef(vendors?.length || 0);
+  useEffect(() => {
+    if (vendors && vendors.length > prevVendorsLen.current) {
+      if (vendors[0]?.vendorName) {
+        setVendor(vendors[0].vendorName);
+      }
+    }
+    prevVendorsLen.current = vendors?.length || 0;
+  }, [vendors]);
 
   useEffect(() => {
     if (!isAddExpenseModalOpen) return;
@@ -155,13 +166,23 @@ export const AddExpenseModal: React.FC = () => {
                     required
                   >
                     <option value="">Select or add vendor</option>
-                    <option value="Airtel Broadband">Airtel Broadband</option>
-                    <option value="Jio Telecom">Jio Telecom</option>
-                    <option value="Office Landlord">Office Landlord</option>
-                    <option value="Sharma Enterprises">Sharma Enterprises</option>
-                    <option value="Local Stationery Store">Local Stationery Store</option>
-                    <option value="Google Ads">Google Ads</option>
-                    <option value="Meta Ads">Meta Ads</option>
+                    {vendors && vendors.length > 0 ? (
+                      vendors.map((v) => (
+                        <option key={v.id} value={v.vendorName}>
+                          {v.vendorName}
+                        </option>
+                      ))
+                    ) : (
+                      <>
+                        <option value="Airtel Broadband">Airtel Broadband</option>
+                        <option value="Jio Telecom">Jio Telecom</option>
+                        <option value="Office Landlord">Office Landlord</option>
+                        <option value="Sharma Enterprises">Sharma Enterprises</option>
+                        <option value="Local Stationery Store">Local Stationery Store</option>
+                        <option value="Google Ads">Google Ads</option>
+                        <option value="Meta Ads">Meta Ads</option>
+                      </>
+                    )}
                   </select>
                   <button
                     type="button"

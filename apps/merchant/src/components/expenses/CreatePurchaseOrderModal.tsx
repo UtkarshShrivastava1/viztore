@@ -32,6 +32,16 @@ export const CreatePurchaseOrderModal: React.FC = () => {
   const [taxRate, setTaxRate] = useState(18);
   const [settledAmount, setSettledAmount] = useState(0);
 
+  const prevVendorsLen = React.useRef(vendors?.length || 0);
+  useEffect(() => {
+    if (vendors && vendors.length > prevVendorsLen.current) {
+      if (vendors[0]?.vendorName) {
+        setVendor(vendors[0].vendorName);
+      }
+    }
+    prevVendorsLen.current = vendors?.length || 0;
+  }, [vendors]);
+
   // Fresh initial line item ready for entry
   const [items, setItems] = useState<LineItem[]>([
     { id: 'item-1', name: '', description: '', qty: 1, unit: 'Pcs', rate: 0 },

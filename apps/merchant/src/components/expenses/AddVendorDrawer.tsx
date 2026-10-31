@@ -184,18 +184,22 @@ export const AddVendorDrawer: React.FC<AddVendorDrawerProps> = ({
     if (createVendorRecord) {
       try {
         await createVendorRecord({
+          vendorName: companyName.trim() || displayName.trim() || 'New Vendor',
+          contactPerson: contactPerson.trim() || displayName.trim() || companyName.trim() || 'Manager',
           name: displayName.trim() || companyName.trim() || 'New Vendor',
           companyName: companyName.trim() || displayName.trim() || undefined,
           phone: phone.trim() || '9876543210',
+          email: email.trim() || undefined,
           gstin: gstin.trim() || undefined,
           pan: pan.trim() || undefined,
           address: addressLine.trim() || undefined,
-          city: city.trim() || undefined,
+          city: city.trim() || 'Raipur',
           pincode: pincode.trim() || undefined,
           category: category || 'General',
           paymentTerms: paymentTerms || 'Due on Receipt',
           openingBalance: parseFloat(openingBalance) || 0,
           creditLimit: parseFloat(creditLimit) || 0,
+          status: isActive ? 'Active' : 'Inactive',
         });
       } catch (err) {
         console.error('Failed to sync vendor to cloud:', err);

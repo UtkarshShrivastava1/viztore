@@ -202,4 +202,33 @@ Browser Errors Captured: 0
 4. **Full Test Suite Verification:**
    - Ran complete monorepo test suite: **36/36 test files passed**, **256/256 tests passing** with 0 regressions.
 
+---
+
+## 6. Production UX Transformation: Fresh Line Items Builder with Catalog Autocomplete
+
+**Affected Workflows:**
+- `CreatePurchaseOrderModal.tsx` (`+ Add Purchase` ➔ `Create Purchase Order`)
+- `CreatePurchaseBillModal.tsx` (`+ Add Purchase` ➔ `Create Purchase (Bill)`)
+- `CreateDirectPurchaseModal.tsx` (`+ Add Purchase` ➔ `Create Direct Purchase`)
+
+### Prior Deficiency Identified:
+The dialogs originally contained hardcoded dummy apparel entries (`Men T-Shirt (M)`, `Men T-Shirt (L)`, `Women Kurti (M)`, `Women Kurti (L)`) with fixed 50/30 quantities and 2024 year timestamps (`PO-2024-...`, `BILL-2024-...`).
+
+### Architectural Redesign & Production Upgrades:
+1. **Fresh Slate by Default:**
+   - Starts with 1 empty line item ready for entry (`Product / Item`, `Description / SKU`, `Qty: 1`, `Unit: Pcs`, `Rate: ₹0`).
+   - Clean Indian retail units (`Pcs`, `Box`, `Kg`, `Gm`, `Ltr`, `Ml`, `Mtr`, `Dozen`, `Pack`, `Roll`, `Set`, `Pair`).
+2. **Interactive Catalog Autocomplete (`LineItemsTable.tsx`):**
+   - As the merchant types into `Product / Item`, an autocomplete popover matches products from `useCatalogStore.products`.
+   - Displays real-time catalog matches with name, category, SKU, cost/selling price, and available stock.
+   - 1-click selection auto-populates item name, description/SKU, unit, and default unit rate.
+   - Custom uncatalogued items can still be freely entered.
+3. **Dynamic Sequential Reference Numbering:**
+   - Automatically computes `PO-${currentYear}-${sequentialCount}` and `BILL-${currentYear}-${sequentialCount}` using current year (2026) and active ledger count.
+4. **Dynamic Vendor Integration:**
+   - Automatically pulls registered suppliers from `useExpenseStore.vendors` with inline `+ Add New Vendor` creation trigger.
+5. **Real-time Live Computations:**
+   - Line totals, Subtotal, GST rates (0%, 5%, 12%, 18%, 28%), Discounts, and Pending Balances dynamically recomputed.
+
+
 
