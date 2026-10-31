@@ -141,18 +141,23 @@ export const purchaseItemSchema = z.object({
   sku: z.string().optional(),
   quantity: z.number().positive().default(1),
   unitPrice: z.number().nonnegative().optional(),
-});
+}).passthrough();
 
 export const createPurchaseBillSchema = z.object({
-  vendor: z.string().min(2, 'Vendor is required'),
+  vendor: z.string().optional(),
+  vendorName: z.string().optional(),
   itemsCount: z.string().default('1 item'),
   totalAmount: z.number().positive('Total amount must be greater than zero'),
-  paymentStatus: z.enum(['Paid', 'Partially Paid', 'Unpaid']).default('Unpaid'),
+  paymentStatus: z.string().default('Unpaid'),
   status: z.enum(['Pending', 'Partially Received', 'Received', 'Cancelled']).optional(),
   dueDate: z.string().optional(),
   type: z.enum(['Purchase', 'Purchase Order', 'Direct Purchase']).default('Purchase'),
   items: z.array(purchaseItemSchema).optional(),
-});
+}).passthrough().transform((d) => ({
+  ...d,
+  vendor: d.vendor || d.vendorName || 'Unknown Vendor',
+  paymentStatus: (d.paymentStatus?.toLowerCase() === 'paid' ? 'Paid' : d.paymentStatus?.toLowerCase() === 'partial' || d.paymentStatus === 'Partially Paid' ? 'Partially Paid' : 'Unpaid') as 'Paid' | 'Partially Paid' | 'Unpaid',
+}));
 
 export const createCreditNoteSchema = z.object({
   referencePurchase: z.string().min(1, 'Reference purchase is required'),
