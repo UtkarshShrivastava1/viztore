@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { ProductCard } from '@/features/products/components/ProductCard';
@@ -39,6 +39,43 @@ export function StoreStorefrontClient({ slug }: StoreStorefrontClientProps) {
   );
 
   const rawProducts = useMemo(() => productsData?.products || [], [productsData]);
+
+  // Curated store sections configured by the merchant
+  const storeSections = useMemo(() => {
+    const rawSections = (store as any)?.sections;
+    if (!rawSections || !Array.isArray(rawSections) || rawSections.length === 0) {
+      return [
+        { id: 'all', name: 'All Products', isAlwaysOn: true, isActive: true, priority: 0, productIds: [] as string[] },
+        { id: 'new', name: 'New Arrivals', isActive: true, priority: 1, productIds: [] as string[] },
+        { id: 'deals', name: 'Best Deals', isActive: true, priority: 2, productIds: [] as string[] },
+        { id: 'top', name: 'Top Picks', isActive: true, priority: 3, productIds: [] as string[] },
+      ];
+    }
+    // Filter only active sections and sort by merchant priority
+    const active = rawSections
+      .filter((s: any) => s.isActive || s.isAlwaysOn)
+      .sort((a: any, b: any) => (a.priority || 0) - (b.priority || 0));
+
+    // Ensure 'All Products' tab is always present
+    const hasAll = active.some((s: any) => s.name.toLowerCase() === 'all products');
+    if (!hasAll) {
+      return [
+        { id: 'all', name: 'All Products', isAlwaysOn: true, isActive: true, priority: 0, productIds: [] as string[] },
+        ...active,
+      ];
+    }
+    return active;
+  }, [store]);
+
+  // Synchronize activeTab if it's no longer an active section
+  useEffect(() => {
+    if (storeSections.length > 0) {
+      const isTabValid = storeSections.some((s: any) => s.name === activeTab);
+      if (!isTabValid) {
+        setActiveTab(storeSections[0].name);
+      }
+    }
+  }, [storeSections, activeTab]);
 
   // 1. Dynamic category facet extraction with real counts from catalog
   const categoryFacets = useMemo(() => {
@@ -138,14 +175,31 @@ export function StoreStorefrontClient({ slug }: StoreStorefrontClientProps) {
       result = result.filter((p) => (p.basePrice || 0) <= priceLimit);
     }
 
-    // Filter / Sort by active tab
-    if (activeTab === 'New Arrivals') {
-      result.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
-    } else if (activeTab === 'Best Deals') {
-      result = result.filter((p) => (p.baseMrp && p.baseMrp > p.basePrice) || (p.maxDiscount && p.maxDiscount > 0));
-      result.sort((a, b) => (b.maxDiscount || 0) - (a.maxDiscount || 0) || (a.basePrice || 0) - (b.basePrice || 0));
-    } else if (activeTab === 'Top Picks') {
-      result.sort((a, b) => (b.rating || 0) - (a.rating || 0) || (b.basePrice || 0) - (a.basePrice || 0));
+    // Filter / Sort by active tab & merchant curated sections
+    const activeSection = storeSections.find((s: any) => s.name === activeTab);
+    if (activeSection && activeSection.name.toLowerCase() !== 'all products') {
+      const explicitMatches =
+        activeSection.productIds && activeSection.productIds.length > 0
+          ? result.filter((p) => {
+              const pId = String((p as any)._id || (p as any).id);
+              return activeSection.productIds.includes(pId);
+            })
+          : [];
+
+      if (explicitMatches.length > 0) {
+        result = explicitMatches;
+      } else {
+        // Dynamic smart section fallback if no products explicitly match the stored IDs (e.g. automatic/seed section)
+        const nameLower = activeSection.name.toLowerCase();
+        if (nameLower.includes('arrival') || nameLower.includes('new')) {
+          result.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+        } else if (nameLower.includes('deal') || nameLower.includes('discount')) {
+          result = result.filter((p) => (p.baseMrp && p.baseMrp > p.basePrice) || (p.maxDiscount && p.maxDiscount > 0));
+          result.sort((a, b) => (b.maxDiscount || 0) - (a.maxDiscount || 0) || (a.basePrice || 0) - (b.basePrice || 0));
+        } else if (nameLower.includes('top') || nameLower.includes('best') || nameLower.includes('rated') || nameLower.includes('popular')) {
+          result.sort((a, b) => (b.rating || 0) - (a.rating || 0) || (b.basePrice || 0) - (a.basePrice || 0));
+        }
+      }
     }
 
     // Apply explicit sort option
@@ -161,7 +215,7 @@ export function StoreStorefrontClient({ slug }: StoreStorefrontClientProps) {
     }
 
     return result;
-  }, [rawProducts, storeSearch, selectedCategory, selectedBrands, priceLimit, activeTab, sortOption]);
+  }, [rawProducts, storeSearch, selectedCategory, selectedBrands, priceLimit, activeTab, sortOption, storeSections]);
 
   const filteredBrands = useMemo(() => {
     if (!brandSearch.trim()) return brandFacets;
@@ -441,24 +495,42 @@ export function StoreStorefrontClient({ slug }: StoreStorefrontClientProps) {
             {/* Tabs & Sort Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-surface-200 pb-px mb-6">
               <div className="flex overflow-x-auto hide-scrollbar gap-8">
-                {['All Products', 'New Arrivals', 'Best Deals', 'Top Picks'].map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`pb-4 text-[14px] font-bold whitespace-nowrap border-b-2 transition-colors ${
-                      activeTab === tab
-                        ? 'border-blue-600 text-[#192168]'
-                        : 'border-transparent text-surface-500 hover:text-[#192168]'
-                    }`}
-                  >
-                    {tab}
-                    {tab === 'All Products' && (
-                      <span className="ml-1.5 text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-bold">
-                        {filteredProducts.length}
-                      </span>
-                    )}
-                  </button>
-                ))}
+                {storeSections.map((sec: any) => {
+                  const isAll = sec.name.toLowerCase() === 'all products';
+                  const isSelected = activeTab === sec.name;
+                  const explicitCount =
+                    sec.productIds && sec.productIds.length > 0
+                      ? rawProducts.filter((p) =>
+                          sec.productIds.includes(String((p as any)._id || (p as any).id))
+                        ).length
+                      : 0;
+                  const count = isAll ? rawProducts.length : (explicitCount > 0 ? explicitCount : null);
+
+                  return (
+                    <button
+                      key={sec.id || sec.name}
+                      onClick={() => setActiveTab(sec.name)}
+                      className={`pb-4 text-[14px] font-bold whitespace-nowrap border-b-2 transition-colors flex items-center gap-2 ${
+                        isSelected
+                          ? 'border-blue-600 text-[#192168]'
+                          : 'border-transparent text-surface-500 hover:text-[#192168]'
+                      }`}
+                    >
+                      <span>{sec.name}</span>
+                      {count > 0 && (
+                        <span
+                          className={`text-xs px-2 py-0.5 rounded-full font-bold transition-colors ${
+                            isSelected
+                              ? 'bg-blue-50 text-blue-700'
+                              : 'bg-surface-100 text-surface-500'
+                          }`}
+                        >
+                          {count}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
 
               {/* Sort Selector & Product Count */}

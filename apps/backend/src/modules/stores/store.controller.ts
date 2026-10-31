@@ -98,7 +98,7 @@ export const updateStoreSettings: RequestHandler = catchAsync(async (req: Reques
   const { id } = req.params;
   if (!id) throw AppError.badRequest('Store ID is required');
 
-  const updatedSettings = await storeService.updateStoreSettings(id, req.user.sub, req.body);
+  const updatedSettings = await storeService.updateStoreSettings(id, req.user.sub, req.body, req.user.role);
   return ApiResponse.success(res, updatedSettings, 'Store settings updated and persisted successfully');
 });
 

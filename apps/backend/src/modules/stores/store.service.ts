@@ -436,13 +436,14 @@ export async function updateStoreSettings(
   storeId: string,
   ownerId: string,
   payload: any,
+  role?: string,
 ): Promise<any> {
   const store = await StoreModel.findById(storeId);
   if (!store) {
     throw AppError.notFound('Store not found', 'STORE_NOT_FOUND');
   }
 
-  if (store.ownerId.toString() !== ownerId) {
+  if (store.ownerId.toString() !== ownerId && role !== 'admin') {
     throw AppError.forbidden('You are not authorized to update settings for this store', 'STORE_ACCESS_DENIED');
   }
 

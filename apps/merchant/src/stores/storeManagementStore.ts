@@ -96,6 +96,8 @@ interface StoreManagementState {
     description?: string;
     isActive: boolean;
     badge?: 'Special' | 'New' | 'Popular' | 'Category' | 'Brand' | 'Default';
+    productIds?: string[];
+    priority?: number;
   }) => void;
   updateSection: (id: string, updates: Partial<StoreSection>) => void;
   deleteSection: (id: string) => void;
@@ -586,9 +588,9 @@ export const useStoreManagementStore = create<StoreManagementState>((set, get) =
     }
   },
 
-  addSection: ({ name, sectionType, description, isActive, badge }) => {
+  addSection: ({ name, sectionType, description, isActive, badge, productIds, priority }) => {
     set((state) => {
-      const newPriority = state.sections.length + 1;
+      const newPriority = priority !== undefined ? priority : state.sections.length + 1;
       const type: 'Automatic' | 'Manual' =
         sectionType === 'product' || sectionType === 'category' ? 'Manual' : 'Automatic';
 
@@ -600,16 +602,17 @@ export const useStoreManagementStore = create<StoreManagementState>((set, get) =
           ? 'Brand'
           : 'New');
 
+      const initialProductIds = Array.isArray(productIds) ? productIds : [];
       const newSection: StoreSection = {
         id: `sec-${Date.now()}`,
         name: name.trim(),
         badge: inferredBadge,
         type,
         sectionType,
-        productCount: 0,
+        productCount: initialProductIds.length,
         isActive,
         priority: newPriority,
-        productIds: [],
+        productIds: initialProductIds,
         description: description?.trim() || '',
       };
 

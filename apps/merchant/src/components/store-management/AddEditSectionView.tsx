@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   ArrowLeft,
   Search,
@@ -24,6 +24,7 @@ import {
   Plus,
   Mic,
   Sparkles,
+  RefreshCw,
 } from 'lucide-react';
 import { useStoreManagementStore, StoreSection } from '../../stores/storeManagementStore.js';
 import { branding } from '../../lib/branding.js';
@@ -55,7 +56,14 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
   sectionId,
   onBack,
 }) => {
-  const { sections, addSection, updateSection } = useStoreManagementStore();
+  const {
+    sections,
+    curatedProducts,
+    addSection,
+    updateSection,
+    persistStoreData,
+    isSaving,
+  } = useStoreManagementStore();
 
   const existingSection = sectionId ? sections.find((s) => s.id === sectionId) : null;
 
@@ -73,116 +81,167 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
   const [brandFilter, setBrandFilter] = useState('All Brands');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Selected products
-  const [selectedProductIds, setSelectedProductIds] = useState<string[]>([
-    'p1',
-    'p2',
-    'p4',
-    'p7',
-  ]);
+  const [isSavingLocal, setIsSavingLocal] = useState(false);
+
+  // Real store catalog products if available, with demo fallback
+  const products = useMemo(() => {
+    if (curatedProducts && curatedProducts.length > 0) {
+      return curatedProducts.map((p) => ({
+        id: p.id,
+        name: p.name,
+        details: `${p.category || 'General'} • SKU: ${p.sku}`,
+        sku: p.sku,
+        category: p.category || 'General',
+        stock: p.stock ?? 0,
+        price: p.price ?? 0,
+        rating: 4.8,
+        reviews: 42,
+        image:
+          p.image ||
+          'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100&auto=format&fit=crop&q=80',
+      }));
+    }
+    return [
+      {
+        id: 'p1',
+        name: 'Men Black Round Neck T-Shirt',
+        details: 'Size: M • Color: Black',
+        sku: 'PRD-TSHIRT-BLK-M',
+        category: "Men's Fashion > T-Shirts",
+        stock: 120,
+        price: 599,
+        rating: 4.5,
+        reviews: 320,
+        image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=100&auto=format&fit=crop&q=80',
+      },
+      {
+        id: 'p2',
+        name: 'Men White Round Neck T-Shirt',
+        details: 'Size: M • Color: White',
+        sku: 'PRD-TSHIRT-WHT-M',
+        category: "Men's Fashion > T-Shirts",
+        stock: 80,
+        price: 599,
+        rating: 4.5,
+        reviews: 280,
+        image: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=100&auto=format&fit=crop&q=80',
+      },
+      {
+        id: 'p3',
+        name: 'Men Navy Blue Bound Neck T-Shirt',
+        details: 'Size: L • Color: Navy Blue',
+        sku: 'PRD-TSHIRT-NVY-L',
+        category: "Men's Fashion > T-Shirts",
+        stock: 60,
+        price: 599,
+        rating: 4.3,
+        reviews: 110,
+        image: 'https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=100&auto=format&fit=crop&q=80',
+      },
+      {
+        id: 'p4',
+        name: 'Men Grey Round Neck T-Shirt',
+        details: 'Size: M • Color: Grey',
+        sku: 'PRD-TSHIRT-GRY-M',
+        category: "Men's Fashion > T-Shirts",
+        stock: 45,
+        price: 599,
+        rating: 4.5,
+        reviews: 195,
+        image: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=100&auto=format&fit=crop&q=80',
+      },
+      {
+        id: 'p5',
+        name: 'Men Black Polo T-Shirt',
+        details: 'Size: M • Color: Black',
+        sku: 'PRD-POLO-BLK-M',
+        category: "Men's Fashion > Polo T-Shirt",
+        stock: 30,
+        price: 649,
+        rating: 4.6,
+        reviews: 180,
+        image: 'https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=100&auto=format&fit=crop&q=80',
+      },
+      {
+        id: 'p6',
+        name: 'Men Maroon Polo T-Shirt',
+        details: 'Size: L • Color: Maroon',
+        sku: 'PRD-POLO-MRN-L',
+        category: "Men's Fashion > Polo T-Shirt",
+        stock: 25,
+        price: 649,
+        rating: 4.4,
+        reviews: 95,
+        image: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=100&auto=format&fit=crop&q=80',
+      },
+      {
+        id: 'p7',
+        name: 'Men Blue Henley T-Shirt',
+        details: 'Size: M • Color: Blue',
+        sku: 'PRD-HENLEY-BLU-M',
+        category: "Men's Fashion > T-Shirts",
+        stock: 20,
+        price: 699,
+        rating: 4.4,
+        reviews: 142,
+        image: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=100&auto=format&fit=crop&q=80',
+      },
+      {
+        id: 'p8',
+        name: 'Men Striped Round Neck T-Shirt',
+        details: 'Size: M • Color: White/Black',
+        sku: 'PRD-TSHIRT-STP-M',
+        category: "Men's Fashion > T-Shirts",
+        stock: 15,
+        price: 599,
+        rating: 4.2,
+        reviews: 70,
+        image: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=100&auto=format&fit=crop&q=80',
+      },
+    ];
+  }, [curatedProducts]);
+
+  // Selected products initialized from existing section or empty
+  const [selectedProductIds, setSelectedProductIds] = useState<string[]>(() => {
+    if (existingSection?.productIds && Array.isArray(existingSection.productIds) && existingSection.productIds.length > 0) {
+      return existingSection.productIds;
+    }
+    return [];
+  });
+
+  const availableCategories = useMemo(() => {
+    const set = new Set<string>();
+    products.forEach((p) => {
+      if (p.category) {
+        const primaryCat = (p.category.split('>')[0] || '').trim();
+        if (primaryCat) set.add(primaryCat);
+      }
+    });
+    return ['All Categories', ...Array.from(set)];
+  }, [products]);
 
   const filteredPresets = PRESET_SECTIONS.filter((p) =>
     p.name.toLowerCase().includes(dropdownSearch.toLowerCase())
   );
 
-  const products = [
-    {
-      id: 'p1',
-      name: 'Men Black Round Neck T-Shirt',
-      details: 'Size: M • Color: Black',
-      sku: 'PRD-TSHIRT-BLK-M',
-      category: "Men's Fashion > T-Shirts",
-      stock: 120,
-      price: 599,
-      rating: 4.5,
-      reviews: 320,
-      image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=100&auto=format&fit=crop&q=80',
-    },
-    {
-      id: 'p2',
-      name: 'Men White Round Neck T-Shirt',
-      details: 'Size: M • Color: White',
-      sku: 'PRD-TSHIRT-WHT-M',
-      category: "Men's Fashion > T-Shirts",
-      stock: 80,
-      price: 599,
-      rating: 4.5,
-      reviews: 280,
-      image: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=100&auto=format&fit=crop&q=80',
-    },
-    {
-      id: 'p3',
-      name: 'Men Navy Blue Bound Neck T-Shirt',
-      details: 'Size: L • Color: Navy Blue',
-      sku: 'PRD-TSHIRT-NVY-L',
-      category: "Men's Fashion > T-Shirts",
-      stock: 60,
-      price: 599,
-      rating: 4.3,
-      reviews: 110,
-      image: 'https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=100&auto=format&fit=crop&q=80',
-    },
-    {
-      id: 'p4',
-      name: 'Men Grey Round Neck T-Shirt',
-      details: 'Size: M • Color: Grey',
-      sku: 'PRD-TSHIRT-GRY-M',
-      category: "Men's Fashion > T-Shirts",
-      stock: 45,
-      price: 599,
-      rating: 4.5,
-      reviews: 195,
-      image: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=100&auto=format&fit=crop&q=80',
-    },
-    {
-      id: 'p5',
-      name: 'Men Black Polo T-Shirt',
-      details: 'Size: M • Color: Black',
-      sku: 'PRD-POLO-BLK-M',
-      category: "Men's Fashion > Polo T-Shirt",
-      stock: 30,
-      price: 649,
-      rating: 4.6,
-      reviews: 180,
-      image: 'https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=100&auto=format&fit=crop&q=80',
-    },
-    {
-      id: 'p6',
-      name: 'Men Maroon Polo T-Shirt',
-      details: 'Size: L • Color: Maroon',
-      sku: 'PRD-POLO-MRN-L',
-      category: "Men's Fashion > Polo T-Shirt",
-      stock: 25,
-      price: 649,
-      rating: 4.4,
-      reviews: 95,
-      image: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=100&auto=format&fit=crop&q=80',
-    },
-    {
-      id: 'p7',
-      name: 'Men Blue Henley T-Shirt',
-      details: 'Size: M • Color: Blue',
-      sku: 'PRD-HENLEY-BLU-M',
-      category: "Men's Fashion > T-Shirts",
-      stock: 20,
-      price: 699,
-      rating: 4.4,
-      reviews: 142,
-      image: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=100&auto=format&fit=crop&q=80',
-    },
-    {
-      id: 'p8',
-      name: 'Men Striped Round Neck T-Shirt',
-      details: 'Size: M • Color: White/Black',
-      sku: 'PRD-TSHIRT-STP-M',
-      category: "Men's Fashion > T-Shirts",
-      stock: 15,
-      price: 599,
-      rating: 4.2,
-      reviews: 70,
-      image: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=100&auto=format&fit=crop&q=80',
-    },
-  ];
+  const displayedProducts = useMemo(() => {
+    return products.filter((p) => {
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const match =
+          p.name.toLowerCase().includes(q) ||
+          p.sku.toLowerCase().includes(q) ||
+          p.category.toLowerCase().includes(q);
+        if (!match) return false;
+      }
+      if (categoryFilter !== 'All Categories') {
+        if (!p.category.toLowerCase().includes(categoryFilter.toLowerCase())) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [products, searchQuery, categoryFilter]);
 
   const toggleSelect = (id: string) => {
     setSelectedProductIds((prev) =>
@@ -190,22 +249,34 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
     );
   };
 
-  const handleSave = () => {
-    if (existingSection) {
-      updateSection(existingSection.id, {
-        name: sectionName,
-        priority: displayOrder,
-        isActive,
-        productCount: selectedProductIds.length,
-      });
-    } else {
-      addSection({
-        name: sectionName,
-        sectionType: 'product',
-        isActive,
-      });
+  const handleSave = async () => {
+    setIsSavingLocal(true);
+    try {
+      if (existingSection) {
+        updateSection(existingSection.id, {
+          name: sectionName,
+          priority: displayOrder,
+          isActive,
+          productIds: selectedProductIds,
+          productCount: selectedProductIds.length,
+        });
+      } else {
+        addSection({
+          name: sectionName,
+          sectionType: 'product',
+          isActive,
+          badge: 'New',
+          priority: displayOrder,
+          productIds: selectedProductIds,
+        });
+      }
+      await persistStoreData();
+      onBack();
+    } catch (err) {
+      console.error('Failed to save section:', err);
+    } finally {
+      setIsSavingLocal(false);
     }
-    onBack();
   };
 
   return (
@@ -469,9 +540,9 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
               onChange={(e) => setCategoryFilter(e.target.value)}
               className="px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-semibold text-slate-700"
             >
-              <option>All Categories</option>
-              <option>Men's Fashion</option>
-              <option>Women's Fashion</option>
+              {availableCategories.map((cat) => (
+                <option key={cat}>{cat}</option>
+              ))}
             </select>
 
             <select
@@ -534,15 +605,24 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
                   <th className="py-2 px-2.5 w-7">
                     <input
                       type="checkbox"
-                      checked={selectedProductIds.length === products.length}
-                      onChange={() =>
-                        setSelectedProductIds(
-                          selectedProductIds.length === products.length
-                            ? []
-                            : products.map((p) => p.id)
-                        )
+                      checked={
+                        displayedProducts.length > 0 &&
+                        displayedProducts.every((p) => selectedProductIds.includes(p.id))
                       }
-                      className="rounded border-slate-300 text-blue-600"
+                      onChange={() => {
+                        const allDisplayedSelected = displayedProducts.every((p) =>
+                          selectedProductIds.includes(p.id)
+                        );
+                        if (allDisplayedSelected) {
+                          setSelectedProductIds((prev) =>
+                            prev.filter((id) => !displayedProducts.some((p) => p.id === id))
+                          );
+                        } else {
+                          const newIds = displayedProducts.map((p) => p.id);
+                          setSelectedProductIds((prev) => Array.from(new Set([...prev, ...newIds])));
+                        }
+                      }}
+                      className="rounded border-slate-300 text-blue-600 cursor-pointer"
                     />
                   </th>
                   <th className="py-2 px-2.5">Product</th>
@@ -553,7 +633,14 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {products.map((p) => {
+                {displayedProducts.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-8 text-center text-slate-400">
+                      No products found matching filters
+                    </td>
+                  </tr>
+                ) : (
+                  displayedProducts.map((p) => {
                   const isChecked = selectedProductIds.includes(p.id);
                   return (
                     <tr
@@ -568,7 +655,7 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
                           type="checkbox"
                           checked={isChecked}
                           onChange={() => toggleSelect(p.id)}
-                          className="rounded border-slate-300 text-blue-600"
+                          className="rounded border-slate-300 text-blue-600 cursor-pointer"
                         />
                       </td>
                       <td className="py-2 px-2.5">
@@ -598,7 +685,7 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
                       <td className="py-2 px-2 text-right font-black text-slate-900">₹{p.price}</td>
                     </tr>
                   );
-                })}
+                }))}
               </tbody>
             </table>
           </div>
@@ -745,9 +832,11 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
         <button
           type="button"
           onClick={handleSave}
-          className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition-colors"
+          disabled={isSavingLocal || isSaving}
+          className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-2"
         >
-          {existingSection ? 'Save Changes' : 'Create Section'}
+          {(isSavingLocal || isSaving) && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
+          <span>{existingSection ? 'Save Changes' : 'Create Section'}</span>
         </button>
       </div>
     </div>
