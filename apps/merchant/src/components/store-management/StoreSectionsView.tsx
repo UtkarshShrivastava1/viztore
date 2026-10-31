@@ -26,18 +26,18 @@ export const StoreSectionsView: React.FC = () => {
     toggleSectionStatus,
     moveSectionPriority,
     deleteSection,
+    isEditingSection,
+    editingSectionId,
+    startEditingSection,
+    stopEditingSection,
   } = useStoreManagementStore();
 
-  const [isEditingMode, setIsEditingMode] = useState(false);
-  const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
-
-  if (isEditingMode) {
+  if (isEditingSection) {
     return (
       <AddEditSectionView
         sectionId={editingSectionId}
         onBack={() => {
-          setIsEditingMode(false);
-          setEditingSectionId(null);
+          stopEditingSection();
         }}
       />
     );
@@ -175,8 +175,7 @@ export const StoreSectionsView: React.FC = () => {
           <button
             type="button"
             onClick={() => {
-              setEditingSectionId(null);
-              setIsEditingMode(true);
+              startEditingSection(null);
             }}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition-colors"
           >
@@ -309,8 +308,7 @@ export const StoreSectionsView: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => {
-                            setEditingSectionId(sec.id);
-                            setIsEditingMode(true);
+                            startEditingSection(sec.id);
                           }}
                           className="px-2.5 py-1 text-blue-600 hover:bg-blue-50 border border-blue-200 rounded-lg text-xs font-semibold transition-colors"
                         >

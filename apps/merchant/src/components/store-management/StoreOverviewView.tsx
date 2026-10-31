@@ -43,6 +43,18 @@ export const StoreOverviewView: React.FC = () => {
   const [bannerPreview, setBannerPreview] = useState(storeBanner);
   const [isSavedNotice, setIsSavedNotice] = useState(false);
 
+  React.useEffect(() => {
+    if (storeDescription) setDescText(storeDescription);
+  }, [storeDescription]);
+
+  React.useEffect(() => {
+    if (storeLogo) setLogoPreview(storeLogo);
+  }, [storeLogo]);
+
+  React.useEffect(() => {
+    if (storeBanner) setBannerPreview(storeBanner);
+  }, [storeBanner]);
+
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {

@@ -39,8 +39,32 @@ export const StoreQrLinkView: React.FC = () => {
   const storeUrl = isDev ? `${window.location.protocol}//${window.location.hostname}:3000/stores/${storeSlug || 'fashionhub'}` : `https://${displayDomain}/stores/${storeSlug || 'fashionhub'}`;
   const qrRef = useRef<SVGSVGElement>(null);
 
+  const fallbackCopyText = (text: string) => {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-9999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+      document.execCommand('copy');
+    } catch {}
+    document.body.removeChild(textArea);
+  };
+
   const handleCopy = () => {
-    navigator.clipboard.writeText(storeUrl);
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(storeUrl).catch(() => {
+          fallbackCopyText(storeUrl);
+        });
+      } else {
+        fallbackCopyText(storeUrl);
+      }
+    } catch {
+      fallbackCopyText(storeUrl);
+    }
     setCopied(true);
     setActionNotice('Store link copied to clipboard!');
     setTimeout(() => {

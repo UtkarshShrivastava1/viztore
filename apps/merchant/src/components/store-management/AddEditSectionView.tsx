@@ -563,7 +563,7 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
                         isChecked ? 'bg-blue-50/20' : ''
                       }`}
                     >
-                      <td className="py-2 px-2.5">
+                      <td className="py-2 px-2.5" onClick={(e) => e.stopPropagation()}>
                         <input
                           type="checkbox"
                           checked={isChecked}

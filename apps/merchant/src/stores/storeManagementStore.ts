@@ -60,6 +60,10 @@ interface StoreManagementState {
   curatedProducts: CuratedProduct[];
   kpis: StoreKPIs;
   isAddSectionModalOpen: boolean;
+  isEditingSection: boolean;
+  editingSectionId: string | null;
+  startEditingSection: (id: string | null) => void;
+  stopEditingSection: () => void;
 
   // Backend sync methods
   fetchStoreManagementData: () => Promise<void>;
@@ -349,6 +353,11 @@ export const useStoreManagementStore = create<StoreManagementState>((set, get) =
   sections: initialSections,
   curatedProducts: initialCuratedProducts,
   isAddSectionModalOpen: false,
+  isEditingSection: false,
+  editingSectionId: null,
+
+  startEditingSection: (id) => set({ isEditingSection: true, editingSectionId: id, activeSubTab: 'sections' }),
+  stopEditingSection: () => set({ isEditingSection: false, editingSectionId: null }),
 
   // Store Appearance
   storeLogo: '',
