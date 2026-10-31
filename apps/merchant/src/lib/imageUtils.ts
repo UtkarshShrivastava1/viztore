@@ -51,3 +51,4 @@ export async function getOptimizedImageUrl(file: File, folder = 'stores'): Promi
     reader.readAsDataURL(file);
   });
 }
+

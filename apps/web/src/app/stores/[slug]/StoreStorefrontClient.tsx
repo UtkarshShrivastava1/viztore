@@ -252,7 +252,7 @@ export function StoreStorefrontClient({ slug }: StoreStorefrontClientProps) {
         {/* Store Info Banner Card */}
         <StoreHeroCard store={store} />
 
-        <div className="flex flex-col md:flex-row gap-8 mt-16">
+        <div className="flex flex-col md:flex-row gap-8 mt-6">
           {/* Desktop Filter Sidebar (Dynamic Catalog Facets) */}
           <aside className="hidden md:block w-[260px] flex-shrink-0">
             <div className="bg-white border border-surface-200 rounded-2xl p-0 sticky top-24 shadow-sm overflow-hidden">
