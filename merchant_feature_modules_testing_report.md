@@ -139,3 +139,42 @@ Authenticated as: Test Merchant Lead (9988776655), Store: Apex Lifestyle Hub
 Total Actions Checked: 30
 Browser Errors Captured: 0
 ```
+
+---
+
+## 5. Live Interactive Browser Automation Log — Expense & Purchase Module
+
+**Mode:** Native Chrome DevTools Live MCP Automation (`chrome-devtools`)  
+**Page Target:** `http://localhost:3001/dashboard/expenses`  
+**Execution Timestamp:** 31 October 2026, 12:20 PM IST  
+
+### End-to-End Actions Verified:
+1. **Authenticated Session Navigation:**
+   - Injected merchant JWT, user session, and store `#3257` (`Apex Lifestyle Hub`) via page initialization script.
+   - Rendered `/dashboard/expenses` dashboard directly with verified active store banner and real-time KPI overview cards.
+2. **`+ Add Expense` Workflow:**
+   - Clicked `+ Add Expense` trigger button.
+   - Modal dialog rendered with all fields: Category combobox, Vendor selection, Expense Date, Reference Number, Notes counter (`0/250`), Base Amount, Tax Amount, Auto-calculated Total Amount (`₹ 53,100.00`), Payment Method, and Terms.
+   - Filled Category: `Electricity Bill`, Vendor: `Office Landlord`, Reference: `EXP-OCT-2026-9041`, Notes: `Commercial retail space rent payment for current month with maintenance fee included`, Amount: `₹ 45,000`, Tax: `₹ 8,100`, Payment: `Bank Transfer`.
+   - Clicked `Save Expense`.
+   - Modal closed seamlessly; Top KPI card "Total Expense" immediately updated to **`₹ 53,100.00`**, and new row `EXP-2026-000001` appended to the live transactions table with `Paid` status.
+3. **Transaction Details Modal Inspection:**
+   - Clicked `View` on `EXP-2026-000001`.
+   - Verified details dialog with `Overview`, `Items`, `Payments`, `E-Way Bill`, `Notes`, `Activity` sub-navigation tabs, GST breakdown (`CGST` + `SGST`), and print/download actions.
+   - Dismissed via `Close` action.
+4. **`+ Add Purchase` Split Menu & PO Generation:**
+   - Clicked `+ Add Purchase` split dropdown button.
+   - Verified 4 contextual creation paths: `Create Purchase Order`, `Create Purchase (Bill)`, `Create Purchase Return`, and `Create Direct Purchase`.
+   - Selected `Create Purchase Order`:
+     - Modal loaded with PO Number `PO-2024-000126`, vendor `Sharma Enterprises`, warehouse selection `Main Warehouse`, and multi-line items table (`Men T-Shirt (M)`, `Men T-Shirt (L)`, `Women Kurti (M)`, `Women Kurti (L)`).
+     - Subtotal `₹ 52,000.00`, GST 18% `₹ 9,360.00`, Total Amount `₹ 61,360.00`.
+     - Clicked `Create Purchase Order`.
+     - KPI metric "Open Purchase Orders" updated to **`₹ 61,360.00 (1 PO)`**.
+5. **Multi-Tab Sub-Navigation Verification:**
+   - Switched to `Purchase Orders` tab: Verified new PO `PO-2024-000126` for `Sharma Enterprises` (4 items, `₹ 61,360.00`, status `Pending`).
+   - Switched to `Vendors` directory tab: Verified KPI summary (`28 Total`, `24 Active`, `3 Inactive`, `1 Blocked`) and vendor search/filter table.
+   - Switched to `Credit Notes` tab: Verified KPI summary (`12 Total`, `₹ 12,450.00 Total Amount`, `3 Pending`).
+   - Switched to `Expenses` sub-tab: Verified expense record `EXP-2026-000001` with `Electricity Bill` category and `Bank Transfer` method.
+6. **Viewport Screenshot Capture:**
+   - Captured final rendered state snapshot offloaded to artifact storage.
+
