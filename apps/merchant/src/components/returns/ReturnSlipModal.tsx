@@ -1,7 +1,12 @@
 import React from 'react';
-import { X, Printer, CheckSquare } from 'lucide-react';
+import { X, Printer, Download, CheckSquare } from 'lucide-react';
 import { ReturnRecord } from '../../stores/returnsStore.js';
 import { branding } from '../../lib/branding.js';
+import {
+  downloadDocumentPdf,
+  printFormattedDocument,
+  returnSlipToVoucherDoc,
+} from '../../lib/pdfEngine.js';
 
 interface ReturnSlipModalProps {
   isOpen: boolean;
@@ -17,7 +22,13 @@ export const ReturnSlipModal: React.FC<ReturnSlipModalProps> = ({
   if (!isOpen || !returnRecord) return null;
 
   const handlePrint = () => {
-    window.print();
+    const docData = returnSlipToVoucherDoc(returnRecord);
+    printFormattedDocument(docData);
+  };
+
+  const handleDownloadPdf = () => {
+    const docData = returnSlipToVoucherDoc(returnRecord);
+    downloadDocumentPdf(docData);
   };
 
   return (
@@ -40,8 +51,15 @@ export const ReturnSlipModal: React.FC<ReturnSlipModalProps> = ({
           </div>
           <div className="flex items-center gap-2">
             <button
+              onClick={handleDownloadPdf}
+              className="px-3.5 py-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-colors shadow-2xs flex items-center gap-1.5 cursor-pointer"
+            >
+              <Download className="w-3.5 h-3.5 text-blue-600" />
+              <span>Download PDF</span>
+            </button>
+            <button
               onClick={handlePrint}
-              className="px-3.5 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors shadow-2xs flex items-center gap-1.5"
+              className="px-3.5 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors shadow-2xs flex items-center gap-1.5 cursor-pointer"
             >
               <Printer className="w-3.5 h-3.5" />
               <span>Print Slip</span>

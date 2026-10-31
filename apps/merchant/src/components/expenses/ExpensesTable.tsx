@@ -27,6 +27,7 @@ import {
 } from '../../stores/expenseStore.js';
 import { TableActionPopover } from '../ui/TableActionPopover.js';
 import { downloadCSV } from '../../utils/csvExport.js';
+import { downloadDocumentPdf, VoucherDocumentData } from '../../lib/pdfEngine.js';
 
 interface ExpensesTableProps {
   onViewDetails: (item: any) => void;
@@ -174,12 +175,43 @@ const ExpenseRowActionMenu: React.FC<{
           type="button"
           onClick={() => {
             onClose();
-            window.print();
+            const rawAmount = item.totalAmount || Math.abs(item.amount) || 1000;
+            const subtotal = Math.round((rawAmount / 1.18) * 100) / 100;
+            const tax = Math.round((rawAmount - subtotal) * 100) / 100;
+            const docData: VoucherDocumentData = {
+              title: item.type === 'Expense' ? 'EXPENSE VOUCHER' : 'TAX INVOICE',
+              referenceNo: item.referenceNo || item.billNumber || item.expenseNo || item.id,
+              voucherType: item.type || 'Purchase',
+              date: item.date || 'Today',
+              time: item.time,
+              vendorOrCustomer: {
+                name: item.vendorOrPaidTo || item.vendor || 'Supplier',
+                city: 'Local',
+              },
+              items: [
+                {
+                  name: item.category ? `${item.category} Intake` : 'General Inventory',
+                  qty: 1,
+                  unit: 'Pcs',
+                  rate: subtotal,
+                  total: subtotal,
+                },
+              ],
+              financials: {
+                subtotal,
+                taxAmount: tax,
+                totalAmount: rawAmount,
+                paidAmount: item.status === 'Paid' ? rawAmount : 0,
+                balanceDue: item.status === 'Paid' ? 0 : rawAmount,
+              },
+              filename: `${item.referenceNo || item.id}_Invoice`,
+            };
+            downloadDocumentPdf(docData);
           }}
           className="w-full px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer"
         >
           <Download className="w-3.5 h-3.5 text-slate-400" />
-          <span>Download Invoice</span>
+          <span>Download Invoice (PDF)</span>
         </button>
 
         <button
@@ -427,7 +459,35 @@ export const ExpensesTable: React.FC<ExpensesTableProps> = ({
                     type="button"
                     onClick={() => {
                       setIsDownloadOpen(false);
-                      window.print();
+                      const activeItems = allTransactions || [];
+                      const totalSum = activeItems.reduce((acc, t) => acc + (Number(Math.abs(t.amount)) || 0), 0);
+                      const subtotal = Math.round((totalSum / 1.18) * 100) / 100;
+                      const reportData: VoucherDocumentData = {
+                        title: 'PROCUREMENT & EXPENSE REPORT',
+                        referenceNo: `REP-${Date.now().toString().slice(-6)}`,
+                        voucherType: 'Report',
+                        date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+                        vendorOrCustomer: {
+                          name: 'Consolidated Ledger Summary',
+                          city: 'Store Operations',
+                        },
+                        items: activeItems.slice(0, 8).map((t) => ({
+                          name: `${t.referenceNo || 'TXN'} - ${t.vendorOrPaidTo || t.category || 'General'}`,
+                          qty: 1,
+                          unit: 'Entry',
+                          rate: Math.abs(t.amount) || 0,
+                          total: Math.abs(t.amount) || 0,
+                        })),
+                        financials: {
+                          subtotal,
+                          taxAmount: Math.round((totalSum - subtotal) * 100) / 100,
+                          totalAmount: totalSum,
+                          paidAmount: totalSum,
+                          balanceDue: 0,
+                        },
+                        filename: `Procurement_Report_${new Date().toISOString().slice(0, 10)}`,
+                      };
+                      downloadDocumentPdf(reportData);
                     }}
                     className="w-full px-3 py-2 text-left text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer"
                   >

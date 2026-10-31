@@ -18,6 +18,7 @@ import { useCustomerStore } from '../../stores/customerStore.js';
 import { useInventoryStore } from '../../stores/inventoryStore.js';
 import { useCatalogStore } from '../../stores/catalogStore.js';
 import { INDIAN_STATES, DEFAULT_INDIAN_STATE } from '@repo/shared-types';
+import { printFormattedDocument, quoteToVoucherDoc } from '../../lib/pdfEngine.js';
 
 interface CreateQuoteViewProps {
   onBack: () => void;
@@ -283,8 +284,8 @@ export const CreateQuoteView: React.FC<CreateQuoteViewProps> = ({ onBack }) => {
     }, 900);
   };
 
-  const handleSave = (status: 'draft' | 'sent' = 'sent', print: boolean = false) => {
-    createQuote({
+  const handleSave = async (status: 'draft' | 'sent' = 'sent', print: boolean = false) => {
+    const createdQuote = await createQuote({
       quoteNo,
       date: quoteDate,
       validUntil,
@@ -338,8 +339,13 @@ export const CreateQuoteView: React.FC<CreateQuoteViewProps> = ({ onBack }) => {
       }
     }
 
-    if (print) {
-      window.print();
+    if (print && createdQuote) {
+      try {
+        const docData = quoteToVoucherDoc(createdQuote);
+        printFormattedDocument(docData);
+      } catch (err) {
+        console.warn('Isolated document printing failed', err);
+      }
     }
     onBack();
   };

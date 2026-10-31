@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import { X, Printer, Tag, Sparkles } from 'lucide-react';
 import { useCatalogStore } from '../../stores/catalogStore.js';
 import { branding } from '@repo/shared-types/branding.config';
+import { printHtmlDocument } from '../../lib/pdfEngine.js';
 
 export const ProductLabelPrintModal: React.FC = () => {
   const { isPrintLabelModalOpen, closePrintLabelModal, selectedProductForLabel } =
@@ -19,7 +20,41 @@ export const ProductLabelPrintModal: React.FC = () => {
   const colorAttr = product.attributes?.color || 'Black';
 
   const handlePrint = () => {
-    window.print();
+    if (printAreaRef.current) {
+      const labelHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Label - ${product.name}</title>
+  <style>
+    @page { size: 50mm 35mm; margin: 1mm; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      width: 48mm;
+      height: 33mm;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #ffffff !important;
+      color: #000000;
+      font-size: 9px;
+      line-height: 1.2;
+      text-align: center;
+      padding: 2px;
+    }
+    div, p, span { color: inherit; }
+  </style>
+</head>
+<body>
+  ${printAreaRef.current.innerHTML}
+</body>
+</html>`;
+      printHtmlDocument(labelHtml);
+    } else {
+      window.print();
+    }
   };
 
   return (

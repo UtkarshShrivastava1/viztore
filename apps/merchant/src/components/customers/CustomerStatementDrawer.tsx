@@ -26,6 +26,7 @@ import {
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock.js';
 import { downloadCSV } from '../../utils/csvExport.js';
 import { branding } from '../../lib/branding.js';
+import { downloadDocumentPdf, printFormattedDocument, VoucherDocumentData } from '../../lib/pdfEngine.js';
 
 interface CustomerStatementDrawerProps {
   customer: Customer | null;
@@ -64,10 +65,48 @@ export const CustomerStatementDrawer: React.FC<CustomerStatementDrawerProps> = (
   const agingBuckets = customer.agingBuckets || [];
   const overdueInvoices = customer.overdueInvoices || [];
 
+  const getCustomerDocData = (): VoucherDocumentData => {
+    const rawTotal = customer.outstandingAmount || 0;
+    const items = transactions.slice(0, 8).map((tx) => ({
+      name: `${tx.type} #${tx.referenceNo || 'TXN'}`,
+      description: `Txn Date: ${tx.date}`,
+      qty: 1,
+      unit: 'Entry',
+      rate: Math.abs(tx.amount),
+      total: Math.abs(tx.amount),
+    }));
+
+    return {
+      title: 'CUSTOMER STATEMENT OF ACCOUNT',
+      referenceNo: `STMT-${customer.id.slice(-6).toUpperCase()}`,
+      voucherType: 'Statement',
+      date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+      vendorOrCustomer: {
+        name: customer.name,
+        phone: customer.phone,
+        email: customer.email,
+        address: customer.billingAddress?.addressLine1,
+        city: customer.billingAddress?.city || customer.location || 'Local',
+        state: customer.billingAddress?.state,
+        pincode: customer.billingAddress?.pincode,
+        gstin: customer.gstin,
+      },
+      items: items.length > 0 ? items : [{ name: 'Current Outstanding Khata Balance', qty: 1, unit: 'Balance', rate: rawTotal, total: rawTotal }],
+      financials: {
+        subtotal: rawTotal,
+        taxAmount: 0,
+        totalAmount: rawTotal,
+        paidAmount: Math.max(0, (customer.creditLimit || 0) - rawTotal),
+        balanceDue: rawTotal,
+      },
+      filename: `${customer.name.replace(/\s+/g, '_')}_Statement`,
+    };
+  };
+
   const handleDownload = (format: 'pdf' | 'excel' | 'csv') => {
     setShowDownloadMenu(false);
     if (format === 'pdf') {
-      window.print();
+      downloadDocumentPdf(getCustomerDocData());
       return;
     }
 
@@ -100,7 +139,7 @@ export const CustomerStatementDrawer: React.FC<CustomerStatementDrawerProps> = (
   };
 
   const handlePrint = () => {
-    window.print();
+    printFormattedDocument(getCustomerDocData());
   };
 
   const isAging = activeStatementTab === 'aging';

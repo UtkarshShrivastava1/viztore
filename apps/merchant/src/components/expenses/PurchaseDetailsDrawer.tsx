@@ -32,6 +32,7 @@ import {
 
 import { useBodyScrollLock } from '../../hooks/useBodyScrollLock.js';
 import { useExpenseStore } from '../../stores/expenseStore.js';
+import { downloadDocumentPdf, printFormattedDocument, VoucherDocumentData } from '../../lib/pdfEngine.js';
 
 interface PurchaseLineItem {
   id: string;
@@ -224,6 +225,83 @@ export const PurchaseDetailsDrawer: React.FC<PurchaseDetailsDrawerProps> = ({
     };
   }, [ewayBills, referenceNo, vendorName, purchase, matchedVendor]);
 
+  // Structured voucher document payload for direct PDF download and isolated printing
+  const voucherDocData: VoucherDocumentData = useMemo(() => {
+    return {
+      title:
+        activeTab === 'eway'
+          ? 'E-WAY BILL SLIP'
+          : activeTab === 'payments'
+          ? 'PAYMENT RECEIPT'
+          : 'PURCHASE VOUCHER',
+      referenceNo,
+      voucherType,
+      date: purchase?.date || '11 May 2024',
+      time: purchase?.time || '11:24 AM',
+      dueDate: purchase?.dueDate || '11 May 2024',
+      paymentTerms: matchedVendor?.paymentTerms || 'Due on Receipt',
+      placeOfSupply: 'Chhattisgarh (22)',
+      purchaseOrderRef: purchase?.purchaseOrder || 'PO-2024-000021',
+      status: purchase?.status || 'Active',
+      paymentStatus: isPaid ? 'Paid & Reconciled' : 'Pending Settlement',
+      vendorOrCustomer: {
+        name: vendorName,
+        address: matchedVendor?.address || 'Plot No. 12, Industrial Area, Durg',
+        city: matchedVendor?.city || 'Durg',
+        state: 'Chhattisgarh',
+        pincode: matchedVendor?.pincode || '490024',
+        gstin: matchedVendor?.gstin || purchase?.vendorGstin || '22ABCDE1234F1Z5',
+        phone: matchedVendor?.phone || '9876543210',
+        email: matchedVendor?.email || 'vendor@example.com',
+      },
+      items: lineItems.map((it) => ({
+        name: it.name,
+        hsn: it.sku,
+        sku: it.sku,
+        qty: it.qty,
+        unit: it.unit,
+        rate: it.rate,
+        taxPercent: it.taxPercent,
+        total: it.total,
+      })),
+      financials: {
+        subtotal,
+        cgst,
+        sgst,
+        taxAmount,
+        totalAmount: rawAmount,
+        paidAmount: isPaid ? rawAmount : 0,
+        balanceDue: isPaid ? 0 : rawAmount,
+        paymentMethod: purchase?.paymentMethod || 'Bank Transfer (NEFT/RTGS)',
+        referenceTxnId: 'REF-202610-89104',
+      },
+      ewayBill: {
+        ewayBillNo: matchedEWayBill.eWayBillNo,
+        vehicleNo: matchedEWayBill.vehicleNo || 'CG 07 CA 4589',
+        validTill: matchedEWayBill.validTill || '18 May 2024',
+        fromLocation: `${matchedVendor?.city || 'Durg'} Hub, CG`,
+        toLocation: 'Central Store, Bhilai',
+        distanceKm: matchedEWayBill.distanceKm || 45,
+      },
+      filename: `${referenceNo}_${voucherType}`,
+    };
+  }, [
+    activeTab,
+    referenceNo,
+    voucherType,
+    purchase,
+    matchedVendor,
+    vendorName,
+    isPaid,
+    lineItems,
+    subtotal,
+    cgst,
+    sgst,
+    taxAmount,
+    rawAmount,
+    matchedEWayBill,
+  ]);
+
   if (!isOpen || !purchase) return null;
 
   const handleAddNote = (e: React.FormEvent) => {
@@ -329,12 +407,22 @@ export const PurchaseDetailsDrawer: React.FC<PurchaseDetailsDrawerProps> = ({
 
           <button
             type="button"
-            onClick={() => window.print()}
-            className="px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
-            title="Print or save invoice as PDF"
+            onClick={() => downloadDocumentPdf(voucherDocData)}
+            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
+            title="Directly download clean vector PDF"
           >
-            <Download className="w-3.5 h-3.5 text-slate-500" />
-            <span>Download / Print Invoice</span>
+            <Download className="w-3.5 h-3.5" />
+            <span>Download PDF</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => printFormattedDocument(voucherDocData)}
+            className="px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
+            title="Print formatted A4 document without webpage background"
+          >
+            <Printer className="w-3.5 h-3.5 text-slate-500" />
+            <span>Print</span>
           </button>
         </div>
 
@@ -652,11 +740,19 @@ export const PurchaseDetailsDrawer: React.FC<PurchaseDetailsDrawerProps> = ({
               <div className="flex items-center gap-2 pt-1">
                 <button
                   type="button"
-                  onClick={() => window.print()}
-                  className="flex-1 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl flex items-center justify-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
+                  onClick={() => downloadDocumentPdf({ ...voucherDocData, title: 'PAYMENT RECEIPT' })}
+                  className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl flex items-center justify-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
                 >
-                  <Receipt className="w-3.5 h-3.5 text-slate-500" />
-                  <span>Download Payment Voucher</span>
+                  <Download className="w-3.5 h-3.5 text-white" />
+                  <span>Download Payment Receipt (PDF)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => printFormattedDocument({ ...voucherDocData, title: 'PAYMENT RECEIPT' })}
+                  className="px-4 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl flex items-center justify-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
+                >
+                  <Printer className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Print Receipt</span>
                 </button>
               </div>
             </div>
@@ -736,11 +832,19 @@ export const PurchaseDetailsDrawer: React.FC<PurchaseDetailsDrawerProps> = ({
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => window.print()}
-                  className="flex-1 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl flex items-center justify-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
+                  onClick={() => downloadDocumentPdf({ ...voucherDocData, title: 'E-WAY BILL SLIP' })}
+                  className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl flex items-center justify-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5 text-white" />
+                  <span>Download E-Way Bill (PDF)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => printFormattedDocument({ ...voucherDocData, title: 'E-WAY BILL SLIP' })}
+                  className="px-4 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl flex items-center justify-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
                 >
                   <Printer className="w-3.5 h-3.5 text-slate-500" />
-                  <span>Print E-Way Bill Receipt</span>
+                  <span>Print E-Way Bill</span>
                 </button>
               </div>
             </div>
@@ -885,14 +989,25 @@ export const PurchaseDetailsDrawer: React.FC<PurchaseDetailsDrawerProps> = ({
 
         {/* Footer */}
         <div className="p-4 border-t border-slate-100 bg-white flex items-center justify-between gap-3 shrink-0">
-          <button
-            type="button"
-            onClick={() => window.print()}
-            className="px-4 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span>Download PDF</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => downloadDocumentPdf(voucherDocData)}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
+            >
+              <Download className="w-3.5 h-3.5 text-white" />
+              <span>Download PDF</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => printFormattedDocument(voucherDocData)}
+              className="px-4 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
+            >
+              <Printer className="w-3.5 h-3.5 text-slate-500" />
+              <span>Print</span>
+            </button>
+          </div>
 
           <button
             type="button"

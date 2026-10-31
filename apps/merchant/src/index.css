@@ -80,6 +80,21 @@ input[type="number"] {
     display: none !important;
   }
 
+  /* Strip modal backdrops & overlays so they never print as gray/black slabs */
+  .fixed.inset-0,
+  .backdrop-blur-xs,
+  [class*="backdrop-blur"],
+  [class*="bg-black/"],
+  [class*="bg-slate-900/"] {
+    background: transparent !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Hide background application container if print dialog is invoked */
+  body.printing-modal #root {
+    display: none !important;
+  }
+
   /* 2. Global Document Clean Formatting */
   html,
   body {

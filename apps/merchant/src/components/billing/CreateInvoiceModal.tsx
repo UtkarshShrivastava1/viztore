@@ -5,6 +5,7 @@ import { useCustomerStore } from '../../stores/customerStore.js';
 import { useInventoryStore } from '../../stores/inventoryStore.js';
 import { useCatalogStore } from '../../stores/catalogStore.js';
 import { INDIAN_STATES, DEFAULT_INDIAN_STATE } from '@repo/shared-types';
+import { printFormattedDocument, invoiceToVoucherDoc } from '../../lib/pdfEngine.js';
 
 interface CreateInvoiceModalProps {
   isOpen: boolean;
@@ -280,7 +281,7 @@ export const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
   };
 
 
-  const handleSubmit = (withPrint: boolean = false) => {
+  const handleSubmit = async (withPrint: boolean = false) => {
     if (!customerName.trim()) {
       setCustomerNameError('Please enter a customer name before proceeding.');
       return;
@@ -296,7 +297,7 @@ export const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
       status = 'partially_paid';
     }
 
-    createInvoice({
+    const createdInvoice = await createInvoice({
       invoiceNo: '',
       date: invoiceDate,
       dueDate: dueDate,
@@ -349,8 +350,13 @@ export const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
       }
     }
 
-    if (withPrint) {
-      window.print();
+    if (withPrint && createdInvoice) {
+      try {
+        const docData = invoiceToVoucherDoc(createdInvoice);
+        printFormattedDocument(docData);
+      } catch (err) {
+        console.warn('Isolated document printing failed', err);
+      }
     }
 
     onClose();
