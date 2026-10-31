@@ -17,7 +17,7 @@ export const SettlementsTab: React.FC = () => {
     setIsSettlementDrawerOpen,
   } = usePayoutsStore();
 
-  const [dateRange, setDateRange] = useState('10 May 2024 - 16 May 2024');
+  const [dateRange, setDateRange] = useState('01 Oct 2026 - 31 Oct 2026');
   const [statusFilter, setStatusFilter] = useState('All Statuses');
   const [payoutAccountFilter, setPayoutAccountFilter] = useState(
     'HDFC Bank - 50200012345678'
@@ -32,7 +32,7 @@ export const SettlementsTab: React.FC = () => {
   });
 
   const clearFilters = () => {
-    setDateRange('10 May 2024 - 16 May 2024');
+    setDateRange('01 Oct 2026 - 31 Oct 2026');
     setStatusFilter('All Statuses');
     setPayoutAccountFilter('HDFC Bank - 50200012345678');
     setCurrentPage(1);
@@ -140,7 +140,7 @@ export const SettlementsTab: React.FC = () => {
           <tbody className="divide-y divide-slate-100 text-slate-700 text-[11px]">
             {filteredSettlements.length === 0 ? (
               <tr>
-                <td colSpan={8} className="py-10 text-center text-slate-400 text-xs">
+                <td colSpan={10} className="py-10 text-center text-slate-400 text-xs">
                   No settlements found
                 </td>
               </tr>

@@ -19,7 +19,7 @@ export const PaymentHistoryTab: React.FC = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All Statuses');
-  const [dateRange, setDateRange] = useState('10 May 2024 - 16 May 2024');
+  const [dateRange, setDateRange] = useState('01 Oct 2026 - 31 Oct 2026');
   const [currentPage, setCurrentPage] = useState(1);
 
   const filteredPayouts = payouts.filter((p) => {
@@ -40,7 +40,7 @@ export const PaymentHistoryTab: React.FC = () => {
   const clearFilters = () => {
     setSearchQuery('');
     setStatusFilter('All Statuses');
-    setDateRange('10 May 2024 - 16 May 2024');
+    setDateRange('01 Oct 2026 - 31 Oct 2026');
     setCurrentPage(1);
   };
 

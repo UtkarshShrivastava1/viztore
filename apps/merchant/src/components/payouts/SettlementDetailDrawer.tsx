@@ -1,7 +1,8 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { X, CheckCircle2, Boxes, Calendar, Hash } from 'lucide-react';
+import { X, CheckCircle2, Boxes, Download, Printer } from 'lucide-react';
 import { SettlementRecord } from '../../stores/payoutsStore.js';
+import { downloadDocumentPdf, printFormattedDocument, VoucherDocumentData } from '../../lib/pdfEngine.js';
 
 interface SettlementDetailDrawerProps {
   isOpen: boolean;
@@ -15,6 +16,50 @@ export const SettlementDetailDrawer: React.FC<SettlementDetailDrawerProps> = ({
   settlement,
 }) => {
   if (!isOpen || !settlement) return null;
+
+  const buildSettlementDoc = (): VoucherDocumentData => ({
+    title: 'SETTLEMENT STATEMENT SLIP',
+    referenceNo: settlement.settlementId,
+    voucherType: 'Settlement',
+    date: settlement.settlementDate,
+    status: settlement.status,
+    paymentStatus: settlement.status,
+    vendorOrCustomer: {
+      name: settlement.payoutAccount,
+      address: `Settlement Period: ${settlement.period} | Orders Count: ${settlement.orderCount}`,
+    },
+    items: [
+      {
+        name: `Settlement Batch ${settlement.settlementId}`,
+        description: `Order Volume: ${settlement.orderCount} orders settled for period ${settlement.period}`,
+        qty: settlement.orderCount,
+        unit: 'Orders',
+        rate: settlement.grossAmount / (settlement.orderCount || 1),
+        total: settlement.grossAmount,
+      },
+    ],
+    financials: {
+      subtotal: settlement.grossAmount,
+      cgst: 0,
+      sgst: 0,
+      taxAmount: settlement.deductions,
+      totalAmount: settlement.settlementAmount,
+      paidAmount: settlement.settlementAmount,
+      balanceDue: 0,
+      paymentMethod: 'Direct Bank Settlement (NEFT/RTGS)',
+      referenceTxnId: settlement.utr,
+    },
+    notes: `Settlement UTR: ${settlement.utr}. Gross: ₹${settlement.grossAmount}, Deductions: ₹${settlement.deductions}, Net Credited: ₹${settlement.settlementAmount}.`,
+    filename: `Settlement_${settlement.settlementId}`,
+  });
+
+  const handleDownloadPdf = () => {
+    downloadDocumentPdf(buildSettlementDoc());
+  };
+
+  const handlePrint = () => {
+    printFormattedDocument(buildSettlementDoc());
+  };
 
   const drawerContent = (
     <div className="fixed inset-0 z-[100] overflow-hidden">
@@ -112,8 +157,26 @@ export const SettlementDetailDrawer: React.FC<SettlementDetailDrawerProps> = ({
             </div>
           </div>
 
-          {/* Footer */}
-          <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+          {/* Footer Actions */}
+          <div className="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleDownloadPdf}
+                className="px-3 py-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100/60 border border-blue-200 rounded-xl transition-colors inline-flex items-center gap-1.5"
+                title="Download Clean A4 PDF Settlement Slip"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>PDF Slip</span>
+              </button>
+              <button
+                onClick={handlePrint}
+                className="px-3 py-1.5 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl transition-colors inline-flex items-center gap-1.5"
+                title="Print Clean Document"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>Print</span>
+              </button>
+            </div>
             <button
               onClick={onClose}
               className="px-4 py-2 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-colors shadow-2xs"

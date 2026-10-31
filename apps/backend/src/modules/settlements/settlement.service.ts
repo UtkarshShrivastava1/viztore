@@ -63,9 +63,9 @@ export class SettlementService {
       .lean();
 
     const orderCount = deliveredOrders.length;
-    const grossAmount = deliveredOrders.reduce((sum, o: any) => sum + (o.pricing?.totalAmount || 0), 0);
+    const grossAmount = deliveredOrders.reduce((sum, o: any) => sum + (o.grandTotal || o.pricing?.totalAmount || o.pricing?.grandTotal || o.subtotal || 0), 0);
     const commissionFee = Math.round(grossAmount * 0.05 * 100) / 100; // 5% platform commission
-    const deliveryFees = Math.round(deliveredOrders.reduce((sum, o: any) => sum + (o.pricing?.deliveryFee || 0), 0) * 100) / 100;
+    const deliveryFees = Math.round(deliveredOrders.reduce((sum, o: any) => sum + (o.shippingFee || o.pricing?.deliveryFee || 0), 0) * 100) / 100;
     const taxes = Math.round(grossAmount * 0.01 * 100) / 100; // 1% Indian TDS section 194-O
     const netPayoutAmount = Math.max(0, grossAmount - commissionFee - taxes);
 
