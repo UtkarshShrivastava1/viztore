@@ -742,7 +742,7 @@ export const useExpenseStore = create<PurchaseExpenseState>((set, get) => ({
         dueDate: data.dueDate || 'In 14 days',
       };
       set((s) => ({
-        purchases: [fallbackBill, ...s.purchases],
+        purchaseBills: [fallbackBill, ...(s.purchaseBills || [])],
         overviewKPIs: {
           ...s.overviewKPIs,
           totalPurchase: s.overviewKPIs.totalPurchase + (data.totalAmount || 0),
