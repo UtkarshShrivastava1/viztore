@@ -232,3 +232,61 @@ The dialogs originally contained hardcoded dummy apparel entries (`Men T-Shirt (
 
 
 
+
+
+### Round 3: Interactive Verification of Dynamic Vendor Creation & Procurement Ledger:
+**Mode:** Native Chrome DevTools Live MCP Automation (`chrome-devtools`)  
+**Store Authenticated:** Urban Vogue Studio (`#3ab2`) — Rahul Sharma (`rahul.merchant@example.com`)  
+**Execution Timestamp:** 31 October 2026, 01:14 PM IST  
+
+1. **Vendor Registration Drawer (`+ Add New Vendor`):**
+   - Opened `Create Purchase Order` modal from `+ Add Purchase` menu.
+   - Clicked `+ Add New Vendor` trigger button, rendering the `Add Vendor` slide-over drawer alongside the purchase dialog.
+   - Filled Business Details:
+     - **Company Name:** `Apex Textiles & Fabrics Ltd`
+     - **Display Name:** `Apex Textiles`
+     - **GSTIN:** `22AAAAA0000A1Z5`
+     - **PAN:** `AAAAA0000A`
+     - **Category:** `Apparel & Fashion`
+     - **Contact Person:** `Rajesh Patel`
+     - **Mobile Phone:** `9876543210`
+     - **Email Address:** `contact@apextextiles.com`
+   - Clicked `Save Vendor`.
+   - **Verification:**
+     - Vendor persisted to cloud MongoDB Atlas and local procurement state (`VND-001`).
+     - `Vendors` directory table immediately listed row 1: `Apex Textiles & Fabrics Ltd`, `Rajesh Patel`, `9876543210`, `Raipur`, status `Active`.
+     - Parent `Create Purchase Order` dialog reactively auto-selected the newly registered vendor: `Apex Textiles & Fabrics Ltd (Raipur)`.
+
+2. **Purchase Order Generation with New Vendor & Catalog Autocomplete:**
+   - PO Number auto-sequenced to current year: `PO-2026-000001`.
+   - Item Autocomplete: Typed `Linen` — catalog query instantly proposed `Slim Fit Handloom Linen Shirt` (SKU: `UVS-SH-WHT-M`, Rate: ₹ 899.00).
+   - Selected suggested item, updated quantity to `10` units (`Qty: 10`, `Rate: 899`).
+   - Line Total computed to ₹ 8,990.00; Subtotal ₹ 8,990.00; GST 18% ₹ 1,618.20; Total Amount **₹ 10,608.20**.
+   - Clicked `Create Purchase Order`.
+   - Modal dismissed; `Purchase Orders` tab verified row 1: `PO-2026-000001` for `Apex Textiles & Fabrics Ltd` (`1 items`, **₹ 10,608.20**, status `Pending`).
+
+3. **Operating Expense Record with New Vendor:**
+   - Clicked `+ Add Expense`.
+   - `Vendor / Paid To` dropdown automatically populated and selected the new vendor: `Apex Textiles & Fabrics Ltd`.
+   - Category: `Packaging Supplies`.
+   - Reference No.: `EXP-2026-000042`.
+   - Amount: ₹ 3,500.00.
+   - Payment Method: `UPI / QR`.
+   - Clicked `Save Expense`.
+   - **Verification:**
+     - Top KPI card `Total Expense` immediately updated to **₹ 3,500.00**.
+     - `Expenses` tab listed row 1: `EXP-2026-000001`, `Packaging Supplies - Apex Textiles & Fabrics Ltd`, **₹ 3,500.00**, `UPI / QR`, status `Paid`.
+
+4. **Purchase Bill Creation Linked to Vendor PO:**
+   - Clicked `+ Add Purchase` ➔ `Create Purchase (Bill)`.
+   - Vendor auto-selected to `Apex Textiles & Fabrics Ltd (Raipur)`.
+   - Linked Purchase Order dropdown populated with `PO-2026-000001 • Apex Textiles & Fabrics Ltd (₹10608.2)`.
+   - Item Autocomplete: Typed `Chanderi` ➔ Selected `Embroidered Chanderi Silk Kurta` (SKU: `UVS-KRT-MRN-S`, Rate: ₹ 1,739.00).
+   - Quantity set to `5` units; Subtotal ₹ 8,695.00; GST 18% ₹ 1,565.10; Total Amount **₹ 10,260.10**.
+   - Payment Method: `Bank Transfer (NEFT/RTGS/IMPS)`.
+   - Clicked `Create Purchase Bill`.
+   - **Verification:**
+     - Top KPI card `Total Purchase` immediately updated to **₹ 10,260.10**.
+     - `All Transactions` feed verified:
+       - Row 1: `BILL-2026-000001` | `Purchase` | `Apex Textiles & Fabrics Ltd` | `- ₹ 10,260.10` | `Open`.
+       - Row 2: `EXP-2026-000001` | `Expense` | `Packaging Supplies - Apex Textiles & Fabrics Ltd` | `- ₹ 3,500.00` | `Paid`.
