@@ -13,6 +13,7 @@ export const userApi = {
    * Fetch all saved addresses for current customer
    */
   getAddresses: async (): Promise<IAddress[]> => {
+    if (typeof window !== 'undefined' && !localStorage.getItem('token')) return [];
     const res = await api.get<IAddress[] | { addresses?: IAddress[] }>('/users/addresses');
     if (Array.isArray(res.data)) return res.data;
     if (res.data && 'addresses' in res.data && Array.isArray(res.data.addresses)) return res.data.addresses;

@@ -18,6 +18,7 @@ export const notificationsApi = {
    * Fetch customer notifications with optional category filter
    */
   getNotifications: async (params?: { category?: string; page?: number; limit?: number }): Promise<ICustomerNotification[]> => {
+    if (typeof window !== 'undefined' && !localStorage.getItem('token')) return [];
     try {
       const res = await api.get<ICustomerNotification[]>('/notifications', params);
       return res.data || [];
@@ -32,6 +33,7 @@ export const notificationsApi = {
    * Fetch unread notifications count
    */
   getUnreadSummary: async (): Promise<{ unreadCount: number }> => {
+    if (typeof window !== 'undefined' && !localStorage.getItem('token')) return { unreadCount: 0 };
     try {
       const res = await api.get<{ unreadCount: number }>('/notifications/unread-summary');
       return res.data || { unreadCount: 0 };

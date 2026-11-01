@@ -51,11 +51,11 @@ function mapApiNotification(n: ICustomerNotification): INotificationItem {
     description: n.message,
     timestamp: n.createdAt
       ? new Date(n.createdAt).toLocaleDateString('en-IN', {
-          day: 'numeric',
-          month: 'short',
-          hour: '2-digit',
-          minute: '2-digit',
-        })
+        day: 'numeric',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
       : 'Recent',
     createdAt: n.createdAt,
     isRead: Boolean(n.isRead),
@@ -70,6 +70,7 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   isLoading: false,
 
   fetchNotifications: async (category?: string) => {
+    if (typeof window !== 'undefined' && !localStorage.getItem('token')) return;
     try {
       set({ isLoading: true });
       const apiCategory = category === 'all' ? undefined : category;
@@ -89,6 +90,7 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   },
 
   fetchUnreadSummary: async () => {
+    if (typeof window !== 'undefined' && !localStorage.getItem('token')) return;
     try {
       const summary = await notificationsApi.getUnreadSummary();
       set({ unreadCount: summary?.unreadCount || 0 });

@@ -99,15 +99,15 @@ export function Footer() {
             
             <ul className="flex flex-col space-y-3 mt-4 text-[15px] font-medium">
               {[
-                { label: 'About Us', href: '/about' },
-                { label: 'Contact Us', href: '/contact' },
-                { label: 'Partner with Us', href: '/partner' },
-                { label: 'Customer Terms & Conditions', href: '/terms' },
-                { label: 'Seller Terms & Conditions', href: '/seller-terms' },
-                { label: 'Careers', href: '/careers' },
-                { label: 'Privacy Policy', href: '/privacy' },
-                { label: 'Refund and Cancellation Policy', href: '/refund' },
-                { label: 'Grievance Redressal', href: '/grievance' },
+                { label: 'About Us', href: '/account/support' },
+                { label: 'Contact Us', href: '/account/support' },
+                { label: 'Partner with Us', href: '/account/sell' },
+                { label: 'Customer Terms & Conditions', href: '/account/terms' },
+                { label: 'Seller Terms & Conditions', href: '/account/terms' },
+                { label: 'Careers', href: '/account/support' },
+                { label: 'Privacy Policy', href: '/account/privacy' },
+                { label: 'Refund and Cancellation Policy', href: '/account/terms' },
+                { label: 'Grievance Redressal', href: '/account/support' },
               ].map((link) => (
                 <li key={link.href}>
                   <Link href={link.href} className="hover:text-white transition-colors">

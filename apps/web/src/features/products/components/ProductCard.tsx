@@ -112,6 +112,9 @@ export function ProductCard({ product, badge }: ProductCardProps) {
             alt={product.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             loading="lazy"
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=600&auto=format&fit=crop';
+            }}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-surface-100">
