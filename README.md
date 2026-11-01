@@ -1,6 +1,6 @@
-# Hyperlocal Multi-Vendor E-Commerce Platform
+# Viztore — Hyperlocal Multi-Vendor E-Commerce Platform
 
-A production-grade, brand-agnostic, white-label hyperlocal multi-vendor e-commerce platform designed for local retail digitization. Features sub-4km proximity store discovery, a single-store checkout cart rule, real-time merchant order fulfillment, WhatsApp rider fleet dispatch, and automated tax invoicing.
+**Viztore** is a production-grade hyperlocal multi-vendor e-commerce platform designed for local retail digitization. Features sub-4km proximity store discovery, a single-store checkout cart rule, real-time merchant order fulfillment, WhatsApp rider fleet dispatch, and automated tax invoicing.
 
 ---
 
@@ -50,7 +50,7 @@ Clone the repository and install all workspace dependencies:
 
 ```bash
 git clone <repository-url>
-cd platform-root
+cd viztore
 pnpm install
 ```
 
@@ -103,14 +103,14 @@ pnpm build
 
 ## 🏷️ White-Label & Domain Configuration
 
-This repository is strictly **brand-agnostic**. All client-facing brand identifiers, taglines, legal URLs, and theme palettes are configured dynamically via environment variables and resolved through `packages/shared-types/src/branding.config.ts`:
+While branded as **Viztore**, the platform is architected with a brand-agnostic foundation. All client-facing brand identifiers, taglines, legal URLs, and theme palettes can be configured dynamically via environment variables and resolved through `packages/shared-types/src/branding.config.ts`:
 
 ```typescript
 export const branding = {
-  appName:      process.env.NEXT_PUBLIC_APP_NAME      || 'LocalStore',
+  appName:      process.env.NEXT_PUBLIC_APP_NAME      || 'Viztore',
   tagline:      process.env.NEXT_PUBLIC_APP_TAGLINE   || 'Shop Local. Shop Smart.',
   domain:       process.env.NEXT_PUBLIC_APP_DOMAIN    || 'localhost',
-  supportEmail: process.env.NEXT_PUBLIC_SUPPORT_EMAIL || 'support@example.com',
+  supportEmail: process.env.NEXT_PUBLIC_SUPPORT_EMAIL || 'support@viztore.com',
   logoUrl:      process.env.NEXT_PUBLIC_LOGO_URL      || '/logo.svg',
   themeColor:   process.env.NEXT_PUBLIC_THEME_COLOR   || '#6366f1',
 } as const;
@@ -124,8 +124,8 @@ export const branding = {
 The repository includes a production multi-stage `Dockerfile`:
 
 ```bash
-docker build -t platform-backend:latest .
-docker run -p 5000:5000 --env-file .env platform-backend:latest
+docker build -t viztore-backend:latest .
+docker run -p 5000:5000 --env-file .env viztore-backend:latest
 ```
 
 ### Cloud Platforms
@@ -138,4 +138,4 @@ docker run -p 5000:5000 --env-file .env platform-backend:latest
 
 ## 📄 License & IP
 
-Private & Confidential. All intellectual property and codebase rights reserved.
+Private & Confidential. All intellectual property and codebase rights reserved for Viztore.

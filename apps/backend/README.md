@@ -59,3 +59,4 @@ pnpm start
 - Role-based access control (RBAC): `customer`, `merchant`, `admin`, `rider`.
 - Rate limiting per endpoint (general API limiter, auth limiter, OTP verification limiter).
 - Strict Zod schema validation on all incoming request payloads and query parameters.
+
