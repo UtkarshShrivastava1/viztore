@@ -150,14 +150,14 @@ interface CustomerState {
 }
 
 const defaultStatementTransactions: StatementTransaction[] = [
-  { id: 'st-1', date: '11 May 2024', type: 'Invoice', referenceNo: 'INV-1248', amount: 12450.0, balance: 18450.0 },
-  { id: 'st-2', date: '10 May 2024', type: 'Payment', referenceNo: 'PAY-0034', amount: -25000.0, balance: 6000.0 },
-  { id: 'st-3', date: '02 May 2024', type: 'Invoice', referenceNo: 'INV-1241', amount: 32000.0, balance: 31000.0 },
-  { id: 'st-4', date: '28 Apr 2024', type: 'Payment', referenceNo: 'PAY-0031', amount: -15000.0, balance: -1000.0 },
-  { id: 'st-5', date: '21 Apr 2024', type: 'Invoice', referenceNo: 'INV-1235', amount: 18450.0, balance: 18000.0 },
-  { id: 'st-6', date: '10 Apr 2024', type: 'Payment', referenceNo: 'PAY-0028', amount: -40000.0, balance: -450.0 },
-  { id: 'st-7', date: '05 Apr 2024', type: 'Invoice', referenceNo: 'INV-1228', amount: 22000.0, balance: 39550.0 },
-  { id: 'st-8', date: '28 Mar 2024', type: 'Payment', referenceNo: 'PAY-0021', amount: -22000.0, balance: 17550.0 },
+  { id: 'st-1', date: '28 Oct 2026', type: 'Invoice', referenceNo: 'INV-1248', amount: 12450.0, balance: 18450.0 },
+  { id: 'st-2', date: '25 Oct 2026', type: 'Payment', referenceNo: 'PAY-0034', amount: -25000.0, balance: 6000.0 },
+  { id: 'st-3', date: '20 Oct 2026', type: 'Invoice', referenceNo: 'INV-1241', amount: 32000.0, balance: 31000.0 },
+  { id: 'st-4', date: '15 Oct 2026', type: 'Payment', referenceNo: 'PAY-0031', amount: -15000.0, balance: -1000.0 },
+  { id: 'st-5', date: '10 Oct 2026', type: 'Invoice', referenceNo: 'INV-1235', amount: 18450.0, balance: 18000.0 },
+  { id: 'st-6', date: '05 Oct 2026', type: 'Payment', referenceNo: 'PAY-0028', amount: -40000.0, balance: -450.0 },
+  { id: 'st-7', date: '28 Sep 2026', type: 'Invoice', referenceNo: 'INV-1228', amount: 22000.0, balance: 39550.0 },
+  { id: 'st-8', date: '20 Sep 2026', type: 'Payment', referenceNo: 'PAY-0021', amount: -22000.0, balance: 17550.0 },
 ];
 
 const defaultAgingBuckets: AgingBucket[] = [
@@ -169,9 +169,9 @@ const defaultAgingBuckets: AgingBucket[] = [
 ];
 
 const defaultOverdueInvoices: OverdueInvoice[] = [
-  { id: 'ov-1', invoiceNo: 'INV-1248', invoiceDate: '11 May 2024', dueDate: '10 Jun 2024', amount: 6250.0, daysOverdue: 21, status: 'Overdue' },
-  { id: 'ov-2', invoiceNo: 'INV-1235', invoiceDate: '21 Apr 2024', dueDate: '21 May 2024', amount: 8750.0, daysOverdue: 41, status: 'Overdue' },
-  { id: 'ov-3', invoiceNo: 'INV-1228', invoiceDate: '05 Apr 2024', dueDate: '05 May 2024', amount: 3450.0, daysOverdue: 57, status: 'Overdue' },
+  { id: 'ov-1', invoiceNo: 'INV-1248', invoiceDate: '28 Oct 2026', dueDate: '15 Nov 2026', amount: 6250.0, daysOverdue: 14, status: 'Overdue' },
+  { id: 'ov-2', invoiceNo: 'INV-1235', invoiceDate: '10 Oct 2026', dueDate: '30 Oct 2026', amount: 8750.0, daysOverdue: 28, status: 'Overdue' },
+  { id: 'ov-3', invoiceNo: 'INV-1228', invoiceDate: '28 Sep 2026', dueDate: '20 Oct 2026', amount: 3450.0, daysOverdue: 42, status: 'Overdue' },
 ];
 
 export function computeCustomerKPIs(customers: Customer[]): CustomerKPIs {
