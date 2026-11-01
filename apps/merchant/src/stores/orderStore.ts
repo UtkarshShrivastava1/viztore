@@ -526,12 +526,20 @@ export const useOrderStore = create<OrderStoreState>((set, get) => {
         // 1. Verify OTP with backend
         const res = await ordersApi.verifyDeliveryOtp(orderId, cleanOtp);
         if (res && res.valid === false) {
-          throw new Error('Invalid delivery OTP code');
+          throw new Error('Invalid delivery OTP code. Please verify the 4-digit code provided by the customer.');
         }
         // 2. Transition order status on backend to DELIVERED
         await ordersApi.updateOrderStatus(orderId, 'DELIVERED', cleanOtp);
-      } catch (err) {
-        console.warn('API verify OTP error, applying optimistic delivery fallback:', err);
+      } catch (err: any) {
+        if (
+          err?.code === 'INVALID_DELIVERY_OTP' ||
+          err?.statusCode === 400 ||
+          err?.message?.includes('OTP') ||
+          err?.message?.includes('Invalid')
+        ) {
+          throw err;
+        }
+        console.warn('Network issue during OTP verification, applying optimistic delivery fallback:', err);
       }
 
       set((state) => ({

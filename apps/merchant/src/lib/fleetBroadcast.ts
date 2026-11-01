@@ -1,5 +1,6 @@
 import { MerchantOrderRecord } from '../stores/orderStore.js';
 import { useAuthStore } from '../stores/authStore.js';
+import { branding } from './branding.js';
 
 export function getRiderRunUrl(order: MerchantOrderRecord): string {
   if (import.meta.env.VITE_STOREFRONT_URL) {
@@ -13,7 +14,7 @@ export function getRiderRunUrl(order: MerchantOrderRecord): string {
     const storefrontHost = host.replace('partner.', 'shop.').replace('merchant.', 'web.');
     return `${window.location.protocol}//${storefrontHost}/rider/run/${order.id || order.orderNumber}`;
   }
-  return `https://viztore-web.vercel.app/rider/run/${order.id || order.orderNumber}`;
+  return `https://${branding.domain || 'localhost:3000'}/rider/run/${order.id || order.orderNumber}`;
 }
 
 export function buildFleetBroadcastText(order: MerchantOrderRecord): string {

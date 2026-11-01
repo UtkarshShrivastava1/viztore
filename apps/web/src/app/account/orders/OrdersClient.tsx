@@ -66,7 +66,7 @@ export function OrdersClient() {
       : 'Recent Order';
 
     return {
-      id: `#${order.orderNumber || (order._id || order.id || '').slice(-6).toUpperCase()}`,
+      id: order.orderNumber ? (order.orderNumber.startsWith('#') ? order.orderNumber : `#${order.orderNumber}`) : `#ORD-${(order._id || order.id || '000000').slice(-6).toUpperCase()}`,
       rawId: order._id || order.id || order.orderNumber,
       type: isReserve ? 'reserve' : 'regular',
       rawStatus: order.status,
@@ -77,7 +77,7 @@ export function OrdersClient() {
       variants: firstItem ? `Qty: ${firstItem.quantity} • Unit: ₹${firstItem.unitPrice}` : `Total items: ${totalItems}`,
       price: firstItem ? firstItem.unitPrice * firstItem.quantity : order.grandTotal,
       total: order.grandTotal,
-      image: 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&q=80&w=200&h=200',
+      image: (firstItem as any)?.imageUrl || (firstItem as any)?.image || 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&q=80&w=200&h=200',
     };
   };
 

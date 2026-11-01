@@ -71,19 +71,9 @@ export function OrderDetailsClient({ id }: OrderDetailsClientProps) {
   const subtotal = order?.subtotal ?? (order?.items?.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0) || 0);
   const deliveryFee = order?.shippingFee ?? 0;
 
-  const otpDigits = order?.deliveryOtp ? order.deliveryOtp.split('') : ['4', '8', '2', '1'];
-  const items: IOrderItem[] = order?.items && order.items.length > 0 
-    ? order.items 
-    : [
-        {
-          productId: 'prd-default',
-          name: 'Hyperlocal Store Items',
-          quantity: 1,
-          unitPrice: totalAmount || 499,
-          storeId: order?.storeId || 'store-1',
-          sku: 'SKU-001'
-        }
-      ];
+  const otpDigits = order?.deliveryOtp && order.deliveryOtp.length === 4 ? order.deliveryOtp.split('') : [];
+  const hasValidOtp = otpDigits.length === 4;
+  const items: IOrderItem[] = order?.items || [];
 
   if (loading) {
     return (
@@ -149,7 +139,7 @@ export function OrderDetailsClient({ id }: OrderDetailsClientProps) {
                     <div key={`${item.productId}-${index}`} className="flex gap-4 py-3 first:pt-2 last:pb-1">
                       <div className="w-[72px] h-[72px] lg:w-[80px] lg:h-[80px] rounded-lg overflow-hidden bg-surface-50 flex-shrink-0 flex items-center justify-center border border-surface-100">
                         <img 
-                          src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&q=80&w=200&h=200" 
+                          src={(item as any)?.imageUrl || (item as any)?.image || "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&q=80&w=200&h=200"} 
                           alt={item.name} 
                           className="w-full h-full object-cover mix-blend-multiply" 
                         />
@@ -197,7 +187,7 @@ export function OrderDetailsClient({ id }: OrderDetailsClientProps) {
               </div>
 
               {/* Delivery OTP Box */}
-              {!isDelivered && (
+              {!isDelivered && !isCancelled && hasValidOtp && (
                 <div className="mx-4 lg:mx-0 bg-white rounded-2xl p-4 lg:p-5 shadow-sm border border-surface-200/60 flex flex-col sm:flex-row gap-4 items-center">
                   <div className="flex-1 w-full">
                     <div className="flex items-center gap-2">

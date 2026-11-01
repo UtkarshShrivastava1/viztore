@@ -47,7 +47,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
       }
       return `${window.location.protocol}//${host.replace('partner.', 'shop.').replace('merchant.', 'web.')}`;
     }
-    return 'https://viztore-web.vercel.app';
+    return `https://${branding.domain || 'localhost:3000'}`;
   };
 
   const getRunUrl = () => {
