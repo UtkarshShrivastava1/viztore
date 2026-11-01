@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
-import { branding } from "@repo/shared-types/branding.config";
+import { branding } from "@/config/company";
 
 export default function CareersHero() {
   return (

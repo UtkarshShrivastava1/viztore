@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { branding } from "@repo/shared-types/branding.config";
+import { branding } from "@/config/company";
 
 const navLinks = [
   { label: "Home", href: "/" },

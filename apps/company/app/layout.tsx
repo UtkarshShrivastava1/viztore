@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Poppins, Geist, Geist_Mono } from "next/font/google";
-import { branding } from "@repo/shared-types/branding.config";
+import { branding } from "@/config/company";
 import './global.css';
 
 const geistSans = Geist({

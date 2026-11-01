@@ -3,7 +3,7 @@
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import PageHero from "@/components/ui/PageHero";
-import { branding } from "@repo/shared-types/branding.config";
+import { branding } from "@/config/company";
 
 export default function RefundPolicyPage() {
   return (

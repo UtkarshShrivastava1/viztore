@@ -3,7 +3,7 @@
 import { Store, PackagePlus, ScanLine, Rocket, LineChart, MapPinned, Search, Eye, Scale, ShoppingBag, ShieldCheck } from "lucide-react";
 import SectionHeading from "@/components/ui/SectionHeading";
 import FeatureCard from "@/components/ui/FeatureCard";
-import { branding } from "@repo/shared-types/branding.config";
+import { branding } from "@/config/company";
 
 const retailerSteps = [
   {

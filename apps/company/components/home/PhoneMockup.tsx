@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { floatAnimation } from "./animations";
-import { branding } from "@repo/shared-types/branding.config";
+import { branding } from "@/config/company";
 
 export default function PhoneMockup() {
   return (

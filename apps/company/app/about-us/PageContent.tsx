@@ -5,7 +5,7 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import SectionHeading from "@/components/ui/SectionHeading";
 import FeatureCard from "@/components/ui/FeatureCard";
-import { branding } from "@repo/shared-types/branding.config";
+import { branding } from "@/config/company";
 import {
   Globe2,
   Rocket,

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ArrowLeft, Home, Compass } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
-import { branding } from "@repo/shared-types/branding.config";
+import { branding } from "@/config/company";
 
 export default function NotFound() {
   return (

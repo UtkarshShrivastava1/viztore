@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Mail, Phone, MapPin, Headphones, ArrowRight } from "lucide-react";
-import { branding } from "@repo/shared-types/branding.config";
+import { branding } from "@/config/company";
 
 export default function ContactDirectInfo() {
   return (
