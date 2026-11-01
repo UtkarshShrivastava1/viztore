@@ -8,11 +8,15 @@ build/
 .next/
 out/
 .turbo/
+.expo/
+*.apk
+*.ipa
 
 # Environment variables
 .env
 .env.local
 .env.*.local
+.env.*
 
 # IDE
 .vscode/
@@ -33,11 +37,15 @@ pnpm-debug.log*
 coverage/
 scripts/test-screenshots/
 scripts/test-results.json
+scripts/test-*.ts
+scripts/test-*.mjs
+scripts/purge-database.ts
 postman-local-report.json
 
-# Misc & Sourcemaps
+# Misc, Sourcemaps & Emitted Configs
 *.tsbuildinfo
 *.map
+apps/backend/vitest.config.js
 
 # Internal planning, specs, audit reports & guides (local only — never push to remote)
 /*.md
