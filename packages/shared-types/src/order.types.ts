@@ -76,6 +76,7 @@ export const createOrderSchema = z.object({
   shippingAddress: shippingAddressSchema.optional(),
   fulfilmentMode: z.nativeEnum(FulfilmentMode).default(FulfilmentMode.DELIVER).optional(),
   couponCode: z.string().optional(),
+  paymentMethod: z.string().optional(),
 });
 
 export const updateOrderStatusSchema = z.object({

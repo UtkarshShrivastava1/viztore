@@ -34,6 +34,8 @@ export interface CreateOrderDTO {
   shippingAddress?: ShippingAddressDTO;
   couponCode?: string;
   discount?: number;
+  paymentMethod?: string;
+  paymentStatus?: string;
 }
 
 export interface UpdateOrderStatusDTO {
@@ -61,6 +63,8 @@ export interface OrderResponse {
   deliveryOtp?: string;
   deliveredAt?: Date;
   version: number;
+  paymentMethod?: string;
+  paymentStatus?: string;
   statusHistory?: IOrderStatusHistoryEntry[];
   createdAt: Date;
   updatedAt: Date;
@@ -85,6 +89,8 @@ export interface OrderDocument extends Document {
   deliveryOtp: string;
   deliveredAt?: Date;
   version: number;
+  paymentMethod?: string;
+  paymentStatus?: string;
   statusHistory: IOrderStatusHistoryEntry[];
   createdAt: Date;
   updatedAt: Date;

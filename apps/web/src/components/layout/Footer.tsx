@@ -1,3 +1,5 @@
+'use client';
+import { usePathname } from 'next/navigation';
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -5,6 +7,8 @@ import { Instagram, Facebook, Youtube, Linkedin, MapPin, Heart, Circle } from 'l
 import { branding } from '@repo/shared-types';
 
 export function Footer() {
+  const pathname = usePathname();
+  if (pathname?.startsWith('/rider')) return null;
   return (
     <footer className="w-full bg-gradient-to-b from-blue-50 via-blue-600 to-[#00174F] text-black">
       <div className="max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-24 pt-16 pb-24 md:pb-8">

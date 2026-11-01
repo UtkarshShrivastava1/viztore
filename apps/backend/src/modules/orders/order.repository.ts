@@ -31,6 +31,8 @@ export function createOrderRepository(
       items: raw.items,
       shippingAddress: raw.shippingAddress,
       fulfilmentMode: (raw as any).fulfilmentMode,
+      paymentMethod: (raw as any).paymentMethod || 'cod',
+      paymentStatus: (raw as any).paymentStatus || ((raw as any).paymentMethod === 'online' || (raw as any).paymentMethod === 'prepaid' ? 'paid' : 'pending'),
       reserveCode: (raw as any).reserveCode,
       reserveExpiresAt: (raw as any).reserveExpiresAt,
       subtotal: raw.subtotal,
@@ -69,8 +71,13 @@ export function createOrderRepository(
       },
     ];
 
+    const resolvedPaymentMethod = dto.paymentMethod || 'cod';
+    const resolvedPaymentStatus = dto.paymentStatus || (resolvedPaymentMethod === 'online' || resolvedPaymentMethod === 'prepaid' ? 'paid' : 'pending');
+
     const orderData = {
       ...dto,
+      paymentMethod: resolvedPaymentMethod,
+      paymentStatus: resolvedPaymentStatus,
       orderNumber: generateOrderNumber(),
       deliveryOtp: generateDeliveryOtp(),
       subtotal,

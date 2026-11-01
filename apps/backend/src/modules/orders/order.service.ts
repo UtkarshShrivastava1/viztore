@@ -143,6 +143,8 @@ export function createOrderService(
         shippingAddress: normalizedShippingAddress,
         discount: couponDiscount,
         couponCode: dto.couponCode || undefined,
+        paymentMethod: dto.paymentMethod || 'cod',
+        paymentStatus: (dto.paymentMethod === 'online' || dto.paymentMethod === 'prepaid') ? 'paid' : 'pending',
       };
 
       const created = session

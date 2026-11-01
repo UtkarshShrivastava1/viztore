@@ -60,6 +60,8 @@ const orderSchema = new Schema<OrderDocument>(
     },
     deliveryOtp: { type: String, required: true },
     deliveredAt: { type: Date },
+    paymentMethod: { type: String, default: 'cod', index: true },
+    paymentStatus: { type: String, default: 'pending' },
     statusHistory: { type: [statusHistorySchema], default: [] },
     version: { type: Number, required: true, default: 1, min: 1, index: true },
   },

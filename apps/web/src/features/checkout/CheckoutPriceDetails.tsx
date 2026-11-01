@@ -23,7 +23,8 @@ export function CheckoutPriceDetails({ storeId }: { storeId?: string }) {
     couponCode,
     discountAmount,
     applyCouponDiscount,
-    removeCoupon
+    removeCoupon,
+    paymentMethod,
   } = useCheckoutStore();
   const { isAuthenticated, user, openAuthModal } = useAuthStore();
   const { city: locationCity, pincode: locationPincode } = useLocationStore();
@@ -150,6 +151,7 @@ export function CheckoutPriceDetails({ storeId }: { storeId?: string }) {
       shippingAddress: fulfillmentType === 'deliver' ? finalAddress : undefined,
       fulfilmentMode: (fulfillmentType as any) || 'deliver',
       couponCode: couponCode || undefined,
+      paymentMethod: fulfillmentType === 'reserve' ? 'pay_at_store' : (paymentMethod || 'cod'),
     };
 
     setIsPlacingOrder(true);

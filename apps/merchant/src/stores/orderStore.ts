@@ -245,15 +245,46 @@ export function mapApiOrderToMerchantRecord(apiOrder: any): MerchantOrderRecord 
       totalAmount: apiOrder.grandTotal || 0,
     },
     payment: {
-      status:
-        apiOrder.status === 'delivered' ||
-        apiOrder.status === 'confirmed' ||
-        apiOrder.status === 'packed' ||
-        apiOrder.status === 'out_for_delivery'
-          ? 'Paid'
-          : 'Pending',
-      paymentMethod: isReserve ? ('Pay at Store' as any) : 'Online Paid',
-      mode: 'UPI',
+      status: (() => {
+        const rawMethod = String(
+          apiOrder.paymentMethod ||
+          (apiOrder as any).payment?.paymentMethod ||
+          (apiOrder as any).paymentMode ||
+          ''
+        ).toLowerCase();
+        const isCodOrder = !isReserve && (
+          rawMethod === 'cod' ||
+          rawMethod === 'cash on delivery' ||
+          rawMethod === 'cash' ||
+          rawMethod.includes('cod') ||
+          rawMethod.includes('cash')
+        );
+        return isCodOrder ? (apiOrder.status === 'delivered' ? 'Paid' : 'Pending') : 'Paid';
+      })(),
+      paymentMethod: isReserve
+        ? ('Pay at Store' as any)
+        : (() => {
+            const rawMethod = String(
+              apiOrder.paymentMethod ||
+              (apiOrder as any).payment?.paymentMethod ||
+              (apiOrder as any).paymentMode ||
+              ''
+            ).toLowerCase();
+            return (rawMethod === 'cod' || rawMethod === 'cash on delivery' || rawMethod === 'cash' || rawMethod.includes('cod') || rawMethod.includes('cash'))
+              ? 'Cash on Delivery'
+              : 'Online Paid';
+          })(),
+      mode: (() => {
+        const rawMethod = String(
+          apiOrder.paymentMethod ||
+          (apiOrder as any).payment?.paymentMethod ||
+          (apiOrder as any).paymentMode ||
+          ''
+        ).toLowerCase();
+        return (rawMethod === 'cod' || rawMethod === 'cash on delivery' || rawMethod === 'cash' || rawMethod.includes('cod') || rawMethod.includes('cash'))
+          ? 'Cash'
+          : 'UPI';
+      })(),
     },
     otp: apiOrder.deliveryOtp || '0000',
     timestamps: {

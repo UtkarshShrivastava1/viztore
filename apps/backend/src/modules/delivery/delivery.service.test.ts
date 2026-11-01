@@ -325,7 +325,7 @@ describe('DeliveryService Unit Tests', () => {
       expect(details?.orderId).toBe('order-123');
       expect(details?.isClaimed).toBe(false);
       expect(details?.isClaimedByCaller).toBe(false);
-      expect(details?.pickupDetails).toBeUndefined(); // Redacted before claim
+      expect(details?.pickupDetails).toBeDefined(); // Full store address provided for pre-claim evaluation
     });
 
     it('should return unlocked run details when caller is the assigned rider', async () => {
