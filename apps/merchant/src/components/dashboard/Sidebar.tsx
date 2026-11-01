@@ -228,24 +228,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <div className="h-16 px-4 flex items-center justify-between border-b border-[#152348] shrink-0">
         {!isCollapsed && (
           <div className="flex items-center gap-3 overflow-hidden">
-            {/* Stylized Logo Icon */}
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-400 via-rose-500 to-blue-600 flex items-center justify-center text-white font-black text-lg shadow-md shrink-0">
-              {branding.appName.charAt(0).toUpperCase()}
-            </div>
-            <div className="truncate">
-              <h1 className="font-extrabold text-base tracking-tight text-white leading-none capitalize">
-                {branding.appName}
-              </h1>
-              <span className="text-[9px] text-slate-400 font-medium block mt-1 tracking-tight">
-                {branding.tagline}
-              </span>
-            </div>
+            {/* Official Branding Logo */}
+            <img
+              src="/images/logo-white.png"
+              alt={branding.appName}
+              className="h-8 max-w-[155px] w-auto object-contain"
+            />
           </div>
         )}
 
         {isCollapsed && (
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-400 via-rose-500 to-blue-600 flex items-center justify-center text-white font-black text-lg shadow-md mx-auto">
-            {branding.appName.charAt(0).toUpperCase()}
+          <div className="w-8 h-8 rounded-xl overflow-hidden flex items-center justify-center mx-auto bg-slate-900/60 p-0.5 border border-slate-700/50 shadow-sm" title={branding.appName}>
+            <img
+              src="/images/logo-white.png"
+              alt={branding.appName}
+              className="h-7 max-w-none object-cover object-left"
+              style={{ width: 'auto' }}
+            />
           </div>
         )}
 

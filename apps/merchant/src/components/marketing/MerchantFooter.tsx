@@ -63,12 +63,11 @@ export const MerchantFooter: React.FC<MerchantFooterProps> = ({ onNavigate }) =>
               onClick={() => onNavigate('/')}
               className="flex items-center gap-2.5 cursor-pointer group"
             >
-              <div className="w-10 h-10 rounded-xl bg-[#0052ff] text-white flex items-center justify-center shadow-xs">
-                <ShoppingBag className="w-5 h-5 fill-white/20" />
-              </div>
-              <span className="text-[28px] font-black text-[#0052ff] tracking-tight">
-                {branding.appName}
-              </span>
+              <img
+                src="/images/logo-dark.png"
+                alt={branding.appName}
+                className="h-9 sm:h-10 w-auto object-contain"
+              />
             </div>
 
             {/* Tagline */}

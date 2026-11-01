@@ -237,22 +237,21 @@ export const SellerLoginPage: React.FC<SellerLoginPageProps> = ({
           </button>
 
           {/* Header Brand Icon & Tag */}
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#0038ed] to-blue-500 text-white flex items-center justify-center shadow-md shadow-blue-600/25 shrink-0">
-              {mode === 'login' ? (
-                <Store className="w-5 h-5" />
-              ) : (
-                <Sparkles className="w-5 h-5" />
-              )}
-            </div>
-            <div>
+          <div className="mb-4">
+            <div className="flex items-center gap-2 mb-2">
+              <img
+                src="/images/logo-dark.png"
+                alt={branding.appName}
+                className="h-7 w-auto object-contain"
+              />
+              <div className="h-4 w-px bg-slate-200 mx-1" />
               <span className="text-[11px] font-bold text-[#0038ed] uppercase tracking-wider block">
-                {branding.appName} Merchant Hub
+                Merchant Hub
               </span>
-              <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
-                {mode === 'login' ? 'Merchant Login' : 'Create Seller Account'}
-              </h2>
             </div>
+            <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+              {mode === 'login' ? 'Merchant Login' : 'Create Seller Account'}
+            </h2>
           </div>
 
           <p className="text-xs text-slate-500 mb-5 leading-relaxed">

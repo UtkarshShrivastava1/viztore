@@ -85,12 +85,11 @@ export const MerchantNavbar: React.FC<MerchantNavbarProps> = ({
           onClick={() => handleLinkClick('/')}
           className="flex items-center gap-2.5 cursor-pointer group"
         >
-          <div className="w-9 h-9 rounded-xl bg-[#0052ff] text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
-            <ShoppingBag className="w-5 h-5 fill-white/20" />
-          </div>
-          <span className="text-2xl font-black text-[#0052ff] tracking-tight">
-            {branding.appName}
-          </span>
+          <img
+            src="/images/logo-dark.png"
+            alt={branding.appName}
+            className="h-8 sm:h-9 w-auto object-contain group-hover:opacity-90 transition-opacity"
+          />
         </div>
 
         {/* Desktop Nav Items */}

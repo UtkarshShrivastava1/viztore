@@ -59,3 +59,7 @@ Merchant_Front/
 Merchant_Website/
 *.docx
 *.xlsx
+
+# Raw design assets drop
+/Logo/
+/logo/

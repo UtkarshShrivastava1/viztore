@@ -56,25 +56,11 @@ export const SellerNavbar: React.FC<SellerNavbarProps> = ({
           onClick={() => handleNavigate('/')}
           className="flex items-center gap-2.5 text-left focus:outline-none cursor-pointer group"
         >
-          {/* Shopping Bag with Checkmark Icon matching Mockup Logo */}
-          <div className="w-9 h-9 rounded-xl bg-[#0038ed] flex items-center justify-center text-white shadow-xs group-hover:scale-105 transition-transform">
-            <svg
-              className="w-5 h-5"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
-              <path d="M3 6h18" />
-              <path d="m9 13 2 2 4-4" />
-            </svg>
-          </div>
-          <span className="text-2xl font-bold tracking-tight text-[#0038ed] font-sans">
-            {branding.appName}
-          </span>
+          <img
+            src="/images/logo-dark.png"
+            alt={branding.appName}
+            className="h-8 sm:h-9 w-auto object-contain group-hover:opacity-90 transition-opacity"
+          />
         </button>
 
         {/* Desktop Nav Items */}

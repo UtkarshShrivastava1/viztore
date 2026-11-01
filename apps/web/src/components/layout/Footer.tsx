@@ -14,10 +14,10 @@ export function Footer() {
           <div className="flex flex-col space-y-6">
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
-                <Image src="/logo_v.png" alt={`${branding.appName} Logo`} width={48} height={48} className="object-contain" style={{ width: 'auto', height: 'auto' }} />
-                <span className="text-4xl font-bold tracking-tight text-black">{branding.appName.toLowerCase()}</span>
+                <Image src="/images/logo-dark.png" alt={`${branding.appName} Logo`} width={140} height={46} className="h-10 md:h-11 w-auto object-contain" />
+
               </div>
-              <p className="text-blue-700 text-sm font-medium mt-1 ml-[56px]">
+              <p className="text-blue-700 text-sm font-medium mt-1">
                 Making Local Stores <span className="font-bold">Visible.</span>
               </p>
             </div>

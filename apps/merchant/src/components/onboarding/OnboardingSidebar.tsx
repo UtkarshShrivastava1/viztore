@@ -61,6 +61,7 @@ export const OnboardingSidebar: React.FC<OnboardingSidebarProps> = ({
     <div className="bg-white/90 backdrop-blur-md border border-slate-200/90 rounded-3xl p-6 sm:p-8 flex flex-col justify-between shadow-xl shadow-slate-200/30">
       <div className="space-y-6">
         <div>
+          <img src="/images/logo-dark.png" alt={branding.appName} className="h-7 w-auto object-contain mb-3" />
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/60 text-[#0038ed] text-[11px] font-bold uppercase tracking-wider mb-2.5">
             <Sparkles className="w-3.5 h-3.5 text-[#0038ed]" />
             <span>Digital Merchant Onboarding</span>
