@@ -348,10 +348,13 @@ export const AddCustomerView: React.FC<AddCustomerViewProps> = ({
               </div>
               <input
                 type="tel"
-                placeholder="Enter mobile number (e.g. 9876543210)"
+                inputMode="numeric"
+                maxLength={10}
+                placeholder="10-digit mobile (e.g. 9876543210)"
                 value={mobileNumber}
                 onChange={(e) => {
-                  setMobileNumber(e.target.value);
+                  const cleaned = e.target.value.replace(/\D/g, '').slice(0, 10);
+                  setMobileNumber(cleaned);
                   if (mobileError) setMobileError('');
                 }}
                 onBlur={() => {
@@ -361,7 +364,7 @@ export const AddCustomerView: React.FC<AddCustomerViewProps> = ({
                     setMobileError('');
                   }
                 }}
-                className={`w-full px-3.5 py-2.5 bg-white border rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 shadow-2xs transition-colors ${
+                className={`w-full px-3.5 py-2.5 bg-white border rounded-xl text-xs font-mono text-slate-800 focus:outline-none focus:ring-2 shadow-2xs transition-colors ${
                   mobileError
                     ? 'border-rose-400 focus:ring-rose-400'
                     : 'border-slate-200 focus:ring-blue-500'
@@ -491,11 +494,13 @@ export const AddCustomerView: React.FC<AddCustomerViewProps> = ({
               </label>
               <input
                 type="text"
+                inputMode="numeric"
                 placeholder="Enter 6-digit pincode"
                 value={pincode}
                 maxLength={6}
                 onChange={(e) => {
-                  setPincode(e.target.value);
+                  const cleaned = e.target.value.replace(/\D/g, '').slice(0, 6);
+                  setPincode(cleaned);
                   if (pincodeError) setPincodeError('');
                 }}
                 onBlur={() => {
@@ -549,7 +554,8 @@ export const AddCustomerView: React.FC<AddCustomerViewProps> = ({
               value={gstin}
               maxLength={15}
               onChange={(e) => {
-                setGstin(e.target.value.toUpperCase());
+                const cleaned = e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 15);
+                setGstin(cleaned);
                 if (gstinError) setGstinError('');
               }}
               onBlur={() => {
@@ -580,7 +586,8 @@ export const AddCustomerView: React.FC<AddCustomerViewProps> = ({
               value={pan}
               maxLength={10}
               onChange={(e) => {
-                setPan(e.target.value.toUpperCase());
+                const cleaned = e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 10);
+                setPan(cleaned);
                 if (panError) setPanError('');
               }}
               onBlur={() => {

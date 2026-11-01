@@ -105,6 +105,11 @@ export default function EditProfilePage() {
   };
 
   const handleChange = (field: string, value: string) => {
+    if (field === 'mobileNumber') {
+      const digits = value.replace(/\D/g, '').slice(0, 10);
+      setFormData((prev) => ({ ...prev, [field]: digits ? `+91 ${digits}` : '' }));
+      return;
+    }
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -291,7 +296,9 @@ function FormField({
           </select>
         ) : (
           <input
-            type="text"
+            type={label === 'Mobile Number' ? 'tel' : 'text'}
+            inputMode={label === 'Mobile Number' ? 'numeric' : undefined}
+            maxLength={label === 'Mobile Number' ? 14 : undefined}
             value={value}
             onChange={(e) => onChange(e.target.value)}
             className="w-full bg-transparent py-3 pl-4 pr-24 text-sm font-medium text-gray-900 focus:outline-none placeholder:text-gray-400"

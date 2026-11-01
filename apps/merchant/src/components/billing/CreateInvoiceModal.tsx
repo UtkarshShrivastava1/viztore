@@ -522,10 +522,12 @@ export const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
                       </label>
                       <input
                         type="tel"
+                        inputMode="numeric"
+                        maxLength={10}
                         value={customerPhone}
-                        onChange={(e) => setCustomerPhone(e.target.value)}
+                        onChange={(e) => setCustomerPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
                         placeholder="Enter 10-digit mobile number"
-                        className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+                        className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 font-mono"
                       />
                     </div>
 
@@ -603,10 +605,11 @@ export const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
                   </label>
                   <input
                     type="text"
+                    maxLength={15}
                     value={gstin}
-                    onChange={(e) => setGstin(e.target.value)}
-                    placeholder="Enter GSTIN"
-                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+                    onChange={(e) => setGstin(e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 15))}
+                    placeholder="Enter 15-character GSTIN"
+                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-mono uppercase text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
                   />
                 </div>
               </div>

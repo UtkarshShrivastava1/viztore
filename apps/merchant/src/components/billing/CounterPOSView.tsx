@@ -578,10 +578,12 @@ export const CounterPOSView: React.FC<CounterPOSViewProps> = ({ onBack }) => {
                 className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-200 bg-white"
               />
               <input
-                type="text"
+                type="tel"
+                inputMode="numeric"
+                maxLength={10}
                 placeholder="Phone (10 digits)"
                 value={customerPhone}
-                onChange={(e) => setCustomerPhone(e.target.value)}
+                onChange={(e) => setCustomerPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
                 className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-200 bg-white font-mono"
               />
             </div>

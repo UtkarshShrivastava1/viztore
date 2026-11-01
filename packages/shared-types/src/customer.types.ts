@@ -1,4 +1,10 @@
 import { z } from 'zod';
+import {
+  standardPhoneSchema,
+  standardPanOptionalSchema,
+  standardGstinOptionalSchema,
+  standardPincodeOptionalSchema,
+} from './standardFields.js';
 
 export enum CustomerType {
   INDIVIDUAL = 'Individual',
@@ -31,7 +37,7 @@ export const CustomerBillingAddressSchema = z.object({
   addressLine2: z.string().optional(),
   city: z.string().min(1, 'City is required'),
   state: z.string().min(1, 'State is required'),
-  pincode: z.string().optional().default(''),
+  pincode: standardPincodeOptionalSchema,
   country: z.string().default('India'),
   sameAsShipping: z.boolean().default(true),
 });
@@ -40,10 +46,10 @@ export const CreateCustomerSchema = z.object({
   name: z.string().min(1, 'Customer name is required'),
   displayName: z.string().optional(),
   customerType: z.nativeEnum(CustomerType).default(CustomerType.INDIVIDUAL),
-  phone: z.string().min(10, 'Valid 10-digit phone number is required'),
+  phone: standardPhoneSchema,
   email: z.string().email().optional().or(z.literal('')),
-  gstin: z.string().optional().or(z.literal('')),
-  pan: z.string().optional().or(z.literal('')),
+  gstin: standardGstinOptionalSchema,
+  pan: standardPanOptionalSchema,
   creditLimit: z.number().min(0).default(10000),
   paymentTerms: z.string().default('15 Days'),
   creditPeriodDays: z.number().min(0).default(15),

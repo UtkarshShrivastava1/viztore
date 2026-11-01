@@ -240,11 +240,13 @@ export function AddAddressClient() {
                     </div>
                     <input 
                       type="tel" 
+                      inputMode="numeric"
+                      maxLength={10}
                       value={mobileNumber}
-                      onChange={(e) => setMobileNumber(e.target.value)}
+                      onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
                       placeholder="Enter 10-digit mobile number" 
                       required
-                      className="bg-white w-full pl-10 pr-4 py-3 rounded-lg border border-surface-200 focus:outline-none focus:border-[#1668F6] text-[13px] text-surface-800 placeholder:text-surface-400" 
+                      className="bg-white w-full pl-10 pr-4 py-3 rounded-lg border border-surface-200 focus:outline-none focus:border-[#1668F6] text-[13px] text-surface-800 placeholder:text-surface-400 font-mono" 
                     />
                   </div>
                 </div>
@@ -259,11 +261,13 @@ export function AddAddressClient() {
                     </div>
                     <input 
                       type="text" 
+                      inputMode="numeric"
+                      maxLength={6}
                       value={pincode}
-                      onChange={(e) => setPincode(e.target.value)}
+                      onChange={(e) => setPincode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                       placeholder="Enter 6-digit pincode" 
                       required
-                      className="bg-white w-full pl-10 pr-4 py-3 rounded-lg border border-surface-200 focus:outline-none focus:border-[#1668F6] text-[13px] text-surface-800 placeholder:text-surface-400" 
+                      className="bg-white w-full pl-10 pr-4 py-3 rounded-lg border border-surface-200 focus:outline-none focus:border-[#1668F6] text-[13px] text-surface-800 placeholder:text-surface-400 font-mono" 
                     />
                   </div>
                 </div>
@@ -360,10 +364,12 @@ export function AddAddressClient() {
                     </div>
                     <input 
                       type="tel" 
+                      inputMode="numeric"
+                      maxLength={10}
                       value={alternatePhone}
-                      onChange={(e) => setAlternatePhone(e.target.value)}
-                      placeholder="Enter alternate phone number" 
-                      className="bg-white w-full pl-10 pr-4 py-3 rounded-lg border border-surface-200 focus:outline-none focus:border-[#1668F6] text-[13px] text-surface-800 placeholder:text-surface-400" 
+                      onChange={(e) => setAlternatePhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                      placeholder="Enter 10-digit alternate mobile number" 
+                      className="bg-white w-full pl-10 pr-4 py-3 rounded-lg border border-surface-200 focus:outline-none focus:border-[#1668F6] text-[13px] text-surface-800 placeholder:text-surface-400 font-mono" 
                     />
                   </div>
                 </div>

@@ -83,9 +83,13 @@ export const TaxGstTab: React.FC = () => {
               </label>
               <input
                 type="text"
+                maxLength={15}
                 value={formData.gstin}
-                onChange={(e) => setFormData({ ...formData, gstin: e.target.value })}
-                className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 uppercase tracking-wider focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                onChange={(e) => {
+                  const clean = e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 15);
+                  setFormData({ ...formData, gstin: clean });
+                }}
+                className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 uppercase tracking-wider focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-mono"
               />
               <p className="text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
                 <CheckCircle2 className="w-3 h-3" /> GSTIN verified successfully

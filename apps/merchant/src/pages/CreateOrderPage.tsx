@@ -345,12 +345,17 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
         setErrorMessage('Please provide customer name and mobile phone number for the new customer.');
         return;
       }
+      const cleanPhoneDigits = newCustomer.phone.replace(/\D/g, '').slice(-10);
+      if (!/^[6-9]\d{9}$/.test(cleanPhoneDigits)) {
+        setErrorMessage('Please provide a valid 10-digit Indian mobile number (starting with 6, 7, 8, or 9).');
+        return;
+      }
       if (deliveryType === 'delivery' && !newCustomer.address.trim()) {
         setErrorMessage('Please provide a delivery address for the new customer.');
         return;
       }
       finalCustomerName = newCustomer.name.trim();
-      finalCustomerPhone = newCustomer.phone.trim();
+      finalCustomerPhone = cleanPhoneDigits;
       finalCustomerEmail =
         newCustomer.email.trim() ||
         `${newCustomer.name.trim().toLowerCase().replace(/\s+/g, '')}@example.com`;
@@ -745,16 +750,25 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
                         </div>
                         <div>
                           <label className="text-[11px] text-slate-500 font-semibold block mb-1">
-                            Phone Number
+                            Mobile Number (10 Digits)
                           </label>
-                          <input
-                            type="text"
-                            value={selectedCustomer.phone}
-                            onChange={(e) =>
-                              setSelectedCustomer({ ...selectedCustomer, phone: e.target.value })
-                            }
-                            className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs"
-                          />
+                          <div className="relative">
+                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[11px] font-bold text-slate-400 select-none">
+                              +91
+                            </span>
+                            <input
+                              type="tel"
+                              inputMode="numeric"
+                              maxLength={10}
+                              placeholder="9876543210"
+                              value={selectedCustomer.phone.replace(/^\+91\s*/, '')}
+                              onChange={(e) => {
+                                const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                                setSelectedCustomer({ ...selectedCustomer, phone: digits });
+                              }}
+                              className="w-full pl-9 pr-3 py-1.5 border border-slate-200 rounded-lg text-xs font-mono"
+                            />
+                          </div>
                         </div>
                         <div>
                           <label className="text-[11px] text-slate-500 font-semibold block mb-1">
@@ -869,15 +883,25 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <div>
                     <label className="text-[11px] text-slate-600 font-semibold block mb-1">
-                      Mobile Number *
+                      Mobile Number * (10 Digits)
                     </label>
-                    <input
-                      type="text"
-                      placeholder="+91 98765 43210"
-                      value={newCustomer.phone}
-                      onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })}
-                      className="w-full px-3 py-1.5 border border-slate-200 bg-white rounded-lg text-xs focus:ring-1 focus:ring-blue-500"
-                    />
+                    <div className="relative">
+                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 select-none">
+                        +91
+                      </span>
+                      <input
+                        type="tel"
+                        inputMode="numeric"
+                        maxLength={10}
+                        placeholder="9876543210"
+                        value={newCustomer.phone}
+                        onChange={(e) => {
+                          const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                          setNewCustomer({ ...newCustomer, phone: digits });
+                        }}
+                        className="w-full pl-9 pr-3 py-1.5 border border-slate-200 bg-white rounded-lg text-xs font-mono focus:ring-1 focus:ring-blue-500"
+                      />
+                    </div>
                   </div>
                   <div>
                     <label className="text-[11px] text-slate-600 font-semibold block mb-1">

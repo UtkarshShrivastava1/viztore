@@ -663,10 +663,11 @@ export const AddVendorDrawer: React.FC<AddVendorDrawerProps> = ({
                 <input
                   type="text"
                   maxLength={6}
+                  inputMode="numeric"
                   placeholder="6-digit PIN"
                   value={pincode}
                   onChange={(e) => {
-                    setPincode(e.target.value);
+                    setPincode(e.target.value.replace(/\D/g, '').slice(0, 6));
                     if (pincodeError) setPincodeError('');
                   }}
                   onBlur={() => {
@@ -725,10 +726,11 @@ export const AddVendorDrawer: React.FC<AddVendorDrawerProps> = ({
                 <input
                   type="tel"
                   maxLength={10}
+                  inputMode="numeric"
                   placeholder="10-digit mobile number (e.g. 9876543210)"
                   value={phone}
                   onChange={(e) => {
-                    setPhone(e.target.value);
+                    setPhone(e.target.value.replace(/\D/g, '').slice(0, 10));
                     if (phoneError) setPhoneError('');
                   }}
                   onBlur={() => {
@@ -789,9 +791,11 @@ export const AddVendorDrawer: React.FC<AddVendorDrawerProps> = ({
                   </label>
                   <input
                     type="text"
-                    placeholder="Enter bank account number"
+                    maxLength={18}
+                    inputMode="numeric"
+                    placeholder="Enter bank account number (9-18 digits)"
                     value={accountNumber}
-                    onChange={(e) => setAccountNumber(e.target.value)}
+                    onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, '').slice(0, 18))}
                     className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-mono font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-2xs"
                   />
                 </div>
@@ -805,7 +809,7 @@ export const AddVendorDrawer: React.FC<AddVendorDrawerProps> = ({
                     maxLength={11}
                     placeholder="e.g. SBIN0001234"
                     value={ifscCode}
-                    onChange={(e) => setIfscCode(e.target.value.toUpperCase())}
+                    onChange={(e) => setIfscCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 11))}
                     className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-mono uppercase font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-2xs"
                   />
                 </div>

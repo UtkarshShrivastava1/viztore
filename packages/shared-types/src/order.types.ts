@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { standardPhoneSchema, standardPincodeSchema } from './standardFields.js';
 
 /**
  * Order Domain Types & Zod Schemas
@@ -46,9 +47,9 @@ export const shippingAddressSchema = z.object({
   street: z.string().min(1, 'Street address is required'),
   city: z.string().min(1, 'City is required'),
   state: z.string().min(1, 'State is required'),
-  postalCode: z.string().min(1, 'Postal code is required'),
+  postalCode: standardPincodeSchema,
   country: z.string().default('IN'),
-  phone: z.string().min(10, 'Valid 10-digit phone number is required'),
+  phone: standardPhoneSchema,
 });
 
 export const createOrderSchema = z.object({

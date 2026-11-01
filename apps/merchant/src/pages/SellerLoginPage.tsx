@@ -393,10 +393,11 @@ export const SellerLoginPage: React.FC<SellerLoginPageProps> = ({
                   <span className="text-xs font-semibold text-slate-500 mr-1.5 select-none">+91</span>
                   <input
                     type="tel"
+                    inputMode="numeric"
                     maxLength={10}
                     placeholder="9876543210"
                     value={regPhone}
-                    onChange={(e) => setRegPhone(e.target.value.replace(/\D/g, ''))}
+                    onChange={(e) => setRegPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
                     className="modal-input w-full text-xs text-slate-900 placeholder:text-slate-400 bg-transparent focus:outline-none"
                     required
                   />

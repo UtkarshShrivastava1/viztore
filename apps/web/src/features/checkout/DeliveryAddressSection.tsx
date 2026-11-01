@@ -284,15 +284,25 @@ export function DeliveryAddressSection() {
 
                 <div>
                   <label className="block text-[11px] font-bold text-gray-700 mb-1">10-Digit Mobile Number</label>
-                  <input
-                    type="tel"
-                    required
-                    pattern="[0-9]{10}"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="e.g. 9876543210"
-                    className="w-full px-3 py-2 text-xs rounded-xl border border-gray-200 focus:outline-none focus:border-[#1668F6]"
-                  />
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-gray-400 select-none">
+                      +91
+                    </span>
+                    <input
+                      type="tel"
+                      inputMode="numeric"
+                      required
+                      maxLength={10}
+                      pattern="[6-9][0-9]{9}"
+                      value={phone.replace(/^\+91\s*/, '')}
+                      onChange={(e) => {
+                        const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                        setPhone(digits);
+                      }}
+                      placeholder="9876543210"
+                      className="w-full pl-10 pr-3 py-2 text-xs rounded-xl border border-gray-200 focus:outline-none focus:border-[#1668F6] font-mono"
+                    />
+                  </div>
                 </div>
 
                 <div>
@@ -334,12 +344,17 @@ export function DeliveryAddressSection() {
                     <label className="block text-[10px] font-bold text-gray-700 mb-1">Pincode</label>
                     <input
                       type="text"
+                      inputMode="numeric"
                       required
-                      pattern="[0-9]{6}"
+                      maxLength={6}
+                      pattern="[1-9][0-9]{5}"
                       value={postalCode}
-                      onChange={(e) => setPostalCode(e.target.value)}
-                      placeholder="e.g. 400001"
-                      className="w-full px-2 py-2 text-xs rounded-xl border border-gray-200 focus:outline-none focus:border-[#1668F6]"
+                      onChange={(e) => {
+                        const digits = e.target.value.replace(/\D/g, '').slice(0, 6);
+                        setPostalCode(digits);
+                      }}
+                      placeholder="e.g. 490006"
+                      className="w-full px-2 py-2 text-xs rounded-xl border border-gray-200 focus:outline-none focus:border-[#1668F6] font-mono"
                     />
                   </div>
                 </div>

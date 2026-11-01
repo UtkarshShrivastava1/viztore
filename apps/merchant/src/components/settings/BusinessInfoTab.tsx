@@ -164,9 +164,14 @@ export const BusinessInfoTab: React.FC = () => {
               <div className="relative flex items-center">
                 <input
                   type="text"
+                  maxLength={15}
                   value={formData.gstin}
-                  onChange={(e) => { setFormData({ ...formData, gstin: e.target.value.toUpperCase(), isGstinVerified: false }); markDirty(); }}
-                  className="w-full pl-3.5 pr-28 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 uppercase tracking-wider"
+                  onChange={(e) => { 
+                    const clean = e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 15);
+                    setFormData({ ...formData, gstin: clean, isGstinVerified: false }); 
+                    markDirty(); 
+                  }}
+                  className="w-full pl-3.5 pr-28 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 uppercase tracking-wider font-mono"
                 />
                 <div className="absolute right-2 flex items-center gap-1.5">
                   <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
@@ -180,7 +185,7 @@ export const BusinessInfoTab: React.FC = () => {
                   </button>
                 </div>
               </div>
-              <p className="text-[11px] text-slate-400">Enter your 15-digit GSTIN.</p>
+              <p className="text-[11px] text-slate-400">Enter your 15-character GSTIN.</p>
               {gstinMessage && (
                 <p className="text-[10px] font-semibold text-emerald-600 mt-1">{gstinMessage}</p>
               )}
@@ -193,9 +198,14 @@ export const BusinessInfoTab: React.FC = () => {
               <div className="relative flex items-center">
                 <input
                   type="text"
+                  maxLength={10}
                   value={formData.panNumber}
-                  onChange={(e) => { setFormData({ ...formData, panNumber: e.target.value.toUpperCase(), isPanVerified: false }); markDirty(); }}
-                  className="w-full pl-3.5 pr-28 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 uppercase tracking-wider"
+                  onChange={(e) => { 
+                    const clean = e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 10);
+                    setFormData({ ...formData, panNumber: clean, isPanVerified: false }); 
+                    markDirty(); 
+                  }}
+                  className="w-full pl-3.5 pr-28 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 uppercase tracking-wider font-mono"
                 />
                 <div className="absolute right-2 flex items-center gap-1.5">
                   <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
@@ -348,9 +358,15 @@ export const BusinessInfoTab: React.FC = () => {
                 <MapPin className="w-3.5 h-3.5 text-slate-400 absolute left-3.5 pointer-events-none" />
                 <input
                   type="text"
+                  inputMode="numeric"
+                  maxLength={6}
                   value={formData.pinCode}
-                  onChange={(e) => setFormData({ ...formData, pinCode: e.target.value })}
-                  className="w-full pl-9 pr-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  onChange={(e) => {
+                    const clean = e.target.value.replace(/\D/g, '').slice(0, 6);
+                    setFormData({ ...formData, pinCode: clean });
+                    markDirty();
+                  }}
+                  className="w-full pl-9 pr-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-mono"
                 />
               </div>
             </div>

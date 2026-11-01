@@ -280,10 +280,12 @@ export const AuthModal: React.FC = () => {
                   <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                   <input
                     type="tel"
+                    inputMode="numeric"
+                    maxLength={10}
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
+                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
                     placeholder="10-digit mobile number"
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-10 pr-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-[#1668F6] focus:outline-none focus:ring-2 focus:ring-[#1668F6]/20 transition-all"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/50 pl-10 pr-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-[#1668F6] focus:outline-none focus:ring-2 focus:ring-[#1668F6]/20 transition-all font-mono"
                   />
                 </div>
               </div>

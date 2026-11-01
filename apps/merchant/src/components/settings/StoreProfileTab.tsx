@@ -178,9 +178,17 @@ export const StoreProfileTab: React.FC = () => {
             <div className="relative flex items-center">
               <Phone className="w-3.5 h-3.5 text-slate-400 absolute left-3.5 pointer-events-none" />
               <input
-                type="text" ref={phoneInputRef} value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="w-full pl-9 pr-24 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                type="tel"
+                inputMode="numeric"
+                maxLength={10}
+                ref={phoneInputRef}
+                value={formData.phone.replace(/\D/g, '').slice(0, 10)}
+                onChange={(e) => {
+                  const cleaned = e.target.value.replace(/\D/g, '').slice(0, 10);
+                  setFormData({ ...formData, phone: cleaned });
+                  markDirty();
+                }}
+                className="w-full pl-9 pr-24 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
               />
               <div className="absolute right-2.5 flex items-center gap-2">
                 <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
@@ -306,9 +314,15 @@ export const StoreProfileTab: React.FC = () => {
               <MapPin className="w-3.5 h-3.5 text-slate-400 absolute left-3.5 pointer-events-none" />
               <input
                 type="text"
+                inputMode="numeric"
+                maxLength={6}
                 value={formData.pinCode}
-                onChange={(e) => setFormData({ ...formData, pinCode: e.target.value })}
-                className="w-full pl-9 pr-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                onChange={(e) => {
+                  const cleaned = e.target.value.replace(/\D/g, '').slice(0, 6);
+                  setFormData({ ...formData, pinCode: cleaned });
+                  markDirty();
+                }}
+                className="w-full pl-9 pr-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
               />
             </div>
           </div>
