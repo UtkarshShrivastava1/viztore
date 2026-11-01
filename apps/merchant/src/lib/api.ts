@@ -179,6 +179,9 @@ export const api = {
 };
 
 export const ordersApi = {
+  createOrder: (orderData: unknown) =>
+    api.post<any>('/orders', orderData),
+
   getStoreOrders: (storeId: string) => 
     api.get<any[]>(`/orders/store/${storeId}`),
 
