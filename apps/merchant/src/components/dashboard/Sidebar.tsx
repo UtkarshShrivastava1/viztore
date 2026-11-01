@@ -232,7 +232,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <img
               src="/images/logo-white.png"
               alt={branding.appName}
-              className="h-8 max-w-[155px] w-auto object-contain"
+              className="h-9 sm:h-10 max-w-[165px] w-auto object-contain"
             />
           </div>
         )}

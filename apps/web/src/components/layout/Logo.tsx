@@ -5,6 +5,7 @@ import { branding } from '@repo/shared-types';
 interface LogoProps {
   theme?: 'light' | 'dark';
   className?: string;
+  imgClassName?: string;
   width?: number;
   height?: number;
 }
@@ -12,8 +13,9 @@ interface LogoProps {
 export default function Logo({ 
   theme = 'light',
   className = '',
-  width = 135,
-  height = 42,
+  imgClassName = '',
+  width = 160,
+  height = 54,
 }: LogoProps) {
   const isDarkTheme = theme === 'dark';
   const appName = process.env.NEXT_PUBLIC_APP_NAME || branding.appName;
@@ -24,7 +26,7 @@ export default function Logo({
   return (
     <Link 
       href="/" 
-      className={`inline-flex items-center select-none hover:opacity-90 transition-opacity ${className}`}
+      className={`inline-flex items-center select-none hover:opacity-90 transition-opacity shrink-0 ${className}`}
       aria-label={`${appName} - ${branding.tagline}`}
     >
       <Image
@@ -32,7 +34,7 @@ export default function Logo({
         alt={appName}
         width={width}
         height={height}
-        className="h-8 md:h-9 w-auto object-contain"
+        className={imgClassName || "h-10 sm:h-11 md:h-12 w-auto object-contain"}
         priority
       />
     </Link>

@@ -71,7 +71,7 @@ export default function Navbar() {
                   width={140}
                   height={36}
                   priority
-                  className="h-10 sm:h-11 w-auto object-contain transition-opacity duration-300"
+                  className="h-11 sm:h-12 md:h-[48px] w-auto object-contain transition-opacity duration-300"
                 />
               </Link>
             </div>

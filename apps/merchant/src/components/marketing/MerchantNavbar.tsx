@@ -88,7 +88,7 @@ export const MerchantNavbar: React.FC<MerchantNavbarProps> = ({
           <img
             src="/images/logo-dark.png"
             alt={branding.appName}
-            className="h-8 sm:h-9 w-auto object-contain group-hover:opacity-90 transition-opacity"
+            className="h-11 sm:h-12 md:h-[52px] w-auto object-contain group-hover:opacity-90 transition-opacity"
           />
         </div>
 
