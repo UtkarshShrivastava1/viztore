@@ -328,6 +328,11 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
       (runDetails?.isClaimed && selectedRider?.id && runDetails?.claimedByRider?.id === selectedRider?.id),
   );
 
+  const isClaimedByAnotherRider = Boolean(
+    isAlreadyClaimedByOther ||
+      (runDetails?.isClaimed && !isClaimedByCaller),
+  );
+
   // Is COD check
   const isCod =
     runDetails?.paymentMethod === 'CASH_ON_DELIVERY' ||
@@ -433,6 +438,39 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
           <RefreshCw className="w-3.5 h-3.5" />
           <span>Retry Connection</span>
         </button>
+      </div>
+    );
+  }
+
+  // Early return: Run Already Claimed by Another Rider (Render ONLY this info box)
+  if (isClaimedByAnotherRider) {
+    const claimer =
+      claimedByName && claimedByName !== 'Another Partner'
+        ? claimedByName
+        : runDetails?.claimedByRider?.name || 'Another Partner';
+
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center p-4 sm:p-6 selection:bg-amber-500 selection:text-slate-950">
+        <div className="w-full max-w-xl p-8 sm:p-10 rounded-3xl bg-slate-900 border border-slate-800 text-center space-y-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+          <div className="w-16 h-16 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto shadow-inner">
+            <Clock className="w-8 h-8" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">Run Already Claimed!</h2>
+            <p className="text-sm text-slate-300 leading-relaxed max-w-md mx-auto">
+              This delivery assignment was claimed by <strong className="text-amber-400 font-bold">{claimer}</strong> moments ago.
+            </p>
+          </div>
+          <div className="pt-2">
+            <a
+              href="https://wa.me"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs sm:text-sm font-bold text-white transition-all shadow-md active:scale-98"
+            >
+              <MessageCircle className="w-4 h-4 text-emerald-400" />
+              <span>Return to WhatsApp Group</span>
+            </a>
+          </div>
+        </div>
       </div>
     );
   }
@@ -658,29 +696,7 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
           </div>
         )}
 
-        {/* =========================================================================
-            STATE: ALREADY CLAIMED BY SOMEONE ELSE
-        ========================================================================= */}
-        {isAlreadyClaimedByOther && (
-          <div className="p-6 sm:p-8 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-center space-y-4">
-            <div className="w-16 h-16 rounded-2xl bg-amber-500/20 border border-amber-500/40 text-amber-400 flex items-center justify-center mx-auto">
-              <Clock className="w-8 h-8" />
-            </div>
-            <div>
-              <h3 className="text-lg font-bold text-white">Run Already Claimed!</h3>
-              <p className="text-xs text-amber-200/90 leading-relaxed max-w-md mx-auto mt-1">
-                This delivery assignment was claimed by <strong className="text-amber-300">{claimedByName}</strong> moments ago.
-              </p>
-            </div>
-            <a
-              href="https://wa.me"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-white transition-all shadow-md"
-            >
-              <MessageCircle className="w-4 h-4 text-emerald-400" />
-              <span>Return to WhatsApp Group</span>
-            </a>
-          </div>
-        )}
+        
 
         {/* =========================================================================
             STATE: DELIVERED (SUCCESS SCREEN)
