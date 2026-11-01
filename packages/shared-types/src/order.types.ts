@@ -42,15 +42,33 @@ export const createOrderItemSchema = z.object({
   storeId: z.string().min(1, 'Store ID is required'),
 });
 
-export const shippingAddressSchema = z.object({
-  fullName: z.string().min(1, 'Full name is required'),
-  street: z.string().min(1, 'Street address is required'),
-  city: z.string().min(1, 'City is required'),
-  state: z.preprocess((val) => (typeof val === 'string' && val.trim() ? val.trim() : 'Chhattisgarh'), z.string().min(1, 'State is required')),
-  postalCode: standardPincodeSchema,
-  country: z.string().default('IN'),
-  phone: standardPhoneSchema,
-});
+export const shippingAddressSchema = z.preprocess(
+  (val: any) => {
+    if (typeof val === 'object' && val !== null) {
+      const copy = { ...val };
+      if (!copy.fullName && (copy.recipientName || copy.name)) {
+        copy.fullName = copy.recipientName || copy.name;
+      }
+      if (!copy.postalCode && (copy.pincode || copy.pinCode || copy.zipCode)) {
+        copy.postalCode = copy.pincode || copy.pinCode || copy.zipCode;
+      }
+      if (!copy.phone && copy.mobile) {
+        copy.phone = copy.mobile;
+      }
+      return copy;
+    }
+    return val;
+  },
+  z.object({
+    fullName: z.string().min(1, 'Full name is required'),
+    street: z.string().min(1, 'Street address is required'),
+    city: z.string().min(1, 'City is required'),
+    state: z.preprocess((val) => (typeof val === 'string' && val.trim() ? val.trim() : 'Chhattisgarh'), z.string().min(1, 'State is required')),
+    postalCode: standardPincodeSchema,
+    country: z.string().default('IN'),
+    phone: standardPhoneSchema,
+  })
+);
 
 export const createOrderSchema = z.object({
   storeId: z.string().min(1, 'Store ID is required'),
