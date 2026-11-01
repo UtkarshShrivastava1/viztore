@@ -247,9 +247,9 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
     } catch (err: any) {
       if (err instanceof ApiError && err.statusCode === 409) {
         setIsAlreadyClaimedByOther(true);
-        setErrorMessage('Another rider just claimed this run moments ago.');
+        setErrorMessage('Another delivery partner already claimed this order.');
       } else {
-        setErrorMessage(err?.message || 'Could not claim this delivery run.');
+        setErrorMessage(err?.message || 'Could not claim this order.');
       }
     } finally {
       setIsSubmitting(false);
@@ -462,9 +462,9 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
             <Clock className="w-8 h-8" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">Run Already Claimed!</h2>
+            <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">Order Already Claimed!</h2>
             <p className="text-sm text-slate-300 leading-relaxed max-w-md mx-auto">
-              This delivery assignment was claimed by <strong className="text-amber-400 font-bold">{claimer}</strong> moments ago.
+              This order was already claimed by <strong className="text-amber-400 font-bold">{claimer}</strong>.
             </p>
           </div>
           <div className="pt-2">
