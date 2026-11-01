@@ -6,7 +6,7 @@ import { useAuthStore } from '@/stores/auth.store';
 import { useLocationStore } from '@/stores/location.store';
 import { useCheckoutStore, ShippingAddressData } from '@/stores/checkoutStore';
 import { userApi } from '@/lib/api/user';
-import type { IAddress } from '@repo/shared-types';
+import { type IAddress, cleanName, cleanPhoneNumber, cleanPincode, validatePersonName } from '@repo/shared-types';
 
 export function DeliveryAddressSection() {
   const { user, isAuthenticated } = useAuthStore();
@@ -23,6 +23,7 @@ export function DeliveryAddressSection() {
   const [city, setCity] = useState('');
   const [state, setState] = useState('');
   const [postalCode, setPostalCode] = useState('');
+  const [formError, setFormError] = useState<string | null>(null);
 
   // Fetch saved user addresses if authenticated, or use active GPS if available
   useEffect(() => {
@@ -58,7 +59,7 @@ export function DeliveryAddressSection() {
             });
           }
         })
-        .catch(() => {});
+        .catch(() => { });
     } else if (isLocationSet && locationAddress && !shippingAddress?.street) {
       setShippingAddress({
         fullName: '',
@@ -85,15 +86,47 @@ export function DeliveryAddressSection() {
 
   const handleSaveCustomAddress = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fullName || !phone || !street || !postalCode) return;
+    setFormError(null);
+
+    const sanitizedName = cleanName(fullName);
+    const cleanDigits = cleanPhoneNumber(phone);
+    const cleanPin = cleanPincode(postalCode);
+    const trimmedStreet = street.trim();
+    const trimmedCity = city.trim() && city.trim() !== 'Local City' ? city.trim() : (locationCity || 'Bhilai');
+    const trimmedState = state.trim() && state.trim() !== 'State' ? state.trim() : 'Chhattisgarh';
+
+    if (!sanitizedName || sanitizedName.length < 2) {
+      setFormError('Please enter a valid recipient name (at least 2 characters).');
+      return;
+    }
+    const nameCheck = validatePersonName(sanitizedName);
+    if (!nameCheck.isValid) {
+      setFormError(nameCheck.error || 'Name contains invalid characters.');
+      return;
+    }
+
+    if (!cleanDigits || cleanDigits.length !== 10 || !/^[6-9]\d{9}$/.test(cleanDigits)) {
+      setFormError('Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9.');
+      return;
+    }
+
+    if (!trimmedStreet || trimmedStreet.length < 5) {
+      setFormError('Please provide a complete street address or locality (at least 5 characters).');
+      return;
+    }
+
+    if (!cleanPin || cleanPin.length !== 6 || !/^[1-9][0-9]{5}$/.test(cleanPin)) {
+      setFormError('Please enter a valid 6-digit postal PIN code.');
+      return;
+    }
 
     const newAddress: ShippingAddressData = {
-      fullName: fullName.trim(),
-      phone: phone.trim(),
-      street: street.trim(),
-      city: city.trim() && city.trim() !== 'Local City' ? city.trim() : (locationCity || 'Local City'),
-      state: state.trim() && state.trim() !== 'State' ? state.trim() : '',
-      postalCode: postalCode.trim() && postalCode.trim() !== '452001' ? postalCode.trim() : (locationPincode || ''),
+      fullName: sanitizedName,
+      phone: cleanDigits,
+      street: trimmedStreet,
+      city: trimmedCity,
+      state: trimmedState,
+      postalCode: cleanPin,
       country: 'IN',
     };
 
@@ -144,8 +177,8 @@ export function DeliveryAddressSection() {
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-sm font-bold text-[#192168]">1. Delivery Address</h2>
         {hasStreet ? (
-          <button 
-            type="button" 
+          <button
+            type="button"
             onClick={handleOpenEdit}
             className="text-[11px] font-bold text-[#1668F6] hover:underline flex items-center gap-1"
           >
@@ -270,11 +303,18 @@ export function DeliveryAddressSection() {
             {/* Form for new/edited address */}
             {(isEditing || savedAddresses.length === 0) && (
               <form onSubmit={handleSaveCustomAddress} className="space-y-3">
+                {formError && (
+                  <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 font-medium">
+                    {formError}
+                  </div>
+                )}
                 <div>
-                  <label className="block text-[11px] font-bold text-gray-700 mb-1">Full Name</label>
+                  <label className="block text-[11px] font-bold text-gray-700 mb-1">Full Name *</label>
                   <input
                     type="text"
                     required
+                    autoComplete="name"
+                    maxLength={100}
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="e.g. Rahul Sharma"
@@ -283,7 +323,7 @@ export function DeliveryAddressSection() {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-gray-700 mb-1">10-Digit Mobile Number</label>
+                  <label className="block text-[11px] font-bold text-gray-700 mb-1">10-Digit Mobile Number *</label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-gray-400 select-none">
                       +91
@@ -292,6 +332,7 @@ export function DeliveryAddressSection() {
                       type="tel"
                       inputMode="numeric"
                       required
+                      autoComplete="tel"
                       maxLength={10}
                       pattern="[6-9][0-9]{9}"
                       value={phone.replace(/^\+91\s*/, '')}
@@ -306,10 +347,12 @@ export function DeliveryAddressSection() {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-gray-700 mb-1">Street Address / Locality</label>
+                  <label className="block text-[11px] font-bold text-gray-700 mb-1">Street Address / Locality *</label>
                   <input
                     type="text"
                     required
+                    autoComplete="street-address"
+                    maxLength={200}
                     value={street}
                     onChange={(e) => setStreet(e.target.value)}
                     placeholder="House/Flat No., Street, Landmark"
@@ -319,10 +362,12 @@ export function DeliveryAddressSection() {
 
                 <div className="grid grid-cols-3 gap-2">
                   <div>
-                    <label className="block text-[10px] font-bold text-gray-700 mb-1">City</label>
+                    <label className="block text-[10px] font-bold text-gray-700 mb-1">City *</label>
                     <input
                       type="text"
                       required
+                      autoComplete="address-level2"
+                      maxLength={50}
                       value={city}
                       onChange={(e) => setCity(e.target.value)}
                       placeholder="e.g. Mumbai"
@@ -330,10 +375,12 @@ export function DeliveryAddressSection() {
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-gray-700 mb-1">State</label>
+                    <label className="block text-[10px] font-bold text-gray-700 mb-1">State *</label>
                     <input
                       type="text"
                       required
+                      autoComplete="address-level1"
+                      maxLength={50}
                       value={state}
                       onChange={(e) => setState(e.target.value)}
                       placeholder="e.g. Maharashtra"
@@ -341,11 +388,12 @@ export function DeliveryAddressSection() {
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-gray-700 mb-1">Pincode</label>
+                    <label className="block text-[10px] font-bold text-gray-700 mb-1">Pincode *</label>
                     <input
                       type="text"
                       inputMode="numeric"
                       required
+                      autoComplete="postal-code"
                       maxLength={6}
                       pattern="[1-9][0-9]{5}"
                       value={postalCode}

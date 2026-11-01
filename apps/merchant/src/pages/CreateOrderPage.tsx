@@ -34,7 +34,16 @@ import { useInventoryStore } from '../stores/inventoryStore.js';
 import { useCatalogStore, ProductItem } from '../stores/catalogStore.js';
 import { useAuthStore } from '../stores/authStore.js';
 import { ordersApi } from '../lib/api.js';
-import { formatDateIST, branding } from '@repo/shared-types';
+import {
+  formatDateIST,
+  branding,
+  cleanName,
+  cleanEmail,
+  cleanPhoneNumber,
+  cleanAmount,
+  validateEmail,
+  validatePersonName,
+} from '@repo/shared-types';
 
 interface CreateOrderPageProps {
   onBack?: () => void;
@@ -256,21 +265,31 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
 
   const handleAddCustomItem = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!customItemName.trim()) return;
-    const priceNum = parseFloat(customItemPrice) || 0;
+    const sanitizedTitle = cleanName(customItemName);
+    if (!sanitizedTitle || sanitizedTitle.length < 2) {
+      setErrorMessage('Custom item title must be at least 2 characters.');
+      return;
+    }
+    const priceNum = cleanAmount(customItemPrice);
+    if (priceNum <= 0) {
+      setErrorMessage('Please enter a valid unit price greater than ₹0.');
+      return;
+    }
+    const validQty = Math.max(1, Math.min(9999, parseInt(String(customItemQty), 10) || 1));
     const newItem: OrderItem = {
       id: `custom-${Date.now()}`,
-      name: customItemName.trim(),
+      name: sanitizedTitle,
       variant: customItemVariant.trim() || 'Standard',
       price: priceNum,
-      quantity: Math.max(1, customItemQty),
+      quantity: validQty,
       iconType: 'general',
     };
     handleAddItem(newItem);
     setCustomItemName('');
     setCustomItemVariant('Standard');
-    setCustomItemPrice('499');
+    setCustomItemPrice('');
     setCustomItemQty(1);
+    setErrorMessage(null);
   };
 
   // Filter Catalog Products in Modal
@@ -341,27 +360,45 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
         selectedCustomer.email ||
         `${selectedCustomer.name.toLowerCase().replace(/\s+/g, '')}@example.com`;
     } else {
-      if (!newCustomer.name.trim() || !newCustomer.phone.trim()) {
-        setErrorMessage('Please provide customer name and mobile phone number for the new customer.');
+      const sanitizedName = cleanName(newCustomer.name);
+      if (!sanitizedName || sanitizedName.length < 2) {
+        setErrorMessage('Please provide a valid customer name (at least 2 characters).');
         return;
       }
-      const cleanPhoneDigits = newCustomer.phone.replace(/\D/g, '').slice(-10);
-      if (!/^[6-9]\d{9}$/.test(cleanPhoneDigits)) {
+      const nameCheck = validatePersonName(sanitizedName);
+      if (!nameCheck.isValid) {
+        setErrorMessage(nameCheck.error || 'Customer name contains invalid characters.');
+        return;
+      }
+
+      const cleanPhoneDigits = cleanPhoneNumber(newCustomer.phone);
+      if (!cleanPhoneDigits || cleanPhoneDigits.length !== 10 || !/^[6-9]\d{9}$/.test(cleanPhoneDigits)) {
         setErrorMessage('Please provide a valid 10-digit Indian mobile number (starting with 6, 7, 8, or 9).');
         return;
       }
-      if (deliveryType === 'delivery' && !newCustomer.address.trim()) {
-        setErrorMessage('Please provide a delivery address for the new customer.');
-        return;
+
+      if (newCustomer.email.trim()) {
+        const emailCheck = validateEmail(newCustomer.email.trim());
+        if (!emailCheck.isValid) {
+          setErrorMessage(emailCheck.error || 'Please provide a valid email address or leave it blank.');
+          return;
+        }
       }
-      finalCustomerName = newCustomer.name.trim();
+
+      if (deliveryType === 'delivery') {
+        const trimmedAddress = newCustomer.address.trim();
+        if (!trimmedAddress || trimmedAddress.length < 5) {
+          setErrorMessage('Please provide a complete delivery address (at least 5 characters).');
+          return;
+        }
+        finalDeliveryAddress = trimmedAddress;
+      }
+
+      finalCustomerName = sanitizedName;
       finalCustomerPhone = cleanPhoneDigits;
       finalCustomerEmail =
-        newCustomer.email.trim() ||
-        `${newCustomer.name.trim().toLowerCase().replace(/\s+/g, '')}@example.com`;
-      if (deliveryType === 'delivery') {
-        finalDeliveryAddress = newCustomer.address.trim();
-      }
+        cleanEmail(newCustomer.email) ||
+        `${sanitizedName.toLowerCase().replace(/\s+/g, '')}@example.com`;
 
       // Register newly created customer in customerStore Khata
       useCustomerStore.getState().addCustomer({

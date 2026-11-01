@@ -17,7 +17,7 @@ import { branding } from '@repo/shared-types';
 export const BusinessInfoTab: React.FC = () => {
   const { businessInfo, updateBusinessInfo, setActiveSubTab, saveAllChanges, isSaving, markDirty } = useSettingsStore();
   const { currentStore } = useAuthStore();
-  
+
   const [formData, setFormData] = useState(() => {
     const base = { ...businessInfo };
     if (currentStore?.name && (base.businessName === 'Fashion Hub' || !base.businessName)) {
@@ -38,7 +38,7 @@ export const BusinessInfoTab: React.FC = () => {
     }
   }, [currentStore, businessInfo.businessName, updateBusinessInfo]);
 
-    const [isVerifyingGstin, setIsVerifyingGstin] = useState(false);
+  const [isVerifyingGstin, setIsVerifyingGstin] = useState(false);
   const [isVerifyingPan, setIsVerifyingPan] = useState(false);
   const [gstinMessage, setGstinMessage] = useState<string | null>(null);
   const [panMessage, setPanMessage] = useState<string | null>(null);
@@ -166,10 +166,10 @@ export const BusinessInfoTab: React.FC = () => {
                   type="text"
                   maxLength={15}
                   value={formData.gstin}
-                  onChange={(e) => { 
+                  onChange={(e) => {
                     const clean = e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 15);
-                    setFormData({ ...formData, gstin: clean, isGstinVerified: false }); 
-                    markDirty(); 
+                    setFormData({ ...formData, gstin: clean, isGstinVerified: false });
+                    markDirty();
                   }}
                   className="w-full pl-3.5 pr-28 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 uppercase tracking-wider font-mono"
                 />
@@ -200,10 +200,10 @@ export const BusinessInfoTab: React.FC = () => {
                   type="text"
                   maxLength={10}
                   value={formData.panNumber}
-                  onChange={(e) => { 
+                  onChange={(e) => {
                     const clean = e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 10);
-                    setFormData({ ...formData, panNumber: clean, isPanVerified: false }); 
-                    markDirty(); 
+                    setFormData({ ...formData, panNumber: clean, isPanVerified: false });
+                    markDirty();
                   }}
                   className="w-full pl-3.5 pr-28 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 uppercase tracking-wider font-mono"
                 />

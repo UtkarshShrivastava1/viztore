@@ -3,7 +3,16 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { X, Eye, EyeOff, Lock, Mail, User, Phone, CheckCircle2, AlertCircle } from 'lucide-react';
-import { branding, type IUserProfile } from '@repo/shared-types';
+import {
+  branding,
+  type IUserProfile,
+  cleanEmail,
+  cleanName,
+  cleanPhoneNumber,
+  validateEmail,
+  validatePassword,
+  validatePersonName,
+} from '@repo/shared-types';
 import { useAuthStore } from '@/stores/auth.store';
 import { authApi } from '@/lib/api/auth';
 
@@ -53,8 +62,14 @@ export const AuthModal: React.FC = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
-      setError('Please enter both email and password.');
+    const normalizedEmail = cleanEmail(email);
+    if (!normalizedEmail || !password) {
+      setError('Please enter both your email address and password.');
+      return;
+    }
+    const emailValidation = validateEmail(normalizedEmail);
+    if (!emailValidation.isValid) {
+      setError(emailValidation.error || 'Please enter a valid email address.');
       return;
     }
 
@@ -62,7 +77,7 @@ export const AuthModal: React.FC = () => {
     setError(null);
 
     try {
-      const res = await authApi.login({ email: email.trim(), password });
+      const res = await authApi.login({ email: normalizedEmail, password });
       setSuccessMsg('Welcome back!');
       setTimeout(() => {
         handleSuccessfulAuth(res.user, res.tokens.accessToken, res.tokens.refreshToken);
@@ -76,16 +91,47 @@ export const AuthModal: React.FC = () => {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fullName || !email || !password) {
-      setError('Please fill in all required fields.');
+    const sanitizedName = cleanName(fullName);
+    const normalizedEmail = cleanEmail(email);
+    const cleanedPhone = cleanPhoneNumber(phone);
+
+    if (!sanitizedName) {
+      setError('Please enter your full name.');
       return;
     }
+    const nameValidation = validatePersonName(sanitizedName);
+    if (!nameValidation.isValid) {
+      setError(nameValidation.error || 'Name must be at least 2 characters.');
+      return;
+    }
+
+    if (!normalizedEmail) {
+      setError('Please enter your email address.');
+      return;
+    }
+    const emailValidation = validateEmail(normalizedEmail);
+    if (!emailValidation.isValid) {
+      setError(emailValidation.error || 'Please enter a valid email address.');
+      return;
+    }
+
+    if (cleanedPhone && cleanedPhone.length !== 10) {
+      setError('Mobile number must be strictly 10 digits starting with 6, 7, 8, or 9.');
+      return;
+    }
+    if (cleanedPhone && !/^[6-9]\d{9}$/.test(cleanedPhone)) {
+      setError('Please enter a valid Indian mobile number starting with 6, 7, 8, or 9.');
+      return;
+    }
+
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+      setError(passwordValidation.error || 'Password must be at least 8 characters long and contain letters, numbers, and special characters.');
+      return;
+    }
+
     if (!agreeTerms) {
-      setError('Please agree to the Terms & Conditions.');
-      return;
-    }
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters long.');
+      setError('Please agree to the Terms & Conditions and Privacy Policy.');
       return;
     }
 
@@ -93,10 +139,9 @@ export const AuthModal: React.FC = () => {
     setError(null);
 
     try {
-      const cleanedPhone = phone ? phone.replace(/\D/g, '').slice(-10) : undefined;
       const res = await authApi.register({
-        fullName: fullName.trim(),
-        email: email.trim(),
+        fullName: sanitizedName,
+        email: normalizedEmail,
         password,
         phone: cleanedPhone || undefined,
       });
@@ -199,7 +244,13 @@ export const AuthModal: React.FC = () => {
                   <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                   <input
                     type="email"
+                    id="login-email"
+                    name="email"
                     required
+                    autoComplete="username"
+                    autoCapitalize="none"
+                    spellCheck={false}
+                    maxLength={100}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="name@example.com"
@@ -263,7 +314,11 @@ export const AuthModal: React.FC = () => {
                   <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                   <input
                     type="text"
+                    id="register-fullname"
+                    name="name"
                     required
+                    autoComplete="name"
+                    maxLength={100}
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="Enter your full name"
@@ -274,13 +329,16 @@ export const AuthModal: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Mobile Number
+                  Mobile Number (Optional)
                 </label>
                 <div className="relative">
                   <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                   <input
                     type="tel"
+                    id="register-phone"
+                    name="tel"
                     inputMode="numeric"
+                    autoComplete="tel"
                     maxLength={10}
                     value={phone}
                     onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
@@ -298,7 +356,13 @@ export const AuthModal: React.FC = () => {
                   <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                   <input
                     type="email"
+                    id="register-email"
+                    name="email"
                     required
+                    autoComplete="email"
+                    autoCapitalize="none"
+                    spellCheck={false}
+                    maxLength={100}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="name@example.com"
@@ -315,7 +379,12 @@ export const AuthModal: React.FC = () => {
                   <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                   <input
                     type={showPassword ? 'text' : 'password'}
+                    id="register-password"
+                    name="password"
                     required
+                    autoComplete="new-password"
+                    minLength={8}
+                    maxLength={128}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
@@ -325,10 +394,26 @@ export const AuthModal: React.FC = () => {
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
+                {/* Visual Password Strength Bar */}
+                {password && (
+                  <div className="mt-2 space-y-1">
+                    <div className="flex gap-1 h-1">
+                      <div className={`flex-1 rounded-full ${password.length >= 8 ? 'bg-amber-400' : 'bg-rose-400'}`} />
+                      <div className={`flex-1 rounded-full ${validatePassword(password).score >= 3 ? 'bg-blue-500' : 'bg-slate-200'}`} />
+                      <div className={`flex-1 rounded-full ${validatePassword(password).score >= 4 ? 'bg-emerald-500' : 'bg-slate-200'}`} />
+                    </div>
+                    <p className="text-[10px] text-slate-500">
+                      {validatePassword(password).isValid
+                        ? 'Strong password'
+                        : 'Use 8+ characters with uppercase, lowercase, numbers & symbols'}
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div className="flex items-start gap-2 pt-1">

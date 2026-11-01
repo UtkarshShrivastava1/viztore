@@ -23,6 +23,7 @@ import { useAuthStore } from '@/stores/auth.store';
 import { useLocationStore } from '@/stores/location.store';
 import { AccountSidebar } from '@/components/account/AccountSidebar';
 import { useAddressStore } from '@/stores/addressStore';
+import { cleanName, cleanPhoneNumber, cleanPincode, validatePersonName } from '@repo/shared-types';
 import type { CreateAddressDto } from '@repo/shared-types';
 
 export function AddAddressClient() {
@@ -102,8 +103,47 @@ export function AddAddressClient() {
     e.preventDefault();
     setErrorMsg(null);
 
-    if (!fullName.trim() || !mobileNumber.trim() || !pincode.trim() || !streetAddress.trim() || !city.trim()) {
-      setErrorMsg('Please fill in all required fields (Full Name, Phone, Pincode, Address, City).');
+    const sanitizedName = cleanName(fullName);
+    const cleanPhone = cleanPhoneNumber(mobileNumber);
+    const cleanAltPhone = cleanPhoneNumber(alternatePhone);
+    const cleanPin = cleanPincode(pincode);
+    const trimmedStreet = streetAddress.trim();
+    const trimmedCity = city.trim() || 'Bhilai';
+    const trimmedState = state.trim() || 'Chhattisgarh';
+
+    if (!sanitizedName || sanitizedName.length < 2) {
+      setErrorMsg('Please enter a valid recipient full name (at least 2 characters).');
+      return;
+    }
+    const nameCheck = validatePersonName(sanitizedName);
+    if (!nameCheck.isValid) {
+      setErrorMsg(nameCheck.error || 'Name contains invalid characters.');
+      return;
+    }
+
+    if (!cleanPhone || cleanPhone.length !== 10 || !/^[6-9]\d{9}$/.test(cleanPhone)) {
+      setErrorMsg('Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9.');
+      return;
+    }
+
+    if (cleanAltPhone) {
+      if (cleanAltPhone.length !== 10 || !/^[6-9]\d{9}$/.test(cleanAltPhone)) {
+        setErrorMsg('Alternate mobile number must be a valid 10-digit number starting with 6, 7, 8, or 9.');
+        return;
+      }
+      if (cleanAltPhone === cleanPhone) {
+        setErrorMsg('Alternate mobile number cannot be the same as primary mobile number.');
+        return;
+      }
+    }
+
+    if (!trimmedStreet || trimmedStreet.length < 5) {
+      setErrorMsg('Please enter a complete flat/house/building address (at least 5 characters).');
+      return;
+    }
+
+    if (!cleanPin || cleanPin.length !== 6 || !/^[1-9][0-9]{5}$/.test(cleanPin)) {
+      setErrorMsg('Please enter a valid 6-digit Indian postal PIN code.');
       return;
     }
 
@@ -116,12 +156,12 @@ export function AddAddressClient() {
 
     const dto: CreateAddressDto = {
       label: labelName,
-      recipientName: fullName.trim(),
-      phone: mobileNumber.trim(),
-      street: locality ? `${streetAddress.trim()}, ${locality.trim()}` : streetAddress.trim(),
-      city: city.trim() || 'Bhilai',
-      state: 'Chhattisgarh',
-      pincode: pincode.trim() || (city === 'Durg' ? '491001' : '490006'),
+      recipientName: sanitizedName,
+      phone: cleanPhone,
+      street: locality ? `${trimmedStreet}, ${locality.trim()}` : trimmedStreet,
+      city: trimmedCity,
+      state: trimmedState,
+      pincode: cleanPin,
       isDefault: isDefault,
     };
 
