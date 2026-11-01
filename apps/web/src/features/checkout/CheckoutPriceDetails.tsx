@@ -100,12 +100,29 @@ export function CheckoutPriceDetails({ storeId }: { storeId?: string }) {
     }
 
     if (fulfillmentType === 'deliver') {
-      if (!shippingAddress || !shippingAddress.street || !shippingAddress.phone || shippingAddress.street === 'Customer Address') {
+      const pinToTest = (shippingAddress?.postalCode && shippingAddress.postalCode !== '452001') ? shippingAddress.postalCode : (locationPincode || '');
+      const cleanPin = pinToTest.replace(/\D/g, '');
+      const phoneToTest = shippingAddress?.phone || user?.phone || '';
+      const cleanPhone = phoneToTest.replace(/\D/g, '');
+      const streetToTest = shippingAddress?.street?.trim() || '';
+
+      const isInvalid =
+        !shippingAddress ||
+        !streetToTest ||
+        streetToTest === 'Customer Address' ||
+        streetToTest.length < 5 ||
+        cleanPin.length !== 6 ||
+        !/^[1-9][0-9]{5}$/.test(cleanPin) ||
+        cleanPhone.length !== 10 ||
+        !/^[6-9]\d{9}$/.test(cleanPhone);
+
+      if (isInvalid) {
         setIsAddressModalOpen(true);
         const addressEl = document.getElementById('delivery-address-section');
         if (addressEl) {
           addressEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
+        alert('Please provide a complete delivery address with a valid 6-digit postal PIN code and 10-digit mobile number.');
         return;
       }
     }
@@ -115,8 +132,8 @@ export function CheckoutPriceDetails({ storeId }: { storeId?: string }) {
       phone: shippingAddress?.phone || user?.phone || '9876543210',
       street: shippingAddress?.street || (fulfillmentType === 'pickup' ? 'Store Pickup' : fulfillmentType === 'reserve' ? 'In-Store 2h Hold' : 'Customer Address'),
       city: (shippingAddress?.city && shippingAddress.city !== 'Local City') ? shippingAddress.city : (locationCity || 'Local City'),
-      state: (shippingAddress?.state && shippingAddress.state !== 'State') ? shippingAddress.state : '',
-      postalCode: (shippingAddress?.postalCode && shippingAddress.postalCode !== '452001') ? shippingAddress.postalCode : (locationPincode || ''),
+      state: (shippingAddress?.state && shippingAddress.state !== 'State') ? shippingAddress.state : 'Chhattisgarh',
+      postalCode: (shippingAddress?.postalCode && shippingAddress.postalCode !== '452001') ? shippingAddress.postalCode : (locationPincode || '490006'),
       country: 'IN',
     };
 
@@ -130,7 +147,7 @@ export function CheckoutPriceDetails({ storeId }: { storeId?: string }) {
         unitPrice: item.unitPrice,
         storeId: targetStoreId,
       })),
-      shippingAddress: finalAddress,
+      shippingAddress: fulfillmentType === 'deliver' ? finalAddress : undefined,
       fulfilmentMode: (fulfillmentType as any) || 'deliver',
       couponCode: couponCode || undefined,
     };
@@ -157,7 +174,16 @@ export function CheckoutPriceDetails({ storeId }: { storeId?: string }) {
         return;
       }
 
-      const msg = err instanceof Error ? err.message : 'Failed to communicate with store server. Please try again.';
+      let msg = err instanceof Error ? err.message : 'Failed to communicate with store server. Please try again.';
+      if ((err as { details?: unknown })?.details) {
+        const details = (err as { details?: unknown }).details;
+        if (Array.isArray(details)) {
+          const detailStrings = details.map((d: any) => d.message || `${d.field}: ${d.message}`).filter(Boolean);
+          if (detailStrings.length > 0) {
+            msg = `${msg} (${detailStrings.join(', ')})`;
+          }
+        }
+      }
       alert(`Could not place order: ${msg}`);
     } finally {
       setIsPlacingOrder(false);

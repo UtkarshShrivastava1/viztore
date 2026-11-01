@@ -22,7 +22,8 @@ export const notificationsApi = {
       const res = await api.get<ICustomerNotification[]>('/notifications', params);
       return res.data || [];
     } catch (err) {
-      console.warn('Failed to fetch notifications:', err);
+      const isAuth = (err as { statusCode?: number })?.statusCode === 401;
+      if (!isAuth) console.warn('Failed to fetch notifications:', err);
       return [];
     }
   },

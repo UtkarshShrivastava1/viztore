@@ -52,9 +52,9 @@ export function DeliveryAddressSection() {
               fullName: user?.fullName || '',
               phone: user?.phone || '',
               street: locationAddress,
-              city: locationCity || '',
-              state: '',
-              postalCode: locationPincode || '',
+              city: locationCity || 'Bhilai',
+              state: 'Chhattisgarh',
+              postalCode: locationPincode || '490006',
               country: 'IN',
             });
           }
@@ -65,9 +65,9 @@ export function DeliveryAddressSection() {
         fullName: '',
         phone: '',
         street: locationAddress,
-        city: locationCity || '',
-        state: '',
-        postalCode: locationPincode || '',
+        city: locationCity || 'Bhilai',
+        state: 'Chhattisgarh',
+        postalCode: locationPincode || '490006',
         country: 'IN',
       });
     }

@@ -29,6 +29,7 @@ export function createStrictLimiter(config: RateLimiterConfig) {
     },
     standardHeaders: true,
     legacyHeaders: false,
+    validate: { xForwardedForHeader: false },
     statusCode: 429,
     message: {
       success: false,

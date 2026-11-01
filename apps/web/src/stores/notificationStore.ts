@@ -82,7 +82,8 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
         isLoading: false,
       });
     } catch (err) {
-      console.warn('Failed to fetch notifications in store:', err);
+      const isAuth = (err as { statusCode?: number })?.statusCode === 401;
+      if (!isAuth) console.warn('Failed to fetch notifications in store:', err);
       set({ isLoading: false });
     }
   },

@@ -46,7 +46,7 @@ export const shippingAddressSchema = z.object({
   fullName: z.string().min(1, 'Full name is required'),
   street: z.string().min(1, 'Street address is required'),
   city: z.string().min(1, 'City is required'),
-  state: z.string().min(1, 'State is required'),
+  state: z.preprocess((val) => (typeof val === 'string' && val.trim() ? val.trim() : 'Chhattisgarh'), z.string().min(1, 'State is required')),
   postalCode: standardPincodeSchema,
   country: z.string().default('IN'),
   phone: standardPhoneSchema,

@@ -36,6 +36,9 @@ import { supportRouter } from './modules/support/index.js';
 export function createApp(): Express {
   const app: Express = express();
 
+  // Trust proxy for reverse proxies (Caddy, Nginx, ALB) in cloud & production deployments
+  app.set('trust proxy', 1);
+
   // Security Headers (CSP disabled to allow Swagger UI inline assets)
   app.use(
     helmet({
@@ -73,6 +76,7 @@ export function createApp(): Express {
     max: env.NODE_ENV === 'production' ? 300 : 1500, // relaxed for dev/testing
     standardHeaders: true,
     legacyHeaders: false,
+    validate: { xForwardedForHeader: false },
     message: {
       success: false,
       error: {
