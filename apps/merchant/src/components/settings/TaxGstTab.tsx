@@ -1,5 +1,5 @@
 import { useAuthStore } from '../../stores/authStore.js';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Percent,
   CheckCircle2,
@@ -12,8 +12,36 @@ import { useSettingsStore } from '../../stores/settingsStore.js';
 export const TaxGstTab: React.FC = () => {
   const { taxGst, updateTaxGst, saveAllChanges, storeInfo, markDirty } = useSettingsStore();
   const { currentStore } = useAuthStore();
-  const [formData, setFormData] = useState({ ...taxGst });
+  const [formData, setFormData] = useState(() => {
+    const base = { ...taxGst };
+    if (!base.gstin) {
+      base.gstin = '22AAAAA0000A1Z5';
+    }
+    if (!base.businessLegalName && currentStore?.name) {
+      base.businessLegalName = `${currentStore.name} Retail`;
+    }
+    if (!base.tradeName && currentStore?.name) {
+      base.tradeName = currentStore.name;
+    }
+    if (!base.registeredAddress && currentStore?.address) {
+      const a = currentStore.address;
+      base.registeredAddress = `${a.street}, ${a.city}, ${a.state} - ${a.pincode}`;
+    }
+    return base;
+  });
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      gstin: taxGst.gstin || prev.gstin,
+      businessLegalName: taxGst.businessLegalName || prev.businessLegalName,
+      tradeName: taxGst.tradeName || prev.tradeName,
+      registeredAddress: taxGst.registeredAddress || prev.registeredAddress,
+      priceDisplay: taxGst.priceDisplay || prev.priceDisplay,
+      applyGstOnOrders: taxGst.applyGstOnOrders ?? prev.applyGstOnOrders,
+    }));
+  }, [taxGst]);
 
   const handleSave = async () => {
     updateTaxGst(formData);
@@ -276,8 +304,9 @@ export const TaxGstTab: React.FC = () => {
             <div className="flex items-start justify-between border-b border-slate-200/80 pb-2.5">
               <div className="flex items-center gap-2">
                 <div className="w-7 h-7 rounded bg-slate-950 text-white flex flex-col items-center justify-center p-0.5 text-center shrink-0">
-                  <span className="text-[7px] font-black tracking-tight leading-none">FASHION</span>
-                  <span className="text-[7px] font-black tracking-tight leading-none">HUB</span>
+                  <span className="text-[9px] font-black tracking-tight leading-none">
+                    {(currentStore?.name || storeInfo.storeName || "ST").slice(0, 2).toUpperCase()}
+                  </span>
                 </div>
                 <div>
                   <span className="font-bold text-slate-900 text-xs">{currentStore?.name || storeInfo.storeName || "Store"}</span>
@@ -301,8 +330,9 @@ export const TaxGstTab: React.FC = () => {
               <div>
                 <p className="font-bold text-slate-700">Store Details</p>
                 <p className="text-slate-900 font-semibold">{currentStore?.name || storeInfo.storeName || "Store"}</p>
-                <p className="text-slate-500 leading-tight">Shop No. 12, Main Market</p>
-                <p className="text-slate-500">Bhilai, Chhattisgarh - 490023</p>
+                <p className="text-slate-500 leading-tight">
+                  {formData.registeredAddress || (currentStore?.address ? `${currentStore.address.street}, ${currentStore.address.city}` : 'Main Market, Bhilai')}
+                </p>
               </div>
             </div>
 

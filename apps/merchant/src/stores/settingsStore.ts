@@ -418,12 +418,12 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     set((state) => ({ billingInvoicing: { ...state.billingInvoicing, ...data } })),
 
   taxGst: {
-    gstin: '',
+    gstin: '22AAAAA0000A1Z5',
     isVerified: true,
-    businessLegalName: '',
-    tradeName: '',
+    businessLegalName: 'Urban Vogue Studio Retail',
+    tradeName: 'Urban Vogue Studio',
     registrationType: 'Regular',
-    registeredAddress: '',
+    registeredAddress: 'Shop No. 12, City Mall, Supela, Bhilai, Chhattisgarh - 490023',
     applyGstOnOrders: true,
     priceDisplay: 'excluding_tax',
     defaultGstRate: '18% (Standard Rate)',
@@ -441,14 +441,14 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     notifyPaymentReceived: true,
     notifyPayoutUpdates: true,
     walletBalance: 32450,
-    nextPayoutDate: '25 May 2024',
+    nextPayoutDate: '03 Nov 2026',
     nextPayoutAmount: 18230,
     recentTransactions: [
-      { id: 'tx-1', title: 'Order Payment Received', date: '18 May 2024, 10:24 AM', amount: 2450, type: 'credit' },
-      { id: 'tx-2', title: 'Payout to Bank', date: '15 May 2024, 06:12 PM', amount: -18230, type: 'debit' },
-      { id: 'tx-3', title: 'Order Payment Received', date: '14 May 2024, 03:40 PM', amount: 1980, type: 'credit' },
-      { id: 'tx-4', title: 'Refund Processed', date: '12 May 2024, 11:20 AM', amount: -899, type: 'refund' },
-      { id: 'tx-5', title: 'Order Payment Received', date: '10 May 2024, 09:15 AM', amount: 3299, type: 'credit' },
+      { id: 'tx-1', title: 'Order Payment Received', date: '31 Oct 2026, 10:24 AM', amount: 2450, type: 'credit' },
+      { id: 'tx-2', title: 'Payout to Bank', date: '28 Oct 2026, 06:12 PM', amount: -18230, type: 'debit' },
+      { id: 'tx-3', title: 'Order Payment Received', date: '26 Oct 2026, 03:40 PM', amount: 1980, type: 'credit' },
+      { id: 'tx-4', title: 'Refund Processed', date: '24 Oct 2026, 11:20 AM', amount: -899, type: 'refund' },
+      { id: 'tx-5', title: 'Order Payment Received', date: '22 Oct 2026, 09:15 AM', amount: 3299, type: 'credit' },
     ],
   },
   updatePaymentsWallet: (data) =>
@@ -581,19 +581,30 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   loadSettings: async (storeId?: string) => {
     try {
       const activeStore = useAuthStore.getState().currentStore;
+      const activeUser = useAuthStore.getState().user;
       const targetId = storeId || activeStore?._id || activeStore?.id;
       if (!targetId) return;
 
       const res = await storesApi.getStoreSettings(targetId);
       if (res?.data) {
         const s = res.data;
+        const defaultDayMap: Record<string, string> = {
+          Monday: 'monday',
+          Tuesday: 'tuesday',
+          Wednesday: 'wednesday',
+          Thursday: 'thursday',
+          Friday: 'friday',
+          Saturday: 'saturday',
+          Sunday: 'sunday',
+        };
+
         set((state) => ({
           storeProfile: {
             ...state.storeProfile,
             displayName: s.name || state.storeProfile.displayName,
             description: s.description || state.storeProfile.description,
-            phone: s.phone || state.storeProfile.phone,
-            email: s.email || state.storeProfile.email,
+            phone: s.phone || activeUser?.phone || state.storeProfile.phone,
+            email: s.email || activeUser?.email || state.storeProfile.email,
             logoUrl: s.logoUrl || state.storeProfile.logoUrl,
             address: s.address?.street || state.storeProfile.address,
             city: s.address?.city || state.storeProfile.city,
@@ -604,20 +615,74 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
             ...state.businessInfo,
             businessName: s.name || state.businessInfo.businessName,
             gstin: s.legalDetails?.gstin || state.businessInfo.gstin,
-            isGstinVerified: Boolean(s.legalDetails?.isGstVerified),
+            isGstinVerified: Boolean(s.legalDetails?.isGstVerified ?? true),
             panNumber: s.legalDetails?.pan || state.businessInfo.panNumber,
             isPanVerified: Boolean(s.legalDetails?.pan),
-            legalBusinessName: s.legalDetails?.legalBusinessName || state.businessInfo.legalBusinessName,
+            legalBusinessName: s.legalDetails?.legalBusinessName || s.name || state.businessInfo.legalBusinessName,
             city: s.address?.city || state.businessInfo.city,
             state: s.address?.state || state.businessInfo.state,
             pinCode: s.address?.pincode || state.businessInfo.pinCode,
+          },
+          taxGst: {
+            ...state.taxGst,
+            gstin: s.legalDetails?.gstin || state.businessInfo.gstin || state.taxGst.gstin,
+            isVerified: Boolean(s.legalDetails?.isGstVerified ?? true),
+            businessLegalName: s.legalDetails?.legalBusinessName || s.name || state.taxGst.businessLegalName,
+            tradeName: s.name || state.taxGst.tradeName,
+            registeredAddress: s.address
+              ? `${s.address.street}, ${s.address.city}, ${s.address.state} - ${s.address.pincode}`
+              : state.taxGst.registeredAddress,
+            priceDisplay: s.settings?.tax?.isTaxInclusive ? 'including_tax' : 'excluding_tax',
+            applyGstOnOrders: s.settings?.tax?.isTaxInclusive ?? true,
+          },
+          billingInvoicing: {
+            ...state.billingInvoicing,
+            invoicePrefix: s.settings?.billing?.invoicePrefix || state.billingInvoicing.invoicePrefix,
+            startingNumber: String(s.settings?.billing?.nextInvoiceNumber || state.billingInvoicing.startingNumber || '1001'),
+            invoiceFormat: s.settings?.billing?.thermalFormat === '58mm' ? 'simplified' : 'standard',
+            invoiceNotes: s.settings?.billing?.termsAndConditions || state.billingInvoicing.invoiceNotes,
+          },
+          storeTimings: {
+            hours: s.operatingHours
+              ? defaultHours.map((dh) => {
+                  const key = defaultDayMap[dh.day];
+                  const backendDay = key ? (s.operatingHours as any)[key] : null;
+                  if (backendDay) {
+                    return {
+                      day: dh.day,
+                      isOpen: backendDay.isOpen ?? dh.isOpen,
+                      openTime: backendDay.open || dh.openTime,
+                      closeTime: backendDay.close || dh.closeTime,
+                    };
+                  }
+                  return dh;
+                })
+              : state.storeTimings.hours,
+            inStorePickup: true,
+            localDelivery: true,
+          },
+          shippingReturns: {
+            ...state.shippingReturns,
+            allowReturns: s.settings?.shipping?.acceptReturns ?? true,
+            returnWindow: s.settings?.shipping?.returnWindowHours === 168 ? '7 days' : s.settings?.shipping?.returnWindowHours === 360 ? '15 days' : '3 days',
+          },
+          notifications: {
+            ...state.notifications,
+            orderStatusUpdates: s.settings?.notifications?.whatsappCustomerUpdates ?? true,
+            newOrderReceived: s.settings?.notifications?.merchantSmsAlerts ?? true,
+            importantAnnouncements: s.settings?.notifications?.dailySalesEmail ?? true,
+          },
+          securityLogin: {
+            ...state.securityLogin,
+            email: activeUser?.email || state.securityLogin.email,
+            phone: activeUser?.phone || state.securityLogin.phone,
           },
           storeInfo: {
             ...state.storeInfo,
             storeName: s.name || state.storeInfo.storeName,
             description: s.description || state.storeInfo.description,
-            phone: s.phone || state.storeInfo.phone,
-            email: s.email || state.storeInfo.email,
+            phone: s.phone || activeUser?.phone || state.storeInfo.phone,
+            email: s.email || activeUser?.email || state.storeInfo.email,
             logoUrl: s.logoUrl || state.storeInfo.logoUrl,
             address: s.address
               ? `${s.address.street}, ${s.address.city}, ${s.address.state} - ${s.address.pincode}`
@@ -644,6 +709,28 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
         return true;
       }
 
+      const defaultDayMap: Record<string, string> = {
+        Monday: 'monday',
+        Tuesday: 'tuesday',
+        Wednesday: 'wednesday',
+        Thursday: 'thursday',
+        Friday: 'friday',
+        Saturday: 'saturday',
+        Sunday: 'sunday',
+      };
+
+      const operatingHours: any = {};
+      state.storeTimings.hours.forEach((h) => {
+        const key = defaultDayMap[h.day];
+        if (key) {
+          operatingHours[key] = {
+            isOpen: h.isOpen,
+            open: h.openTime,
+            close: h.closeTime,
+          };
+        }
+      });
+
       const payload = {
         name: state.storeProfile.displayName || state.storeInfo.storeName,
         description: state.storeProfile.description || state.storeInfo.description,
@@ -651,6 +738,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
         email: state.storeProfile.email || state.storeInfo.email,
         logoUrl: state.storeProfile.logoUrl || state.storeInfo.logoUrl,
         bannerUrl: state.bannerImage.url,
+        operatingHours,
         address: {
           street: state.storeProfile.address || state.storeInfo.address,
           city: state.storeProfile.city || state.businessInfo.city || 'Bhilai',
@@ -658,10 +746,10 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
           pincode: state.storeProfile.pinCode || state.businessInfo.pinCode || '490023',
         },
         legalDetails: {
-          gstin: state.businessInfo.gstin,
+          gstin: state.businessInfo.gstin || state.taxGst.gstin,
           pan: state.businessInfo.panNumber,
-          legalBusinessName: state.businessInfo.legalBusinessName || state.businessInfo.businessName,
-          isGstVerified: state.businessInfo.isGstinVerified,
+          legalBusinessName: state.businessInfo.legalBusinessName || state.taxGst.businessLegalName || state.businessInfo.businessName,
+          isGstVerified: state.businessInfo.isGstinVerified || state.taxGst.isVerified,
         },
         bankDetails: {
           accountNumber: state.paymentsWallet.bankAccount,
@@ -671,6 +759,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
           billing: {
             invoicePrefix: state.billingInvoicing.invoicePrefix,
             nextInvoiceNumber: parseInt(state.billingInvoicing.startingNumber || '1001', 10),
+            thermalFormat: state.billingInvoicing.invoiceFormat === 'simplified' ? '58mm' : '80mm',
             termsAndConditions: state.billingInvoicing.invoiceNotes,
           },
           tax: {
@@ -679,16 +768,18 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
             showTaxBreakdownOnBill: true,
           },
           payments: {
-            settlementCycle: 'T+1',
+            settlementCycle: state.paymentsWallet.payoutFrequency.includes('Daily') ? 'T+1' : 'T+2',
+            upiId: state.paymentsWallet.acceptUpi ? 'merchant@upi' : '',
           },
           shipping: {
             acceptReturns: state.shippingReturns.allowReturns,
-            returnWindowHours: state.shippingReturns.returnWindow.includes('7') ? 168 : 48,
+            returnWindowHours: state.shippingReturns.returnWindow.includes('7') ? 168 : state.shippingReturns.returnWindow.includes('15') ? 360 : 48,
           },
           notifications: {
-            whatsappCustomerUpdates: true,
-            merchantSmsAlerts: true,
+            whatsappCustomerUpdates: state.notifications.orderStatusUpdates,
+            merchantSmsAlerts: state.notifications.newOrderReceived,
             audioChimeEnabled: true,
+            dailySalesEmail: state.notifications.importantAnnouncements,
           },
         },
       };

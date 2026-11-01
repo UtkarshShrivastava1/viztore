@@ -305,16 +305,14 @@ export const StoreOverviewView: React.FC = () => {
                             className="flex items-center gap-1.5 group"
                           >
                             <div
-                              className={`w-7 h-4 rounded-full transition-colors flex items-center p-0.5 ${
-                                sec.isActive ? 'bg-emerald-500 justify-end' : 'bg-slate-300 justify-start'
-                              }`}
+                              className={`w-7 h-4 rounded-full transition-colors flex items-center p-0.5 ${sec.isActive ? 'bg-emerald-500 justify-end' : 'bg-slate-300 justify-start'
+                                }`}
                             >
                               <div className="w-3 h-3 rounded-full bg-white shadow-xs" />
                             </div>
                             <span
-                              className={`text-[10px] font-bold ${
-                                sec.isActive ? 'text-emerald-600' : 'text-slate-400'
-                              }`}
+                              className={`text-[10px] font-bold ${sec.isActive ? 'text-emerald-600' : 'text-slate-400'
+                                }`}
                             >
                               {sec.isActive ? 'Active' : 'Inactive'}
                             </span>

@@ -15,14 +15,17 @@ import { useSettingsStore } from '../../stores/settingsStore.js';
 import { branding } from '@repo/shared-types';
 
 export const NotificationsTab: React.FC = () => {
-  const { notifications, updateNotifications } = useSettingsStore();
+  const { notifications, updateNotifications, saveAllChanges } = useSettingsStore();
   const [formData, setFormData] = useState({ ...notifications });
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     updateNotifications(formData);
-    setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 2500);
+    const success = await saveAllChanges();
+    if (success) {
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 2500);
+    }
   };
 
   return (
