@@ -45,7 +45,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
       if (host === 'localhost' || host === '127.0.0.1') {
         return 'http://localhost:3000';
       }
-      return `${window.location.protocol}//${host.replace('partner.', 'shop.').replace('merchant.', 'web.')}`;
+      return `${window.location.protocol}//${host.replace(/^(seller|partner|merchant)\./, 'www.')}`;
     }
     return `https://${branding.domain || 'localhost:3000'}`;
   };

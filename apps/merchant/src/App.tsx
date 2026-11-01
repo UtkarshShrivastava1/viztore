@@ -187,6 +187,18 @@ export const App: React.FC = () => {
   }, [handleSelectTab, navigate]);
 
   // View Resolution:
+  // 0. Rider Run Portal Redirect (Hosted on Customer Storefront)
+  if (pathname.startsWith('/rider/run/')) {
+    if (typeof window !== 'undefined') {
+      const targetHost = (host === 'localhost' || host === '127.0.0.1')
+        ? 'localhost:3000'
+        : host.replace(/^(seller|partner|merchant)\./, 'www.');
+      const protocol = (host === 'localhost' || host === '127.0.0.1') ? 'http:' : window.location.protocol;
+      window.location.replace(`${protocol}//${targetHost}${location.pathname}`);
+      return null;
+    }
+  }
+
   // 1. Onboarding / Register
   if (isRegisterRoute) {
     return (

@@ -11,7 +11,7 @@ export function getRiderRunUrl(order: MerchantOrderRecord): string {
     if (host === 'localhost' || host === '127.0.0.1') {
       return `http://localhost:3000/rider/run/${order.id || order.orderNumber}`;
     }
-    const storefrontHost = host.replace('partner.', 'shop.').replace('merchant.', 'web.');
+    const storefrontHost = host.replace(/^(seller|partner|merchant)\./, 'www.');
     return `${window.location.protocol}//${storefrontHost}/rider/run/${order.id || order.orderNumber}`;
   }
   return `https://${branding.domain || 'localhost:3000'}/rider/run/${order.id || order.orderNumber}`;
