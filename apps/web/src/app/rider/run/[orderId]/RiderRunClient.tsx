@@ -91,6 +91,7 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
   // OTP Inputs (4 digits)
   const [otpDigits, setOtpDigits] = useState(['', '', '', '']);
   const [otpError, setOtpError] = useState<string | null>(null);
+  const [isCashCollected, setIsCashCollected] = useState(false);
   const otpInputRefs = [
     useRef<HTMLInputElement>(null),
     useRef<HTMLInputElement>(null),
@@ -299,6 +300,11 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
     const otp = otpDigits.join('');
     if (otp.length !== 4) {
       setOtpError('Please enter all 4 digits of the Delivery OTP.');
+      return;
+    }
+
+    if (isCod && !isCashCollected) {
+      setOtpError(`Please confirm that you have received the ₹${runDetails?.totalAmount?.toLocaleString('en-IN') || 0} cash first.`);
       return;
     }
 
@@ -985,6 +991,89 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
                   ) : null}
                 </div>
 
+                {/* Step 2A: COD Cash Collection Confirmation Gate */}
+                {isCod && (
+                  <div
+                    className={`p-4 sm:p-5 rounded-2xl border-2 transition-all ${
+                      isCashCollected
+                        ? 'bg-emerald-500/15 border-emerald-500/50 shadow-lg shadow-emerald-950/20'
+                        : 'bg-amber-500/15 border-amber-500/50 shadow-lg shadow-amber-950/20'
+                    }`}
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
+                      <div className="flex items-start sm:items-center gap-3">
+                        <div
+                          className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
+                            isCashCollected
+                              ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/30'
+                              : 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/30'
+                          }`}
+                        >
+                          {isCashCollected ? (
+                            <CheckCircle2 className="w-6 h-6 stroke-[2.5]" />
+                          ) : (
+                            <Banknote className="w-6 h-6 stroke-[2.5]" />
+                          )}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md ${
+                                isCashCollected
+                                  ? 'bg-emerald-500/30 text-emerald-300'
+                                  : 'bg-amber-500/30 text-amber-300'
+                              }`}
+                            >
+                              Step 2A: Cash Collection
+                            </span>
+                            {isCashCollected && (
+                              <span className="text-[10px] font-bold text-emerald-400 flex items-center gap-1">
+                                <Check className="w-3 h-3 stroke-[3]" />
+                                Confirmed
+                              </span>
+                            )}
+                          </div>
+                          <h4 className="text-base font-black text-white mt-0.5">
+                            {isCashCollected
+                              ? `✅ ₹${runDetails?.totalAmount?.toLocaleString('en-IN') || 0} Cash Collected`
+                              : `Collect ₹${runDetails?.totalAmount?.toLocaleString('en-IN') || 0} Cash First`}
+                          </h4>
+                          <p className="text-xs text-slate-300 mt-0.5 leading-snug">
+                            {isCashCollected
+                              ? 'Cash verified in hand. Ask customer for delivery OTP.'
+                              : 'Take cash from customer before handing over the parcel & asking for OTP.'}
+                          </p>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsCashCollected((prev) => !prev);
+                          setOtpError(null);
+                        }}
+                        className={`w-full sm:w-auto px-5 py-3 rounded-xl font-black text-xs uppercase tracking-wider transition-all active:scale-98 cursor-pointer flex items-center justify-center gap-2 shadow-md ${
+                          isCashCollected
+                            ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-emerald-500/25'
+                            : 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/25 animate-pulse'
+                        }`}
+                      >
+                        {isCashCollected ? (
+                          <>
+                            <Check className="w-4 h-4 stroke-[3]" />
+                            <span>CASH RECEIVED (CONFIRMED)</span>
+                          </>
+                        ) : (
+                          <>
+                            <Banknote className="w-4 h-4 stroke-[2.5]" />
+                            <span>I HAVE RECEIVED THE CASH</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {/* Customer Delivery OTP Verification Box */}
                 <div className="pt-4 border-t border-slate-800 space-y-3">
                   <div className="text-center">
@@ -1022,7 +1111,7 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
 
                   <button
                     type="button"
-                    disabled={isSubmitting || otpDigits.join('').length !== 4}
+                    disabled={isSubmitting || otpDigits.join('').length !== 4 || (isCod && !isCashCollected)}
                     onClick={handleVerifyOtp}
                     className="w-full py-4 px-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 text-slate-950 font-black text-xs uppercase tracking-wider transition-all shadow-xl shadow-emerald-500/25 flex items-center justify-center gap-2 active:scale-98 cursor-pointer"
                   >
@@ -1030,6 +1119,11 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
                       <>
                         <div className="w-4 h-4 rounded-full border-2 border-slate-950 border-t-transparent animate-spin" />
                         <span>Verifying Delivery OTP...</span>
+                      </>
+                    ) : isCod && !isCashCollected ? (
+                      <>
+                        <Lock className="w-4 h-4 stroke-[2.5]" />
+                        <span>CONFIRM CASH RECEIVED TO COMPLETE DELIVERY</span>
                       </>
                     ) : (
                       <>
