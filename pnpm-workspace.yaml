@@ -3,5 +3,5 @@ packages:
   - "packages/*"
 allowBuilds:
   '@scarf/scarf': false
-  core-js: set this to true or false
+  core-js: false
   esbuild: true
