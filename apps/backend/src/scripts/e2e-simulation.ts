@@ -96,16 +96,16 @@ export async function runSimulation(options: { targetUrl?: string; verbose?: boo
   if (!serverAlive) {
     console.log(`  ${colors.yellow}⚠️  No live server detected at ${baseUrl}. Starting in-process Express server...${colors.reset}`);
     try {
-      const { createApp } = await import('../apps/backend/src/app.js');
-      const { connectDatabase } = await import('../apps/backend/src/shared/database/connection.js');
+      const { createApp } = await import('../app.js');
+      const { connectDatabase } = await import('../shared/database/connection.js');
 
       await connectDatabase();
 
-      const { StoreModel } = await import('../apps/backend/src/modules/stores/store.model.js');
+      const { StoreModel } = await import('../modules/stores/store.model.js');
       const storeCount = await StoreModel.countDocuments();
       if (storeCount === 0) {
         console.log(`  ${colors.yellow}🌱 Empty database detected in simulation environment. Auto-seeding catalog...${colors.reset}`);
-        const { seedMerchantsAndData } = await import('../apps/backend/src/scripts/seed-merchants.js');
+        const { seedMerchantsAndData } = await import('./seed-merchants.js');
         await seedMerchantsAndData();
       }
 
@@ -655,7 +655,7 @@ export async function runSimulation(options: { targetUrl?: string; verbose?: boo
     if (inProcessServer) {
       await new Promise<void>((resolve) => inProcessServer!.close(() => resolve()));
       try {
-        const { disconnectDatabase } = await import('../apps/backend/src/shared/database/connection.js');
+        const { disconnectDatabase } = await import('../shared/database/connection.js');
         await disconnectDatabase();
       } catch {
         // ignore disconnect error
