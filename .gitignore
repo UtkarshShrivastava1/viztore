@@ -29,28 +29,23 @@ Thumbs.db
 npm-debug.log*
 pnpm-debug.log*
 
-# Testing
+# Testing & Coverage
 coverage/
+scripts/test-screenshots/
+scripts/test-results.json
+postman-local-report.json
 
-# Misc
+# Misc & Sourcemaps
 *.tsbuildinfo
+*.map
 
-# Internal planning & spec docs (local only — never push to remote)
-AGENTS.md
-APP_ARCHITECTURE.md.md
-BACKEND_ARCHITECTURE.md
-Merchant_Side_Specifications.md
-User_Side_Specifications.md
-repo_sync_blueprint.md
-analysis_results.md
-git-permissions.md
-intern_task_tracker.md
-user_front_mockup_tracker.md
-merchant_mockup_tracker.md
-task_feedback.md
-temp.md
-PRODUCTION_INFRASTRUCTURE_CHECKLIST.md
-platform_task_backlog.md
+# Internal planning, specs, audit reports & guides (local only — never push to remote)
+/*.md
+!/README.md
+apps/company/COMPANY_WEB_QA_AUDIT_REPORT.md
+apps/merchant/MERCHANT_E2E_QA_AUDIT_REPORT.md
+apps/web/docs/
+docs/
 .agents/
 logs/
 notes-handbook/
@@ -58,9 +53,5 @@ mockups/
 _mockups_temp/
 Merchant_Front/
 Merchant_Website/
-PROJECT_BRAIN_MANIFEST.md
 *.docx
 *.xlsx
- 
-scripts/test-screenshots/
-scripts/test-results.json

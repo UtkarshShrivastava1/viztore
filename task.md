@@ -1,9 +1,0 @@
-- [x] Create Orders UI in `/account/orders` page
-  - [x] Custom white header for mobile layout
-  - [x] Scrollable horizontal tabs (All Orders, To Be Delivered, etc.)
-  - [x] Order cards with order status, icons, thumbnails, and totals
-  - [x] Distinct visual styling for Reserve and Pickup orders (borders, backgrounds, colored badges)
-- [x] Update Account UI
-  - [x] Connect 'View All Orders' link to `/account/orders`
-  - [x] Connect the 4 status counters (All Orders, To Be Delivered, Delivered, Returns) to `/account/orders`
-  - [x] Connect 'Reserve Orders' and 'Pickup Orders' sections to `/account/orders`
