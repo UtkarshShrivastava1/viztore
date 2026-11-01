@@ -43,13 +43,11 @@ const userSchema = new Schema<IUserDocument>(
       required: [true, 'Email is required'],
       lowercase: true,
       trim: true,
-      index: true,
     },
     phone: {
       type: String,
       required: [true, 'Phone number is required'],
       trim: true,
-      index: true,
     },
     password: {
       type: String,
