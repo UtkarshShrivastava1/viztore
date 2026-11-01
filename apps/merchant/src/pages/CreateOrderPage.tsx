@@ -26,6 +26,7 @@ import {
   Receipt,
   Phone,
   Layers,
+  User,
 } from 'lucide-react';
 import { useOrderStore } from '../stores/orderStore.js';
 import { useCustomerStore, Customer } from '../stores/customerStore.js';
@@ -67,14 +68,39 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
     }
   }, [catalogProducts.length, customers.length, fetchProducts, fetchCustomers]);
 
-  // Customer State
+  // Customer State - decoupled between Existing Customer selection and New Customer registration
   const [customerType, setCustomerType] = useState<'existing' | 'new'>('existing');
-  const [customerName, setCustomerName] = useState(() => customers[0]?.name || 'Pooja Sharma');
-  const [customerEmail, setCustomerEmail] = useState(() => customers[0]?.email || 'pooja.sharma@example.com');
-  const [customerPhone, setCustomerPhone] = useState(() => customers[0]?.phone || '+91 98261 45091');
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [newCustomer, setNewCustomer] = useState({
+    name: '',
+    phone: '',
+    email: '',
+    address: '',
+  });
   const [isEditingCustomer, setIsEditingCustomer] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const searchContainerRef = React.useRef<HTMLDivElement>(null);
+
+  // Close search dropdown on click outside or Escape
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) {
+        setIsSearchOpen(false);
+      }
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsSearchOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
 
   // Delivery & Location State
   const storeAddress = useMemo(() => {
@@ -241,9 +267,7 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
   }, [customers, searchQuery]);
 
   const handleSelectCustomer = (c: Customer) => {
-    setCustomerName(c.name);
-    setCustomerPhone(c.phone);
-    setCustomerEmail(c.email || `${c.name.toLowerCase().replace(/\s+/g, '')}@example.com`);
+    setSelectedCustomer(c);
     if (c.billingAddress?.addressLine1) {
       const fullAddr = `${c.billingAddress.addressLine1}, ${c.billingAddress.city || 'Bhilai'} - ${
         c.billingAddress.pincode || '490006'
@@ -251,9 +275,10 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
       setDeliveryAddress(fullAddr);
       setAddressList((prev) => (prev.includes(fullAddr) ? prev : [fullAddr, ...prev]));
     }
-    setSearchQuery(c.name);
+    setSearchQuery('');
     setIsSearchOpen(false);
-    setCustomerType('existing');
+    setIsEditingCustomer(false);
+    setErrorMessage(null);
   };
 
   // Quantity handlers
@@ -336,29 +361,51 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
       return;
     }
 
-    if (customerType === 'new') {
-      if (!customerName.trim() || !customerPhone.trim()) {
-        setErrorMessage('Please provide customer name and phone number for the new customer.');
+    let finalCustomerName = '';
+    let finalCustomerPhone = '';
+    let finalCustomerEmail = '';
+    let finalDeliveryAddress = deliveryAddress;
+
+    if (customerType === 'existing') {
+      if (!selectedCustomer) {
+        setErrorMessage('Please search and select an existing customer, or switch to "New Customer".');
         return;
       }
-      if (deliveryType === 'delivery' && !deliveryAddress.trim()) {
+      finalCustomerName = selectedCustomer.name;
+      finalCustomerPhone = selectedCustomer.phone;
+      finalCustomerEmail =
+        selectedCustomer.email ||
+        `${selectedCustomer.name.toLowerCase().replace(/\s+/g, '')}@example.com`;
+    } else {
+      if (!newCustomer.name.trim() || !newCustomer.phone.trim()) {
+        setErrorMessage('Please provide customer name and mobile phone number for the new customer.');
+        return;
+      }
+      if (deliveryType === 'delivery' && !newCustomer.address.trim()) {
         setErrorMessage('Please provide a delivery address for the new customer.');
         return;
       }
+      finalCustomerName = newCustomer.name.trim();
+      finalCustomerPhone = newCustomer.phone.trim();
+      finalCustomerEmail =
+        newCustomer.email.trim() ||
+        `${newCustomer.name.trim().toLowerCase().replace(/\s+/g, '')}@example.com`;
+      if (deliveryType === 'delivery') {
+        finalDeliveryAddress = newCustomer.address.trim();
+      }
+
       // Register newly created customer in customerStore Khata
       useCustomerStore.getState().addCustomer({
-        name: customerName.trim(),
-        phone: customerPhone.trim(),
-        email:
-          customerEmail.trim() ||
-          `${customerName.trim().toLowerCase().replace(/\s+/g, '')}@example.com`,
+        name: finalCustomerName,
+        phone: finalCustomerPhone,
+        email: finalCustomerEmail,
         customerType: 'Individual',
         paymentTerms: 'Immediate',
         creditPeriodDays: 0,
         status: 'active',
         location: 'Bhilai, Chhattisgarh',
         billingAddress: {
-          addressLine1: deliveryAddress.trim(),
+          addressLine1: finalDeliveryAddress,
           city: 'Bhilai',
           state: 'Chhattisgarh',
           pincode: '490006',
@@ -369,7 +416,7 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
     }
 
     setErrorMessage(null);
-    const initials = customerName
+    const initials = finalCustomerName
       .split(' ')
       .map((w) => w[0])
       .join('')
@@ -384,18 +431,18 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
       orderType: deliveryType === 'delivery' ? 'Online Order' : 'Manual In-Store',
       status: 'new',
       customer: {
-        name: customerName,
-        email: customerEmail,
-        phone: customerPhone,
+        name: finalCustomerName,
+        email: finalCustomerEmail,
+        phone: finalCustomerPhone,
         avatarInitials: initials || 'CU',
       },
       deliveryAddress: {
-        street: deliveryAddress,
+        street: finalDeliveryAddress,
         locality: 'Bhilai Local Area',
         city: 'Bhilai',
         state: 'Chhattisgarh',
         pincode: '490006',
-        fullText: `${customerName}\n${deliveryAddress}`,
+        fullText: `${finalCustomerName}\n${finalDeliveryAddress}`,
       },
       items: items.map((i) => ({
         id: i.id,
@@ -585,7 +632,7 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
             {customerType === 'existing' ? (
               <>
                 {/* Customer Search Dropdown */}
-                <div className="relative mb-3.5">
+                <div ref={searchContainerRef} className="relative mb-3.5">
                   <div className="relative">
                     <input
                       type="text"
@@ -602,7 +649,7 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
                     <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                   </div>
 
-                  {/* Autocomplete Dropdown List */}
+                  {/* Autocomplete Dropdown List with Outside-Click & Escape Dismissal */}
                   {isSearchOpen && (
                     <div className="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl border border-slate-200 shadow-xl z-30 max-h-56 overflow-y-auto divide-y divide-slate-100">
                       {filteredCustomers.length > 0 ? (
@@ -625,115 +672,180 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
                           </button>
                         ))
                       ) : (
-                        <div className="p-3 text-center text-xs text-slate-400">
-                          No existing customers match "{searchQuery}"
+                        <div className="p-3.5 text-center text-xs space-y-2">
+                          <p className="text-slate-400">No existing customers match "{searchQuery}"</p>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCustomerType('new');
+                              setNewCustomer((prev) => ({ ...prev, name: searchQuery }));
+                              setIsSearchOpen(false);
+                            }}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold transition-colors cursor-pointer text-xs"
+                          >
+                            <UserPlus className="w-3.5 h-3.5" />
+                            <span>Register as New Customer</span>
+                          </button>
                         </div>
                       )}
                     </div>
                   )}
                 </div>
 
-                {/* Verified / Editable Customer Card */}
-                <div className="p-3.5 rounded-xl border border-slate-200/90 bg-white relative shadow-2xs">
-                  {isEditingCustomer ? (
-                    <div className="space-y-2.5">
-                      <div className="text-xs font-bold text-slate-900">Edit Customer Information</div>
-                      <div>
-                        <label className="text-[11px] text-slate-500 font-semibold block mb-1">
-                          Customer Name
-                        </label>
-                        <input
-                          type="text"
-                          value={customerName}
-                          onChange={(e) => setCustomerName(e.target.value)}
-                          className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[11px] text-slate-500 font-semibold block mb-1">
-                          Phone Number
-                        </label>
-                        <input
-                          type="text"
-                          value={customerPhone}
-                          onChange={(e) => setCustomerPhone(e.target.value)}
-                          className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[11px] text-slate-500 font-semibold block mb-1">
-                          Email Address
-                        </label>
-                        <input
-                          type="email"
-                          value={customerEmail}
-                          onChange={(e) => setCustomerEmail(e.target.value)}
-                          className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs"
-                        />
-                      </div>
-                      <div className="flex justify-end pt-1">
-                        <button
-                          type="button"
-                          onClick={() => setIsEditingCustomer(false)}
-                          className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold cursor-pointer"
-                        >
-                          Save Details
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-start gap-3">
-                      {/* Avatar */}
-                      <div className="w-9 h-9 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs">
-                        {customerName
-                          .split(' ')
-                          .map((w) => w[0])
-                          .join('')
-                          .slice(0, 2)
-                          .toUpperCase() || 'CU'}
-                      </div>
-
-                      {/* Details */}
-                      <div className="space-y-1 min-w-0 pr-12 text-xs">
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-slate-900 text-xs">{customerName}</span>
-                          <span className="text-[10px] font-semibold px-2 py-0.2 rounded bg-emerald-50 text-emerald-700 border border-emerald-200/60 leading-tight">
-                            Verified
-                          </span>
-                        </div>
-
-                        <div className="text-slate-700 font-semibold text-[11px] flex items-center gap-1.5">
-                          <Phone className="w-3 h-3 text-slate-400" />
-                          <span>{customerPhone}</span>
-                        </div>
-
-                        <div className="text-slate-500 text-[11px] flex items-center gap-1.5">
-                          <Mail className="w-3 h-3 text-slate-400" />
-                          <span className="truncate">{customerEmail}</span>
-                        </div>
-
-                        <div className="text-slate-500 text-[11px] leading-tight pt-0.5 flex items-start gap-1">
-                          <MapPin className="w-3 h-3 text-slate-400 shrink-0 mt-0.5" />
-                          <span className="line-clamp-2">{deliveryAddress}</span>
+                {/* Selected Customer Card or Clean Empty State */}
+                {!selectedCustomer ? (
+                  <div className="p-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/60 text-center">
+                    <User className="w-7 h-7 text-slate-300 mx-auto mb-1.5" />
+                    <p className="text-xs font-bold text-slate-700">No Customer Selected</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">
+                      Search above by name, phone or email, or pick from known buyers below:
+                    </p>
+                    {customers.length > 0 && (
+                      <div className="mt-3 pt-2.5 border-t border-slate-200/60">
+                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 text-left">
+                          Quick Select from Directory:
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {customers.slice(0, 3).map((c) => (
+                            <button
+                              key={c.id}
+                              type="button"
+                              onClick={() => handleSelectCustomer(c)}
+                              className="px-2.5 py-1 rounded-lg border border-slate-200 bg-white hover:border-blue-400 hover:bg-blue-50/50 text-[11px] font-bold text-slate-700 transition-colors flex items-center gap-1 cursor-pointer"
+                            >
+                              <span className="text-blue-600 font-black">+</span>
+                              <span>{c.name}</span>
+                            </button>
+                          ))}
                         </div>
                       </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="p-3.5 rounded-xl border border-slate-200/90 bg-white relative shadow-2xs">
+                    {isEditingCustomer ? (
+                      <div className="space-y-2.5">
+                        <div className="text-xs font-bold text-slate-900">Edit Customer Information</div>
+                        <div>
+                          <label className="text-[11px] text-slate-500 font-semibold block mb-1">
+                            Customer Name
+                          </label>
+                          <input
+                            type="text"
+                            value={selectedCustomer.name}
+                            onChange={(e) =>
+                              setSelectedCustomer({ ...selectedCustomer, name: e.target.value })
+                            }
+                            className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[11px] text-slate-500 font-semibold block mb-1">
+                            Phone Number
+                          </label>
+                          <input
+                            type="text"
+                            value={selectedCustomer.phone}
+                            onChange={(e) =>
+                              setSelectedCustomer({ ...selectedCustomer, phone: e.target.value })
+                            }
+                            className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[11px] text-slate-500 font-semibold block mb-1">
+                            Email Address
+                          </label>
+                          <input
+                            type="email"
+                            value={selectedCustomer.email || ''}
+                            onChange={(e) =>
+                              setSelectedCustomer({ ...selectedCustomer, email: e.target.value })
+                            }
+                            className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs"
+                          />
+                        </div>
+                        <div className="flex justify-end pt-1">
+                          <button
+                            type="button"
+                            onClick={() => setIsEditingCustomer(false)}
+                            className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold cursor-pointer"
+                          >
+                            Save Details
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-start gap-3">
+                        {/* Avatar */}
+                        <div className="w-9 h-9 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs">
+                          {selectedCustomer.name
+                            .split(' ')
+                            .map((w) => w[0])
+                            .join('')
+                            .slice(0, 2)
+                            .toUpperCase() || 'CU'}
+                        </div>
 
-                      {/* Edit Button */}
-                      <button
-                        type="button"
-                        onClick={() => setIsEditingCustomer(true)}
-                        className="absolute top-3.5 right-3.5 inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-slate-200 text-blue-600 text-xs font-semibold hover:bg-slate-50 bg-white shadow-2xs transition-colors cursor-pointer"
-                      >
-                        <Edit2 className="w-3 h-3" />
-                        <span>Edit</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
+                        {/* Details */}
+                        <div className="space-y-1 min-w-0 pr-16 text-xs">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-slate-900 text-xs truncate">
+                              {selectedCustomer.name}
+                            </span>
+                            <span className="text-[10px] font-semibold px-2 py-0.2 rounded bg-emerald-50 text-emerald-700 border border-emerald-200/60 leading-tight shrink-0">
+                              Verified
+                            </span>
+                          </div>
+
+                          <div className="text-slate-700 font-semibold text-[11px] flex items-center gap-1.5">
+                            <Phone className="w-3 h-3 text-slate-400 shrink-0" />
+                            <span>{selectedCustomer.phone}</span>
+                          </div>
+
+                          {selectedCustomer.email && (
+                            <div className="text-slate-500 text-[11px] flex items-center gap-1.5">
+                              <Mail className="w-3 h-3 text-slate-400 shrink-0" />
+                              <span className="truncate">{selectedCustomer.email}</span>
+                            </div>
+                          )}
+
+                          <div className="text-slate-500 text-[11px] leading-tight pt-0.5 flex items-start gap-1">
+                            <MapPin className="w-3 h-3 text-slate-400 shrink-0 mt-0.5" />
+                            <span className="line-clamp-2">{deliveryAddress}</span>
+                          </div>
+                        </div>
+
+                        {/* Action Buttons: Change & Edit */}
+                        <div className="absolute top-3.5 right-3.5 flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => setIsEditingCustomer(true)}
+                            className="p-1 rounded-lg border border-slate-200 text-slate-600 hover:text-blue-600 hover:bg-slate-50 bg-white shadow-2xs transition-colors cursor-pointer"
+                            title="Edit customer details"
+                          >
+                            <Edit2 className="w-3 h-3" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedCustomer(null);
+                              setSearchQuery('');
+                            }}
+                            className="px-2 py-0.5 rounded-lg border border-slate-200 text-slate-500 hover:text-rose-600 hover:border-rose-200 hover:bg-rose-50/50 text-[10px] font-bold transition-colors cursor-pointer"
+                            title="Change customer"
+                          >
+                            Change
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </>
             ) : (
-              /* Inline New Customer Registration Form */
-              <div className="p-4 rounded-xl border border-blue-200 bg-blue-50/20 space-y-3 shadow-2xs">
+              /* Inline New Customer Registration Form (Starts completely empty!) */
+              <div className="p-4 rounded-xl border border-blue-200 bg-blue-50/20 space-y-3 shadow-2xs animate-in fade-in-50 duration-150">
                 <div className="text-xs font-bold text-blue-900 flex items-center gap-1.5 pb-1 border-b border-blue-100">
                   <UserPlus className="w-4 h-4 text-blue-600" />
                   <span>New Customer Information</span>
@@ -745,8 +857,8 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
                   <input
                     type="text"
                     placeholder="e.g. Ramesh Agrawal"
-                    value={customerName}
-                    onChange={(e) => setCustomerName(e.target.value)}
+                    value={newCustomer.name}
+                    onChange={(e) => setNewCustomer({ ...newCustomer, name: e.target.value })}
                     className="w-full px-3 py-1.5 border border-slate-200 bg-white rounded-lg text-xs focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
@@ -758,20 +870,20 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
                     <input
                       type="text"
                       placeholder="+91 98765 43210"
-                      value={customerPhone}
-                      onChange={(e) => setCustomerPhone(e.target.value)}
+                      value={newCustomer.phone}
+                      onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })}
                       className="w-full px-3 py-1.5 border border-slate-200 bg-white rounded-lg text-xs focus:ring-1 focus:ring-blue-500"
                     />
                   </div>
                   <div>
                     <label className="text-[11px] text-slate-600 font-semibold block mb-1">
-                      Email Address
+                      Email Address (Optional)
                     </label>
                     <input
                       type="email"
                       placeholder="customer@example.com"
-                      value={customerEmail}
-                      onChange={(e) => setCustomerEmail(e.target.value)}
+                      value={newCustomer.email}
+                      onChange={(e) => setNewCustomer({ ...newCustomer, email: e.target.value })}
                       className="w-full px-3 py-1.5 border border-slate-200 bg-white rounded-lg text-xs focus:ring-1 focus:ring-blue-500"
                     />
                   </div>
@@ -783,8 +895,8 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
                   <textarea
                     rows={2}
                     placeholder="House/Plot No, Street, Locality, Bhilai - 490006"
-                    value={deliveryAddress}
-                    onChange={(e) => setDeliveryAddress(e.target.value)}
+                    value={newCustomer.address}
+                    onChange={(e) => setNewCustomer({ ...newCustomer, address: e.target.value })}
                     className="w-full px-3 py-1.5 border border-slate-200 bg-white rounded-lg text-xs focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
