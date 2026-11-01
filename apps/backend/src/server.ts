@@ -136,9 +136,10 @@ async function bootstrap() {
     app.set('io', io);
 
 
-    // 5. Start HTTP Listener
-    server.listen(env.PORT, () => {
-      logger.info(`✨ Server running on http://localhost:${env.PORT}`);
+    // 5. Start HTTP Listener on 0.0.0.0 (required for container ingress and Render port detection)
+    const host = '0.0.0.0';
+    server.listen(env.PORT, host, () => {
+      logger.info(`✨ Server running on http://${host}:${env.PORT}`);
       logger.info(`📡 API Version: /api/${env.API_VERSION}`);
       logger.info(`🌍 Environment: ${env.NODE_ENV}`);
 

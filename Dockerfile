@@ -63,8 +63,8 @@ USER nodejs
 EXPOSE 5000
 
 # Container liveness health check probe
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD curl -f http://localhost:5000/healthz || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+  CMD sh -c "curl -f http://127.0.0.1:${PORT:-5000}/healthz || exit 1"
 
 # Launch backend modular monolith
 CMD ["node", "dist/server.js"]
