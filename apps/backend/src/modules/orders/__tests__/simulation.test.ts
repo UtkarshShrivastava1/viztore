@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import net from 'net';
-import { runSimulation } from '../../../../../../scripts/e2e-simulation.js';
+import { runSimulation } from '../../../scripts/e2e-simulation.js';
 
 async function isMongoReachable(uri: string = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017'): Promise<boolean> {
   return new Promise((resolve) => {

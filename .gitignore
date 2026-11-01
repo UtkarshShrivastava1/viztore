@@ -35,11 +35,7 @@ pnpm-debug.log*
 
 # Testing & Coverage
 coverage/
-scripts/test-screenshots/
-scripts/test-results.json
-scripts/test-*.ts
-scripts/test-*.mjs
-scripts/purge-database.ts
+/scripts/
 postman-local-report.json
 
 # Misc, Sourcemaps & Emitted Configs
