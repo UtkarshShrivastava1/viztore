@@ -60,6 +60,11 @@ Merchant_Website/
 *.docx
 *.xlsx
 
+# Keys & Certificates
+*.pem
+*.key
+*.crt
+
 # Raw design assets drop
 /Logo/
 /logo/
