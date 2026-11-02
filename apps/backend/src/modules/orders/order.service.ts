@@ -137,6 +137,9 @@ export function createOrderService(
       }
 
       const createPayload = {
+        customerName: dto.customerName || normalizedShippingAddress?.fullName,
+        customerEmail: dto.customerEmail || (normalizedShippingAddress as any)?.email,
+        customerPhone: dto.customerPhone || normalizedShippingAddress?.phone,
         ...dto,
         items: authoritativeItems,
         userId,

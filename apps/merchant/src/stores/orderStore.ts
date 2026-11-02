@@ -196,7 +196,7 @@ export function mapApiOrderToMerchantRecord(apiOrder: any): MerchantOrderRecord 
     status: mappedStatus,
     customer: {
       name: customerName,
-      email: apiOrder.customerEmail || 'customer@example.com',
+      email: apiOrder.customerEmail || (apiOrder.shippingAddress && apiOrder.shippingAddress.email) || '',
       phone: apiOrder.shippingAddress?.phone || '+91 98765 43210',
       avatarInitials: initials || 'CS',
     },
@@ -636,7 +636,7 @@ export const useOrderStore = create<OrderStoreState>((set, get) => {
       status: newOrder.status || 'new',
       customer: newOrder.customer || {
         name: 'Walk-in Customer',
-        email: 'customer@example.com',
+        email: '',
         phone: '+91 99999 00000',
         avatarInitials: 'WC',
       },

@@ -89,6 +89,17 @@ const getStoreDefaultCategory = (storeCategory?: string): string => {
 
 const categoryCatalogTree: Record<string, CategoryDefinition> = buildMasterCategoryTree();
 
+function getCategoryFallbackHsn(category?: string, subCategory?: string): string {
+  const c = (category || '').toLowerCase();
+  const s = (subCategory || '').toLowerCase();
+  if (c.includes('elect') || c.includes('mobile') || s.includes('mobile') || s.includes('phone')) return '85171300';
+  if (c.includes('foot') || c.includes('shoe') || s.includes('foot') || s.includes('shoe')) return '64039990';
+  if (c.includes('food') || c.includes('groc') || s.includes('food') || s.includes('snack')) return '21069099';
+  if (c.includes('fashion') || c.includes('cloth') || c.includes('apparel') || s.includes('shirt') || s.includes('dress')) return '61091000';
+  return '85171300';
+}
+
+
 const commonBrandOptions = Array.from(
   new Set([
     'Generic / Unbranded',
@@ -196,7 +207,7 @@ export const AddProductStep1: React.FC = () => {
   const productIdentification = draftProduct.productIdentification || 'new';
   // Preload taxonomy attributes on mount or when parent category / product type is set
   React.useEffect(() => {
-    const activeCat = category || 'Men\'s Fashion';
+    const activeCat = category || defaultCategory || 'Electronics';
     const activeSub = subCategory || 'Clothing';
     const activePt = productType || 'Standard';
 
@@ -221,7 +232,7 @@ export const AddProductStep1: React.FC = () => {
   }, [category, subCategory, productType]);
 
   const brand = draftProduct.brand || 'Generic / Unbranded';
-  const hsnCode = draftProduct.hsnCode || '61091000';
+  const hsnCode = draftProduct.hsnCode || getCategoryFallbackHsn(category, subCategory);
 
   const matchedHsn = React.useMemo(() => {
     if (!hsnCode || hsnCode.length < 4) return null;
@@ -292,7 +303,7 @@ export const AddProductStep1: React.FC = () => {
 
     updateDraftProduct({
       productType: newPt,
-      hsnCode: match?.hsnCode || draftProduct.hsnCode || '61091000',
+      hsnCode: match?.hsnCode || draftProduct.hsnCode || getCategoryFallbackHsn(category, subCategory),
       tax: match?.gstRate
         ? {
             category: normalizeCategoryName(match.category),
@@ -328,7 +339,7 @@ export const AddProductStep1: React.FC = () => {
       category: normCat,
       subCategory: t.subcategory,
       productType: t.productType,
-      hsnCode: t.hsnCode || '61091000',
+      hsnCode: t.hsnCode || getCategoryFallbackHsn(normCat, t.subcategory),
       tax: {
         category: normCat,
         rate: t.gstRate ?? 18,

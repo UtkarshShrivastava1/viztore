@@ -420,7 +420,7 @@ export const AddProductStep3: React.FC = () => {
                   ? ['UK 6', 'UK 7', 'UK 8', 'UK 9', 'UK 10', 'UK 11']
                   : ['XS', 'S', 'M', 'L', 'XL', '2XL']
                 ).map((sz) => {
-                  const isSelected = (attributes.size || (isFootwearCategory(draftProduct.category, draftProduct.subCategory) ? 'UK 8' : 'M')) === sz;
+                  const isSelected = attributes.size === sz;
                   return (
                     <button
                       key={sz}

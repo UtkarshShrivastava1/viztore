@@ -44,6 +44,35 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
   const [isAdded, setIsAdded] = useState(false);
   const [showDetails, setShowDetails] = useState(true);
 
+  const productAttributesList = React.useMemo(() => {
+    const list: Array<{ label: string; value: string }> = [];
+    if (product?.brand) {
+      list.push({ label: 'Brand', value: product.brand });
+    }
+    const rawAttrs = product?.attributes;
+    if (Array.isArray(rawAttrs)) {
+      rawAttrs.forEach((attr: any) => {
+        if (attr && attr.key && attr.value) {
+          list.push({ label: String(attr.key), value: String(attr.value) });
+        }
+      });
+    } else if (rawAttrs && typeof rawAttrs === 'object') {
+      Object.entries(rawAttrs).forEach(([k, v]) => {
+        if (v && typeof v === 'string') {
+          list.push({ label: k.charAt(0).toUpperCase() + k.slice(1), value: v });
+        }
+      });
+    }
+    if (product?.subCategory) {
+      list.push({ label: 'Sub-Category', value: product.subCategory });
+    }
+    if (product?.subType) {
+      list.push({ label: 'Type', value: product.subType });
+    }
+    return list;
+  }, [product]);
+
+
   // Safe extraction of store and category metadata for recommendations (unconditional hook execution)
   const rawStoreId = product?.storeId;
   const storeId = typeof rawStoreId === 'object' && rawStoreId !== null
@@ -116,10 +145,19 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
     );
   }
 
-  const selectedVariant = product.variants[selectedVariantIdx] || product.variants[0];
-  const allImages = selectedVariant?.images?.length > 0
+  const variants = Array.isArray(product.variants) && product.variants.length > 0 ? product.variants : [];
+  const selectedVariant = variants[selectedVariantIdx] || variants[0] || {
+    price: product.basePrice || 0,
+    mrp: product.baseMrp || product.basePrice || 0,
+    images: Array.isArray((product as any).images) && (product as any).images.length > 0 ? (product as any).images : [],
+    sku: product._id || 'STD-01',
+    stock: product.totalStock || 10,
+    isActive: true,
+  };
+  const rawImages = (selectedVariant?.images && selectedVariant.images.length > 0)
     ? selectedVariant.images
-    : product.variants.flatMap((v) => v.images).filter(Boolean);
+    : variants.flatMap((v) => v.images || []).filter(Boolean);
+  const allImages = rawImages.length > 0 ? rawImages : (Array.isArray((product as any).images) ? (product as any).images : []);
 
   const discount = selectedVariant && selectedVariant.mrp > 0
     ? Math.round(((selectedVariant.mrp - selectedVariant.price) / selectedVariant.mrp) * 100)

@@ -55,16 +55,16 @@ export const SummaryReviewCards: React.FC<SummaryReviewCardsProps> = ({ product 
         <div className="space-y-1.5 text-xs text-slate-600">
           <div className="flex justify-between">
             <span className="text-slate-400">Category:</span>
-            <span className="font-semibold text-slate-800">{product.category || 'Men'}</span>
+            <span className="font-semibold text-slate-800">{product.category || 'General'}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-slate-400">Sub-category:</span>
-            <span className="font-semibold text-slate-800">{product.subCategory || 'T-Shirts'}</span>
+            <span className="font-semibold text-slate-800">{product.subCategory || 'General'}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-slate-400">Product Type:</span>
             <span className="font-semibold text-slate-800">
-              {product.productType || 'Round Neck T-Shirt'}
+              {product.productType || 'Standard'}
             </span>
           </div>
         </div>
@@ -125,12 +125,12 @@ export const SummaryReviewCards: React.FC<SummaryReviewCardsProps> = ({ product 
         <div className="space-y-1.5 text-xs text-slate-600">
           <div className="flex justify-between">
             <span className="text-slate-400">Brand / Manufacturer:</span>
-            <span className="font-semibold text-slate-800">{product.brand || 'Roadster'}</span>
+            <span className="font-semibold text-slate-800">{product.brand || 'Generic / In-House'}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-slate-400">HSN Code:</span>
             <span className="font-mono font-semibold text-slate-800">
-              {product.hsnCode || '61091000'}
+              {product.hsnCode || 'Standard Tax Code'}
             </span>
           </div>
         </div>

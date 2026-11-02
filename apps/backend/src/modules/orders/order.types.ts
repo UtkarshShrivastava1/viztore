@@ -29,6 +29,9 @@ export interface ShippingAddressDTO {
 }
 
 export interface CreateOrderDTO {
+  customerName?: string;
+  customerEmail?: string;
+  customerPhone?: string;
   storeId: string;
   items: OrderItemDTO[];
   shippingAddress?: ShippingAddressDTO;
@@ -46,6 +49,9 @@ export interface UpdateOrderStatusDTO {
 export interface OrderResponse {
   id: string;
   orderNumber: string;
+  customerName?: string;
+  customerEmail?: string;
+  customerPhone?: string;
   userId: string;
   storeId: string;
   items: OrderItemDTO[];
@@ -74,6 +80,9 @@ export interface OrderDocument extends Document {
   userId: string;
   storeId: string;
   orderNumber: string;
+  customerName?: string;
+  customerEmail?: string;
+  customerPhone?: string;
   items: OrderItemDTO[];
   shippingAddress?: ShippingAddressDTO;
   discount?: number;

@@ -126,6 +126,13 @@ export const VariantMatrixBuilder: React.FC = () => {
   const [customColorName, setCustomColorName] = useState('');
   const [customColorHex, setCustomColorHex] = useState('#6366f1');
 
+  
+  // Synchronize variant presets whenever the product category or subcategory changes
+  useEffect(() => {
+    setSelectedSizes(initialSizes);
+    setSelectedColors(initialColors);
+  }, [draftProduct.category, draftProduct.subCategory]);
+
   // Bulk control values
   const [bulkPriceInput, setBulkPriceInput] = useState<string>(String(basePrice));
   const [bulkMrpInput, setBulkMrpInput] = useState<string>(String(baseMrp));

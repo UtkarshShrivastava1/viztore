@@ -76,6 +76,10 @@ class MerchantSocketClient {
 
       // Handle Order Placed event (matching both dot and colon format)
       const handleOrderPlaced = (payload: OrderPlacedSocketPayload) => {
+        // Strict store isolation: never chime or handle orders belonging to other stores
+        if (this.currentStoreId && payload.storeId && String(payload.storeId) !== String(this.currentStoreId)) {
+          return;
+        }
         // 1. Play audible arrival chime
         playOrderAlertChime();
 
