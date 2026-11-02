@@ -301,7 +301,7 @@ export const AddProductStep3: React.FC = () => {
               ))
             ) : (
               <>
-                {((draftProduct.category || '').toLowerCase().includes('groc') || (draftProduct.category || '').toLowerCase().includes('food')) ? (
+                {isGroceryCategory(draftProduct.category, draftProduct.subCategory) ? (
                   <>
                     <div>
                       <label className="block text-[11px] font-medium text-slate-600 mb-1">Net Qty / Weight</label>
@@ -333,7 +333,7 @@ export const AddProductStep3: React.FC = () => {
                       </select>
                     </div>
                   </>
-                ) : ((draftProduct.category || '').toLowerCase().includes('elect') || (draftProduct.category || '').toLowerCase().includes('gadget') || (draftProduct.category || '').toLowerCase().includes('mobile')) ? (
+                ) : isElectronicsCategory(draftProduct.category, draftProduct.subCategory) ? (
                   <>
                     <div>
                       <label className="block text-[11px] font-medium text-slate-600 mb-1">Warranty</label>
@@ -359,7 +359,39 @@ export const AddProductStep3: React.FC = () => {
                       />
                     </div>
                   </>
-                ) : (
+                ) : isFootwearCategory(draftProduct.category, draftProduct.subCategory) ? (
+                  <>
+                    <div>
+                      <label className="block text-[11px] font-medium text-slate-600 mb-1">Upper Material</label>
+                      <select
+                        value={attributes.upperMaterial || 'Mesh'}
+                        onChange={(e) => updateDraftProduct({ attributes: { ...attributes, upperMaterial: e.target.value } })}
+                        className="w-full px-2 py-1.5 text-xs bg-white border border-slate-200 rounded-lg cursor-pointer"
+                      >
+                        <option value="Mesh">Mesh</option>
+                        <option value="Synthetic Leather">Synthetic Leather</option>
+                        <option value="Genuine Leather">Genuine Leather</option>
+                        <option value="Canvas">Canvas</option>
+                        <option value="Suede">Suede</option>
+                        <option value="Knit Fabric">Knit Fabric</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-medium text-slate-600 mb-1">Sole Material</label>
+                      <select
+                        value={attributes.soleMaterial || 'Rubber'}
+                        onChange={(e) => updateDraftProduct({ attributes: { ...attributes, soleMaterial: e.target.value } })}
+                        className="w-full px-2 py-1.5 text-xs bg-white border border-slate-200 rounded-lg cursor-pointer"
+                      >
+                        <option value="Rubber">Rubber</option>
+                        <option value="EVA">EVA (Lightweight)</option>
+                        <option value="Air Cushion">Air Cushion</option>
+                        <option value="TPU">TPU</option>
+                        <option value="Phylon">Phylon</option>
+                      </select>
+                    </div>
+                  </>
+                ) : isFashionCategory(draftProduct.category, draftProduct.subCategory) ? (
                   <>
                     <div>
                       <label className="block text-[11px] font-medium text-slate-600 mb-1">Fit Type</label>
@@ -387,6 +419,29 @@ export const AddProductStep3: React.FC = () => {
                         <option value="Linen">Linen</option>
                         <option value="Denim">Denim</option>
                       </select>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <label className="block text-[11px] font-medium text-slate-600 mb-1">Material / Finish</label>
+                      <input
+                        type="text"
+                        value={attributes.material || ''}
+                        placeholder="e.g. Stainless Steel, Plastic"
+                        onChange={(e) => updateDraftProduct({ attributes: { ...attributes, material: e.target.value } })}
+                        className="w-full px-2 py-1.5 text-xs bg-white border border-slate-200 rounded-lg"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-medium text-slate-600 mb-1">Warranty</label>
+                      <input
+                        type="text"
+                        value={attributes.warranty || 'Standard Warranty'}
+                        placeholder="e.g. 6 Months Warranty"
+                        onChange={(e) => updateDraftProduct({ attributes: { ...attributes, warranty: e.target.value } })}
+                        className="w-full px-2 py-1.5 text-xs bg-white border border-slate-200 rounded-lg"
+                      />
                     </div>
                   </>
                 )}

@@ -35,11 +35,11 @@ export const CatalogWizardStepper: React.FC = () => {
 
   const getCompletedSummary = (stepNum: WizardStep) => {
     if (stepNum === 1) {
-      const cat = draftProduct.category || "Men's Fashion";
-      const sub = draftProduct.subCategory || 'T-Shirts';
-      const type = draftProduct.productType || 'Round Neck T-Shirt';
-      const brand = draftProduct.brand || 'Roadster';
-      return `${cat} > ${sub} > ${type} • Brand: ${brand}`;
+      const cat = draftProduct.category || 'Category';
+      const sub = draftProduct.subCategory || 'Sub-category';
+      const type = draftProduct.productType || 'Product Type';
+      const brand = draftProduct.brand && draftProduct.brand !== 'Generic / Unbranded' ? ` • Brand: ${draftProduct.brand}` : '';
+      return `${cat} > ${sub} > ${type}${brand}`;
     }
     if (stepNum === 2) {
       const imgCount = draftProduct.images?.length || 0;

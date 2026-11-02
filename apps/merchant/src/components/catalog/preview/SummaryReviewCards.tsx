@@ -311,7 +311,7 @@ export const SummaryReviewCards: React.FC<SummaryReviewCardsProps> = ({ product 
         <div className="grid grid-cols-2 gap-1.5 text-xs text-slate-600">
           <div>Selling Price: <strong className="text-slate-900">₹{product.price}</strong></div>
           <div>MRP: <strong className="text-slate-500 line-through">₹{product.mrp}</strong></div>
-          <div>Tax Rate: <strong className="text-slate-800">{tax.rate}% ({tax.category})</strong></div>
+          <div>Tax Rate: <strong className="text-slate-800">{tax.rate}% ({(tax.category || 'Standard').replace(/\s*\(\d+%\)/, '')})</strong></div>
           <div>Tax Inclusive: <strong className="text-slate-800">{tax.inclusive ? 'Yes' : 'No'}</strong></div>
         </div>
       </div>
