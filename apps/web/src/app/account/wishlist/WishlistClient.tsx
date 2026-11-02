@@ -17,7 +17,7 @@ import { AccountSidebar } from '@/components/account/AccountSidebar';
 
 export function WishlistClient() {
   const router = useRouter();
-  const { addItem: addToCart } = useCartStore();
+  const { addItem: addToCart, openCart } = useCartStore();
   const { items: wishlistStoreItems, removeItem } = useWishlistFlyoutStore();
   const isLoading = false;
 
@@ -30,10 +30,11 @@ export function WishlistClient() {
       productId: item.productId || item.id,
       name: item.title,
       unitPrice: item.price || 0,
-      storeId: 'store-1', // Default store ID since it's not in IWishlistFlyoutItem
+      storeId: item.storeId || 'store-1',
       storeName: item.storeName || 'Verified Store Partner',
       imageUrl: item.imageUrl || '',
     });
+    openCart();
   };
 
   return (

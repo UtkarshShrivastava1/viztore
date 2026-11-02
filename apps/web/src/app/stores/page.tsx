@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { StoreCardSkeleton } from '@/components/ui/Skeleton';
 import { useNearbyStores } from '@/hooks/useNearbyStores';
@@ -39,7 +39,13 @@ export default function StoresPage({
   const { data: allStoresResponse, isLoading: allLoading } = useAllStores({ category: activeCategory });
 
   const hasNearby = !!(nearbyStores && nearbyStores.length > 0);
-  const stores = hasNearby ? nearbyStores : (allStoresResponse?.stores || []);
+  const [storeSearch, setStoreSearch] = useState('');
+  const rawStores = hasNearby ? nearbyStores : (allStoresResponse?.stores || []);
+  const stores = useMemo(() => {
+    if (!storeSearch.trim()) return rawStores;
+    const q = storeSearch.toLowerCase().trim();
+    return rawStores.filter((s) => s.name?.toLowerCase().includes(q) || s.description?.toLowerCase().includes(q) || s.category?.toLowerCase().includes(q));
+  }, [rawStores, storeSearch]);
   const isLoading = nearbyLoading || (allLoading && stores.length === 0);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
@@ -134,7 +140,9 @@ export default function StoresPage({
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400" />
             <input
               type="text"
-              placeholder="Search stores or products..."
+              value={storeSearch}
+              onChange={(e) => setStoreSearch(e.target.value)}
+              placeholder="Search stores..."
               className="w-full h-11 pl-11 pr-4 rounded-xl bg-white border border-surface-200 text-[13px] font-semibold text-[#061842] placeholder:text-surface-400 focus:outline-none focus:border-[#1668F6] focus:ring-1 focus:ring-[#1668F6] shadow-sm transition-all"
             />
           </div>

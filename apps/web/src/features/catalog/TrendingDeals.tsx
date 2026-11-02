@@ -5,6 +5,7 @@ import { Heart, Store, ShoppingCart, Zap, Check } from 'lucide-react';
 import { useFeaturedProducts } from '@/hooks/useFeaturedProducts';
 import { useProducts } from '@/hooks/useProducts';
 import { useCartStore } from '@/stores/cart.store';
+import { useWishlistFlyoutStore } from '@/stores/wishlistFlyoutStore';
 
 interface ProductDealItem {
   id: string;
@@ -25,7 +26,8 @@ export function TrendingDeals() {
   const addItem = useCartStore((state) => state.addItem);
   const openCart = useCartStore((state) => state.openCart);
   const [addedIds, setAddedIds] = useState<Record<string, boolean>>({});
-  const [wishlistedIds, setWishlistedIds] = useState<Record<string, boolean>>({});
+  const wishlistItems = useWishlistFlyoutStore((state) => state.items);
+  const toggleWishlistStore = useWishlistFlyoutStore((state) => state.toggleItem);
 
   const handleAddToCart = (e: React.MouseEvent, deal: ProductDealItem) => {
     e.preventDefault();
@@ -48,10 +50,19 @@ export function TrendingDeals() {
     openCart();
   };
 
-  const toggleWishlist = (e: React.MouseEvent, id: string) => {
+  const toggleWishlist = (e: React.MouseEvent, deal: ProductDealItem) => {
     e.preventDefault();
     e.stopPropagation();
-    setWishlistedIds((prev) => ({ ...prev, [id]: !prev[id] }));
+    toggleWishlistStore({
+      id: deal.id,
+      productId: deal.id,
+      title: deal.name,
+      storeName: deal.storeName,
+      storeId: deal.storeId || 'store-1',
+      price: deal.price,
+      originalPrice: deal.mrp,
+      imageUrl: deal.image,
+    });
   };
 
   // Build items exclusively from live database products
@@ -101,7 +112,7 @@ export function TrendingDeals() {
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5 sm:gap-4 md:gap-5">
         {dealsToRender.map((deal) => {
           const isAdded = !!addedIds[deal.id];
-          const isWishlisted = !!wishlistedIds[deal.id];
+          const isWishlisted = wishlistItems.some((item) => item.productId === deal.id || item.id === deal.id);
 
           return (
             <div
@@ -118,12 +129,12 @@ export function TrendingDeals() {
                 {/* Wishlist Heart */}
                 <button
                   type="button"
-                  onClick={(e) => toggleWishlist(e, deal.id)}
+                  onClick={(e) => toggleWishlist(e, deal)}
                   aria-label="Save to Wishlist"
                   className="absolute top-2 right-2 p-1.5 rounded-full hover:bg-white/90 text-[#1668F6] transition-colors"
                 >
                   <Heart
-                    className={`w-4 h-4 ${isWishlisted ? 'fill-[#1668F6] text-[#1668F6]' : 'text-[#1668F6]'}`}
+                    className={`w-4 h-4 ${isWishlisted ? 'fill-rose-600 text-rose-600' : 'text-[#1668F6]'}`}
                   />
                 </button>
 

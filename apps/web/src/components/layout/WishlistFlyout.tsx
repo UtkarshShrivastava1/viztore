@@ -16,7 +16,7 @@ export function WishlistFlyout({ onClose }: { onClose: () => void }) {
       name: item.title,
       unitPrice: item.price,
       imageUrl: item.imageUrl,
-      storeId: 's1',
+      storeId: item.storeId || 'store-main',
       storeName: item.storeName,
     });
   };

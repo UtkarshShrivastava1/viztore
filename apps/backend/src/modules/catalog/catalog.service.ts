@@ -313,7 +313,16 @@ export async function listProducts(query: ProductQueryDto): Promise<IProductList
 
   // Text search
   if (search) {
-    filter.$text = { $search: search };
+    const escaped = search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const searchRegex = new RegExp(escaped, 'i');
+    filter.$or = [
+      { name: searchRegex },
+      { brand: searchRegex },
+      { category: searchRegex },
+      { subCategory: searchRegex },
+      { tags: searchRegex },
+      { description: searchRegex },
+    ];
   }
 
   // Faceted filters on variant fields

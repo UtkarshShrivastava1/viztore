@@ -198,9 +198,13 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
           {/* Left Gallery (Web 2.2 / Mob 2.2) */}
           <div className="lg:col-span-7">
             <ProductImageCarousel
+              productId={product._id}
+              productPrice={selectedVariant.price}
+              productMrp={selectedVariant.mrp || product.baseMrp}
               productName={product.name}
               images={allImages}
               storeName={storeName}
+              storeId={storeId}
               storeRating={4.7}
               selectedImageIdx={activeImageIndex}
               setSelectedImageIdx={setActiveImageIndex}

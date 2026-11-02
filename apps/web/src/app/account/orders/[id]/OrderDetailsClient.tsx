@@ -5,8 +5,10 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { 
   ArrowLeft, ChevronRight, Share2, Download, ShoppingBasket, 
-  Shield, CheckCircle2, MapPin, Store, HeadphonesIcon, MessageSquare, Loader2
+  Shield, CheckCircle2, MapPin, Store, HeadphonesIcon, MessageSquare, Loader2,
+  Check, CheckCircle
 } from 'lucide-react';
+import { shareContent } from '@/lib/share';
 import { AccountSidebar } from '@/components/account/AccountSidebar';
 import { OrderInvoiceModal } from '@/components/orders/OrderInvoiceModal';
 import { ordersApi } from '@/lib/api/orders.js';
@@ -21,6 +23,35 @@ export function OrderDetailsClient({ id }: OrderDetailsClientProps) {
   const [order, setOrder] = useState<IOrder | null>(null);
   const [loading, setLoading] = useState(true);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+  const [copiedItemSku, setCopiedItemSku] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const handleShareItem = async (item: IOrderItem) => {
+    const itemKey = item.sku || item.productId || item.name;
+    const url = item.productId
+      ? `${window.location.origin}/products/${item.productId}`
+      : window.location.href;
+
+    const res = await shareContent({
+      title: item.name,
+      text: `Check out ${item.name} on Viztore!`,
+      url,
+    });
+
+    if (res.success) {
+      if (res.action === 'copied') {
+        setCopiedItemSku(itemKey);
+        setToastMessage('Product link copied to clipboard!');
+        setTimeout(() => {
+          setCopiedItemSku(null);
+          setToastMessage(null);
+        }, 2500);
+      } else if (res.action === 'shared') {
+        setToastMessage('Shared successfully!');
+        setTimeout(() => setToastMessage(null), 2500);
+      }
+    }
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -150,8 +181,22 @@ export function OrderDetailsClient({ id }: OrderDetailsClientProps) {
                           <h4 className="text-[14px] lg:text-[15px] font-bold text-[#192168] line-clamp-1 pr-2">
                             {item.name}
                           </h4>
-                          <button className="w-8 h-8 rounded-full bg-surface-50 flex items-center justify-center shrink-0">
-                            <Share2 className="w-4 h-4 text-[#192168]" />
+                          <button
+                            type="button"
+                            onClick={() => handleShareItem(item)}
+                            aria-label="Share product"
+                            title={copiedItemSku === (item.sku || item.productId || item.name) ? "Copied!" : "Share product"}
+                            className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-all active:scale-90 ${
+                              copiedItemSku === (item.sku || item.productId || item.name)
+                                ? 'bg-emerald-50 text-emerald-600'
+                                : 'bg-surface-50 text-[#192168] hover:bg-surface-100'
+                            }`}
+                          >
+                            {copiedItemSku === (item.sku || item.productId || item.name) ? (
+                              <Check className="w-4 h-4 text-emerald-600" />
+                            ) : (
+                              <Share2 className="w-4 h-4" />
+                            )}
                           </button>
                         </div>
                         <p className="text-[12px] lg:text-[13px] font-medium text-surface-500 mt-0.5">
@@ -374,6 +419,13 @@ export function OrderDetailsClient({ id }: OrderDetailsClientProps) {
         onClose={() => setShowInvoiceModal(false)}
         orderId={order?.id || order?._id || id}
       />
+
+      {toastMessage && (
+        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 bg-[#061842] text-white text-xs font-bold px-4 py-2.5 rounded-full shadow-2xl z-50 flex items-center gap-2 border border-white/20 animate-fade-in pointer-events-none">
+          <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
     </div>
   );
 }

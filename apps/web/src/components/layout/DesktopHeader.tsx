@@ -1,6 +1,6 @@
 "use client";
 
-import { Heart, ShoppingCart, Search, Mic, Bell, CircleUserRound, MapPin, ChevronDown } from "lucide-react";
+import { Heart, ShoppingCart, Search, Mic, Bell, CircleUserRound, MapPin, ChevronDown, X } from "lucide-react";
 import Logo from '@/components/layout/Logo';
 import { useRouter, usePathname } from 'next/navigation';
 import DesktopCategoryStrip from '@/components/layout/DesktopCategoryStrip';
@@ -18,6 +18,8 @@ export interface DesktopHeaderProps {
   userName?: string;
   address?: string;
   cartCount?: number;
+  wishlistCount?: number;
+  notificationCount?: number;
   searchPlaceholder?: string;
   isSimpleHeader?: boolean;
   isAccountPage?: boolean;
@@ -29,6 +31,8 @@ export function DesktopHeader({
   userName: propUserName,
   address: propAddress,
   cartCount: propCartCount,
+  wishlistCount: propWishlistCount,
+  notificationCount: propNotificationCount,
   searchPlaceholder = "Search for products, stores and more...",
   isSimpleHeader: _isSimpleHeader,
   isAccountPage: _isAccountPage,
@@ -42,12 +46,15 @@ export function DesktopHeader({
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchCategory, setSearchCategory] = useState<string | null>(null);
+  const [isListening, setIsListening] = useState(false);
   const headerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       setSearchCategory(params.get('category'));
+      const q = params.get('search') || params.get('q') || '';
+      setSearchQuery(q);
     }
   }, [pathname]);
 
@@ -61,8 +68,8 @@ export function DesktopHeader({
   const setStoreLocation = useLocationStore((state) => state.setLocation);
   const rawCartCount = useCartStore((state) => state.items.reduce((sum, item) => sum + item.quantity, 0));
   
-  const notificationCount = useNotificationStore((state) => state.unreadCount);
-  const wishlistCount = useWishlistFlyoutStore((state) => state.items.length);
+  const rawNotificationCount = useNotificationStore((state) => state.unreadCount);
+  const rawWishlistCount = useWishlistFlyoutStore((state) => state.items.length);
 
   useEffect(() => {
     setMounted(true);
@@ -74,6 +81,8 @@ export function DesktopHeader({
   }, [authUser, locationIsSet, setStoreLocation]);
 
   const cartCount = mounted ? (propCartCount !== undefined ? propCartCount : rawCartCount) : 0;
+  const wishlistCount = mounted ? (propWishlistCount !== undefined ? propWishlistCount : rawWishlistCount) : 0;
+  const notificationCount = mounted ? (propNotificationCount !== undefined ? propNotificationCount : rawNotificationCount) : 0;
   const isAuthenticated = mounted ? (propIsAuthenticated !== undefined ? propIsAuthenticated : authIsAuthenticated) : false;
   const userName = mounted ? (propUserName || authUser?.fullName || "Customer") : "Customer";
   const address = mounted 
@@ -98,10 +107,58 @@ export function DesktopHeader({
     }
   };
 
+  const handleVoiceSearch = () => {
+    if (typeof window === 'undefined') return;
+    interface SpeechRecognitionInstance {
+      lang: string;
+      interimResults: boolean;
+      onstart: () => void;
+      onend: () => void;
+      onerror: () => void;
+      onresult: (event: { results: Array<Array<{ transcript: string }>> }) => void;
+      start: () => void;
+    }
+
+    type SpeechRecognitionConstructor = new () => SpeechRecognitionInstance;
+
+    const SpeechRecognition =
+      (window as unknown as { SpeechRecognition?: SpeechRecognitionConstructor; webkitSpeechRecognition?: SpeechRecognitionConstructor }).SpeechRecognition ||
+      (window as unknown as { SpeechRecognition?: SpeechRecognitionConstructor; webkitSpeechRecognition?: SpeechRecognitionConstructor }).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Voice search is not supported in this browser.");
+      return;
+    }
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+      setIsListening(true);
+      recognition.onresult = (event: { results: Array<Array<{ transcript: string }>> }) => {
+        const transcript = event.results[0]?.[0]?.transcript;
+        if (transcript) {
+          setSearchQuery(transcript);
+          router.push(`/products?search=${encodeURIComponent(transcript.trim())}`);
+        }
+        setIsListening(false);
+      };
+      recognition.onerror = () => {
+        setIsListening(false);
+      };
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+      recognition.start();
+    } catch {
+      setIsListening(false);
+    }
+  };
+
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      router.push(`/products?q=${encodeURIComponent(searchQuery.trim())}`);
+      router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+    } else {
+      router.push('/products');
     }
   };
 
@@ -148,7 +205,9 @@ export function DesktopHeader({
 
             {/* Search Bar - Center and Large */}
             <form onSubmit={handleSearchSubmit} className="flex flex-1 items-center gap-2.5 rounded-full bg-white px-4 py-2.5 shadow-sm mx-4">
-              <Search className="h-5 w-5 shrink-0 text-[#1E293B]" strokeWidth={2} />
+              <button type="submit" aria-label="Search" className="shrink-0 text-[#1E293B] hover:text-[#1668F6] transition-colors">
+                <Search className="h-5 w-5 shrink-0" strokeWidth={2} />
+              </button>
               <input
                 type="text"
                 value={searchQuery}
@@ -156,8 +215,22 @@ export function DesktopHeader({
                 placeholder={searchPlaceholder}
                 className="w-full truncate bg-transparent text-[14px] text-slate-900 placeholder:text-slate-500/90 font-normal focus:outline-none"
               />
-              <button type="submit" aria-label="Search" className="shrink-0 text-[#1E293B] hover:opacity-80">
-                <Mic className="h-5 w-5" strokeWidth={1.8} />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  aria-label="Clear search"
+                  className="shrink-0 p-1 text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={handleVoiceSearch}
+                aria-label="Voice search"
+                className="shrink-0 text-[#1E293B] hover:text-[#1668F6] transition-colors">
+                <Mic className={`h-5 w-5 ${isListening ? 'text-red-500 animate-pulse' : ''}`} strokeWidth={1.8} />
               </button>
             </form>
 

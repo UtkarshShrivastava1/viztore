@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Heart, Store, Plus, Minus, Zap } from 'lucide-react';
 import type { IProduct } from '@repo/shared-types';
 import { useCartStore } from '@/stores/cart.store';
+import { useWishlistFlyoutStore } from '@/stores/wishlistFlyoutStore';
 
 interface ProductCardProps {
   product: IProduct;
@@ -13,7 +14,10 @@ interface ProductCardProps {
 
 export function ProductCard({ product, badge }: ProductCardProps) {
   const { items, addItem, updateQuantity, removeItem, openCart } = useCartStore();
-  const [isWishlisted, setIsWishlisted] = useState(false);
+  const isWishlisted = useWishlistFlyoutStore((state) =>
+    state.items.some((item) => item.productId === product._id || item.id === product._id)
+  );
+  const toggleWishlist = useWishlistFlyoutStore((state) => state.toggleItem);
   const [isHovered, setIsHovered] = useState(false);
 
   const discount =
@@ -127,16 +131,27 @@ export function ProductCard({ product, badge }: ProductCardProps) {
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              setIsWishlisted(!isWishlisted);
+              toggleWishlist({
+                id: product._id,
+                productId: product._id,
+                title: product.name,
+                storeName,
+                storeId,
+                price: firstVariant?.price || product.basePrice,
+                originalPrice: product.baseMrp || undefined,
+                imageUrl: primaryImage,
+                selectedVariant: firstVariant?.size || firstVariant?.color || undefined,
+                availableVariants: sizePreviews.length > 0 ? sizePreviews : undefined,
+              });
             }}
             className={`absolute top-2 right-2 p-1.5 rounded-full backdrop-blur-md transition-all active:scale-90 shadow-2xs z-10 ${
               isWishlisted
                 ? 'bg-rose-50 text-rose-600'
                 : 'bg-white/85 text-surface-600 hover:text-rose-500 hover:bg-white'
             }`}
-            aria-label="Wishlist"
+            aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
           >
-            <Heart className={`w-3.5 h-3.5 ${isWishlisted ? 'fill-current' : ''}`} />
+            <Heart className={`w-3.5 h-3.5 ${isWishlisted ? 'fill-rose-600 text-rose-600' : ''}`} />
           </button>
 
           {/* Size Pill Previews on Hover (Desktop Web 2.1) */}

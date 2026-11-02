@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { Heart, Store, Star } from 'lucide-react';
 import type { IProduct } from '@repo/shared-types';
+import { useWishlistFlyoutStore } from '@/stores/wishlistFlyoutStore';
 
 interface MobileDealCardProps {
   product: IProduct;
@@ -33,7 +34,10 @@ const fallbackRatings = [
 ];
 
 export function MobileDealCard({ product, index = 0 }: MobileDealCardProps) {
-  const [isWishlisted, setIsWishlisted] = useState(false);
+  const isWishlisted = useWishlistFlyoutStore((state) =>
+    state.items.some((item) => item.productId === product._id || item.id === product._id)
+  );
+  const toggleWishlistStore = useWishlistFlyoutStore((state) => state.toggleItem);
 
   const discount = product.baseMrp > product.basePrice
     ? Math.round(((product.baseMrp - product.basePrice) / product.baseMrp) * 100)
@@ -48,7 +52,19 @@ export function MobileDealCard({ product, index = 0 }: MobileDealCardProps) {
   const toggleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsWishlisted(!isWishlisted);
+    const storeId = typeof rawStoreId === 'object' && rawStoreId !== null
+      ? (rawStoreId as { _id?: string })._id || String(rawStoreId)
+      : String(rawStoreId || 'store-main');
+    toggleWishlistStore({
+      id: product._id,
+      productId: product._id,
+      title: product.name,
+      storeName,
+      storeId,
+      price: product.basePrice,
+      originalPrice: product.baseMrp || undefined,
+      imageUrl: productImage,
+    });
   };
 
   return (
@@ -80,9 +96,9 @@ export function MobileDealCard({ product, index = 0 }: MobileDealCardProps) {
           type="button"
           onClick={toggleWishlist}
           className="absolute top-1.5 right-1.5 p-1 rounded-full text-blue-600 hover:bg-blue-50 transition-colors"
-          aria-label="Save to Wishlist"
+          aria-label={isWishlisted ? "Remove from wishlist" : "Save to wishlist"}
         >
-          <Heart className={`w-3.5 h-3.5 ${isWishlisted ? 'fill-blue-600 text-blue-600' : 'text-blue-600'}`} />
+          <Heart className={`w-3.5 h-3.5 ${isWishlisted ? 'fill-rose-600 text-rose-600' : 'text-blue-600'}`} />
         </button>
       </div>
 

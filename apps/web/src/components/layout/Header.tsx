@@ -18,7 +18,7 @@ export interface HeaderProps {
 export function Header(props: HeaderProps) {
   const { className = "", pageTitle, ...restProps } = props;
   const pathname = usePathname();
-  const isSimpleHeader = pathname?.startsWith('/checkout') || pathname === '/account/orders' || pathname === '/account/wishlist' || pathname === '/account/addresses' || pathname === '/account/edit-profile' || pathname === '/account/coupons' || pathname === '/account/support' || pathname === '/account/sell' || pathname === '/account/privacy' || pathname === '/account/feedback' || pathname === '/account/terms' || pathname === '/account/logout' || pathname === '/account/logged-out' || pathname?.startsWith('/account/orders/');
+  const isSimpleHeader = pathname?.startsWith('/checkout') || pathname === '/account/wishlist' || pathname === '/account/addresses' || pathname === '/account/edit-profile' || pathname === '/account/coupons' || pathname === '/account/support' || pathname === '/account/sell' || pathname === '/account/privacy' || pathname === '/account/feedback' || pathname === '/account/terms' || pathname === '/account/logout' || pathname === '/account/logged-out' || pathname?.startsWith('/account/orders/');
   const isAccountPage = pathname?.startsWith('/account') && !isSimpleHeader;
   const isHomePage = pathname === '/';
 
@@ -28,7 +28,7 @@ export function Header(props: HeaderProps) {
     else if (pathname === '/account/edit-profile') displayTitle = 'Edit Profile';
     else if (pathname === '/account/addresses') displayTitle = 'My Addresses';
     else if (pathname === '/account/wishlist') displayTitle = 'Wishlist';
-    else if (pathname === '/account/orders' || pathname?.startsWith('/account/orders/')) displayTitle = 'My Orders';
+    else if (pathname?.startsWith('/account/orders/')) displayTitle = 'Order Details';
     else if (pathname === '/account/coupons') displayTitle = 'My Coupons';
     else if (pathname === '/account/support') displayTitle = 'Help & Support';
     else if (pathname === '/account/sell') displayTitle = 'Sell With Us';

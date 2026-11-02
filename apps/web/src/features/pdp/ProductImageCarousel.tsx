@@ -2,12 +2,18 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Heart, Share2, ZoomIn, ArrowLeft, Star, CheckCircle, Package } from 'lucide-react';
+import { Heart, Share2, ZoomIn, ArrowLeft, Star, CheckCircle, Package, Check } from 'lucide-react';
+import { useWishlistFlyoutStore } from '@/stores/wishlistFlyoutStore';
+import { shareContent } from '@/lib/share';
 
 interface ProductImageCarouselProps {
+  productId?: string;
+  productPrice?: number;
+  productMrp?: number;
   productName: string;
   images: string[];
   storeName?: string;
+  storeId?: string;
   storeRating?: number;
   selectedImageIdx: number;
   setSelectedImageIdx: (idx: number) => void;
@@ -16,9 +22,13 @@ interface ProductImageCarouselProps {
 }
 
 export function ProductImageCarousel({
+  productId,
+  productPrice,
+  productMrp,
   productName,
   images,
   storeName = 'Official Store',
+  storeId,
   storeRating = 4.7,
   selectedImageIdx,
   setSelectedImageIdx,
@@ -26,25 +36,40 @@ export function ProductImageCarousel({
   onBuyNow,
 }: ProductImageCarouselProps) {
   const router = useRouter();
-  const [isWishlisted, setIsWishlisted] = useState(false);
+  const isWishlisted = useWishlistFlyoutStore((state) =>
+    productId
+      ? state.items.some((item) => item.productId === productId || item.id === productId)
+      : false
+  );
+  const toggleWishlist = useWishlistFlyoutStore((state) => state.toggleItem);
   const [isZoomed, setIsZoomed] = useState(false);
-  const [sharedToast, setSharedToast] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Normalize images to have at least 1 image, and ensure array supports up to 8 slides/dots as per Mob 2.2
   const displayImages = images.length > 0 ? images : [''];
   // Pad up to 8 dots if product has multiple images or duplicate for carousel demo
   const dotCount = Math.min(8, Math.max(displayImages.length, 4));
 
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: productName,
-        url: window.location.href,
-      }).catch(() => {});
-    } else {
-      navigator.clipboard?.writeText(window.location.href);
-      setSharedToast(true);
-      setTimeout(() => setSharedToast(false), 2000);
+  const handleShare = async () => {
+    const res = await shareContent({
+      title: productName,
+      text: `Check out ${productName} on Viztore!`,
+      url: typeof window !== 'undefined' ? window.location.href : '',
+    });
+
+    if (res.success) {
+      if (res.action === 'copied') {
+        setIsCopied(true);
+        setToastMessage('Link copied to clipboard!');
+        setTimeout(() => {
+          setIsCopied(false);
+          setToastMessage(null);
+        }, 2500);
+      } else if (res.action === 'shared') {
+        setToastMessage('Shared successfully!');
+        setTimeout(() => setToastMessage(null), 2500);
+      }
     }
   };
 
@@ -107,22 +132,37 @@ export function ProductImageCarousel({
           <div className="absolute top-3 right-3 flex flex-col gap-2.5 z-20">
             <button
               type="button"
-              onClick={() => setIsWishlisted(!isWishlisted)}
+              onClick={() => {
+                if (!productId) return;
+                toggleWishlist({
+                  id: productId,
+                  productId,
+                  title: productName,
+                  storeName,
+                  storeId,
+                  price: productPrice || 0,
+                  originalPrice: productMrp,
+                  imageUrl: displayImages[0] || '',
+                });
+              }}
               className={`w-10 h-10 rounded-full bg-white/90 backdrop-blur-md shadow-sm border border-surface-200/80 flex items-center justify-center transition-all active:scale-90 ${
                 isWishlisted ? 'text-rose-600 bg-rose-50' : 'text-surface-700 hover:text-rose-500'
               }`}
-              aria-label="Wishlist"
+              aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
             >
-              <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-current' : ''}`} />
+              <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-rose-600 text-rose-600' : ''}`} />
             </button>
 
             <button
               type="button"
               onClick={handleShare}
-              className="w-10 h-10 rounded-full bg-white/90 backdrop-blur-md shadow-sm border border-surface-200/80 flex items-center justify-center text-surface-700 hover:text-[#1668F6] transition-all active:scale-90"
+              className={`w-10 h-10 rounded-full bg-white/90 backdrop-blur-md shadow-sm border border-surface-200/80 flex items-center justify-center transition-all active:scale-90 ${
+                isCopied ? 'text-emerald-600 bg-emerald-50 border-emerald-300' : 'text-surface-700 hover:text-[#1668F6]'
+              }`}
+              title={isCopied ? 'Link copied!' : 'Share'}
               aria-label="Share"
             >
-              <Share2 className="w-4 h-4" />
+              {isCopied ? <Check className="w-4 h-4 text-emerald-600" /> : <Share2 className="w-4 h-4" />}
             </button>
           </div>
 
@@ -197,9 +237,10 @@ export function ProductImageCarousel({
           </div>
         )}
 
-        {sharedToast && (
-          <div className="fixed bottom-20 left-1/2 -translate-x-1/2 bg-[#061842] text-white text-xs font-bold px-4 py-2 rounded-full shadow-lg z-50 animate-fade-in">
-            Link copied to clipboard!
+        {toastMessage && (
+          <div className="fixed bottom-24 sm:bottom-8 left-1/2 -translate-x-1/2 bg-[#061842] text-white text-xs font-bold px-4 py-2.5 rounded-full shadow-2xl z-50 flex items-center gap-2 border border-white/20 animate-fade-in pointer-events-none">
+            <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span>{toastMessage}</span>
           </div>
         )}
       </div>

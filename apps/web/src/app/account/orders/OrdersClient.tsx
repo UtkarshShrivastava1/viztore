@@ -118,7 +118,7 @@ export function OrdersClient() {
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 lg:border-b lg:border-surface-100 pb-4 px-4 lg:px-0 pt-6 lg:pt-0 bg-white lg:bg-transparent shadow-sm lg:shadow-none">
             <div className="flex items-center gap-3">
-              <button onClick={() => router.back()} className="lg:hidden">
+              <button type="button" onClick={() => router.push('/account')} aria-label="Back to Account" className="lg:hidden p-1 -ml-1 text-[#192168] hover:text-[#1668F6] transition-colors cursor-pointer">
                 <ArrowLeft className="w-6 h-6 text-[#192168]" />
               </button>
               <div>

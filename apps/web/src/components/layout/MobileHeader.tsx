@@ -125,10 +125,15 @@ export function MobileHeader({
               <button
                 type="button"
                 aria-label="Wishlist"
-                className="text-white hover:text-white/80 transition-opacity cursor-pointer p-0.5"
+                className="relative text-white hover:text-white/80 transition-opacity cursor-pointer p-0.5"
                 onClick={() => router.push('/account/wishlist')}
               >
                 <Heart className="h-6 w-6 text-white" strokeWidth={1.75} />
+                {wishlistCount > 0 && (
+                  <span className="absolute -top-1.5 -right-2 flex h-[18px] min-w-[18px] px-1 items-center justify-center rounded-full bg-red-500 text-[10.5px] font-bold text-white shadow-sm border border-white">
+                    {wishlistCount}
+                  </span>
+                )}
               </button>
               <button
                 type="button"

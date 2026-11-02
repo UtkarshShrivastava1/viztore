@@ -23,7 +23,7 @@ function ProductsContent() {
   // Read filters from URL
   const query: Partial<ProductQueryDto> = useMemo(
     () => ({
-      search: searchParams.get('search') || undefined,
+      search: searchParams.get('search') || searchParams.get('q') || undefined,
       category: (searchParams.get('category') as ProductCategory) || undefined,
       sort: (searchParams.get('sort') as ProductSortOption) || ProductSortOption.RELEVANCE,
       page: parseInt(searchParams.get('page') || '1'),
@@ -59,7 +59,11 @@ function ProductsContent() {
   const updateFilter = useCallback(
     (key: string, value: string | undefined) => {
       const params = new URLSearchParams(searchParams.toString());
-      if (value) {
+      if (key === 'search' || key === 'q') {
+        params.delete('q');
+        if (value) params.set('search', value);
+        else params.delete('search');
+      } else if (value) {
         params.set(key, value);
       } else {
         params.delete(key);
@@ -191,17 +195,17 @@ function ProductsContent() {
               <div className="p-12 text-center bg-white rounded-3xl border border-surface-200 shadow-2xs">
                 <SlidersHorizontal className="w-10 h-10 mx-auto text-surface-400 mb-3" />
                 <h3 className="text-base font-black text-[#061842]">
-                  No products match your filters
+                  {query.search ? `No products found for "${query.search}"` : 'No products match your filters'}
                 </h3>
                 <p className="text-xs text-surface-500 mt-1 max-w-sm mx-auto">
-                  Try adjusting or clearing your filter selections to see more results.
+                  {query.search ? 'Try checking your spelling or searching with a different term.' : 'Try adjusting or clearing your filter selections to see more results.'}
                 </p>
                 <button
                   type="button"
                   onClick={() => router.push('/products')}
                   className="mt-4 px-5 py-2 rounded-xl bg-[#1668F6] text-white text-xs font-black hover:bg-blue-700 transition-colors shadow-sm"
                 >
-                  Reset Filters
+                  {query.search ? 'Clear Search' : 'Reset Filters'}
                 </button>
               </div>
             )}

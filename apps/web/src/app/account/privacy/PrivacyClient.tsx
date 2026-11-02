@@ -4,18 +4,88 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   User, Shield, ArrowLeft,
-  ShieldCheck, Lock, EyeOff, CheckCircle2, ChevronRight, Search
+  ShieldCheck, Lock, EyeOff, CheckCircle2, ChevronRight, Search,
+  ChevronsUpDown, FileText, Database, Share2
 } from 'lucide-react';
 import { branding } from '@repo/shared-types';
 import { AccountSidebar } from '@/components/account/AccountSidebar';
 
-const SECTIONS = [
-  '1. Information We Collect',
-  '2. How We Use Your Information',
-  '3. Information Sharing',
-  '4. Data Security',
-  '5. Your Rights',
-  '6. Changes to This Policy',
+interface PolicySection {
+  id: number;
+  title: string;
+  desc: string;
+  icon: React.ReactNode;
+  details: string[];
+}
+
+const SECTIONS: PolicySection[] = [
+  {
+    id: 1,
+    title: '1. Information We Collect',
+    desc: 'Types of data collected when you use our platform.',
+    icon: <Database className="w-4 h-4 text-blue-500" />,
+    details: [
+      `Personal Profile Details: Your name, mobile number, email address, and delivery addresses provided during registration and checkout.`,
+      `Device & Location Data: Approximate and precise GPS coordinates (with your permission) to calculate delivery distances, verify delivery zone feasibility, and recommend nearby local stores.`,
+      `Transactional Records: Details of ordered products, billing invoices, payment statuses, and customer support communications.`,
+    ],
+  },
+  {
+    id: 2,
+    title: '2. How We Use Your Information',
+    desc: 'Purpose and legitimate interests for processing your data.',
+    icon: <Lock className="w-4 h-4 text-blue-500" />,
+    details: [
+      `To process, fulfill, and deliver orders placed with local merchant stores across our network.`,
+      `To transmit real-time order status updates, delivery OTPs, and rider tracking notifications.`,
+      `To detect, prevent, and mitigate fraudulent transactions, coupon abuse, and unauthorized account access.`,
+      `To improve store recommendations and refine catalog search relevance based on localized demand.`,
+    ],
+  },
+  {
+    id: 3,
+    title: '3. Information Sharing & Disclosure',
+    desc: 'Strict controls on how data is shared with fulfillment partners.',
+    icon: <Share2 className="w-4 h-4 text-blue-500" />,
+    details: [
+      `Local Merchant Stores: We share your delivery recipient name, delivery address, and ordered items with the fulfilling merchant store solely to prepare and package your items.`,
+      `Delivery Partners: Assigned delivery riders receive your address and delivery instructions strictly to complete the last-mile package drop-off.`,
+      `We strictly do NOT sell, rent, or trade your personal information or browsing data to third-party data brokers or marketing agencies.`,
+    ],
+  },
+  {
+    id: 4,
+    title: '4. Data Security & Storage',
+    desc: 'Bank-grade encryption and access controls protecting your data.',
+    icon: <ShieldCheck className="w-4 h-4 text-blue-500" />,
+    details: [
+      `All communication between your device and our servers is secured using modern TLS 1.3 cryptographic protocols.`,
+      `Sensitive authentication credentials (passwords, OTP sessions) are hashed and protected with restricted internal access controls.`,
+      `Payment processing is handled through RBI-certified, PCI-DSS compliant payment gateways; we do not store sensitive credit/debit card CVVs.`,
+    ],
+  },
+  {
+    id: 5,
+    title: '5. Your Privacy Rights & Controls',
+    desc: 'How you can manage, access, or delete your personal data.',
+    icon: <User className="w-4 h-4 text-blue-500" />,
+    details: [
+      `Access & Edit: You can review and update your profile details and saved delivery addresses anytime in your account settings.`,
+      `Data Deletion: You may request the permanent closure of your account and erasure of personal data by contacting our support team.`,
+      `Notification Preferences: You can manage notification settings while continuing to receive essential transactional order alerts.`,
+    ],
+  },
+  {
+    id: 6,
+    title: '6. Policy Updates & Contact',
+    desc: 'Notifications regarding policy revisions and contact channels.',
+    icon: <FileText className="w-4 h-4 text-blue-500" />,
+    details: [
+      `We may update this Privacy Policy periodically to reflect enhancements in platform features or changes in statutory data protection laws.`,
+      `When significant changes are made, we will notify users through the app and update the 'Last Updated' timestamp above.`,
+      `For any privacy inquiries or grievance redressal, please write to privacy@viztore.com or visit the Help & Support section.`,
+    ],
+  },
 ];
 
 const HIGHLIGHTS = [
@@ -31,13 +101,35 @@ export function PrivacyClient() {
   const [policyData, setPolicyData] = useState<Record<string, unknown> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [openSections, setOpenSections] = useState<number[]>([1]);
 
   const filteredSections = SECTIONS.filter(section => 
-    section.toLowerCase().includes(searchQuery.toLowerCase())
+    section.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    section.desc.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    section.details.some(d => d.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   useEffect(() => {
-    // TODO: Connect to backend API for fetching privacy policy dynamically
+    if (searchQuery.trim()) {
+      setOpenSections(filteredSections.map(s => s.id));
+    }
+  }, [searchQuery]);
+
+  const toggleSection = (id: number) => {
+    setOpenSections(prev => 
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleExpandAll = () => {
+    setOpenSections(filteredSections.map(s => s.id));
+  };
+
+  const handleCollapseAll = () => {
+    setOpenSections([]);
+  };
+
+  useEffect(() => {
     const fetchPrivacyPolicy = async () => {
       try {
         setIsLoading(true);
@@ -46,7 +138,7 @@ export function PrivacyClient() {
             lastUpdated: '20 May 2025'
           });
           setIsLoading(false);
-        }, 500);
+        }, 300);
       } catch (error) {
         console.error('Failed to fetch privacy policy', error);
         setIsLoading(false);
@@ -55,6 +147,7 @@ export function PrivacyClient() {
     fetchPrivacyPolicy();
   }, []);
 
+  const allExpanded = filteredSections.length > 0 && filteredSections.every(s => openSections.includes(s.id));
 
   return (
     <div className="min-h-screen bg-[#ffffff] font-sans relative pb-24">
@@ -71,13 +164,18 @@ export function PrivacyClient() {
             <div className="flex items-start justify-between relative">
               <div className="flex-1 min-w-0 z-10">
                 <div className="flex items-center gap-2 mb-4">
-                  <button type="button" onClick={() => router.back()} className="shrink-0 lg:hidden">
+                  <button 
+                    type="button" 
+                    onClick={() => router.back()} 
+                    aria-label="Go back"
+                    className="shrink-0 lg:hidden p-1 text-[#192168] hover:text-[#1668F6] transition-colors"
+                  >
                     <ArrowLeft className="w-6 h-6 text-[#192168]" />
                   </button>
                   <h1 className="text-[24px] md:text-[32px] font-extrabold text-[#192168] leading-tight">Privacy Policy</h1>
                 </div>
-                <p className="text-[12px] text-surface-500 leading-relaxed max-w-[220px]">
-                  Your privacy is important to us. This Privacy Policy explains how {branding.appName} collects, uses, discloses and protects your information...
+                <p className="text-[12px] text-surface-500 leading-relaxed max-w-[280px]">
+                  Your privacy is important to us. This Privacy Policy explains how {branding.appName} collects, uses, discloses and protects your information.
                 </p>
               </div>
 
@@ -113,10 +211,25 @@ export function PrivacyClient() {
               </div>
             </div>
 
-            {/* Policy Contents */}
+            {/* Policy Contents (Accordion) */}
             <div className="mt-4">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-[14px] font-extrabold text-[#192168]">Policy Contents</h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-[14px] font-extrabold text-[#192168]">Policy Contents</h3>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">
+                    {filteredSections.length} sections
+                  </span>
+                </div>
+                {filteredSections.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={allExpanded ? handleCollapseAll : handleExpandAll}
+                    className="flex items-center gap-1 text-[11px] font-bold text-[#1668F6] hover:text-blue-800 transition-colors cursor-pointer"
+                  >
+                    <ChevronsUpDown className="w-3.5 h-3.5" />
+                    <span>{allExpanded ? 'Collapse All' : 'Expand All'}</span>
+                  </button>
+                )}
               </div>
 
               {/* Search Input */}
@@ -133,14 +246,64 @@ export function PrivacyClient() {
                 />
               </div>
 
-              <div className="bg-white rounded-2xl border border-surface-200 shadow-[0_2px_8px_rgb(0,0,0,0.04)] overflow-hidden flex flex-col">
+              {/* Accordion Container */}
+              <div className="bg-white rounded-2xl border border-surface-200 shadow-[0_2px_8px_rgb(0,0,0,0.04)] overflow-hidden flex flex-col divide-y divide-surface-100">
                 {filteredSections.length > 0 ? (
-                  filteredSections.map((section, idx) => (
-                    <button key={idx} className={`flex items-center justify-between p-4 hover:bg-surface-50 transition-colors text-left ${idx !== filteredSections.length - 1 ? 'border-b border-surface-100' : ''}`}>
-                      <span className="text-[12px] font-semibold text-[#192168]">{section}</span>
-                      <ChevronRight className="w-4 h-4 text-surface-400" />
-                    </button>
-                  ))
+                  filteredSections.map((section) => {
+                    const isOpen = openSections.includes(section.id);
+                    return (
+                      <div key={section.id} className="transition-colors">
+                        <button 
+                          type="button"
+                          onClick={() => toggleSection(section.id)}
+                          aria-expanded={isOpen}
+                          aria-controls={`policy-content-${section.id}`}
+                          className={`w-full flex items-start gap-3 p-4 text-left cursor-pointer transition-all ${
+                            isOpen ? 'bg-blue-50/40' : 'hover:bg-surface-50/70'
+                          }`}
+                        >
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5 transition-colors ${
+                            isOpen ? 'bg-blue-100 text-[#1668F6]' : 'bg-blue-50'
+                          }`}>
+                            {section.icon}
+                          </div>
+
+                          <div className="flex-1 min-w-0 pr-2">
+                            <h4 className={`text-[13px] font-bold mb-0.5 transition-colors ${
+                              isOpen ? 'text-[#1668F6]' : 'text-[#192168]'
+                            }`}>
+                              {section.title}
+                            </h4>
+                            <p className="text-[11px] text-surface-500 leading-tight">
+                              {section.desc}
+                            </p>
+                          </div>
+
+                          <div className="shrink-0 mt-1.5 p-1 rounded-full text-surface-400">
+                            <ChevronRight 
+                              className={`w-4 h-4 transition-transform duration-200 ${
+                                isOpen ? 'rotate-90 text-[#1668F6]' : 'text-surface-400'
+                              }`} 
+                            />
+                          </div>
+                        </button>
+
+                        {isOpen && (
+                          <div 
+                            id={`policy-content-${section.id}`}
+                            className="px-5 pb-5 pt-2 bg-gradient-to-b from-blue-50/30 to-white border-t border-surface-100/70 text-[12px] text-surface-700 space-y-2.5 animate-fadeIn"
+                          >
+                            {section.details.map((paragraph, pIdx) => (
+                              <div key={pIdx} className="flex items-start gap-2.5 leading-relaxed">
+                                <span className="text-[#1668F6] font-extrabold text-sm leading-none shrink-0 mt-0.5">•</span>
+                                <p className="text-surface-600">{paragraph}</p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
                 ) : (
                   <div className="p-8 text-center text-surface-500 text-[12px]">
                     No policies found matching "{searchQuery}"
@@ -150,12 +313,16 @@ export function PrivacyClient() {
             </div>
 
             {/* Questions Banner */}
-            <div className="bg-[#E8F0FE] rounded-2xl p-5 flex flex-col gap-3 relative mt-4">
+            <div className="bg-[#E8F0FE] rounded-2xl p-5 flex flex-col gap-3 relative mt-4 border border-blue-100">
               <div>
                 <h3 className="text-[13px] font-extrabold text-[#192168] mb-1">Questions about your privacy?</h3>
-                <p className="text-[10px] text-surface-600 leading-tight">Our support team is here to help you understand how your data is handled.</p>
+                <p className="text-[11px] text-surface-600 leading-tight">Our support team is here to help you understand how your data is handled.</p>
               </div>
-              <button onClick={() => router.push('/account/support')} className="self-start px-4 py-2 bg-white rounded-lg border border-[#1668F6] text-[#1668F6] text-[11px] font-bold">
+              <button 
+                type="button" 
+                onClick={() => router.push('/account/support')} 
+                className="self-start px-4 py-2 bg-white rounded-lg border border-[#1668F6] text-[#1668F6] text-[11px] font-bold hover:bg-blue-50 transition-colors cursor-pointer"
+              >
                 Contact Support
               </button>
             </div>
@@ -172,4 +339,3 @@ export function PrivacyClient() {
     </div>
   );
 }
-

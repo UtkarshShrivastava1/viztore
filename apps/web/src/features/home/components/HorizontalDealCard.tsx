@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Heart, ShoppingCart, Store, Star } from 'lucide-react';
 import type { IProduct } from '@repo/shared-types';
 import { useCartStore } from '@/stores/cart.store';
+import { useWishlistFlyoutStore } from '@/stores/wishlistFlyoutStore';
 
 interface HorizontalDealCardProps {
   product: IProduct;
@@ -35,7 +36,10 @@ const fallbackRatings = [
 
 export function HorizontalDealCard({ product, index = 0 }: HorizontalDealCardProps) {
   const { addItem, openCart } = useCartStore();
-  const [isWishlisted, setIsWishlisted] = useState(false);
+  const isWishlisted = useWishlistFlyoutStore((state) =>
+    state.items.some((item) => item.productId === product._id || item.id === product._id)
+  );
+  const toggleWishlistStore = useWishlistFlyoutStore((state) => state.toggleItem);
   const [isAdded, setIsAdded] = useState(false);
 
   const discount = product.baseMrp > product.basePrice
@@ -74,7 +78,16 @@ export function HorizontalDealCard({ product, index = 0 }: HorizontalDealCardPro
   const toggleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsWishlisted(!isWishlisted);
+    toggleWishlistStore({
+      id: product._id,
+      productId: product._id,
+      title: product.name,
+      storeName,
+      storeId,
+      price: product.basePrice,
+      originalPrice: product.baseMrp || undefined,
+      imageUrl: productImage,
+    });
   };
 
   return (
@@ -113,9 +126,9 @@ export function HorizontalDealCard({ product, index = 0 }: HorizontalDealCardPro
             type="button"
             onClick={toggleWishlist}
             className="shrink-0 p-1 rounded-full text-blue-600 hover:bg-blue-50 transition-colors"
-            aria-label="Save to Wishlist"
+            aria-label={isWishlisted ? "Remove from wishlist" : "Save to wishlist"}
           >
-            <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isWishlisted ? 'fill-blue-600 text-blue-600' : 'text-blue-600'}`} />
+            <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isWishlisted ? 'fill-rose-600 text-rose-600' : 'text-blue-600'}`} />
           </button>
         </div>
 

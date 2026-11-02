@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useCartStore, CartItem } from '@/stores/cart.store';
+import { useWishlistFlyoutStore } from '@/stores/wishlistFlyoutStore';
 import { CartPriceDetails } from './CartPriceDetails';
 import { CartItemCard } from '@/components/cart/CartItemCard';
 import { fetchProductBySlug } from '@/lib/api/catalog';
@@ -14,6 +15,7 @@ import Link from 'next/link';
 export function StoreCartView({ storeId }: { storeId: string }) {
   const router = useRouter();
   const { items, updateQuantity, removeItem, clearStoreCart, getShippingFee, getItemCount } = useCartStore();
+  const addWishlistItem = useWishlistFlyoutStore((state) => state.addItem);
 
   const [isLoading, setIsLoading] = useState(true);
   const [store, setStore] = useState<IStore | null>(null);
@@ -191,6 +193,18 @@ export function StoreCartView({ storeId }: { storeId: string }) {
                       onUpdateQuantity={updateQuantity}
                       onRemove={removeItem}
                       onMoveToWishlist={(id) => {
+                        const target = syncedItems.find((i) => i.productId === id);
+                        if (target) {
+                          addWishlistItem({
+                            id: target.productId,
+                            productId: target.productId,
+                            title: target.name,
+                            storeName: target.storeName,
+                            storeId: target.storeId,
+                            price: target.unitPrice,
+                            imageUrl: target.imageUrl || '',
+                          });
+                        }
                         removeItem(id);
                       }}
                     />

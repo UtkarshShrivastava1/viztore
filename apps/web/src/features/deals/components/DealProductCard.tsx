@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Heart, ShoppingCart, Store } from 'lucide-react';
 import type { IProduct } from '@repo/shared-types';
 import { useCartStore } from '@/stores/cart.store';
+import { useWishlistFlyoutStore } from '@/stores/wishlistFlyoutStore';
 
 interface DealProductCardProps {
   product: IProduct;
@@ -12,6 +13,10 @@ interface DealProductCardProps {
 
 export function DealProductCard({ product }: DealProductCardProps) {
   const { addItem, openCart } = useCartStore();
+  const isWishlisted = useWishlistFlyoutStore((state) =>
+    state.items.some((item) => item.productId === product._id || item.id === product._id)
+  );
+  const toggleWishlist = useWishlistFlyoutStore((state) => state.toggleItem);
   const [isAdded, setIsAdded] = React.useState(false);
 
   const discount = product.baseMrp > 0
@@ -19,6 +24,27 @@ export function DealProductCard({ product }: DealProductCardProps) {
     : 0;
 
   const firstImage = product.variants?.[0]?.images?.[0];
+
+  const rawStoreId = product.storeId;
+  const storeId = typeof rawStoreId === 'object' && rawStoreId !== null
+    ? (rawStoreId as { _id?: string })._id || String(rawStoreId)
+    : String(rawStoreId || 'store-main');
+  const storeName = product.storeName || (typeof rawStoreId === 'object' && (rawStoreId as { name?: string })?.name) || 'Official Store';
+
+  const handleWishlistToggle = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleWishlist({
+      id: product._id,
+      productId: product._id,
+      title: product.name,
+      storeName,
+      storeId,
+      price: product.basePrice,
+      originalPrice: product.baseMrp || undefined,
+      imageUrl: firstImage || '',
+    });
+  };
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -74,13 +100,16 @@ export function DealProductCard({ product }: DealProductCardProps) {
 
         {/* Wishlist Toggle */}
         <button
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-          }}
-          className="absolute top-2 right-2 p-1.5 rounded-full bg-white/80 backdrop-blur-sm hover:bg-rose-50 text-[#192168] hover:text-rose-500 transition-all shadow-[0_2px_8px_-4px_rgba(0,0,0,0.1)]"
+          type="button"
+          onClick={handleWishlistToggle}
+          className={`absolute top-2 right-2 p-1.5 rounded-full backdrop-blur-sm transition-all shadow-[0_2px_8px_-4px_rgba(0,0,0,0.1)] ${
+            isWishlisted
+              ? 'bg-rose-50 text-rose-600'
+              : 'bg-white/80 hover:bg-rose-50 text-[#192168] hover:text-rose-500'
+          }`}
+          aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
         >
-          <Heart className="w-4 h-4" />
+          <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-rose-600 text-rose-600' : ''}`} />
         </button>
       </div>
 
