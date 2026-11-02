@@ -98,26 +98,29 @@ export const Step5SubscriptionPayment: React.FC<Step5SubscriptionPaymentProps> =
         planId,
       });
 
-      if (res.data?.valid) {
+      // Handle both unwrapped payload (custom fetch client) and wrapped payload
+      const couponData = (res as any)?.data || res;
+
+      if (couponData?.valid) {
         setAppliedCoupon({
-          code: res.data.code,
-          discountType: res.data.discountType,
-          discountValue: res.data.discountValue,
-          discountAmount: res.data.discountAmount,
-          finalAmount: res.data.finalAmount,
-          description: res.data.description,
+          code: couponData.code,
+          discountType: couponData.discountType,
+          discountValue: couponData.discountValue,
+          discountAmount: couponData.discountAmount,
+          finalAmount: couponData.finalAmount,
+          description: couponData.description,
         });
-        if (res.data.salesRep) {
-          setSalesRepInfo(res.data.salesRep);
+        if (couponData.salesRep) {
+          setSalesRepInfo(couponData.salesRep);
         }
-        setCouponInput(res.data.code);
+        setCouponInput(couponData.code);
         setCouponError(null);
       } else {
-        setCouponError(res.data?.message || 'Invalid coupon or Sales Representative ID');
+        setCouponError(couponData?.message || 'Invalid coupon or Sales Representative ID');
         setAppliedCoupon(null);
       }
     } catch (err: any) {
-      setCouponError(err.response?.data?.error?.message || err.message || 'Invalid or unauthorized coupon code');
+      setCouponError(err.message || 'Invalid or unauthorized coupon code');
       setAppliedCoupon(null);
     } finally {
       setIsValidatingCoupon(false);
@@ -237,7 +240,7 @@ export const Step5SubscriptionPayment: React.FC<Step5SubscriptionPaymentProps> =
         storeName: draft.step4?.storeDisplayName,
       });
 
-      const orderData = orderRes.data;
+      const orderData = (orderRes as any)?.data || orderRes;
 
       // 3A. Free Promo Code Bypass (e.g. FREE100, LAUNCH100)
       if (orderData.isFree || finalPayable === 0) {
@@ -317,7 +320,7 @@ export const Step5SubscriptionPayment: React.FC<Step5SubscriptionPaymentProps> =
             await finalizeStoreSubmission(orderData.draftId);
             onComplete();
           } catch (verifyErr: any) {
-            setError(verifyErr.response?.data?.error?.message || verifyErr.message || 'Payment verification failed');
+            setError(verifyErr.message || 'Payment verification failed');
             setIsProcessing(false);
           }
         },
@@ -330,7 +333,7 @@ export const Step5SubscriptionPayment: React.FC<Step5SubscriptionPaymentProps> =
       });
       rzp.open();
     } catch (err: any) {
-      setError(err.response?.data?.error?.message || err.message || 'Could not initiate onboarding activation');
+      setError(err.message || 'Could not initiate onboarding activation');
       setIsProcessing(false);
     }
   };
