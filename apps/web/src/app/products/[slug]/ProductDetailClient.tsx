@@ -222,6 +222,10 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
             images={allImages}
             selectedImageIdx={selectedImageIdx}
             setSelectedImageIdx={setSelectedImageIdx}
+            isWishlisted={isWishlisted}
+            onToggleWishlist={handleToggleWishlist}
+            onShare={handleShare}
+            isCopied={isCopied}
           />
 
           {/* ── PRODUCT DETAILS & SELECTION ── */}
@@ -430,7 +434,7 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
                  <div className="flex flex-col border-t border-surface-100">
                    <div className="flex items-center py-2.5 border-b border-surface-100">
                      <div className="w-1/3 text-[13px] font-medium text-surface-500">Brand</div>
-                     <div className="w-2/3 text-[13px] font-medium text-[#192168]">U.S. Polo Assn.</div>
+                     <div className="w-2/3 text-[13px] font-medium text-[#192168]">{product.brand || product.storeName || 'Official Store'}</div>
                    </div>
                    <div className="flex items-center py-2.5 border-b border-surface-100">
                      <div className="w-1/3 text-[13px] font-medium text-surface-500">Fabric</div>
