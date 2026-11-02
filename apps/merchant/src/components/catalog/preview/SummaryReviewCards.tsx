@@ -13,6 +13,7 @@ import {
   Package,
 } from 'lucide-react';
 import { ProductItem, WizardStep, useCatalogStore } from '../../../stores/catalogStore.js';
+import { getDisplayAttributes } from '../../../lib/taxonomyHelper.js';
 
 interface SummaryReviewCardsProps {
   product: Partial<ProductItem>;
@@ -26,6 +27,7 @@ export const SummaryReviewCards: React.FC<SummaryReviewCardsProps> = ({ product 
     setActiveView('wizard');
   };
 
+  const displayAttrs = React.useMemo(() => getDisplayAttributes(product), [product]);
   const attrs = product.attributes || {};
   const storage = product.storageLocation || { warehouse: 'Main Warehouse' };
   const tax = product.tax || { category: 'Apparel (5%)', rate: 5, inclusive: false };
@@ -247,14 +249,19 @@ export const SummaryReviewCards: React.FC<SummaryReviewCardsProps> = ({ product 
             <span>Edit</span>
           </button>
         </div>
-        <div className="grid grid-cols-2 gap-1.5 text-xs text-slate-600">
-          <div>Fit: <strong className="text-slate-800">{attrs.fit || 'Regular'}</strong></div>
-          <div>Sleeve: <strong className="text-slate-800">{attrs.sleeve || 'Half'}</strong></div>
-          <div>Neck: <strong className="text-slate-800">{attrs.neck || 'Round Neck'}</strong></div>
-          <div>Fabric: <strong className="text-slate-800">{attrs.fabric || 'Cotton'}</strong></div>
-          <div>Color: <strong className="text-slate-800">{attrs.color || 'Black'}</strong></div>
-          <div>Size: <strong className="text-slate-800">{attrs.size || 'M'}</strong></div>
-        </div>
+        {displayAttrs.length > 0 ? (
+          <div className="grid grid-cols-2 gap-1.5 text-xs text-slate-600">
+            {displayAttrs.map((da, idx) => (
+              <div key={idx} className="truncate">
+                {da.label}: <strong className="text-slate-800">{da.value}</strong>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-xs text-slate-400 italic py-1">
+            Standard specifications (no custom attributes specified)
+          </div>
+        )}
       </div>
 
       {/* 8. Storage Location */}

@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { api, catalogApi } from '../lib/api.js';
 import { useAuthStore } from './authStore.js';
 import { recordCustomCategory, recordCustomBrand } from '../lib/customTaxonomyStorage.js';
+import { isElectronicsCategory, isFootwearCategory, isGroceryCategory, getPreloadedAttributes } from '../lib/taxonomyHelper.js';
 
 export interface StorageLocation {
   warehouse: string;
@@ -271,19 +272,17 @@ const initialDefaultDraft: Partial<ProductItem> = {
   name: '',
   sku: `PRD-${new Date().toISOString().slice(0, 10)}-${Math.floor(100000 + Math.random() * 900000)}`,
   barcode: '8901234567890',
-  category: 'Fashion',
-  subCategory: 'Apparel',
-  productType: 'Clothing',
-  brand: 'Brand',
+  category: '',
+  subCategory: '',
+  productType: '',
+  brand: '',
   stock: 10,
   lowStockThreshold: 5,
   status: 'active',
   price: 499,
   costPrice: 250,
   mrp: 699,
-  images: [
-    'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=600&q=80',
-  ],
+  images: [],
   attributes: {},
   storageLocation: {
     warehouse: 'Main Warehouse',
@@ -294,18 +293,18 @@ const initialDefaultDraft: Partial<ProductItem> = {
     description: 'Standard shelf',
   },
   tax: {
-    category: 'GST (18%)',
+    category: 'Standard (18%)',
     rate: 18,
     inclusive: true,
     amount: 90,
   },
   productIdentification: 'new',
-  hsnCode: '61091000',
+  hsnCode: '',
   description: '',
   tags: [],
   trackInventory: true,
   countryOfOrigin: 'India',
-  warranty: 'No Warranty',
+  warranty: 'Standard Warranty',
   isReturnable: true,
   weight: '0.250',
   dimensions: { length: '30', width: '20', height: '2' },
@@ -923,21 +922,50 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
     const hasVariants = draftProduct.attributes?.hasVariants === 'true';
     let variants = [];
 
-    if (hasVariants) {
-      const sizes = ['S', 'M', 'L', 'XL'];
-      variants = sizes.map((sz) => ({
-        sku: `${baseSku}-${sz}`,
-        size: sz,
+    if (hasVariants && Array.isArray(draftProduct.variants) && draftProduct.variants.length > 0) {
+      // Use existing user-configured variants from VariantMatrixBuilder
+      variants = draftProduct.variants.map((v, i) => ({
+        id: v.id || `var-${Date.now()}-${i}`,
+        sku: v.sku || `${baseSku}-${v.size || v.color || 'VAR'}`,
+        size: v.size || 'Standard',
+        color: v.color || 'Standard',
+        price: Number(v.price ?? draftProduct.price ?? 599),
+        mrp: Number(v.mrp ?? draftProduct.mrp ?? draftProduct.price ?? 699),
+        stock: Number(v.stock ?? 10),
+        images: v.image ? [v.image] : images,
+        image: v.image || images[0],
+        isActive: v.isActive !== false,
+      }));
+    } else if (hasVariants) {
+      // Intelligent category-aware fallback if rows were not generated
+      const isElect = isElectronicsCategory(draftProduct.category, draftProduct.subCategory);
+      const isFoot = isFootwearCategory(draftProduct.category, draftProduct.subCategory);
+      const isGroc = isGroceryCategory(draftProduct.category, draftProduct.subCategory);
+
+      const primaryOptions = isElect
+        ? ['128 GB', '256 GB', '512 GB']
+        : isFoot
+          ? ['UK 7', 'UK 8', 'UK 9']
+          : isGroc
+            ? ['500g', '1 kg', '2 kg']
+            : ['S', 'M', 'L', 'XL'];
+
+      variants = primaryOptions.map((opt, i) => ({
+        id: `var-${Date.now()}-${i}`,
+        sku: `${baseSku}-${opt.replace(/[^a-zA-Z0-9]/g, '')}`,
+        size: opt,
         color: draftProduct.attributes?.color || 'Standard',
         price: Number(draftProduct.price ?? 599),
         mrp: Number(draftProduct.mrp ?? draftProduct.price ?? 699),
-        stock: Math.max(1, Math.floor(Number(draftProduct.stock ?? 10) / sizes.length)),
+        stock: Math.max(1, Math.floor(Number(draftProduct.stock ?? 10) / primaryOptions.length)),
         images,
+        image: images[0],
         isActive: draftProduct.status !== 'inactive',
       }));
     } else {
       variants = [
         {
+          id: `var-${Date.now()}-0`,
           sku: baseSku,
           size: draftProduct.attributes?.size || 'Standard',
           color: draftProduct.attributes?.color || 'Standard',
@@ -945,6 +973,7 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
           mrp: Number(draftProduct.mrp ?? draftProduct.price ?? 699),
           stock: Number(draftProduct.stock ?? 10),
           images,
+          image: images[0],
           isActive: draftProduct.status !== 'inactive',
         },
       ];
@@ -993,9 +1022,9 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
         name: draftProduct.name || 'Untitled Product',
         sku: draftProduct.sku || `PRD-${Date.now()}`,
         barcode: draftProduct.barcode || '8901234567890',
-        category: draftProduct.category || 'Fashion',
-        subCategory: draftProduct.subCategory || 'Apparel',
-        productType: draftProduct.productType || 'Clothing',
+        category: draftProduct.category || 'General',
+        subCategory: draftProduct.subCategory || 'General',
+        productType: draftProduct.productType || 'Standard',
         brand: draftProduct.brand || 'Generic',
         stock: Number(draftProduct.stock ?? 100),
         lowStockThreshold: Number(draftProduct.lowStockThreshold ?? 10),
@@ -1004,11 +1033,8 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
         costPrice: Number(draftProduct.costPrice ?? 350),
         mrp: Number(draftProduct.mrp ?? 899),
         images,
-        attributes: draftProduct.attributes || {
-          fit: 'Regular',
-          color: 'Black',
-          size: 'M',
-        },
+        variants,
+        attributes: draftProduct.attributes || {},
         storageLocation: draftProduct.storageLocation || {
           warehouse: 'Main Warehouse',
           room: 'Room 101',
@@ -1023,7 +1049,7 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
           amount: 28.52,
         },
         updatedAt: nowStr,
-        hsnCode: draftProduct.hsnCode || '61091000',
+        hsnCode: draftProduct.hsnCode || '85171300',
         description: draftProduct.description || '',
         tags: draftProduct.tags || [],
         countryOfOrigin: draftProduct.countryOfOrigin || 'India',
@@ -1031,7 +1057,7 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
         isReturnable: draftProduct.isReturnable ?? true,
         weight: draftProduct.weight || '0.250',
         dimensions: draftProduct.dimensions || { length: '30', width: '20', height: '2' },
-        material: draftProduct.material || 'Cotton',
+        material: draftProduct.material || draftProduct.attributes?.Material || draftProduct.attributes?.fabric || '',
         careInstructions: draftProduct.careInstructions || 'Standard care',
         metaTitle: draftProduct.metaTitle || draftProduct.name,
         metaDescription: draftProduct.metaDescription || draftProduct.description,

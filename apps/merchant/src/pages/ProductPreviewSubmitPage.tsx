@@ -14,6 +14,7 @@ import { ProductGalleryPreview } from '../components/catalog/preview/ProductGall
 import { BarcodeLabelPreview } from '../components/catalog/preview/BarcodeLabelPreview.js';
 import { SummaryReviewCards } from '../components/catalog/preview/SummaryReviewCards.js';
 import { ProductLabelPrintModal } from '../components/catalog/ProductLabelPrintModal.js';
+import { getDisplayAttributes } from '../lib/taxonomyHelper.js';
 
 export const ProductPreviewSubmitPage: React.FC = () => {
   const {
@@ -86,6 +87,23 @@ export const ProductPreviewSubmitPage: React.FC = () => {
   const discountPct = mrp > price ? Math.round(((mrp - price) / mrp) * 100) : 0;
   const margin = price - cost;
   const marginPct = price > 0 ? Math.round((margin / price) * 100) : 0;
+
+  const quickSpecs = React.useMemo(() => {
+    const list: Array<{ label: string; value: string }> = [];
+    if (draftProduct.brand) {
+      list.push({ label: 'Brand', value: draftProduct.brand });
+    }
+    const dynamicSpecs = getDisplayAttributes(draftProduct);
+    dynamicSpecs.forEach((ds) => {
+      if (ds.label.toLowerCase() !== 'brand' && list.length < 8) {
+        list.push(ds);
+      }
+    });
+    if (draftProduct.hsnCode) {
+      list.push({ label: 'HSN', value: draftProduct.hsnCode });
+    }
+    return list;
+  }, [draftProduct]);
 
   return (
     <div className="space-y-5 max-w-7xl mx-auto pb-16">
@@ -206,7 +224,7 @@ export const ProductPreviewSubmitPage: React.FC = () => {
               </div>
 
               <h2 className="text-xl font-bold text-slate-900 tracking-tight leading-snug">
-                {draftProduct.name || 'Men Black Round Neck T-Shirt'}
+                {draftProduct.name || 'Untitled Product'}
               </h2>
 
               <div className="mt-1 flex items-center gap-2 font-mono text-xs text-slate-500">
@@ -268,36 +286,16 @@ export const ProductPreviewSubmitPage: React.FC = () => {
                 Quick Specs
               </h4>
               <div className="flex flex-wrap gap-1.5">
-                <span className="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
-                  Brand: <strong className="text-slate-900">{draftProduct.brand}</strong>
-                </span>
-                <span className="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
-                  Size:{' '}
-                  <strong className="text-slate-900">
-                    {draftProduct.attributes?.size || 'M'}
-                  </strong>
-                </span>
-                <span className="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
-                  Color:{' '}
-                  <strong className="text-slate-900">
-                    {draftProduct.attributes?.color || 'Black'}
-                  </strong>
-                </span>
-                <span className="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
-                  Fit:{' '}
-                  <strong className="text-slate-900">
-                    {draftProduct.attributes?.fit || 'Regular'}
-                  </strong>
-                </span>
-                <span className="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
-                  Fabric:{' '}
-                  <strong className="text-slate-900">
-                    {draftProduct.attributes?.fabric || 'Cotton'}
-                  </strong>
-                </span>
-                <span className="px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200 font-mono">
-                  HSN: <strong className="text-slate-900">{draftProduct.hsnCode}</strong>
-                </span>
+                {quickSpecs.map((spec, sIdx) => (
+                  <span
+                    key={sIdx}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200 ${
+                      spec.label === 'HSN' ? 'font-mono' : ''
+                    }`}
+                  >
+                    {spec.label}: <strong className="text-slate-900">{spec.value}</strong>
+                  </span>
+                ))}
               </div>
             </div>
           </div>

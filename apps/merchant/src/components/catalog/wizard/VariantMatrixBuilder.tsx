@@ -12,8 +12,16 @@ import {
   Palette,
   Ruler,
   AlertCircle,
+  HardDrive,
+  Package,
 } from 'lucide-react';
 import { useCatalogStore, ProductVariantItem } from '../../../stores/catalogStore.js';
+import {
+  isElectronicsCategory,
+  isFootwearCategory,
+  isGroceryCategory,
+  isFashionCategory,
+} from '../../../lib/taxonomyHelper.js';
 
 interface ColorPreset {
   name: string;
@@ -21,9 +29,9 @@ interface ColorPreset {
 }
 
 const APPAREL_SIZES = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'];
-const FOOTWEAR_SIZES = ['UK 6', 'UK 7', 'UK 8', 'UK 9', 'UK 10', 'UK 11'];
-const WAIST_SIZES = ['28', '30', '32', '34', '36', '38'];
-const WEIGHT_SIZES = ['250g', '500g', '1 kg', '2 kg', '5 kg'];
+const FOOTWEAR_SIZES = ['UK 6', 'UK 7', 'UK 8', 'UK 9', 'UK 10', 'UK 11', 'UK 12'];
+const STORAGE_PRESETS = ['64 GB', '128 GB', '256 GB', '512 GB', '1 TB', '8GB / 128GB', '12GB / 256GB', '16GB / 512GB'];
+const GROCERY_PACKS = ['100g', '250g', '500g', '1 kg', '2 kg', '5 kg', '500 ml', '1 L'];
 
 const POPULAR_COLORS: ColorPreset[] = [
   { name: 'Black', hex: '#0f172a' },
@@ -38,21 +46,82 @@ const POPULAR_COLORS: ColorPreset[] = [
   { name: 'Mustard Yellow', hex: '#d97706' },
 ];
 
+const ELECTRONICS_COLORS: ColorPreset[] = [
+  { name: 'Space Black', hex: '#1c1b1f' },
+  { name: 'Natural Titanium', hex: '#8e8a84' },
+  { name: 'Silver', hex: '#e2e8f0' },
+  { name: 'Midnight', hex: '#191f28' },
+  { name: 'Starlight', hex: '#f0ece1' },
+  { name: 'Deep Blue', hex: '#1e3a8a' },
+  { name: 'Desert Titanium', hex: '#d4bba2' },
+];
+
+const GROCERY_VARIANTS: ColorPreset[] = [
+  { name: 'Standard Pack', hex: '#3b82f6' },
+  { name: 'Family Pack', hex: '#10b981' },
+  { name: 'Economy Pack', hex: '#f59e0b' },
+  { name: 'Classic Flavour', hex: '#64748b' },
+];
+
 export const VariantMatrixBuilder: React.FC = () => {
   const { draftProduct, updateDraftProduct } = useCatalogStore();
 
-  const category = (draftProduct.category || '').toLowerCase();
+  const isElect = isElectronicsCategory(draftProduct.category, draftProduct.subCategory);
+  const isFoot = isFootwearCategory(draftProduct.category, draftProduct.subCategory);
+  const isGroc = isGroceryCategory(draftProduct.category, draftProduct.subCategory);
+  const isFash = isFashionCategory(draftProduct.category, draftProduct.subCategory);
+
   const baseSku = draftProduct.sku || `SKU-${Date.now().toString().slice(-6)}`;
   const basePrice = draftProduct.price ?? 499;
   const baseMrp = draftProduct.mrp ?? 699;
   const baseCost = draftProduct.costPrice ?? 300;
 
+  // Presets and titles according to category
+  const activePrimaryPresets = isElect
+    ? STORAGE_PRESETS
+    : isFoot
+      ? FOOTWEAR_SIZES
+      : isGroc
+        ? GROCERY_PACKS
+        : APPAREL_SIZES;
+
+  const activeSecondaryPresets = isElect
+    ? ELECTRONICS_COLORS
+    : isGroc
+      ? GROCERY_VARIANTS
+      : POPULAR_COLORS;
+
+  const dim1Title = isElect
+    ? 'Storage / Specs'
+    : isFoot
+      ? 'Shoe Sizes (UK)'
+      : isGroc
+        ? 'Pack Size / Weight'
+        : 'Apparel Sizes';
+
+  const dim2Title = isElect
+    ? 'Color / Finish'
+    : isGroc
+      ? 'Flavour / Pack Type'
+      : 'Colors';
+
+  const initialSizes = isElect
+    ? ['128 GB', '256 GB', '512 GB']
+    : isFoot
+      ? ['UK 7', 'UK 8', 'UK 9']
+      : isGroc
+        ? ['500g', '1 kg', '2 kg']
+        : ['M', 'L', 'XL'];
+
+  const initialColors = isElect
+    ? ELECTRONICS_COLORS.slice(0, 2)
+    : isGroc
+      ? GROCERY_VARIANTS.slice(0, 2)
+      : POPULAR_COLORS.slice(0, 2);
+
   // Selected Dimensions
-  const [selectedSizes, setSelectedSizes] = useState<string[]>(['M', 'L', 'XL']);
-  const [selectedColors, setSelectedColors] = useState<ColorPreset[]>([
-    { name: 'Black', hex: '#0f172a' },
-    { name: 'Navy Blue', hex: '#1e3a8a' },
-  ]);
+  const [selectedSizes, setSelectedSizes] = useState<string[]>(initialSizes);
+  const [selectedColors, setSelectedColors] = useState<ColorPreset[]>(initialColors);
   const [customSizeInput, setCustomSizeInput] = useState('');
   const [customColorName, setCustomColorName] = useState('');
   const [customColorHex, setCustomColorHex] = useState('#6366f1');
@@ -67,23 +136,29 @@ export const VariantMatrixBuilder: React.FC = () => {
     return (draftProduct.variants as ProductVariantItem[]) || [];
   });
 
-  // Decide default size palette based on category
-  const activeSizePresets = category.includes('foot')
-    ? FOOTWEAR_SIZES
-    : category.includes('groc') || category.includes('food')
-      ? WEIGHT_SIZES
-      : APPAREL_SIZES;
+  const syncWithStore = (rows: ProductVariantItem[]) => {
+    const totalStock = rows.reduce((acc, r) => (r.isActive ? acc + (r.stock || 0) : acc), 0);
+    updateDraftProduct({
+      variants: rows,
+      stock: totalStock > 0 ? totalStock : draftProduct.stock,
+      attributes: {
+        ...(draftProduct.attributes || {}),
+        hasVariants: 'true',
+        totalVariants: String(rows.length),
+      },
+    });
+  };
 
   // Generate or regenerate matrix when requested
   const generateMatrix = () => {
     const newRows: ProductVariantItem[] = [];
 
-    const colors = selectedColors.length > 0 ? selectedColors : [{ name: 'Default', hex: '#64748b' }];
+    const colors = selectedColors.length > 0 ? selectedColors : [{ name: 'Standard', hex: '#64748b' }];
     const sizes = selectedSizes.length > 0 ? selectedSizes : ['Standard'];
 
     colors.forEach((c) => {
       sizes.forEach((s) => {
-        const cleanColor = c.name.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 3);
+        const cleanColor = c.name.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 4);
         const cleanSize = s.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
         const sku = `${baseSku}-${cleanColor}-${cleanSize}`;
         const barcode = `890${Math.floor(1000000000 + Math.random() * 9000000000)}`;
@@ -106,19 +181,6 @@ export const VariantMatrixBuilder: React.FC = () => {
 
     setMatrixRows(newRows);
     syncWithStore(newRows);
-  };
-
-  const syncWithStore = (rows: ProductVariantItem[]) => {
-    const totalStock = rows.reduce((acc, r) => (r.isActive ? acc + (r.stock || 0) : acc), 0);
-    updateDraftProduct({
-      variants: rows,
-      stock: totalStock > 0 ? totalStock : draftProduct.stock,
-      attributes: {
-        ...(draftProduct.attributes || {}),
-        hasVariants: 'true',
-        totalVariants: String(rows.length),
-      },
-    });
   };
 
   // Bulk Apply Helpers
@@ -213,14 +275,14 @@ export const VariantMatrixBuilder: React.FC = () => {
           <div>
             <div className="flex items-center gap-2">
               <h4 className="text-xs sm:text-sm font-bold text-slate-900">
-                Amazon / Flipkart Variant Matrix Generator
+                Multi-Variant Matrix Generator
               </h4>
               <span className="text-[10px] bg-blue-600 text-white px-2 py-0.5 rounded-full font-bold">
-                Multi-SKU
+                {isElect ? 'Specs / Color' : isGroc ? 'Weight / Pack' : isFoot ? 'Size / Color' : 'Multi-SKU'}
               </span>
             </div>
             <p className="text-[11px] text-slate-500">
-              Pick colors and sizes to generate combinations with 1-click bulk price &amp; inventory controls.
+              Pick {dim1Title.toLowerCase()} and {dim2Title.toLowerCase()} to generate combinations with 1-click bulk price &amp; inventory controls.
             </p>
           </div>
         </div>
@@ -232,26 +294,82 @@ export const VariantMatrixBuilder: React.FC = () => {
         >
           <Zap className="w-3.5 h-3.5 fill-current" />
           <span>
-            Generate Matrix ({selectedColors.length} × {selectedSizes.length} ={' '}
-            {selectedColors.length * selectedSizes.length} Variants)
+            Generate Matrix ({selectedSizes.length} × {selectedColors.length} ={' '}
+            {selectedSizes.length * selectedColors.length} Variants)
           </span>
         </button>
       </div>
 
       {/* Dimension Pickers */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Colors Picker */}
+        {/* Dimension 1: Sizes / Storage / Pack Size */}
         <div className="p-4 bg-slate-50/80 border border-slate-200 rounded-xl space-y-2.5">
           <div className="flex items-center justify-between">
             <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-              <Palette className="w-3.5 h-3.5 text-blue-600" />
-              <span>1. Select Available Colors ({selectedColors.length})</span>
+              {isElect ? (
+                <HardDrive className="w-3.5 h-3.5 text-blue-600" />
+              ) : isGroc ? (
+                <Package className="w-3.5 h-3.5 text-blue-600" />
+              ) : (
+                <Ruler className="w-3.5 h-3.5 text-blue-600" />
+              )}
+              <span>1. Select {dim1Title} ({selectedSizes.length})</span>
             </label>
             <span className="text-[10px] text-slate-400">Click to toggle</span>
           </div>
 
           <div className="flex flex-wrap gap-1.5">
-            {POPULAR_COLORS.map((col) => {
+            {activePrimaryPresets.map((sz) => {
+              const isSelected = selectedSizes.includes(sz);
+              return (
+                <button
+                  key={sz}
+                  type="button"
+                  onClick={() => toggleSize(sz)}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
+                    isSelected
+                      ? 'bg-blue-600 border-blue-600 text-white shadow-xs'
+                      : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
+                  }`}
+                >
+                  {sz}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Custom Size / Spec Input */}
+          <div className="flex items-center gap-1.5 pt-1">
+            <input
+              type="text"
+              value={customSizeInput}
+              onChange={(e) => setCustomSizeInput(e.target.value)}
+              placeholder={`Add custom ${dim1Title.toLowerCase()}...`}
+              className="flex-1 px-2.5 py-1 text-xs bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:ring-1 focus:ring-blue-500"
+            />
+            <button
+              type="button"
+              onClick={addCustomSize}
+              disabled={!customSizeInput.trim()}
+              className="px-2.5 py-1 text-xs font-semibold bg-slate-800 text-white hover:bg-slate-900 rounded-lg disabled:opacity-40 transition-colors cursor-pointer"
+            >
+              + Add
+            </button>
+          </div>
+        </div>
+
+        {/* Dimension 2: Colors / Finish / Pack Type */}
+        <div className="p-4 bg-slate-50/80 border border-slate-200 rounded-xl space-y-2.5">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+              <Palette className="w-3.5 h-3.5 text-blue-600" />
+              <span>2. Select {dim2Title} ({selectedColors.length})</span>
+            </label>
+            <span className="text-[10px] text-slate-400">Click to toggle</span>
+          </div>
+
+          <div className="flex flex-wrap gap-1.5">
+            {activeSecondaryPresets.map((col) => {
               const isSelected = selectedColors.some((c) => c.name === col.name);
               return (
                 <button
@@ -288,7 +406,7 @@ export const VariantMatrixBuilder: React.FC = () => {
               type="text"
               value={customColorName}
               onChange={(e) => setCustomColorName(e.target.value)}
-              placeholder="Custom color (e.g. Teal Blue)..."
+              placeholder={`Custom ${dim2Title.toLowerCase()}...`}
               className="flex-1 px-2.5 py-1 text-xs bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:ring-1 focus:ring-blue-500"
             />
             <button
@@ -301,59 +419,9 @@ export const VariantMatrixBuilder: React.FC = () => {
             </button>
           </div>
         </div>
-
-        {/* Sizes Picker */}
-        <div className="p-4 bg-slate-50/80 border border-slate-200 rounded-xl space-y-2.5">
-          <div className="flex items-center justify-between">
-            <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-              <Ruler className="w-3.5 h-3.5 text-blue-600" />
-              <span>2. Select Available Sizes ({selectedSizes.length})</span>
-            </label>
-            <span className="text-[10px] text-slate-400">Click to toggle</span>
-          </div>
-
-          <div className="flex flex-wrap gap-1.5">
-            {activeSizePresets.map((size) => {
-              const isSelected = selectedSizes.includes(size);
-              return (
-                <button
-                  key={size}
-                  type="button"
-                  onClick={() => toggleSize(size)}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
-                    isSelected
-                      ? 'bg-blue-600 border-blue-600 text-white shadow-xs'
-                      : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
-                  }`}
-                >
-                  {size}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Custom Size Input */}
-          <div className="flex items-center gap-1.5 pt-1">
-            <input
-              type="text"
-              value={customSizeInput}
-              onChange={(e) => setCustomSizeInput(e.target.value)}
-              placeholder="Custom size (e.g. 42, Free Size, 1.5 Litre)..."
-              className="flex-1 px-2.5 py-1 text-xs bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:ring-1 focus:ring-blue-500"
-            />
-            <button
-              type="button"
-              onClick={addCustomSize}
-              disabled={!customSizeInput.trim()}
-              className="px-2.5 py-1 text-xs font-semibold bg-slate-800 text-white hover:bg-slate-900 rounded-lg disabled:opacity-40 transition-colors cursor-pointer"
-            >
-              + Add
-            </button>
-          </div>
-        </div>
       </div>
 
-      {/* Bulk Update Controls (Amazon Seller Central Style) */}
+      {/* Bulk Update Controls */}
       {matrixRows.length > 0 && (
         <div className="p-3 bg-white border border-slate-200 rounded-xl shadow-2xs space-y-2">
           <div className="flex items-center justify-between">
@@ -521,17 +589,17 @@ export const VariantMatrixBuilder: React.FC = () => {
                         type="number"
                         value={row.stock}
                         onChange={(e) => handleRowChange(idx, 'stock', Number(e.target.value))}
-                        className="w-full px-2 py-1 text-xs font-bold text-emerald-600 bg-white border border-slate-200 rounded focus:border-blue-500 text-right"
+                        className="w-full px-2 py-1 text-xs font-bold text-slate-800 bg-white border border-slate-200 rounded focus:border-blue-500"
                       />
                     </td>
 
-                    {/* Delete Action */}
+                    {/* Delete */}
                     <td className="p-2.5 text-center">
                       <button
                         type="button"
                         onClick={() => handleDeleteRow(idx)}
-                        className="text-slate-400 hover:text-rose-500 p-1 rounded transition-colors cursor-pointer"
-                        title="Remove Variant"
+                        className="p-1 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded transition-colors cursor-pointer"
+                        title="Delete variant row"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -541,25 +609,15 @@ export const VariantMatrixBuilder: React.FC = () => {
               </tbody>
             </table>
           </div>
-
-          <div className="p-2.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-[11px] text-slate-500">
-            <span>
-              Total {matrixRows.filter((r) => r.isActive).length} active variants generated
-            </span>
-            <span className="font-bold text-slate-800">
-              Total Variant Stock:{' '}
-              <span className="text-emerald-600">
-                {matrixRows.reduce((acc, r) => (r.isActive ? acc + (r.stock || 0) : acc), 0)} units
-              </span>
-            </span>
-          </div>
         </div>
       ) : (
-        <div className="p-4 rounded-xl border border-dashed border-slate-200 text-center text-xs text-slate-500 bg-slate-50/50">
-          Click <span className="font-bold text-blue-600">"Generate Matrix"</span> above to build your variant combinations table.
+        <div className="p-4 bg-slate-50 border border-dashed border-slate-200 rounded-xl text-center space-y-1">
+          <p className="text-xs font-semibold text-slate-600">No variants generated yet.</p>
+          <p className="text-[11px] text-slate-400">
+            Select your {dim1Title.toLowerCase()} and {dim2Title.toLowerCase()} above, then click &ldquo;Generate Matrix&rdquo;.
+          </p>
         </div>
       )}
     </div>
   );
 };
-

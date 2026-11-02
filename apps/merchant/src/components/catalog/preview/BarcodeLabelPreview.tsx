@@ -2,6 +2,7 @@ import React from 'react';
 import { Printer, Sparkles } from 'lucide-react';
 import { ProductItem } from '../../../stores/catalogStore.js';
 import { branding } from '@repo/shared-types/branding.config';
+import { getBarcodeStickerSpecs } from '../../../lib/taxonomyHelper.js';
 
 interface BarcodeLabelPreviewProps {
   product: Partial<ProductItem>;
@@ -16,8 +17,7 @@ export const BarcodeLabelPreview: React.FC<BarcodeLabelPreviewProps> = ({
   const sellingPrice = Number(product.price ?? 599);
   const savings = Math.max(0, mrp - sellingPrice);
   const discountPct = mrp > 0 ? Math.round((savings / mrp) * 100) : 0;
-  const sizeAttr = product.attributes?.size || 'M';
-  const colorAttr = product.attributes?.color || 'Black';
+  const { subtitle } = React.useMemo(() => getBarcodeStickerSpecs(product), [product]);
   const barcode = product.barcode || '8901234567890';
   const sku = product.sku || 'PRD-TSHIRT-RD-BLK-M';
 
@@ -41,18 +41,10 @@ export const BarcodeLabelPreview: React.FC<BarcodeLabelPreviewProps> = ({
         {/* Product Title */}
         <div className="w-full text-left">
           <h4 className="text-[11px] font-bold text-slate-900 line-clamp-2 leading-snug">
-            {product.name || 'Men Black Round Neck T-Shirt'}
+            {product.name || 'Product Item'}
           </h4>
-          <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-slate-600 font-medium">
-            <span>
-              Size: <strong className="text-slate-900">{sizeAttr}</strong>
-            </span>
-            <span>•</span>
-            <span>
-              Color: <strong className="text-slate-900">{colorAttr}</strong>
-            </span>
-            <span>•</span>
-            <span>{product.brand || 'Roadster'}</span>
+          <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-slate-600 font-medium truncate">
+            <span>{subtitle}</span>
           </div>
         </div>
 

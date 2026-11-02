@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useCatalogStore } from '../../../stores/catalogStore.js';
 import { VariantMatrixBuilder } from './VariantMatrixBuilder.js';
+import { findTaxonomy, isFashionCategory, isFootwearCategory, isElectronicsCategory, isGroceryCategory } from '../../../lib/taxonomyHelper.js';
 
 const popularTagSuggestions = [
   'Cotton',
@@ -72,22 +73,8 @@ export const AddProductStep3: React.FC = () => {
   const tagInputRef = useRef<HTMLInputElement>(null);
 
   const matchedTaxonomy = React.useMemo(() => {
-    const pType = (draftProduct.productType || '').trim().toLowerCase();
-    const cat = (draftProduct.category || '').trim().toLowerCase();
-    return (
-      (masterTaxonomies as any[]).find(
-        (t) =>
-          t.productType.toLowerCase() === pType &&
-          (!cat ||
-            t.category.toLowerCase() === cat ||
-            (cat.includes('men') && t.category.toLowerCase().includes('men')) ||
-            (cat.includes('women') && t.category.toLowerCase().includes('women'))),
-      ) ||
-      (masterTaxonomies as any[]).find(
-        (t) => t.productType.toLowerCase() === pType,
-      )
-    );
-  }, [draftProduct.productType, draftProduct.category]);
+    return findTaxonomy(draftProduct.category, draftProduct.subCategory, draftProduct.productType);
+  }, [draftProduct.category, draftProduct.subCategory, draftProduct.productType]);
 
   const dynamicAttributes: TaxonomyAttribute[] = matchedTaxonomy?.attributes || [];
 
@@ -423,12 +410,17 @@ export const AddProductStep3: React.FC = () => {
           </div>
 
           {/* Size Pills (Only shown for fashion / footwear) */}
-          {!((draftProduct.category || '').toLowerCase().includes('groc') || (draftProduct.category || '').toLowerCase().includes('food') || (draftProduct.category || '').toLowerCase().includes('elect') || (draftProduct.category || '').toLowerCase().includes('gadget')) && (
+          {(isFashionCategory(draftProduct.category, draftProduct.subCategory) || isFootwearCategory(draftProduct.category, draftProduct.subCategory)) && (
             <div className="pt-2 border-t border-slate-100">
-              <div className="text-[11px] font-semibold text-slate-600 mb-1.5">Size Options</div>
-              <div className="flex items-center gap-1.5">
-                {sizeOptions.map((sz) => {
-                  const isSelected = (attributes.size || 'M') === sz;
+              <div className="text-[11px] font-semibold text-slate-600 mb-1.5">
+                {isFootwearCategory(draftProduct.category, draftProduct.subCategory) ? 'Shoe Size (UK)' : 'Size Options'}
+              </div>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {(isFootwearCategory(draftProduct.category, draftProduct.subCategory)
+                  ? ['UK 6', 'UK 7', 'UK 8', 'UK 9', 'UK 10', 'UK 11']
+                  : ['XS', 'S', 'M', 'L', 'XL', '2XL']
+                ).map((sz) => {
+                  const isSelected = (attributes.size || (isFootwearCategory(draftProduct.category, draftProduct.subCategory) ? 'UK 8' : 'M')) === sz;
                   return (
                     <button
                       key={sz}
@@ -436,7 +428,7 @@ export const AddProductStep3: React.FC = () => {
                       onClick={() =>
                         updateDraftProduct({ attributes: { ...attributes, size: sz } })
                       }
-                      className={`w-7 h-7 rounded-md text-xs font-bold transition-all cursor-pointer ${
+                      className={`px-2.5 py-1 rounded-md text-xs font-bold transition-all cursor-pointer ${
                         isSelected
                           ? 'bg-blue-600 text-white shadow-xs'
                           : 'bg-slate-100 text-slate-600 hover:bg-slate-200'

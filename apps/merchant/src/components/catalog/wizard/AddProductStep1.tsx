@@ -27,6 +27,7 @@ import { lookupMasterProduct, MasterCatalogProduct } from '../../../lib/masterCa
 import { CameraBarcodeScannerModal } from '../CameraBarcodeScannerModal.js';
 
 import masterTaxonomies from '../../../data/taxonomies.json';
+import { getPreloadedAttributes } from '../../../lib/taxonomyHelper.js';
 
 interface CategoryDefinition {
   subCategories: string[];
@@ -193,6 +194,32 @@ export const AddProductStep1: React.FC = () => {
       ? draftProduct.productType
       : (availableProductTypes[0] || 'Standard');
   const productIdentification = draftProduct.productIdentification || 'new';
+  // Preload taxonomy attributes on mount or when parent category / product type is set
+  React.useEffect(() => {
+    const activeCat = category || 'Men\'s Fashion';
+    const activeSub = subCategory || 'Clothing';
+    const activePt = productType || 'Standard';
+
+    if (!draftProduct.category || !draftProduct.productType) {
+      const preloaded = getPreloadedAttributes(activeCat, activeSub, activePt, draftProduct.attributes || {});
+      updateDraftProduct({
+        category: activeCat,
+        subCategory: activeSub,
+        productType: activePt,
+        attributes: preloaded,
+      });
+    } else {
+      const currentAttrs = draftProduct.attributes || {};
+      const currentKeys = Object.keys(currentAttrs).filter(
+        (k) => k !== 'hasVariants' && k !== 'totalVariants' && k !== 'shelfLocation' && Boolean(currentAttrs[k])
+      );
+      if (currentKeys.length === 0) {
+        const preloaded = getPreloadedAttributes(draftProduct.category, draftProduct.subCategory, draftProduct.productType, currentAttrs);
+        updateDraftProduct({ attributes: preloaded });
+      }
+    }
+  }, [category, subCategory, productType]);
+
   const brand = draftProduct.brand || 'Generic / Unbranded';
   const hsnCode = draftProduct.hsnCode || '61091000';
 
@@ -220,10 +247,13 @@ export const AddProductStep1: React.FC = () => {
       customTax.productTypes[nextSub] ||
       ['Standard'];
 
+    const nextAttributes = getPreloadedAttributes(normCat, nextSub, nextTypes[0] || 'Standard', draftProduct.attributes || {});
+
     updateDraftProduct({
       category: normCat,
       subCategory: nextSub,
       productType: nextTypes[0] || 'Standard',
+      attributes: nextAttributes,
     });
 
     // Record custom category if not in static tree
@@ -239,9 +269,12 @@ export const AddProductStep1: React.FC = () => {
       customTax.productTypes[newSub] ||
       ['Standard'];
 
+    const nextAttributes = getPreloadedAttributes(category, newSub, nextTypes[0] || 'Standard', draftProduct.attributes || {});
+
     updateDraftProduct({
       subCategory: newSub,
       productType: nextTypes[0] || 'Standard',
+      attributes: nextAttributes,
     });
 
     const updated = recordCustomCategory(storeId, category, newSub, nextTypes[0]);
@@ -255,6 +288,8 @@ export const AddProductStep1: React.FC = () => {
         (!category || normalizeCategoryName(t.category).toLowerCase() === category.toLowerCase()),
     );
 
+    const nextAttributes = getPreloadedAttributes(category, subCategory, newPt, draftProduct.attributes || {});
+
     updateDraftProduct({
       productType: newPt,
       hsnCode: match?.hsnCode || draftProduct.hsnCode || '61091000',
@@ -265,6 +300,7 @@ export const AddProductStep1: React.FC = () => {
             inclusive: true,
           }
         : draftProduct.tax,
+      attributes: nextAttributes,
     });
     const updated = recordCustomCategory(storeId, category, subCategory, newPt);
     setCustomTax(updated);
@@ -287,6 +323,7 @@ export const AddProductStep1: React.FC = () => {
 
   const selectHierarchy = (t: TaxonomyItem) => {
     const normCat = normalizeCategoryName(t.category);
+    const preloaded = getPreloadedAttributes(normCat, t.subcategory, t.productType, draftProduct.attributes || {});
     updateDraftProduct({
       category: normCat,
       subCategory: t.subcategory,
@@ -297,6 +334,7 @@ export const AddProductStep1: React.FC = () => {
         rate: t.gstRate ?? 18,
         inclusive: true,
       },
+      attributes: preloaded,
     });
     setQuickSearch('');
   };
