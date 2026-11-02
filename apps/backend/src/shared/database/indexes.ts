@@ -182,12 +182,27 @@ export async function ensureIndexes(options?: {
         // 1. Explicitly trigger index creation on the model
         await model.createIndexes();
 
-        // 2. Query MongoDB's collection for active indexes
+        // 2. Prune legacy conflicting unique indexes for role-scoped collections (AUDIT-004 & AUDIT-013)
+        if (spec.modelName === 'User') {
+          const currentIndexes = await model.collection.listIndexes().toArray();
+          for (const idx of currentIndexes) {
+            if (idx.name === 'email_1' && idx.unique) {
+              await model.collection.dropIndex('email_1').catch(() => {});
+              logger.info('🧹 [IndexManager] Dropped legacy global unique index "email_1" to enable role-scoped customer/merchant coexistence');
+            }
+            if (idx.name === 'phone_1' && idx.unique) {
+              await model.collection.dropIndex('phone_1').catch(() => {});
+              logger.info('🧹 [IndexManager] Dropped legacy global unique index "phone_1" to enable role-scoped customer/merchant coexistence');
+            }
+          }
+        }
+
+        // 3. Query MongoDB's collection for active indexes
         const liveIndexes = await model.collection.listIndexes().toArray();
         auditEntry.existingIndexes = liveIndexes.map((idx) => idx.name || JSON.stringify(idx.key));
         totalIndexesCount += liveIndexes.length;
 
-        // 3. Cross-reference against canonical ESR rules
+        // 4. Cross-reference against canonical ESR rules
         for (const rule of spec.criticalRules) {
           const matched = liveIndexes.some((idx) => isKeyMatch(idx.key as Record<string, unknown>, rule.fields));
           if (!matched) {
