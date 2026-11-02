@@ -1,3 +1,4 @@
+import { useAuthStore } from '@/stores/auth.store';
 import { create } from 'zustand';
 import { notificationsApi, type ICustomerNotification } from '@/lib/api/notifications';
 
@@ -84,7 +85,9 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
       });
     } catch (err) {
       const isAuth = (err as { statusCode?: number })?.statusCode === 401;
-      if (!isAuth) console.warn('Failed to fetch notifications in store:', err);
+      if (isAuth && typeof window !== 'undefined') {
+        try { useAuthStore.getState().logout(); } catch (e) { void e; }
+      }
       set({ isLoading: false });
     }
   },

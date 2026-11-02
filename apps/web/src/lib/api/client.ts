@@ -1,3 +1,4 @@
+import { useAuthStore } from '@/stores/auth.store';
 import type { ApiSuccessResponse } from '@repo/shared-types';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
@@ -123,6 +124,7 @@ async function performTokenRefresh(): Promise<string | null> {
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('customer-auth-storage');
+    try { useAuthStore.getState().logout(); } catch (e) { void e; }
   }
   return null;
 }
