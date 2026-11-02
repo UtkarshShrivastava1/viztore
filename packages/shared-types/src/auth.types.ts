@@ -72,6 +72,7 @@ export const loginUserSchema = z
     identifier: z.string().min(3, 'Email or phone number is required').optional(),
     email: z.string().email('Invalid email address').optional(),
     password: z.string().min(1, 'Password is required'),
+    role: z.nativeEnum(UserRole).optional(),
   })
   .refine((data) => Boolean(data.identifier || data.email), {
     message: 'Email or phone number identifier is required',
@@ -80,6 +81,7 @@ export const loginUserSchema = z
   .transform((data) => ({
     identifier: (data.identifier || data.email) as string,
     password: data.password,
+    role: data.role,
   }));
 
 export const refreshTokenSchema = z.object({
@@ -109,6 +111,13 @@ export const updateProfileSchema = z.object({
   gender: z.enum(['male', 'female', 'other', 'prefer_not_to_say']).optional(),
 });
 
+export const createFeedbackSchema = z.object({
+  experience: z.number().int().min(1).max(5),
+  topic: z.string().min(1).max(50),
+  text: z.string().max(2000).optional().default(''),
+  nps: z.number().int().min(0).max(10).optional(),
+});
+
 export type RegisterUserDto = z.infer<typeof registerUserSchema>;
 export type LoginUserDto = z.infer<typeof loginUserSchema>;
 export type RefreshTokenDto = z.infer<typeof refreshTokenSchema>;
@@ -116,5 +125,5 @@ export type UserAddressDto = z.infer<typeof userAddressSchema>;
 export type CreateAddressDto = UserAddressDto;
 export type UpdateAddressDto = z.infer<typeof updateAddressSchema>;
 export type UpdateProfileDto = z.infer<typeof updateProfileSchema>;
+export type CreateFeedbackDto = z.infer<typeof createFeedbackSchema>;
 export type IUserProfile = IUser;
-

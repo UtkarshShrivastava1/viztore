@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Download,
   ChevronDown,
@@ -39,6 +39,7 @@ export const PayoutsPage: React.FC<PayoutsPageProps> = ({ onNavigateHome }) => {
     payoutAccountFilter,
     setPayoutAccountFilter,
     dateRangeFilter,
+    setDateRangeFilter,
     downloadStatement,
     selectedPayout,
     isPayoutDrawerOpen,
@@ -49,7 +50,12 @@ export const PayoutsPage: React.FC<PayoutsPageProps> = ({ onNavigateHome }) => {
     selectedTransaction,
     isTransactionDrawerOpen,
     setIsTransactionDrawerOpen,
+    fetchOverview,
   } = usePayoutsStore();
+
+  useEffect(() => {
+    fetchOverview();
+  }, [fetchOverview]);
 
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
 
@@ -200,7 +206,7 @@ export const PayoutsPage: React.FC<PayoutsPageProps> = ({ onNavigateHome }) => {
             <div className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate">
               ₹ {availableForPayout.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
             </div>
-            <span className="text-[10px] text-slate-400 mt-0.5 block truncate">Next payout on 22 May 2024</span>
+            <span className="text-[10px] text-slate-400 mt-0.5 block truncate">Next cycle payout on 04 Nov 2026</span>
           </div>
         </div>
 
@@ -217,7 +223,7 @@ export const PayoutsPage: React.FC<PayoutsPageProps> = ({ onNavigateHome }) => {
             <div className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate">
               ₹ {pendingBalance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
             </div>
-            <span className="text-[10px] text-slate-400 mt-0.5 block truncate">From 12 Orders</span>
+            <span className="text-[10px] text-slate-400 mt-0.5 block truncate">From 1 In-Transit Settlement</span>
           </div>
         </div>
 
@@ -234,7 +240,7 @@ export const PayoutsPage: React.FC<PayoutsPageProps> = ({ onNavigateHome }) => {
             <div className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate">
               ₹ {onHold.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
             </div>
-            <span className="text-[10px] text-slate-400 mt-0.5 block truncate">From 3 Orders</span>
+            <span className="text-[10px] text-slate-400 mt-0.5 block truncate">Risk review: Clear</span>
           </div>
         </div>
 
@@ -266,27 +272,40 @@ export const PayoutsPage: React.FC<PayoutsPageProps> = ({ onNavigateHome }) => {
             <span className="text-xs text-slate-500 font-medium">Payout Account</span>
             <div className="relative">
               <select
-                value={payoutAccountFilter}
+                value={payoutAccountFilter || 'HDFC Bank - 50200012345678'}
                 onChange={(e) => setPayoutAccountFilter(e.target.value)}
-                className="appearance-none bg-white border border-slate-200 rounded-xl pl-3 pr-8 py-1.5 text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 min-w-[210px]"
+                className="appearance-none bg-white border border-slate-200 rounded-xl pl-3 pr-8 py-1.5 text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 min-w-[220px]"
               >
                 <option value="HDFC Bank - 50200012345678">
-                  HDFC Bank - 50200012345678
+                  HDFC Bank - 50200012345678 (Primary)
                 </option>
                 <option value="ICICI Bank - 001205012345">
                   ICICI Bank - 001205012345
+                </option>
+                <option value="State Bank of India - 39820019284">
+                  State Bank of India - 39820019284
                 </option>
               </select>
               <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
           </div>
 
-          {/* Date Range */}
+          {/* Date Range Selector */}
           <div className="flex items-center gap-1.5">
             <span className="text-xs text-slate-500 font-medium">Date Range</span>
-            <div className="flex items-center bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-medium text-slate-700 min-w-[190px] justify-between">
-              <span>{dateRangeFilter}</span>
-              <Calendar className="w-3.5 h-3.5 text-slate-400" />
+            <div className="relative">
+              <select
+                value={dateRangeFilter || '01 Oct 2026 - 31 Oct 2026'}
+                onChange={(e) => setDateRangeFilter(e.target.value)}
+                className="appearance-none bg-white border border-slate-200 rounded-xl pl-3 pr-8 py-1.5 text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 min-w-[210px]"
+              >
+                <option value="01 Oct 2026 - 31 Oct 2026">01 Oct 2026 - 31 Oct 2026 (This Month)</option>
+                <option value="25 Oct 2026 - 31 Oct 2026">25 Oct 2026 - 31 Oct 2026 (This Week)</option>
+                <option value="18 Oct 2026 - 24 Oct 2026">18 Oct 2026 - 24 Oct 2026 (Last Week)</option>
+                <option value="01 Sep 2026 - 30 Sep 2026">01 Sep 2026 - 30 Sep 2026 (Last Month)</option>
+                <option value="All Time (FY 2026-27)">All Time (FY 2026-27)</option>
+              </select>
+              <Calendar className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
           </div>
         </div>
@@ -294,7 +313,10 @@ export const PayoutsPage: React.FC<PayoutsPageProps> = ({ onNavigateHome }) => {
         {/* Filter Button */}
         <button
           type="button"
-          className="px-3.5 py-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-colors shadow-2xs flex items-center gap-1.5 cursor-pointer"
+          onClick={() => {
+            fetchOverview();
+          }}
+          className="px-3.5 py-1.5 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-colors shadow-2xs flex items-center gap-1.5 cursor-pointer active:scale-95"
         >
           <Filter className="w-3.5 h-3.5 text-blue-600" />
           <span>Apply Filter</span>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   Store,
   Upload,
@@ -19,7 +19,7 @@ import { useAuthStore } from '../../stores/authStore.js';
 import { branding } from '@repo/shared-types';
 
 export const StoreProfileTab: React.FC = () => {
-  const { storeProfile, updateStoreProfile, setActiveSubTab } = useSettingsStore();
+  const { storeProfile, updateStoreProfile, setActiveSubTab, saveAllChanges, isSaving, markDirty } = useSettingsStore();
   const { currentStore, user } = useAuthStore();
   
   const [formData, setFormData] = useState(() => {
@@ -52,13 +52,32 @@ export const StoreProfileTab: React.FC = () => {
     }
   }, [currentStore, user, storeProfile.displayName, updateStoreProfile]);
 
+      const completionPercentage = useMemo(() => {
+    const checks = [
+      Boolean(formData.displayName && formData.displayName !== 'Fashion Hub'),
+      Boolean(formData.description && formData.description.length > 5),
+      Boolean(formData.phone),
+      Boolean(formData.email),
+      Boolean(formData.address && formData.city),
+    ];
+    const passed = checks.filter(Boolean).length;
+    return Math.round((passed / checks.length) * 100);
+  }, [formData]);
+
+  const [isEditingPhone, setIsEditingPhone] = useState(false);
+  const [isEditingEmail, setIsEditingEmail] = useState(false);
+  const phoneInputRef = useRef<HTMLInputElement>(null);
+  const emailInputRef = useRef<HTMLInputElement>(null);
   const [showBanner, setShowBanner] = useState(true);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     updateStoreProfile(formData);
-    setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 2500);
+    const success = await saveAllChanges();
+    if (success) {
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 2500);
+    }
   };
 
   return (
@@ -159,16 +178,30 @@ export const StoreProfileTab: React.FC = () => {
             <div className="relative flex items-center">
               <Phone className="w-3.5 h-3.5 text-slate-400 absolute left-3.5 pointer-events-none" />
               <input
-                type="text"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="w-full pl-9 pr-24 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                type="tel"
+                inputMode="numeric"
+                maxLength={10}
+                ref={phoneInputRef}
+                value={formData.phone.replace(/\D/g, '').slice(0, 10)}
+                onChange={(e) => {
+                  const cleaned = e.target.value.replace(/\D/g, '').slice(0, 10);
+                  setFormData({ ...formData, phone: cleaned });
+                  markDirty();
+                }}
+                className="w-full pl-9 pr-24 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
               />
               <div className="absolute right-2.5 flex items-center gap-2">
                 <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
                   Verified
                 </span>
-                <button type="button" className="text-xs font-bold text-blue-600 hover:text-blue-700">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsEditingEmail(true);
+                    setTimeout(() => emailInputRef.current?.focus(), 50);
+                  }}
+                  className="text-xs font-bold text-blue-600 hover:text-blue-700"
+                >
                   Edit
                 </button>
               </div>
@@ -182,8 +215,7 @@ export const StoreProfileTab: React.FC = () => {
             <div className="relative flex items-center">
               <Mail className="w-3.5 h-3.5 text-slate-400 absolute left-3.5 pointer-events-none" />
               <input
-                type="email"
-                value={formData.email}
+                type="email" ref={emailInputRef} value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 className="w-full pl-9 pr-24 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
               />
@@ -191,7 +223,14 @@ export const StoreProfileTab: React.FC = () => {
                 <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
                   Verified
                 </span>
-                <button type="button" className="text-xs font-bold text-blue-600 hover:text-blue-700">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsEditingEmail(true);
+                    setTimeout(() => emailInputRef.current?.focus(), 50);
+                  }}
+                  className="text-xs font-bold text-blue-600 hover:text-blue-700"
+                >
                   Edit
                 </button>
               </div>
@@ -275,9 +314,15 @@ export const StoreProfileTab: React.FC = () => {
               <MapPin className="w-3.5 h-3.5 text-slate-400 absolute left-3.5 pointer-events-none" />
               <input
                 type="text"
+                inputMode="numeric"
+                maxLength={6}
                 value={formData.pinCode}
-                onChange={(e) => setFormData({ ...formData, pinCode: e.target.value })}
-                className="w-full pl-9 pr-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                onChange={(e) => {
+                  const cleaned = e.target.value.replace(/\D/g, '').slice(0, 6);
+                  setFormData({ ...formData, pinCode: cleaned });
+                  markDirty();
+                }}
+                className="w-full pl-9 pr-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
               />
             </div>
           </div>
@@ -313,11 +358,11 @@ export const StoreProfileTab: React.FC = () => {
         <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-5 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-bold text-slate-900">Profile completeness</h3>
-            <span className="text-xs font-black text-blue-600">80%</span>
+            <span className="text-xs font-black text-blue-600">{completionPercentage}%</span>
           </div>
 
           <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-            <div className="h-full bg-blue-600 rounded-full" style={{ width: '80%' }} />
+            <div className="h-full bg-blue-600 rounded-full" style={{ width: `${completionPercentage}%` }} />
           </div>
 
           <div className="divide-y divide-slate-100 text-xs">

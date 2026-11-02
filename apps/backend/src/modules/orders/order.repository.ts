@@ -30,7 +30,14 @@ export function createOrderRepository(
       storeId: raw.storeId,
       items: raw.items,
       shippingAddress: raw.shippingAddress,
+      fulfilmentMode: (raw as any).fulfilmentMode,
+      paymentMethod: (raw as any).paymentMethod || 'cod',
+      paymentStatus: (raw as any).paymentStatus || ((raw as any).paymentMethod === 'online' || (raw as any).paymentMethod === 'prepaid' ? 'paid' : 'pending'),
+      reserveCode: (raw as any).reserveCode,
+      reserveExpiresAt: (raw as any).reserveExpiresAt,
       subtotal: raw.subtotal,
+      discount: (raw as any).discount || 0,
+      couponCode: (raw as any).couponCode || null,
       tax: raw.tax,
       shippingFee: raw.shippingFee,
       grandTotal: raw.grandTotal,
@@ -51,7 +58,9 @@ export function createOrderRepository(
     const subtotal = calculateSubtotal(dto.items);
     const tax = calculateTax(subtotal);
     const shippingFee = calculateShippingFee(subtotal);
-    const grandTotal = calculateGrandTotal(subtotal, tax, shippingFee);
+    const discount = dto.discount && dto.discount > 0 ? dto.discount : 0;
+    const rawTotal = calculateGrandTotal(subtotal, tax, shippingFee);
+    const grandTotal = Number(Math.max(0, rawTotal - discount).toFixed(2));
 
     const initialStatusHistory: IOrderStatusHistoryEntry[] = [
       {
@@ -62,11 +71,18 @@ export function createOrderRepository(
       },
     ];
 
+    const resolvedPaymentMethod = dto.paymentMethod || 'cod';
+    const resolvedPaymentStatus = dto.paymentStatus || (resolvedPaymentMethod === 'online' || resolvedPaymentMethod === 'prepaid' ? 'paid' : 'pending');
+
     const orderData = {
       ...dto,
+      paymentMethod: resolvedPaymentMethod,
+      paymentStatus: resolvedPaymentStatus,
       orderNumber: generateOrderNumber(),
       deliveryOtp: generateDeliveryOtp(),
       subtotal,
+      discount,
+      couponCode: dto.couponCode || null,
       tax,
       shippingFee,
       grandTotal,

@@ -13,12 +13,12 @@ export function FulfillmentPicker() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <OptionCard 
           icon={<Calendar className="h-5 w-5" />}
-          title="Reserve"
-          desc="Reserve your order for a specific date and time."
+          title="In-Store Hold (2 Hours)"
+          desc="Hold items at local store for 2 hours. Inspect & pay at counter."
           selected={fulfillmentType === 'reserve'}
           onClick={() => setFulfillmentType('reserve')}
-          iconColor="text-blue-500"
-          iconBg="bg-blue-50"
+          iconColor="text-indigo-600"
+          iconBg="bg-indigo-50"
         />
         <OptionCard 
           icon={<ShoppingBag className="h-5 w-5" />}
@@ -47,9 +47,12 @@ export function FulfillmentPicker() {
          </div>
       )}
       {fulfillmentType === 'reserve' && (
-         <div className="mt-3 flex items-center gap-2 rounded-lg border border-green-100 bg-green-50 px-4 py-2.5 text-[11px] font-bold text-emerald-600">
-           <Calendar className="h-4 w-4" />
-           Your items will be reserved. You can pay later at the time of pickup or delivery.
+         <div className="mt-3 flex items-center justify-between gap-2 rounded-xl border border-indigo-200 bg-gradient-to-r from-indigo-50 to-blue-50 px-4 py-3 text-[11px] font-bold text-indigo-900 shadow-2xs">
+           <div className="flex items-center gap-2">
+             <Calendar className="h-4 w-4 text-indigo-600 shrink-0" />
+             <span>⏱️ 2-Hour In-Store Hold Active: Your items are held exclusively for 2 hours. Zero payment needed now — pay at counter upon pickup.</span>
+           </div>
+           <span className="shrink-0 bg-indigo-600 text-white text-[10px] px-2 py-0.5 rounded-full font-semibold">2h Window</span>
          </div>
       )}
     </div>

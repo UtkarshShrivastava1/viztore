@@ -95,6 +95,7 @@ export const Step1MobileEmail: React.FC<Step1MobileEmailProps> = ({
           authRes = await api.post('/auth/login', {
             identifier: cleanEmail,
             password,
+            role: 'merchant',
           });
         } else {
           throw regErr;

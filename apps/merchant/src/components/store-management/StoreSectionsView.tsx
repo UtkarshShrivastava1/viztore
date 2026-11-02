@@ -22,22 +22,23 @@ import { AddEditSectionView } from './AddEditSectionView.js';
 export const StoreSectionsView: React.FC = () => {
   const {
     sections,
+    curatedProducts,
     kpis,
     toggleSectionStatus,
     moveSectionPriority,
     deleteSection,
+    isEditingSection,
+    editingSectionId,
+    startEditingSection,
+    stopEditingSection,
   } = useStoreManagementStore();
 
-  const [isEditingMode, setIsEditingMode] = useState(false);
-  const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
-
-  if (isEditingMode) {
+  if (isEditingSection) {
     return (
       <AddEditSectionView
         sectionId={editingSectionId}
         onBack={() => {
-          setIsEditingMode(false);
-          setEditingSectionId(null);
+          stopEditingSection();
         }}
       />
     );
@@ -175,8 +176,7 @@ export const StoreSectionsView: React.FC = () => {
           <button
             type="button"
             onClick={() => {
-              setEditingSectionId(null);
-              setIsEditingMode(true);
+              startEditingSection(null);
             }}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition-colors"
           >
@@ -238,7 +238,9 @@ export const StoreSectionsView: React.FC = () => {
 
                     {/* Products Count */}
                     <td className="py-2.5 px-3 text-center font-bold text-slate-800">
-                      {sec.productCount}
+                      {isLastAlwaysOn
+                        ? (curatedProducts.length || sec.productCount)
+                        : (Array.isArray(sec.productIds) ? sec.productIds.length : sec.productCount)}
                     </td>
 
                     {/* Display Order */}
@@ -309,8 +311,7 @@ export const StoreSectionsView: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => {
-                            setEditingSectionId(sec.id);
-                            setIsEditingMode(true);
+                            startEditingSection(sec.id);
                           }}
                           className="px-2.5 py-1 text-blue-600 hover:bg-blue-50 border border-blue-200 rounded-lg text-xs font-semibold transition-colors"
                         >

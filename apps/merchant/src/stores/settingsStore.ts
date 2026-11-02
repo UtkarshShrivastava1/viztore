@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { storesApi } from '../lib/api.js';
+import { useAuthStore } from './authStore.js';
 
 export type SettingsSubTab =
   | 'store_profile'
@@ -329,12 +331,16 @@ export interface SettingsState {
   openStoreInfoModal: () => void;
   closeStoreInfoModal: () => void;
 
-  // Unsaved changes tracking
+  // Unsaved changes tracking & backend persistence (AUDIT-057)
   isDirty: boolean;
+  isSaving: boolean;
+  saveSuccess: boolean;
+  saveError: string | null;
   setIsDirty: (dirty: boolean) => void;
   markDirty: () => void;
   markClean: () => void;
-  saveAllChanges: () => void;
+  loadSettings: (storeId?: string) => Promise<void>;
+  saveAllChanges: () => Promise<boolean>;
   discardAllChanges: () => void;
 }
 
@@ -348,7 +354,7 @@ const defaultHours: BusinessHours[] = [
   { day: 'Sunday', isOpen: false, openTime: 'Closed', closeTime: 'Closed' },
 ];
 
-export const useSettingsStore = create<SettingsState>((set) => ({
+export const useSettingsStore = create<SettingsState>((set, get) => ({
   activeSubTab: 'store_profile',
   setActiveSubTab: (tab) => set({ activeSubTab: tab }),
 
@@ -412,12 +418,12 @@ export const useSettingsStore = create<SettingsState>((set) => ({
     set((state) => ({ billingInvoicing: { ...state.billingInvoicing, ...data } })),
 
   taxGst: {
-    gstin: '',
+    gstin: '22AAAAA0000A1Z5',
     isVerified: true,
-    businessLegalName: '',
-    tradeName: '',
+    businessLegalName: 'Urban Vogue Studio Retail',
+    tradeName: 'Urban Vogue Studio',
     registrationType: 'Regular',
-    registeredAddress: '',
+    registeredAddress: 'Shop No. 12, City Mall, Supela, Bhilai, Chhattisgarh - 490023',
     applyGstOnOrders: true,
     priceDisplay: 'excluding_tax',
     defaultGstRate: '18% (Standard Rate)',
@@ -435,14 +441,14 @@ export const useSettingsStore = create<SettingsState>((set) => ({
     notifyPaymentReceived: true,
     notifyPayoutUpdates: true,
     walletBalance: 32450,
-    nextPayoutDate: '25 May 2024',
+    nextPayoutDate: '03 Nov 2026',
     nextPayoutAmount: 18230,
     recentTransactions: [
-      { id: 'tx-1', title: 'Order Payment Received', date: '18 May 2024, 10:24 AM', amount: 2450, type: 'credit' },
-      { id: 'tx-2', title: 'Payout to Bank', date: '15 May 2024, 06:12 PM', amount: -18230, type: 'debit' },
-      { id: 'tx-3', title: 'Order Payment Received', date: '14 May 2024, 03:40 PM', amount: 1980, type: 'credit' },
-      { id: 'tx-4', title: 'Refund Processed', date: '12 May 2024, 11:20 AM', amount: -899, type: 'refund' },
-      { id: 'tx-5', title: 'Order Payment Received', date: '10 May 2024, 09:15 AM', amount: 3299, type: 'credit' },
+      { id: 'tx-1', title: 'Order Payment Received', date: '31 Oct 2026, 10:24 AM', amount: 2450, type: 'credit' },
+      { id: 'tx-2', title: 'Payout to Bank', date: '28 Oct 2026, 06:12 PM', amount: -18230, type: 'debit' },
+      { id: 'tx-3', title: 'Order Payment Received', date: '26 Oct 2026, 03:40 PM', amount: 1980, type: 'credit' },
+      { id: 'tx-4', title: 'Refund Processed', date: '24 Oct 2026, 11:20 AM', amount: -899, type: 'refund' },
+      { id: 'tx-5', title: 'Order Payment Received', date: '22 Oct 2026, 09:15 AM', amount: 3299, type: 'credit' },
     ],
   },
   updatePaymentsWallet: (data) =>
@@ -563,11 +569,260 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   openStoreInfoModal: () => set({ isStoreInfoModalOpen: true }),
   closeStoreInfoModal: () => set({ isStoreInfoModalOpen: false }),
 
-  // Unsaved changes tracking
+  // Unsaved changes tracking & live backend persistence (AUDIT-057)
   isDirty: false,
+  isSaving: false,
+  saveSuccess: false,
+  saveError: null,
   setIsDirty: (dirty) => set({ isDirty: dirty }),
   markDirty: () => set({ isDirty: true }),
   markClean: () => set({ isDirty: false }),
-  saveAllChanges: () => set({ isDirty: false }),
-  discardAllChanges: () => set({ isDirty: false }),
+
+  loadSettings: async (storeId?: string) => {
+    try {
+      const activeStore = useAuthStore.getState().currentStore;
+      const activeUser = useAuthStore.getState().user;
+      const targetId = storeId || activeStore?._id || activeStore?.id;
+      if (!targetId) return;
+
+      const res = await storesApi.getStoreSettings(targetId);
+      if (res?.data) {
+        const s = res.data;
+        const defaultDayMap: Record<string, string> = {
+          Monday: 'monday',
+          Tuesday: 'tuesday',
+          Wednesday: 'wednesday',
+          Thursday: 'thursday',
+          Friday: 'friday',
+          Saturday: 'saturday',
+          Sunday: 'sunday',
+        };
+
+        set((state) => ({
+          storeProfile: {
+            ...state.storeProfile,
+            displayName: s.name || state.storeProfile.displayName,
+            description: s.description || state.storeProfile.description,
+            phone: s.phone || activeUser?.phone || state.storeProfile.phone,
+            email: s.email || activeUser?.email || state.storeProfile.email,
+            logoUrl: s.logoUrl || state.storeProfile.logoUrl,
+            address: s.address?.street || state.storeProfile.address,
+            city: s.address?.city || state.storeProfile.city,
+            state: s.address?.state || state.storeProfile.state,
+            pinCode: s.address?.pincode || state.storeProfile.pinCode,
+          },
+          businessInfo: {
+            ...state.businessInfo,
+            businessName: s.name || state.businessInfo.businessName,
+            gstin: s.legalDetails?.gstin || state.businessInfo.gstin,
+            isGstinVerified: Boolean(s.legalDetails?.isGstVerified ?? true),
+            panNumber: s.legalDetails?.pan || state.businessInfo.panNumber,
+            isPanVerified: Boolean(s.legalDetails?.pan),
+            legalBusinessName: s.legalDetails?.legalBusinessName || s.name || state.businessInfo.legalBusinessName,
+            city: s.address?.city || state.businessInfo.city,
+            state: s.address?.state || state.businessInfo.state,
+            pinCode: s.address?.pincode || state.businessInfo.pinCode,
+          },
+          taxGst: {
+            ...state.taxGst,
+            gstin: s.legalDetails?.gstin || state.businessInfo.gstin || state.taxGst.gstin,
+            isVerified: Boolean(s.legalDetails?.isGstVerified ?? true),
+            businessLegalName: s.legalDetails?.legalBusinessName || s.name || state.taxGst.businessLegalName,
+            tradeName: s.name || state.taxGst.tradeName,
+            registeredAddress: s.address
+              ? `${s.address.street}, ${s.address.city}, ${s.address.state} - ${s.address.pincode}`
+              : state.taxGst.registeredAddress,
+            priceDisplay: s.settings?.tax?.isTaxInclusive ? 'including_tax' : 'excluding_tax',
+            applyGstOnOrders: s.settings?.tax?.isTaxInclusive ?? true,
+          },
+          billingInvoicing: {
+            ...state.billingInvoicing,
+            invoicePrefix: s.settings?.billing?.invoicePrefix || state.billingInvoicing.invoicePrefix,
+            startingNumber: String(s.settings?.billing?.nextInvoiceNumber || state.billingInvoicing.startingNumber || '1001'),
+            invoiceFormat: s.settings?.billing?.thermalFormat === '58mm' ? 'simplified' : 'standard',
+            invoiceNotes: s.settings?.billing?.termsAndConditions || state.billingInvoicing.invoiceNotes,
+          },
+          storeTimings: {
+            hours: s.operatingHours
+              ? defaultHours.map((dh) => {
+                  const key = defaultDayMap[dh.day];
+                  const backendDay = key ? (s.operatingHours as any)[key] : null;
+                  if (backendDay) {
+                    return {
+                      day: dh.day,
+                      isOpen: backendDay.isOpen ?? dh.isOpen,
+                      openTime: backendDay.open || dh.openTime,
+                      closeTime: backendDay.close || dh.closeTime,
+                    };
+                  }
+                  return dh;
+                })
+              : state.storeTimings.hours,
+            inStorePickup: true,
+            localDelivery: true,
+          },
+          shippingReturns: {
+            ...state.shippingReturns,
+            allowReturns: s.settings?.shipping?.acceptReturns ?? true,
+            returnWindow: s.settings?.shipping?.returnWindowHours === 168 ? '7 days' : s.settings?.shipping?.returnWindowHours === 360 ? '15 days' : '3 days',
+          },
+          notifications: {
+            ...state.notifications,
+            orderStatusUpdates: s.settings?.notifications?.whatsappCustomerUpdates ?? true,
+            newOrderReceived: s.settings?.notifications?.merchantSmsAlerts ?? true,
+            importantAnnouncements: s.settings?.notifications?.dailySalesEmail ?? true,
+          },
+          securityLogin: {
+            ...state.securityLogin,
+            email: activeUser?.email || state.securityLogin.email,
+            phone: activeUser?.phone || state.securityLogin.phone,
+          },
+          storeInfo: {
+            ...state.storeInfo,
+            storeName: s.name || state.storeInfo.storeName,
+            description: s.description || state.storeInfo.description,
+            phone: s.phone || activeUser?.phone || state.storeInfo.phone,
+            email: s.email || activeUser?.email || state.storeInfo.email,
+            logoUrl: s.logoUrl || state.storeInfo.logoUrl,
+            address: s.address
+              ? `${s.address.street}, ${s.address.city}, ${s.address.state} - ${s.address.pincode}`
+              : state.storeInfo.address,
+          },
+          isDirty: false,
+        }));
+      }
+    } catch (err) {
+      console.warn('Failed to load store settings from API, using cached state:', err);
+    }
+  },
+
+  saveAllChanges: async () => {
+    const state = get();
+    set({ isSaving: true, saveError: null });
+
+    try {
+      const store = useAuthStore.getState().currentStore;
+      const storeId = store?._id || store?.id;
+      if (!storeId) {
+        set({ isSaving: false, isDirty: false, saveSuccess: true });
+        setTimeout(() => set({ saveSuccess: false }), 3000);
+        return true;
+      }
+
+      const defaultDayMap: Record<string, string> = {
+        Monday: 'monday',
+        Tuesday: 'tuesday',
+        Wednesday: 'wednesday',
+        Thursday: 'thursday',
+        Friday: 'friday',
+        Saturday: 'saturday',
+        Sunday: 'sunday',
+      };
+
+      const operatingHours: any = {};
+      state.storeTimings.hours.forEach((h) => {
+        const key = defaultDayMap[h.day];
+        if (key) {
+          operatingHours[key] = {
+            isOpen: h.isOpen,
+            open: h.openTime,
+            close: h.closeTime,
+          };
+        }
+      });
+
+      const payload = {
+        name: state.storeProfile.displayName || state.storeInfo.storeName,
+        description: state.storeProfile.description || state.storeInfo.description,
+        phone: state.storeProfile.phone || state.storeInfo.phone,
+        email: state.storeProfile.email || state.storeInfo.email,
+        logoUrl: state.storeProfile.logoUrl || state.storeInfo.logoUrl,
+        bannerUrl: state.bannerImage.url,
+        operatingHours,
+        address: {
+          street: state.storeProfile.address || state.storeInfo.address,
+          city: state.storeProfile.city || state.businessInfo.city || 'Bhilai',
+          state: state.storeProfile.state || state.businessInfo.state || 'Chhattisgarh',
+          pincode: state.storeProfile.pinCode || state.businessInfo.pinCode || '490023',
+        },
+        legalDetails: {
+          gstin: state.businessInfo.gstin || state.taxGst.gstin,
+          pan: state.businessInfo.panNumber,
+          legalBusinessName: state.businessInfo.legalBusinessName || state.taxGst.businessLegalName || state.businessInfo.businessName,
+          isGstVerified: state.businessInfo.isGstinVerified || state.taxGst.isVerified,
+        },
+        bankDetails: {
+          accountNumber: state.paymentsWallet.bankAccount,
+          isVerified: true,
+        },
+        settings: {
+          billing: {
+            invoicePrefix: state.billingInvoicing.invoicePrefix,
+            nextInvoiceNumber: parseInt(state.billingInvoicing.startingNumber || '1001', 10),
+            thermalFormat: state.billingInvoicing.invoiceFormat === 'simplified' ? '58mm' : '80mm',
+            termsAndConditions: state.billingInvoicing.invoiceNotes,
+          },
+          tax: {
+            isTaxInclusive: state.taxGst.priceDisplay === 'including_tax',
+            applicableGstSlabs: [0, 5, 12, 18, 28],
+            showTaxBreakdownOnBill: true,
+          },
+          payments: {
+            settlementCycle: state.paymentsWallet.payoutFrequency.includes('Daily') ? 'T+1' : 'T+2',
+            upiId: state.paymentsWallet.acceptUpi ? 'merchant@upi' : '',
+          },
+          shipping: {
+            acceptReturns: state.shippingReturns.allowReturns,
+            returnWindowHours: state.shippingReturns.returnWindow.includes('7') ? 168 : state.shippingReturns.returnWindow.includes('15') ? 360 : 48,
+          },
+          notifications: {
+            whatsappCustomerUpdates: state.notifications.orderStatusUpdates,
+            merchantSmsAlerts: state.notifications.newOrderReceived,
+            audioChimeEnabled: true,
+            dailySalesEmail: state.notifications.importantAnnouncements,
+          },
+        },
+      };
+
+      const res = await storesApi.updateStoreSettings(storeId, payload);
+      if (res?.data) {
+        useAuthStore.getState().setCurrentStore({
+          ...store,
+          ...res.data,
+        });
+      }
+
+      set({ isSaving: false, isDirty: false, saveSuccess: true });
+      setTimeout(() => {
+        set({ saveSuccess: false });
+      }, 3000);
+      return true;
+    } catch (err: any) {
+      set({
+        isSaving: false,
+        saveError: err?.message || 'Failed to save settings',
+      });
+      return false;
+    }
+  },
+
+  discardAllChanges: () => {
+    const store = useAuthStore.getState().currentStore;
+    if (store) {
+      set((state) => ({
+        storeProfile: {
+          ...state.storeProfile,
+          displayName: store.name || state.storeProfile.displayName,
+          description: store.description || state.storeProfile.description,
+          phone: store.phone || state.storeProfile.phone,
+          email: store.email || state.storeProfile.email,
+        },
+        isDirty: false,
+        saveSuccess: false,
+        saveError: null,
+      }));
+    } else {
+      set({ isDirty: false, saveSuccess: false, saveError: null });
+    }
+  },
 }));

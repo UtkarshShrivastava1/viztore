@@ -85,6 +85,7 @@ const rawEnv = isTestEnv ? { ...testDefaults, ...process.env } : process.env;
 const parsedEnv = envSchema.safeParse(rawEnv);
 
 if (!parsedEnv.success) {
+  console.error('❌ [CRITICAL] Invalid environment variables configuration:', JSON.stringify(parsedEnv.error.format(), null, 2));
   logger.error('❌ Invalid environment variables configuration:', parsedEnv.error.format());
   if (!isTestEnv) {
     process.exit(1);

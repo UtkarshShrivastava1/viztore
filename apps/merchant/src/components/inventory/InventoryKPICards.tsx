@@ -10,11 +10,12 @@ export const InventoryKPICards: React.FC = () => {
   const outOfStockCount = items.filter((item) => item.status === 'out_of_stock').length;
   const totalStockValue = items.reduce((acc, item) => acc + (item.stockValue || 0), 0);
 
-  const totalProductsDisplay = totalProductCount > 0 ? totalProductCount.toLocaleString() : '1,248';
-  const totalStockDisplay = totalStock > 0 ? totalStock.toLocaleString() : '12,842';
-  const lowStockDisplay = lowStockCount > 0 ? lowStockCount.toLocaleString() : '78';
-  const outOfStockDisplay = outOfStockCount > 0 ? outOfStockCount.toLocaleString() : '38';
-  const stockValueDisplay = totalStockValue > 0 ? `₹${totalStockValue.toLocaleString('en-IN')}` : '₹18,75,320';
+  const count = totalProductCount || items.length;
+  const totalProductsDisplay = count.toLocaleString();
+  const totalStockDisplay = totalStock.toLocaleString();
+  const lowStockDisplay = lowStockCount.toLocaleString();
+  const outOfStockDisplay = outOfStockCount.toLocaleString();
+  const stockValueDisplay = `₹${totalStockValue.toLocaleString('en-IN')}`;
 
   const cards = [
     {

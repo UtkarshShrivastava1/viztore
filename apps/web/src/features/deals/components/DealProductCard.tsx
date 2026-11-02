@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Heart, ShoppingCart, Store } from 'lucide-react';
 import type { IProduct } from '@repo/shared-types';
 import { useCartStore } from '@/stores/cart.store';
+import { useWishlistFlyoutStore } from '@/stores/wishlistFlyoutStore';
 
 interface DealProductCardProps {
   product: IProduct;
@@ -13,6 +14,10 @@ interface DealProductCardProps {
 export function DealProductCard({ product }: DealProductCardProps) {
   const { addItem, openCart } = useCartStore();
   const [isAdded, setIsAdded] = React.useState(false);
+  const isWishlisted = useWishlistFlyoutStore((state) =>
+    state.items.some((i) => i.id === product._id || i.productId === product._id)
+  );
+  const toggleWishlistStore = useWishlistFlyoutStore((state) => state.toggleItem);
 
   const discount = product.baseMrp > 0
     ? Math.round(((product.baseMrp - product.basePrice) / product.baseMrp) * 100)
@@ -74,13 +79,36 @@ export function DealProductCard({ product }: DealProductCardProps) {
 
         {/* Wishlist Toggle */}
         <button
+          type="button"
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
+            const rawStoreId = product.storeId;
+            const storeId = typeof rawStoreId === 'object' && rawStoreId !== null
+              ? (rawStoreId as { _id?: string })._id || String(rawStoreId)
+              : String(rawStoreId || 'store-main');
+            const storeName = product.storeName || (typeof rawStoreId === 'object' && (rawStoreId as { name?: string })?.name) || 'Official Store';
+            const firstVariant = product.variants?.[0];
+            toggleWishlistStore({
+              id: product._id,
+              productId: product._id,
+              title: product.name,
+              storeId,
+              storeName,
+              price: firstVariant?.price || product.basePrice,
+              originalPrice: product.baseMrp,
+              imageUrl: firstImage || '',
+              slug: product.slug,
+            });
           }}
-          className="absolute top-2 right-2 p-1.5 rounded-full bg-white/80 backdrop-blur-sm hover:bg-rose-50 text-[#192168] hover:text-rose-500 transition-all shadow-[0_2px_8px_-4px_rgba(0,0,0,0.1)]"
+          title={isWishlisted ? 'Remove from wishlist' : 'Save to wishlist'}
+          className={`absolute top-2 right-2 p-1.5 rounded-full transition-all shadow-[0_2px_8px_-4px_rgba(0,0,0,0.1)] ${
+            isWishlisted
+              ? 'bg-rose-50 text-rose-500 scale-110 ring-2 ring-rose-200'
+              : 'bg-white/80 backdrop-blur-sm text-[#192168] hover:bg-rose-50 hover:text-rose-500'
+          }`}
         >
-          <Heart className="w-4 h-4" />
+          <Heart className={`w-4 h-4 transition-transform active:scale-125 ${isWishlisted ? 'fill-rose-500 text-rose-500' : ''}`} />
         </button>
       </div>
 

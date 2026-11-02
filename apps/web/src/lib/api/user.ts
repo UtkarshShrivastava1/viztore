@@ -4,6 +4,7 @@ import type {
   CreateAddressDto,
   UpdateAddressDto,
   UpdateProfileDto,
+  CreateFeedbackDto,
   IUserProfile,
 } from '@repo/shared-types';
 
@@ -12,6 +13,7 @@ export const userApi = {
    * Fetch all saved addresses for current customer
    */
   getAddresses: async (): Promise<IAddress[]> => {
+    if (typeof window !== 'undefined' && !localStorage.getItem('token')) return [];
     const res = await api.get<IAddress[] | { addresses?: IAddress[] }>('/users/addresses');
     if (Array.isArray(res.data)) return res.data;
     if (res.data && 'addresses' in res.data && Array.isArray(res.data.addresses)) return res.data.addresses;
@@ -71,6 +73,14 @@ export const userApi = {
    */
   updateProfile: async (dto: UpdateProfileDto): Promise<IUserProfile> => {
     const res = await api.patch<IUserProfile>('/users/me', dto);
+    return res.data;
+  },
+
+  /**
+   * Submit Customer Platform Feedback
+   */
+  submitFeedback: async (dto: CreateFeedbackDto): Promise<{ success: boolean; message: string }> => {
+    const res = await api.post<{ success: boolean; message: string }>('/users/feedback', dto);
     return res.data;
   },
 };

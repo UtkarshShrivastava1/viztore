@@ -17,18 +17,19 @@ import {
   ShieldCheck,
   Building2,
   FileSpreadsheet,
-  ChevronRight,
   Loader2
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
 import { useLocationStore } from '@/stores/location.store';
 import { AccountSidebar } from '@/components/account/AccountSidebar';
-import { userApi } from '@/lib/api/user.js';
+import { useAddressStore } from '@/stores/addressStore';
+import { cleanName, cleanPhoneNumber, cleanPincode, validatePersonName } from '@repo/shared-types';
 import type { CreateAddressDto } from '@repo/shared-types';
 
 export function AddAddressClient() {
   const router = useRouter();
   const { user, isAuthenticated, openAuthModal } = useAuthStore();
+  const { addAddress: storeAddAddress } = useAddressStore();
   const { address: locationAddress, city: locationCity, locality: locationLocality, pincode: locationPincode, isSet: isLocationSet } = useLocationStore();
 
   const [addressType, setAddressType] = useState<'home' | 'work' | 'other'>('home');
@@ -37,11 +38,11 @@ export function AddAddressClient() {
   // Form fields
   const [fullName, setFullName] = useState(user?.fullName || '');
   const [mobileNumber, setMobileNumber] = useState(user?.phone || '');
-  const [pincode, setPincode] = useState('490006');
-  const [locality, setLocality] = useState('');
-  const [streetAddress, setStreetAddress] = useState('');
-  const [city, setCity] = useState('Bhilai');
-  const [state, setState] = useState('Chhattisgarh');
+  const [pincode, setPincode] = useState(locationPincode || '');
+  const [locality, setLocality] = useState(locationLocality || '');
+  const [streetAddress, setStreetAddress] = useState(locationAddress || '');
+  const [city, setCity] = useState(locationCity || '');
+  const [state, setState] = useState('');
   const [landmark, setLandmark] = useState('');
   const [alternatePhone, setAlternatePhone] = useState('');
   const [isDefault, setIsDefault] = useState(true);
@@ -57,7 +58,9 @@ export function AddAddressClient() {
       if (locationLocality) setLocality(locationLocality);
       if (locationCity) setCity(locationCity);
       if (locationPincode) setPincode(locationPincode);
-      setState('Chhattisgarh');
+      const parts = locationAddress.split(',').map((p) => p.trim());
+      const statePart = parts.length > 1 ? parts[parts.length - 1].replace(/\d+/g, '').trim() : '';
+      if (statePart) setState(statePart);
       return;
     }
 
@@ -75,9 +78,9 @@ export function AddAddressClient() {
           const data = await res.json();
           if (data && data.address) {
             if (data.address.postcode) setPincode(data.address.postcode);
-            const rawCity = data.address.city || data.address.town || data.address.village || 'Bhilai';
-            setCity(rawCity.toLowerCase().includes('durg') ? 'Durg' : 'Bhilai');
-            setState('Chhattisgarh');
+            const rawCity = data.address.city || data.address.town || data.address.village || data.address.county || '';
+            if (rawCity) setCity(rawCity);
+            if (data.address.state) setState(data.address.state);
             if (data.address.suburb || data.address.neighbourhood) {
               setLocality(data.address.suburb || data.address.neighbourhood);
             }
@@ -100,8 +103,47 @@ export function AddAddressClient() {
     e.preventDefault();
     setErrorMsg(null);
 
-    if (!fullName.trim() || !mobileNumber.trim() || !pincode.trim() || !streetAddress.trim() || !city.trim()) {
-      setErrorMsg('Please fill in all required fields (Full Name, Phone, Pincode, Address, City).');
+    const sanitizedName = cleanName(fullName);
+    const cleanPhone = cleanPhoneNumber(mobileNumber);
+    const cleanAltPhone = cleanPhoneNumber(alternatePhone);
+    const cleanPin = cleanPincode(pincode);
+    const trimmedStreet = streetAddress.trim();
+    const trimmedCity = city.trim() || 'Bhilai';
+    const trimmedState = state.trim() || 'Chhattisgarh';
+
+    if (!sanitizedName || sanitizedName.length < 2) {
+      setErrorMsg('Please enter a valid recipient full name (at least 2 characters).');
+      return;
+    }
+    const nameCheck = validatePersonName(sanitizedName);
+    if (!nameCheck.isValid) {
+      setErrorMsg(nameCheck.error || 'Name contains invalid characters.');
+      return;
+    }
+
+    if (!cleanPhone || cleanPhone.length !== 10 || !/^[6-9]\d{9}$/.test(cleanPhone)) {
+      setErrorMsg('Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9.');
+      return;
+    }
+
+    if (cleanAltPhone) {
+      if (cleanAltPhone.length !== 10 || !/^[6-9]\d{9}$/.test(cleanAltPhone)) {
+        setErrorMsg('Alternate mobile number must be a valid 10-digit number starting with 6, 7, 8, or 9.');
+        return;
+      }
+      if (cleanAltPhone === cleanPhone) {
+        setErrorMsg('Alternate mobile number cannot be the same as primary mobile number.');
+        return;
+      }
+    }
+
+    if (!trimmedStreet || trimmedStreet.length < 5) {
+      setErrorMsg('Please enter a complete flat/house/building address (at least 5 characters).');
+      return;
+    }
+
+    if (!cleanPin || cleanPin.length !== 6 || !/^[1-9][0-9]{5}$/.test(cleanPin)) {
+      setErrorMsg('Please enter a valid 6-digit Indian postal PIN code.');
       return;
     }
 
@@ -114,18 +156,18 @@ export function AddAddressClient() {
 
     const dto: CreateAddressDto = {
       label: labelName,
-      recipientName: fullName.trim(),
-      phone: mobileNumber.trim(),
-      street: locality ? `${streetAddress.trim()}, ${locality.trim()}` : streetAddress.trim(),
-      city: city.trim() || 'Bhilai',
-      state: 'Chhattisgarh',
-      pincode: pincode.trim() || (city === 'Durg' ? '491001' : '490006'),
+      recipientName: sanitizedName,
+      phone: cleanPhone,
+      street: locality ? `${trimmedStreet}, ${locality.trim()}` : trimmedStreet,
+      city: trimmedCity,
+      state: trimmedState,
+      pincode: cleanPin,
       isDefault: isDefault,
     };
 
     try {
       setIsSubmitting(true);
-      await userApi.addAddress(dto);
+      await storeAddAddress(dto);
       router.push('/account/addresses');
     } catch (err: unknown) {
       console.error('Error saving address:', err);
@@ -238,11 +280,13 @@ export function AddAddressClient() {
                     </div>
                     <input 
                       type="tel" 
+                      inputMode="numeric"
+                      maxLength={10}
                       value={mobileNumber}
-                      onChange={(e) => setMobileNumber(e.target.value)}
+                      onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
                       placeholder="Enter 10-digit mobile number" 
                       required
-                      className="bg-white w-full pl-10 pr-4 py-3 rounded-lg border border-surface-200 focus:outline-none focus:border-[#1668F6] text-[13px] text-surface-800 placeholder:text-surface-400" 
+                      className="bg-white w-full pl-10 pr-4 py-3 rounded-lg border border-surface-200 focus:outline-none focus:border-[#1668F6] text-[13px] text-surface-800 placeholder:text-surface-400 font-mono" 
                     />
                   </div>
                 </div>
@@ -257,11 +301,13 @@ export function AddAddressClient() {
                     </div>
                     <input 
                       type="text" 
+                      inputMode="numeric"
+                      maxLength={6}
                       value={pincode}
-                      onChange={(e) => setPincode(e.target.value)}
+                      onChange={(e) => setPincode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                       placeholder="Enter 6-digit pincode" 
                       required
-                      className="bg-white w-full pl-10 pr-4 py-3 rounded-lg border border-surface-200 focus:outline-none focus:border-[#1668F6] text-[13px] text-surface-800 placeholder:text-surface-400" 
+                      className="bg-white w-full pl-10 pr-4 py-3 rounded-lg border border-surface-200 focus:outline-none focus:border-[#1668F6] text-[13px] text-surface-800 placeholder:text-surface-400 font-mono" 
                     />
                   </div>
                 </div>
@@ -306,24 +352,14 @@ export function AddAddressClient() {
                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                       <Building2 className="w-4 h-4 text-surface-400" />
                     </div>
-                    <select 
+                    <input 
+                      type="text"
                       value={city}
-                      onChange={(e) => {
-                        const newCity = e.target.value;
-                        setCity(newCity);
-                        if (!pincode || pincode === '490006' || pincode === '491001') {
-                          setPincode(newCity === 'Durg' ? '491001' : '490006');
-                        }
-                      }}
+                      onChange={(e) => setCity(e.target.value)}
+                      placeholder="e.g. Mumbai, Delhi, Bhilai"
                       required
-                      className="bg-white w-full pl-10 pr-10 py-3 rounded-lg border border-surface-200 focus:outline-none focus:border-[#1668F6] text-[13px] text-surface-800 appearance-none cursor-pointer font-medium" 
-                    >
-                      <option value="Bhilai">Bhilai</option>
-                      <option value="Durg">Durg</option>
-                    </select>
-                    <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none">
-                      <ChevronRight className="w-4 h-4 text-surface-400 rotate-90" />
-                    </div>
+                      className="bg-white w-full pl-10 pr-4 py-3 rounded-lg border border-surface-200 focus:outline-none focus:border-[#1668F6] text-[13px] text-surface-800 font-medium" 
+                    />
                   </div>
                 </div>
                 <div className="flex flex-col gap-1.5">
@@ -332,16 +368,14 @@ export function AddAddressClient() {
                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                       <FileSpreadsheet className="w-4 h-4 text-surface-400" />
                     </div>
-                    <select 
+                    <input 
+                      type="text"
                       value={state}
                       onChange={(e) => setState(e.target.value)}
-                      className="w-full pl-10 pr-10 py-3 rounded-lg border border-surface-200 focus:outline-none focus:border-[#1668F6] text-[13px] text-surface-800 bg-slate-50/60 appearance-none cursor-pointer font-medium"
-                    >
-                      <option value="Chhattisgarh">Chhattisgarh</option>
-                    </select>
-                    <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none">
-                      <ChevronRight className="w-4 h-4 text-surface-400 rotate-90" />
-                    </div>
+                      placeholder="e.g. Maharashtra, Chhattisgarh"
+                      required
+                      className="bg-white w-full pl-10 pr-4 py-3 rounded-lg border border-surface-200 focus:outline-none focus:border-[#1668F6] text-[13px] text-surface-800 font-medium"
+                    />
                   </div>
                 </div>
               </div>
@@ -370,10 +404,12 @@ export function AddAddressClient() {
                     </div>
                     <input 
                       type="tel" 
+                      inputMode="numeric"
+                      maxLength={10}
                       value={alternatePhone}
-                      onChange={(e) => setAlternatePhone(e.target.value)}
-                      placeholder="Enter alternate phone number" 
-                      className="bg-white w-full pl-10 pr-4 py-3 rounded-lg border border-surface-200 focus:outline-none focus:border-[#1668F6] text-[13px] text-surface-800 placeholder:text-surface-400" 
+                      onChange={(e) => setAlternatePhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                      placeholder="Enter 10-digit alternate mobile number" 
+                      className="bg-white w-full pl-10 pr-4 py-3 rounded-lg border border-surface-200 focus:outline-none focus:border-[#1668F6] text-[13px] text-surface-800 placeholder:text-surface-400 font-mono" 
                     />
                   </div>
                 </div>

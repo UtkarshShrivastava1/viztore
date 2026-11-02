@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { IInvoice, useBillingStore } from '../../stores/billingStore.js';
 import { TableActionPopover } from '../ui/TableActionPopover.js';
+import { downloadDocumentPdf, invoiceToVoucherDoc } from '../../lib/pdfEngine.js';
 
 interface InvoiceRowActionMenuProps {
   invoice: IInvoice;
@@ -56,10 +57,13 @@ export const InvoiceRowActionMenu: React.FC<InvoiceRowActionMenuProps> = ({
     onClose();
     switch (action) {
       case 'download':
-        if (onPrintA4) {
-          onPrintA4(invoice);
-        } else {
-          window.print();
+        try {
+          const docData = invoiceToVoucherDoc(invoice);
+          downloadDocumentPdf(docData);
+          onShowToast?.(`Invoice ${invoice.invoiceNo} PDF downloaded successfully!`, 'success');
+        } catch (e) {
+          console.error('Failed to download invoice PDF', e);
+          onShowToast?.('Failed to download invoice PDF', 'error');
         }
         break;
       case 'print_thermal':

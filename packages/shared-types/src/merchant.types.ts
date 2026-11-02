@@ -1,10 +1,7 @@
 import { z } from 'zod';
 import { StoreCategory, geoPointSchema, storeAddressSchema, storeOperatingHoursSchema } from './store.types.js';
-
-// Regex patterns for Indian compliance
-export const GSTIN_REGEX = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
-export const PAN_REGEX = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
-export const IFSC_REGEX = /^[A-Z]{4}0[A-Z0-9]{6}$/;
+import { GSTIN_REGEX, PAN_REGEX, IFSC_REGEX } from './standardFields.js';
+export { GSTIN_REGEX, PAN_REGEX, IFSC_REGEX };
 
 /**
  * Step 1: Account & Credentials Setup
@@ -82,6 +79,7 @@ export const completeOnboardingSchema = z.object({
   step4: onboardingStep4Schema,
   step5: onboardingStep5Schema,
   step6: onboardingStep6Schema,
+  paymentDraftId: z.string().optional(),
 });
 
 export type OnboardingStep1Dto = z.infer<typeof onboardingStep1Schema>;

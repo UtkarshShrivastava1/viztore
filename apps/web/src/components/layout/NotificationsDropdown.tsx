@@ -2,11 +2,23 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Smartphone, Percent, Truck, Store, Star, ArrowRight, Bell } from 'lucide-react';
-import { useNotificationStore } from '@/stores/notificationStore';
+import { useRouter } from 'next/navigation';
+import { Smartphone, Percent, Truck, Store, Star, ArrowRight, Bell, CheckCheck } from 'lucide-react';
+import { useNotificationStore, type INotificationItem } from '@/stores/notificationStore';
 
 export function NotificationsDropdown({ onClose }: { onClose: () => void }) {
-  const { notifications } = useNotificationStore();
+  const router = useRouter();
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotificationStore();
+
+  const handleItemClick = (notification: INotificationItem) => {
+    markAsRead(notification.id);
+    onClose();
+    if (notification.targetUrl) {
+      router.push(notification.targetUrl);
+    } else if (notification.orderId) {
+      router.push(`/account/orders/${notification.orderId}`);
+    }
+  };
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -45,11 +57,22 @@ export function NotificationsDropdown({ onClose }: { onClose: () => void }) {
   return (
     <div className="absolute right-0 top-14 w-96 rounded-2xl bg-white shadow-2xl border border-gray-100 z-50 overflow-hidden flex flex-col max-h-[600px]">
       <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-        <h3 className="font-semibold text-lg text-gray-900">Notifications</h3>
-        {notifications.length > 0 && (
-          <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">
-            {notifications.filter((n) => !n.isRead).length} new
-          </span>
+        <div className="flex items-center gap-2">
+          <h3 className="font-semibold text-lg text-gray-900">Notifications</h3>
+          {unreadCount > 0 && (
+            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">
+              {unreadCount} new
+            </span>
+          )}
+        </div>
+        {unreadCount > 0 && (
+          <button
+            type="button"
+            onClick={() => markAllAsRead()}
+            className="text-xs font-bold text-blue-600 hover:text-blue-800 transition flex items-center gap-1"
+          >
+            <CheckCheck className="w-3.5 h-3.5" /> Mark all read
+          </button>
         )}
       </div>
       
@@ -68,6 +91,7 @@ export function NotificationsDropdown({ onClose }: { onClose: () => void }) {
           {notifications.map((notification) => (
             <div 
               key={notification.id} 
+              onClick={() => handleItemClick(notification)}
               className={`p-4 border-b border-gray-50 hover:bg-gray-50 transition-colors flex gap-4 cursor-pointer relative ${!notification.isRead ? 'bg-blue-50/30' : ''}`}
             >
               {/* Unread indicator */}
@@ -106,7 +130,7 @@ export function NotificationsDropdown({ onClose }: { onClose: () => void }) {
       <div className="p-3 border-t border-gray-100 bg-gray-50/50">
         <Link 
           href="/account/notifications" 
-          className="flex items-center justify-center gap-2 text-sm font-semibold text-brand-600 hover:text-brand-700 transition-colors py-2"
+          className="flex items-center justify-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors py-2"
           onClick={onClose}
         >
           View All Notifications <ArrowRight className="w-4 h-4" />

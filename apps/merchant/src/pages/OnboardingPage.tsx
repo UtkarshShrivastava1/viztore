@@ -7,6 +7,7 @@ import { Step2Signature } from '../components/onboarding/Step2Signature.js';
 import { Step3StoreDetails } from '../components/onboarding/Step3StoreDetails.js';
 import { Step3BusinessInfo } from '../components/onboarding/Step3BusinessInfo.js';
 import { Step4BankAccount } from '../components/onboarding/Step4BankAccount.js';
+import { Step5SubscriptionPayment } from '../components/onboarding/Step5SubscriptionPayment.js';
 import { ReviewWaitingRoom } from '../components/onboarding/ReviewWaitingRoom.js';
 import { RegistrationSuccessView } from '../components/onboarding/RegistrationSuccessView.js';
 import { useOnboardingStore } from '../stores/onboardingStore.js';
@@ -19,7 +20,7 @@ interface OnboardingPageProps {
   onNavigate?: (route: string) => void;
 }
 
-export type SubStepKey = '1_account' | '2_id' | '2_signature' | '3_store' | '3_business' | '4_bank' | 'success';
+export type SubStepKey = '1_account' | '2_id' | '2_signature' | '3_store' | '3_business' | '4_bank' | '5_plan' | 'success';
 
 export const OnboardingPage: React.FC<OnboardingPageProps> = ({
   onEnterDashboard,
@@ -40,12 +41,13 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
     }
   };
 
-  // Derive active main step (1, 2, 3, 4) for the sidebar indicator
+  // Derive active main step (1, 2, 3, 4, 5) for the sidebar indicator
   const getActiveMainStep = (): OnboardingMainStep => {
     if (subStep.startsWith('1_')) return 1;
     if (subStep.startsWith('2_')) return 2;
     if (subStep.startsWith('3_')) return 3;
-    return 4;
+    if (subStep.startsWith('4_')) return 4;
+    return 5;
   };
 
   const activeMainStep = getActiveMainStep();
@@ -113,19 +115,20 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
         <div className="lg:hidden mb-6 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
           <div className="flex items-center justify-between text-xs font-bold text-slate-700 mb-2">
             <span className="text-[#0038ed] uppercase tracking-wide">
-              Step {activeMainStep} of 4
+              Step {activeMainStep} of 5
             </span>
             <span className="text-slate-500">
               {activeMainStep === 1 && 'Mobile & Email'}
               {activeMainStep === 2 && 'Identity Verification'}
               {activeMainStep === 3 && 'Store Details'}
               {activeMainStep === 4 && 'Bank Account'}
+              {activeMainStep === 5 && 'Plan & Activation'}
             </span>
           </div>
           <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
             <div
               className="bg-gradient-to-r from-[#0038ed] to-blue-500 h-full rounded-full transition-all duration-300"
-              style={{ width: `${(activeMainStep / 4) * 100}%` }}
+              style={{ width: `${(activeMainStep / 5) * 100}%` }}
             />
           </div>
         </div>
@@ -140,6 +143,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
                 if (step === 2) setSubStep('2_id');
                 if (step === 3) setSubStep('3_store');
                 if (step === 4) setSubStep('4_bank');
+                if (step === 5) setSubStep('5_plan');
               }}
             />
           </div>
@@ -181,6 +185,13 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
             {subStep === '4_bank' && (
               <Step4BankAccount
                 onBack={() => setSubStep('3_business')}
+                onComplete={() => setSubStep('5_plan')}
+              />
+            )}
+
+            {subStep === '5_plan' && (
+              <Step5SubscriptionPayment
+                onBack={() => setSubStep('4_bank')}
                 onComplete={() => setSubStep('success')}
               />
             )}

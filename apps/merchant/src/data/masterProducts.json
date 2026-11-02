@@ -1,0 +1,412 @@
+[
+  {
+    "barcode": "8901499009845",
+    "name": "Tata Salt Vacuum Evaporated Iodised Salt, 1 kg",
+    "brand": "Tata",
+    "category": "Food Essentials",
+    "subCategory": "Staples",
+    "productType": "Salt",
+    "mrp": 28,
+    "suggestedPrice": 25,
+    "costPrice": 22,
+    "hsnCode": "25010010",
+    "gstRate": 0,
+    "images": [
+      "https://images.unsplash.com/photo-1518843875459-f738682238a6?auto=format&fit=crop&w=600&q=80"
+    ],
+    "description": "Tata Salt provides pure vacuum-evaporated table salt iodised to recommended national standards, guaranteeing consistent purity and freshness in daily home cooking.",
+    "keyFeatures": [
+      "Vacuum evaporated technology ensures 99.9% pure salt",
+      "Guaranteed iodine content for thyroid health",
+      "Free-flowing fine crystals for uniform seasoning",
+      "100% vegetarian Indian grocery staple"
+    ],
+    "unit": "1 kg"
+  },
+  {
+    "barcode": "8901725181222",
+    "name": "Aashirvaad Superior MP Sharbati Whole Wheat Atta, 5 kg",
+    "brand": "Aashirvaad",
+    "category": "Food Essentials",
+    "subCategory": "Staples",
+    "productType": "Atta",
+    "mrp": 295,
+    "suggestedPrice": 275,
+    "costPrice": 245,
+    "hsnCode": "11010000",
+    "gstRate": 0,
+    "images": [
+      "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=600&q=80"
+    ],
+    "description": "Aashirvaad Sharbati Atta is crafted from golden grains harvested in Madhya Pradesh fields, ground with traditional stone chakki process for softer and fluffier rotis.",
+    "keyFeatures": [
+      "100% pure whole wheat grain flour with zero maida",
+      "High natural dietary fibre for healthy digestion",
+      "Absorbs more water for rotis that stay soft for hours",
+      "Mechanically cleaned and hygienically packed"
+    ],
+    "unit": "5 kg"
+  },
+  {
+    "barcode": "8901058852394",
+    "name": "Maggi 2-Minute Masala Instant Noodles, 70g Pack",
+    "brand": "Maggi",
+    "category": "Food Essentials",
+    "subCategory": "Packaged Food",
+    "productType": "Instant Noodles",
+    "mrp": 14,
+    "suggestedPrice": 14,
+    "costPrice": 11.5,
+    "hsnCode": "19023010",
+    "gstRate": 12,
+    "images": [
+      "https://images.unsplash.com/photo-1612927601601-6638404737ce?auto=format&fit=crop&w=600&q=80"
+    ],
+    "description": "India's beloved 2-minute instant noodles blended with authentic aromatic roast spices for a quick, comforting and flavorful snack anytime.",
+    "keyFeatures": [
+      "Signature tastemaker with 10 roasted Indian spices",
+      "Cooks ready to eat in under 2 minutes",
+      "Fortified with essential iron nutrients",
+      "Airtight hygienic packaging"
+    ],
+    "unit": "70g"
+  },
+  {
+    "barcode": "8901262010054",
+    "name": "Amul Pure Pasteurized Salted Butter, 500g Carton",
+    "brand": "Amul",
+    "category": "Food Essentials",
+    "subCategory": "Dairy",
+    "productType": "Butter",
+    "mrp": 275,
+    "suggestedPrice": 265,
+    "costPrice": 240,
+    "hsnCode": "04051000",
+    "gstRate": 12,
+    "images": [
+      "https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?auto=format&fit=crop&w=600&q=80"
+    ],
+    "description": "Amul Butter is made from pure cow and buffalo milk fat, lightly salted and pasteurized to deliver unmistakable rich taste on morning toasts and hot parathas.",
+    "keyFeatures": [
+      "Taste of India made from fresh cream",
+      "Natural golden hue rich in Vitamin A",
+      "Smooth spreadability on warm breads and rotis",
+      "Cold-chain pasteurized for guaranteed freshness"
+    ],
+    "unit": "500g"
+  },
+  {
+    "barcode": "8901063012110",
+    "name": "Britannia Good Day Rich Cashew Cookies, 200g Pack",
+    "brand": "Britannia",
+    "category": "Food Essentials",
+    "subCategory": "Biscuits & Cookies",
+    "productType": "Cookies",
+    "mrp": 50,
+    "suggestedPrice": 45,
+    "costPrice": 38,
+    "hsnCode": "19053100",
+    "gstRate": 18,
+    "images": [
+      "https://images.unsplash.com/photo-1499636136210-6f4ee915583e?auto=format&fit=crop&w=600&q=80"
+    ],
+    "description": "Britannia Good Day Cashew Cookies are loaded with real cashew nuts and a rich butter aroma designed to spread happiness with every crunchy bite.",
+    "keyFeatures": [
+      "Crispy melt-in-mouth golden baked cookie texture",
+      "Real roasted cashew bits baked inside",
+      "Perfect tea and coffee companion for guests",
+      "Zero trans-fat formulation"
+    ],
+    "unit": "200g"
+  },
+  {
+    "barcode": "8901207010019",
+    "name": "Parle-G Original Gluco Power Biscuits, 250g Family Pack",
+    "brand": "Parle",
+    "category": "Food Essentials",
+    "subCategory": "Biscuits & Cookies",
+    "productType": "Biscuits",
+    "mrp": 25,
+    "suggestedPrice": 23,
+    "costPrice": 19.5,
+    "hsnCode": "19053100",
+    "gstRate": 18,
+    "images": [
+      "https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&w=600&q=80"
+    ],
+    "description": "The world's largest selling glucose biscuit, filled with the wholesome goodness of milk and wheat for instant energy and nostalgic chai snacking.",
+    "keyFeatures": [
+      "Rich source of glucose and wheat nourishment",
+      "Classic iconic sweet taste trusted for generations",
+      "Instant energy booster for busy days",
+      "Best dipped in hot cutting chai"
+    ],
+    "unit": "250g"
+  },
+  {
+    "barcode": "8906014450012",
+    "name": "Fortune Sunlite Refined Sunflower Cooking Oil, 1L Pouch",
+    "brand": "Fortune",
+    "category": "Food Essentials",
+    "subCategory": "Edible Oils",
+    "productType": "Cooking Oil",
+    "mrp": 155,
+    "suggestedPrice": 142,
+    "costPrice": 128,
+    "hsnCode": "15121910",
+    "gstRate": 5,
+    "images": [
+      "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=600&q=80"
+    ],
+    "description": "Fortune Sunlite Refined Sunflower Oil is a light and healthy cooking oil fortified with Vitamins A & D, ideal for everyday sautéing, curries, and deep frying.",
+    "keyFeatures": [
+      "High smoke point suited for Indian high-flame cooking",
+      "Fortified with Vitamins A, D, and E for immunity",
+      "Light texture keeps fried snacks non-greasy",
+      "Zero cholesterol heart-friendly formula"
+    ],
+    "unit": "1 Litre"
+  },
+  {
+    "barcode": "8901030383700",
+    "name": "Surf Excel Easy Wash Detergent Powder, 1 kg",
+    "brand": "Surf Excel",
+    "category": "Food Essentials",
+    "subCategory": "Household Care",
+    "productType": "Detergent Powder",
+    "mrp": 145,
+    "suggestedPrice": 135,
+    "costPrice": 118,
+    "hsnCode": "34029011",
+    "gstRate": 18,
+    "images": [
+      "https://images.unsplash.com/photo-1585421514738-01798e348b17?auto=format&fit=crop&w=600&q=80"
+    ],
+    "description": "Surf Excel Easy Wash combines stain eraser technology with rapid lathering to eliminate stubborn collar dirt, gravy stains, and oil without brushing.",
+    "keyFeatures": [
+      "Superfine powder dissolves instantly in cold water",
+      "Removes tough dried stains like clay, ink, and curry",
+      "Pleasant fresh floral fragrance leaves clothes revitalized",
+      "Gentle on hands and fabric threads"
+    ],
+    "unit": "1 kg"
+  },
+  {
+    "barcode": "8901233014168",
+    "name": "Dettol Original Germ Protection Bathing Soap, 125g Bar",
+    "brand": "Dettol",
+    "category": "Food Essentials",
+    "subCategory": "Personal Care",
+    "productType": "Soap",
+    "mrp": 60,
+    "suggestedPrice": 55,
+    "costPrice": 46,
+    "hsnCode": "34011110",
+    "gstRate": 18,
+    "images": [
+      "https://images.unsplash.com/photo-1600857544200-b2f666a9a2ec?auto=format&fit=crop&w=600&q=80"
+    ],
+    "description": "Dettol Original Bar Soap delivers trusted 99.9% germ defense with added plant-derived cleansers and skin moisturizers for clean and healthy skin daily.",
+    "keyFeatures": [
+      "Trusted antibacterial protection against 100 illness-causing germs",
+      "Infused with soothing pine fragrance",
+      "Dermatologically tested and Grade 1 soap purity",
+      "Suitable for the whole family"
+    ],
+    "unit": "125g"
+  },
+  {
+    "barcode": "8906145620018",
+    "name": "boAt Rockerz 450 Bluetooth Wireless On-Ear Headphones, Luscious Black",
+    "brand": "boAt",
+    "category": "Electronics",
+    "subCategory": "Audio & Accessories",
+    "productType": "Headphones",
+    "mrp": 3990,
+    "suggestedPrice": 1499,
+    "costPrice": 1100,
+    "hsnCode": "85183000",
+    "gstRate": 18,
+    "images": [
+      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80"
+    ],
+    "description": "boAt Rockerz 450 on-ear wireless headphones feature 40mm dynamic drivers that deliver signature punchy bass with up to 15 hours of continuous playback.",
+    "keyFeatures": [
+      "40mm High-Definition Drivers with boAt Signature Sound",
+      "Up to 15 hours playback with fast charging",
+      "Dual connectivity: Bluetooth v5.0 and 3.5mm AUX cable",
+      "Plush padded earcups and lightweight foldable headband",
+      "Built-in mic and on-ear easy physical controls"
+    ],
+    "unit": "1 Piece"
+  },
+  {
+    "barcode": "8906145620025",
+    "name": "boAt Airdopes 141 True Wireless Earbuds, Bold Black",
+    "brand": "boAt",
+    "category": "Electronics",
+    "subCategory": "Audio & Accessories",
+    "productType": "Earbuds",
+    "mrp": 4490,
+    "suggestedPrice": 1299,
+    "costPrice": 950,
+    "hsnCode": "85183000",
+    "gstRate": 18,
+    "images": [
+      "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=600&q=80"
+    ],
+    "description": "boAt Airdopes 141 wireless earbuds boast 42 hours of total playtime, BEAST mode for low latency gaming, and ENx noise-cancelling tech for crystal-clear calls.",
+    "keyFeatures": [
+      "Up to 42 hours playtime with Type-C pocket carry case",
+      "ASAP Charge: 5 mins charge gives 75 mins playtime",
+      "IPX4 water and sweat resistance for workout routines",
+      "ENx Environmental Noise Cancellation technology for calls"
+    ],
+    "unit": "1 Pair"
+  },
+  {
+    "barcode": "194252033005",
+    "name": "Apple 20W USB-C Fast Power Adapter, White (Original)",
+    "brand": "Apple",
+    "category": "Electronics",
+    "subCategory": "Mobile Accessories",
+    "productType": "Charger",
+    "mrp": 1900,
+    "suggestedPrice": 1799,
+    "costPrice": 1550,
+    "hsnCode": "85044030",
+    "gstRate": 18,
+    "images": [
+      "https://images.unsplash.com/photo-1583863788434-e58a36330cf0?auto=format&fit=crop&w=600&q=80"
+    ],
+    "description": "The Apple 20W USB-C Power Adapter offers fast, efficient charging at home, in the office, or on the go. Compatible with any USB-C-enabled device.",
+    "keyFeatures": [
+      "Fast charging: 0% to 50% in approximately 30 minutes on iPhone",
+      "Compatible with iPhone, iPad, and Apple Watch series",
+      "Intelligent temperature regulation and overvoltage protection",
+      "Compact design with smooth glossy white Apple finish"
+    ],
+    "unit": "1 Piece"
+  },
+  {
+    "barcode": "8904325410014",
+    "name": "Portronics Kronos Y1 Smartwatch with 1.75\" HD Display & BT Calling",
+    "brand": "Portronics",
+    "category": "Electronics",
+    "subCategory": "Smart Wearables",
+    "productType": "Smartwatch",
+    "mrp": 3999,
+    "suggestedPrice": 1899,
+    "costPrice": 1350,
+    "hsnCode": "85176290",
+    "gstRate": 18,
+    "images": [
+      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=600&q=80"
+    ],
+    "description": "Portronics Kronos Y1 smart watch features dynamic Bluetooth calling, 24/7 SpO2 heart health monitoring, and IP67 splash resistance for outdoor fitness.",
+    "keyFeatures": [
+      "1.75 inch vibrant HD curved touch screen display",
+      "High-fidelity built-in speaker & microphone for calls",
+      "Heart rate, blood oxygen (SpO2), and sleep tracker",
+      "Over 60 sports modes with 7-day battery standby"
+    ],
+    "unit": "1 Piece"
+  },
+  {
+    "barcode": "8907861001234",
+    "name": "Peter England Men Slim Fit 100% Cotton Formal Shirt, Sky Blue",
+    "brand": "Peter England",
+    "category": "Men's Fashion",
+    "subCategory": "Clothing",
+    "productType": "Formal Shirts",
+    "mrp": 1699,
+    "suggestedPrice": 1299,
+    "costPrice": 850,
+    "hsnCode": "62052000",
+    "gstRate": 5,
+    "images": [
+      "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&w=600&q=80"
+    ],
+    "description": "Crafted from breathable 100% long-staple cotton, this classic sky blue Peter England formal shirt is designed with a semi-cutaway collar and tailored slim fit.",
+    "keyFeatures": [
+      "100% Premium Combed Cotton fabric with soft sheen",
+      "Wrinkle-resistant weave stays crisp during 9-hour workdays",
+      "Semi-cutaway formal collar with reinforced stays",
+      "Machine washable with color-fast longevity"
+    ],
+    "unit": "1 Piece"
+  },
+  {
+    "barcode": "8907861005678",
+    "name": "Allen Solly Men Regular Fit Textured Solid Polo T-Shirt, Navy Blue",
+    "brand": "Allen Solly",
+    "category": "Men's Fashion",
+    "subCategory": "Clothing",
+    "productType": "Polo T-Shirts",
+    "mrp": 1299,
+    "suggestedPrice": 999,
+    "costPrice": 620,
+    "hsnCode": "61091000",
+    "gstRate": 5,
+    "images": [
+      "https://images.unsplash.com/photo-1581655353564-df123a1eb820?auto=format&fit=crop&w=600&q=80"
+    ],
+    "description": "Elevate your weekend casuals with this Allen Solly signature polo, knitted in honeycomb pique cotton with the iconic embroidered stag insignia.",
+    "keyFeatures": [
+      "Breathable honeycomb pique cotton knit",
+      "Ribbed collar and cuffs with 2-button placket",
+      "Classic Allen Solly embroidered crest on chest",
+      "Anti-shrink pre-washed garment"
+    ],
+    "unit": "1 Piece"
+  },
+  {
+    "barcode": "8905140012345",
+    "name": "Sparx Men Breathable Mesh Lightweight Sports Running Shoes, Black/Red (UK 8)",
+    "brand": "Sparx",
+    "category": "Men's Fashion",
+    "subCategory": "Footwear",
+    "productType": "Sports Shoes",
+    "mrp": 1499,
+    "suggestedPrice": 1199,
+    "costPrice": 790,
+    "hsnCode": "64041190",
+    "gstRate": 12,
+    "images": [
+      "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=80"
+    ],
+    "description": "Engineered for high-impact jogging and gym sessions, Sparx running shoes offer ergonomic EVA cushioned soles and seamless mesh airflow upper.",
+    "keyFeatures": [
+      "Super-lightweight shock-absorbing EVA grooved sole",
+      "Breathable engineered flyknit mesh prevents foot sweat",
+      "Padded collar and tongue for ankle stability",
+      "Slip-resistant rubber pods at toe and heel"
+    ],
+    "unit": "1 Pair"
+  },
+  {
+    "barcode": "8901234567890",
+    "name": "Apex Classic 100% Combed Cotton Regular Fit Everyday T-Shirt, Solid White (L)",
+    "brand": "Local Artisan / In-House",
+    "category": "Men's Fashion",
+    "subCategory": "Clothing",
+    "productType": "T-Shirts",
+    "mrp": 699,
+    "suggestedPrice": 499,
+    "costPrice": 250,
+    "hsnCode": "61091000",
+    "gstRate": 5,
+    "images": [
+      "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=600&q=80"
+    ],
+    "description": "Essential daily crew-neck tee made from 180 GSM bio-washed combed cotton, providing ultra-soft touch and zero shrinkage after routine washing.",
+    "keyFeatures": [
+      "180 GSM Premium Bio-Washed Combed Cotton",
+      "Reinforced double-stitched neckband and hemline",
+      "Tagless itch-free inner label comfort",
+      "Pre-shrunk fabric ensures consistent fit"
+    ],
+    "unit": "1 Piece"
+  }
+]
+

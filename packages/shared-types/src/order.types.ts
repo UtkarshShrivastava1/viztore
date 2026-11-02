@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { standardPhoneSchema, standardPincodeSchema } from './standardFields.js';
 
 /**
  * Order Domain Types & Zod Schemas
@@ -41,20 +42,41 @@ export const createOrderItemSchema = z.object({
   storeId: z.string().min(1, 'Store ID is required'),
 });
 
-export const shippingAddressSchema = z.object({
-  fullName: z.string().min(1, 'Full name is required'),
-  street: z.string().min(1, 'Street address is required'),
-  city: z.string().min(1, 'City is required'),
-  state: z.string().min(1, 'State is required'),
-  postalCode: z.string().min(1, 'Postal code is required'),
-  country: z.string().default('IN'),
-  phone: z.string().min(10, 'Valid 10-digit phone number is required'),
-});
+export const shippingAddressSchema = z.preprocess(
+  (val: any) => {
+    if (typeof val === 'object' && val !== null) {
+      const copy = { ...val };
+      if (!copy.fullName && (copy.recipientName || copy.name)) {
+        copy.fullName = copy.recipientName || copy.name;
+      }
+      if (!copy.postalCode && (copy.pincode || copy.pinCode || copy.zipCode)) {
+        copy.postalCode = copy.pincode || copy.pinCode || copy.zipCode;
+      }
+      if (!copy.phone && copy.mobile) {
+        copy.phone = copy.mobile;
+      }
+      return copy;
+    }
+    return val;
+  },
+  z.object({
+    fullName: z.string().min(1, 'Full name is required'),
+    street: z.string().min(1, 'Street address is required'),
+    city: z.string().min(1, 'City is required'),
+    state: z.preprocess((val) => (typeof val === 'string' && val.trim() ? val.trim() : 'Chhattisgarh'), z.string().min(1, 'State is required')),
+    postalCode: standardPincodeSchema,
+    country: z.string().default('IN'),
+    phone: standardPhoneSchema,
+  })
+);
 
 export const createOrderSchema = z.object({
   storeId: z.string().min(1, 'Store ID is required'),
   items: z.array(createOrderItemSchema).min(1, 'Order must contain at least one item'),
-  shippingAddress: shippingAddressSchema,
+  shippingAddress: shippingAddressSchema.optional(),
+  fulfilmentMode: z.nativeEnum(FulfilmentMode).default(FulfilmentMode.DELIVER).optional(),
+  couponCode: z.string().optional(),
+  paymentMethod: z.string().optional(),
 });
 
 export const updateOrderStatusSchema = z.object({
@@ -102,12 +124,21 @@ export interface IOrder {
   items: IOrderItem[];
   shippingAddress: ShippingAddressDto;
   subtotal: number;
+  discount?: number;
+  couponCode?: string | null;
   tax: number;
   shippingFee: number;
   grandTotal: number;
   status: OrderStatus;
+  fulfilmentMode?: FulfilmentMode | string;
+  reserveCode?: string | null;
+  reserveExpiresAt?: string | null;
+  isReserved?: boolean;
   deliveryOtp?: string;
   deliveredAt?: string;
+  version?: number;
+  cancellationReason?: string;
+  cancelledAt?: string;
   createdAt: string;
   updatedAt: string;
 }

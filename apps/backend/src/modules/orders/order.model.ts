@@ -42,8 +42,13 @@ const orderSchema = new Schema<OrderDocument>(
     storeId: { type: String, required: true, index: true },
     orderNumber: { type: String, required: true, unique: true, index: true },
     items: { type: [orderItemSchema], required: true },
-    shippingAddress: { type: shippingAddressSchema, required: true },
+    shippingAddress: { type: shippingAddressSchema, required: false },
+    fulfilmentMode: { type: String, default: 'deliver' },
+    reserveCode: { type: String },
+    reserveExpiresAt: { type: Date },
     subtotal: { type: Number, required: true },
+    discount: { type: Number, default: 0 },
+    couponCode: { type: String, default: null },
     tax: { type: Number, required: true },
     shippingFee: { type: Number, required: true },
     grandTotal: { type: Number, required: true },
@@ -55,6 +60,8 @@ const orderSchema = new Schema<OrderDocument>(
     },
     deliveryOtp: { type: String, required: true },
     deliveredAt: { type: Date },
+    paymentMethod: { type: String, default: 'cod', index: true },
+    paymentStatus: { type: String, default: 'pending' },
     statusHistory: { type: [statusHistorySchema], default: [] },
     version: { type: Number, required: true, default: 1, min: 1, index: true },
   },
@@ -65,6 +72,7 @@ const orderSchema = new Schema<OrderDocument>(
 orderSchema.index({ storeId: 1, status: 1, createdAt: -1 });
 orderSchema.index({ userId: 1, createdAt: -1 });
 orderSchema.index({ status: 1, createdAt: 1 });
+orderSchema.index({ fulfilmentMode: 1, status: 1, reserveExpiresAt: 1 });
 
 export const OrderModel =
   (mongoose.models.Order as mongoose.Model<OrderDocument>) ||

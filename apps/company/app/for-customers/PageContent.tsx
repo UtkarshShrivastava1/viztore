@@ -6,7 +6,7 @@ import FeatureCard from "@/components/ui/FeatureCard";
 import TimelineCard from "@/components/ui/TimelineCard";
 import CategoryCard from "@/components/ui/CategoryCard";
 import CTASection from "@/components/ui/CTASection";
-import { branding } from "@repo/shared-types/branding.config";
+import { branding } from "@/config/company";
 import {
   MapPin,
   Search,

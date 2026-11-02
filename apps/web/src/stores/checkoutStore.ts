@@ -27,10 +27,13 @@ export interface CheckoutState {
   setReserveDateTime: (dt: string | null) => void;
   couponCode: string | null;
   discountAmount: number;
+  applyCouponDiscount: (code: string, discount: number) => void;
   applyCoupon: (code: string) => void;
   removeCoupon: () => void;
   isPlacingOrder: boolean;
   setIsPlacingOrder: (loading: boolean) => void;
+  isAddressModalOpen: boolean;
+  setIsAddressModalOpen: (open: boolean) => void;
 }
 
 export const useCheckoutStore = create<CheckoutState>()(
@@ -48,10 +51,13 @@ export const useCheckoutStore = create<CheckoutState>()(
       setReserveDateTime: (dt) => set({ reserveDateTime: dt }),
       couponCode: null,
       discountAmount: 0,
-      applyCoupon: (code) => set({ couponCode: code, discountAmount: 100 }), // Mock discount for now
+      applyCouponDiscount: (code, discount) => set({ couponCode: code, discountAmount: discount }),
+      applyCoupon: (code) => set({ couponCode: code, discountAmount: 100 }),
       removeCoupon: () => set({ couponCode: null, discountAmount: 0 }),
       isPlacingOrder: false,
       setIsPlacingOrder: (loading) => set({ isPlacingOrder: loading }),
+      isAddressModalOpen: false,
+      setIsAddressModalOpen: (open) => set({ isAddressModalOpen: open }),
     }),
     {
       name: 'platform-checkout-storage',
@@ -61,6 +67,8 @@ export const useCheckoutStore = create<CheckoutState>()(
         shippingAddress: state.shippingAddress,
         paymentMethod: state.paymentMethod,
         reserveDateTime: state.reserveDateTime,
+        couponCode: state.couponCode,
+        discountAmount: state.discountAmount,
       }),
     }
   )

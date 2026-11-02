@@ -8,6 +8,7 @@ import {
   openPoolQuerySchema,
   updateDeliveryStatusSchema,
   verifyDeliveryOtpSchema,
+  updateRiderLocationSchema,
 } from './delivery.validator.js';
 import { ApiResponse } from '../../shared/utils/ApiResponse.js';
 import { AppError } from '../../shared/utils/AppError.js';
@@ -23,6 +24,7 @@ export interface DeliveryController {
   verifyOtp: RequestHandler;
   getPilotRoster: RequestHandler;
   getRunDetails: RequestHandler;
+  updateLocation: RequestHandler;
 }
 
 export function createDeliveryController(service: IDeliveryService): DeliveryController {
@@ -120,6 +122,14 @@ export function createDeliveryController(service: IDeliveryService): DeliveryCon
     return ApiResponse.success(res, details, 'Rider run details retrieved successfully');
   });
 
+    const updateLocation: RequestHandler = catchAsync(async (req: Request, res: Response) => {
+    const orderId = req.params.orderId as string;
+    const dto = updateRiderLocationSchema.parse(req.body);
+
+    const result = await service.updateLocation(orderId, dto);
+    return ApiResponse.success(res, result, 'Rider telemetry updated successfully', StatusCodes.OK);
+  });
+
   return {
     getTracking,
     assignRider,
@@ -130,6 +140,7 @@ export function createDeliveryController(service: IDeliveryService): DeliveryCon
     verifyOtp,
     getPilotRoster,
     getRunDetails,
+    updateLocation,
   };
 }
 

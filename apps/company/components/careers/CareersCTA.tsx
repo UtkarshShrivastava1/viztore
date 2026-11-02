@@ -1,7 +1,7 @@
 "use client";
 
 import { Mail, ArrowRight } from "lucide-react";
-import { branding } from "@repo/shared-types/branding.config";
+import { branding } from "@/config/company";
 
 export default function CareersCTA() {
   return (

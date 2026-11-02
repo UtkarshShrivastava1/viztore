@@ -8,7 +8,7 @@ import {
   ArrowLeft, Loader2
 } from 'lucide-react';
 import { AccountSidebar } from '@/components/account/AccountSidebar';
-import { notificationsApi, type ICustomerNotification } from '@/lib/api/notifications.js';
+import { useNotificationStore, type INotificationItem } from '@/stores/notificationStore';
 
 const TABS = [
   { id: 'all', label: 'All' },
@@ -21,37 +21,27 @@ export function NotificationsClient() {
   const router = useRouter();
   const { isAuthenticated, openAuthModal } = useAuthStore();
   const [activeTab, setActiveTab] = useState('all');
-  const [notifications, setNotifications] = useState<ICustomerNotification[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isMarkingAll, setIsMarkingAll] = useState<boolean>(false);
 
-  const loadNotifications = async () => {
-    try {
-      setIsLoading(true);
-      if (isAuthenticated) {
-        const categoryParam = activeTab === 'all' ? undefined : activeTab;
-        const data = await notificationsApi.getNotifications({ category: categoryParam });
-        setNotifications(data);
-        return;
-      }
-      setNotifications([]);
-    } catch (err) {
-      console.warn('Failed to load notifications from API:', err);
-      setNotifications([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const {
+    notifications,
+    unreadCount,
+    isLoading,
+    fetchNotifications,
+    markAsRead,
+    markAllAsRead,
+  } = useNotificationStore();
 
   useEffect(() => {
-    loadNotifications();
-  }, [isAuthenticated, activeTab]);
+    if (isAuthenticated) {
+      fetchNotifications(activeTab);
+    }
+  }, [isAuthenticated, activeTab, fetchNotifications]);
 
   const handleMarkAllRead = async () => {
     try {
       setIsMarkingAll(true);
-      await notificationsApi.markAllAsRead();
-      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+      await markAllAsRead();
     } catch (err) {
       console.error('Failed to mark all as read:', err);
     } finally {
@@ -59,28 +49,41 @@ export function NotificationsClient() {
     }
   };
 
-  const handleMarkSingleRead = async (id: string) => {
-    try {
-      await notificationsApi.markAsRead(id);
-      setNotifications(prev => prev.map(n => n._id === id || n.id === id ? { ...n, isRead: true } : n));
-    } catch (err) {
-      console.error('Failed to mark notification as read:', err);
+  const handleItemClick = (item: INotificationItem) => {
+    if (!item.isRead) {
+      markAsRead(item.id);
+    }
+    if (item.targetUrl) {
+      router.push(item.targetUrl);
+    } else if (item.orderId) {
+      router.push(`/account/orders/${item.orderId}`);
     }
   };
 
-  const getIconForCategory = (category: string) => {
-    switch (category) {
+  const getIconForCategory = (type?: string, category?: string) => {
+    const key = category || type;
+    switch (key) {
       case 'order':
+      case 'order_update':
         return { icon: <Briefcase className="w-5 h-5 text-purple-600" />, bg: 'bg-purple-50' };
       case 'promo':
+      case 'offer':
         return { icon: <Tag className="w-5 h-5 text-rose-500" />, bg: 'bg-rose-50' };
       case 'system':
+      case 'review':
       default:
         return { icon: <Bell className="w-5 h-5 text-blue-500" />, bg: 'bg-blue-50' };
     }
   };
 
-  const unreadCount = notifications.filter(n => !n.isRead).length;
+  const displayedNotifications = activeTab === 'all'
+    ? notifications
+    : notifications.filter((n) => {
+        if (activeTab === 'order') return n.category === 'order' || n.type === 'order_update';
+        if (activeTab === 'promo') return n.category === 'promo' || n.type === 'offer';
+        if (activeTab === 'system') return n.category === 'system' || n.type === 'review';
+        return true;
+      });
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] pb-24 font-sans">
@@ -106,9 +109,10 @@ export function NotificationsClient() {
 
             {unreadCount > 0 && (
               <button 
+                type="button"
                 onClick={handleMarkAllRead}
                 disabled={isMarkingAll}
-                className="text-[12px] font-bold text-[#1668F6] hover:underline shrink-0 pt-1"
+                className="text-[12px] font-bold text-[#1668F6] hover:underline shrink-0 pt-1 cursor-pointer"
               >
                 {isMarkingAll ? 'Marking...' : 'Mark all as read'}
               </button>
@@ -117,11 +121,11 @@ export function NotificationsClient() {
 
           {/* Category Tabs */}
           <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-surface-100 my-2 hide-scrollbar">
-            {TABS.map(tab => (
+            {TABS.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
                   activeTab === tab.id
                     ? 'bg-[#1668F6] text-white shadow-sm'
                     : 'bg-white border border-surface-200 text-surface-600 hover:bg-surface-50'
@@ -134,12 +138,12 @@ export function NotificationsClient() {
 
           {/* Notifications List */}
           <div className="flex-1 mt-3">
-            {isLoading ? (
+            {isLoading && displayedNotifications.length === 0 ? (
               <div className="py-20 flex flex-col items-center justify-center gap-2 text-surface-400">
                 <Loader2 className="w-8 h-8 animate-spin text-[#1668F6]" />
                 <p className="text-xs font-semibold">Loading notifications...</p>
               </div>
-            ) : notifications.length === 0 ? (
+            ) : displayedNotifications.length === 0 ? (
               /* Empty State */
               <div className="border border-dashed border-[#E5E7EB] bg-white rounded-2xl p-8 lg:p-14 text-center flex flex-col items-center justify-center my-4">
                 <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mb-4">
@@ -154,7 +158,7 @@ export function NotificationsClient() {
                 {!isAuthenticated && (
                   <button 
                     onClick={() => openAuthModal('login')}
-                    className="px-6 py-2.5 bg-[#1668F6] text-white text-xs font-bold rounded-xl shadow-sm hover:bg-blue-700 transition"
+                    className="px-6 py-2.5 bg-[#1668F6] text-white text-xs font-bold rounded-xl shadow-sm hover:bg-blue-700 transition cursor-pointer"
                   >
                     Sign In
                   </button>
@@ -162,23 +166,14 @@ export function NotificationsClient() {
               </div>
             ) : (
               <div className="flex flex-col gap-3">
-                {notifications.map(item => {
-                  const id = item._id || item.id || '';
-                  const { icon, bg } = getIconForCategory(item.category);
+                {displayedNotifications.map((item) => {
+                  const { icon, bg } = getIconForCategory(item.type, item.category);
                   const isUnread = !item.isRead;
-                  const formattedTime = item.createdAt 
-                    ? new Date(item.createdAt).toLocaleDateString('en-IN', {
-                        day: 'numeric',
-                        month: 'short',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })
-                    : 'Recent';
 
                   return (
                     <div 
-                      key={id}
-                      onClick={() => isUnread && handleMarkSingleRead(id)}
+                      key={item.id}
+                      onClick={() => handleItemClick(item)}
                       className={`p-4 rounded-xl border transition-all flex items-start gap-3.5 cursor-pointer ${
                         isUnread 
                           ? 'bg-[#F8FAFF] border-blue-200 shadow-sm' 
@@ -195,11 +190,11 @@ export function NotificationsClient() {
                             {item.title}
                           </h4>
                           <span className="text-[11px] text-surface-400 font-medium shrink-0">
-                            {formattedTime}
+                            {item.timestamp}
                           </span>
                         </div>
                         <p className="text-[12px] text-surface-600 mt-1 leading-relaxed">
-                          {item.message}
+                          {item.description}
                         </p>
                       </div>
 

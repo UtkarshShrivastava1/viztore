@@ -46,12 +46,15 @@ export function isValidObjectId(id: string): boolean {
   return /^[a-f\d]{24}$/i.test(id);
 }
 
-export function normalizeAddress(address?: Partial<ShippingAddressDTO> | null): ShippingAddressDTO {
+export function normalizeAddress(address?: Partial<ShippingAddressDTO> | null): ShippingAddressDTO | undefined {
+  if (!address || (!address.street && !address.postalCode && !address.fullName)) {
+    return undefined;
+  }
   return {
     fullName: (address?.fullName ?? '').trim(),
     street: (address?.street ?? '').trim(),
     city: (address?.city ?? '').trim(),
-    state: (address?.state ?? '').trim(),
+    state: (address?.state ?? '').trim() || 'Chhattisgarh',
     postalCode: (address?.postalCode ?? '').trim(),
     country: (address?.country || 'IN').trim().toUpperCase(),
     phone: (address?.phone ?? '').trim(),

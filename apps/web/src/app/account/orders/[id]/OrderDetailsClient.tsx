@@ -9,6 +9,10 @@ import {
 } from 'lucide-react';
 import { AccountSidebar } from '@/components/account/AccountSidebar';
 import { OrderInvoiceModal } from '@/components/orders/OrderInvoiceModal';
+import { CustomerReturnModal } from '@/components/orders/CustomerReturnModal';
+import { CustomerCancelOrderModal } from '@/components/orders/CustomerCancelOrderModal';
+import { XCircle } from 'lucide-react';
+import { RotateCcw } from 'lucide-react';
 import { ordersApi } from '@/lib/api/orders.js';
 import type { IOrder, IOrderItem } from '@repo/shared-types';
 
@@ -21,6 +25,8 @@ export function OrderDetailsClient({ id }: OrderDetailsClientProps) {
   const [order, setOrder] = useState<IOrder | null>(null);
   const [loading, setLoading] = useState(true);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+  const [showReturnModal, setShowReturnModal] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -44,13 +50,16 @@ export function OrderDetailsClient({ id }: OrderDetailsClientProps) {
   }, [id]);
 
   const currentStatus = order?.status ? String(order.status).toUpperCase() : 'CONFIRMED';
-  const displayId = order?.orderNumber ? `#${order.orderNumber}` : (id ? `#${id.slice(-6).toUpperCase()}` : '#ORD-98214');
+  const isReserve = order?.fulfilmentMode === 'reserve' || order?.orderNumber?.toUpperCase().includes('RES-') || Boolean((order as any)?.isReserved);
+  const displayId = order?.orderNumber ? (order.orderNumber.startsWith('#') ? order.orderNumber : `#${order.orderNumber}`) : (id ? (isReserve ? `#RES-${id.slice(-5).toUpperCase()}` : `#ORD-${id.slice(-6).toUpperCase()}`) : '#ORD-98214');
 
   // Derive status progression from real order status
   const isConfirmed = ['CONFIRMED', 'PROCESSING', 'PACKED', 'SHIPPED', 'OUT_FOR_DELIVERY', 'DELIVERED'].includes(currentStatus);
   const isPacked = ['PACKED', 'SHIPPED', 'OUT_FOR_DELIVERY', 'DELIVERED'].includes(currentStatus);
   const isOutForDelivery = ['OUT_FOR_DELIVERY', 'DELIVERED'].includes(currentStatus);
   const isDelivered = currentStatus === 'DELIVERED';
+  const isCancelled = currentStatus === 'CANCELLED';
+  const isCancellable = ['PENDING', 'CONFIRMED'].includes(currentStatus);
 
   const orderDate = order?.createdAt 
     ? new Date(order.createdAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
@@ -62,19 +71,9 @@ export function OrderDetailsClient({ id }: OrderDetailsClientProps) {
   const subtotal = order?.subtotal ?? (order?.items?.reduce((sum, item) => sum + (item.unitPrice * item.quantity), 0) || 0);
   const deliveryFee = order?.shippingFee ?? 0;
 
-  const otpDigits = order?.deliveryOtp ? order.deliveryOtp.split('') : ['4', '8', '2', '1'];
-  const items: IOrderItem[] = order?.items && order.items.length > 0 
-    ? order.items 
-    : [
-        {
-          productId: 'prd-default',
-          name: 'Hyperlocal Store Items',
-          quantity: 1,
-          unitPrice: totalAmount || 499,
-          storeId: order?.storeId || 'store-1',
-          sku: 'SKU-001'
-        }
-      ];
+  const otpDigits = order?.deliveryOtp && order.deliveryOtp.length === 4 ? order.deliveryOtp.split('') : [];
+  const hasValidOtp = otpDigits.length === 4;
+  const items: IOrderItem[] = order?.items || [];
 
   if (loading) {
     return (
@@ -140,7 +139,7 @@ export function OrderDetailsClient({ id }: OrderDetailsClientProps) {
                     <div key={`${item.productId}-${index}`} className="flex gap-4 py-3 first:pt-2 last:pb-1">
                       <div className="w-[72px] h-[72px] lg:w-[80px] lg:h-[80px] rounded-lg overflow-hidden bg-surface-50 flex-shrink-0 flex items-center justify-center border border-surface-100">
                         <img 
-                          src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&q=80&w=200&h=200" 
+                          src={(item as any)?.imageUrl || (item as any)?.image || "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&q=80&w=200&h=200"} 
                           alt={item.name} 
                           className="w-full h-full object-cover mix-blend-multiply" 
                         />
@@ -188,7 +187,7 @@ export function OrderDetailsClient({ id }: OrderDetailsClientProps) {
               </div>
 
               {/* Delivery OTP Box */}
-              {!isDelivered && (
+              {!isDelivered && !isCancelled && hasValidOtp && (
                 <div className="mx-4 lg:mx-0 bg-white rounded-2xl p-4 lg:p-5 shadow-sm border border-surface-200/60 flex flex-col sm:flex-row gap-4 items-center">
                   <div className="flex-1 w-full">
                     <div className="flex items-center gap-2">
@@ -328,6 +327,60 @@ export function OrderDetailsClient({ id }: OrderDetailsClientProps) {
                 </div>
               </div>
 
+              {/* Return / Exchange Action Card (Delivered Orders) */}
+              {isDelivered && (
+                <div className="mx-4 lg:mx-0 bg-white rounded-2xl p-4 lg:p-5 shadow-sm border border-emerald-200/80 bg-gradient-to-r from-emerald-50/40 to-blue-50/30 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-100/80 text-emerald-700 flex items-center justify-center shrink-0">
+                      <RotateCcw className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-[14px] font-bold text-[#192168]">Return or Exchange</h4>
+                      <p className="text-[12px] text-surface-500 mt-0.5">Eligible within 7 days of delivery</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowReturnModal(true)}
+                    className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition shadow-xs shrink-0 cursor-pointer"
+                  >
+                    Request Return
+                  </button>
+                </div>
+              )}
+
+              {/* Cancel Order Action Card (Pending / Confirmed Orders) */}
+              {isCancellable && (
+                <div className="mx-4 lg:mx-0 bg-white rounded-2xl p-4 lg:p-5 shadow-sm border border-rose-200/80 bg-rose-50/20 flex items-center justify-between gap-3">
+                  <div>
+                    <h4 className="text-[13px] font-bold text-gray-900">Need to Cancel?</h4>
+                    <p className="text-[11px] text-gray-500 mt-0.5">Order can be cancelled before packing begins.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowCancelModal(true)}
+                    className="px-4 py-2 border border-rose-300 text-rose-600 hover:bg-rose-50 rounded-xl text-xs font-bold transition-colors cursor-pointer shrink-0"
+                  >
+                    Cancel Order
+                  </button>
+                </div>
+              )}
+
+              {/* Cancelled Banner */}
+              {isCancelled && (
+                <div className="mx-4 lg:mx-0 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center shrink-0 mt-0.5">
+                    <XCircle className="w-4 h-4 text-rose-600" />
+                  </div>
+                  <div>
+                    <h4 className="text-[13px] font-bold">This Order is Cancelled</h4>
+                    <p className="text-[11px] text-rose-600 mt-0.5">
+                      {'This order has been cancelled and inventory was returned to the store catalog.'}
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {/* Bottom Actions */}
               <div className="mx-4 lg:mx-0 space-y-3 lg:space-y-4 mb-6">
                 <Link 
@@ -373,6 +426,25 @@ export function OrderDetailsClient({ id }: OrderDetailsClientProps) {
         isOpen={showInvoiceModal}
         onClose={() => setShowInvoiceModal(false)}
         orderId={order?.id || order?._id || id}
+      />
+
+      {/* Customer Return & Exchange Modal */}
+      <CustomerReturnModal
+        isOpen={showReturnModal}
+        onClose={() => setShowReturnModal(false)}
+        order={order}
+      />
+
+      {/* Customer Cancel Order Modal */}
+      <CustomerCancelOrderModal
+        orderId={order?._id || order?.id || id}
+        orderNumber={displayId}
+        expectedVersion={order?.version}
+        isOpen={showCancelModal}
+        onClose={() => setShowCancelModal(false)}
+        onSuccess={(updatedOrder) => {
+          setOrder(updatedOrder);
+        }}
       />
     </div>
   );

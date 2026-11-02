@@ -179,6 +179,9 @@ export const api = {
 };
 
 export const ordersApi = {
+  createOrder: (orderData: unknown) =>
+    api.post<any>('/orders', orderData),
+
   getStoreOrders: (storeId: string) => 
     api.get<any[]>(`/orders/store/${storeId}`),
 
@@ -213,20 +216,54 @@ export const catalogApi = {
 
   deleteProduct: (productId: string) =>
     api.delete<any>(`/catalog/products/${productId}`),
+
+  bulkDeleteProducts: (productIds: string[]) =>
+    api.post<{ deletedCount: number }>('/catalog/products/bulk-delete', { productIds }),
+
+  getTaxonomyCategories: () =>
+    api.get<Array<{ name: string; subcategoryCount: number; productTypeCount: number }>>('/catalog/taxonomy/categories'),
+
+  getTaxonomySubcategories: (category: string) =>
+    api.get<Array<{ name: string; productTypeCount: number }>>(`/catalog/taxonomy/subcategories?category=${encodeURIComponent(category)}`),
+
+  getTaxonomyProductTypes: (category: string, subCategory: string) =>
+    api.get<string[]>(`/catalog/taxonomy/product-types?category=${encodeURIComponent(category)}&subCategory=${encodeURIComponent(subCategory)}`),
+
+  getTaxonomyAttributes: (productType: string, category?: string) => {
+    const qs = category ? `&category=${encodeURIComponent(category)}` : '';
+    return api.get<any>(`/catalog/taxonomy/attributes?productType=${encodeURIComponent(productType)}${qs}`);
+  },
+
+  lookupHSN: (category: string, subcategory?: string, productType?: string) => {
+    const params = new URLSearchParams({ category, subcategory: subcategory || '', productType: productType || '' });
+    return api.get<any>(`/catalog/taxonomy/hsn-lookup?${params.toString()}`);
+  },
+
+  searchTaxonomy: (query: string) =>
+    api.get<any[]>(`/catalog/taxonomy/search?q=${encodeURIComponent(query)}`),
 };
 
 export const storesApi = {
   getMyStore: () =>
     api.get<any>('/stores/me'),
 
+  getStoreSettings: (storeId: string) =>
+    api.get<any>(`/stores/${storeId}/settings`),
+
   updateStoreSettings: (storeId: string, data: unknown) =>
-    api.patch<any>(`/stores/${storeId}`, data),
+    api.patch<any>(`/stores/${storeId}/settings`, data),
 
   updateStoreStatus: (storeId: string, isActive: boolean) =>
     api.patch<any>(`/stores/${storeId}`, { isActive, isOpen: isActive }),
 
   toggleOnlineStatus: (storeId: string, isOpen: boolean) =>
     api.patch<any>(`/stores/${storeId}`, { isActive: isOpen, isOpen }),
+
+  verifyGstin: (gstin: string) =>
+    api.post<any>('/stores/onboarding/verify-gstin', { gstin }),
+
+  verifyPan: (pan: string) =>
+    api.post<any>('/stores/onboarding/verify-pan', { pan }),
 };
 
 export const notificationsApi = {
@@ -324,6 +361,9 @@ export const expensesApi = {
   createPurchase: (data: unknown) =>
     api.post<any>('/expenses/purchases', data),
 
+  receivePurchase: (id: string) =>
+    api.post<any>('/expenses/purchases/' + id + '/receive'),
+
   getCreditNotes: () =>
     api.get<any[]>('/expenses/credit-notes'),
 
@@ -335,6 +375,12 @@ export const expensesApi = {
 
   createEWayBill: (data: unknown) =>
     api.post<any>('/expenses/eway-bills', data),
+};
+
+export const couponsApi = {
+  getCoupons: () => api.get<any[]>('/coupons'),
+  createCoupon: (data: unknown) => api.post<any>('/coupons', data),
+  deleteCoupon: (id: string) => api.delete<any>(`/coupons/${id}`),
 };
 
 export const mediaApi = {
@@ -417,4 +463,96 @@ export const analyticsApi = {
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
   },
+};
+
+export const customersApi = {
+  getCustomers: (params?: Record<string, string>) => {
+    const qs = params ? '?' + new URLSearchParams(params).toString() : '';
+    return api.get<any>(`/customers${qs}`);
+  },
+  getAll: (params?: Record<string, string>) => {
+    const qs = params ? '?' + new URLSearchParams(params).toString() : '';
+    return api.get<any>(`/customers${qs}`);
+  },
+
+  getCustomerById: (id: string) =>
+    api.get<any>(`/customers/${id}`),
+  getById: (id: string) =>
+    api.get<any>(`/customers/${id}`),
+
+  createCustomer: (data: unknown) =>
+    api.post<any>('/customers', data),
+  create: (data: unknown) =>
+    api.post<any>('/customers', data),
+
+  updateCustomer: (id: string, data: unknown) =>
+    api.patch<any>(`/customers/${id}`, data),
+  update: (id: string, data: unknown) =>
+    api.patch<any>(`/customers/${id}`, data),
+
+  deleteCustomer: (id: string) =>
+    api.delete<any>(`/customers/${id}`),
+  delete: (id: string) =>
+    api.delete<any>(`/customers/${id}`),
+
+  adjustCredit: (id: string, data: { amount: number; type: 'add' | 'deduct'; reason: string }) =>
+    api.post<any>(`/customers/${id}/credit`, data),
+  addCredit: (id: string, data: { amount: number; type: 'add' | 'deduct'; reason: string }) =>
+    api.post<any>(`/customers/${id}/credit`, data),
+
+  recordPayment: (id: string, data: { amount: number; paymentMethod: string; notes?: string; referenceNo?: string }) =>
+    api.post<any>(`/customers/${id}/payments`, data),
+};
+
+export const returnsApi = {
+  getReturns: (params?: Record<string, string>) => {
+    const qs = params ? '?' + new URLSearchParams(params).toString() : '';
+    return api.get<any>(`/returns${qs}`);
+  },
+  getReturnById: (id: string) =>
+    api.get<any>(`/returns/${id}`),
+  createReturn: (data: unknown) =>
+    api.post<any>('/returns', data),
+  approveReturn: (id: string, data?: { pickupDate?: string; pickupTime?: string; internalNote?: string }) =>
+    api.patch<any>(`/returns/${id}/approve`, data || {}),
+  rejectReturn: (id: string, reason: string) =>
+    api.patch<any>(`/returns/${id}/reject`, { reason }),
+  processRefund: (id: string, data?: { refundAmount?: number; refundMethod?: string; internalNote?: string }) =>
+    api.post<any>(`/returns/${id}/refund`, data || {}),
+};
+
+export const settlementsApi = {
+  getOverview: (storeId?: string) => {
+    const url = storeId ? `/settlements/store/${storeId}/overview` : '/settlements/overview';
+    return api.get<any>(url);
+  },
+  getHistory: (params?: Record<string, string>) => {
+    const qs = params ? '?' + new URLSearchParams(params).toString() : '';
+    return api.get<any>(`/settlements${qs}`);
+  },
+  getById: (id: string) =>
+    api.get<any>(`/settlements/${id}`),
+  getBankAccount: () =>
+    api.get<any>('/settlements/bank-account'),
+  saveBankAccount: (data: unknown) =>
+    api.post<any>('/settlements/bank-account', data),
+  requestPayout: (data: { amount: number; remarks?: string }) =>
+    api.post<any>('/settlements/request', data),
+};
+
+export const supportApi = {
+  getTickets: (params?: Record<string, string | number>) => {
+    const qs = params ? '?' + new URLSearchParams(params as Record<string, string>).toString() : '';
+    return api.get<{ tickets: any[]; total: number }>(`/support/tickets${qs}`);
+  },
+  getTicketById: (id: string) =>
+    api.get<any>(`/support/tickets/${id}`),
+  createTicket: (data: any) =>
+    api.post<any>('/support/tickets', data),
+  addMessage: (id: string, data: { text: string; attachments?: string[] }) =>
+    api.post<any>(`/support/tickets/${id}/messages`, data),
+  updateStatus: (id: string, status: string) =>
+    api.patch<any>(`/support/tickets/${id}/status`, { status }),
+  requestCallback: (data: { contactName: string; phoneNumber: string; preferredTime?: string; topic?: string; notes?: string }) =>
+    api.post<any>('/support/callback-requests', data),
 };

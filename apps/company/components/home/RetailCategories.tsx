@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import SectionHeading from "@/components/ui/SectionHeading";
 import CategoryCard from "@/components/ui/CategoryCard";
-import { branding } from "@repo/shared-types/branding.config";
+import { branding } from "@/config/company";
 
 const categories = [
   { icon: Shirt, label: "Fashion" },

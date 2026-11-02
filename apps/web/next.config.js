@@ -25,6 +25,27 @@ const nextConfig = {
 
     return config;
   },
+  async redirects() {
+    return [
+      { source: '/about', destination: '/account/support', permanent: false },
+      { source: '/contact', destination: '/account/support', permanent: false },
+      { source: '/partner', destination: '/account/sell', permanent: false },
+      { source: '/terms', destination: '/account/terms', permanent: false },
+      { source: '/seller-terms', destination: '/account/terms', permanent: false },
+      { source: '/careers', destination: '/account/support', permanent: false },
+      { source: '/privacy', destination: '/account/privacy', permanent: false },
+      { source: '/refund', destination: '/account/terms', permanent: false },
+      { source: '/grievance', destination: '/account/support', permanent: false },
+    ];
+  },
+  async rewrites() {
+    return [
+      {
+        source: '/store/:slug*',
+        destination: '/stores/:slug*',
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       {

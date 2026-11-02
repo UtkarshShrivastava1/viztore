@@ -16,6 +16,8 @@ import {
   EWayBillModel,
 } from './expense.model.js';
 import { AppError } from '../../shared/utils/AppError.js';
+import { catalogModule } from '../catalog/index.js';
+import { ProductModel } from '../catalog/product.model.js';
 
 export const expenseService = {
   /**
@@ -209,11 +211,13 @@ export const expenseService = {
       date: dateStr,
       time: timeStr,
       vendor: dto.vendor,
-      itemsCount: dto.itemsCount,
+      itemsCount: dto.itemsCount || `${dto.items?.length || 1} items`,
       totalAmount: dto.totalAmount,
-      paymentStatus: dto.paymentStatus,
+      paymentStatus: dto.paymentStatus || 'Unpaid',
+      status: dto.type === 'Purchase Order' ? (dto.status || 'Pending') : 'Received',
       dueDate: dto.dueDate || '',
       type: dto.type,
+      items: dto.items || [],
     });
 
     // Update vendor totalPurchases
@@ -222,7 +226,61 @@ export const expenseService = {
       { $inc: { totalPurchases: dto.totalAmount } },
     );
 
+    // If it's a direct Purchase (bill) with items, auto-increment catalog stock
+    if (dto.type !== 'Purchase Order' && dto.items && dto.items.length > 0) {
+      const itemsToRestore = dto.items
+        .filter((it: any) => it.productId)
+        .map((it: any) => ({
+          productId: it.productId.toString(),
+          sku: it.sku,
+          quantity: it.quantity || 1,
+        }));
+      if (itemsToRestore.length > 0) {
+        await catalogModule.restoreStock(itemsToRestore);
+      }
+    }
+
     return created;
+  },
+
+  /**
+   * Receive Purchase Order (Updates status & increments catalog inventory)
+   */
+  async receivePurchaseOrder(storeId: string, purchaseId: string) {
+    const sId = new mongoose.Types.ObjectId(storeId);
+    const purchase = await PurchaseBillModel.findOne({ _id: purchaseId, storeId: sId });
+    if (!purchase) {
+      throw AppError.notFound('Purchase record not found', 'PURCHASE_NOT_FOUND');
+    }
+
+    purchase.paymentStatus = 'Paid';
+    purchase.status = 'Received';
+    await purchase.save();
+
+    // Check if items are attached or find store products to increment inventory
+    const items = purchase.items || [];
+    if (items.length > 0) {
+      const itemsToRestore = items
+        .filter((it: any) => it.productId)
+        .map((it: any) => ({
+          productId: it.productId.toString(),
+          sku: it.sku,
+          quantity: it.quantity || 1,
+        }));
+
+      if (itemsToRestore.length > 0) {
+        await catalogModule.restoreStock(itemsToRestore);
+      }
+    } else {
+      // If purchase record has no item details, find active products for this store and increment stock
+      const product = await ProductModel.findOne({ storeId: sId, isActive: true });
+      if (product) {
+        const qty = parseInt(purchase.itemsCount) || 1;
+        await catalogModule.restoreStock([{ productId: product._id.toString(), quantity: qty }]);
+      }
+    }
+
+    return purchase;
   },
 
   /**

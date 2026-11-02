@@ -54,6 +54,42 @@ export interface IProductAttribute {
   value: string; // e.g. "Twill", "Opaque", "Slim Fit", "100% Cotton"
 }
 
+// ── Master Taxonomy & HSN Types ─────────────────────────────────────────
+
+export interface ITaxonomyAttributeDefinition {
+  name: string;
+  values: string[];
+  isMultiSelect?: boolean;
+  isRequired?: boolean;
+}
+
+export interface ITaxonomyNode {
+  _id?: string;
+  category: string;
+  subcategory: string;
+  productType: string;
+  slug?: string;
+  hsnCode?: string;
+  gstRate?: number;
+  attributes: ITaxonomyAttributeDefinition[];
+}
+
+export interface IHSNLookupResult {
+  hsnCode: string;
+  gstRate: number;
+  description: string;
+  category: string;
+}
+
+export interface ITaxonomySearchMatch {
+  category: string;
+  subcategory: string;
+  productType: string;
+  attributeCount: number;
+  hsnCode?: string;
+  gstRate?: number;
+}
+
 export interface IProductVariant {
   sku: string;
   size?: string;
@@ -77,6 +113,8 @@ export interface IProduct {
   subCategory?: string;
   subType?: ProductSubType | string;
   brand?: string;
+  hsnCode?: string;
+  gstRate?: number;
   tags: string[];
   attributes: IProductAttribute[];
   variants: IProductVariant[];
@@ -150,8 +188,10 @@ export const createProductSchema = z.object({
     return val.toLowerCase().trim().replace(/[\s-]+/g, '_');
   }, z.string().max(100).optional()),
   brand: z.string().max(100).optional(),
+  hsnCode: z.string().max(20).optional(),
+  gstRate: z.number().min(0).max(100).optional(),
   tags: z.array(z.string().max(50)).max(20).default([]),
-  attributes: z.array(productAttributeSchema).max(30).default([]),
+  attributes: z.array(productAttributeSchema).max(50).default([]),
   variants: z.array(productVariantSchema).min(1, 'At least one variant is required').max(100),
   isFeatured: z.boolean().default(false),
 });

@@ -42,7 +42,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${inter.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${inter.variable} ${inter.className}`} style={{ fontFamily: 'var(--font-inter)' }} suppressHydrationWarning>
       <body className="font-sans bg-white text-surface-900 antialiased min-h-[100dvh] relative overflow-x-hidden">
         {/* Subtle decorative side gradients for wide screens */}
         <div className="pointer-events-none fixed inset-0 z-0 hidden lg:block" aria-hidden="true">

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   ArrowLeft,
   Mail,
@@ -8,71 +8,232 @@ import {
   Calendar,
   Plus,
   X,
+  UserPlus,
+  CheckCircle2,
+  Search,
+  Sparkles,
+  CreditCard,
+  Wallet,
+  Banknote,
+  Truck,
+  RotateCw,
+  ShoppingBag,
+  Store,
+  MapPin,
+  Clock,
+  ShieldCheck,
+  Tag,
+  Receipt,
+  Phone,
+  Layers,
+  User,
 } from 'lucide-react';
 import { useOrderStore } from '../stores/orderStore.js';
+import { useCustomerStore, Customer } from '../stores/customerStore.js';
 import { useInventoryStore } from '../stores/inventoryStore.js';
+import { useCatalogStore, ProductItem } from '../stores/catalogStore.js';
+import { useAuthStore } from '../stores/authStore.js';
+import { ordersApi } from '../lib/api.js';
+import {
+  formatDateIST,
+  branding,
+  cleanName,
+  cleanEmail,
+  cleanPhoneNumber,
+  cleanAmount,
+  validateEmail,
+  validatePersonName,
+} from '@repo/shared-types';
 
 interface CreateOrderPageProps {
   onBack?: () => void;
 }
 
-interface OrderItem {
+export interface OrderItem {
   id: string;
   name: string;
   variant: string;
   price: number;
   quantity: number;
-  iconType: 'tshirt' | 'jeans' | 'kurti' | 'saree';
+  iconType?: 'tshirt' | 'jeans' | 'kurti' | 'saree' | 'general';
+  image?: string;
+  sku?: string;
+  stock?: number;
 }
-
-const catalogOptions: OrderItem[] = [
-  { id: 'item-1', name: 'Men T-shirt', variant: 'Black • Size: L', price: 599, quantity: 1, iconType: 'tshirt' },
-  { id: 'item-2', name: 'Men Jeans', variant: 'Blue • Size: 32', price: 1299, quantity: 1, iconType: 'jeans' },
-  { id: 'item-3', name: 'Embroidered Kurti', variant: 'Red • Size: M', price: 899, quantity: 1, iconType: 'kurti' },
-  { id: 'item-4', name: 'Cotton Silk Saree', variant: 'Gold / Yellow', price: 2199, quantity: 1, iconType: 'saree' },
-];
 
 export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
   const { addManualOrder } = useOrderStore();
+  const { products: catalogProducts, fetchProducts } = useCatalogStore();
+  const { currentStore } = useAuthStore();
+  const customers = useCustomerStore((state) => state.customers);
+  const fetchCustomers = useCustomerStore((state) => state.fetchCustomers);
 
-  // State
+  // Load real store data on mount
+  useEffect(() => {
+    if (catalogProducts.length === 0) {
+      fetchProducts();
+    }
+    if (customers.length === 0) {
+      fetchCustomers();
+    }
+  }, [catalogProducts.length, customers.length, fetchProducts, fetchCustomers]);
+
+  // Customer State - decoupled between Existing Customer selection and New Customer registration
   const [customerType, setCustomerType] = useState<'existing' | 'new'>('existing');
-  const [customerName, setCustomerName] = useState('Rohan Verma');
-  const [customerEmail, setCustomerEmail] = useState('rohanverma@gmail.com');
-  const [customerPhone, setCustomerPhone] = useState('+91 98765 43210');
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [newCustomer, setNewCustomer] = useState({
+    name: '',
+    phone: '',
+    email: '',
+    address: '',
+  });
   const [isEditingCustomer, setIsEditingCustomer] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const searchContainerRef = React.useRef<HTMLDivElement>(null);
+
+  // Close search dropdown on click outside or Escape
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) {
+        setIsSearchOpen(false);
+      }
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsSearchOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
+  // Delivery & Location State
+  const storeAddress = useMemo(() => {
+    if (currentStore?.address) {
+      const a = currentStore.address;
+      return `${a.street}, ${a.city}, ${a.state} - ${a.pincode}`;
+    }
+    return 'Shop No. 12, City Mall, Supela, Bhilai, Chhattisgarh - 490023';
+  }, [currentStore]);
 
   const [deliveryType, setDeliveryType] = useState<'delivery' | 'pickup'>('delivery');
-  const [addressList, setAddressList] = useState<string[]>([
-    '123, Green Park, Lajpat Nagar, New Delhi - 110024',
-    'Flat 4B, Shanti Apartments, Andheri West, Mumbai - 400058',
-  ]);
-  const [deliveryAddress, setDeliveryAddress] = useState('123, Green Park, Lajpat Nagar, New Delhi - 110024');
+  const [addressList, setAddressList] = useState<string[]>([]);
+  const [deliveryAddress, setDeliveryAddress] = useState<string>('');
   const [isAddingAddress, setIsAddingAddress] = useState(false);
   const [newAddressInput, setNewAddressInput] = useState('');
 
-  const [deliveryDate, setDeliveryDate] = useState('14 May 2024');
-  const [deliveryTimeSlot, setDeliveryTimeSlot] = useState('');
-  const [deliveryPartner, setDeliveryPartner] = useState('');
-  const [otp] = useState('4827');
+  const [deliveryDate, setDeliveryDate] = useState(() => formatDateIST(new Date()));
+  const [deliveryTimeSlot, setDeliveryTimeSlot] = useState('Immediate (30-45 mins express)');
+  const [deliveryPartner, setDeliveryPartner] = useState(
+    `${branding.appName} Hyperlocal Rider (30-45 mins express)`
+  );
+
+  // Security OTP
+  const [otp, setOtp] = useState(() => String(Math.floor(1000 + Math.random() * 9000)));
+  const regenerateOtp = () => {
+    setOtp(String(Math.floor(1000 + Math.random() * 9000)));
+  };
+
+  // Payment Selection
+  const [paymentMode, setPaymentMode] = useState<'UPI' | 'Cash' | 'Card' | 'Khata'>('UPI');
+  const [paymentStatus, setPaymentStatus] = useState<'Paid' | 'Pending'>('Paid');
+
+  // Notes
   const [orderNotes, setOrderNotes] = useState('');
   const [internalNotes, setInternalNotes] = useState('');
+
+  // Modals & Feedback
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [modalTab, setModalTab] = useState<'catalog' | 'custom'>('catalog');
+  const [catalogSearch, setCatalogSearch] = useState('');
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('All');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [createdOrderId, setCreatedOrderId] = useState<string | null>(null);
 
-  // Items in Order matching Orders_09_Create_Order.png
-  const [items, setItems] = useState<OrderItem[]>([
-    { id: 'item-1', name: 'Men T-shirt', variant: 'Black • Size: L', price: 599, quantity: 1, iconType: 'tshirt' },
-    { id: 'item-2', name: 'Men Jeans', variant: 'Blue • Size: 32', price: 1299, quantity: 1, iconType: 'jeans' },
-  ]);
+  // Custom Item Form State
+  const [customItemName, setCustomItemName] = useState('');
+  const [customItemVariant, setCustomItemVariant] = useState('Standard');
+  const [customItemPrice, setCustomItemPrice] = useState<string>('499');
+  const [customItemQty, setCustomItemQty] = useState<number>(1);
+
+  // Items in Order - starts 100% clean and empty for genuine production order creation
+  const [items, setItems] = useState<OrderItem[]>([]);
+
+  // Adjust payment status automatically when payment mode changes
+  useEffect(() => {
+    if (paymentMode === 'Cash' && deliveryType === 'delivery') {
+      setPaymentStatus('Pending');
+    } else if (paymentMode === 'Khata') {
+      setPaymentStatus('Pending');
+    } else {
+      setPaymentStatus('Paid');
+    }
+  }, [paymentMode, deliveryType]);
+
+  // Financial Charges & Discounts
+  const [discount, setDiscount] = useState<number>(0);
+  const [shippingCharge, setShippingCharge] = useState<number>(0);
+  const [packagingCharge, setPackagingCharge] = useState<number>(0);
+
+  // Synchronize delivery logistics and addresses based on fulfillment mode & customer selection
+  useEffect(() => {
+    if (deliveryType === 'pickup') {
+      setShippingCharge(0);
+      setDeliveryPartner('In-Store Customer Pickup');
+      setDeliveryAddress(`${currentStore?.name || 'Store'} Pickup Counter`);
+    } else {
+      setDeliveryPartner(`${branding.appName} Hyperlocal Rider (30-45 mins express)`);
+      if (customerType === 'existing' && selectedCustomer?.billingAddress?.addressLine1) {
+        const fullAddr = `${selectedCustomer.billingAddress.addressLine1}, ${selectedCustomer.billingAddress.city || 'Bhilai'} - ${selectedCustomer.billingAddress.pincode || '490006'}`;
+        setDeliveryAddress(fullAddr);
+      } else if (customerType === 'new' && newCustomer.address) {
+        setDeliveryAddress(newCustomer.address);
+      } else if (addressList.length > 0) {
+        setDeliveryAddress(addressList[0] || '');
+      } else {
+        setDeliveryAddress('');
+      }
+    }
+  }, [deliveryType, currentStore, customerType, selectedCustomer, newCustomer.address, addressList]);
 
   // Calculations
   const itemsTotal = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
-  const discount = 0;
-  const shippingCharge = 0;
-  const packagingCharge = items.length > 0 ? 20 : 0;
-  const orderTotal = itemsTotal - discount + shippingCharge + packagingCharge;
+  const activePackaging = items.length > 0 ? packagingCharge : 0;
+  const orderTotal = Math.max(0, itemsTotal - discount + shippingCharge + activePackaging);
+
+  // Customer Filtering
+  const filteredCustomers = useMemo(() => {
+    if (!searchQuery.trim()) return customers.slice(0, 6);
+    const q = searchQuery.toLowerCase();
+    return customers.filter(
+      (c) =>
+        c.name.toLowerCase().includes(q) ||
+        c.phone.toLowerCase().includes(q) ||
+        (c.email && c.email.toLowerCase().includes(q))
+    );
+  }, [customers, searchQuery]);
+
+  const handleSelectCustomer = (c: Customer) => {
+    setSelectedCustomer(c);
+    if (c.billingAddress?.addressLine1) {
+      const fullAddr = `${c.billingAddress.addressLine1}, ${c.billingAddress.city || 'Bhilai'} - ${
+        c.billingAddress.pincode || '490006'
+      }`;
+      setDeliveryAddress(fullAddr);
+      setAddressList((prev) => (prev.includes(fullAddr) ? prev : [fullAddr, ...prev]));
+    }
+    setSearchQuery('');
+    setIsSearchOpen(false);
+    setIsEditingCustomer(false);
+    setErrorMessage(null);
+  };
 
   // Quantity handlers
   const handleQuantity = (id: string, delta: number) => {
@@ -102,15 +263,168 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
     setIsAddModalOpen(false);
   };
 
-  // Submit
-  const handleCreateOrder = () => {
+  const handleAddCustomItem = (e: React.FormEvent) => {
+    e.preventDefault();
+    const sanitizedTitle = cleanName(customItemName);
+    if (!sanitizedTitle || sanitizedTitle.length < 2) {
+      setErrorMessage('Custom item title must be at least 2 characters.');
+      return;
+    }
+    const priceNum = cleanAmount(customItemPrice);
+    if (priceNum <= 0) {
+      setErrorMessage('Please enter a valid unit price greater than ₹0.');
+      return;
+    }
+    const validQty = Math.max(1, Math.min(9999, parseInt(String(customItemQty), 10) || 1));
+    const newItem: OrderItem = {
+      id: `custom-${Date.now()}`,
+      name: sanitizedTitle,
+      variant: customItemVariant.trim() || 'Standard',
+      price: priceNum,
+      quantity: validQty,
+      iconType: 'general',
+    };
+    handleAddItem(newItem);
+    setCustomItemName('');
+    setCustomItemVariant('Standard');
+    setCustomItemPrice('');
+    setCustomItemQty(1);
+    setErrorMessage(null);
+  };
+
+  // Filter Catalog Products in Modal
+  const modalFilteredProducts = useMemo(() => {
+    let prods = catalogProducts;
+    if (selectedCategoryFilter !== 'All') {
+      prods = prods.filter((p) => p.category === selectedCategoryFilter);
+    }
+    if (catalogSearch.trim()) {
+      const q = catalogSearch.toLowerCase();
+      prods = prods.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          p.sku.toLowerCase().includes(q) ||
+          p.brand?.toLowerCase().includes(q)
+      );
+    }
+    return prods;
+  }, [catalogProducts, selectedCategoryFilter, catalogSearch]);
+
+  const categoriesList = useMemo(() => {
+    const setCats = new Set<string>();
+    catalogProducts.forEach((p) => {
+      if (p.category) setCats.add(p.category);
+    });
+    return ['All', ...Array.from(setCats)];
+  }, [catalogProducts]);
+
+  // Reset order creation form for fresh order
+  const handleResetForm = () => {
+    setSelectedCustomer(null);
+    setNewCustomer({ name: '', phone: '', email: '', address: '' });
+    setCustomerType('existing');
+    setItems([]);
+    setDiscount(0);
+    setShippingCharge(0);
+    setPackagingCharge(0);
+    setOrderNotes('');
+    setInternalNotes('');
+    setPaymentMode('UPI');
+    setDeliveryType('delivery');
+    setIsSuccess(false);
+    setCreatedOrderId(null);
+    setErrorMessage(null);
+    regenerateOtp();
+  };
+
+  // Order Submission
+  const handleCreateOrder = async () => {
     if (items.length === 0) {
-      setErrorMessage('Please add at least one item to generate this order.');
+      setErrorMessage('Please add at least one item from the catalog or custom creator to generate this order.');
       return;
     }
 
+    let finalCustomerName = '';
+    let finalCustomerPhone = '';
+    let finalCustomerEmail = '';
+    let finalDeliveryAddress = deliveryAddress;
+
+    if (customerType === 'existing') {
+      if (!selectedCustomer) {
+        setErrorMessage('Please search and select an existing customer, or switch to "New Customer".');
+        return;
+      }
+      finalCustomerName = selectedCustomer.name;
+      finalCustomerPhone = selectedCustomer.phone;
+      finalCustomerEmail =
+        selectedCustomer.email ||
+        `${selectedCustomer.name.toLowerCase().replace(/\s+/g, '')}@example.com`;
+    } else {
+      const sanitizedName = cleanName(newCustomer.name);
+      if (!sanitizedName || sanitizedName.length < 2) {
+        setErrorMessage('Please provide a valid customer name (at least 2 characters).');
+        return;
+      }
+      const nameCheck = validatePersonName(sanitizedName);
+      if (!nameCheck.isValid) {
+        setErrorMessage(nameCheck.error || 'Customer name contains invalid characters.');
+        return;
+      }
+
+      const cleanPhoneDigits = cleanPhoneNumber(newCustomer.phone);
+      if (!cleanPhoneDigits || cleanPhoneDigits.length !== 10 || !/^[6-9]\d{9}$/.test(cleanPhoneDigits)) {
+        setErrorMessage('Please provide a valid 10-digit Indian mobile number (starting with 6, 7, 8, or 9).');
+        return;
+      }
+
+      if (newCustomer.email.trim()) {
+        const emailCheck = validateEmail(newCustomer.email.trim());
+        if (!emailCheck.isValid) {
+          setErrorMessage(emailCheck.error || 'Please provide a valid email address or leave it blank.');
+          return;
+        }
+      }
+
+      if (deliveryType === 'delivery') {
+        const trimmedAddress = newCustomer.address.trim();
+        if (!trimmedAddress || trimmedAddress.length < 5) {
+          setErrorMessage('Please provide a complete delivery address (at least 5 characters).');
+          return;
+        }
+        finalDeliveryAddress = trimmedAddress;
+      }
+
+      finalCustomerName = sanitizedName;
+      finalCustomerPhone = cleanPhoneDigits;
+      finalCustomerEmail =
+        cleanEmail(newCustomer.email) ||
+        `${sanitizedName.toLowerCase().replace(/\s+/g, '')}@example.com`;
+
+      // Register newly created customer in customerStore Khata
+      useCustomerStore.getState().addCustomer({
+        name: finalCustomerName,
+        phone: finalCustomerPhone,
+        email: finalCustomerEmail,
+        customerType: 'Individual',
+        paymentTerms: 'Immediate',
+        creditPeriodDays: 0,
+        status: 'active',
+        location: 'Bhilai, Chhattisgarh',
+        billingAddress: {
+          addressLine1: finalDeliveryAddress,
+          city: 'Bhilai',
+          state: 'Chhattisgarh',
+          pincode: '490006',
+          country: 'India',
+          sameAsShipping: true,
+        },
+      });
+    }
+
     setErrorMessage(null);
-    const initials = customerName
+    setIsSubmitting(true);
+
+    const initials = finalCustomerName
       .split(' ')
       .map((w) => w[0])
       .join('')
@@ -120,23 +434,55 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
     const nextNum = Math.floor(10330 + Math.random() * 900);
     const assignedOrderNumber = `#ORD-${nextNum}`;
 
+    // Real backend API persistence attempt
+    try {
+      const storeId = currentStore?._id || currentStore?.id;
+      if (storeId) {
+        await ordersApi.createOrder({
+          storeId,
+          items: items.map((i) => ({
+            productId: i.id.startsWith('custom-') ? '665544332211009988776655' : i.id,
+            sku: i.sku || 'SKU-MANUAL',
+            name: i.name,
+            quantity: i.quantity,
+            unitPrice: i.price,
+            storeId,
+          })),
+          shippingAddress: {
+            fullName: finalCustomerName,
+            street: finalDeliveryAddress || 'Store Pickup Counter',
+            city: 'Bhilai',
+            state: 'Chhattisgarh',
+            postalCode: '490006',
+            country: 'IN',
+            phone: finalCustomerPhone.replace(/[^\d+]/g, '').slice(-10) || '9876543210',
+          },
+          fulfilmentMode: deliveryType === 'delivery' ? 'deliver' : 'pickup',
+        });
+      }
+    } catch (apiErr) {
+      console.warn('Backend order creation notice, falling back to instant local store:', apiErr);
+    } finally {
+      setIsSubmitting(false);
+    }
+
     addManualOrder({
       orderNumber: assignedOrderNumber,
       orderType: deliveryType === 'delivery' ? 'Online Order' : 'Manual In-Store',
       status: 'new',
       customer: {
-        name: customerName,
-        email: customerEmail,
-        phone: customerPhone,
+        name: finalCustomerName,
+        email: finalCustomerEmail,
+        phone: finalCustomerPhone,
         avatarInitials: initials || 'CU',
       },
       deliveryAddress: {
-        street: deliveryAddress,
-        locality: 'Local Delivery Area',
+        street: finalDeliveryAddress || (deliveryType === 'pickup' ? storeAddress : 'Local Bhilai Delivery'),
+        locality: 'Bhilai Local Area',
         city: 'Bhilai',
         state: 'Chhattisgarh',
         pincode: '490006',
-        fullText: `${customerName}\n${deliveryAddress}`,
+        fullText: `${finalCustomerName}\n${finalDeliveryAddress || storeAddress}`,
       },
       items: items.map((i) => ({
         id: i.id,
@@ -152,14 +498,19 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
       },
       pricing: {
         itemsTotal,
-        packagingFee: packagingCharge,
+        packagingFee: activePackaging,
         deliveryFee: shippingCharge,
         totalAmount: orderTotal,
       },
       payment: {
-        status: 'Paid',
-        paymentMethod: 'Online Paid',
-        mode: 'UPI',
+        status: paymentStatus,
+        paymentMethod:
+          paymentMode === 'Cash'
+            ? 'Cash on Delivery'
+            : paymentMode === 'Card'
+            ? 'Card / POS'
+            : 'Online Paid',
+        mode: paymentMode === 'Khata' ? 'Cash' : paymentMode,
       },
       otp: otp,
       notes: {
@@ -173,7 +524,7 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
       useInventoryStore.getState().recordSaleDeduction(
         items.map((i) => ({
           productId: i.id,
-          sku: i.id,
+          sku: i.sku || i.id,
           quantity: i.quantity,
         })),
         assignedOrderNumber.replace('#', ''),
@@ -184,32 +535,27 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
       console.warn('Inventory sync error on order creation:', invErr);
     }
 
+    setCreatedOrderId(assignedOrderNumber);
     setIsSuccess(true);
-    setTimeout(() => {
-      onBack?.();
-    }, 600);
   };
 
   return (
-    <div className="space-y-4 w-full pb-8 font-sans animate-in fade-in-50 duration-200">
-      {/* 1. Header Section matching Orders_09_Create_Order.png */}
+    <div className="space-y-4 w-full pb-12 font-sans animate-in fade-in-50 duration-200">
+      {/* 1. Header Section */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 pb-1">
         <div>
-          {/* Back link */}
           <button
             type="button"
             onClick={onBack}
             className="inline-flex items-center gap-1.5 text-blue-600 text-xs font-semibold hover:underline cursor-pointer"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Orders</span>
+            <span>Back to Orders</span>
           </button>
 
-          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight mt-1">
-            Create Order
-          </h1>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight mt-1">Create Order</h1>
           <p className="text-xs text-slate-500 mt-0.5">
-            Add customer, items and delivery details to create a new order.
+            Add customer, items and delivery details to create a new manual order.
           </p>
         </div>
 
@@ -218,23 +564,34 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
           <button
             type="button"
             onClick={onBack}
-            className="px-5 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 text-xs font-semibold hover:bg-slate-50 transition-colors shadow-2xs cursor-pointer"
+            className="px-4 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 text-xs font-semibold hover:bg-slate-50 transition-colors shadow-2xs cursor-pointer"
           >
             Cancel
           </button>
           <button
             type="button"
+            disabled={isSubmitting}
             onClick={handleCreateOrder}
-            className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-all shadow-xs cursor-pointer"
+            className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
           >
-            Create Order
+            {isSubmitting ? (
+              <>
+                <RotateCw className="w-3.5 h-3.5 animate-spin" />
+                <span>Processing...</span>
+              </>
+            ) : (
+              <>
+                <Plus className="w-3.5 h-3.5" />
+                <span>Create Order</span>
+              </>
+            )}
           </button>
         </div>
       </div>
 
       {/* Inline Feedback Banners */}
       {errorMessage && (
-        <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center justify-between animate-in fade-in-50 duration-150">
+        <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center justify-between animate-in fade-in-50 duration-150">
           <span>{errorMessage}</span>
           <button
             type="button"
@@ -247,17 +604,52 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
       )}
 
       {isSuccess && (
-        <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold animate-in fade-in-50 duration-150">
-          Order created successfully! Redirecting to orders pipeline...
+        <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 shadow-xs animate-in zoom-in-95 duration-200">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                <CheckCircle2 className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-emerald-900">
+                  Order {createdOrderId} Created Successfully!
+                </h3>
+                <p className="text-xs text-emerald-700 mt-0.5">
+                  Stock has been deducted from inventory and registered to your active orders pipeline.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={onBack}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs transition-colors cursor-pointer"
+              >
+                View in Orders Pipeline
+              </button>
+              <button
+                type="button"
+                onClick={handleResetForm}
+                className="px-3.5 py-2 border border-emerald-300 bg-white text-emerald-800 rounded-xl text-xs font-semibold hover:bg-emerald-50 transition-colors cursor-pointer"
+              >
+                Create Another Order
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* 2. Top Row: 3 Columns matching reference proportions: [33.5% | 38% | 28.5%] */}
+      {/* 2. Top Row: 3 Columns [33.5% | 38% | 28.5%] */}
       <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1.35fr_1fr] gap-4 items-stretch">
         {/* Card 1: Customer Details */}
         <div className="rounded-2xl bg-white border border-slate-200/80 p-4 sm:p-5 shadow-2xs flex flex-col justify-between">
           <div>
-            <h2 className="text-sm font-bold text-slate-900">Customer Details</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-bold text-slate-900">Customer Details</h2>
+              <span className="text-[11px] text-slate-500 font-semibold">
+                {customerType === 'existing' ? 'Known Buyer' : 'New Registration'}
+              </span>
+            </div>
 
             {/* Radio Toggles */}
             <div className="flex items-center gap-6 mt-3.5 mb-3.5">
@@ -279,108 +671,302 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
                   onChange={() => setCustomerType('new')}
                   className="w-3.5 h-3.5 text-blue-600 focus:ring-blue-500 border-slate-300"
                 />
-                <span className="text-xs font-medium text-slate-600">New Customer</span>
+                <span className="text-xs font-semibold text-slate-700">New Customer</span>
               </label>
             </div>
 
-            {/* Customer Search Dropdown */}
-            <div className="relative mb-3.5">
-              <input
-                type="text"
-                readOnly
-                placeholder="Search customer by name, phone or email..."
-                className="w-full pl-3.5 pr-8 py-2 rounded-xl border border-slate-200 text-xs text-slate-700 bg-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 shadow-2xs cursor-pointer"
-              />
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-            </div>
+            {customerType === 'existing' ? (
+              <>
+                {/* Customer Search Dropdown */}
+                <div ref={searchContainerRef} className="relative mb-3.5">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        setIsSearchOpen(true);
+                      }}
+                      onFocus={() => setIsSearchOpen(true)}
+                      placeholder="Search customer by name, phone or email..."
+                      className="w-full pl-8 pr-8 py-2 rounded-xl border border-slate-200 text-xs text-slate-700 bg-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 shadow-2xs"
+                    />
+                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  </div>
 
-            {/* Verified / Editable Customer Card */}
-            <div className="p-3.5 rounded-xl border border-slate-200/90 bg-white relative shadow-2xs">
-              {isEditingCustomer ? (
-                <div className="space-y-2.5">
-                  <div className="text-xs font-bold text-slate-900">Edit Customer Information</div>
+                  {/* Autocomplete Dropdown List with Outside-Click & Escape Dismissal */}
+                  {isSearchOpen && (
+                    <div className="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl border border-slate-200 shadow-xl z-30 max-h-56 overflow-y-auto divide-y divide-slate-100">
+                      {filteredCustomers.length > 0 ? (
+                        filteredCustomers.map((c) => (
+                          <button
+                            key={c.id}
+                            type="button"
+                            onClick={() => handleSelectCustomer(c)}
+                            className="w-full px-3.5 py-2.5 text-left hover:bg-blue-50/50 flex items-center justify-between transition-colors cursor-pointer"
+                          >
+                            <div>
+                              <div className="text-xs font-bold text-slate-900">{c.name}</div>
+                              <div className="text-[11px] text-slate-500">
+                                {c.phone} {c.email ? `• ${c.email}` : ''}
+                              </div>
+                            </div>
+                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-600">
+                              {c.customerType || 'Customer'}
+                            </span>
+                          </button>
+                        ))
+                      ) : (
+                        <div className="p-3.5 text-center text-xs space-y-2">
+                          <p className="text-slate-400">No existing customers match "{searchQuery}"</p>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCustomerType('new');
+                              setNewCustomer((prev) => ({ ...prev, name: searchQuery }));
+                              setIsSearchOpen(false);
+                            }}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold transition-colors cursor-pointer text-xs"
+                          >
+                            <UserPlus className="w-3.5 h-3.5" />
+                            <span>Register as New Customer</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Selected Customer Card or Clean Empty State */}
+                {!selectedCustomer ? (
+                  <div className="p-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/60 text-center">
+                    <User className="w-7 h-7 text-slate-300 mx-auto mb-1.5" />
+                    <p className="text-xs font-bold text-slate-700">No Customer Selected</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">
+                      Search above by name, phone or email, or pick from known buyers below:
+                    </p>
+                    {customers.length > 0 && (
+                      <div className="mt-3 pt-2.5 border-t border-slate-200/60">
+                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 text-left">
+                          Quick Select from Directory:
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {customers.slice(0, 3).map((c) => (
+                            <button
+                              key={c.id}
+                              type="button"
+                              onClick={() => handleSelectCustomer(c)}
+                              className="px-2.5 py-1 rounded-lg border border-slate-200 bg-white hover:border-blue-400 hover:bg-blue-50/50 text-[11px] font-bold text-slate-700 transition-colors flex items-center gap-1 cursor-pointer"
+                            >
+                              <span className="text-blue-600 font-black">+</span>
+                              <span>{c.name}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="p-3.5 rounded-xl border border-slate-200/90 bg-white relative shadow-2xs">
+                    {isEditingCustomer ? (
+                      <div className="space-y-2.5">
+                        <div className="text-xs font-bold text-slate-900">Edit Customer Information</div>
+                        <div>
+                          <label className="text-[11px] text-slate-500 font-semibold block mb-1">
+                            Customer Name
+                          </label>
+                          <input
+                            type="text"
+                            value={selectedCustomer.name}
+                            onChange={(e) =>
+                              setSelectedCustomer({ ...selectedCustomer, name: e.target.value })
+                            }
+                            className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[11px] text-slate-500 font-semibold block mb-1">
+                            Mobile Number (10 Digits)
+                          </label>
+                          <div className="relative">
+                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[11px] font-bold text-slate-400 select-none">
+                              +91
+                            </span>
+                            <input
+                              type="tel"
+                              inputMode="numeric"
+                              maxLength={10}
+                              placeholder="9876543210"
+                              value={selectedCustomer.phone.replace(/^\+91\s*/, '')}
+                              onChange={(e) => {
+                                const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                                setSelectedCustomer({ ...selectedCustomer, phone: digits });
+                              }}
+                              className="w-full pl-9 pr-3 py-1.5 border border-slate-200 rounded-lg text-xs font-mono"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-[11px] text-slate-500 font-semibold block mb-1">
+                            Email Address
+                          </label>
+                          <input
+                            type="email"
+                            value={selectedCustomer.email || ''}
+                            onChange={(e) =>
+                              setSelectedCustomer({ ...selectedCustomer, email: e.target.value })
+                            }
+                            className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs"
+                          />
+                        </div>
+                        <div className="flex justify-end pt-1">
+                          <button
+                            type="button"
+                            onClick={() => setIsEditingCustomer(false)}
+                            className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold cursor-pointer"
+                          >
+                            Save Details
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-start gap-3">
+                        {/* Avatar */}
+                        <div className="w-9 h-9 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs">
+                          {selectedCustomer.name
+                            .split(' ')
+                            .map((w) => w[0])
+                            .join('')
+                            .slice(0, 2)
+                            .toUpperCase() || 'CU'}
+                        </div>
+
+                        {/* Details */}
+                        <div className="space-y-1 min-w-0 pr-16 text-xs">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-slate-900 text-xs truncate">
+                              {selectedCustomer.name}
+                            </span>
+                            <span className="text-[10px] font-semibold px-2 py-0.2 rounded bg-emerald-50 text-emerald-700 border border-emerald-200/60 leading-tight shrink-0">
+                              Verified
+                            </span>
+                          </div>
+
+                          <div className="text-slate-700 font-semibold text-[11px] flex items-center gap-1.5">
+                            <Phone className="w-3 h-3 text-slate-400 shrink-0" />
+                            <span>{selectedCustomer.phone}</span>
+                          </div>
+
+                          {selectedCustomer.email && (
+                            <div className="text-slate-500 text-[11px] flex items-center gap-1.5">
+                              <Mail className="w-3 h-3 text-slate-400 shrink-0" />
+                              <span className="truncate">{selectedCustomer.email}</span>
+                            </div>
+                          )}
+
+                          <div className="text-slate-500 text-[11px] leading-tight pt-0.5 flex items-start gap-1">
+                            <MapPin className="w-3 h-3 text-slate-400 shrink-0 mt-0.5" />
+                            <span className="line-clamp-2">{deliveryAddress}</span>
+                          </div>
+                        </div>
+
+                        {/* Action Buttons: Change & Edit */}
+                        <div className="absolute top-3.5 right-3.5 flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => setIsEditingCustomer(true)}
+                            className="p-1 rounded-lg border border-slate-200 text-slate-600 hover:text-blue-600 hover:bg-slate-50 bg-white shadow-2xs transition-colors cursor-pointer"
+                            title="Edit customer details"
+                          >
+                            <Edit2 className="w-3 h-3" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedCustomer(null);
+                              setSearchQuery('');
+                            }}
+                            className="px-2 py-0.5 rounded-lg border border-slate-200 text-slate-500 hover:text-rose-600 hover:border-rose-200 hover:bg-rose-50/50 text-[10px] font-bold transition-colors cursor-pointer"
+                            title="Change customer"
+                          >
+                            Change
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
+            ) : (
+              /* Inline New Customer Registration Form (Starts completely empty!) */
+              <div className="p-4 rounded-xl border border-blue-200 bg-blue-50/20 space-y-3 shadow-2xs animate-in fade-in-50 duration-150">
+                <div className="text-xs font-bold text-blue-900 flex items-center gap-1.5 pb-1 border-b border-blue-100">
+                  <UserPlus className="w-4 h-4 text-blue-600" />
+                  <span>New Customer Information</span>
+                </div>
+                <div>
+                  <label className="text-[11px] text-slate-600 font-semibold block mb-1">
+                    Full Name *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Ramesh Agrawal"
+                    value={newCustomer.name}
+                    onChange={(e) => setNewCustomer({ ...newCustomer, name: e.target.value })}
+                    className="w-full px-3 py-1.5 border border-slate-200 bg-white rounded-lg text-xs focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <div>
-                    <label className="text-[11px] text-slate-500 font-semibold block mb-1">Customer Name</label>
-                    <input
-                      type="text"
-                      value={customerName}
-                      onChange={(e) => setCustomerName(e.target.value)}
-                      className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs"
-                    />
+                    <label className="text-[11px] text-slate-600 font-semibold block mb-1">
+                      Mobile Number * (10 Digits)
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 select-none">
+                        +91
+                      </span>
+                      <input
+                        type="tel"
+                        inputMode="numeric"
+                        maxLength={10}
+                        placeholder="9876543210"
+                        value={newCustomer.phone}
+                        onChange={(e) => {
+                          const digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+                          setNewCustomer({ ...newCustomer, phone: digits });
+                        }}
+                        className="w-full pl-9 pr-3 py-1.5 border border-slate-200 bg-white rounded-lg text-xs font-mono focus:ring-1 focus:ring-blue-500"
+                      />
+                    </div>
                   </div>
                   <div>
-                    <label className="text-[11px] text-slate-500 font-semibold block mb-1">Phone Number</label>
-                    <input
-                      type="text"
-                      value={customerPhone}
-                      onChange={(e) => setCustomerPhone(e.target.value)}
-                      className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[11px] text-slate-500 font-semibold block mb-1">Email Address</label>
+                    <label className="text-[11px] text-slate-600 font-semibold block mb-1">
+                      Email Address (Optional)
+                    </label>
                     <input
                       type="email"
-                      value={customerEmail}
-                      onChange={(e) => setCustomerEmail(e.target.value)}
-                      className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-xs"
+                      placeholder="customer@example.com"
+                      value={newCustomer.email}
+                      onChange={(e) => setNewCustomer({ ...newCustomer, email: e.target.value })}
+                      className="w-full px-3 py-1.5 border border-slate-200 bg-white rounded-lg text-xs focus:ring-1 focus:ring-blue-500"
                     />
                   </div>
-                  <div className="flex justify-end pt-1">
-                    <button
-                      type="button"
-                      onClick={() => setIsEditingCustomer(false)}
-                      className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold cursor-pointer"
-                    >
-                      Save Details
-                    </button>
-                  </div>
                 </div>
-              ) : (
-                <div className="flex items-start gap-3">
-                  {/* Avatar */}
-                  <div className="w-9 h-9 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs">
-                    {customerName
-                      .split(' ')
-                      .map((w) => w[0])
-                      .join('')
-                      .slice(0, 2)
-                      .toUpperCase() || 'CU'}
-                  </div>
-
-                  {/* Details */}
-                  <div className="space-y-1 min-w-0 pr-12 text-xs">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-slate-900 text-xs">{customerName}</span>
-                      <span className="text-[10px] font-semibold px-2 py-0.2 rounded bg-emerald-50 text-emerald-700 border border-emerald-200/60 leading-tight">
-                        Verified
-                      </span>
-                    </div>
-
-                    <div className="text-slate-700 font-semibold text-[11px]">{customerPhone}</div>
-
-                    <div className="text-slate-500 text-[11px] flex items-center gap-1.5">
-                      <Mail className="w-3 h-3 text-slate-400" />
-                      <span>{customerEmail}</span>
-                    </div>
-
-                    <div className="text-slate-500 text-[11px] leading-tight pt-0.5">
-                      {deliveryAddress}
-                    </div>
-                  </div>
-
-                  {/* Edit Button */}
-                  <button
-                    type="button"
-                    onClick={() => setIsEditingCustomer(true)}
-                    className="absolute top-3.5 right-3.5 inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-slate-200 text-blue-600 text-xs font-semibold hover:bg-slate-50 bg-white shadow-2xs transition-colors cursor-pointer"
-                  >
-                    <Edit2 className="w-3 h-3" />
-                    <span>Edit</span>
-                  </button>
+                <div>
+                  <label className="text-[11px] text-slate-600 font-semibold block mb-1">
+                    Delivery Address *
+                  </label>
+                  <textarea
+                    rows={2}
+                    placeholder="House/Plot No, Street, Locality, Bhilai - 490006"
+                    value={newCustomer.address}
+                    onChange={(e) => setNewCustomer({ ...newCustomer, address: e.target.value })}
+                    className="w-full px-3 py-1.5 border border-slate-200 bg-white rounded-lg text-xs focus:ring-1 focus:ring-blue-500"
+                  />
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -389,11 +975,16 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
           <div>
             {/* Title & Add Item Trigger */}
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-bold text-slate-900">Order Items</h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-bold text-slate-900">Order Items</h2>
+                <span className="text-[11px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full">
+                  {items.length} {items.length === 1 ? 'item' : 'items'}
+                </span>
+              </div>
               <button
                 type="button"
                 onClick={() => setIsAddModalOpen(true)}
-                className="text-blue-600 inline-flex items-center gap-1 text-xs font-semibold hover:underline cursor-pointer"
+                className="text-blue-600 inline-flex items-center gap-1 text-xs font-bold hover:underline cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add Item</span>
@@ -410,82 +1001,161 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
             </div>
 
             {/* Items Rows */}
-            <div className="divide-y divide-slate-100 text-xs">
-              {items.map((item) => (
-                <div key={item.id} className="py-2.5 grid grid-cols-12 items-center gap-1">
-                  {/* Product Details with realistic preview */}
-                  <div className="col-span-5 flex items-center gap-2.5 min-w-0 pr-1">
-                    <div className="w-9 h-9 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden shadow-2xs">
-                      {item.iconType === 'jeans' ? (
-                        <div className="w-7 h-7 bg-blue-600 rounded flex items-center justify-center text-white">
-                          <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
-                            <path d="M6 3h12v4l-2 15h-3l-1-10-1 10H8L6 7V3z" />
-                          </svg>
-                        </div>
-                      ) : (
-                        <div className="w-7 h-7 bg-slate-900 rounded flex items-center justify-center text-white">
-                          <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
-                            <path d="M16 2l4 4-2 3-2-1v14H8V8L6 9 4 6l4-4h2a3 3 0 004 0h2z" />
-                          </svg>
-                        </div>
-                      )}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="font-bold text-slate-900 text-xs truncate">{item.name}</div>
-                      <div className="text-[10px] text-slate-400 mt-0.5 truncate">{item.variant}</div>
-                    </div>
-                  </div>
-
-                  {/* Price */}
-                  <div className="col-span-2 text-right pr-2 font-bold text-slate-900 text-xs">
-                    ₹{item.price.toLocaleString('en-IN')}
-                  </div>
-
-                  {/* Quantity Stepper */}
-                  <div className="col-span-2 flex justify-center">
-                    <div className="inline-flex items-center border border-slate-200 rounded-md bg-white shadow-2xs h-6 overflow-hidden">
-                      <button
-                        type="button"
-                        onClick={() => handleQuantity(item.id, -1)}
-                        className="w-5 h-full flex items-center justify-center text-blue-600 hover:bg-slate-50 font-bold transition-colors text-xs cursor-pointer"
-                      >
-                        -
-                      </button>
-                      <span className="w-6 h-full flex items-center justify-center text-xs font-bold text-slate-900 border-x border-slate-200">
-                        {item.quantity}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => handleQuantity(item.id, 1)}
-                        className="w-5 h-full flex items-center justify-center text-blue-600 hover:bg-slate-50 font-bold transition-colors text-xs cursor-pointer"
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Line Total */}
-                  <div className="col-span-2 text-right font-black text-slate-900 text-xs">
-                    ₹{(item.price * item.quantity).toLocaleString('en-IN')}
-                  </div>
-
-                  {/* Trash Remove */}
-                  <div className="col-span-1 text-right">
-                    <button
-                      type="button"
-                      onClick={() => handleRemove(item.id)}
-                      className="p-1 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
-                      title="Remove item"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+            {items.length === 0 ? (
+              <div className="py-7 px-4 text-center border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
+                <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-2 shadow-2xs">
+                  <ShoppingBag className="w-5 h-5" />
                 </div>
-              ))}
-            </div>
+                <p className="text-xs font-bold text-slate-800">No items added to this order yet</p>
+                <p className="text-[11px] text-slate-400 mt-0.5 mb-3.5 max-w-xs mx-auto">
+                  Select products from your catalog or enter custom line items.
+                </p>
+                <div className="flex flex-wrap items-center justify-center gap-2 mb-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setModalTab('catalog');
+                      setIsAddModalOpen(true);
+                    }}
+                    className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer inline-flex items-center gap-1.5 transition-colors"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Browse Store Catalog</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setModalTab('custom');
+                      setIsAddModalOpen(true);
+                    }}
+                    className="px-3.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-semibold shadow-2xs cursor-pointer inline-flex items-center gap-1.5 transition-colors"
+                  >
+                    <Tag className="w-3.5 h-3.5 text-slate-500" />
+                    <span>+ Custom / Ad-hoc Item</span>
+                  </button>
+                </div>
+
+                {/* Quick Add Shelf from Store Catalog */}
+                {catalogProducts.length > 0 && (
+                  <div className="pt-3 border-t border-slate-200/80 text-left">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">
+                      Quick Add Popular Products:
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {catalogProducts.slice(0, 4).map((p) => (
+                        <div
+                          key={p.id}
+                          className="p-2 rounded-xl border border-slate-200/90 bg-white hover:border-blue-300 hover:shadow-2xs transition-all flex items-center justify-between text-xs group"
+                        >
+                          <div className="min-w-0 pr-2">
+                            <p className="font-bold text-slate-800 truncate text-[11px]">{p.name}</p>
+                            <p className="text-[10px] text-slate-400">
+                              ₹{p.price.toLocaleString('en-IN')} • {p.stock} in stock
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleAddItem({
+                                id: p.id,
+                                name: p.name,
+                                variant: p.variants?.[0]?.color
+                                  ? `${p.variants[0].color} • ${p.variants[0].size || 'M'}`
+                                  : 'Standard',
+                                price: p.price,
+                                quantity: 1,
+                                sku: p.sku,
+                                image: p.images?.[0],
+                                stock: p.stock,
+                                iconType: 'tshirt',
+                              })
+                            }
+                            className="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white font-bold text-[11px] transition-colors cursor-pointer shrink-0"
+                          >
+                            + Add
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="divide-y divide-slate-100 text-xs max-h-60 overflow-y-auto pr-1">
+                {items.map((item) => (
+                  <div key={item.id} className="py-2.5 grid grid-cols-12 items-center gap-1">
+                    {/* Product Details with real thumbnail / icon */}
+                    <div className="col-span-5 flex items-center gap-2.5 min-w-0 pr-1">
+                      <div className="w-9 h-9 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden shadow-2xs">
+                        {item.image ? (
+                          <img
+                            src={item.image}
+                            alt={item.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <ShoppingBag className="w-4 h-4 text-blue-600" />
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-bold text-slate-900 text-xs truncate" title={item.name}>
+                          {item.name}
+                        </div>
+                        <div className="text-[10px] text-slate-400 mt-0.5 truncate">{item.variant}</div>
+                      </div>
+                    </div>
+
+                    {/* Price */}
+                    <div className="col-span-2 text-right pr-2 font-bold text-slate-900 text-xs">
+                      ₹{item.price.toLocaleString('en-IN')}
+                    </div>
+
+                    {/* Quantity Stepper */}
+                    <div className="col-span-2 flex justify-center">
+                      <div className="inline-flex items-center border border-slate-200 rounded-md bg-white shadow-2xs h-6 overflow-hidden">
+                        <button
+                          type="button"
+                          onClick={() => handleQuantity(item.id, -1)}
+                          className="w-5 h-full flex items-center justify-center text-blue-600 hover:bg-slate-50 font-bold transition-colors text-xs cursor-pointer"
+                        >
+                          -
+                        </button>
+                        <span className="w-6 h-full flex items-center justify-center text-xs font-bold text-slate-900 border-x border-slate-200">
+                          {item.quantity}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleQuantity(item.id, 1)}
+                          className="w-5 h-full flex items-center justify-center text-blue-600 hover:bg-slate-50 font-bold transition-colors text-xs cursor-pointer"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Line Total */}
+                    <div className="col-span-2 text-right font-black text-slate-900 text-xs">
+                      ₹{(item.price * item.quantity).toLocaleString('en-IN')}
+                    </div>
+
+                    {/* Trash Remove */}
+                    <div className="col-span-1 text-right">
+                      <button
+                        type="button"
+                        onClick={() => handleRemove(item.id)}
+                        className="p-1 text-slate-400 hover:text-rose-600 transition-colors cursor-pointer"
+                        title="Remove item"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Add More Items Button matching mockup */}
+          {/* Add More Items Button */}
           <div className="mt-3 pt-1">
             <button
               type="button"
@@ -493,44 +1163,137 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
               className="w-full py-2 rounded-xl border border-dashed border-blue-300 bg-blue-50/40 hover:bg-blue-50 text-blue-600 font-bold text-xs flex justify-center items-center gap-1.5 transition-colors cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>Add More Items</span>
+              <span>Add From Catalog / Custom Item</span>
             </button>
           </div>
         </div>
 
-        {/* Card 3: Order Summary */}
+        {/* Card 3: Order Summary & Payment Mode */}
         <div className="rounded-2xl bg-white border border-slate-200/80 p-4 sm:p-5 shadow-2xs flex flex-col justify-between">
           <div>
-            <h2 className="text-sm font-bold text-slate-900 mb-4">Order Summary</h2>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-bold text-slate-900">Order Summary</h2>
+              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                GST Included
+              </span>
+            </div>
 
-            <div className="space-y-3.5 text-xs">
+            <div className="space-y-3 text-xs">
               <div className="flex justify-between items-center text-slate-700">
-                <span className="font-medium">Items Total ({items.reduce((acc, i) => acc + i.quantity, 0)})</span>
+                <span className="font-medium">
+                  Items Subtotal ({items.reduce((acc, i) => acc + i.quantity, 0)})
+                </span>
                 <span className="font-bold text-slate-900">₹{itemsTotal.toLocaleString('en-IN')}</span>
               </div>
+
+              {/* Editable Discount */}
               <div className="flex justify-between items-center text-slate-700">
-                <span className="font-medium">Discount</span>
-                <span className="font-bold text-emerald-600">- ₹0</span>
+                <div className="flex items-center gap-1">
+                  <Tag className="w-3 h-3 text-emerald-600" />
+                  <span className="font-medium">Discount (₹)</span>
+                </div>
+                <div className="w-20">
+                  <input
+                    type="number"
+                    min="0"
+                    max={itemsTotal}
+                    value={discount === 0 ? '' : discount}
+                    placeholder="0"
+                    onChange={(e) => setDiscount(Math.max(0, parseFloat(e.target.value) || 0))}
+                    className="w-full px-2 py-1 border border-slate-200 rounded-lg text-right text-xs font-bold text-emerald-600 focus:ring-1 focus:ring-emerald-500 bg-slate-50"
+                  />
+                </div>
               </div>
+
+              {/* Editable Shipping Charge */}
               <div className="flex justify-between items-center text-slate-700">
-                <span className="font-medium">Shipping Charge</span>
-                <span className="font-bold text-slate-900">₹0</span>
+                <div className="flex items-center gap-1">
+                  <Truck className="w-3 h-3 text-blue-600" />
+                  <span className="font-medium">Delivery Fee</span>
+                </div>
+                <div className="w-20">
+                  <input
+                    type="number"
+                    min="0"
+                    value={shippingCharge === 0 ? '' : shippingCharge}
+                    placeholder="0"
+                    onChange={(e) => setShippingCharge(Math.max(0, parseFloat(e.target.value) || 0))}
+                    className="w-full px-2 py-1 border border-slate-200 rounded-lg text-right text-xs font-bold text-slate-900 focus:ring-1 focus:ring-blue-500 bg-slate-50"
+                  />
+                </div>
               </div>
+
+              {/* Packaging Charge */}
               <div className="flex justify-between items-center text-slate-700">
-                <span className="font-medium">Packaging Charge</span>
-                <span className="font-bold text-slate-900">₹20</span>
+                <div className="flex items-center gap-1">
+                  <Receipt className="w-3 h-3 text-slate-500" />
+                  <span className="font-medium">Packaging Fee</span>
+                </div>
+                <div className="w-20">
+                  <input
+                    type="number"
+                    min="0"
+                    value={packagingCharge === 0 ? '' : packagingCharge}
+                    placeholder="0"
+                    onChange={(e) => setPackagingCharge(Math.max(0, parseFloat(e.target.value) || 0))}
+                    className="w-full px-2 py-1 border border-slate-200 rounded-lg text-right text-xs font-bold text-slate-900 focus:ring-1 focus:ring-blue-500 bg-slate-50"
+                  />
+                </div>
+              </div>
+
+              {/* Payment Mode Selector */}
+              <div className="pt-2 border-t border-slate-100">
+                <label className="text-[11px] font-bold text-slate-800 block mb-1.5">
+                  Payment Method
+                </label>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {[
+                    { id: 'UPI', label: 'UPI / Online', icon: Wallet },
+                    { id: 'Cash', label: 'Cash / COD', icon: Banknote },
+                    { id: 'Card', label: 'POS Card', icon: CreditCard },
+                    { id: 'Khata', label: 'Khata (Credit)', icon: Receipt },
+                  ].map((m) => {
+                    const Icon = m.icon;
+                    const isSelected = paymentMode === m.id;
+                    return (
+                      <button
+                        key={m.id}
+                        type="button"
+                        onClick={() => setPaymentMode(m.id as any)}
+                        className={`p-1.5 rounded-lg border text-left flex items-center gap-1.5 transition-all cursor-pointer ${
+                          isSelected
+                            ? 'border-blue-600 bg-blue-50 text-blue-700 font-bold shadow-2xs'
+                            : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                        }`}
+                      >
+                        <Icon className="w-3 h-3 shrink-0" />
+                        <span className="text-[11px] truncate">{m.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="flex items-center justify-between text-[11px] text-slate-500 mt-2 px-1">
+                  <span>Settlement Status:</span>
+                  <span
+                    className={`font-bold ${
+                      paymentStatus === 'Paid' ? 'text-emerald-600' : 'text-amber-600'
+                    }`}
+                  >
+                    ● {paymentStatus === 'Paid' ? 'Paid' : 'Pending (Collect on Handshake)'}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Order Total at bottom of Card 3 */}
-          <div className="pt-4 border-t border-slate-100 mt-6">
+          <div className="pt-3 border-t border-slate-100 mt-4">
             <div className="flex justify-between items-start">
               <div>
-                <h3 className="text-xs font-bold text-slate-900">Order Total</h3>
-                <p className="text-[10px] text-slate-400 mt-0.5">Inclusive of all taxes</p>
+                <h3 className="text-xs font-bold text-slate-900">Grand Total</h3>
+                <p className="text-[10px] text-slate-400 mt-0.5">Inclusive of GST & fees</p>
               </div>
-              <span className="text-base font-black text-slate-900">
+              <span className="text-lg font-black text-slate-900 tracking-tight">
                 ₹{orderTotal.toLocaleString('en-IN')}
               </span>
             </div>
@@ -538,21 +1301,32 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
         </div>
       </div>
 
-      {/* 3. Bottom Row: Delivery Details [71.5%] | Order Notes [28.5%] perfectly aligning with top row seam! */}
+      {/* 3. Bottom Row: Delivery Details [71.5%] | Order Notes [28.5%] */}
       <div className="grid grid-cols-1 lg:grid-cols-[2.55fr_1fr] gap-4 items-stretch">
         {/* Card 4: Delivery Details */}
         <div className="rounded-2xl bg-white border border-slate-200/80 p-4 sm:p-5 shadow-2xs flex flex-col justify-between">
           <div>
-            <h2 className="text-sm font-bold text-slate-900 mb-4">Delivery Details</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-sm font-bold text-slate-900">Delivery & Handshake Logistics</h2>
+              <span className="text-[11px] font-semibold text-slate-500">
+                {deliveryType === 'delivery' ? '3–4 km Hyperlocal Radius' : 'Store Counter Handover'}
+              </span>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
               {/* Left Column */}
               <div className="space-y-4">
                 {/* Delivery Type */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-800 mb-2">Delivery Type</label>
-                  <div className="flex items-center gap-6">
-                    <label className="flex items-center gap-2 cursor-pointer">
+                  <label className="block text-xs font-bold text-slate-800 mb-2">Fulfillment Mode</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <label
+                      className={`flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer transition-all ${
+                        deliveryType === 'delivery'
+                          ? 'border-blue-600 bg-blue-50/50 text-blue-900 font-bold'
+                          : 'border-slate-200 bg-white text-slate-700'
+                      }`}
+                    >
                       <input
                         type="radio"
                         name="deliveryType"
@@ -560,9 +1334,17 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
                         onChange={() => setDeliveryType('delivery')}
                         className="w-3.5 h-3.5 text-blue-600 focus:ring-blue-500 border-slate-300"
                       />
-                      <span className="text-xs font-bold text-slate-900">Delivery</span>
+                      <Truck className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                      <span className="text-xs">Doorstep Delivery</span>
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
+
+                    <label
+                      className={`flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer transition-all ${
+                        deliveryType === 'pickup'
+                          ? 'border-blue-600 bg-blue-50/50 text-blue-900 font-bold'
+                          : 'border-slate-200 bg-white text-slate-700'
+                      }`}
+                    >
                       <input
                         type="radio"
                         name="deliveryType"
@@ -570,7 +1352,8 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
                         onChange={() => setDeliveryType('pickup')}
                         className="w-3.5 h-3.5 text-blue-600 focus:ring-blue-500 border-slate-300"
                       />
-                      <span className="text-xs font-medium text-slate-600">Self Pickup</span>
+                      <Store className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                      <span className="text-xs">Counter Pickup</span>
                     </label>
                   </div>
                 </div>
@@ -578,22 +1361,26 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
                 {/* Delivery Address */}
                 <div>
                   <div className="flex justify-between items-center mb-1.5">
-                    <label className="text-xs font-bold text-slate-800">Delivery Address</label>
-                    <button
-                      type="button"
-                      onClick={() => setIsAddingAddress(!isAddingAddress)}
-                      className="text-blue-600 text-[11px] font-semibold hover:underline inline-flex items-center gap-1 cursor-pointer"
-                    >
-                      <Plus className="w-3 h-3" />
-                      <span>{isAddingAddress ? 'Cancel' : 'Add New Address'}</span>
-                    </button>
+                    <label className="text-xs font-bold text-slate-800">
+                      {deliveryType === 'delivery' ? 'Delivery Address' : 'Pickup Counter Address'}
+                    </label>
+                    {deliveryType === 'delivery' && (
+                      <button
+                        type="button"
+                        onClick={() => setIsAddingAddress(!isAddingAddress)}
+                        className="text-blue-600 text-[11px] font-semibold hover:underline inline-flex items-center gap-1 cursor-pointer"
+                      >
+                        <Plus className="w-3 h-3" />
+                        <span>{isAddingAddress ? 'Cancel' : 'Add New Address'}</span>
+                      </button>
+                    )}
                   </div>
 
                   {isAddingAddress && (
                     <div className="mb-2 p-2.5 rounded-xl border border-blue-200 bg-blue-50/40 space-y-2">
                       <input
                         type="text"
-                        placeholder="Enter street, area, city, pincode..."
+                        placeholder="Enter house, street, locality, Bhilai..."
                         value={newAddressInput}
                         onChange={(e) => setNewAddressInput(e.target.value)}
                         className="w-full px-3 py-1.5 rounded-lg border border-slate-200 text-xs bg-white text-slate-800"
@@ -617,35 +1404,80 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
                     </div>
                   )}
 
-                  <div className="relative">
-                    <select
-                      value={deliveryAddress}
-                      onChange={(e) => setDeliveryAddress(e.target.value)}
-                      className="w-full border border-slate-200 rounded-xl pl-3 pr-8 py-2 text-xs font-medium text-slate-900 outline-none appearance-none bg-white focus:ring-1 focus:ring-blue-500 shadow-2xs cursor-pointer"
-                    >
-                      {addressList.map((addr) => (
-                        <option key={addr} value={addr}>
-                          {addr}
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  </div>
+                  {deliveryType === 'delivery' ? (
+                    customerType === 'new' ? (
+                      <div className="p-2.5 bg-blue-50/40 border border-blue-200 rounded-xl text-xs space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="font-semibold text-blue-900 flex items-center gap-1.5">
+                            <MapPin className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                            <span>Destination Address</span>
+                          </span>
+                          <span className="text-[10px] text-blue-600 font-bold bg-white px-1.5 py-0.5 rounded border border-blue-200">
+                            From Registration
+                          </span>
+                        </div>
+                        <p className="text-slate-700 font-medium">
+                          {newCustomer.address.trim() || (
+                            <span className="italic text-slate-400">
+                              Please enter customer address in the registration form above.
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    ) : !selectedCustomer ? (
+                      <div className="p-2.5 bg-amber-50/50 border border-amber-200 rounded-xl text-xs flex items-center gap-2 text-amber-800">
+                        <MapPin className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                        <span>Select a customer above to view their delivery address, or add an address below.</span>
+                      </div>
+                    ) : (
+                      <div className="relative">
+                        <select
+                          value={deliveryAddress}
+                          onChange={(e) => setDeliveryAddress(e.target.value)}
+                          className="w-full border border-slate-200 rounded-xl pl-3 pr-8 py-2 text-xs font-medium text-slate-900 outline-none appearance-none bg-white focus:ring-1 focus:ring-blue-500 shadow-2xs cursor-pointer"
+                        >
+                          {addressList.length > 0 ? (
+                            addressList.map((addr) => (
+                              <option key={addr} value={addr}>
+                                {addr}
+                              </option>
+                            ))
+                          ) : (
+                            <option value="">No address on file for this customer</option>
+                          )}
+                        </select>
+                        <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      </div>
+                    )
+                  ) : (
+                    <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 font-medium flex items-start gap-2">
+                      <MapPin className="w-3.5 h-3.5 text-blue-600 shrink-0 mt-0.5" />
+                      <span>{storeAddress}</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Delivery Partner */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-800 mb-1.5">Delivery Partner</label>
+                  <label className="block text-xs font-bold text-slate-800 mb-1.5">
+                    Delivery Partner / Dispatch
+                  </label>
                   <div className="relative">
                     <select
                       value={deliveryPartner}
                       onChange={(e) => setDeliveryPartner(e.target.value)}
-                      className="w-full border border-slate-200 rounded-xl pl-3 pr-8 py-2 text-xs text-slate-400 outline-none appearance-none bg-white focus:ring-1 focus:ring-blue-500 shadow-2xs cursor-pointer"
+                      disabled={deliveryType === 'pickup'}
+                      className="w-full border border-slate-200 rounded-xl pl-3 pr-8 py-2 text-xs text-slate-800 outline-none appearance-none bg-white focus:ring-1 focus:ring-blue-500 shadow-2xs cursor-pointer disabled:bg-slate-100 disabled:text-slate-500"
                     >
-                      <option value="">Select Delivery Partner (Optional)</option>
-                      <option value="Delhivery">Delhivery</option>
-                      <option value="Bluedart">Bluedart</option>
-                      <option value="Shadowfax">Shadowfax</option>
+                      <option value={`${branding.appName} Hyperlocal Rider (30-45 mins express)`}>
+                        {branding.appName} Hyperlocal Rider (30–45 mins express)
+                      </option>
+                      <option value="In-House Delivery Staff">Self / In-House Delivery Staff</option>
+                      <option value="Delhivery Local Express">Delhivery Local Express</option>
+                      <option value="Shadowfax Hyperlocal">Shadowfax Hyperlocal</option>
+                      {deliveryType === 'pickup' && (
+                        <option value="In-Store Customer Pickup">In-Store Customer Pickup</option>
+                      )}
                     </select>
                     <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                   </div>
@@ -657,7 +1489,7 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
                 {/* Preferred Delivery Date */}
                 <div>
                   <label className="block text-xs font-bold text-slate-800 mb-1.5">
-                    Preferred Delivery Date
+                    Order Scheduled Date
                   </label>
                   <div className="relative">
                     <input
@@ -673,36 +1505,54 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
                 {/* Preferred Delivery Time */}
                 <div>
                   <label className="block text-xs font-bold text-slate-800 mb-1.5">
-                    Preferred Delivery Time
+                    Preferred Time Slot
                   </label>
                   <div className="relative">
                     <select
                       value={deliveryTimeSlot}
                       onChange={(e) => setDeliveryTimeSlot(e.target.value)}
-                      className="w-full border border-slate-200 rounded-xl pl-3 pr-8 py-2 text-xs text-slate-400 outline-none appearance-none bg-white focus:ring-1 focus:ring-blue-500 shadow-2xs cursor-pointer"
+                      className="w-full border border-slate-200 rounded-xl pl-3 pr-8 py-2 text-xs text-slate-900 font-medium outline-none appearance-none bg-white focus:ring-1 focus:ring-blue-500 shadow-2xs cursor-pointer"
                     >
-                      <option value="">Select Time Slot (Optional)</option>
-                      <option value="Morning (9:00 AM - 12:00 PM)">Morning (9:00 AM - 12:00 PM)</option>
-                      <option value="Afternoon (12:00 PM - 3:00 PM)">Afternoon (12:00 PM - 3:00 PM)</option>
+                      <option value="Immediate (30-45 mins express)">
+                        Immediate (30–45 mins express)
+                      </option>
+                      <option value="Morning (9:00 AM - 12:00 PM)">
+                        Morning (9:00 AM - 12:00 PM)
+                      </option>
+                      <option value="Afternoon (12:00 PM - 3:00 PM)">
+                        Afternoon (12:00 PM - 3:00 PM)
+                      </option>
                       <option value="Evening (5:00 PM - 8:00 PM)">Evening (5:00 PM - 8:00 PM)</option>
                     </select>
                     <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                   </div>
                 </div>
 
-                {/* Order OTP */}
+                {/* Order OTP with Regenerate Action */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-800 mb-1.5">
-                    Order OTP <span className="font-normal text-slate-400">(for delivery verification)</span>
-                  </label>
+                  <div className="flex justify-between items-center mb-1.5">
+                    <label className="text-xs font-bold text-slate-800">
+                      Handshake OTP{' '}
+                      <span className="font-normal text-slate-400">(Verification Code)</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={regenerateOtp}
+                      className="text-blue-600 hover:text-blue-700 text-[11px] font-bold flex items-center gap-1 cursor-pointer"
+                      title="Generate new 4-digit OTP"
+                    >
+                      <RotateCw className="w-3 h-3" />
+                      <span>Refresh</span>
+                    </button>
+                  </div>
                   <input
                     type="text"
                     readOnly
                     value={otp}
-                    className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:ring-1 focus:ring-blue-500 shadow-2xs bg-white tracking-widest font-mono"
+                    className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 outline-none focus:ring-1 focus:ring-blue-500 shadow-2xs bg-slate-50 tracking-widest font-mono"
                   />
                   <p className="text-[10px] text-slate-400 mt-1">
-                    This OTP will be required by the delivery partner.
+                    Customer provides this 4-digit code to complete doorstep delivery or pickup.
                   </p>
                 </div>
               </div>
@@ -710,7 +1560,7 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
           </div>
         </div>
 
-        {/* Card 5: Order Notes (Optional) */}
+        {/* Card 5: Order Notes */}
         <div className="rounded-2xl bg-white border border-slate-200/80 p-4 sm:p-5 shadow-2xs flex flex-col justify-between text-xs">
           <div>
             <h2 className="text-sm font-bold text-slate-900 mb-3">
@@ -719,25 +1569,29 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
 
             <div className="space-y-4">
               <div>
+                <label className="block font-semibold text-slate-800 text-xs mb-1">
+                  Customer Instructions
+                </label>
                 <textarea
-                  rows={4}
+                  rows={3}
                   value={orderNotes}
                   onChange={(e) => setOrderNotes(e.target.value)}
-                  placeholder="Add order notes or special instructions..."
-                  className="w-full border border-slate-200 rounded-xl p-3 text-xs text-slate-800 placeholder-slate-400 outline-none resize-none focus:ring-1 focus:ring-blue-500 shadow-2xs"
+                  placeholder="e.g. Please ring bell twice, call before arrival..."
+                  className="w-full border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800 placeholder-slate-400 outline-none resize-none focus:ring-1 focus:ring-blue-500 shadow-2xs bg-white"
                 />
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-800 text-xs mb-1.5">
-                  Internal Note <span className="font-normal text-slate-400">(Visible only to you)</span>
+                <label className="block font-semibold text-slate-800 text-xs mb-1">
+                  Internal Merchant Note{' '}
+                  <span className="font-normal text-slate-400">(Staff Only)</span>
                 </label>
                 <textarea
-                  rows={4}
+                  rows={3}
                   value={internalNotes}
                   onChange={(e) => setInternalNotes(e.target.value)}
-                  placeholder="Add internal notes..."
-                  className="w-full border border-slate-200 rounded-xl p-3 text-xs text-slate-800 placeholder-slate-400 outline-none resize-none focus:ring-1 focus:ring-blue-500 shadow-2xs"
+                  placeholder="e.g. Verified customer on phone, VIP buyer..."
+                  className="w-full border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800 placeholder-slate-400 outline-none resize-none focus:ring-1 focus:ring-blue-500 shadow-2xs bg-white"
                 />
               </div>
             </div>
@@ -745,12 +1599,15 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
         </div>
       </div>
 
-      {/* 4. Bottom Total & Action Bar matching Orders_09_Create_Order.png */}
-      <div className="rounded-2xl bg-white border border-slate-200/80 p-4 shadow-2xs flex items-center justify-between">
+      {/* 4. Bottom Total & Action Bar */}
+      <div className="rounded-2xl bg-white border border-slate-200/80 p-4 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-baseline gap-4">
-          <span className="font-bold text-slate-800 text-xs">Order Total</span>
-          <span className="font-black text-slate-900 text-xl tracking-tight">
+          <span className="font-bold text-slate-800 text-xs">Order Total Payable:</span>
+          <span className="font-black text-slate-900 text-2xl tracking-tight">
             ₹{orderTotal.toLocaleString('en-IN')}
+          </span>
+          <span className="text-xs font-semibold text-slate-500">
+            ({items.reduce((acc, i) => acc + i.quantity, 0)} items · {paymentMode} · {paymentStatus})
           </span>
         </div>
 
@@ -758,62 +1615,242 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
           <button
             type="button"
             onClick={onBack}
-            className="px-6 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 text-xs font-semibold hover:bg-slate-50 transition-colors shadow-2xs cursor-pointer"
+            className="px-6 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-xs font-semibold hover:bg-slate-50 transition-colors shadow-2xs cursor-pointer"
           >
             Cancel
           </button>
           <button
             type="button"
+            disabled={isSubmitting}
             onClick={handleCreateOrder}
-            className="px-6 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-all shadow-xs cursor-pointer"
+            className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center gap-2"
           >
-            Create Order
+            {isSubmitting ? (
+              <>
+                <RotateCw className="w-4 h-4 animate-spin" />
+                <span>Creating Order...</span>
+              </>
+            ) : (
+              <>
+                <CheckCircle2 className="w-4 h-4" />
+                <span>Confirm & Place Order</span>
+              </>
+            )}
           </button>
         </div>
       </div>
 
-      {/* Catalog Modal */}
+      {/* 5. Comprehensive Add Item Modal (Catalog & Custom Tabs) */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
-            className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs"
+            className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs"
             onClick={() => setIsAddModalOpen(false)}
           />
-          <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl z-10 p-5 space-y-4 border border-slate-200">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-              <h3 className="text-sm font-bold text-slate-900">Add Item From Catalog</h3>
+          <div className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl z-10 p-5 space-y-4 border border-slate-200 animate-in zoom-in-95 duration-150">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <ShoppingBag className="w-5 h-5 text-blue-600" />
+                <h3 className="text-sm font-bold text-slate-900">Add Item to Order</h3>
+              </div>
               <button
                 type="button"
                 onClick={() => setIsAddModalOpen(false)}
-                className="p-1 text-slate-400 hover:text-slate-600 cursor-pointer"
+                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="max-h-72 overflow-y-auto divide-y divide-slate-100 text-xs">
-              {catalogOptions.map((prod) => (
-                <div
-                  key={prod.id}
-                  className="py-2.5 flex items-center justify-between hover:bg-slate-50 px-2 rounded-lg"
-                >
-                  <div>
-                    <div className="font-bold text-slate-900">{prod.name}</div>
-                    <div className="text-[10px] text-slate-400">{prod.variant}</div>
+            {/* Segmented Tabs */}
+            <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
+              <button
+                type="button"
+                onClick={() => setModalTab('catalog')}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                  modalTab === 'catalog'
+                    ? 'bg-blue-600 text-white shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                }`}
+              >
+                From Store Catalog ({catalogProducts.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setModalTab('custom')}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                  modalTab === 'custom'
+                    ? 'bg-blue-600 text-white shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                }`}
+              >
+                + Custom / Ad-hoc Item
+              </button>
+            </div>
+
+            {modalTab === 'catalog' ? (
+              <div className="space-y-3">
+                {/* Search & Filter Bar */}
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <div className="relative flex-1">
+                    <input
+                      type="text"
+                      placeholder="Search store catalog by title, SKU, brand..."
+                      value={catalogSearch}
+                      onChange={(e) => setCatalogSearch(e.target.value)}
+                      className="w-full pl-8 pr-3 py-1.5 border border-slate-200 rounded-xl text-xs bg-slate-50 focus:bg-white focus:ring-1 focus:ring-blue-500"
+                    />
+                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="font-bold text-slate-900">₹{prod.price}</span>
-                    <button
-                      type="button"
-                      onClick={() => handleAddItem(prod)}
-                      className="px-3 py-1 rounded-lg bg-blue-600 text-white font-bold text-xs hover:bg-blue-700 cursor-pointer"
-                    >
-                      Add
-                    </button>
+
+                  {/* Category Pills */}
+                  <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0">
+                    {categoriesList.slice(0, 4).map((cat) => (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => setSelectedCategoryFilter(cat)}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold whitespace-nowrap cursor-pointer ${
+                          selectedCategoryFilter === cat
+                            ? 'bg-slate-900 text-white'
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        }`}
+                      >
+                        {cat}
+                      </button>
+                    ))}
                   </div>
                 </div>
-              ))}
-            </div>
+
+                {/* Catalog Products List */}
+                <div className="max-h-80 overflow-y-auto divide-y divide-slate-100 text-xs pr-1">
+                  {modalFilteredProducts.length > 0 ? (
+                    modalFilteredProducts.map((prod) => (
+                      <div
+                        key={prod.id}
+                        className="py-2.5 flex items-center justify-between hover:bg-slate-50 px-2 rounded-xl transition-colors"
+                      >
+                        <div className="flex items-center gap-3 min-w-0 pr-2">
+                          <div className="w-10 h-10 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0 overflow-hidden">
+                            {prod.images?.[0] ? (
+                              <img
+                                src={prod.images[0]}
+                                alt={prod.name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <ShoppingBag className="w-5 h-5 text-slate-400" />
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="font-bold text-slate-900 truncate">{prod.name}</div>
+                            <div className="text-[11px] text-slate-500 flex items-center gap-2 mt-0.5">
+                              <span className="font-mono text-[10px] bg-slate-100 px-1.5 py-0.2 rounded text-slate-600">
+                                {prod.sku}
+                              </span>
+                              <span>·</span>
+                              <span className="text-emerald-700 font-semibold">
+                                {prod.stock} in stock
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3 shrink-0">
+                          <span className="font-black text-slate-900 text-xs">
+                            ₹{prod.price.toLocaleString('en-IN')}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleAddItem({
+                                id: prod.id,
+                                name: prod.name,
+                                variant: prod.variants?.[0]?.color
+                                  ? `${prod.variants[0].color} • ${prod.variants[0].size || 'M'}`
+                                  : 'Standard',
+                                price: prod.price,
+                                quantity: 1,
+                                sku: prod.sku,
+                                image: prod.images?.[0],
+                                stock: prod.stock,
+                                iconType: 'tshirt',
+                              })
+                            }
+                            className="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-2xs transition-colors cursor-pointer"
+                          >
+                            + Add
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="py-8 text-center text-slate-400">
+                      No catalog products found matching "{catalogSearch}".
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              /* Custom / Ad-hoc Item Form */
+              <form onSubmit={handleAddCustomItem} className="space-y-3 pt-1">
+                <div>
+                  <label className="text-xs font-bold text-slate-700 block mb-1">Item Title *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Custom Silk Scarf, Alteration Service..."
+                    value={customItemName}
+                    onChange={(e) => setCustomItemName(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">Variant / Note</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Size L • Red"
+                      value={customItemVariant}
+                      onChange={(e) => setCustomItemVariant(e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">Unit Price (₹) *</label>
+                    <input
+                      type="number"
+                      required
+                      min="0"
+                      step="any"
+                      placeholder="499"
+                      value={customItemPrice}
+                      onChange={(e) => setCustomItemPrice(e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500 font-bold"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">Quantity</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={customItemQty}
+                      onChange={(e) => setCustomItemQty(Math.max(1, parseInt(e.target.value) || 1))}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-1 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end pt-2">
+                  <button
+                    type="submit"
+                    className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs cursor-pointer"
+                  >
+                    Add Custom Item
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}

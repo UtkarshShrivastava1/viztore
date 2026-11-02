@@ -74,6 +74,14 @@ export const openPoolQuerySchema = z.object({
   limit: z.coerce.number().int().positive().max(50).default(20),
 });
 
+export const updateRiderLocationSchema = z.object({
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180),
+  heading: z.number().optional(),
+  speed: z.number().optional(),
+  accuracy: z.number().optional(),
+});
+
 // ── Inferred DTO Types ─────────────────────────────────────────────────
 
 export type RiderInfoDto = z.infer<typeof riderInfoSchema>;
@@ -84,6 +92,7 @@ export type OpenPoolQueryDto = z.infer<typeof openPoolQuerySchema>;
 export type UpdateDeliveryStatusDto = z.infer<typeof updateDeliveryStatusSchema>;
 export type VerifyDeliveryOtpDto = z.infer<typeof verifyDeliveryOtpSchema>;
 export type DeliveryQueryDto = z.infer<typeof deliveryQuerySchema>;
+export type UpdateRiderLocationDto = z.infer<typeof updateRiderLocationSchema>;
 
 export interface DeliveryTimelineEntry {
   status: DeliveryStatus;
@@ -188,6 +197,8 @@ export interface RiderRunDetailsDto {
     id: string;
     name: string;
   };
+  pickupCoordinates?: [number, number];
+  dropoffCoordinates?: [number, number];
   pickupDetails?: {
     storeName: string;
     storePhone: string;

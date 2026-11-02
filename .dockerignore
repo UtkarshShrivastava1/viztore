@@ -17,6 +17,8 @@ Thumbs.db
 **/.cache
 **/logs
 *.log
+*.tsbuildinfo
+*.map
 
 # Environment variables (NEVER leak secrets into Docker images)
 .env
@@ -25,10 +27,18 @@ Thumbs.db
 
 # Documentation, specifications, and mockups
 mockups/
+_mockups_temp/
 notes-handbook/
+.agents/
+docs/
 *.md
 !packages/**/*.md
+*.docx
+*.xlsx
 
-# Test reports and coverage
+# Local scripts, Postman, test reports and coverage
 coverage/
 *.lcov
+postman/
+/scripts/
+postman-local-report.json

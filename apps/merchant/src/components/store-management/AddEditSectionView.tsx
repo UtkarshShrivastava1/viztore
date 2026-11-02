@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   ArrowLeft,
   Search,
@@ -24,8 +24,10 @@ import {
   Plus,
   Mic,
   Sparkles,
+  RefreshCw,
 } from 'lucide-react';
 import { useStoreManagementStore, StoreSection } from '../../stores/storeManagementStore.js';
+import { useCatalogStore } from '../../stores/catalogStore.js';
 import { branding } from '../../lib/branding.js';
 
 interface AddEditSectionViewProps {
@@ -55,7 +57,14 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
   sectionId,
   onBack,
 }) => {
-  const { sections, addSection, updateSection } = useStoreManagementStore();
+  const {
+    sections,
+    curatedProducts,
+    addSection,
+    updateSection,
+    persistStoreData,
+    isSaving,
+  } = useStoreManagementStore();
 
   const existingSection = sectionId ? sections.find((s) => s.id === sectionId) : null;
 
@@ -73,116 +82,168 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
   const [brandFilter, setBrandFilter] = useState('All Brands');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Selected products
-  const [selectedProductIds, setSelectedProductIds] = useState<string[]>([
-    'p1',
-    'p2',
-    'p4',
-    'p7',
-  ]);
+  const [isSavingLocal, setIsSavingLocal] = useState(false);
+
+  const catalogProducts = useCatalogStore((state) => state.products);
+
+  // Real store catalog products prioritized with full attribute fidelity
+  const products = useMemo(() => {
+    // 1. Prefer curatedProducts from storeManagementStore if populated
+    if (curatedProducts && curatedProducts.length > 0) {
+      return curatedProducts.map((p) => {
+        const catStr = p.category || 'General';
+        const brandStr = p.brand || 'Store In-House Brand';
+        return {
+          id: p.id,
+          name: p.name,
+          details: `Size: ${p.size || 'M'} • Color: ${p.color || 'Standard'}`,
+          sku: p.sku,
+          category: catStr,
+          subCategory: p.subCategory,
+          productType: p.productType,
+          brand: brandStr,
+          stock: p.stock ?? 0,
+          price: p.price ?? 0,
+          rating: 4.8,
+          reviews: 42,
+          image: p.image,
+        };
+      });
+    }
+
+    // 2. Or fallback to catalogStore products if already loaded in merchant app
+    if (catalogProducts && catalogProducts.length > 0) {
+      return catalogProducts.map((p) => {
+        const catName = p.category ? String(p.category).replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) : 'General';
+        const subCat = p.subCategory ? String(p.subCategory).replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) : '';
+        const catStr = subCat ? `${catName} > ${subCat}` : catName;
+
+        const primaryImg =
+          (Array.isArray(p.images) && p.images[0]) ||
+          'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100&auto=format&fit=crop&q=80';
+
+        const sizeVal = p.attributes?.Size || p.variants?.[0]?.size || 'M';
+        const colorVal = p.attributes?.Color || p.variants?.[0]?.color || 'Standard';
+
+        return {
+          id: p.id,
+          name: p.name,
+          details: `Size: ${sizeVal} • Color: ${colorVal}`,
+          sku: p.sku,
+          category: catStr,
+          subCategory: p.subCategory,
+          productType: p.productType,
+          brand: p.brand || 'Store In-House Brand',
+          stock: p.stock ?? 0,
+          price: p.price ?? 0,
+          rating: 4.8,
+          reviews: 42,
+          image: primaryImg,
+        };
+      });
+    }
+
+    return [];
+  }, [curatedProducts, catalogProducts]);
+
+  // Selected products initialized from existing section or empty
+  const [selectedProductIds, setSelectedProductIds] = useState<string[]>(() => {
+    if (existingSection?.productIds && Array.isArray(existingSection.productIds) && existingSection.productIds.length > 0) {
+      return existingSection.productIds;
+    }
+    return [];
+  });
+
+  // Sanitize selectedProductIds to only retain IDs that exist in the loaded store catalog
+  useEffect(() => {
+    if (products.length > 0 && selectedProductIds.length > 0) {
+      const validIds = new Set(products.map((p) => p.id));
+      const filtered = selectedProductIds.filter((id) => validIds.has(id));
+      if (filtered.length !== selectedProductIds.length) {
+        setSelectedProductIds(filtered);
+      }
+    }
+  }, [products, selectedProductIds]);
+
+  const availableCategories = useMemo(() => {
+    const set = new Set<string>();
+    products.forEach((p) => {
+      if (p.category) {
+        const primaryCat = (p.category.split('>')[0] || '').trim();
+        if (primaryCat) set.add(primaryCat);
+      }
+    });
+    return ['All Categories', ...Array.from(set)];
+  }, [products]);
+
+  const availableSubCategories = useMemo(() => {
+    const set = new Set<string>();
+    products.forEach((p) => {
+      if (p.subCategory) {
+        set.add(p.subCategory.trim());
+      } else if (p.category && p.category.includes('>')) {
+        const sub = (p.category.split('>')[1] || '').trim();
+        if (sub) set.add(sub);
+      }
+    });
+    return ['All Sub Categories', ...Array.from(set)];
+  }, [products]);
+
+  const availableProductTypes = useMemo(() => {
+    const set = new Set<string>();
+    products.forEach((p) => {
+      if (p.productType) set.add(p.productType.trim());
+    });
+    return ['All Product Types', ...Array.from(set)];
+  }, [products]);
+
+  const availableBrands = useMemo(() => {
+    const set = new Set<string>();
+    products.forEach((p) => {
+      if (p.brand) set.add(p.brand.trim());
+    });
+    return ['All Brands', ...Array.from(set)];
+  }, [products]);
 
   const filteredPresets = PRESET_SECTIONS.filter((p) =>
     p.name.toLowerCase().includes(dropdownSearch.toLowerCase())
   );
 
-  const products = [
-    {
-      id: 'p1',
-      name: 'Men Black Round Neck T-Shirt',
-      details: 'Size: M • Color: Black',
-      sku: 'PRD-TSHIRT-BLK-M',
-      category: "Men's Fashion > T-Shirts",
-      stock: 120,
-      price: 599,
-      rating: 4.5,
-      reviews: 320,
-      image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=100&auto=format&fit=crop&q=80',
-    },
-    {
-      id: 'p2',
-      name: 'Men White Round Neck T-Shirt',
-      details: 'Size: M • Color: White',
-      sku: 'PRD-TSHIRT-WHT-M',
-      category: "Men's Fashion > T-Shirts",
-      stock: 80,
-      price: 599,
-      rating: 4.5,
-      reviews: 280,
-      image: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=100&auto=format&fit=crop&q=80',
-    },
-    {
-      id: 'p3',
-      name: 'Men Navy Blue Bound Neck T-Shirt',
-      details: 'Size: L • Color: Navy Blue',
-      sku: 'PRD-TSHIRT-NVY-L',
-      category: "Men's Fashion > T-Shirts",
-      stock: 60,
-      price: 599,
-      rating: 4.3,
-      reviews: 110,
-      image: 'https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=100&auto=format&fit=crop&q=80',
-    },
-    {
-      id: 'p4',
-      name: 'Men Grey Round Neck T-Shirt',
-      details: 'Size: M • Color: Grey',
-      sku: 'PRD-TSHIRT-GRY-M',
-      category: "Men's Fashion > T-Shirts",
-      stock: 45,
-      price: 599,
-      rating: 4.5,
-      reviews: 195,
-      image: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=100&auto=format&fit=crop&q=80',
-    },
-    {
-      id: 'p5',
-      name: 'Men Black Polo T-Shirt',
-      details: 'Size: M • Color: Black',
-      sku: 'PRD-POLO-BLK-M',
-      category: "Men's Fashion > Polo T-Shirt",
-      stock: 30,
-      price: 649,
-      rating: 4.6,
-      reviews: 180,
-      image: 'https://images.unsplash.com/photo-1581655353564-df123a1eb820?w=100&auto=format&fit=crop&q=80',
-    },
-    {
-      id: 'p6',
-      name: 'Men Maroon Polo T-Shirt',
-      details: 'Size: L • Color: Maroon',
-      sku: 'PRD-POLO-MRN-L',
-      category: "Men's Fashion > Polo T-Shirt",
-      stock: 25,
-      price: 649,
-      rating: 4.4,
-      reviews: 95,
-      image: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=100&auto=format&fit=crop&q=80',
-    },
-    {
-      id: 'p7',
-      name: 'Men Blue Henley T-Shirt',
-      details: 'Size: M • Color: Blue',
-      sku: 'PRD-HENLEY-BLU-M',
-      category: "Men's Fashion > T-Shirts",
-      stock: 20,
-      price: 699,
-      rating: 4.4,
-      reviews: 142,
-      image: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=100&auto=format&fit=crop&q=80',
-    },
-    {
-      id: 'p8',
-      name: 'Men Striped Round Neck T-Shirt',
-      details: 'Size: M • Color: White/Black',
-      sku: 'PRD-TSHIRT-STP-M',
-      category: "Men's Fashion > T-Shirts",
-      stock: 15,
-      price: 599,
-      rating: 4.2,
-      reviews: 70,
-      image: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=100&auto=format&fit=crop&q=80',
-    },
-  ];
+  const displayedProducts = useMemo(() => {
+    return products.filter((p) => {
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const match =
+          p.name.toLowerCase().includes(q) ||
+          p.sku.toLowerCase().includes(q) ||
+          p.category.toLowerCase().includes(q) ||
+          (p.brand && p.brand.toLowerCase().includes(q));
+        if (!match) return false;
+      }
+      if (categoryFilter !== 'All Categories') {
+        if (!p.category.toLowerCase().includes(categoryFilter.toLowerCase())) {
+          return false;
+        }
+      }
+      if (subCategoryFilter !== 'All Sub Categories') {
+        const sub = p.subCategory || (p.category.includes('>') ? p.category.split('>')[1] : '');
+        if (!sub?.toLowerCase().includes(subCategoryFilter.toLowerCase())) {
+          return false;
+        }
+      }
+      if (productTypeFilter !== 'All Product Types') {
+        if (p.productType && !p.productType.toLowerCase().includes(productTypeFilter.toLowerCase())) {
+          return false;
+        }
+      }
+      if (brandFilter !== 'All Brands') {
+        if (p.brand && !p.brand.toLowerCase().includes(brandFilter.toLowerCase())) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [products, searchQuery, categoryFilter, subCategoryFilter, productTypeFilter, brandFilter]);
 
   const toggleSelect = (id: string) => {
     setSelectedProductIds((prev) =>
@@ -190,22 +251,34 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
     );
   };
 
-  const handleSave = () => {
-    if (existingSection) {
-      updateSection(existingSection.id, {
-        name: sectionName,
-        priority: displayOrder,
-        isActive,
-        productCount: selectedProductIds.length,
-      });
-    } else {
-      addSection({
-        name: sectionName,
-        sectionType: 'product',
-        isActive,
-      });
+  const handleSave = async () => {
+    setIsSavingLocal(true);
+    try {
+      if (existingSection) {
+        updateSection(existingSection.id, {
+          name: sectionName,
+          priority: displayOrder,
+          isActive,
+          productIds: selectedProductIds,
+          productCount: selectedProductIds.length,
+        });
+      } else {
+        addSection({
+          name: sectionName,
+          sectionType: 'product',
+          isActive,
+          badge: 'New',
+          priority: displayOrder,
+          productIds: selectedProductIds,
+        });
+      }
+      await persistStoreData();
+      onBack();
+    } catch (err) {
+      console.error('Failed to save section:', err);
+    } finally {
+      setIsSavingLocal(false);
     }
-    onBack();
   };
 
   return (
@@ -469,9 +542,9 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
               onChange={(e) => setCategoryFilter(e.target.value)}
               className="px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-semibold text-slate-700"
             >
-              <option>All Categories</option>
-              <option>Men's Fashion</option>
-              <option>Women's Fashion</option>
+              {availableCategories.map((cat) => (
+                <option key={cat}>{cat}</option>
+              ))}
             </select>
 
             <select
@@ -479,9 +552,9 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
               onChange={(e) => setSubCategoryFilter(e.target.value)}
               className="px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-semibold text-slate-700"
             >
-              <option>All Sub Categories</option>
-              <option>T-Shirts</option>
-              <option>Polo T-Shirts</option>
+              {availableSubCategories.map((sub) => (
+                <option key={sub}>{sub}</option>
+              ))}
             </select>
 
             <select
@@ -489,10 +562,9 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
               onChange={(e) => setProductTypeFilter(e.target.value)}
               className="px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-semibold text-slate-700"
             >
-              <option>All Product Types</option>
-              <option>Round Neck</option>
-              <option>Polo</option>
-              <option>Henley</option>
+              {availableProductTypes.map((type) => (
+                <option key={type}>{type}</option>
+              ))}
             </select>
 
             <select
@@ -500,8 +572,9 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
               onChange={(e) => setBrandFilter(e.target.value)}
               className="px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-[11px] font-semibold text-slate-700"
             >
-              <option>All Brands</option>
-              <option>Store In-House Brand</option>
+              {availableBrands.map((brand) => (
+                <option key={brand}>{brand}</option>
+              ))}
             </select>
           </div>
 
@@ -534,15 +607,24 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
                   <th className="py-2 px-2.5 w-7">
                     <input
                       type="checkbox"
-                      checked={selectedProductIds.length === products.length}
-                      onChange={() =>
-                        setSelectedProductIds(
-                          selectedProductIds.length === products.length
-                            ? []
-                            : products.map((p) => p.id)
-                        )
+                      checked={
+                        displayedProducts.length > 0 &&
+                        displayedProducts.every((p) => selectedProductIds.includes(p.id))
                       }
-                      className="rounded border-slate-300 text-blue-600"
+                      onChange={() => {
+                        const allDisplayedSelected = displayedProducts.every((p) =>
+                          selectedProductIds.includes(p.id)
+                        );
+                        if (allDisplayedSelected) {
+                          setSelectedProductIds((prev) =>
+                            prev.filter((id) => !displayedProducts.some((p) => p.id === id))
+                          );
+                        } else {
+                          const newIds = displayedProducts.map((p) => p.id);
+                          setSelectedProductIds((prev) => Array.from(new Set([...prev, ...newIds])));
+                        }
+                      }}
+                      className="rounded border-slate-300 text-blue-600 cursor-pointer"
                     />
                   </th>
                   <th className="py-2 px-2.5">Product</th>
@@ -553,7 +635,14 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {products.map((p) => {
+                {displayedProducts.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-8 text-center text-slate-400">
+                      No products found matching filters
+                    </td>
+                  </tr>
+                ) : (
+                  displayedProducts.map((p) => {
                   const isChecked = selectedProductIds.includes(p.id);
                   return (
                     <tr
@@ -563,12 +652,12 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
                         isChecked ? 'bg-blue-50/20' : ''
                       }`}
                     >
-                      <td className="py-2 px-2.5">
+                      <td className="py-2 px-2.5" onClick={(e) => e.stopPropagation()}>
                         <input
                           type="checkbox"
                           checked={isChecked}
                           onChange={() => toggleSelect(p.id)}
-                          className="rounded border-slate-300 text-blue-600"
+                          className="rounded border-slate-300 text-blue-600 cursor-pointer"
                         />
                       </td>
                       <td className="py-2 px-2.5">
@@ -576,7 +665,11 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
                           <img
                             src={p.image}
                             alt={p.name}
-                            className="w-7 h-7 rounded-lg object-cover border border-slate-200 shrink-0"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src =
+                                'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100&auto=format&fit=crop&q=80';
+                            }}
+                            className="w-7 h-7 rounded-lg object-cover border border-slate-200 shrink-0 bg-slate-100"
                           />
                           <div className="min-w-0">
                             <span className="font-bold text-slate-900 block truncate max-w-[140px]">
@@ -595,17 +688,19 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
                       <td className="py-2 px-2 text-[10px] font-semibold text-emerald-600">
                         {p.stock} In Stock
                       </td>
-                      <td className="py-2 px-2 text-right font-black text-slate-900">₹{p.price}</td>
+                      <td className="py-2 px-2 text-right font-black text-slate-900">
+                        ₹{p.price.toLocaleString('en-IN')}
+                      </td>
                     </tr>
                   );
-                })}
+                }))}
               </tbody>
             </table>
           </div>
 
           {/* Pagination */}
           <div className="flex items-center justify-between text-xs text-slate-500 pt-1">
-            <span className="text-[11px]">Showing 1 to 8 of 248 products</span>
+            <span className="text-[11px]">Showing {displayedProducts.length === 0 ? 0 : 1} to {displayedProducts.length} of {displayedProducts.length} products</span>
             <div className="flex items-center gap-1">
               <button type="button" disabled className="p-1 rounded border border-slate-200 opacity-40">
                 <ChevronLeft className="w-3.5 h-3.5" />
@@ -706,7 +801,11 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
                           <img
                             src={p.image}
                             alt={p.name}
-                            className="w-full h-16 object-cover rounded-md"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src =
+                                'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100&auto=format&fit=crop&q=80';
+                            }}
+                            className="w-full h-16 object-cover rounded-md bg-slate-100"
                           />
                           <div className="w-4 h-4 rounded-full bg-white/90 text-slate-400 flex items-center justify-center absolute top-1 right-1 shadow-2xs">
                             <Heart className="w-2.5 h-2.5" />
@@ -716,7 +815,9 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
                           <span className="text-[9px] font-bold text-slate-900 block truncate leading-tight">
                             {p.name}
                           </span>
-                          <span className="text-[9px] font-black text-slate-900 block mt-0.5">₹{p.price}</span>
+                          <span className="text-[9px] font-black text-slate-900 block mt-0.5">
+                            ₹{p.price.toLocaleString('en-IN')}
+                          </span>
                         </div>
                         <button
                           type="button"
@@ -745,9 +846,11 @@ export const AddEditSectionView: React.FC<AddEditSectionViewProps> = ({
         <button
           type="button"
           onClick={handleSave}
-          className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition-colors"
+          disabled={isSavingLocal || isSaving}
+          className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-2"
         >
-          {existingSection ? 'Save Changes' : 'Create Section'}
+          {(isSavingLocal || isSaving) && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
+          <span>{existingSection ? 'Save Changes' : 'Create Section'}</span>
         </button>
       </div>
     </div>

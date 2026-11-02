@@ -27,6 +27,11 @@ export interface CuratedProduct {
   isActive: boolean;
   image: string;
   category: string;
+  subCategory?: string;
+  productType?: string;
+  brand?: string;
+  size?: string;
+  color?: string;
 }
 
 export interface StoreKPIs {
@@ -60,6 +65,10 @@ interface StoreManagementState {
   curatedProducts: CuratedProduct[];
   kpis: StoreKPIs;
   isAddSectionModalOpen: boolean;
+  isEditingSection: boolean;
+  editingSectionId: string | null;
+  startEditingSection: (id: string | null) => void;
+  stopEditingSection: () => void;
 
   // Backend sync methods
   fetchStoreManagementData: () => Promise<void>;
@@ -68,10 +77,12 @@ interface StoreManagementState {
   // Store Appearance
   storeLogo: string;
   storeBanner: string;
+  storeMobileBanner: string;
   storeDescription: string;
   storeSlug: string;
   setStoreLogo: (url: string) => void;
   setStoreBanner: (url: string) => void;
+  setStoreMobileBanner: (url: string) => void;
   setStoreDescription: (desc: string) => void;
   setStoreSlug: (slug: string) => void;
 
@@ -90,6 +101,8 @@ interface StoreManagementState {
     description?: string;
     isActive: boolean;
     badge?: 'Special' | 'New' | 'Popular' | 'Category' | 'Brand' | 'Default';
+    productIds?: string[];
+    priority?: number;
   }) => void;
   updateSection: (id: string, updates: Partial<StoreSection>) => void;
   deleteSection: (id: string) => void;
@@ -112,12 +125,12 @@ const initialSections: StoreSection[] = [
     badge: 'Special',
     type: 'Automatic',
     sectionType: 'product',
-    productCount: 12,
+    productCount: 0,
     isActive: true,
     displayOn: 'Home',
     priority: 1,
     description: 'Limited time offers on top picks',
-    productIds: ['prd-1', 'prd-2', 'prd-3', 'prd-4', 'prd-5'],
+    productIds: [],
   },
   {
     id: 'sec-2',
@@ -125,12 +138,12 @@ const initialSections: StoreSection[] = [
     badge: 'New',
     type: 'Manual',
     sectionType: 'product',
-    productCount: 24,
+    productCount: 0,
     isActive: true,
     displayOn: 'Home',
     priority: 2,
     description: 'Check out the latest products',
-    productIds: ['prd-6', 'prd-7', 'prd-8'],
+    productIds: [],
   },
   {
     id: 'sec-3',
@@ -138,12 +151,12 @@ const initialSections: StoreSection[] = [
     badge: 'Popular',
     type: 'Automatic',
     sectionType: 'product',
-    productCount: 20,
+    productCount: 0,
     isActive: true,
     displayOn: 'Home',
     priority: 3,
     description: 'Most loved by our customers',
-    productIds: ['prd-9', 'prd-10', 'prd-11'],
+    productIds: [],
   },
   {
     id: 'sec-4',
@@ -151,7 +164,7 @@ const initialSections: StoreSection[] = [
     badge: 'Category',
     type: 'Manual',
     sectionType: 'category',
-    productCount: 8,
+    productCount: 0,
     isActive: true,
     displayOn: 'Home',
     priority: 4,
@@ -164,7 +177,7 @@ const initialSections: StoreSection[] = [
     badge: 'Popular',
     type: 'Automatic',
     sectionType: 'product',
-    productCount: 16,
+    productCount: 0,
     isActive: true,
     displayOn: 'Home',
     priority: 5,
@@ -177,7 +190,7 @@ const initialSections: StoreSection[] = [
     badge: 'Brand',
     type: 'Manual',
     sectionType: 'brand',
-    productCount: 10,
+    productCount: 0,
     isActive: true,
     displayOn: 'Home',
     priority: 6,
@@ -190,7 +203,7 @@ const initialSections: StoreSection[] = [
     badge: 'Default',
     type: 'Automatic',
     sectionType: 'product',
-    productCount: 110,
+    productCount: 0,
     isActive: true,
     isAlwaysOn: true,
     displayOn: 'Home',
@@ -347,10 +360,16 @@ export const useStoreManagementStore = create<StoreManagementState>((set, get) =
   sections: initialSections,
   curatedProducts: initialCuratedProducts,
   isAddSectionModalOpen: false,
+  isEditingSection: false,
+  editingSectionId: null,
+
+  startEditingSection: (id) => set({ isEditingSection: true, editingSectionId: id, activeSubTab: 'sections' }),
+  stopEditingSection: () => set({ isEditingSection: false, editingSectionId: null }),
 
   // Store Appearance
   storeLogo: '',
   storeBanner: '',
+  storeMobileBanner: '',
   storeDescription: '',
   storeSlug: '',
 
@@ -396,42 +415,91 @@ export const useStoreManagementStore = create<StoreManagementState>((set, get) =
             : [];
 
           if (prodList.length > 0) {
-            mappedProducts = prodList.map((p: any) => ({
-              id: p._id || p.id,
-              name: p.name,
-              sku: p.sku || `PRD-${(p._id || '').slice(-6).toUpperCase()}`,
-              price: p.pricing?.sellingPrice || p.price || 0,
-              originalPrice: p.pricing?.mrp || p.originalPrice,
-              discount:
-                p.pricing?.mrp && p.pricing?.sellingPrice
-                  ? `${Math.round(((p.pricing.mrp - p.pricing.sellingPrice) / p.pricing.mrp) * 100)}% OFF`
-                  : undefined,
-              stock: p.inventory?.stockOnHand ?? p.stock ?? 0,
-              isActive: p.isActive ?? true,
-              image:
-                p.images?.[0]?.url ||
+            mappedProducts = prodList.map((p: any) => {
+              const variant = p.variants?.[0] || {};
+              const img =
+                (Array.isArray(variant.images) && variant.images[0]) ||
+                (Array.isArray(p.images) && (typeof p.images[0] === 'string' ? p.images[0] : p.images[0]?.url)) ||
                 p.image ||
-                'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=400&q=80',
-              category: p.category || 'General',
-            }));
+                'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=400&q=80';
+
+              const price = p.basePrice || variant.price || p.pricing?.sellingPrice || p.price || 0;
+              const mrp = p.baseMrp || variant.mrp || p.pricing?.mrp || p.originalPrice || price;
+              const stock =
+                typeof p.totalStock === 'number'
+                  ? p.totalStock
+                  : variant.stock ?? p.inventory?.stockOnHand ?? p.stock ?? 0;
+              const sku = variant.sku || p.sku || `PRD-${(p._id || '').slice(-6).toUpperCase()}`;
+
+              const catName = p.category
+                ? String(p.category).replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+                : 'General';
+              const subCat = p.subCategory
+                ? String(p.subCategory).replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+                : '';
+              const displayCategory = subCat ? `${catName} > ${subCat}` : catName;
+
+              return {
+                id: p._id || p.id,
+                name: p.name,
+                sku,
+                price,
+                originalPrice: mrp,
+                discount:
+                  mrp > price
+                    ? `${Math.round(((mrp - price) / mrp) * 100)}% OFF`
+                    : undefined,
+                stock,
+                isActive: p.isActive ?? true,
+                image: img,
+                category: displayCategory,
+                subCategory: p.subCategory,
+                productType: p.subType || p.productType,
+                brand: p.brand || 'Store In-House Brand',
+                size: variant.size || 'M',
+                color: variant.color || 'Standard',
+              };
+            });
           }
         } catch (err) {
           console.warn('Could not fetch store products for placement view:', err);
         }
       }
 
-      const activeCount = loadedSections.filter((s) => s.isActive && !s.isAlwaysOn).length;
+      // Sanitize loadedSections against real catalog product IDs
+      const validProductIds = new Set(mappedProducts.map((p) => String(p.id)));
+
+      const sanitizedSections = loadedSections.map((sec) => {
+        const isAll = sec.name.toLowerCase() === 'all products' || sec.isAlwaysOn;
+        if (isAll) {
+          return {
+            ...sec,
+            productCount: mappedProducts.length,
+            productIds: mappedProducts.map((p) => String(p.id)),
+          };
+        }
+        // Filter out any stale/seed product IDs that don't exist in the store's current catalog
+        const cleanIds = (sec.productIds || []).filter((id: string) => validProductIds.has(String(id)));
+        return {
+          ...sec,
+          productIds: cleanIds,
+          productCount: cleanIds.length,
+        };
+      });
+
+      const activeCount = sanitizedSections.filter((s) => s.isActive && !s.isAlwaysOn).length;
 
       set({
         currentStoreId: storeId || null,
-        sections: loadedSections,
+        sections: sanitizedSections,
         curatedProducts: mappedProducts,
         storeLogo: storeData?.logoUrl || '',
         storeBanner: storeData?.bannerUrl || '',
+        storeMobileBanner: storeData?.mobileBannerUrl || '',
         storeDescription: storeData?.description || '',
         storeSlug: storeData?.slug || '',
         kpis: {
-          totalSections: loadedSections.length,
+          totalSections: sanitizedSections.length,
           activeSections: activeCount,
           totalProducts: mappedProducts.length,
           impressions: 12450,
@@ -447,7 +515,7 @@ export const useStoreManagementStore = create<StoreManagementState>((set, get) =
   },
 
   persistStoreData: async () => {
-    const { currentStoreId, sections, storeLogo, storeBanner, storeDescription, storeSlug } = get();
+    const { currentStoreId, sections, storeLogo, storeBanner, storeMobileBanner, storeDescription, storeSlug } = get();
     let targetId = currentStoreId;
     if (!targetId) {
       const raw = localStorage.getItem('current_store');
@@ -466,6 +534,7 @@ export const useStoreManagementStore = create<StoreManagementState>((set, get) =
         sections,
         logoUrl: storeLogo,
         bannerUrl: storeBanner,
+        mobileBannerUrl: storeMobileBanner,
         description: storeDescription,
         slug: storeSlug,
       });
@@ -484,6 +553,10 @@ export const useStoreManagementStore = create<StoreManagementState>((set, get) =
   },
   setStoreBanner: (url) => {
     set({ storeBanner: url });
+    get().persistStoreData();
+  },
+  setStoreMobileBanner: (url) => {
+    set({ storeMobileBanner: url });
     get().persistStoreData();
   },
   setStoreDescription: (desc) => {
@@ -568,9 +641,9 @@ export const useStoreManagementStore = create<StoreManagementState>((set, get) =
     }
   },
 
-  addSection: ({ name, sectionType, description, isActive, badge }) => {
+  addSection: ({ name, sectionType, description, isActive, badge, productIds, priority }) => {
     set((state) => {
-      const newPriority = state.sections.length + 1;
+      const newPriority = priority !== undefined ? priority : state.sections.length + 1;
       const type: 'Automatic' | 'Manual' =
         sectionType === 'product' || sectionType === 'category' ? 'Manual' : 'Automatic';
 
@@ -582,16 +655,17 @@ export const useStoreManagementStore = create<StoreManagementState>((set, get) =
           ? 'Brand'
           : 'New');
 
+      const initialProductIds = Array.isArray(productIds) ? productIds : [];
       const newSection: StoreSection = {
         id: `sec-${Date.now()}`,
         name: name.trim(),
         badge: inferredBadge,
         type,
         sectionType,
-        productCount: 0,
+        productCount: initialProductIds.length,
         isActive,
         priority: newPriority,
-        productIds: [],
+        productIds: initialProductIds,
         description: description?.trim() || '',
       };
 
@@ -611,7 +685,15 @@ export const useStoreManagementStore = create<StoreManagementState>((set, get) =
 
   updateSection: (id, updates) => {
     set((state) => ({
-      sections: state.sections.map((s) => (s.id === id ? { ...s, ...updates } : s)),
+      sections: state.sections.map((s) => {
+        if (s.id !== id) return s;
+        const newProductIds = updates.productIds !== undefined ? updates.productIds : s.productIds;
+        const productCount =
+          updates.productCount !== undefined
+            ? updates.productCount
+            : (newProductIds ? newProductIds.length : s.productCount);
+        return { ...s, ...updates, productIds: newProductIds, productCount };
+      }),
     }));
     get().persistStoreData();
   },

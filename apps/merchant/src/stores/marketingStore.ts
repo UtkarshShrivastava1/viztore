@@ -1,3 +1,4 @@
+import { couponsApi } from '../lib/api.js';
 import { create } from 'zustand';
 
 export type MarketingSubTab =
@@ -384,6 +385,8 @@ interface MarketingState {
 
   // Discounts & Coupons
   coupons: CouponItem[];
+  isLoadingCoupons: boolean;
+  fetchCoupons: () => Promise<void>;
   couponView: 'list' | 'create';
   setCouponView: (view: 'list' | 'create') => void;
   isCreateCouponWizardOpen: boolean;
@@ -482,6 +485,34 @@ export const useMarketingStore = create<MarketingState>((set, get) => ({
   },
 
   coupons: [],
+  isLoadingCoupons: false,
+  fetchCoupons: async () => {
+    set({ isLoadingCoupons: true });
+    try {
+      const data = await couponsApi.getCoupons();
+      if (Array.isArray(data) && data.length > 0) {
+        const mapped: CouponItem[] = data.map((c: any) => ({
+          id: c.id || c._id,
+          code: c.code,
+          title: c.title,
+          type: c.discountType === 'percentage' ? 'Percentage' : c.discountType === 'free_shipping' ? 'Free Shipping' : 'Fixed Amount',
+          benefit: c.discountType === 'percentage' ? `${c.discountValue}% OFF${c.maxDiscount ? ` Max ₹${c.maxDiscount}` : ''}` : `₹${c.discountValue} OFF Min. order ₹${c.minOrderValue}`,
+          applicableOn: c.applicableOn || 'All Products',
+          startDate: c.startDate || '01 Jan 2026',
+          endDate: c.endDate || '31 Dec 2026',
+          usedCount: c.usedCount || 0,
+          totalLimit: c.usageLimit || 1000,
+          status: c.isActive ? 'Active' : 'Expired',
+        }));
+        set({ coupons: mapped, isLoadingCoupons: false });
+      } else {
+        set({ isLoadingCoupons: false });
+      }
+    } catch (err) {
+      console.error('Failed to fetch coupons from server:', err);
+      set({ isLoadingCoupons: false });
+    }
+  },
   couponView: 'list',
   setCouponView: (view) => set({ couponView: view, isCreateCouponWizardOpen: view === 'create', couponWizardStep: 1 }),
   isCreateCouponWizardOpen: false,
@@ -517,18 +548,37 @@ export const useMarketingStore = create<MarketingState>((set, get) => ({
         couponView: 'list',
       };
     }),
-  createDraftCoupon: () => {
+  createDraftCoupon: async () => {
     const d = get().draftCoupon;
-    get().addCoupon({
-      code: d.code,
-      title: d.name,
-      type: d.discountType,
-      benefit: d.discountType === 'Percentage' ? `${d.discountValue}% OFF Max ₹${d.maxDiscount}` : `₹${d.discountValue} OFF Min. order ₹${d.minOrderValue}`,
-      applicableOn: d.applicableOn,
-      startDate: d.startDate,
-      endDate: d.endDate,
-      totalLimit: d.maxUsage,
-    });
+    try {
+      await couponsApi.createCoupon({
+        code: d.code,
+        title: d.name || 'Store Coupon',
+        description: d.description || '',
+        discountType: d.discountType === 'Percentage' ? 'percentage' : d.discountType === 'Free Shipping' ? 'free_shipping' : 'fixed',
+        discountValue: Number(d.discountValue || 10),
+        minOrderValue: Number(d.minOrderValue || 0),
+        maxDiscount: d.maxDiscount ? Number(d.maxDiscount) : undefined,
+        startDate: d.startDate,
+        endDate: d.endDate,
+        usageLimit: d.maxUsage ? Number(d.maxUsage) : undefined,
+        applicableOn: d.applicableOn,
+      });
+      await get().fetchCoupons();
+      set({ isCreateCouponWizardOpen: false, couponView: 'list' });
+    } catch (err) {
+      console.error('Failed to create coupon on backend:', err);
+      get().addCoupon({
+        code: d.code,
+        title: d.name,
+        type: d.discountType,
+        benefit: d.discountType === 'Percentage' ? `${d.discountValue}% OFF Max ₹${d.maxDiscount}` : `₹${d.discountValue} OFF Min. order ₹${d.minOrderValue}`,
+        applicableOn: d.applicableOn,
+        startDate: d.startDate,
+        endDate: d.endDate,
+        totalLimit: d.maxUsage,
+      });
+    }
   },
 
   isSelectProductsModalOpen: false,
@@ -545,7 +595,14 @@ export const useMarketingStore = create<MarketingState>((set, get) => ({
   setWizardStep: (s) => set({ wizardStep: s }),
   deleteCampaign: (id) => set((s) => ({ ads: s.ads.filter((a) => a.id !== id), advertisements: s.advertisements.filter((a) => a.id !== id) })),
   deleteOffer: (id) => set((s) => ({ coupons: s.coupons.filter((c) => c.id !== id) })),
-  deleteCoupon: (id) => set((s) => ({ coupons: s.coupons.filter((c) => c.id !== id) })),
+  deleteCoupon: async (id) => {
+    try {
+      await couponsApi.deleteCoupon(id);
+    } catch (err) {
+      console.error('Failed to delete coupon on backend:', err);
+    }
+    set((s) => ({ coupons: s.coupons.filter((c) => c.id !== id) }));
+  },
   addOffer: () => {},
 
   searchQuery: '',

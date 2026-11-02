@@ -64,7 +64,7 @@ export function createNotificationModule(events: IEventBus = eventBus): Notifica
   events.on(EVENTS.ORDER_CONFIRMED, async (payload) => {
     try {
       await service.createNotification({
-        recipientId: payload.orderId, // Target order room or resolved customer
+        recipientId: payload.userId || payload.orderId,
         recipientRole: 'customer',
         category: 'order',
         title: 'Order Confirmed',
@@ -79,7 +79,7 @@ export function createNotificationModule(events: IEventBus = eventBus): Notifica
   events.on(EVENTS.ORDER_CANCELLED, async (payload) => {
     try {
       await service.createNotification({
-        recipientId: payload.orderId,
+        recipientId: payload.userId || payload.orderId,
         recipientRole: 'customer',
         category: 'order',
         title: 'Order Cancelled',
@@ -95,7 +95,7 @@ export function createNotificationModule(events: IEventBus = eventBus): Notifica
     try {
       // 1. In-app customer notification
       await service.createNotification({
-        recipientId: payload.orderId,
+        recipientId: payload.userId || payload.orderId,
         recipientRole: 'customer',
         category: 'order',
         title: 'Delivery Partner Assigned',
@@ -122,11 +122,11 @@ export function createNotificationModule(events: IEventBus = eventBus): Notifica
     }
   });
 
-  events.on(EVENTS.DELIVERY_COMPLETED, async (payload) => {
+  const handleOrderDelivered = async (payload: any) => {
     try {
       // 1. In-app customer notification
       await service.createNotification({
-        recipientId: payload.orderId,
+        recipientId: payload.userId || payload.orderId,
         recipientRole: 'customer',
         category: 'order',
         title: 'Order Delivered',
@@ -143,7 +143,10 @@ export function createNotificationModule(events: IEventBus = eventBus): Notifica
     } catch (err) {
       logger.warn(`[NotificationModule] Failed to generate notification on DELIVERY_COMPLETED: ${err instanceof Error ? err.message : String(err)}`);
     }
-  });
+  };
+
+  events.on(EVENTS.DELIVERY_COMPLETED, handleOrderDelivered);
+  events.on(EVENTS.ORDER_DELIVERED, handleOrderDelivered);
 
   events.on(EVENTS.PRODUCT_OUT_OF_STOCK, async (payload) => {
     try {

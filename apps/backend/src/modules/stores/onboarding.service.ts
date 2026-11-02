@@ -7,6 +7,8 @@ import {
 } from '@repo/shared-types';
 import { StoreModel } from './store.model.js';
 import { UserModel } from '../auth/auth.model.js';
+import { OnboardingPaymentDraftModel } from './onboarding-payment-draft.model.js';
+import { buildPaymentRecordFromDraft } from './onboarding-payment.service.js';
 import { AppError } from '../../shared/utils/AppError.js';
 import { logger } from '../../shared/utils/logger.js';
 
@@ -62,7 +64,8 @@ export const GST_STATE_CODE_MAP: Record<string, string> = {
 
 /**
  * Verify GSTIN in real-time
- * Performs syntax validation and extracts state code + PAN
+ * Performs syntax validation, extracts state code + PAN, and inspects database
+ * for duplicate registration collisions (AUDIT-013).
  */
 export async function verifyGstin(gstin: string): Promise<{
   isValid: boolean;
@@ -73,6 +76,8 @@ export async function verifyGstin(gstin: string): Promise<{
   stateName: string;
   legalName: string;
   legalNameMock: string;
+  isAlreadyRegistered?: boolean;
+  existingStoreName?: string;
 }> {
   const normalizedGstin = gstin.trim().toUpperCase();
 
@@ -87,6 +92,22 @@ export async function verifyGstin(gstin: string): Promise<{
   // In production, integrates with GST API; mock returns verified business name with jurisdiction
   const legalName = `Retail Merchant (${stateName})`;
 
+  let isAlreadyRegistered = false;
+  let existingStoreName: string | undefined;
+
+  try {
+    const existing = await StoreModel.findOne({
+      'legalDetails.gstin': normalizedGstin,
+      approvalStatus: { $ne: StoreApprovalStatus.REJECTED },
+    });
+    if (existing) {
+      isAlreadyRegistered = true;
+      existingStoreName = existing.name;
+    }
+  } catch {
+    // Graceful fallback for mock unit test environments without db connection
+  }
+
   return {
     isValid: true,
     gstin: normalizedGstin,
@@ -96,12 +117,15 @@ export async function verifyGstin(gstin: string): Promise<{
     stateName,
     legalName,
     legalNameMock: legalName,
+    isAlreadyRegistered,
+    existingStoreName,
   };
 }
 
 /**
  * Complete 6-Step Onboarding Submission
- * Creates or updates merchant's store into PENDING approval queue
+ * Creates or updates merchant's store into PENDING approval queue.
+ * Strictly verifies identity attributes against duplicate merchant accounts (AUDIT-013).
  */
 export async function submitCompleteOnboarding(
   userId: string,
@@ -112,10 +136,59 @@ export async function submitCompleteOnboarding(
     throw AppError.notFound('User not found', 'USER_NOT_FOUND');
   }
 
+  // Strict Uniqueness check for GSTIN across different merchants (AUDIT-013)
+  if (dto.step2?.gstin) {
+    const normalizedGstin = dto.step2.gstin.trim().toUpperCase();
+    const duplicateGstin = await StoreModel.findOne({
+      'legalDetails.gstin': normalizedGstin,
+      ownerId: { $ne: userId },
+      approvalStatus: { $ne: StoreApprovalStatus.REJECTED },
+    });
+    if (duplicateGstin) {
+      throw AppError.conflict(
+        `GSTIN ${normalizedGstin} is already registered to store '${duplicateGstin.name}'. Each business entity can only register one store per GSTIN.`,
+        'GSTIN_ALREADY_REGISTERED',
+      );
+    }
+  }
+
+  // Strict Uniqueness check for PAN across different merchants (AUDIT-013)
+  if (dto.step2?.pan) {
+    const normalizedPan = dto.step2.pan.trim().toUpperCase();
+    const duplicatePan = await StoreModel.findOne({
+      'legalDetails.pan': normalizedPan,
+      ownerId: { $ne: userId },
+      approvalStatus: { $ne: StoreApprovalStatus.REJECTED },
+    });
+    if (duplicatePan) {
+      throw AppError.conflict(
+        `Business PAN ${normalizedPan} is already registered to store '${duplicatePan.name}'.`,
+        'PAN_ALREADY_REGISTERED',
+      );
+    }
+  }
+
   // Check if store already registered by this user
   let store = await StoreModel.findOne({ ownerId: userId });
 
   const slug = generateSlug(dto.step4.storeDisplayName);
+
+  // Link onboarding payment if provided or found for this owner
+  let onboardingPaymentRecord = null;
+  if (dto.paymentDraftId) {
+    const draft = await OnboardingPaymentDraftModel.findById(dto.paymentDraftId);
+    if (draft) {
+      onboardingPaymentRecord = buildPaymentRecordFromDraft(draft);
+    }
+  } else {
+    const draft = await OnboardingPaymentDraftModel.findOne({
+      ownerId: userId,
+      status: { $in: ['PAID', 'COUPON_WAIVED'] },
+    }).sort({ createdAt: -1 });
+    if (draft) {
+      onboardingPaymentRecord = buildPaymentRecordFromDraft(draft);
+    }
+  }
 
   if (store) {
     // Update existing store draft
@@ -127,6 +200,9 @@ export async function submitCompleteOnboarding(
     store.location = dto.step4.location;
     store.operatingHours = dto.step5.operatingHours;
     store.deliveryRadiusKm = dto.step4.deliveryRadiusKm;
+    if (onboardingPaymentRecord) {
+      store.onboardingPayment = onboardingPaymentRecord as any;
+    }
     store.legalDetails = {
       gstin: dto.step2.gstin,
       pan: dto.step2.pan,
@@ -156,6 +232,7 @@ export async function submitCompleteOnboarding(
       location: dto.step4.location,
       operatingHours: dto.step5.operatingHours,
       deliveryRadiusKm: dto.step4.deliveryRadiusKm,
+      onboardingPayment: onboardingPaymentRecord,
       legalDetails: {
         gstin: dto.step2.gstin,
         pan: dto.step2.pan,

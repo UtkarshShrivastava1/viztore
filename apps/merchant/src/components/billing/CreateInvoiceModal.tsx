@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { X, Plus, Calendar, Trash2, Printer, CheckCircle2, ShieldAlert } from 'lucide-react';
+import { X, Plus, Calendar, Trash2, Printer, CheckCircle2, ShieldAlert, Loader2 } from 'lucide-react';
 import { IInvoice, IInvoiceItem, useBillingStore } from '../../stores/billingStore.js';
 import { useCustomerStore } from '../../stores/customerStore.js';
 import { useInventoryStore } from '../../stores/inventoryStore.js';
 import { useCatalogStore } from '../../stores/catalogStore.js';
 import { INDIAN_STATES, DEFAULT_INDIAN_STATE } from '@repo/shared-types';
+import { printFormattedDocument, invoiceToVoucherDoc } from '../../lib/pdfEngine.js';
 
 interface CreateInvoiceModalProps {
   isOpen: boolean;
@@ -176,6 +177,7 @@ export const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
   const [paymentDate, setPaymentDate] = useState(() => new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }));
   const [paidStatusOption, setPaidStatusOption] = useState<'unpaid' | 'partial' | 'full'>('unpaid');
   const [saveAsDraft, setSaveAsDraft] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Prepopulate if initialData exists (e.g. from Convert Quote to Invoice)
   useEffect(() => {
@@ -201,6 +203,15 @@ export const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
   }, [initialData, isOpen, customersWithHistory.length]);
 
   const [customerNameError, setCustomerNameError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -270,7 +281,7 @@ export const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
   };
 
 
-  const handleSubmit = (withPrint: boolean = false) => {
+  const handleSubmit = async (withPrint: boolean = false) => {
     if (!customerName.trim()) {
       setCustomerNameError('Please enter a customer name before proceeding.');
       return;
@@ -286,7 +297,7 @@ export const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
       status = 'partially_paid';
     }
 
-    createInvoice({
+    const createdInvoice = await createInvoice({
       invoiceNo: '',
       date: invoiceDate,
       dueDate: dueDate,
@@ -339,15 +350,20 @@ export const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
       }
     }
 
-    if (withPrint) {
-      window.print();
+    if (withPrint && createdInvoice) {
+      try {
+        const docData = invoiceToVoucherDoc(createdInvoice);
+        printFormattedDocument(docData);
+      } catch (err) {
+        console.warn('Isolated document printing failed', err);
+      }
     }
 
     onClose();
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-3 sm:p-5 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
+    <div onClick={(e) => { if (e.target === e.currentTarget) onClose(); }} className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-3 sm:p-5 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
       <div className="relative w-full max-w-6xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]">
         {/* Modal Header */}
         <div className="px-6 py-4 border-b border-slate-200/80 flex items-center justify-between shrink-0 bg-white">
@@ -506,10 +522,12 @@ export const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
                       </label>
                       <input
                         type="tel"
+                        inputMode="numeric"
+                        maxLength={10}
                         value={customerPhone}
-                        onChange={(e) => setCustomerPhone(e.target.value)}
+                        onChange={(e) => setCustomerPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
                         placeholder="Enter 10-digit mobile number"
-                        className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+                        className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 font-mono"
                       />
                     </div>
 
@@ -587,10 +605,11 @@ export const CreateInvoiceModal: React.FC<CreateInvoiceModalProps> = ({
                   </label>
                   <input
                     type="text"
+                    maxLength={15}
                     value={gstin}
-                    onChange={(e) => setGstin(e.target.value)}
-                    placeholder="Enter GSTIN"
-                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+                    onChange={(e) => setGstin(e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 15))}
+                    placeholder="Enter 15-character GSTIN"
+                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-mono uppercase text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
                   />
                 </div>
               </div>

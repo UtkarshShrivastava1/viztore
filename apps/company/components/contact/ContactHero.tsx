@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Store, Globe, Rocket } from "lucide-react";
-import { branding } from "@repo/shared-types/branding.config";
+import { branding } from "@/config/company";
 
 const heroBenefits = [
   {

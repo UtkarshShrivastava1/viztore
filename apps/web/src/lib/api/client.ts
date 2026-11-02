@@ -197,6 +197,7 @@ export async function apiClient<T>(
       response.status,
       errorData?.error?.code || 'UNKNOWN_ERROR',
       errorData?.error?.message || 'An unexpected error occurred',
+      errorData?.error?.details,
     );
   }
 
@@ -229,6 +230,7 @@ export class ApiError extends Error {
     public statusCode: number,
     public code: string,
     message: string,
+    public details?: unknown,
   ) {
     super(message);
     this.name = 'ApiError';

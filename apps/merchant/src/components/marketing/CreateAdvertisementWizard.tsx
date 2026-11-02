@@ -74,8 +74,8 @@ export const CreateAdvertisementWizard: React.FC<CreateAdvertisementWizardProps>
 
   // Step 3 Duration & Schedule
   const [selectedDuration, setSelectedDuration] = useState<'3 Days' | '7 Days' | '15 Days' | '30 Days'>('7 Days');
-  const [startDate, setStartDate] = useState('2024-05-20');
-  const [endDate, setEndDate] = useState('2024-05-26');
+  const [startDate, setStartDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [endDate, setEndDate] = useState(() => new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]);
 
   // Step 4 Payment & Review
   const [paymentMethod, setPaymentMethod] = useState<'wallet' | 'upi' | 'card'>('wallet');

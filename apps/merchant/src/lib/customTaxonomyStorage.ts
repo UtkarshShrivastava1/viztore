@@ -8,6 +8,14 @@ export interface CustomTaxonomyState {
   brands: string[];
 }
 
+export function normalizeCategoryName(raw?: string): string {
+  const trimmed = raw?.trim() || '';
+  if (!trimmed) return '';
+  if (trimmed === 'Men' || trimmed === "Men's") return "Men's Fashion";
+  if (trimmed === 'Women' || trimmed === "Women's") return "Women's Fashion";
+  return trimmed;
+}
+
 const DEFAULT_TAXONOMY: CustomTaxonomyState = {
   categories: [],
   subCategories: {},
@@ -37,7 +45,9 @@ export function getCustomTaxonomy(storeId?: string): CustomTaxonomyState {
     if (raw) {
       const parsed = JSON.parse(raw);
       localData = {
-        categories: Array.isArray(parsed.categories) ? parsed.categories : [],
+        categories: (Array.isArray(parsed.categories) ? parsed.categories : [])
+          .map(normalizeCategoryName)
+          .filter(Boolean),
         subCategories: parsed.subCategories && typeof parsed.subCategories === 'object' ? parsed.subCategories : {},
         productTypes: parsed.productTypes && typeof parsed.productTypes === 'object' ? parsed.productTypes : {},
         brands: Array.isArray(parsed.brands) ? parsed.brands : [],
@@ -158,7 +168,7 @@ export function recordCustomCategory(
   subCategory?: string,
   productType?: string,
 ): CustomTaxonomyState {
-  const trimmedCat = category?.trim();
+  const trimmedCat = normalizeCategoryName(category?.trim());
   if (!trimmedCat) return getCustomTaxonomy(storeId);
 
   const updates: Partial<CustomTaxonomyState> = {
@@ -214,7 +224,7 @@ export function mineTaxonomyFromProducts(
 
   products.forEach((p) => {
     if (p.category && p.category.trim()) {
-      const cat = p.category.trim();
+      const cat = normalizeCategoryName(p.category.trim());
       extracted.categories.push(cat);
       if (p.subCategory && p.subCategory.trim()) {
         const sub = p.subCategory.trim();

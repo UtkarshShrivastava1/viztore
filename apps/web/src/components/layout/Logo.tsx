@@ -2,32 +2,41 @@ import Image from "next/image";
 import Link from "next/link";
 import { branding } from '@repo/shared-types';
 
-export default function Logo({ theme = 'light' }: { theme?: 'light' | 'dark' }) {
+interface LogoProps {
+  theme?: 'light' | 'dark';
+  className?: string;
+  imgClassName?: string;
+  width?: number;
+  height?: number;
+}
+
+export default function Logo({ 
+  theme = 'light',
+  className = '',
+  imgClassName = '',
+  width = 160,
+  height = 54,
+}: LogoProps) {
   const isDarkTheme = theme === 'dark';
   const appName = process.env.NEXT_PUBLIC_APP_NAME || branding.appName;
+  // Dark theme parameter means dark wordmark for light/white surfaces
+  // Default light theme means white wordmark for dark navy (#011A5D) headers
+  const logoSrc = isDarkTheme ? '/images/logo-dark.png' : '/images/logo-white.png';
   
   return (
-    <Link href="/" className="flex items-center gap-2 select-none hover:opacity-90 transition-opacity">
-      <div className="relative h-[34px] w-[34px] shrink-0">
-        <Image
-          src="/logo_v.png"
-          alt={appName}
-          width={34}
-          height={34}
-          className="object-contain"
-          style={{ width: 'auto', height: 'auto' }}
-          priority
-        />
-      </div>
-
-      <div className="flex flex-col justify-center leading-none">
-        <span className={`text-[22px] font-bold tracking-tight font-sans ${isDarkTheme ? 'text-[#192168]' : 'text-white'}`}>
-          {appName.toLowerCase()}
-        </span>
-        <p className={`text-[8.5px] font-medium tracking-tight mt-0.5 ${isDarkTheme ? 'text-[#192168]/80' : 'text-white/90'}`}>
-          {branding.tagline}
-        </p>
-      </div>
+    <Link 
+      href="/" 
+      className={`inline-flex items-center select-none hover:opacity-90 transition-opacity shrink-0 ${className}`}
+      aria-label={`${appName} - ${branding.tagline}`}
+    >
+      <Image
+        src={logoSrc}
+        alt={appName}
+        width={width}
+        height={height}
+        className={imgClassName || "h-10 sm:h-11 md:h-12 w-auto object-contain"}
+        priority
+      />
     </Link>
   );
 }

@@ -1,0 +1,3162 @@
+{
+  "info": {
+    "_postman_id": "c8942000-dead-beef-1337-postmanv2100",
+    "name": "Platform Master API Engine — Comprehensive Test Suite",
+    "description": "Full-Stack API Test Suite for Hyperlocal Multi-Vendor E-Commerce Engine. Perfectly structured into System Probes, Customer Workflows, Merchant Operational Hubs, Rider Portal, and Shared Infrastructure. Contains pre-configured request payloads, parameter variations, expected response schema templates, and automatic token management.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api/v1",
+      "type": "string",
+      "description": "Base URL (Local: http://localhost:5000/api/v1 | Staging: https://viztore.onrender.com/api/v1)"
+    },
+    {
+      "key": "customerToken",
+      "value": "",
+      "type": "string",
+      "description": "Customer JWT Access Token"
+    },
+    {
+      "key": "merchantToken",
+      "value": "",
+      "type": "string",
+      "description": "Merchant JWT Access Token"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string",
+      "description": "Admin JWT Access Token"
+    },
+    {
+      "key": "riderToken",
+      "value": "",
+      "type": "string",
+      "description": "Rider JWT Access Token"
+    },
+    {
+      "key": "storeId",
+      "value": "6acf505183256911d14c43cc",
+      "type": "string",
+      "description": "Target active store ID"
+    },
+    {
+      "key": "storeSlug",
+      "value": "national-retail-store-oqrk",
+      "type": "string",
+      "description": "Target store slug"
+    },
+    {
+      "key": "productId",
+      "value": "6acf6c0583256911d14c4a07",
+      "type": "string",
+      "description": "Target product ID"
+    },
+    {
+      "key": "productSlug",
+      "value": "classic-cotton-polo-t-shirt-yas6y",
+      "type": "string",
+      "description": "Target product slug"
+    },
+    {
+      "key": "orderId",
+      "value": "",
+      "type": "string",
+      "description": "Active order ID"
+    },
+    {
+      "key": "orderNumber",
+      "value": "",
+      "type": "string",
+      "description": "Active order number"
+    },
+    {
+      "key": "deliveryOtp",
+      "value": "",
+      "type": "string",
+      "description": "Active delivery handshake 4-digit OTP"
+    },
+    {
+      "key": "addressId",
+      "value": "",
+      "type": "string",
+      "description": "Active customer saved address ID"
+    },
+    {
+      "key": "couponCode",
+      "value": "WELCOME50",
+      "type": "string",
+      "description": "Promotional discount coupon code"
+    },
+    {
+      "key": "ticketId",
+      "value": "",
+      "type": "string",
+      "description": "Active support ticket ID"
+    },
+    {
+      "key": "invoiceId",
+      "value": "",
+      "type": "string",
+      "description": "Active billing invoice ID"
+    },
+    {
+      "key": "customerId",
+      "value": "",
+      "type": "string",
+      "description": "Active Khata CRM customer ID"
+    },
+    {
+      "key": "returnId",
+      "value": "",
+      "type": "string",
+      "description": "Active return request ID"
+    },
+    {
+      "key": "purchaseId",
+      "value": "",
+      "type": "string",
+      "description": "Active purchase order ID"
+    }
+  ],
+  "item": [
+    {
+      "name": "00. System Health & Probes",
+      "item": [
+        {
+          "name": "Liveness Probe (/healthz)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/healthz",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "healthz"
+              ]
+            },
+            "description": "Returns process health status, uptime, and active runtime environment.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 and healthy', function () { pm.response.to.have.status(200); pm.expect(pm.response.json().data.status).to.eql('healthy'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Readiness Probe (/readyz)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/readyz",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "readyz"
+              ]
+            },
+            "description": "Verifies MongoDB connection state, Redis health, and memory footprint.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Database is connected', function () { pm.response.to.have.status(200); pm.expect(pm.response.json().data.database).to.eql('connected'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "OpenAPI Documentation JSON (/api-docs.json)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api-docs.json",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api-docs.json"
+              ]
+            },
+            "description": "Fetches live OpenAPI 3.0 / Swagger schema specification.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 and valid JSON', function () { pm.response.to.have.status(200); pm.expect(pm.response.json().openapi).to.exist; });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "01. Authentication & Identity",
+      "item": [
+        {
+          "name": "Customer Register (Role-Scoped)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "description": "Registers a customer account. Creates token pair and persists profile in users collection.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Test Shopper\",\n  \"email\": \"{{regEmail}}\",\n  \"phone\": \"{{regPhone}}\",\n  \"password\": \"Password@123\",\n  \"role\": \"customer\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const ts = Date.now().toString().slice(-6);",
+                  "pm.variables.set('regEmail', 'user_' + ts + '@example.com');",
+                  "pm.variables.set('regPhone', '98' + ts + Math.floor(Math.random() * 90 + 10));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "    const res = pm.response.json();",
+                  "    const token = res.data?.tokens?.accessToken || res.data?.accessToken;",
+                  "    if (token) {",
+                  "        pm.collectionVariables.set('customerToken', token);",
+                  "        pm.environment.set('customerToken', token);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Customer Login (Target Role: customer)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Authenticates customer identity. Stores token in customerToken collection variable.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"arjun.customer@example.com\",\n  \"password\": \"Password@123\",\n  \"role\": \"customer\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "    const res = pm.response.json();",
+                  "    const token = res.data?.tokens?.accessToken || res.data?.accessToken;",
+                  "    if (token) {",
+                  "        pm.collectionVariables.set('customerToken', token);",
+                  "        pm.environment.set('customerToken', token);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Merchant Login (Target Role: merchant)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Authenticates merchant identity. Stores token in merchantToken collection variable.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"rahul.merchant@example.com\",\n  \"password\": \"Password@123\",\n  \"role\": \"merchant\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "    const res = pm.response.json();",
+                  "    const token = res.data?.tokens?.accessToken || res.data?.accessToken;",
+                  "    if (token) {",
+                  "        pm.collectionVariables.set('merchantToken', token);",
+                  "        pm.environment.set('merchantToken', token);",
+                  "    }",
+                  "    const sId = res.data?.user?.storeId || res.data?.store?.id;",
+                  "    if (sId) {",
+                  "        pm.collectionVariables.set('storeId', sId);",
+                  "        pm.environment.set('storeId', sId);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin Login (Target Role: admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Authenticates admin identity. Stores token in adminToken collection variable.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"admin@example.com\",\n  \"password\": \"Password@123\",\n  \"role\": \"admin\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "    const res = pm.response.json();",
+                  "    const token = res.data?.tokens?.accessToken || res.data?.accessToken;",
+                  "    if (token) {",
+                  "        pm.collectionVariables.set('adminToken', token);",
+                  "        pm.environment.set('adminToken', token);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rider Login (Target Role: rider)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"rider@example.com\",\n  \"password\": \"Password@123\",\n  \"role\": \"rider\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Authenticates a Delivery Pilot Rider and captures {{riderToken}} for fleet dispatch operations."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "    const res = pm.response.json();",
+                  "    const token = res.data?.tokens?.accessToken || res.data?.accessToken;",
+                  "    if (token) {",
+                  "        pm.collectionVariables.set('riderToken', token);",
+                  "        pm.environment.set('riderToken', token);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Refresh Token Flow",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh-token",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "refresh-token"
+              ]
+            },
+            "description": "Issues new short-lived access token using long-lived refresh token.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "    const res = pm.response.json();",
+                  "    if (res.data && res.data.accessToken) { pm.collectionVariables.set('customerToken', res.data.accessToken); }",
+                  "pm.environment.set('customerToken', res.data.accessToken);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Logout & Session Invalidation",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Clears refresh token and revokes user authentication session.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "02. Customer Storefront Workflows",
+      "item": [
+        {
+          "name": "02.1 Catalog Discovery & Search",
+          "item": [
+            {
+              "name": "Master Categories Hierarchy",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/catalog/taxonomy/categories",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "catalog",
+                    "taxonomy",
+                    "categories"
+                  ]
+                },
+                "description": "Fetches all top-level categories with icons and subcategory hierarchies.",
+                "auth": {
+                  "type": "noauth"
+                }
+              }
+            },
+            {
+              "name": "Dynamic Category Search & Suggestions",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/catalog/taxonomy/search",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "catalog",
+                    "taxonomy",
+                    "search"
+                  ],
+                  "query": [
+                    {
+                      "key": "q",
+                      "value": "shirt"
+                    }
+                  ]
+                },
+                "description": "Instant hierarchical autocomplete suggestions across categories, subcategories, and product types.",
+                "auth": {
+                  "type": "noauth"
+                }
+              }
+            },
+            {
+              "name": "Faceted Products Search (Filter & Sort)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/catalog/products",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "catalog",
+                    "products"
+                  ],
+                  "query": [
+                    {
+                      "key": "category",
+                      "value": "Fashion & Apparel"
+                    },
+                    {
+                      "key": "minPrice",
+                      "value": "200"
+                    },
+                    {
+                      "key": "maxPrice",
+                      "value": "2000"
+                    },
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "12"
+                    }
+                  ]
+                },
+                "description": "Customer faceted product listing supporting price filters, category slug, brand, and size.",
+                "auth": {
+                  "type": "noauth"
+                }
+              }
+            },
+            {
+              "name": "Featured Products for Homepage",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/catalog/products/featured",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "catalog",
+                    "products",
+                    "featured"
+                  ]
+                },
+                "description": "Returns curated featured promotional products for homepage rails.",
+                "auth": {
+                  "type": "noauth"
+                }
+              }
+            },
+            {
+              "name": "Product Detail by ID or Slug",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/catalog/products/{{productSlug}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "catalog",
+                    "products",
+                    "{{productSlug}}"
+                  ]
+                },
+                "description": "Full PDP payload including variants, specifications, statutory HSN, and store attribution.",
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                      "    const res = pm.response.json();",
+                      "    const pid = res.data?.id || res.data?._id;",
+                      "    if (pid) {",
+                      "        pm.collectionVariables.set('productId', pid);",
+                      "        pm.environment.set('productId', pid);",
+                      "    }",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "02.2 Hyperlocal Store Discovery",
+          "item": [
+            {
+              "name": "Nearby Stores (2dsphere Proximity Sort)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/stores/nearby",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "stores",
+                    "nearby"
+                  ],
+                  "query": [
+                    {
+                      "key": "lat",
+                      "value": "21.1938"
+                    },
+                    {
+                      "key": "lng",
+                      "value": "81.3509"
+                    },
+                    {
+                      "key": "radiusKm",
+                      "value": "4"
+                    }
+                  ]
+                },
+                "description": "Spatial haversine query returning active stores within 3-4 km sorted strictly near-to-far with ETA.",
+                "auth": {
+                  "type": "noauth"
+                }
+              }
+            },
+            {
+              "name": "Store Public Profile by Slug",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/stores/slug/{{storeSlug}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "stores",
+                    "slug",
+                    "{{storeSlug}}"
+                  ]
+                },
+                "description": "Public store landing page with banner, operating hours, delivery radius, and ratings.",
+                "auth": {
+                  "type": "noauth"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                      "    const res = pm.response.json();",
+                      "    const sid = res.data?.id || res.data?._id;",
+                      "    if (sid) {",
+                      "        pm.collectionVariables.set('storeId', sid);",
+                      "        pm.environment.set('storeId', sid);",
+                      "    }",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Store Catalog Products",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/catalog/stores/{{storeId}}/products",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "catalog",
+                    "stores",
+                    "{{storeId}}",
+                    "products"
+                  ]
+                },
+                "description": "Active products scoped strictly to the selected store.",
+                "auth": {
+                  "type": "noauth"
+                }
+              }
+            },
+            {
+              "name": "Submit Store Rating & Review",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/stores/{{storeId}}/rating",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "stores",
+                    "{{storeId}}",
+                    "rating"
+                  ]
+                },
+                "description": "Submits customer star rating (1-5) and feedback review.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{customerToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"rating\": 5,\n  \"review\": \"Excellent hyperlocal delivery and fresh stock packaging!\"\n}"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "02.3 Account, Address Book & Profile",
+          "item": [
+            {
+              "name": "Get Customer Profile",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/me",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "me"
+                  ]
+                },
+                "description": "Fetches current customer personal details, phone, and role.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{customerToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Update Customer Profile",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/profile",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "profile"
+                  ]
+                },
+                "description": "Updates customer display name and contact phone number.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{customerToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"fullName\": \"Ananya Sharma Updated\",\n  \"phone\": \"9876543299\"\n}"
+                }
+              }
+            },
+            {
+              "name": "Get Saved Delivery Addresses",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/addresses",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "addresses"
+                  ]
+                },
+                "description": "Retrieves customer address book. Single source of truth for location modal and checkout.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{customerToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                      "    const res = pm.response.json();",
+                      "    if (Array.isArray(res.data) && res.data.length > 0) {",
+                      "        const aid = res.data[0].id || res.data[0]._id;",
+                      "        if (aid) {",
+                      "            pm.collectionVariables.set('addressId', aid);",
+                      "            pm.environment.set('addressId', aid);",
+                      "        }",
+                      "    }",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Add Delivery Address",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/addresses",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "addresses"
+                  ]
+                },
+                "description": "Adds a verified shipping address with statutory 6-digit Indian pincode.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{customerToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"label\": \"Home\",\n  \"recipientName\": \"Ananya Sharma\",\n  \"phone\": \"9876543299\",\n  \"street\": \"Flat 402, Green Valley Towers, Nehru Nagar\",\n  \"city\": \"Bhilai\",\n  \"state\": \"Chhattisgarh\",\n  \"pincode\": \"490020\",\n  \"landmark\": \"Near Surya Treasure Island Mall\",\n  \"isDefault\": true\n}"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                      "    const res = pm.response.json();",
+                      "    const aid = res.data?.id || res.data?._id;",
+                      "    if (aid) {",
+                      "        pm.collectionVariables.set('addressId', aid);",
+                      "        pm.environment.set('addressId', aid);",
+                      "    }",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Toggle Favorite Store",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/favorite-stores/{{storeId}}/toggle",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "favorite-stores",
+                    "{{storeId}}",
+                    "toggle"
+                  ]
+                },
+                "description": "Bookmarks or unbookmarks a local store into customer saved list.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{customerToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Favorite Stores",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/favorite-stores",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "favorite-stores"
+                  ]
+                },
+                "description": "Retrieves list of all stores bookmarked by the customer.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{customerToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Toggle Wishlist Product",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/wishlist/{{productId}}/toggle",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "wishlist",
+                    "{{productId}}",
+                    "toggle"
+                  ]
+                },
+                "description": "One-tap heart toggle saving or removing product from customer wishlist.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{customerToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Customer Wishlist",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/wishlist",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "wishlist"
+                  ]
+                },
+                "description": "Returns customer saved wishlist items.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{customerToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Submit Customer App Feedback",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/feedback",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "feedback"
+                  ]
+                },
+                "description": "Submits customer feedback and rating.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{customerToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"rating\": 5,\n  \"feedbackType\": \"general\",\n  \"comment\": \"Excellent hyperlocal store experience and ultra-fast delivery!\"\n}"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "02.4 Orders, Checkout & Live Tracking",
+          "item": [
+            {
+              "name": "Place Single-Store Hyperlocal Order",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/orders/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "orders",
+                    ""
+                  ]
+                },
+                "description": "Places single-store order, decrements stock atomically, and generates 4-digit OTP.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{customerToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"storeId\": \"{{storeId}}\",\n  \"items\": [\n    {\n      \"productId\": \"{{productId}}\",\n      \"name\": \"Men Classic Linen Shirt\",\n      \"quantity\": 1,\n      \"unitPrice\": 799,\n      \"storeId\": \"{{storeId}}\"\n    }\n  ],\n  \"shippingAddress\": {\n    \"fullName\": \"Ananya Sharma\",\n    \"phone\": \"9876543299\",\n    \"street\": \"Flat 402, Green Valley Towers, Nehru Nagar\",\n    \"city\": \"Bhilai\",\n    \"state\": \"Chhattisgarh\",\n    \"postalCode\": \"490020\",\n    \"country\": \"IN\"\n  },\n  \"fulfilmentMode\": \"deliver\"\n}"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                      "    const res = pm.response.json();",
+                      "    if (res.data) {",
+                      "        const oid = res.data.id || res.data._id;",
+                      "        if (oid) {",
+                      "            pm.collectionVariables.set('orderId', oid);",
+                      "            pm.environment.set('orderId', oid);",
+                      "        }",
+                      "        if (res.data.orderNumber) {",
+                      "            pm.collectionVariables.set('orderNumber', res.data.orderNumber);",
+                      "            pm.environment.set('orderNumber', res.data.orderNumber);",
+                      "        }",
+                      "        if (res.data.deliveryOtp) {",
+                      "            pm.collectionVariables.set('deliveryOtp', res.data.deliveryOtp);",
+                      "            pm.environment.set('deliveryOtp', res.data.deliveryOtp);",
+                      "        }",
+                      "    }",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Place In-Store Reservation (Hold 2-Hours)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/orders/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "orders",
+                    ""
+                  ]
+                },
+                "description": "Reserves item for in-store pickup with 2-hour holding code `#RES-XXXXX`.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{customerToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"storeId\": \"{{storeId}}\",\n  \"items\": [\n    {\n      \"productId\": \"{{productId}}\",\n      \"name\": \"Men Classic Linen Shirt\",\n      \"quantity\": 1,\n      \"unitPrice\": 799,\n      \"storeId\": \"{{storeId}}\"\n    }\n  ],\n  \"fulfilmentMode\": \"reserve\"\n}"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                      "    const res = pm.response.json();",
+                      "    if (res.data) {",
+                      "        const oid = res.data.id || res.data._id;",
+                      "        if (oid) {",
+                      "            pm.collectionVariables.set('orderId', oid);",
+                      "            pm.environment.set('orderId', oid);",
+                      "        }",
+                      "        if (res.data.orderNumber) {",
+                      "            pm.collectionVariables.set('orderNumber', res.data.orderNumber);",
+                      "            pm.environment.set('orderNumber', res.data.orderNumber);",
+                      "        }",
+                      "        if (res.data.deliveryOtp) {",
+                      "            pm.collectionVariables.set('deliveryOtp', res.data.deliveryOtp);",
+                      "            pm.environment.set('deliveryOtp', res.data.deliveryOtp);",
+                      "        }",
+                      "    }",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Get My Orders History",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/orders/my-orders",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "orders",
+                    "my-orders"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    }
+                  ]
+                },
+                "description": "Fetches paginated order history for current customer.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{customerToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Order Details by ID",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/orders/{{orderId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "orders",
+                    "{{orderId}}"
+                  ]
+                },
+                "description": "Order tracking status, line items, timestamps, and 4-digit OTP.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{customerToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Get Order Tax Invoice Data",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/orders/{{orderId}}/invoice",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "orders",
+                    "{{orderId}}",
+                    "invoice"
+                  ]
+                },
+                "description": "Structured GST Tax Invoice breakdown with CGST, SGST, seller GSTIN, and line totals.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{customerToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Print Order Tax Invoice (A4 / Thermal)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/orders/{{orderId}}/invoice/print",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "orders",
+                    "{{orderId}}",
+                    "invoice",
+                    "print"
+                  ],
+                  "query": [
+                    {
+                      "key": "format",
+                      "value": "a4"
+                    },
+                    {
+                      "key": "autoPrint",
+                      "value": "false"
+                    }
+                  ]
+                },
+                "description": "Headless HTML invoice print engine supporting standard A4 and 80mm thermal formats.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{customerToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Cancel Order (Before Dispatch)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/orders/{{orderId}}/cancel",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "orders",
+                    "{{orderId}}",
+                    "cancel"
+                  ]
+                },
+                "description": "Cancels order in PENDING/CONFIRMED state, releasing catalog stock immediately.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{customerToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"reason\": \"Placed by mistake / Changed delivery address\"\n}"
+                }
+              }
+            },
+            {
+              "name": "Live Rider GPS Tracking Stream",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/delivery/orders/{{orderId}}/track",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "delivery",
+                    "orders",
+                    "{{orderId}}",
+                    "track"
+                  ]
+                },
+                "description": "Polls active rider GPS latitude/longitude, heading, speed, and remaining ETA.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{customerToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "02.5 Coupons & Promotions",
+          "item": [
+            {
+              "name": "Get Active Available Coupons",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/coupons/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "coupons",
+                    ""
+                  ],
+                  "query": [
+                    {
+                      "key": "storeId",
+                      "value": "{{storeId}}"
+                    }
+                  ]
+                },
+                "description": "Lists active platform and store-specific promo coupons.",
+                "auth": {
+                  "type": "noauth"
+                }
+              }
+            },
+            {
+              "name": "Validate Coupon Code at Checkout",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/coupons/validate",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "coupons",
+                    "validate"
+                  ]
+                },
+                "description": "Server-side discount validation verifying min order value and expiration.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{customerToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"code\": \"{{couponCode}}\",\n  \"storeId\": \"{{storeId}}\",\n  \"subtotal\": 799\n}"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "02.6 Customer Returns & Help Desk",
+          "item": [
+            {
+              "name": "Create Order Return Request",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/returns/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "returns",
+                    ""
+                  ]
+                },
+                "description": "Submits customer return and refund request.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{customerToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"orderId\": \"{{orderId}}\",\n  \"items\": [\n    {\n      \"productId\": \"{{productId}}\",\n      \"name\": \"Men Classic Linen Shirt\",\n      \"quantity\": 1,\n      \"price\": 799\n    }\n  ],\n  \"reason\": \"Size too small / Fabric mismatch\",\n  \"returnType\": \"Refund\"\n}"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                      "    const res = pm.response.json();",
+                      "    const rid = res.data?.id || res.data?._id;",
+                      "    if (rid) {",
+                      "        pm.collectionVariables.set('returnId', rid);",
+                      "        pm.environment.set('returnId', rid);",
+                      "    }",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Get Customer's Return Requests",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/returns/my-returns",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "returns",
+                    "my-returns"
+                  ]
+                },
+                "description": "Lists all active and past return/refund requests submitted by customer.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{customerToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Create Support Help Desk Ticket",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/support/tickets",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "support",
+                    "tickets"
+                  ]
+                },
+                "description": "Creates customer helpdesk ticket.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{customerToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"initiatorType\": \"Customer\",\n  \"subject\": \"Delivery Delay Inquiry\",\n  \"category\": \"Delivery\",\n  \"priority\": \"high\",\n  \"orderRef\": \"{{orderNumber}}\",\n  \"initialMessage\": \"My order is taking a bit longer than the estimated 15 minutes.\"\n}"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                      "    const res = pm.response.json();",
+                      "    const tid = res.data?.id || res.data?._id;",
+                      "    if (tid) {",
+                      "        pm.collectionVariables.set('ticketId', tid);",
+                      "        pm.environment.set('ticketId', tid);",
+                      "    }",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Request Instant Customer Callback",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customerToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/support/callback-requests",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "support",
+                    "callback-requests"
+                  ]
+                },
+                "description": "Submits phone number for priority customer care callback.",
+                "auth": {
+                  "type": "noauth"
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"phone\": \"9876543299\",\n  \"reason\": \"Urgent order modification assistance\"\n}"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03. Merchant Operational Hubs",
+      "item": [
+        {
+          "name": "03.1 Store Onboarding & Settings",
+          "item": [
+            {
+              "name": "Verify GSTIN / PAN Online",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{merchantToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/stores/onboarding/verify-gstin",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "stores",
+                    "onboarding",
+                    "verify-gstin"
+                  ]
+                },
+                "description": "Validates 15-character Indian GSTIN and auto-resolves trade name and state.",
+                "auth": {
+                  "type": "noauth"
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"gstin\": \"22AAAAA0000A1Z5\"\n}"
+                }
+              }
+            },
+            {
+              "name": "Submit 6-Step Merchant Onboarding",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{merchantToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/stores/onboarding/submit",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "stores",
+                    "onboarding",
+                    "submit"
+                  ]
+                },
+                "description": "Submits full merchant onboarding application for platform review.",
+                "auth": {
+                  "type": "noauth"
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"storeName\": \"City Fashion Boutique\",\n  \"ownerName\": \"Rahul Verma\",\n  \"phone\": \"9876543210\",\n  \"email\": \"rahul.merchant@example.com\",\n  \"password\": \"Password@123\",\n  \"category\": \"Fashion & Apparel\",\n  \"location\": {\n    \"type\": \"Point\",\n    \"coordinates\": [\n      81.3509,\n      21.1938\n    ],\n    \"addressText\": \"Shop 12, Civic Centre, Bhilai, CG\",\n    \"city\": \"Bhilai\",\n    \"state\": \"Chhattisgarh\",\n    \"pincode\": \"490006\"\n  },\n  \"deliveryRadiusKm\": 4,\n  \"gstin\": \"22AAAAA0000A1Z5\",\n  \"bankDetails\": {\n    \"accountNumber\": \"50100432198765\",\n    \"ifscCode\": \"HDFC0000123\",\n    \"accountHolderName\": \"City Fashion Boutique\"\n  }\n}"
+                }
+              }
+            },
+            {
+              "name": "Get Store Operational Settings",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{merchantToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/stores/{{storeId}}/settings",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "stores",
+                    "{{storeId}}",
+                    "settings"
+                  ]
+                },
+                "description": "Fetches operating hours, banner imagery, delivery radius, and WhatsApp alert numbers.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{merchantToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Update Store Settings & Profile",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{merchantToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/stores/{{storeId}}/settings",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "stores",
+                    "{{storeId}}",
+                    "settings"
+                  ]
+                },
+                "description": "Updates store configuration in MongoDB.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{merchantToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"deliveryRadiusKm\": 4.5,\n  \"notificationPhone\": \"9876543210\",\n  \"operatingHours\": {\n    \"monday\": {\n      \"open\": \"09:00\",\n      \"close\": \"21:30\",\n      \"closed\": false\n    },\n    \"sunday\": {\n      \"open\": \"10:00\",\n      \"close\": \"22:00\",\n      \"closed\": false\n    }\n  }\n}"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "03.2 Catalog & Live Stock Management",
+          "item": [
+            {
+              "name": "Statutory HSN & GST Lookup",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{merchantToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/catalog/taxonomy/hsn-lookup",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "catalog",
+                    "taxonomy",
+                    "hsn-lookup"
+                  ],
+                  "query": [
+                    {
+                      "key": "category",
+                      "value": "Fashion & Apparel"
+                    },
+                    {
+                      "key": "productType",
+                      "value": "Shirts"
+                    }
+                  ]
+                },
+                "description": "Resolves official 4-digit HSN code and applicable GST tax slab.",
+                "auth": {
+                  "type": "noauth"
+                }
+              }
+            },
+            {
+              "name": "Create Product (Wizard Step 3)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{merchantToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/catalog/products",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "catalog",
+                    "products"
+                  ]
+                },
+                "description": "Adds product with stock, HSN statutory rate, and shelf location.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{merchantToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Pure Cotton Casual Shirt\",\n  \"category\": \"Fashion & Apparel\",\n  \"subcategory\": \"Men's Wear\",\n  \"productType\": \"Shirts\",\n  \"basePrice\": 899,\n  \"salePrice\": 749,\n  \"stock\": 25,\n  \"lowStockThreshold\": 5,\n  \"hsnCode\": \"6205\",\n  \"gstRate\": 5,\n  \"shelfLocation\": \"Aisle 3 - Rack B\",\n  \"images\": [\n    \"https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=600\"\n  ]\n}"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                      "    const res = pm.response.json();",
+                      "    if (res.data && res.data.id) { pm.collectionVariables.set('productId', res.data.id); }",
+                      "pm.environment.set('productId', res.data.id);",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Update Product Stock & Price",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{merchantToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/catalog/products/{{productId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "catalog",
+                    "products",
+                    "{{productId}}"
+                  ]
+                },
+                "description": "Updates product pricing and inventory stock count.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{merchantToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"stock\": 35,\n  \"salePrice\": 699,\n  \"shelfLocation\": \"Aisle 2 - Rack A\"\n}"
+                }
+              }
+            },
+            {
+              "name": "Bulk Delete Products",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{merchantToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/catalog/products/bulk-delete",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "catalog",
+                    "products",
+                    "bulk-delete"
+                  ]
+                },
+                "description": "Soft-deletes batch of products from active catalog.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{merchantToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"productIds\": [\n    \"{{productId}}\"\n  ]\n}"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "03.3 Order Processing & Fleet Dispatch",
+          "item": [
+            {
+              "name": "Get Store Active Orders",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{merchantToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/orders/store/{{storeId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "orders",
+                    "store",
+                    "{{storeId}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "1"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "20"
+                    }
+                  ]
+                },
+                "description": "Fetches live order queue for merchant dashboard.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{merchantToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Update Order Status (Accept / Pack / Ship)",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{merchantToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/orders/{{orderId}}/status",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "orders",
+                    "{{orderId}}",
+                    "status"
+                  ]
+                },
+                "description": "Transitions order state machine (PENDING -> CONFIRMED -> PACKED).",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{merchantToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"CONFIRMED\"\n}"
+                }
+              }
+            },
+            {
+              "name": "Broadcast Delivery Job to Rider Pool",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{merchantToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/delivery/orders/{{orderId}}/broadcast",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "delivery",
+                    "orders",
+                    "{{orderId}}",
+                    "broadcast"
+                  ]
+                },
+                "description": "Publishes delivery run to shared pilot rider pool with payout calculation.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{merchantToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Assign Specific Pilot Rider",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{merchantToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/delivery/orders/{{orderId}}/assign",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "delivery",
+                    "orders",
+                    "{{orderId}}",
+                    "assign"
+                  ]
+                },
+                "description": "Assigns designated delivery partner and dispatches WhatsApp navigation link.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{merchantToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"riderId\": \"rider-01\",\n  \"riderName\": \"Suresh Kumar\",\n  \"riderPhone\": \"9876543210\"\n}"
+                }
+              }
+            },
+            {
+              "name": "Fulfill In-Store Order Reservation",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{merchantToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/orders/{{orderId}}/claim-reservation",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "orders",
+                    "{{orderId}}",
+                    "claim-reservation"
+                  ]
+                },
+                "description": "Marks reserved order as claimed and handed over to counter customer.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{merchantToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "03.4 Counter POS, Invoicing & Khata CRM",
+          "item": [
+            {
+              "name": "Record Counter POS Walk-In Sale",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{merchantToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/billing/pos/sale",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "billing",
+                    "pos",
+                    "sale"
+                  ]
+                },
+                "description": "Processes counter retail sale, decrements catalog inventory, and prints thermal slip.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{merchantToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"customerName\": \"Counter Walk-in\",\n  \"customerPhone\": \"9876543211\",\n  \"paymentMethod\": \"CASH\",\n  \"items\": [\n    {\n      \"productId\": \"{{productId}}\",\n      \"name\": \"Pure Cotton Casual Shirt\",\n      \"quantity\": 1,\n      \"rate\": 749,\n      \"gstRate\": 5\n    }\n  ]\n}"
+                }
+              }
+            },
+            {
+              "name": "Generate Tax Invoice",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{merchantToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/billing/invoices",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "billing",
+                    "invoices"
+                  ]
+                },
+                "description": "Creates formal GST tax invoice with statutory sequence numbering.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{merchantToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"customerName\": \"Mohan Lal\",\n  \"customerPhone\": \"9876543212\",\n  \"billingAddress\": \"Sector 6, Bhilai\",\n  \"invoiceType\": \"Tax Invoice\",\n  \"paymentStatus\": \"Paid\",\n  \"paymentMethod\": \"UPI\",\n  \"items\": [\n    {\n      \"name\": \"Pure Cotton Casual Shirt\",\n      \"quantity\": 2,\n      \"rate\": 749,\n      \"taxRate\": 5,\n      \"amount\": 1498\n    }\n  ],\n  \"totalTax\": 74.9,\n  \"grandTotal\": 1572.9\n}"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                      "    const res = pm.response.json();",
+                      "    const iid = res.data?.id || res.data?._id;",
+                      "    if (iid) {",
+                      "        pm.collectionVariables.set('invoiceId', iid);",
+                      "        pm.environment.set('invoiceId', iid);",
+                      "    }",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Print POS Invoice (Thermal / A4)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{merchantToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/billing/invoices/{{invoiceId}}/print",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "billing",
+                    "invoices",
+                    "{{invoiceId}}",
+                    "print"
+                  ],
+                  "query": [
+                    {
+                      "key": "format",
+                      "value": "thermal"
+                    }
+                  ]
+                },
+                "description": "Fetches headless print-ready HTML for thermal receipt printers.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{merchantToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Add Khata Customer",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{merchantToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/customers/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "customers",
+                    ""
+                  ]
+                },
+                "description": "Enrolls customer into store Khata ledger CRM.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{merchantToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Vikram Malhotra\",\n  \"phone\": \"9876543213\",\n  \"email\": \"vikram@example.com\",\n  \"address\": \"Civic Centre, Bhilai\",\n  \"openingBalance\": 1200\n}"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                      "    const res = pm.response.json();",
+                      "    const cid = res.data?.id || res.data?._id;",
+                      "    if (cid) {",
+                      "        pm.collectionVariables.set('customerId', cid);",
+                      "        pm.environment.set('customerId', cid);",
+                      "    }",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Record Khata Credit / Debit Adjustment",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{merchantToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/customers/{{customerId}}/credit",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "customers",
+                    "{{customerId}}",
+                    "credit"
+                  ]
+                },
+                "description": "Adjusts customer Khata credit balance and logs transaction history.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{merchantToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"amount\": 500,\n  \"type\": \"DEBIT\",\n  \"note\": \"Purchased items on credit\"\n}"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "03.5 Procurement, Settlements & Analytics",
+          "item": [
+            {
+              "name": "Create Vendor & Purchase Order",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{merchantToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/expenses/purchases",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "expenses",
+                    "purchases"
+                  ]
+                },
+                "description": "Records procurement expense and increments inventory stock on receipt.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{merchantToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"vendorName\": \"Surat Textiles Wholesale\",\n  \"invoiceNumber\": \"PUR-2026-901\",\n  \"purchaseDate\": \"2026-10-30\",\n  \"items\": [\n    {\n      \"itemName\": \"Linen Fabrics Roll 50m\",\n      \"quantity\": 10,\n      \"rate\": 1200,\n      \"amount\": 12000\n    }\n  ],\n  \"grandTotal\": 12000,\n  \"paymentStatus\": \"Pending\"\n}"
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                      "    const res = pm.response.json();",
+                      "    const pid = res.data?.id || res.data?._id;",
+                      "    if (pid) {",
+                      "        pm.collectionVariables.set('purchaseId', pid);",
+                      "        pm.environment.set('purchaseId', pid);",
+                      "    }",
+                      "}"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Get Merchant Settlements Overview",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{merchantToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/settlements/overview",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "settlements",
+                    "overview"
+                  ]
+                },
+                "description": "Returns net balance, commission fee breakdown, and next payout schedule.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{merchantToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Request Instant Payout",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{merchantToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/settlements/request",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "settlements",
+                    "request"
+                  ]
+                },
+                "description": "Submits request for automated bank settlement transfer.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{merchantToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"amount\": 5000,\n  \"remarks\": \"Weekly working capital withdrawal\"\n}"
+                }
+              }
+            },
+            {
+              "name": "Get Business Analytics Overview",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{merchantToken}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/analytics/overview",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "analytics",
+                    "overview"
+                  ]
+                },
+                "description": "Calculates gross sales, total orders, average order value, and profit margins.",
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{merchantToken}}",
+                      "type": "string"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "04. Rider Portal & Delivery Fleet",
+      "item": [
+        {
+          "name": "Get Available Open Delivery Jobs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{riderToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/delivery/jobs/available",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "delivery",
+                "jobs",
+                "available"
+              ]
+            },
+            "description": "Returns unassigned delivery runs available in the open pool.",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Claim Delivery Run (Atomic Mutex)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{riderToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/delivery/orders/{{orderId}}/claim",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "delivery",
+                "orders",
+                "{{orderId}}",
+                "claim"
+              ]
+            },
+            "description": "Atomically claims delivery job, preventing double-assignment.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"riderId\": \"pilot-rider-01\",\n  \"riderName\": \"Suresh Kumar\",\n  \"riderPhone\": \"9876543210\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Rider Run Navigation Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{riderToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/delivery/orders/{{orderId}}/run-details",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "delivery",
+                "orders",
+                "{{orderId}}",
+                "run-details"
+              ]
+            },
+            "description": "Provides pickup store and customer drop-off navigation coordinates.",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Push Rider Live GPS Location",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{riderToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/delivery/orders/{{orderId}}/location",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "delivery",
+                "orders",
+                "{{orderId}}",
+                "location"
+              ]
+            },
+            "description": "Streams rider coordinates to WebSocket and live tracking clients.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"latitude\": 21.1945,\n  \"longitude\": 81.3512,\n  \"heading\": 90,\n  \"speed\": 25.5,\n  \"accuracy\": 5\n}"
+            }
+          }
+        },
+        {
+          "name": "Verify 4-Digit Handshake OTP (Complete)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{riderToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/delivery/orders/{{orderId}}/verify-otp",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "delivery",
+                "orders",
+                "{{orderId}}",
+                "verify-otp"
+              ]
+            },
+            "description": "Verifies customer physical 4-digit OTP, transitioning order status to DELIVERED.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"otp\": \"{{deliveryOtp}}\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "05. Notifications & Media Hub",
+      "item": [
+        {
+          "name": "Get Unread Notifications Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{customerToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/unread-summary",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notifications",
+                "unread-summary"
+              ]
+            },
+            "description": "Returns unread count for real-time header bell badges.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Notifications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{customerToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notifications",
+                ""
+              ]
+            },
+            "description": "Retrieves customer or merchant notification stream.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Mark All Notifications as Read",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{customerToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/read-all",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "notifications",
+                "read-all"
+              ]
+            },
+            "description": "Clears unread counter across customer devices.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

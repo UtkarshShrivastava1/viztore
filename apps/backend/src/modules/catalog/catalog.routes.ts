@@ -6,8 +6,17 @@ import { idempotencyMiddleware } from '../../shared/middlewares/idempotency.midd
 import { UserRole } from '@repo/shared-types';
 import { createProductSchema, updateProductSchema, productQuerySchema } from './catalog.validation.js';
 import * as catalogController from './catalog.controller.js';
+import { taxonomyController } from './taxonomy.controller.js';
 
 export const catalogRouter = Router();
+
+// ── Master Taxonomy & HSN Routes (Public / Wizard) ──────────────────────
+catalogRouter.get('/taxonomy/categories', (req, res) => taxonomyController.getCategories(req, res));
+catalogRouter.get('/taxonomy/subcategories', (req, res) => taxonomyController.getSubcategories(req, res));
+catalogRouter.get('/taxonomy/product-types', (req, res) => taxonomyController.getProductTypes(req, res));
+catalogRouter.get('/taxonomy/attributes', (req, res) => taxonomyController.getAttributes(req, res));
+catalogRouter.get('/taxonomy/hsn-lookup', (req, res) => taxonomyController.lookupHSN(req, res));
+catalogRouter.get('/taxonomy/search', (req, res) => taxonomyController.search(req, res));
 
 // ── Public Routes (No Auth Required) ───────────────────────────────────
 
@@ -55,6 +64,15 @@ catalogRouter.patch(
   roleGuard(UserRole.MERCHANT, UserRole.ADMIN),
   validateRequest({ body: updateProductSchema }),
   catalogController.updateProduct,
+);
+
+
+// Bulk delete products
+catalogRouter.post(
+  '/products/bulk-delete',
+  authGuard,
+  roleGuard(UserRole.MERCHANT, UserRole.ADMIN),
+  catalogController.bulkDeleteProducts,
 );
 
 // Soft-delete a product

@@ -4,10 +4,11 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { fetchProductBySlug } from '@/lib/api/catalog';
+import { fetchProductBySlug, fetchProducts } from '@/lib/api/catalog';
 import { useCartStore } from '@/stores/cart.store';
+import { useWishlistFlyoutStore } from '@/stores/wishlistFlyoutStore';
 import { 
-  ShoppingBag, Share2, ChevronRight, 
+  ShoppingBag, Share2, ChevronRight, Heart, 
   Check, Minus, Plus, Package, 
   ChevronDown, ChevronUp, Zap
 } from 'lucide-react';
@@ -33,6 +34,61 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
   });
 
   const [selectedVariantIdx] = useState(0);
+  const isWishlisted = useWishlistFlyoutStore((state) =>
+    product ? state.items.some((i) => i.id === product._id || i.productId === product._id) : false
+  );
+  const toggleWishlistStore = useWishlistFlyoutStore((state) => state.toggleItem);
+  const [isCopied, setIsCopied] = useState(false);
+
+  const handleToggleWishlist = () => {
+    if (!product || !selectedVariant) return;
+    toggleWishlistStore({
+      id: product._id,
+      productId: product._id,
+      title: product.name,
+      storeId,
+      storeName,
+      price: selectedVariant.price,
+      originalPrice: selectedVariant.mrp,
+      imageUrl: allImages[0] || '',
+      slug: product.slug,
+    });
+  };
+
+  const handleShare = async () => {
+    const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
+    const shareData = {
+      title: product?.name || 'Product',
+      text: `Check out ${product?.name}!`,
+      url: shareUrl,
+    };
+
+    if (navigator.share && typeof navigator.canShare === 'function' && navigator.canShare(shareData)) {
+      try {
+        await navigator.share(shareData);
+        return;
+      } catch (err: unknown) {
+        if (err && typeof err === 'object' && 'name' in err && err.name === 'AbortError') return;
+      }
+    }
+
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(shareUrl);
+      } else {
+        const textArea = document.createElement('textarea');
+        textArea.value = shareUrl;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2500);
+    } catch (err) {
+      console.warn('Failed to copy to clipboard', err);
+    }
+  };
   const [selectedImageIdx, setSelectedImageIdx] = useState(0);
   const [qty, setQty] = useState(1);
   const [isAdded, setIsAdded] = useState(false);
@@ -90,6 +146,37 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
     : String(rawStoreId || 'store-main');
   const storeName = product.storeName || (typeof rawStoreId === 'object' && (rawStoreId as { name?: string })?.name) || 'Official Store';
 
+  // Fetch store products for "More Products from this Store"
+  const { data: storeProducts = [] } = useQuery({
+    queryKey: ['store-products-recommendations', storeId, product?._id],
+    queryFn: async () => {
+      if (!storeId || storeId === 'store-main') return [];
+      try {
+        const res = await fetchProducts({ storeId, limit: 8 });
+        return (res.products || []).filter((p: any) => p._id !== product?._id);
+      } catch {
+        return [];
+      }
+    },
+    enabled: !!storeId && !!product?._id,
+  });
+
+  // Fetch category products for "You May Also Like"
+  const categoryParam = typeof product?.category === 'string' ? product.category : (product?.category as any)?.name;
+  const { data: categoryProducts = [] } = useQuery({
+    queryKey: ['category-products-recommendations', categoryParam, product?._id],
+    queryFn: async () => {
+      if (!categoryParam) return [];
+      try {
+        const res = await fetchProducts({ category: categoryParam, limit: 8 });
+        return (res.products || []).filter((p: any) => p._id !== product?._id);
+      } catch {
+        return [];
+      }
+    },
+    enabled: !!categoryParam && !!product?._id,
+  });
+
   const handleAddToCart = () => {
     if (!product || !selectedVariant) return;
     const success = addItem({
@@ -135,6 +222,10 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
             images={allImages}
             selectedImageIdx={selectedImageIdx}
             setSelectedImageIdx={setSelectedImageIdx}
+            isWishlisted={isWishlisted}
+            onToggleWishlist={handleToggleWishlist}
+            onShare={handleShare}
+            isCopied={isCopied}
           />
 
           {/* ── PRODUCT DETAILS & SELECTION ── */}
@@ -151,14 +242,41 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
               <span className="text-[#192168] line-clamp-1 truncate">{product.name}</span>
             </div>
 
-            {/* Brand & Share */}
+            {/* Brand, Wishlist & Share Action Bar */}
             <div className="flex items-center justify-between">
               <h2 className="text-sm font-extrabold text-surface-500 uppercase tracking-wider">
                 {product.brand || product.storeName || 'Official Store'}
               </h2>
-              <button className="hidden md:flex text-surface-400 hover:text-[#192168] transition-colors">
-                <Share2 className="w-4 h-4" strokeWidth={2.5} />
-              </button>
+              <div className="flex items-center gap-2">
+                {/* Wishlist Heart Button */}
+                <button
+                  type="button"
+                  onClick={handleToggleWishlist}
+                  title={isWishlisted ? 'Remove from wishlist' : 'Save to wishlist'}
+                  className={`p-2 rounded-full border transition-all ${
+                    isWishlisted
+                      ? 'bg-rose-50 border-rose-200 text-rose-500 scale-105 shadow-xs'
+                      : 'border-surface-200 text-surface-400 hover:text-rose-500 hover:border-rose-200 hover:bg-rose-50/50'
+                  }`}
+                >
+                  <Heart className={`w-4 h-4 transition-transform active:scale-125 ${isWishlisted ? 'fill-rose-500 text-rose-500' : ''}`} />
+                </button>
+
+                {/* Share Button with Fallback Clipboard */}
+                <button
+                  type="button"
+                  onClick={handleShare}
+                  title="Share product link"
+                  className="p-2 rounded-full border border-surface-200 text-surface-400 hover:text-[#1668F6] hover:border-blue-200 hover:bg-blue-50/50 transition-all relative"
+                >
+                  <Share2 className="w-4 h-4" strokeWidth={2.5} />
+                  {isCopied && (
+                    <span className="absolute -top-8 right-0 bg-slate-900 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-lg whitespace-nowrap animate-in fade-in">
+                      Link copied!
+                    </span>
+                  )}
+                </button>
+              </div>
             </div>
 
             {/* Title */}
@@ -316,7 +434,7 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
                  <div className="flex flex-col border-t border-surface-100">
                    <div className="flex items-center py-2.5 border-b border-surface-100">
                      <div className="w-1/3 text-[13px] font-medium text-surface-500">Brand</div>
-                     <div className="w-2/3 text-[13px] font-medium text-[#192168]">U.S. Polo Assn.</div>
+                     <div className="w-2/3 text-[13px] font-medium text-[#192168]">{product.brand || product.storeName || 'Official Store'}</div>
                    </div>
                    <div className="flex items-center py-2.5 border-b border-surface-100">
                      <div className="w-1/3 text-[13px] font-medium text-surface-500">Fabric</div>
@@ -379,8 +497,16 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
 
         {/* ── RELATED PRODUCTS ── */}
         <div className="mt-8 space-y-8 px-4 md:px-0">
-          <CrossSellRails title="More Products For You" products={[product, product]} />
-          <CrossSellRails title="You May Also Like" products={[product, product]} />
+          <CrossSellRails 
+            title="More Products from this Store" 
+            products={storeProducts} 
+            viewAllHref={storeId && storeId !== 'store-main' ? `/stores/${storeId}` : '/products'}
+          />
+          <CrossSellRails 
+            title="You May Also Like" 
+            products={categoryProducts} 
+            viewAllHref={categoryParam ? `/category/${categoryParam}` : '/products'}
+          />
         </div>
       </main>
 

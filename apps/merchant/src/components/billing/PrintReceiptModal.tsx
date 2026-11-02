@@ -16,6 +16,12 @@ import { IInvoice } from '../../stores/billingStore.js';
 import { branding } from '@repo/shared-types';
 import { useAuthStore } from '../../stores/authStore.js';
 import { numberToIndianWords } from '../../lib/numberToWords.js';
+import {
+  downloadDocumentPdf,
+  printFormattedDocument,
+  printHtmlDocument,
+  invoiceToVoucherDoc,
+} from '../../lib/pdfEngine.js';
 
 interface PrintReceiptModalProps {
   isOpen: boolean;
@@ -63,81 +69,52 @@ export const PrintReceiptModal: React.FC<PrintReceiptModalProps> = ({
     : 'Civic Centre Market, Bhilai, Chhattisgarh 490006';
 
   const handlePrint = () => {
-    // Inject page size dynamically before print
-    const styleId = 'dynamic-print-paper-size';
-    let styleTag = document.getElementById(styleId) as HTMLStyleElement | null;
-    if (!styleTag) {
-      styleTag = document.createElement('style');
-      styleTag.id = styleId;
-      document.head.appendChild(styleTag);
+    if (printFormat === 'a4-tax-invoice') {
+      const docData = invoiceToVoucherDoc(invoice);
+      printFormattedDocument(docData);
+      return;
     }
 
-    if (printFormat === 'thermal-80mm') {
-      styleTag.innerHTML = `
-        @media print {
-          @page { size: 80mm auto; margin: 0; }
-          html, body { margin: 0 !important; padding: 0 !important; background: white !important; }
-          body * { visibility: hidden !important; }
-          #printable-thermal-slip, #printable-thermal-slip * { visibility: visible !important; }
-          #printable-thermal-slip {
-            position: absolute !important;
-            left: 0 !important;
-            top: 0 !important;
-            width: 76mm !important;
-            margin: 0 !important;
-            padding: 3mm 2mm !important;
-            background: white !important;
-            color: black !important;
-            box-shadow: none !important;
-            border: none !important;
-          }
-        }
-      `;
-    } else if (printFormat === 'thermal-58mm') {
-      styleTag.innerHTML = `
-        @media print {
-          @page { size: 58mm auto; margin: 0; }
-          html, body { margin: 0 !important; padding: 0 !important; background: white !important; }
-          body * { visibility: hidden !important; }
-          #printable-thermal-slip, #printable-thermal-slip * { visibility: visible !important; }
-          #printable-thermal-slip {
-            position: absolute !important;
-            left: 0 !important;
-            top: 0 !important;
-            width: 54mm !important;
-            margin: 0 !important;
-            padding: 2mm 1mm !important;
-            background: white !important;
-            color: black !important;
-            box-shadow: none !important;
-            border: none !important;
-          }
-        }
-      `;
-    } else {
-      styleTag.innerHTML = `
-        @media print {
-          @page { size: A4 portrait; margin: 8mm; }
-          html, body { margin: 0 !important; padding: 0 !important; background: white !important; }
-          body * { visibility: hidden !important; }
-          #printable-a4-invoice, #printable-a4-invoice * { visibility: visible !important; }
-          #printable-a4-invoice {
-            position: absolute !important;
-            left: 0 !important;
-            top: 0 !important;
-            width: 100% !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            background: white !important;
-            color: black !important;
-            box-shadow: none !important;
-            border: none !important;
-          }
-        }
-      `;
+    const slipEl = document.getElementById('printable-thermal-slip');
+    if (slipEl) {
+      const widthMm = printFormat === 'thermal-80mm' ? '76mm' : '54mm';
+      const pageMm = printFormat === 'thermal-80mm' ? '80mm' : '58mm';
+      const thermalHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Receipt - ${invoice.invoiceNo}</title>
+  <style>
+    @page { size: ${pageMm} auto; margin: 2mm; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      width: ${widthMm};
+      margin: 0 auto;
+      padding: 4px;
+      color: #000000;
+      background: #ffffff !important;
+      font-size: 11px;
+      line-height: 1.35;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 3px 1px; }
+  </style>
+</head>
+<body>
+  ${slipEl.innerHTML}
+</body>
+</html>`;
+      printHtmlDocument(thermalHtml);
+      return;
     }
 
     window.print();
+  };
+
+  const handleDownloadPdf = () => {
+    const docData = invoiceToVoucherDoc(invoice);
+    downloadDocumentPdf(docData);
   };
 
   const handleCopyLink = () => {
@@ -206,6 +183,16 @@ export const PrintReceiptModal: React.FC<PrintReceiptModalProps> = ({
                 A4 Tax Invoice
               </button>
             </div>
+
+            {/* Download PDF CTA */}
+            <button
+              type="button"
+              onClick={handleDownloadPdf}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-bold transition-all shadow-2xs active:scale-95"
+            >
+              <Download className="w-3.5 h-3.5 text-blue-600" />
+              <span>Download PDF</span>
+            </button>
 
             {/* Print CTA */}
             <button

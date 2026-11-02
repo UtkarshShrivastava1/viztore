@@ -10,7 +10,7 @@ import {
   Check,
   Send,
 } from "lucide-react";
-import { branding } from "@repo/shared-types/branding.config";
+import { branding } from "@/config/company";
 
 interface JobPosition {
   id: string;

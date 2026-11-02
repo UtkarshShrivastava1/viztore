@@ -58,9 +58,28 @@ export const NewReturnView: React.FC<NewReturnViewProps> = ({
   }, [merchantOrders]);
 
   const [orderSearchQuery, setOrderSearchQuery] = useState('');
-  const [selectedOrder, setSelectedOrder] = useState<OrderLookupOption>(
-    availableOrders[0] || initialAvailableOrders[0]!
-  );
+  const [selectedOrder, setSelectedOrder] = useState<OrderLookupOption | null>(null);
+
+  const activeOrder = useMemo<OrderLookupOption>(() => {
+    return selectedOrder || availableOrders[0] || initialAvailableOrders[0] || {
+      orderNumber: '#ORD-10045',
+      customerName: 'Direct Customer',
+      customerEmail: 'customer@localstore.com',
+      customerPhone: '+91 98765 43210',
+      customerAddress: 'Direct In-store Retail',
+      orderDate: 'Today',
+      amount: 1499,
+      paymentMethod: 'UPI / Cash',
+      product: {
+        name: 'Retail Store Product',
+        variant: 'Standard',
+        sku: 'SKU-RET-01',
+        price: 1499,
+        quantity: 1,
+        imageUrl: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=120&auto=format&fit=crop&q=80',
+      },
+    };
+  }, [selectedOrder, availableOrders]);
 
   const [returnQty, setReturnQty] = useState<number>(1);
   const [reason, setReason] = useState<string>('Size issue');
@@ -84,7 +103,7 @@ export const NewReturnView: React.FC<NewReturnViewProps> = ({
     );
   });
 
-  const itemTotal = selectedOrder.product.price * returnQty;
+  const itemTotal = activeOrder.product.price * returnQty;
   const shippingCharges = 0;
   const discount = 0;
   const totalRefund = itemTotal + shippingCharges - discount;
@@ -98,21 +117,21 @@ export const NewReturnView: React.FC<NewReturnViewProps> = ({
     e.preventDefault();
 
     addReturn({
-      orderNumber: selectedOrder.orderNumber,
+      orderNumber: activeOrder.orderNumber,
       customer: {
-        name: selectedOrder.customerName,
-        email: selectedOrder.customerEmail,
-        phone: selectedOrder.customerPhone,
-        address: selectedOrder.customerAddress,
+        name: activeOrder.customerName,
+        email: activeOrder.customerEmail,
+        phone: activeOrder.customerPhone,
+        address: activeOrder.customerAddress,
       },
       product: {
-        name: selectedOrder.product.name,
-        variant: selectedOrder.product.variant,
-        sku: selectedOrder.product.sku,
-        price: selectedOrder.product.price,
-        quantity: selectedOrder.product.quantity,
+        name: activeOrder.product.name,
+        variant: activeOrder.product.variant,
+        sku: activeOrder.product.sku,
+        price: activeOrder.product.price,
+        quantity: activeOrder.product.quantity,
         returnQuantity: returnQty,
-        imageUrl: selectedOrder.product.imageUrl,
+        imageUrl: activeOrder.product.imageUrl,
       },
       returnType,
       reason,
@@ -122,7 +141,7 @@ export const NewReturnView: React.FC<NewReturnViewProps> = ({
       refundAmount: totalRefund,
       pickupDate,
       pickupTime,
-      pickupAddress: selectedOrder.customerAddress,
+      pickupAddress: activeOrder.customerAddress,
       comments: comments.trim() ? comments : undefined,
       internalNote: internalNote.trim() ? internalNote : undefined,
       notifyCustomer,
@@ -211,7 +230,7 @@ export const NewReturnView: React.FC<NewReturnViewProps> = ({
 
               <div className="divide-y divide-slate-100 border border-slate-100 rounded-xl overflow-hidden">
                 {filteredOrders.map((ord) => {
-                  const isSelected = selectedOrder.orderNumber === ord.orderNumber;
+                  const isSelected = activeOrder.orderNumber === ord.orderNumber;
                   return (
                     <label
                       key={ord.orderNumber}
@@ -286,7 +305,7 @@ export const NewReturnView: React.FC<NewReturnViewProps> = ({
                   Order ID
                 </span>
                 <p className="font-bold text-slate-900 mt-1">
-                  {selectedOrder.orderNumber}
+                  {activeOrder.orderNumber}
                 </p>
               </div>
 
@@ -296,7 +315,7 @@ export const NewReturnView: React.FC<NewReturnViewProps> = ({
                   Order Date
                 </span>
                 <p className="font-semibold text-slate-800 mt-1 truncate">
-                  {selectedOrder.orderDate}
+                  {activeOrder.orderDate}
                 </p>
               </div>
 
@@ -306,7 +325,7 @@ export const NewReturnView: React.FC<NewReturnViewProps> = ({
                   Customer
                 </span>
                 <p className="font-semibold text-slate-800 mt-1 truncate">
-                  {selectedOrder.customerName}
+                  {activeOrder.customerName}
                 </p>
               </div>
 
@@ -316,7 +335,7 @@ export const NewReturnView: React.FC<NewReturnViewProps> = ({
                   Payment Method
                 </span>
                 <p className="font-semibold text-slate-800 mt-1">
-                  {selectedOrder.paymentMethod}
+                  {activeOrder.paymentMethod}
                 </p>
               </div>
 
@@ -326,7 +345,7 @@ export const NewReturnView: React.FC<NewReturnViewProps> = ({
                   Order Amount
                 </span>
                 <p className="font-bold text-slate-900 mt-1">
-                  ₹ {selectedOrder.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                  ₹ {activeOrder.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                 </p>
               </div>
             </div>
@@ -348,28 +367,28 @@ export const NewReturnView: React.FC<NewReturnViewProps> = ({
                     <td className="py-3 px-3">
                       <div className="flex items-center gap-2.5">
                         <img
-                          src={selectedOrder.product.imageUrl}
-                          alt={selectedOrder.product.name}
+                          src={activeOrder.product.imageUrl}
+                          alt={activeOrder.product.name}
                           className="w-10 h-10 rounded-lg object-cover border border-slate-200 shrink-0 bg-slate-100"
                         />
                         <div>
                           <p className="font-bold text-slate-900">
-                            {selectedOrder.product.name}
+                            {activeOrder.product.name}
                           </p>
                           <p className="text-[11px] text-slate-400">
-                            SKU: {selectedOrder.product.sku}
+                            SKU: {activeOrder.product.sku}
                           </p>
                         </div>
                       </div>
                     </td>
                     <td className="py-3 px-3 text-slate-700 font-medium">
-                      {selectedOrder.product.variant}
+                      {activeOrder.product.variant}
                     </td>
                     <td className="py-3 px-3 font-bold text-slate-900 whitespace-nowrap">
-                      ₹ {selectedOrder.product.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                      ₹ {activeOrder.product.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </td>
                     <td className="py-3 px-3 text-center font-semibold text-slate-800">
-                      {selectedOrder.product.quantity}
+                      {activeOrder.product.quantity}
                     </td>
                     <td className="py-3 px-3">
                       <div className="flex flex-col items-center">
@@ -389,17 +408,17 @@ export const NewReturnView: React.FC<NewReturnViewProps> = ({
                             type="button"
                             onClick={() =>
                               setReturnQty(
-                                Math.min(selectedOrder.product.quantity, returnQty + 1)
+                                Math.min(activeOrder.product.quantity, returnQty + 1)
                               )
                             }
-                            disabled={returnQty >= selectedOrder.product.quantity}
+                            disabled={returnQty >= activeOrder.product.quantity}
                             className="p-1.5 text-slate-500 hover:bg-slate-100 disabled:opacity-40 transition-colors"
                           >
                             <Plus className="w-3.5 h-3.5" />
                           </button>
                         </div>
                         <span className="text-[10px] text-slate-400 mt-1">
-                          Max: {selectedOrder.product.quantity}
+                          Max: {activeOrder.product.quantity}
                         </span>
                       </div>
                     </td>
@@ -623,9 +642,9 @@ export const NewReturnView: React.FC<NewReturnViewProps> = ({
 
               {/* Address Preview Box */}
               <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-700 space-y-0.5">
-                <p className="font-bold text-slate-900">{selectedOrder.customerName}</p>
-                <p className="text-slate-600">{selectedOrder.customerAddress}</p>
-                <p className="text-slate-500 pt-1 font-medium">{selectedOrder.customerPhone}</p>
+                <p className="font-bold text-slate-900">{activeOrder.customerName}</p>
+                <p className="text-slate-600">{activeOrder.customerAddress}</p>
+                <p className="text-slate-500 pt-1 font-medium">{activeOrder.customerPhone}</p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

@@ -14,7 +14,7 @@
     "seed:prod": "node dist/scripts/seed-merchants.js",
     "test:whatsapp": "tsx src/scripts/test-whatsapp-ping.ts",
     "purge:billing": "tsx src/scripts/purge-billing.ts",
-    "sim:e2e": "tsx ../../scripts/e2e-simulation.ts",
+    "sim:e2e": "tsx src/scripts/e2e-simulation.ts",
     "clean": "rimraf dist"
   },
   "dependencies": {
@@ -33,6 +33,7 @@
     "mongo-sanitize": "^1.1.0",
     "mongoose": "^8.10.1",
     "multer": "^2.4.0",
+    "razorpay": "^2.9.8",
     "socket.io": "^4.8.1",
     "swagger-jsdoc": "^6.3.0",
     "swagger-ui-express": "^5.0.1",
@@ -55,6 +56,7 @@
     "supertest": "^7.2.2",
     "tsx": "^4.19.2",
     "typescript": "^5.7.3",
-    "vitest": "^3.0.5"
+    "vitest": "^3.0.5",
+    "xlsx": "^0.18.5"
   }
 }

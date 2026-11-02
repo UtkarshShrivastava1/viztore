@@ -12,22 +12,39 @@ import {
   Lightbulb,
 } from 'lucide-react';
 import { useSettingsStore } from '../../stores/settingsStore.js';
+import { useAuthStore } from '../../stores/authStore.js';
 
 interface SecurityLoginTabProps {
   onNavigateToSupport?: () => void;
 }
 
 export const SecurityLoginTab: React.FC<SecurityLoginTabProps> = ({ onNavigateToSupport }) => {
-  const { securityLogin, updateSecurityLogin, terminateSession } = useSettingsStore();
-  const [formData, setFormData] = useState({ ...securityLogin });
+  const { securityLogin, updateSecurityLogin, terminateSession, saveAllChanges } = useSettingsStore();
+  const { user } = useAuthStore();
+  const [formData, setFormData] = useState(() => ({
+    ...securityLogin,
+    email: user?.email || securityLogin.email,
+    phone: user?.phone || securityLogin.phone,
+  }));
   const [showPassword, setShowPassword] = useState(false);
   const [password, setPassword] = useState('••••••••••');
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  const handleSave = () => {
+  const handleTerminateSession = (id: string) => {
+    terminateSession(id);
+    setFormData((prev) => ({
+      ...prev,
+      sessions: prev.sessions.filter((s) => s.id !== id),
+    }));
+  };
+
+  const handleSave = async () => {
     updateSecurityLogin(formData);
-    setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 2500);
+    const success = await saveAllChanges();
+    if (success) {
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 2500);
+    }
   };
 
   return (
@@ -176,7 +193,7 @@ export const SecurityLoginTab: React.FC<SecurityLoginTabProps> = ({ onNavigateTo
                 {!sess.isCurrent && (
                   <button
                     type="button"
-                    onClick={() => terminateSession(sess.id)}
+                    onClick={() => handleTerminateSession(sess.id)}
                     className="text-xs font-bold text-rose-600 border border-rose-200 px-3 py-1 rounded-xl hover:bg-rose-50 transition-colors"
                   >
                     Logout

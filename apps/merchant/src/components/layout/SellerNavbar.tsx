@@ -21,6 +21,26 @@ export const SellerNavbar: React.FC<SellerNavbarProps> = ({
 }) => {
   const [openDropdown, setOpenDropdown] = useState<'sell' | 'learn' | null>(null);
   const navRef = useRef<HTMLDivElement>(null);
+  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleMouseEnter = (type: 'sell' | 'learn') => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    hoverTimeoutRef.current = setTimeout(() => {
+      setOpenDropdown(type);
+    }, 100);
+  };
+
+  const handleMouseLeave = () => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    hoverTimeoutRef.current = setTimeout(() => {
+      setOpenDropdown(null);
+    }, 150);
+  };
+
+  const toggleDropdown = (type: 'sell' | 'learn') => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    setOpenDropdown((prev) => (prev === type ? null : type));
+  };
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -56,34 +76,24 @@ export const SellerNavbar: React.FC<SellerNavbarProps> = ({
           onClick={() => handleNavigate('/')}
           className="flex items-center gap-2.5 text-left focus:outline-none cursor-pointer group"
         >
-          {/* Shopping Bag with Checkmark Icon matching Mockup Logo */}
-          <div className="w-9 h-9 rounded-xl bg-[#0038ed] flex items-center justify-center text-white shadow-xs group-hover:scale-105 transition-transform">
-            <svg
-              className="w-5 h-5"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
-              <path d="M3 6h18" />
-              <path d="m9 13 2 2 4-4" />
-            </svg>
-          </div>
-          <span className="text-2xl font-bold tracking-tight text-[#0038ed] font-sans">
-            {branding.appName}
-          </span>
+          <img
+            src="/images/logo-dark.png"
+            alt={branding.appName}
+            className="h-11 sm:h-12 md:h-[50px] w-auto object-contain group-hover:opacity-90 transition-opacity"
+          />
         </button>
 
         {/* Desktop Nav Items */}
         <div className="hidden lg:flex items-center gap-2 text-[13px] font-medium text-slate-700">
           {/* Sell Online Dropdown */}
-          <div className="relative">
+          <div
+            className="relative"
+            onMouseEnter={() => handleMouseEnter('sell')}
+            onMouseLeave={handleMouseLeave}
+          >
             <button
               type="button"
-              onClick={() => setOpenDropdown(openDropdown === 'sell' ? null : 'sell')}
+              onClick={() => toggleDropdown('sell')}
               className={`px-3 py-1.5 rounded-lg flex items-center gap-1 hover:text-[#0038ed] transition-colors cursor-pointer ${
                 openDropdown === 'sell' ? 'bg-blue-50 text-[#0038ed]' : ''
               }`}
@@ -131,10 +141,14 @@ export const SellerNavbar: React.FC<SellerNavbarProps> = ({
           </button>
 
           {/* Learn Dropdown */}
-          <div className="relative">
+          <div
+            className="relative"
+            onMouseEnter={() => handleMouseEnter('learn')}
+            onMouseLeave={handleMouseLeave}
+          >
             <button
               type="button"
-              onClick={() => setOpenDropdown(openDropdown === 'learn' ? null : 'learn')}
+              onClick={() => toggleDropdown('learn')}
               className={`px-3 py-1.5 rounded-lg flex items-center gap-1 hover:text-[#0038ed] transition-colors cursor-pointer ${
                 openDropdown === 'learn' ? 'bg-blue-50 text-[#0038ed]' : ''
               }`}

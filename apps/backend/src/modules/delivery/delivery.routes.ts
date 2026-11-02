@@ -9,6 +9,7 @@ import {
   claimDeliverySchema,
   updateDeliveryStatusSchema,
   verifyDeliveryOtpSchema,
+  updateRiderLocationSchema,
 } from './delivery.validator.js';
 import { UserRole } from '@repo/shared-types';
 
@@ -57,6 +58,13 @@ export function createDeliveryRouter(controller: DeliveryController): Router {
     '/orders/:orderId/status',
     validateBody(updateDeliveryStatusSchema),
     controller.updateStatus,
+  );
+
+    // Rider telemetry location broadcast
+  router.post(
+    '/orders/:orderId/location',
+    validateBody(updateRiderLocationSchema),
+    controller.updateLocation,
   );
 
   // Final 4-digit OTP verification upon customer delivery handoff

@@ -1,3 +1,4 @@
+import { couponService } from '../coupons/coupon.service.js';
 import {
   OrderStatus,
   type CreateOrderDTO,
@@ -115,6 +116,14 @@ export function createOrderService(
       authoritativeItems.push(...dto.items);
     }
 
+    // 4.5. Coupon validation and discount computation
+    let couponDiscount = 0;
+    if (dto.couponCode) {
+      const calculatedSubtotal = authoritativeItems.reduce((acc, it) => acc + it.quantity * it.unitPrice, 0);
+      const val = await couponService.validateCoupon(dto.couponCode, calculatedSubtotal, dto.storeId);
+      couponDiscount = val.discountAmount;
+    }
+
     // 5. ACID Transaction: Atomic stock deduction + Order creation + Outbox event insertion
     const normalizedShippingAddress = normalizeAddress(dto.shippingAddress);
 
@@ -132,6 +141,10 @@ export function createOrderService(
         items: authoritativeItems,
         userId,
         shippingAddress: normalizedShippingAddress,
+        discount: couponDiscount,
+        couponCode: dto.couponCode || undefined,
+        paymentMethod: dto.paymentMethod || 'cod',
+        paymentStatus: (dto.paymentMethod === 'online' || dto.paymentMethod === 'prepaid') ? 'paid' : 'pending',
       };
 
       const created = session
@@ -162,6 +175,12 @@ export function createOrderService(
 
       return created;
     });
+
+    if (dto.couponCode) {
+      void couponService.incrementCouponUsage(dto.couponCode).catch((e) => {
+        logger.warn('Failed to increment coupon usage count', { error: e, code: dto.couponCode });
+      });
+    }
 
     // 6. Post-commit asynchronous dispatch triggers
     void processPendingOutboxEvents().catch((error) => {
@@ -290,9 +309,9 @@ export function createOrderService(
         gstin: storeGstin,
       },
       customer: {
-        name: order.shippingAddress.fullName,
-        phone: order.shippingAddress.phone,
-        address: `${order.shippingAddress.street}, ${order.shippingAddress.city}, ${order.shippingAddress.state} - ${order.shippingAddress.postalCode}`,
+        name: order.shippingAddress?.fullName || 'Customer',
+        phone: order.shippingAddress?.phone || '',
+        address: order.shippingAddress ? `${order.shippingAddress.street}, ${order.shippingAddress.city}, ${order.shippingAddress.state} - ${order.shippingAddress.postalCode}` : 'In-Store Pickup',
       },
       items,
       pricing: {
@@ -402,6 +421,7 @@ export function createOrderService(
 
     // Emit domain events
     if (bus && updated) {
+      const resolvedUserId = (updated as any).userId || (current as any).userId;
       const payload = {
         orderId: updated.id,
         orderNumber: updated.orderNumber,
@@ -409,6 +429,7 @@ export function createOrderService(
         newStatus: status,
         actorUserId,
         storeId: updated.storeId,
+        userId: resolvedUserId ? resolvedUserId.toString() : undefined,
       };
 
       if (status === OrderStatus.CONFIRMED || status === OrderStatus.PACKED) bus.emit(EVENTS.ORDER_CONFIRMED, payload);
@@ -506,12 +527,15 @@ export function createOrderService(
     });
 
     if (bus) {
+      const resolvedUserId = (cancelled as any).userId || (current as any).userId || userId;
       bus.emit(EVENTS.ORDER_CANCELLED, {
         orderId: cancelled.id,
         orderNumber: cancelled.orderNumber,
         previousStatus: current.status,
         newStatus: OrderStatus.CANCELLED,
         actorUserId: userId,
+        storeId: cancelled.storeId,
+        userId: resolvedUserId ? resolvedUserId.toString() : undefined,
       });
     }
 
@@ -559,6 +583,66 @@ export function createOrderService(
     };
   }
 
+  async function claimReservation(orderId: string, actorId: string): Promise<OrderResponse> {
+    const order = await repo.findById(orderId);
+    if (!order) {
+      throw AppError.notFound('Order not found', 'ORDER_NOT_FOUND');
+    }
+    if (order.fulfilmentMode !== 'reserve') {
+      throw AppError.badRequest('Order is not an in-store reservation', 'NOT_A_RESERVATION');
+    }
+    if (order.status !== OrderStatus.PENDING && order.status !== OrderStatus.CONFIRMED && order.status !== OrderStatus.PACKED) {
+      throw AppError.badRequest(`Cannot claim reservation with status ${order.status}`, 'INVALID_STATUS');
+    }
+
+    if (order.reserveExpiresAt && new Date(order.reserveExpiresAt) < new Date()) {
+      throw AppError.badRequest('Reservation has expired and can no longer be claimed', 'RESERVATION_EXPIRED');
+    }
+
+    const auditEntry: IOrderStatusHistoryEntry = {
+      status: OrderStatus.DELIVERED,
+      changedBy: actorId,
+      reason: 'Reservation claimed and fulfilled in-store',
+      timestamp: new Date(),
+    };
+    const updated = await repo.updateStatusWithVersion(
+      order.id,
+      order.version,
+      order.status,
+      OrderStatus.DELIVERED,
+      auditEntry,
+    );
+    if (!updated) {
+      throw AppError.internal('Failed to update reservation status');
+    }
+
+    logger.info(`✅ [ReservePipeline] Reservation ${order.orderNumber} claimed and fulfilled by actor ${actorId}`);
+    return updated;
+  }
+
+  async function releaseReservation(orderId: string, actorId: string, reason?: string): Promise<OrderResponse> {
+    const order = await repo.findById(orderId);
+    if (!order) {
+      throw AppError.notFound('Order not found', 'ORDER_NOT_FOUND');
+    }
+    if (order.fulfilmentMode !== 'reserve') {
+      throw AppError.badRequest('Order is not an in-store reservation', 'NOT_A_RESERVATION');
+    }
+
+    const cancelReason = reason || 'Reservation manually released by merchant or customer';
+    const cancelled = await cancelOrder(order.id, actorId, true, order.version, cancelReason);
+    if (!cancelled) {
+      throw AppError.internal('Failed to release reservation');
+    }
+
+    logger.info(`🔓 [ReservePipeline] Reservation ${order.orderNumber} released and inventory returned by actor ${actorId}`);
+    return cancelled;
+  }
+
+  async function expireStaleReservations(batchLimit = 50): Promise<{ processed: number; cancelled: number; failed: number }> {
+    return autoCancelStaleOrders(30, batchLimit);
+  }
+
   return {
     createOrder,
     getOrderById,
@@ -570,5 +654,8 @@ export function createOrderService(
     verifyDeliveryOtp,
     cancelOrder,
     autoCancelStaleOrders,
+    claimReservation,
+    releaseReservation,
+    expireStaleReservations,
   };
 }

@@ -30,6 +30,14 @@ export const ordersApi = {
   },
 
   /**
+   * Cancel an order with optional reason and expected version
+   */
+  cancelOrder: async (orderId: string, reason?: string, expectedVersion?: number): Promise<IOrder> => {
+    const res = await api.post<IOrder>(`/orders/${orderId}/cancel`, { reason, expectedVersion });
+    return res.data;
+  },
+
+  /**
    * Fetch full tax invoice details for an order
    */
   getOrderInvoice: async (orderId: string): Promise<Record<string, unknown>> => {

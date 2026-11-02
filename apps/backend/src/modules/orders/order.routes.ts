@@ -30,6 +30,9 @@ export function createOrderRouter(
   router.get('/my-orders', controller.getMyOrders);
   router.get('/store/:storeId', controller.getStoreOrders);
   router.get('/all', roleGuard(UserRole.ADMIN, UserRole.MERCHANT), controller.getAllOrders);
+  router.post('/reservations/reclaim-stale', controller.reclaimStaleReservations);
+  router.post('/:id/claim-reservation', controller.claimReservation);
+  router.post('/:id/release-reservation', controller.releaseReservation);
   router.get('/:id', controller.getOrder);
   router.get('/:id/invoice', controller.getInvoice);
   router.get('/:id/invoice/print', controller.printInvoice);

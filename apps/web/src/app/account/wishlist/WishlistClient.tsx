@@ -30,10 +30,11 @@ export function WishlistClient() {
       productId: item.productId || item.id,
       name: item.title,
       unitPrice: item.price || 0,
-      storeId: 'store-1', // Default store ID since it's not in IWishlistFlyoutItem
+      storeId: item.storeId || 'store-1',
       storeName: item.storeName || 'Verified Store Partner',
       imageUrl: item.imageUrl || '',
     });
+    removeItem(item.id);
   };
 
   return (
@@ -104,16 +105,16 @@ export function WishlistClient() {
                       </div>
 
                       {/* Image & Product Info */}
-                      <div className="flex gap-3 mb-3">
+                      <Link href={`/products/${item.slug || item.productId || item.id}`} className="flex gap-3 mb-3 group/item">
                         <div className="w-20 h-20 rounded-xl bg-surface-50 shrink-0 overflow-hidden border border-surface-100 flex items-center justify-center">
                           <img 
                             src={item.imageUrl || 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&q=80&w=200&h=200'} 
                             alt={item.title} 
-                            className="w-full h-full object-cover mix-blend-multiply" 
+                            className="w-full h-full object-cover mix-blend-multiply group-hover/item:scale-105 transition-transform" 
                           />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="text-[13px] lg:text-[14px] font-bold text-[#192168] line-clamp-2 leading-snug">
+                          <h4 className="text-[13px] lg:text-[14px] font-bold text-[#192168] line-clamp-2 leading-snug group-hover/item:text-[#1668F6] transition-colors">
                             {item.title}
                           </h4>
                           <p className="text-[14px] lg:text-[16px] font-extrabold text-[#192168] mt-1">
@@ -123,7 +124,7 @@ export function WishlistClient() {
                             In Stock
                           </span>
                         </div>
-                      </div>
+                      </Link>
                     </div>
 
                     {/* Actions */}

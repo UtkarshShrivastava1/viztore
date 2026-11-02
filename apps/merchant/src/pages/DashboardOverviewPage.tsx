@@ -12,18 +12,22 @@ import { DashboardTab } from '../components/dashboard/Sidebar.js';
 import { useAuthStore } from '../stores/authStore.js';
 import { useOrderStore } from '../stores/orderStore.js';
 import { useCatalogStore } from '../stores/catalogStore.js';
+import { useBillingStore } from '../stores/billingStore.js';
+import { useCustomerStore } from '../stores/customerStore.js';
 import { AlertTriangle } from 'lucide-react';
 
 interface DashboardOverviewPageProps {
   onNavigate: (tab: DashboardTab) => void;
   onOpenAddProduct: () => void;
   onOpenBulkUpload: () => void;
+  onOpenCreateOrder?: () => void;
 }
 
 export const DashboardOverviewPage: React.FC<DashboardOverviewPageProps> = ({
   onNavigate,
   onOpenAddProduct,
   onOpenBulkUpload,
+  onOpenCreateOrder,
 }) => {
   const { currentStore, isStoreActive, setStoreActive, isAuthenticated } = useAuthStore();
   const { fetchOrders } = useOrderStore();
@@ -48,46 +52,38 @@ export const DashboardOverviewPage: React.FC<DashboardOverviewPageProps> = ({
       }
     };
 
-    window.addEventListener('visibilitychange', handleVisibilityOrFocus);
     window.addEventListener('focus', handleVisibilityOrFocus);
+    document.addEventListener('visibilitychange', handleVisibilityOrFocus);
 
-    const heartbeat = setInterval(() => {
+    const intervalId = setInterval(() => {
       if (document.visibilityState === 'visible') {
         syncDashboardData();
       }
     }, 20000);
 
     return () => {
-      window.removeEventListener('visibilitychange', handleVisibilityOrFocus);
       window.removeEventListener('focus', handleVisibilityOrFocus);
-      clearInterval(heartbeat);
+      document.removeEventListener('visibilitychange', handleVisibilityOrFocus);
+      clearInterval(intervalId);
     };
   }, [syncDashboardData]);
 
   return (
-    <div className="space-y-3.5 max-w-[1600px] mx-auto">
-      {/* Inactive Dashboard Alert Banner (1.0b(V1).png) */}
-      {!isStoreActive && (
-        <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in duration-200">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-rose-500 text-white flex items-center justify-center shrink-0 shadow-xs">
-              <AlertTriangle className="w-5 h-5" />
-            </div>
-            <div>
-              <h4 className="text-xs sm:text-sm font-bold text-rose-900">
-                Your Store is Currently Inactive
-              </h4>
-              <p className="text-[11px] sm:text-xs text-rose-700 mt-0.5 leading-snug">
-                Customer orders are paused and your store is hidden from the customer app. Activate your store to start receiving orders again.
-              </p>
-            </div>
+    <div className="space-y-4 animate-in fade-in duration-200">
+      {/* Offline / Suspended Store Banner */}
+      {isAuthenticated && currentStore && !isStoreActive && (
+        <div className="p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex items-center justify-between text-amber-500 text-xs">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
+            <span>
+              Your store is currently <strong>Offline</strong>. Customers cannot place live orders on the storefront.
+            </span>
           </div>
           <button
-            type="button"
             onClick={() => setStoreActive(true)}
-            className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl shadow-xs whitespace-nowrap transition-colors"
+            className="px-3 py-1 bg-amber-500 text-white rounded-lg font-bold hover:bg-amber-600 transition-colors shadow-2xs"
           >
-            Activate Store Now
+            Go Online
           </button>
         </div>
       )}
@@ -108,16 +104,35 @@ export const DashboardOverviewPage: React.FC<DashboardOverviewPageProps> = ({
               <LiveOrderAlerts onNavigateOrders={() => onNavigate('orders')} />
             </div>
             <div className="lg:col-span-6 flex flex-col">
-              <RevenueChart />
+              <RevenueChart onNavigateOrders={() => onNavigate('orders')} />
             </div>
           </div>
         </div>
 
         {/* Right Section (approx 25% width) */}
         <div className="lg:col-span-3 space-y-3.5 flex flex-col justify-between">
-          <CreateNewBillCard onOpenCreateInvoice={() => onNavigate('billing')} />
+          <CreateNewBillCard 
+            onOpenCreateInvoice={() => {
+              useBillingStore.getState().setActiveSubTab('invoices');
+              useBillingStore.getState().openCreateInvoiceModal();
+              onNavigate('billing');
+            }}
+            onOpenEstimate={() => {
+              useBillingStore.getState().setActiveSubTab('quotes');
+              useBillingStore.getState().openCreateInvoiceModal();
+              onNavigate('billing');
+            }}
+            onOpenCreditNote={() => {
+              useBillingStore.getState().setActiveSubTab('credit_notes');
+              onNavigate('billing');
+            }}
+            onViewAllInvoices={() => {
+              useBillingStore.getState().setActiveSubTab('invoices');
+              onNavigate('billing');
+            }}
+          />
           <OrderSummaryCard
-            onNavigateStatus={(statusTab) => {
+            onNavigateStatus={(_statusTab) => {
               onNavigate('orders');
             }}
           />
@@ -131,7 +146,7 @@ export const DashboardOverviewPage: React.FC<DashboardOverviewPageProps> = ({
         </div>
         <div className="flex flex-col">
           <LowStockWarnings
-            onAddStock={onOpenAddProduct}
+            onAddStock={() => onNavigate('inventory')}
             onViewAll={() => onNavigate('inventory')}
           />
         </div>
@@ -140,6 +155,19 @@ export const DashboardOverviewPage: React.FC<DashboardOverviewPageProps> = ({
             onNavigate={onNavigate}
             onOpenAddProduct={onOpenAddProduct}
             onOpenBulkUpload={onOpenBulkUpload}
+            onOpenCreateOrder={onOpenCreateOrder || (() => onNavigate('orders'))}
+            onOpenAddCustomer={() => {
+              useCustomerStore.getState().setViewMode('add');
+              onNavigate('customers');
+            }}
+            onOpenCreateInvoice={() => {
+              useBillingStore.getState().setActiveSubTab('invoices');
+              useBillingStore.getState().openCreateInvoiceModal();
+              onNavigate('billing');
+            }}
+            onOpenRefundOrder={() => {
+              onNavigate('returns');
+            }}
           />
         </div>
       </div>

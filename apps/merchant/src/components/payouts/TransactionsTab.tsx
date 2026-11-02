@@ -227,7 +227,14 @@ export const TransactionsTab: React.FC = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 text-slate-700 text-[11px]">
-            {filteredTransactions.map((t) => (
+            {filteredTransactions.length === 0 ? (
+              <tr>
+                <td colSpan={10} className="py-10 text-center text-slate-400 text-xs">
+                  No transactions found
+                </td>
+              </tr>
+            ) : (
+              filteredTransactions.map((t) => (
               <tr key={t.id} className="hover:bg-slate-50/70 transition-colors">
                 <td className="py-2 px-3 text-slate-600 whitespace-nowrap">
                   {t.dateTime}
@@ -282,7 +289,8 @@ export const TransactionsTab: React.FC = () => {
                   </button>
                 </td>
               </tr>
-            ))}
+            ))
+            )}
           </tbody>
         </table>
       </div>
@@ -290,7 +298,7 @@ export const TransactionsTab: React.FC = () => {
       {/* Pagination Matching 10.3.png */}
       <div className="p-3.5 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
         <div>
-          Showing 1 to {filteredTransactions.length} of 248 transactions
+          Showing {filteredTransactions.length === 0 ? 0 : 1} to {filteredTransactions.length} of {filteredTransactions.length} transactions
         </div>
         <div className="flex items-center gap-1">
           <button

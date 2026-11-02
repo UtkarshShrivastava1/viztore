@@ -13,9 +13,20 @@ export function PaymentMethodPicker() {
       <p className="text-[11px] text-gray-500 mb-3">Select a payment method</p>
       
       {isReserve ? (
-        <div className="flex items-center gap-2 rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-xs font-medium text-blue-800 shadow-sm">
-          <Banknote className="h-5 w-5 shrink-0 text-blue-600" />
-          No payment is required now. You can pay later at the time of pickup or delivery.
+        <div className="rounded-xl border border-indigo-200 bg-gradient-to-r from-indigo-50/90 to-blue-50/50 p-4 shadow-2xs space-y-2">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-2xs shrink-0">
+              <Banknote className="h-5 w-5" />
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-gray-900">Pay at Store Counter (On Pickup)</h4>
+              <p className="text-[11px] text-gray-600">Inspect & verify your items in-person • Pay via UPI, Cash, or Card at collection</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 text-[10px] text-indigo-800 bg-white/90 rounded-lg px-3 py-1.5 border border-indigo-100">
+            <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>No advance payment needed. Your 2-hour hold begins immediately upon confirmation.</span>
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">

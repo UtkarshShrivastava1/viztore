@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Store,
   FileText,
@@ -50,7 +50,11 @@ const navItems: NavItem[] = [
 export const SettingsHubView: React.FC<SettingsHubViewProps> = ({
   onNavigateToSupport,
 }) => {
-  const { activeSubTab, setActiveSubTab } = useSettingsStore();
+  const { activeSubTab, setActiveSubTab, loadSettings } = useSettingsStore();
+
+  useEffect(() => {
+    loadSettings();
+  }, [loadSettings]);
 
   const getHeaderMeta = () => {
     switch (activeSubTab) {

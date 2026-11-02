@@ -13,14 +13,17 @@ import { useSettingsStore } from '../../stores/settingsStore.js';
 import { branding } from '@repo/shared-types';
 
 export const ShippingReturnsTab: React.FC = () => {
-  const { shippingReturns, updateShippingReturns } = useSettingsStore();
+  const { shippingReturns, updateShippingReturns, saveAllChanges } = useSettingsStore();
   const [formData, setFormData] = useState({ ...shippingReturns });
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     updateShippingReturns(formData);
-    setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 2500);
+    const success = await saveAllChanges();
+    if (success) {
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 2500);
+    }
   };
 
   return (

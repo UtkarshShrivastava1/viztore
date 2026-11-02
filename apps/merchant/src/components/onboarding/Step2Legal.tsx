@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { onboardingStep2Schema, OnboardingStep2Dto } from '@repo/shared-types';
@@ -31,6 +31,16 @@ export const Step2Legal: React.FC = () => {
   });
 
   const gstinValue = watch('gstin');
+  useEffect(() => {
+    if (gstinValue && gstinValue.length >= 12) {
+      const upper = gstinValue.toUpperCase().trim();
+      const extractedPan = upper.substring(2, 12);
+      if (/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(extractedPan)) {
+        setValue('pan', extractedPan);
+      }
+    }
+  }, [gstinValue, setValue]);
+
 
   const handleVerifyGstin = async () => {
     if (!gstinValue || gstinValue.length < 15) {

@@ -13,12 +13,18 @@ import { authGuard } from '../../shared/middlewares/authGuard.js';
 import { roleGuard } from '../../shared/middlewares/roleGuard.js';
 import * as storeController from './store.controller.js';
 import * as onboardingController from './onboarding.controller.js';
+import * as onboardingPaymentController from './onboarding-payment.controller.js';
 
 const router = Router();
 
 // ==========================================
 // Merchant 6-Step Onboarding Pipeline
 // ==========================================
+router.post(
+  ['/verify-pan', '/onboarding/verify-pan'],
+  storeController.verifyPan,
+);
+
 router.post(
   '/onboarding/verify-gstin',
   onboardingController.verifyGstin,
@@ -37,6 +43,34 @@ router.get(
   authGuard,
   onboardingController.getOnboardingStatus,
 );
+
+// ==========================================
+// Merchant Onboarding Commercial Plan & Payment Routes
+// ==========================================
+router.get(
+  '/onboarding/payment/plans',
+  onboardingPaymentController.getPlans,
+);
+
+router.post(
+  '/onboarding/payment/validate-coupon',
+  onboardingPaymentController.validateCoupon,
+);
+
+router.post(
+  '/onboarding/payment/create-order',
+  authGuard,
+  roleGuard(UserRole.MERCHANT, UserRole.ADMIN),
+  onboardingPaymentController.createPaymentOrder,
+);
+
+router.post(
+  '/onboarding/payment/verify',
+  authGuard,
+  roleGuard(UserRole.MERCHANT, UserRole.ADMIN),
+  onboardingPaymentController.verifyPayment,
+);
+
 
 // ==========================================
 // Super Admin Queue & Review Endpoints
@@ -90,6 +124,28 @@ router.post(
   roleGuard(UserRole.MERCHANT, UserRole.ADMIN),
   validateRequest({ body: createStoreSchema }),
   storeController.createStore,
+);
+
+
+router.get(
+  '/:id/settings',
+  authGuard,
+  roleGuard(UserRole.MERCHANT, UserRole.ADMIN),
+  storeController.getStoreSettings,
+);
+
+router.patch(
+  '/:id/settings',
+  authGuard,
+  roleGuard(UserRole.MERCHANT, UserRole.ADMIN),
+  storeController.updateStoreSettings,
+);
+
+router.put(
+  '/:id/settings',
+  authGuard,
+  roleGuard(UserRole.MERCHANT, UserRole.ADMIN),
+  storeController.updateStoreSettings,
 );
 
 router.patch(

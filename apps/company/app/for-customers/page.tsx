@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { branding } from "@repo/shared-types/branding.config";
+import { branding } from "@/config/company";
 import ForCustomersContent from "./PageContent";
 
 export const metadata: Metadata = {

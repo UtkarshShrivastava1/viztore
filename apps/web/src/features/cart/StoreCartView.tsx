@@ -81,9 +81,9 @@ export function StoreCartView({ storeId }: { storeId: string }) {
   if (storeItems.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
-        <p className="text-gray-500">Your cart for this store is empty.</p>
-        <Link href="/cart" className="mt-4 rounded-lg bg-[#1668F6] px-6 py-2 text-white font-medium">
-          Back to all carts
+        <p className="text-gray-500">Your cart is empty.</p>
+        <Link href="/products" className="mt-4 rounded-xl bg-[#1668F6] px-6 py-2.5 text-white font-semibold text-sm hover:bg-blue-700 transition shadow-sm">
+          Start Shopping
         </Link>
       </div>
     );

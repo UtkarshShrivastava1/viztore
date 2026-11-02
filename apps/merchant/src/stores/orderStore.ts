@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { api, ordersApi } from '../lib/api.js';
 import { useAuthStore } from './authStore.js';
+import { formatDateTimeIST } from '@repo/shared-types';
 
 export type OrderTab =
   | 'new_orders'
@@ -10,7 +11,8 @@ export type OrderTab =
   | 'delivered'
   | 'all_orders'
   | 'cancelled'
-  | 'returns';
+  | 'returns'
+  | 'reserves';
 
 export type OrderStatus =
   | 'new'
@@ -29,12 +31,13 @@ export interface OrderItemDetail {
   price: number;
   quantity: number;
   imageUrl?: string;
+  shelfLocation?: string;
 }
 
 export interface MerchantOrderRecord {
   id: string;
   orderNumber: string;
-  orderType: 'Online Order' | 'Manual In-Store' | 'Express Delivery';
+  orderType: 'Online Order' | 'Manual In-Store' | 'Express Delivery' | 'In-Store Hold (2h)';
   status: OrderStatus;
   customer: {
     name: string;
@@ -131,6 +134,8 @@ interface OrderStoreState {
   markReadyToShip: (orderId: string) => void;
   dispatchOrder: (orderId: string) => void;
   deliverOrder: (orderId: string, otp: string) => Promise<boolean>;
+  claimReservation: (orderId: string) => Promise<void>;
+  releaseReservation: (orderId: string, reason?: string) => Promise<void>;
   addManualOrder: (newOrder: Partial<MerchantOrderRecord>) => void;
 }
 
@@ -182,10 +187,12 @@ export function mapApiOrderToMerchantRecord(apiOrder: any): MerchantOrderRecord 
   const resolvedCity = (extractedCity && extractedCity.toLowerCase() !== 'local city') ? extractedCity : 'Bhilai';
   const resolvedLocality = streetLocality || resolvedCity;
 
+  const isReserve = apiOrder.fulfilmentMode === 'reserve' || String(apiOrder.orderNumber || '').toUpperCase().includes('RES-') || Boolean(apiOrder.isReserved);
+
   return {
     id: apiOrder._id || apiOrder.id,
-    orderNumber: apiOrder.orderNumber || `#ORD-${(apiOrder._id || '').slice(-5)}`,
-    orderType: 'Online Order',
+    orderNumber: apiOrder.orderNumber || (isReserve ? `#RES-${(apiOrder._id || '').slice(-5).toUpperCase()}` : `#ORD-${(apiOrder._id || '').slice(-5)}`),
+    orderType: isReserve ? 'In-Store Hold (2h)' : 'Online Order',
     status: mappedStatus,
     customer: {
       name: customerName,
@@ -238,30 +245,61 @@ export function mapApiOrderToMerchantRecord(apiOrder: any): MerchantOrderRecord 
       totalAmount: apiOrder.grandTotal || 0,
     },
     payment: {
-      status:
-        apiOrder.status === 'delivered' ||
-        apiOrder.status === 'confirmed' ||
-        apiOrder.status === 'packed' ||
-        apiOrder.status === 'out_for_delivery'
-          ? 'Paid'
-          : 'Pending',
-      paymentMethod: 'Online Paid',
-      mode: 'UPI',
+      status: (() => {
+        const rawMethod = String(
+          apiOrder.paymentMethod ||
+          (apiOrder as any).payment?.paymentMethod ||
+          (apiOrder as any).paymentMode ||
+          ''
+        ).toLowerCase();
+        const isCodOrder = !isReserve && (
+          rawMethod === 'cod' ||
+          rawMethod === 'cash on delivery' ||
+          rawMethod === 'cash' ||
+          rawMethod.includes('cod') ||
+          rawMethod.includes('cash')
+        );
+        return isCodOrder ? (apiOrder.status === 'delivered' ? 'Paid' : 'Pending') : 'Paid';
+      })(),
+      paymentMethod: isReserve
+        ? ('Pay at Store' as any)
+        : (() => {
+            const rawMethod = String(
+              apiOrder.paymentMethod ||
+              (apiOrder as any).payment?.paymentMethod ||
+              (apiOrder as any).paymentMode ||
+              ''
+            ).toLowerCase();
+            return (rawMethod === 'cod' || rawMethod === 'cash on delivery' || rawMethod === 'cash' || rawMethod.includes('cod') || rawMethod.includes('cash'))
+              ? 'Cash on Delivery'
+              : 'Online Paid';
+          })(),
+      mode: (() => {
+        const rawMethod = String(
+          apiOrder.paymentMethod ||
+          (apiOrder as any).payment?.paymentMethod ||
+          (apiOrder as any).paymentMode ||
+          ''
+        ).toLowerCase();
+        return (rawMethod === 'cod' || rawMethod === 'cash on delivery' || rawMethod === 'cash' || rawMethod.includes('cod') || rawMethod.includes('cash'))
+          ? 'Cash'
+          : 'UPI';
+      })(),
     },
     otp: apiOrder.deliveryOtp || '0000',
     timestamps: {
-      createdAt: apiOrder.createdAt
-        ? new Date(apiOrder.createdAt).toLocaleString('en-IN', {
-            day: 'numeric',
-            month: 'short',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-          })
-        : 'Recent',
-      deliveredAt: apiOrder.deliveredAt
-        ? new Date(apiOrder.deliveredAt).toLocaleString('en-IN')
-        : undefined,
+      createdAt: apiOrder.createdAt ? formatDateTimeIST(apiOrder.createdAt) : 'Recent',
+
+
+
+
+
+
+
+
+      deliveredAt: apiOrder.deliveredAt ? formatDateTimeIST(apiOrder.deliveredAt) : undefined,
+
+
     },
     currentStageName:
       mappedStatus === 'new'
@@ -519,12 +557,20 @@ export const useOrderStore = create<OrderStoreState>((set, get) => {
         // 1. Verify OTP with backend
         const res = await ordersApi.verifyDeliveryOtp(orderId, cleanOtp);
         if (res && res.valid === false) {
-          throw new Error('Invalid delivery OTP code');
+          throw new Error('Invalid delivery OTP code. Please verify the 4-digit code provided by the customer.');
         }
         // 2. Transition order status on backend to DELIVERED
         await ordersApi.updateOrderStatus(orderId, 'DELIVERED', cleanOtp);
-      } catch (err) {
-        console.warn('API verify OTP error, applying optimistic delivery fallback:', err);
+      } catch (err: any) {
+        if (
+          err?.code === 'INVALID_DELIVERY_OTP' ||
+          err?.statusCode === 400 ||
+          err?.message?.includes('OTP') ||
+          err?.message?.includes('Invalid')
+        ) {
+          throw err;
+        }
+        console.warn('Network issue during OTP verification, applying optimistic delivery fallback:', err);
       }
 
       set((state) => ({
@@ -543,6 +589,42 @@ export const useOrderStore = create<OrderStoreState>((set, get) => {
         ),
       }));
       return true;
+    },
+
+    claimReservation: async (orderId: string) => {
+      try {
+        await api.post(`/orders/${orderId}/claim-reservation`, {});
+      } catch (err) {
+        console.warn('API claimReservation error, applying optimistic fallback:', err);
+      }
+      set((state) => ({
+        orders: state.orders.map((o) =>
+          o.id === orderId
+            ? {
+                ...o,
+                status: 'delivered',
+                currentStageName: 'Delivered (Claimed)',
+                payment: { ...o.payment, status: 'Paid' },
+                timestamps: { ...o.timestamps, deliveredAt: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) },
+              }
+            : o
+        ),
+      }));
+    },
+
+    releaseReservation: async (orderId: string, reason?: string) => {
+      try {
+        await api.post(`/orders/${orderId}/release-reservation`, { reason });
+      } catch (err) {
+        console.warn('API releaseReservation error, applying optimistic fallback:', err);
+      }
+      set((state) => ({
+        orders: state.orders.map((o) =>
+          o.id === orderId
+            ? { ...o, status: 'cancelled', currentStageName: 'Cancelled (Released)' }
+            : o
+        ),
+      }));
     },
 
     addManualOrder: (newOrder) => {

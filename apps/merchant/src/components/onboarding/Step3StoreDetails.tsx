@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { Info, Search, Navigation, ArrowRight, ArrowLeft, ChevronDown } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Info, Search, Navigation, ArrowRight, ArrowLeft, ChevronDown, CheckCircle2, Loader2, MapPin } from 'lucide-react';
 import { useOnboardingStore } from '../../stores/onboardingStore.js';
 import { MapPicker } from './MapPicker.js';
+import { reverseGeocode, searchLocations, GeocodedLocation, LocationSearchResult } from '../../lib/location/geocoding.js';
 
 const CHHATTISGARH_CITIES = [
   'Bhilai',
@@ -52,12 +53,14 @@ export const Step3StoreDetails: React.FC<Step3StoreDetailsProps> = ({
   const [storeName, setStoreName] = useState(draft.step4?.storeDisplayName || '');
   const [storeDetails, setStoreDetails] = useState(draft.step4?.description || '');
 
-  // Address
-  const [building, setBuilding] = useState(draft.step4?.address?.street || '');
+  // Address Fields
+  const [building, setBuilding] = useState(draft.step4?.address?.street?.split(',')?.[0]?.trim() || '');
   const [area, setArea] = useState(
-    draft.step4?.address?.street?.split(',')?.[1]?.trim() || 'Akashganga, Supela',
+    draft.step4?.address?.street?.includes(',')
+      ? draft.step4?.address?.street?.split(',').slice(1).join(',').trim()
+      : draft.step4?.address?.street || 'Akashganga, Supela Market',
   );
-  const [landmark, setLandmark] = useState(draft.step4?.address?.landmark || '');
+  const [landmark, setLandmark] = useState(draft.step4?.address?.landmark || 'Near GE Road');
   const [city, setCity] = useState(draft.step4?.address?.city || 'Bhilai');
   const [customCity, setCustomCity] = useState('');
   const [state, setState] = useState(draft.step4?.address?.state || 'Chhattisgarh');
@@ -69,25 +72,168 @@ export const Step3StoreDetails: React.FC<Step3StoreDetailsProps> = ({
   );
   const [pickupSearch, setPickupSearch] = useState('');
   const [isLocating, setIsLocating] = useState(false);
+  const [isGeocoding, setIsGeocoding] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState<LocationSearchResult[]>([]);
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  const [geoNotification, setGeoNotification] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchContainerRef = useRef<HTMLDivElement | null>(null);
+
+  // Close search dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) {
+        setShowSearchDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Helper to apply reverse geocoded details to form fields
+  const applyResolvedLocation = useCallback((loc: GeocodedLocation, updateSearchText = true) => {
+    if (loc.roadOrArea) {
+      setArea(loc.roadOrArea);
+    }
+    if (loc.shopOrBuilding) {
+      setBuilding(loc.shopOrBuilding);
+    } else if (!building.trim()) {
+      setBuilding('Shop 1, Ground Floor');
+    }
+    // Always update landmark dynamically on every pin drop so stale text from previous locations does not linger
+    setLandmark(loc.landmark || (loc.roadOrArea ? `Near ${loc.roadOrArea}` : ''));
+    if (loc.city) {
+      if (CHHATTISGARH_CITIES.includes(loc.city)) {
+        setCity(loc.city);
+        setCustomCity('');
+      } else {
+        setCity('Other');
+        setCustomCity(loc.city);
+      }
+    }
+    if (loc.state) {
+      setState(loc.state);
+    }
+    if (loc.pincode) {
+      setPincode(loc.pincode);
+    }
+    if (updateSearchText && loc.formattedAddress) {
+      setPickupSearch(loc.formattedAddress);
+    }
+
+    setGeoNotification(`✓ Address auto-filled: ${loc.roadOrArea}, ${loc.city}${loc.pincode ? ' (' + loc.pincode + ')' : ''}`);
+    setTimeout(() => {
+      setGeoNotification(null);
+    }, 4500);
+  }, [building]);
+
+  // Handle GPS "Use Current Location"
   const handleUseCurrentLocation = () => {
     if (navigator.geolocation) {
       setIsLocating(true);
+      setError(null);
       navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setCoordinates([pos.coords.longitude, pos.coords.latitude]);
-          setPickupSearch('Current GPS Location Detected');
-          setIsLocating(false);
+        async (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          const newCoords: [number, number] = [lng, lat];
+          setCoordinates(newCoords);
+          setPickupSearch('Resolving detected location address...');
+          setIsGeocoding(true);
+
+          try {
+            const resolved = await reverseGeocode(lat, lng);
+            applyResolvedLocation(resolved, true);
+          } catch {
+            setPickupSearch(`GPS: ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+          } finally {
+            setIsGeocoding(false);
+            setIsLocating(false);
+          }
         },
         () => {
-          setError('Could not access current location. You can click on the map to pin your store.');
+          setError('Could not access current location. Please allow GPS permission or click on the map to pin your store.');
           setIsLocating(false);
         },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
     } else {
       setError('Geolocation is not supported by your browser.');
     }
+  };
+
+  // Handle Map Pin Drag / Click
+  const handleMapPinChange = (newCoords: [number, number]) => {
+    setCoordinates(newCoords);
+
+    // Debounce reverse geocoding to avoid flooding API requests
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    setIsGeocoding(true);
+    debounceTimerRef.current = setTimeout(async () => {
+      try {
+        const lng = newCoords[0];
+        const lat = newCoords[1];
+        const resolved = await reverseGeocode(lat, lng);
+        applyResolvedLocation(resolved, true);
+      } catch {
+        // Fallback silently if offline
+      } finally {
+        setIsGeocoding(false);
+      }
+    }, 350);
+  };
+
+  // Handle Search Input Change with Autocomplete
+  const handleSearchChange = (value: string) => {
+    setPickupSearch(value);
+
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+    }
+
+    if (!value.trim() || value.trim().length < 2) {
+      setSearchResults([]);
+      setShowSearchDropdown(false);
+      return;
+    }
+
+    setIsSearching(true);
+    searchDebounceRef.current = setTimeout(async () => {
+      try {
+        const results = await searchLocations(value);
+        setSearchResults(results);
+        setShowSearchDropdown(results.length > 0);
+      } catch {
+        setSearchResults([]);
+        setShowSearchDropdown(false);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300);
+  };
+
+  // Select Search Autocomplete Item
+  const handleSelectSearchResult = (result: LocationSearchResult) => {
+    const newCoords: [number, number] = [result.lng, result.lat];
+    setCoordinates(newCoords);
+    setShowSearchDropdown(false);
+
+    applyResolvedLocation({
+      lat: result.lat,
+      lng: result.lng,
+      roadOrArea: result.roadOrArea,
+      city: result.city,
+      state: result.state,
+      pincode: result.pincode,
+      formattedAddress: result.displayName,
+    }, true);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -96,20 +242,21 @@ export const Step3StoreDetails: React.FC<Step3StoreDetailsProps> = ({
       setError('Please enter a store display name');
       return;
     }
-    if (!building.trim() || !pincode.trim()) {
+    if (!area.trim() || !pincode.trim()) {
       setError('Please complete the store address fields');
       return;
     }
 
     const finalCity = city === 'Other' ? customCity.trim() || 'Bhilai' : city;
     const finalState = state.trim() || 'Chhattisgarh';
+    const finalBuilding = building.trim() || 'Shop 1, Ground Floor';
 
     updateStep(4, {
       merchantFullName: fullName,
       storeDisplayName: storeName,
       description: storeDetails,
       address: {
-        street: area ? `${building}, ${area}` : building,
+        street: area ? `${finalBuilding}, ${area}` : finalBuilding,
         landmark,
         city: finalCity,
         state: finalState,
@@ -148,13 +295,20 @@ export const Step3StoreDetails: React.FC<Step3StoreDetailsProps> = ({
       </div>
 
       <p className="text-xs text-slate-500 mb-5 leading-relaxed">
-        Enter your store details and pin your retail shop location to help nearby customers discover and order from your business.
+        Enter your store details and pin your retail shop location. Form fields will <strong>automatically populate</strong> when you use GPS or drop a pin on the map.
       </p>
 
       {error && (
         <div className="mb-5 p-3.5 bg-rose-50 border border-rose-200/80 rounded-xl text-rose-600 text-xs font-semibold flex items-center gap-2 animate-in fade-in">
           <div className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
           <span>{error}</span>
+        </div>
+      )}
+
+      {geoNotification && (
+        <div className="mb-5 p-3.5 bg-emerald-50 border border-emerald-200/80 rounded-xl text-emerald-700 text-xs font-semibold flex items-center gap-2 animate-in fade-in transition-all">
+          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+          <span>{geoNotification}</span>
         </div>
       )}
 
@@ -215,7 +369,15 @@ export const Step3StoreDetails: React.FC<Step3StoreDetailsProps> = ({
 
         {/* Store Address Section */}
         <div className="pt-1">
-          <h3 className="text-xs font-bold text-slate-900 mb-2.5">Store Address</h3>
+          <div className="flex items-center justify-between mb-2.5">
+            <h3 className="text-xs font-bold text-slate-900">Store Address</h3>
+            {isGeocoding && (
+              <span className="text-[11px] text-blue-600 font-medium flex items-center gap-1 animate-pulse">
+                <Loader2 className="w-3 h-3 animate-spin" />
+                Auto-filling address from map...
+              </span>
+            )}
+          </div>
 
           <div className="space-y-2.5">
             <div>
@@ -326,25 +488,60 @@ export const Step3StoreDetails: React.FC<Step3StoreDetailsProps> = ({
 
         {/* Pickup Address Section with Interactive MapPicker */}
         <div className="pt-1 space-y-2.5">
-          <div>
-            <label className="block text-xs font-bold text-slate-900">
-              Pickup Address *
-            </label>
-            <span className="text-[11px] text-slate-500">
-              Add pickup address where your orders will be picked up.
-            </span>
+          <div className="flex items-center justify-between">
+            <div>
+              <label className="block text-xs font-bold text-slate-900">
+                Pickup Address &amp; Map Pin *
+              </label>
+              <span className="text-[11px] text-slate-500">
+                Click map or drag the pin to pinpoint pickup spot. Address above auto-syncs.
+              </span>
+            </div>
+            {isGeocoding && (
+              <span className="text-[11px] text-blue-600 font-semibold flex items-center gap-1">
+                <Loader2 className="w-3 h-3 animate-spin" />
+                Detecting address...
+              </span>
+            )}
           </div>
 
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+          <div ref={searchContainerRef} className="relative flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
             <div className="relative flex-1">
-              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-3" />
+              {isSearching ? (
+                <Loader2 className="w-3.5 h-3.5 text-blue-500 animate-spin absolute left-3 top-3" />
+              ) : (
+                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-3" />
+              )}
               <input
                 type="text"
-                placeholder="Search your pickup area"
+                placeholder="Search pickup area (e.g. Supela, Civic Centre, Durg)"
                 value={pickupSearch}
-                onChange={(e) => setPickupSearch(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                onFocus={() => {
+                  if (searchResults.length > 0) setShowSearchDropdown(true);
+                }}
                 className="w-full text-xs sm:text-sm border border-slate-200 rounded-lg pl-9 pr-3 py-2 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#0038ed]"
               />
+
+              {/* Autocomplete Suggestions Dropdown */}
+              {showSearchDropdown && searchResults.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-[600] max-h-56 overflow-y-auto">
+                  {searchResults.map((res, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => handleSelectSearchResult(res)}
+                      className="w-full text-left px-3.5 py-2.5 hover:bg-blue-50/70 border-b border-slate-100 last:border-0 flex items-start gap-2.5 transition-colors cursor-pointer"
+                    >
+                      <MapPin className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                      <div>
+                        <div className="text-xs font-bold text-slate-800">{res.roadOrArea}</div>
+                        <div className="text-[11px] text-slate-500 line-clamp-1">{res.displayName}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             <span className="text-xs text-slate-400 text-center font-medium">or</span>
@@ -352,19 +549,28 @@ export const Step3StoreDetails: React.FC<Step3StoreDetailsProps> = ({
             <button
               type="button"
               onClick={handleUseCurrentLocation}
-              disabled={isLocating}
+              disabled={isLocating || isGeocoding}
               className="px-4 py-2 text-xs font-semibold text-[#0038ed] border border-[#0038ed] rounded-lg hover:bg-blue-50/60 transition-all flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer disabled:opacity-60"
             >
-              <Navigation className="w-3.5 h-3.5" />
-              <span>{isLocating ? 'Locating...' : 'Use Current Location'}</span>
+              {isLocating ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Detecting GPS...</span>
+                </>
+              ) : (
+                <>
+                  <Navigation className="w-3.5 h-3.5" />
+                  <span>Use Current Location</span>
+                </>
+              )}
             </button>
           </div>
 
           {/* Interactive Leaflet Map Picker */}
           <MapPicker
             coordinates={coordinates}
-            onChange={(newCoords) => setCoordinates(newCoords)}
-            className="h-40 sm:h-44"
+            onChange={handleMapPinChange}
+            className="h-44 sm:h-48"
           />
         </div>
 

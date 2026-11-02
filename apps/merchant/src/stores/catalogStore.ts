@@ -19,6 +19,21 @@ export interface TaxConfig {
   amount?: number;
 }
 
+export interface ProductVariantItem {
+  id: string;
+  sku: string;
+  barcode?: string;
+  color?: string;
+  colorHex?: string;
+  size?: string;
+  price: number;
+  costPrice?: number;
+  mrp: number;
+  stock: number;
+  isActive: boolean;
+  image?: string;
+}
+
 export interface ProductItem {
   id: string;
   name: string;
@@ -43,6 +58,7 @@ export interface ProductItem {
   productIdentification?: 'new' | 'existing';
   existingSearchTerm?: string;
   hsnCode?: string;
+  shelfLocation?: string;
   description?: string;
   tags?: string[];
   trackInventory?: boolean;
@@ -59,6 +75,7 @@ export interface ProductItem {
   careInstructions?: string;
   metaTitle?: string;
   metaDescription?: string;
+  variants?: ProductVariantItem[];
 }
 
 export interface CatalogKPIs {
@@ -122,6 +139,7 @@ interface CatalogStoreState {
   toggleSelectProduct: (id: string) => void;
   toggleSelectAll: () => void;
   setCurrentPage: (page: number) => void;
+  setPageSize: (size: number) => void;
 
   setActiveView: (view: CatalogViewMode) => void;
   setWizardStep: (step: WizardStep) => void;
@@ -135,6 +153,8 @@ interface CatalogStoreState {
   toggleProductStatus: (id: string) => Promise<void>;
   updateStock: (id: string, newStock: number, lowStockThreshold?: number) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
+  bulkDeleteSelectedProducts: () => Promise<void>;
+  clearSelectedProducts: () => void;
 
   // Modal controls
   openStockModal: (product: ProductItem) => void;
@@ -301,7 +321,7 @@ export const initialCatalogMockupProducts: ProductItem[] = [
     name: 'Men Black Round Neck T-Shirt',
     sku: 'PRD-TSHIRT-RD-BLK-M',
     barcode: '8901234567890',
-    category: 'Men',
+    category: "Men's Fashion",
     subCategory: 'T-Shirts',
     productType: 'Round Neck T-Shirt',
     brand: 'Roadster',
@@ -359,7 +379,7 @@ export const initialCatalogMockupProducts: ProductItem[] = [
     name: 'Men White Round Neck T-Shirt',
     sku: 'PRD-TSHIRT-RD-WHT-M',
     barcode: '8901234567891',
-    category: 'Men',
+    category: "Men's Fashion",
     subCategory: 'T-Shirts',
     productType: 'Round Neck T-Shirt',
     brand: 'Roadster',
@@ -406,7 +426,7 @@ export const initialCatalogMockupProducts: ProductItem[] = [
     name: 'Men Navy Blue Round Neck T-Shirt',
     sku: 'PRD-TSHIRT-RD-NVY-L',
     barcode: '8901234567892',
-    category: 'Men',
+    category: "Men's Fashion",
     subCategory: 'T-Shirts',
     productType: 'Round Neck T-Shirt',
     brand: 'Roadster',
@@ -451,7 +471,7 @@ export const initialCatalogMockupProducts: ProductItem[] = [
     name: 'Men Grey Round Neck T-Shirt',
     sku: 'PRD-TSHIRT-RD-GRY-M',
     barcode: '8901234567893',
-    category: 'Men',
+    category: "Men's Fashion",
     subCategory: 'T-Shirts',
     productType: 'Round Neck T-Shirt',
     brand: 'Roadster',
@@ -496,7 +516,7 @@ export const initialCatalogMockupProducts: ProductItem[] = [
     name: 'Men Black Polo T-Shirt',
     sku: 'PRD-POLO-BLK-M',
     barcode: '8901234567894',
-    category: 'Men',
+    category: "Men's Fashion",
     subCategory: 'T-Shirts',
     productType: 'Polo T-Shirt',
     brand: 'Roadster',
@@ -541,7 +561,7 @@ export const initialCatalogMockupProducts: ProductItem[] = [
     name: 'Men Maroon Polo T-Shirt',
     sku: 'PRD-POLO-MRN-L',
     barcode: '8901234567895',
-    category: 'Men',
+    category: "Men's Fashion",
     subCategory: 'T-Shirts',
     productType: 'Polo T-Shirt',
     brand: 'Roadster',
@@ -586,7 +606,7 @@ export const initialCatalogMockupProducts: ProductItem[] = [
     name: 'Men Blue Henley T-Shirt',
     sku: 'PRD-HENLEY-BLU-M',
     barcode: '8901234567896',
-    category: 'Men',
+    category: "Men's Fashion",
     subCategory: 'T-Shirts',
     productType: 'Henley T-Shirt',
     brand: 'Roadster',
@@ -631,7 +651,7 @@ export const initialCatalogMockupProducts: ProductItem[] = [
     name: 'Men Striped Round Neck T-Shirt',
     sku: 'PRD-TSHIRT-RD-STP-M',
     barcode: '8901234567897',
-    category: 'Men',
+    category: "Men's Fashion",
     subCategory: 'T-Shirts',
     productType: 'Round Neck T-Shirt',
     brand: 'Roadster',
@@ -755,8 +775,19 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
   },
 
   setSearchQuery: (searchQuery) => set({ searchQuery, currentPage: 1 }),
-  setCategoryFilter: (categoryFilter) => set({ categoryFilter, currentPage: 1 }),
-  setSubCategoryFilter: (subCategoryFilter) => set({ subCategoryFilter, currentPage: 1 }),
+  setCategoryFilter: (categoryFilter) =>
+    set({
+      categoryFilter,
+      subCategoryFilter: 'All Sub-categories',
+      productTypeFilter: 'All Product Types',
+      currentPage: 1,
+    }),
+  setSubCategoryFilter: (subCategoryFilter) =>
+    set({
+      subCategoryFilter,
+      productTypeFilter: 'All Product Types',
+      currentPage: 1,
+    }),
   setProductTypeFilter: (productTypeFilter) => set({ productTypeFilter, currentPage: 1 }),
   setBrandFilter: (brandFilter) => set({ brandFilter, currentPage: 1 }),
   setStatusFilter: (statusFilter) => set({ statusFilter, currentPage: 1 }),
@@ -789,6 +820,7 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
       return { selectedProductIds: state.products.map((p) => p.id) };
     }),
   setCurrentPage: (currentPage) => set({ currentPage }),
+  setPageSize: (pageSize) => set({ pageSize, currentPage: 1 }),
 
   setActiveView: (activeView) => set({ activeView }),
   setWizardStep: (wizardStep) => set({ wizardStep }),
@@ -807,12 +839,48 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
       },
       wizardStep: 1,
     }),
-  loadProductIntoDraft: (product) =>
+  loadProductIntoDraft: (product) => {
+    const rawImages = Array.isArray(product.images) && product.images.length > 0
+      ? [...product.images]
+      : ((product as any).imageUrl ? [(product as any).imageUrl] : []);
+
+    const normalizedAttributes: Record<string, string> = {};
+    if (product.attributes && typeof product.attributes === 'object') {
+      if (Array.isArray(product.attributes)) {
+        (product.attributes as any[]).forEach((attr: any) => {
+          if (attr.key && attr.value) normalizedAttributes[attr.key] = String(attr.value);
+        });
+      } else {
+        Object.entries(product.attributes).forEach(([k, v]) => {
+          normalizedAttributes[k] = String(v);
+        });
+      }
+    }
+
     set({
-      draftProduct: { ...product },
+      draftProduct: {
+        ...product,
+        price: product.price ?? 0,
+        mrp: product.mrp ?? product.price ?? 0,
+        costPrice: product.costPrice ?? Math.round(Number(product.price || 0) * 0.7),
+        stock: product.stock ?? 0,
+        lowStockThreshold: product.lowStockThreshold ?? 10,
+        images: rawImages,
+        tags: Array.isArray(product.tags) ? [...product.tags] : [],
+        attributes: normalizedAttributes,
+        hsnCode: product.hsnCode || '',
+        barcode: product.barcode || '',
+        sku: product.sku || '',
+        name: product.name || '',
+        category: product.category || 'fashion',
+        subCategory: product.subCategory || '',
+        productType: product.productType || '',
+        brand: product.brand || 'Generic',
+      },
       wizardStep: 1,
       activeView: 'wizard',
-    }),
+    });
+  },
 
   saveDraftAsProduct: async () => {
     const { draftProduct, products } = get();
@@ -892,6 +960,8 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
         ? draftProduct.productType.toLowerCase().trim().replace(/[\s-]+/g, '_')
         : undefined,
       brand: draftProduct.brand || 'Generic',
+      hsnCode: draftProduct.hsnCode || undefined,
+      gstRate: draftProduct.tax?.rate ?? 18,
       tags: draftProduct.tags || [],
       attributes: attributesArray,
       variants,
@@ -1146,7 +1216,42 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
       );
       return { products: updatedList, kpis: calculateKPIs(updatedList) };
     });
+
+    try {
+      const { useInventoryStore } = await import('./inventoryStore.js');
+      useInventoryStore.getState().syncProductStock(id, newStock, {
+        reason: 'Catalog stock update',
+        lowStockThreshold,
+      });
+    } catch {
+      // safe fallback if inventoryStore not loaded
+    }
   },
+
+  
+  bulkDeleteSelectedProducts: async () => {
+    const { selectedProductIds, products } = get();
+    if (selectedProductIds.length === 0) return;
+
+    try {
+      const validBackendIds = selectedProductIds.filter((id) => /^[0-9a-fA-F]{24}$/.test(id));
+      if (validBackendIds.length > 0) {
+        await catalogApi.bulkDeleteProducts(validBackendIds);
+      }
+    } catch (err) {
+      console.warn('Failed to bulk delete products on backend:', err);
+    }
+
+    set((state) => {
+      const updatedList = state.products.filter((p) => !state.selectedProductIds.includes(p.id));
+      return {
+        products: updatedList,
+        kpis: calculateKPIs(updatedList),
+        selectedProductIds: [],
+      };
+    });
+  },
+  clearSelectedProducts: () => set({ selectedProductIds: [] }),
 
   deleteProduct: async (id) => {
     try {

@@ -14,6 +14,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ShieldCheck,
+  Plus,
 } from 'lucide-react';
 import { useExpenseStore, Vendor, PurchaseSubTab } from '../../stores/expenseStore.js';
 import { TableActionPopover } from '../ui/TableActionPopover.js';
@@ -207,24 +208,35 @@ export const VendorsTab: React.FC<VendorsTabProps> = ({
       {/* 1. Main Card Container with Subtabs Bar & Filters */}
       <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden">
         {/* Horizontal Sub-Tabs Bar matching mockup 8.10.png */}
-        <div className="border-b border-slate-100 flex items-center px-4 overflow-x-auto scrollbar-none gap-6 text-xs bg-white">
-          {subTabs.map((tab) => {
-            const isActive = activeSubTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setActiveSubTab(tab.id)}
-                className={`py-3.5 font-bold transition-all relative whitespace-nowrap cursor-pointer ${
-                  isActive
-                    ? 'text-blue-600 border-b-2 border-blue-600'
-                    : 'text-slate-500 hover:text-slate-900 border-b-2 border-transparent'
-                }`}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
+        <div className="border-b border-slate-100 flex items-center justify-between px-4 overflow-x-auto scrollbar-none gap-6 text-xs bg-white">
+          <div className="flex items-center gap-6">
+            {subTabs.map((tab) => {
+              const isActive = activeSubTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveSubTab(tab.id)}
+                  className={`py-3.5 font-bold transition-all relative whitespace-nowrap cursor-pointer ${
+                    isActive
+                      ? 'text-blue-600 border-b-2 border-blue-600'
+                      : 'text-slate-500 hover:text-slate-900 border-b-2 border-transparent'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => (onOpenAddVendor ? onOpenAddVendor() : openAddVendor())}
+            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold flex items-center gap-1.5 shadow-2xs transition-colors shrink-0 cursor-pointer"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Add Vendor</span>
+          </button>
         </div>
 
         {/* 2. Filter Toolbar matching mockup 8.10.png */}

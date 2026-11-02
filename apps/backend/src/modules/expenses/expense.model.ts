@@ -5,6 +5,7 @@ import {
   IPurchaseBill,
   ICreditNoteItem,
   IEWayBillItem,
+  IPurchaseItem,
 } from '@repo/shared-types';
 
 export interface IExpenseDocument extends Document, Omit<IExpenseItem, 'id'> {
@@ -19,6 +20,8 @@ export interface IVendorDocument extends Document, Omit<IVendorItem, 'id'> {
 export interface IPurchaseBillDocument extends Document, Omit<IPurchaseBill, 'id'> {
   storeId: mongoose.Types.ObjectId;
   type: string;
+  status: 'Pending' | 'Partially Received' | 'Received' | 'Cancelled';
+  items?: IPurchaseItem[];
 }
 
 export interface ICreditNoteDocument extends Document, Omit<ICreditNoteItem, 'id'> {
@@ -93,6 +96,17 @@ const vendorSchema = new Schema<IVendorDocument>(
 vendorSchema.index({ storeId: 1, vendorName: 1 });
 
 // 3. Purchase Bill & Order Schema
+const purchaseItemSchema = new Schema(
+  {
+    productId: { type: Schema.Types.ObjectId as any, ref: 'Product' },
+    name: { type: String, trim: true },
+    sku: { type: String, trim: true },
+    quantity: { type: Number, default: 1, min: 1 },
+    unitPrice: { type: Number, default: 0, min: 0 },
+  },
+  { _id: false },
+);
+
 const purchaseBillSchema = new Schema<IPurchaseBillDocument>(
   {
     storeId: { type: Schema.Types.ObjectId as any, ref: 'Store', required: true, index: true },
@@ -107,8 +121,14 @@ const purchaseBillSchema = new Schema<IPurchaseBillDocument>(
       enum: ['Paid', 'Partially Paid', 'Unpaid'],
       default: 'Unpaid',
     },
+    status: {
+      type: String,
+      enum: ['Pending', 'Partially Received', 'Received', 'Cancelled'],
+      default: 'Pending',
+    },
     dueDate: { type: String, default: '' },
     type: { type: String, default: 'Purchase' },
+    items: { type: [purchaseItemSchema], default: [] },
   },
   {
     timestamps: true,

@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import SectionHeading from "@/components/ui/SectionHeading";
 import FeatureCard from "@/components/ui/FeatureCard";
-import { branding } from "@repo/shared-types/branding.config";
+import { branding } from "@/config/company";
 
 const highlights = [
   { icon: Package, title: "Retail Operations", description: "Manage your entire business from one dashboard." },

@@ -5,6 +5,8 @@ import { IUser, IUserAddress, UserRole } from '@repo/shared-types';
 export interface IUserDocument extends Omit<IUser, '_id'>, Document {
   password?: string;
   refreshToken?: string;
+  favoriteStores?: mongoose.Types.ObjectId[];
+  wishlist?: mongoose.Types.ObjectId[];
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
@@ -39,17 +41,13 @@ const userSchema = new Schema<IUserDocument>(
     email: {
       type: String,
       required: [true, 'Email is required'],
-      unique: true,
       lowercase: true,
       trim: true,
-      index: true,
     },
     phone: {
       type: String,
       required: [true, 'Phone number is required'],
-      unique: true,
       trim: true,
-      index: true,
     },
     password: {
       type: String,
@@ -83,6 +81,8 @@ const userSchema = new Schema<IUserDocument>(
       enum: ['male', 'female', 'other', 'prefer_not_to_say'],
     },
     addresses: [userAddressSchema],
+    favoriteStores: [{ type: Schema.Types.ObjectId, ref: 'Store' }],
+    wishlist: [{ type: Schema.Types.ObjectId, ref: 'Product' }],
     refreshToken: {
       type: String,
       select: false,
@@ -100,6 +100,11 @@ const userSchema = new Schema<IUserDocument>(
     },
   },
 );
+
+// Role-scoped tenancy uniqueness compound indexes (AUDIT-004 & AUDIT-013)
+// Guarantees one account per email/phone per role namespace (Customer vs Merchant vs Admin)
+userSchema.index({ email: 1, role: 1 }, { unique: true, name: 'email_role_unique' });
+userSchema.index({ phone: 1, role: 1 }, { unique: true, name: 'phone_role_unique' });
 
 // Pre-save password hashing hook
 userSchema.pre('save', async function (next) {

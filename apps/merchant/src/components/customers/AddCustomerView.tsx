@@ -14,6 +14,12 @@ import {
   validatePhone,
   validatePIN,
 } from '../../utils/validation.js';
+import {
+  validateEmail,
+  validatePersonName,
+  cleanName,
+  cleanEmail,
+} from '@repo/shared-types';
 
 interface AddCustomerViewProps {
   onBack: () => void;
@@ -48,6 +54,7 @@ export const AddCustomerView: React.FC<AddCustomerViewProps> = ({
 
   // Field validation errors
   const [mobileError, setMobileError] = useState('');
+  const [emailError, setEmailError] = useState('');
   const [pincodeError, setPincodeError] = useState('');
   const [gstinError, setGstinError] = useState('');
   const [panError, setPanError] = useState('');
@@ -96,16 +103,34 @@ export const AddCustomerView: React.FC<AddCustomerViewProps> = ({
   const handleSave = () => {
     let hasError = false;
 
-    if (!customerName.trim()) {
-      setErrorMsg('Customer name is required.');
+    const sanitizedName = cleanName(customerName);
+    if (!sanitizedName || sanitizedName.length < 2) {
+      setErrorMsg('Customer name must be at least 2 characters.');
+      return;
+    }
+    const nameCheck = validatePersonName(sanitizedName);
+    if (!nameCheck.isValid) {
+      setErrorMsg(nameCheck.error || 'Customer name contains invalid characters.');
       return;
     }
 
-    if (mobileNumber.trim() && !validatePhone(mobileNumber.trim())) {
+    if (mobileNumber.trim() && !validatePhone(mobileNumber.trim()).isValid) {
       setMobileError('Please enter a valid 10-digit Indian mobile number (e.g. 9876543210).');
       hasError = true;
     } else {
       setMobileError('');
+    }
+
+    if (emailAddress.trim()) {
+      const emailCheck = validateEmail(emailAddress.trim());
+      if (!emailCheck.isValid) {
+        setEmailError('Please enter a valid email address (e.g. name@example.com).');
+        hasError = true;
+      } else {
+        setEmailError('');
+      }
+    } else {
+      setEmailError('');
     }
 
     if (pincode.trim() && !validatePIN(pincode.trim())) {
@@ -115,15 +140,21 @@ export const AddCustomerView: React.FC<AddCustomerViewProps> = ({
       setPincodeError('');
     }
 
-    if (gstin.trim() && !validateGSTIN(gstin.trim())) {
+    const cleanGst = gstin.trim().toUpperCase();
+    const cleanPanVal = pan.trim().toUpperCase();
+
+    if (cleanGst && !validateGSTIN(cleanGst)) {
       setGstinError('Invalid GSTIN format (15 characters alphanumeric, e.g. 23AAAAA0000A1Z5).');
       hasError = true;
     } else {
       setGstinError('');
     }
 
-    if (pan.trim() && !validatePAN(pan.trim())) {
+    if (cleanPanVal && !validatePAN(cleanPanVal)) {
       setPanError('Invalid PAN format (10 characters alphanumeric, e.g. ABCDE1234F).');
+      hasError = true;
+    } else if (cleanGst && cleanPanVal && cleanGst.length >= 12 && cleanGst.slice(2, 12) !== cleanPanVal) {
+      setPanError('PAN does not match the PAN embedded in the GSTIN (characters 3-12).');
       hasError = true;
     } else {
       setPanError('');
@@ -348,10 +379,13 @@ export const AddCustomerView: React.FC<AddCustomerViewProps> = ({
               </div>
               <input
                 type="tel"
-                placeholder="Enter mobile number (e.g. 9876543210)"
+                inputMode="numeric"
+                maxLength={10}
+                placeholder="10-digit mobile (e.g. 9876543210)"
                 value={mobileNumber}
                 onChange={(e) => {
-                  setMobileNumber(e.target.value);
+                  const cleaned = e.target.value.replace(/\D/g, '').slice(0, 10);
+                  setMobileNumber(cleaned);
                   if (mobileError) setMobileError('');
                 }}
                 onBlur={() => {
@@ -361,7 +395,7 @@ export const AddCustomerView: React.FC<AddCustomerViewProps> = ({
                     setMobileError('');
                   }
                 }}
-                className={`w-full px-3.5 py-2.5 bg-white border rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 shadow-2xs transition-colors ${
+                className={`w-full px-3.5 py-2.5 bg-white border rounded-xl text-xs font-mono text-slate-800 focus:outline-none focus:ring-2 shadow-2xs transition-colors ${
                   mobileError
                     ? 'border-rose-400 focus:ring-rose-400'
                     : 'border-slate-200 focus:ring-blue-500'
@@ -380,11 +414,25 @@ export const AddCustomerView: React.FC<AddCustomerViewProps> = ({
             </label>
             <input
               type="email"
+              autoComplete="email"
+              autoCapitalize="none"
+              spellCheck={false}
+              maxLength={100}
               placeholder="Enter email address (optional)"
               value={emailAddress}
-              onChange={(e) => setEmailAddress(e.target.value)}
-              className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-2xs"
+              onChange={(e) => {
+                setEmailAddress(e.target.value);
+                if (emailError) setEmailError('');
+              }}
+              className={`w-full px-3.5 py-2.5 bg-white border rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 shadow-2xs transition-colors ${
+                emailError
+                  ? 'border-rose-400 focus:ring-rose-400'
+                  : 'border-slate-200 focus:ring-blue-500'
+              }`}
             />
+            {emailError && (
+              <p className="text-[11px] text-rose-500 mt-1 font-medium">{emailError}</p>
+            )}
           </div>
 
           {/* Customer Display Name */}
@@ -491,11 +539,13 @@ export const AddCustomerView: React.FC<AddCustomerViewProps> = ({
               </label>
               <input
                 type="text"
+                inputMode="numeric"
                 placeholder="Enter 6-digit pincode"
                 value={pincode}
                 maxLength={6}
                 onChange={(e) => {
-                  setPincode(e.target.value);
+                  const cleaned = e.target.value.replace(/\D/g, '').slice(0, 6);
+                  setPincode(cleaned);
                   if (pincodeError) setPincodeError('');
                 }}
                 onBlur={() => {
@@ -549,7 +599,8 @@ export const AddCustomerView: React.FC<AddCustomerViewProps> = ({
               value={gstin}
               maxLength={15}
               onChange={(e) => {
-                setGstin(e.target.value.toUpperCase());
+                const cleaned = e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 15);
+                setGstin(cleaned);
                 if (gstinError) setGstinError('');
               }}
               onBlur={() => {
@@ -580,7 +631,8 @@ export const AddCustomerView: React.FC<AddCustomerViewProps> = ({
               value={pan}
               maxLength={10}
               onChange={(e) => {
-                setPan(e.target.value.toUpperCase());
+                const cleaned = e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 10);
+                setPan(cleaned);
                 if (panError) setPanError('');
               }}
               onBlur={() => {

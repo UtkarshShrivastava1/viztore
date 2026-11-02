@@ -1,7 +1,12 @@
 import React from 'react';
-import { X, Receipt, Printer, CheckCircle2, Clock, AlertTriangle } from 'lucide-react';
+import { X, Receipt, Printer, Download, CheckCircle2, Clock, AlertTriangle } from 'lucide-react';
 import { WalletTransaction } from '../../stores/walletStore.js';
 import { branding } from '../../lib/branding.js';
+import {
+  downloadDocumentPdf,
+  printFormattedDocument,
+  walletTxnToVoucherDoc,
+} from '../../lib/pdfEngine.js';
 
 interface TransactionDetailModalProps {
   transaction: WalletTransaction | null;
@@ -103,19 +108,35 @@ export const TransactionDetailModal: React.FC<TransactionDetailModalProps> = ({
           </div>
 
           {/* Actions */}
-          <div className="pt-2 flex items-center justify-between gap-3">
-            <button
-              type="button"
-              onClick={() => window.print()}
-              className="px-4 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors shadow-2xs"
-            >
-              <Printer className="w-3.5 h-3.5" />
-              Print Receipt
-            </button>
+          <div className="pt-2 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const docData = walletTxnToVoucherDoc(transaction);
+                  downloadDocumentPdf(docData);
+                }}
+                className="px-3 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5 text-blue-600" />
+                Download PDF
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const docData = walletTxnToVoucherDoc(transaction);
+                  printFormattedDocument(docData);
+                }}
+                className="px-3 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                Print
+              </button>
+            </div>
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-colors shadow-2xs"
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-colors shadow-2xs"
             >
               Done
             </button>

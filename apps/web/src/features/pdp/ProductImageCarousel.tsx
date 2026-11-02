@@ -6,6 +6,10 @@ interface ProductImageCarouselProps {
   images: string[];
   selectedImageIdx: number;
   setSelectedImageIdx: (idx: number) => void;
+  isWishlisted?: boolean;
+  onToggleWishlist?: () => void;
+  onShare?: () => void;
+  isCopied?: boolean;
 }
 
 export function ProductImageCarousel({
@@ -13,6 +17,10 @@ export function ProductImageCarousel({
   images,
   selectedImageIdx,
   setSelectedImageIdx,
+  isWishlisted,
+  onToggleWishlist,
+  onShare,
+  isCopied,
 }: ProductImageCarouselProps) {
   return (
     <div className="md:sticky md:top-24 h-max flex flex-col md:flex-row gap-4">
@@ -48,12 +56,35 @@ export function ProductImageCarousel({
 
         {/* Top Right Action Buttons */}
         <div className="absolute top-4 right-4 flex flex-col gap-3 z-10">
-          <button className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-[#192168] hover:text-rose-500 transition-colors border border-surface-200">
-            <Heart className="w-5 h-5" strokeWidth={1.5} />
-          </button>
-          <button className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-[#192168] hover:text-[#1668F6] transition-colors border border-surface-200">
-            <Share2 className="w-4 h-4" strokeWidth={2} />
-          </button>
+          {onToggleWishlist && (
+            <button
+              type="button"
+              onClick={onToggleWishlist}
+              title={isWishlisted ? 'Remove from wishlist' : 'Save to wishlist'}
+              className={`w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center transition-colors border ${
+                isWishlisted
+                  ? 'border-rose-200 text-rose-500 bg-rose-50/50'
+                  : 'border-surface-200 text-[#192168] hover:text-rose-500 hover:border-rose-200'
+              }`}
+            >
+              <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-rose-500 text-rose-500' : ''}`} strokeWidth={1.5} />
+            </button>
+          )}
+          {onShare && (
+            <button
+              type="button"
+              onClick={onShare}
+              title="Share product link"
+              className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-[#192168] hover:text-[#1668F6] transition-colors border border-surface-200 relative"
+            >
+              <Share2 className="w-4 h-4" strokeWidth={2} />
+              {isCopied && (
+                <span className="absolute -bottom-7 right-0 bg-slate-900 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-lg whitespace-nowrap animate-in fade-in">
+                  Copied!
+                </span>
+              )}
+            </button>
+          )}
         </div>
 
         {/* Zoom Button (Bottom Right Desktop) */}

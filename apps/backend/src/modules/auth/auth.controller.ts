@@ -94,3 +94,40 @@ export const logout: RequestHandler = catchAsync(async (req: Request, res: Respo
   }
   return ApiResponse.success(res, null, 'Logged out successfully');
 });
+
+export const getFavoriteStores: RequestHandler = catchAsync(async (req: Request, res: Response) => {
+  if (!req.user) throw AppError.unauthorized();
+  const stores = await authService.getFavoriteStores(req.user.sub);
+  return ApiResponse.success(res, stores);
+});
+
+export const toggleFavoriteStore: RequestHandler = catchAsync(async (req: Request, res: Response) => {
+  if (!req.user) throw AppError.unauthorized();
+  const { storeId } = req.params;
+  if (!storeId) throw AppError.badRequest('Store ID is required');
+  const result = await authService.toggleFavoriteStore(req.user.sub, storeId);
+  return ApiResponse.success(res, result, result.isFavorite ? 'Store added to favorites' : 'Store removed from favorites');
+});
+
+export const getWishlist: RequestHandler = catchAsync(async (req: Request, res: Response) => {
+  if (!req.user) throw AppError.unauthorized();
+  const products = await authService.getWishlist(req.user.sub);
+  return ApiResponse.success(res, products);
+});
+
+export const toggleWishlist: RequestHandler = catchAsync(async (req: Request, res: Response) => {
+  if (!req.user) throw AppError.unauthorized();
+  const { productId } = req.params;
+  if (!productId) throw AppError.badRequest('Product ID is required');
+  const result = await authService.toggleWishlist(req.user.sub, productId);
+  return ApiResponse.success(res, result, result.isWishlisted ? 'Product added to wishlist' : 'Product removed from wishlist');
+});
+
+export const submitFeedback: RequestHandler = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.user?.sub;
+  const feedback = await authService.submitFeedback({
+    ...req.body,
+    userId,
+  });
+  return ApiResponse.created(res, feedback, 'Feedback submitted successfully');
+});

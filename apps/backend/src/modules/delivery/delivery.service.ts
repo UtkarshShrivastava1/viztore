@@ -14,6 +14,7 @@ import {
   type PilotRider,
   PILOT_RIDERS,
   type RiderRunDetailsDto,
+  type UpdateRiderLocationDto,
 } from './delivery.types.js';
 import { IEventBus } from '../../shared/events/eventBus.js';
 import { EVENTS } from '../../shared/events/eventTypes.js';
@@ -483,12 +484,18 @@ export function createDeliveryService(
       try {
         const order = await orderFacade.getOrderById(targetOrderId);
         if (order) {
-          const isCod = Boolean(
-            (order as any).payment?.paymentMethod === 'Cash on Delivery' ||
-            (order as any).paymentMethod === 'cod' ||
-            (order as any).paymentMethod === 'COD' ||
-            (order as any).paymentMethod === 'CASH_ON_DELIVERY'
-          );
+          const rawMethod = String(
+            (order as any).paymentMethod ||
+            (order as any).payment?.paymentMethod ||
+            (order as any).paymentMode ||
+            ''
+          ).toLowerCase();
+          const isCod =
+            rawMethod === 'cod' ||
+            rawMethod === 'cash on delivery' ||
+            rawMethod === 'cash' ||
+            rawMethod.includes('cod') ||
+            rawMethod.includes('cash');
 
           let storeName = '';
           let storeAddress = '';
@@ -499,8 +506,17 @@ export function createDeliveryService(
               if (store) {
                 storeName = store.name;
                 storePhone = store.phone || '';
-                const parts = [store.address?.street, store.address?.city, store.address?.state].filter(Boolean);
+                const parts = [
+                  store.address?.street,
+                  (store.address as any)?.landmark || (store.address as any)?.locality,
+                  store.address?.city,
+                  store.address?.state,
+                  store.address?.pincode,
+                ].filter(Boolean);
                 storeAddress = parts.join(', ') || store.name;
+                if (store.location?.coordinates && Array.isArray(store.location.coordinates)) {
+                  delivery.pickupLocation.coordinates = store.location.coordinates as [number, number];
+                }
               }
             } catch {
               // fallback
@@ -508,7 +524,12 @@ export function createDeliveryService(
           }
 
           const dropAddress = order.shippingAddress
-            ? [order.shippingAddress.street, order.shippingAddress.city, order.shippingAddress.state].filter(Boolean).join(', ')
+            ? [
+                order.shippingAddress.street,
+                order.shippingAddress.city,
+                order.shippingAddress.state,
+                (order.shippingAddress as any).postalCode || (order.shippingAddress as any).pincode,
+              ].filter(Boolean).join(', ')
             : undefined;
 
           orderInfo = {
@@ -553,23 +574,48 @@ export function createDeliveryService(
       claimedByRider: delivery.rider ? { id: delivery.rider.id, name: delivery.rider.name } : undefined,
     };
 
-    if (isClaimedByCaller) {
-      result.pickupDetails = {
-        storeName: storeDisplayName,
-        storePhone: orderInfo?.pickupPhone || '',
-        pickupAddress: pickupAddressText,
-        navigationUrl: pickupNavigationUrl,
-        pickupCode: `#${delivery.orderNumber.slice(-4).toUpperCase()}`,
-      };
-      result.dropoffDetails = {
-        customerName: orderInfo?.customerName || 'Customer',
-        customerPhone: orderInfo?.customerPhone || '',
-        dropoffAddress: dropAddressText,
-        navigationUrl: dropoffNavigationUrl,
-      };
-    }
+    result.pickupCoordinates = delivery.pickupLocation.coordinates;
+    result.dropoffCoordinates = delivery.dropoffLocation.coordinates;
+    result.pickupDetails = {
+      storeName: storeDisplayName,
+      storePhone: orderInfo?.pickupPhone || '',
+      pickupAddress: pickupAddressText,
+      navigationUrl: pickupNavigationUrl,
+      pickupCode: `#${delivery.orderNumber.slice(-4).toUpperCase()}`,
+    };
+    result.dropoffDetails = {
+      customerName: isClaimedByCaller ? (orderInfo?.customerName || 'Customer') : 'Customer',
+      customerPhone: isClaimedByCaller ? (orderInfo?.customerPhone || '') : '',
+      dropoffAddress: dropAddressText,
+      navigationUrl: dropoffNavigationUrl,
+    };
 
     return result;
+  }
+
+  async function updateLocation(
+    orderId: string,
+    dto: UpdateRiderLocationDto,
+  ): Promise<{ success: boolean; timestamp: string }> {
+    const delivery = await repo.findByOrderId(orderId);
+    if (!delivery) {
+      throw AppError.notFound('Delivery record not found for this order', 'DELIVERY_NOT_FOUND');
+    }
+
+    const timestamp = new Date().toISOString();
+    if (bus) {
+      bus.emit(EVENTS.DELIVERY_LOCATION_UPDATED, {
+        orderId,
+        latitude: dto.latitude,
+        longitude: dto.longitude,
+        heading: dto.heading,
+        speed: dto.speed,
+        accuracy: dto.accuracy,
+        timestamp,
+      });
+    }
+
+    return { success: true, timestamp };
   }
 
   return {
@@ -584,6 +630,7 @@ export function createDeliveryService(
     calculateEta,
     getPilotRoster,
     getRunDetails,
+    updateLocation,
   };
 }
 

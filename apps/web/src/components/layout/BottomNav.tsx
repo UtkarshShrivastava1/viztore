@@ -8,6 +8,7 @@ import { useCartStore } from '@/stores/cart.store';
 
 export function BottomNav() {
   const pathname = usePathname();
+  if (pathname?.startsWith('/rider')) return null;
   const items = useCartStore((state) => state.items);
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
 

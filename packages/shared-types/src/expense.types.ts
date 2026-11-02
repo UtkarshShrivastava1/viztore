@@ -33,6 +33,14 @@ export interface IPurchaseOrder {
   status: 'Pending' | 'Partially Received' | 'Received' | 'Cancelled';
 }
 
+export interface IPurchaseItem {
+  productId?: string;
+  name?: string;
+  sku?: string;
+  quantity: number;
+  unitPrice?: number;
+}
+
 export interface IPurchaseBill {
   id: string;
   billNumber: string;
@@ -43,6 +51,9 @@ export interface IPurchaseBill {
   totalAmount: number;
   paymentStatus: 'Paid' | 'Partially Paid' | 'Unpaid';
   dueDate: string;
+  type?: string;
+  status?: 'Pending' | 'Partially Received' | 'Received' | 'Cancelled';
+  items?: IPurchaseItem[];
 }
 
 export interface IExpenseItem {
@@ -115,23 +126,55 @@ export const createExpenseSchema = z.object({
   notes: z.string().max(500).optional(),
 });
 
-export const createVendorSchema = z.object({
+export const createVendorSchema = z.preprocess((val: any) => {
+  if (val && typeof val === 'object') {
+    const vendorName = val.vendorName || val.companyName || val.displayName || val.name || 'Vendor';
+    const contactPerson = val.contactPerson || val.name || vendorName || 'Manager';
+    const city = val.city || 'Raipur';
+    const phone = val.phone || '9876543210';
+    const status = val.status || 'Active';
+    return {
+      ...val,
+      vendorName,
+      contactPerson,
+      city,
+      phone,
+      status,
+    };
+  }
+  return val;
+}, z.object({
   vendorName: z.string().min(2, 'Vendor name is required'),
   contactPerson: z.string().min(2, 'Contact person is required'),
   phone: z.string().min(8, 'Valid phone number is required'),
   email: z.string().email('Invalid email address').optional().or(z.literal('')),
   city: z.string().min(2, 'City is required'),
   status: z.enum(['Active', 'Inactive', 'Blocked']).default('Active'),
-});
+}).passthrough());
+
+export const purchaseItemSchema = z.object({
+  productId: z.string().optional(),
+  name: z.string().optional(),
+  sku: z.string().optional(),
+  quantity: z.number().positive().default(1),
+  unitPrice: z.number().nonnegative().optional(),
+}).passthrough();
 
 export const createPurchaseBillSchema = z.object({
-  vendor: z.string().min(2, 'Vendor is required'),
+  vendor: z.string().optional(),
+  vendorName: z.string().optional(),
   itemsCount: z.string().default('1 item'),
   totalAmount: z.number().positive('Total amount must be greater than zero'),
-  paymentStatus: z.enum(['Paid', 'Partially Paid', 'Unpaid']).default('Unpaid'),
+  paymentStatus: z.string().default('Unpaid'),
+  status: z.enum(['Pending', 'Partially Received', 'Received', 'Cancelled']).optional(),
   dueDate: z.string().optional(),
   type: z.enum(['Purchase', 'Purchase Order', 'Direct Purchase']).default('Purchase'),
-});
+  items: z.array(purchaseItemSchema).optional(),
+}).passthrough().transform((d) => ({
+  ...d,
+  vendor: d.vendor || d.vendorName || 'Unknown Vendor',
+  paymentStatus: (d.paymentStatus?.toLowerCase() === 'paid' ? 'Paid' : d.paymentStatus?.toLowerCase() === 'partial' || d.paymentStatus === 'Partially Paid' ? 'Partially Paid' : 'Unpaid') as 'Paid' | 'Partially Paid' | 'Unpaid',
+}));
 
 export const createCreditNoteSchema = z.object({
   referencePurchase: z.string().min(1, 'Reference purchase is required'),
@@ -148,6 +191,7 @@ export const createEWayBillSchema = z.object({
   validTill: z.string().optional(),
 });
 
+export type PurchaseItemDto = z.infer<typeof purchaseItemSchema>;
 export type CreateExpenseDto = z.infer<typeof createExpenseSchema>;
 export type CreateVendorDto = z.infer<typeof createVendorSchema>;
 export type CreatePurchaseBillDto = z.infer<typeof createPurchaseBillSchema>;

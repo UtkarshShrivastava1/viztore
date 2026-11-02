@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { branding } from "@repo/shared-types";
+import { branding } from "@/config/company";
 import {
   Info,
   Shield,

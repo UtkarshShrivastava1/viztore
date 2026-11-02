@@ -6,9 +6,10 @@ import {
   userAddressSchema,
   updateAddressSchema,
   updateProfileSchema,
+  createFeedbackSchema,
 } from '@repo/shared-types';
 import { validateRequest } from '../../shared/middlewares/validateRequest.js';
-import { authGuard } from '../../shared/middlewares/authGuard.js';
+import { authGuard, optionalAuthGuard } from '../../shared/middlewares/authGuard.js';
 import { authRateLimiter } from '../../shared/middlewares/rateLimiter.js';
 import * as authController from './auth.controller.js';
 
@@ -100,5 +101,36 @@ router.post(
   authController.logout,
 );
 
-export const authRouter = router;
+router.get(
+  '/favorite-stores',
+  authGuard,
+  authController.getFavoriteStores,
+);
 
+router.post(
+  '/favorite-stores/:storeId/toggle',
+  authGuard,
+  authController.toggleFavoriteStore,
+);
+
+router.get(
+  '/wishlist',
+  authGuard,
+  authController.getWishlist,
+);
+
+router.post(
+  '/wishlist/:productId/toggle',
+  authGuard,
+  authController.toggleWishlist,
+);
+
+// Customer Platform & App Feedback Endpoint
+router.post(
+  '/feedback',
+  optionalAuthGuard,
+  validateRequest({ body: createFeedbackSchema }),
+  authController.submitFeedback,
+);
+
+export const authRouter = router;

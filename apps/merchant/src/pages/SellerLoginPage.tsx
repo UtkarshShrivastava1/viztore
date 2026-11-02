@@ -18,6 +18,14 @@ import { branding } from '../lib/branding.js';
 import { api } from '../lib/api.js';
 import { useAuthStore } from '../stores/authStore.js';
 import { useOnboardingStore } from '../stores/onboardingStore.js';
+import {
+  cleanName,
+  cleanEmail,
+  cleanPhoneNumber,
+  validateEmail,
+  validatePassword,
+  validatePersonName,
+} from '@repo/shared-types';
 
 interface SellerLoginPageProps {
   onLoginSuccess: () => void;
@@ -74,13 +82,19 @@ export const SellerLoginPage: React.FC<SellerLoginPageProps> = ({
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    const cleanId = identifier.trim();
+    if (!cleanId || !password) {
+      setError('Please provide your registered email/phone and password.');
+      return;
+    }
     setIsLoading(true);
     setError(null);
 
     try {
       const res = await api.post<any>('/auth/login', {
-        identifier: identifier.trim(),
+        identifier: cleanId,
         password,
+        role: 'merchant',
       });
 
       // Role-Based Access Control: ensure user has merchant or admin privileges
@@ -100,20 +114,35 @@ export const SellerLoginPage: React.FC<SellerLoginPageProps> = ({
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!regPhone || !/^[6-9]\d{9}$/.test(regPhone)) {
-      setError('Please enter a valid 10-digit mobile number starting with 6-9');
+
+    const sanitizedName = cleanName(regFullName) || 'Merchant Partner';
+    const nameCheck = validatePersonName(sanitizedName);
+    if (!nameCheck.isValid) {
+      setError(nameCheck.error || 'Please enter a valid full name (at least 2 characters).');
       return;
     }
-    if (!regEmail || !regEmail.includes('@')) {
-      setError('Please enter a valid email address');
+
+    const cleanPhone = cleanPhoneNumber(regPhone);
+    if (!cleanPhone || cleanPhone.length !== 10 || !/^[6-9]\d{9}$/.test(cleanPhone)) {
+      setError('Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9.');
       return;
     }
+
+    const normalizedEmail = cleanEmail(regEmail);
+    const emailCheck = validateEmail(normalizedEmail);
+    if (!emailCheck.isValid) {
+      setError(emailCheck.error || 'Please enter a valid email address.');
+      return;
+    }
+
     if (regPassword !== regConfirmPassword) {
-      setError('Passwords do not match');
+      setError('Passwords do not match. Please re-enter your password.');
       return;
     }
-    if (regPassword.length < 8) {
-      setError('Password must be at least 8 characters');
+
+    const passwordCheck = validatePassword(regPassword);
+    if (!passwordCheck.isValid) {
+      setError(passwordCheck.error || 'Password must be at least 8 characters and contain letters, numbers, and special characters.');
       return;
     }
 
@@ -124,17 +153,18 @@ export const SellerLoginPage: React.FC<SellerLoginPageProps> = ({
       let authRes: any;
       try {
         authRes = await api.post('/auth/register', {
-          fullName: regFullName.trim() || 'Merchant Partner',
-          email: regEmail.toLowerCase().trim(),
-          phone: regPhone.trim(),
+          fullName: sanitizedName,
+          email: normalizedEmail,
+          phone: cleanPhone,
           password: regPassword,
           role: 'merchant',
         });
       } catch (regErr: any) {
         if (regErr?.message?.includes('already exists') || regErr?.status === 409) {
           authRes = await api.post('/auth/login', {
-            identifier: regEmail.toLowerCase().trim(),
+            identifier: normalizedEmail,
             password: regPassword,
+            role: 'merchant',
           });
         } else {
           throw regErr;
@@ -147,9 +177,9 @@ export const SellerLoginPage: React.FC<SellerLoginPageProps> = ({
 
       // Sync into onboarding draft store
       updateStep(1, {
-        fullName: regFullName.trim() || 'Merchant Partner',
-        mobileNumber: regPhone.trim(),
-        email: regEmail.toLowerCase().trim(),
+        fullName: sanitizedName,
+        mobileNumber: cleanPhone,
+        email: normalizedEmail,
         password: regPassword,
         confirmPassword: regConfirmPassword,
       });
@@ -207,22 +237,21 @@ export const SellerLoginPage: React.FC<SellerLoginPageProps> = ({
           </button>
 
           {/* Header Brand Icon & Tag */}
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#0038ed] to-blue-500 text-white flex items-center justify-center shadow-md shadow-blue-600/25 shrink-0">
-              {mode === 'login' ? (
-                <Store className="w-5 h-5" />
-              ) : (
-                <Sparkles className="w-5 h-5" />
-              )}
-            </div>
-            <div>
+          <div className="mb-4">
+            <div className="flex items-center gap-2 mb-2">
+              <img
+                src="/images/logo-dark.png"
+                alt={branding.appName}
+                className="h-7 w-auto object-contain"
+              />
+              <div className="h-4 w-px bg-slate-200 mx-1" />
               <span className="text-[11px] font-bold text-[#0038ed] uppercase tracking-wider block">
-                {branding.appName} Merchant Hub
+                Merchant Hub
               </span>
-              <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
-                {mode === 'login' ? 'Merchant Login' : 'Create Seller Account'}
-              </h2>
             </div>
+            <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+              {mode === 'login' ? 'Merchant Login' : 'Create Seller Account'}
+            </h2>
           </div>
 
           <p className="text-xs text-slate-500 mb-5 leading-relaxed">
@@ -230,38 +259,6 @@ export const SellerLoginPage: React.FC<SellerLoginPageProps> = ({
               ? 'Access your merchant store management dashboard and live orders'
               : 'Start your hyperlocal digital storefront and discover nearby customers'}
           </p>
-
-          {/* Segmented Mode Switcher Tabs */}
-          <div className="grid grid-cols-2 p-1 bg-slate-100/80 rounded-xl mb-5 text-xs font-semibold">
-            <button
-              type="button"
-              onClick={() => {
-                setMode('login');
-                setError(null);
-              }}
-              className={`py-2 px-3 rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                mode === 'login'
-                  ? 'bg-white text-slate-900 shadow-xs font-bold'
-                  : 'text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              <span>Sign In</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setMode('register');
-                setError(null);
-              }}
-              className={`py-2 px-3 rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                mode === 'register'
-                  ? 'bg-white text-slate-900 shadow-xs font-bold'
-                  : 'text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              <span>Create Account</span>
-            </button>
-          </div>
 
           {/* Error Banner */}
           {error && (
@@ -283,6 +280,11 @@ export const SellerLoginPage: React.FC<SellerLoginPageProps> = ({
                   <Mail className="w-4 h-4 text-slate-400 mr-2.5 shrink-0" />
                   <input
                     type="text"
+                    id="merchant-login-id"
+                    name="identifier"
+                    autoComplete="username"
+                    autoCapitalize="none"
+                    spellCheck={false}
                     placeholder="Enter phone or email"
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
@@ -309,6 +311,9 @@ export const SellerLoginPage: React.FC<SellerLoginPageProps> = ({
                   <Lock className="w-4 h-4 text-slate-400 mr-2.5 shrink-0" />
                   <input
                     type={showPassword ? 'text' : 'password'}
+                    id="merchant-login-password"
+                    name="password"
+                    autoComplete="current-password"
                     placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -372,6 +377,10 @@ export const SellerLoginPage: React.FC<SellerLoginPageProps> = ({
                   <User className="w-4 h-4 text-slate-400 mr-2 shrink-0" />
                   <input
                     type="text"
+                    id="merchant-reg-name"
+                    name="name"
+                    autoComplete="name"
+                    maxLength={100}
                     placeholder="e.g. Ramesh Kumar"
                     value={regFullName}
                     onChange={(e) => setRegFullName(e.target.value)}
@@ -391,10 +400,14 @@ export const SellerLoginPage: React.FC<SellerLoginPageProps> = ({
                   <span className="text-xs font-semibold text-slate-500 mr-1.5 select-none">+91</span>
                   <input
                     type="tel"
+                    id="merchant-reg-phone"
+                    name="tel"
+                    inputMode="numeric"
+                    autoComplete="tel"
                     maxLength={10}
                     placeholder="9876543210"
                     value={regPhone}
-                    onChange={(e) => setRegPhone(e.target.value.replace(/\D/g, ''))}
+                    onChange={(e) => setRegPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
                     className="modal-input w-full text-xs text-slate-900 placeholder:text-slate-400 bg-transparent focus:outline-none"
                     required
                   />
@@ -410,6 +423,12 @@ export const SellerLoginPage: React.FC<SellerLoginPageProps> = ({
                   <Mail className="w-4 h-4 text-slate-400 mr-2 shrink-0" />
                   <input
                     type="email"
+                    id="merchant-reg-email"
+                    name="email"
+                    autoComplete="email"
+                    autoCapitalize="none"
+                    spellCheck={false}
+                    maxLength={100}
                     placeholder="store.owner@example.com"
                     value={regEmail}
                     onChange={(e) => setRegEmail(e.target.value)}
@@ -429,6 +448,11 @@ export const SellerLoginPage: React.FC<SellerLoginPageProps> = ({
                     <Lock className="w-3.5 h-3.5 text-slate-400 mr-1.5 shrink-0" />
                     <input
                       type={showRegPassword ? 'text' : 'password'}
+                      id="merchant-reg-password"
+                      name="new-password"
+                      autoComplete="new-password"
+                      minLength={8}
+                      maxLength={128}
                       placeholder="Min 8 chars"
                       value={regPassword}
                       onChange={(e) => setRegPassword(e.target.value)}
@@ -446,6 +470,11 @@ export const SellerLoginPage: React.FC<SellerLoginPageProps> = ({
                     <Lock className="w-3.5 h-3.5 text-slate-400 mr-1.5 shrink-0" />
                     <input
                       type={showRegPassword ? 'text' : 'password'}
+                      id="merchant-reg-confirm-password"
+                      name="confirm-password"
+                      autoComplete="new-password"
+                      minLength={8}
+                      maxLength={128}
                       placeholder="Repeat"
                       value={regConfirmPassword}
                       onChange={(e) => setRegConfirmPassword(e.target.value)}

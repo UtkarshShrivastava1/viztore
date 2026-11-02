@@ -7,7 +7,7 @@ import {
   Facebook,
   MapPin,
 } from "lucide-react";
-import { branding } from "@repo/shared-types/branding.config";
+import { branding } from "@/config/company";
 
 const supportLinks = [
   { label: "About Us", href: "/about-us" },

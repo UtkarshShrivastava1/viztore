@@ -1,9 +1,9 @@
 "use client";
 
-import { Heart, ShoppingCart, User } from "lucide-react";
+import { Heart, ShoppingCart } from "lucide-react";
 import Logo from '@/components/layout/Logo';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/stores/auth.store';
+import { useCartStore } from '@/stores/cart.store';
 
 interface TopBarProps {
   wishlistCount?: number;
@@ -12,31 +12,13 @@ interface TopBarProps {
 
 export default function TopBar({ wishlistCount = 0, cartCount = 0 }: TopBarProps) {
   const router = useRouter();
-  const { isAuthenticated, openAuthModal } = useAuthStore();
-
-  const handleUserClick = () => {
-    if (isAuthenticated) {
-      router.push('/account');
-    } else {
-      openAuthModal('login');
-    }
-  };
+  const openCart = useCartStore((state) => state.openCart);
 
   return (
     <div className="flex items-center justify-between px-4 pt-1 pb-3">
       <Logo />
 
       <div className="flex items-center gap-4">
-        {/* User / Auth */}
-        <button
-          type="button"
-          aria-label="User Account"
-          className="relative text-white hover:opacity-85 transition-opacity"
-          onClick={handleUserClick}
-        >
-          <User className="h-[23px] w-[23px]" strokeWidth={1.75} />
-        </button>
-
         {/* Wishlist */}
         <button
           type="button"
@@ -57,7 +39,7 @@ export default function TopBar({ wishlistCount = 0, cartCount = 0 }: TopBarProps
           type="button"
           aria-label="Cart"
           className="relative text-white hover:opacity-85 transition-opacity"
-          onClick={() => router.push('/cart')}
+          onClick={openCart}
         >
           <ShoppingCart className="h-[23px] w-[23px]" strokeWidth={1.75} />
           {cartCount > 0 && (

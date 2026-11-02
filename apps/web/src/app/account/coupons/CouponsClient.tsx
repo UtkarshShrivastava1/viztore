@@ -1,75 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
-  Ticket, Search, ChevronDown, Clock, ArrowLeft
+  Ticket, Search, ChevronDown, ChevronUp, Clock, ArrowLeft, Check, Sparkles, ShoppingBag
 } from 'lucide-react';
 import { AccountSidebar } from '@/components/account/AccountSidebar';
-
-const TABS = [
-  { id: 'all', label: 'All', count: 8 },
-  { id: 'coupons', label: 'Coupons', count: 5 },
-  { id: 'banks', label: 'Bank Offers', count: 3 },
-];
-
-const AVAILABLE_COUPONS = [
-  {
-    id: 1,
-    code: 'VIZ200',
-    title: 'Get flat ₹200 off on orders above ₹1499',
-    validity: 'Valid till 30 Jun 2024',
-    tag: 'Best Deal',
-    amount: '₹200',
-    type: 'FLAT',
-    bgClass: 'bg-[#E8F8F1] text-[#10B981]',
-    borderClass: 'border-[#10B981]/20',
-  },
-  {
-    id: 2,
-    code: 'SAVE100',
-    title: 'Get flat ₹100 off on orders above ₹999',
-    validity: 'Valid till 25 May 2024',
-    tag: null,
-    amount: '₹100',
-    type: 'FLAT',
-    bgClass: 'bg-[#EFF6FF] text-[#1D4ED8]',
-    borderClass: 'border-[#1D4ED8]/20',
-  },
-  {
-    id: 3,
-    code: 'EXTRA5',
-    title: 'Get extra 5% off on all prepaid orders',
-    validity: 'Valid till 20 May 2024',
-    tag: null,
-    amount: '5%',
-    type: 'EXTRA',
-    bgClass: 'bg-[#FFF7ED] text-[#EA580C]',
-    borderClass: 'border-[#EA580C]/20',
-  },
-  {
-    id: 4,
-    code: 'NEW50',
-    title: 'Flat ₹50 off for new users on orders above ₹499',
-    validity: 'Valid till 31 May 2024',
-    tag: 'New User',
-    amount: '₹50',
-    type: 'FLAT',
-    bgClass: 'bg-[#FDF4FF] text-[#9333EA]',
-    borderClass: 'border-[#9333EA]/20',
-  },
-  {
-    id: 5,
-    code: 'WEEKEND10',
-    title: 'Extra 10% off on minimum order of ₹1999',
-    validity: 'Valid till 19 May 2024',
-    tag: null,
-    amount: '10%',
-    type: 'EXTRA',
-    bgClass: 'bg-[#E8F8F1] text-[#10B981]',
-    borderClass: 'border-[#10B981]/20',
-  },
-];
+import { couponsApi } from '@/lib/api/coupons';
+import { branding } from '@repo/shared-types';
+import type { ICoupon } from '@repo/shared-types';
 
 const BANK_OFFERS = [
   {
@@ -77,35 +16,99 @@ const BANK_OFFERS = [
     bank: 'SBI Card',
     logoColor: 'text-[#1668F6]',
     title: '10% Instant Discount*',
-    desc: 'on SBI Credit Cards',
+    desc: 'on SBI Credit Cards on orders above ₹1,999',
+    terms: 'Valid once per card per month. Maximum discount ₹500.',
   },
   {
     id: 2,
-    bank: 'HDFC BANK',
+    bank: 'HDFC Bank',
     logoColor: 'text-[#1D4ED8]',
     title: '₹750 Instant Discount*',
-    desc: 'on HDFC Credit Cards',
+    desc: 'on HDFC Credit Cards on orders above ₹3,499',
+    terms: 'Valid on EMI & non-EMI transactions. Maximum discount ₹750.',
   },
   {
     id: 3,
     bank: 'ICICI Bank',
     logoColor: 'text-[#EA580C]',
     title: '10% Instant Discount*',
-    desc: 'on ICICI Credit Cards',
+    desc: 'on ICICI Credit Cards on orders above ₹1,499',
+    terms: 'Valid on prepaid transactions only. Maximum discount ₹300.',
   },
   {
     id: 4,
-    bank: 'AXIS BANK',
+    bank: 'Axis Bank',
     logoColor: 'text-[#BE123C]',
     title: '₹500 Instant Discount*',
-    desc: 'on Axis Credit Cards',
+    desc: 'on Axis Credit Cards on orders above ₹2,499',
+    terms: 'Valid across all participating local stores.',
   },
 ];
 
 export function CouponsClient() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'coupons' | 'banks'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [coupons, setCoupons] = useState<ICoupon[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [expandedCouponId, setExpandedCouponId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setIsLoading(true);
+    couponsApi.getActiveCoupons()
+      .then((data) => {
+        setCoupons(data);
+      })
+      .catch((err) => {
+        console.error('Failed to fetch coupons:', err);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  }, []);
+
+  const handleCopyCode = async (code: string) => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopiedCode(code);
+      setTimeout(() => {
+        setCopiedCode((curr) => (curr === code ? null : curr));
+      }, 2000);
+    } catch {
+      // Fallback
+      setCopiedCode(code);
+      setTimeout(() => setCopiedCode(null), 2000);
+    }
+  };
+
+  const filteredCoupons = useMemo(() => {
+    return coupons.filter((c) => {
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase();
+      return (
+        c.code.toLowerCase().includes(q) ||
+        c.title.toLowerCase().includes(q) ||
+        (c.description && c.description.toLowerCase().includes(q))
+      );
+    });
+  }, [coupons, searchQuery]);
+
+  const filteredBankOffers = useMemo(() => {
+    return BANK_OFFERS.filter((b) => {
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase();
+      return (
+        b.bank.toLowerCase().includes(q) ||
+        b.title.toLowerCase().includes(q) ||
+        b.desc.toLowerCase().includes(q)
+      );
+    });
+  }, [searchQuery]);
+
+  const totalCouponsCount = coupons.length;
+  const totalBanksCount = BANK_OFFERS.length;
+  const totalAllCount = totalCouponsCount + totalBanksCount;
 
   return (
     <div className="min-h-screen bg-[#ffffff] font-sans relative pb-24">
@@ -120,31 +123,61 @@ export function CouponsClient() {
           {/* Header */}
           <div className="px-0 w-full pt-2">
             <div className="flex items-start gap-3">
-              <button onClick={() => router.back()} className="mt-1.5 shrink-0 lg:hidden">
+              <button 
+                type="button" 
+                onClick={() => router.back()} 
+                className="mt-1.5 shrink-0 lg:hidden cursor-pointer"
+              >
                 <ArrowLeft className="w-6 h-6 text-[#192168]" />
               </button>
               <div>
-                <h1 className="text-[22px] lg:text-[28px] font-extrabold text-[#192168] leading-tight">Coupons & Offers</h1>
-                <p className="text-[12px] lg:text-[14px] text-surface-600 mt-1">Save more on your favourite products</p>
+                <h1 className="text-[22px] lg:text-[28px] font-extrabold text-[#192168] leading-tight">
+                  Coupons & Offers
+                </h1>
+                <p className="text-[12px] lg:text-[14px] text-surface-600 mt-1">
+                  Save more on your favourite neighbourhood retail stores with {branding.appName}
+                </p>
               </div>
             </div>
           </div>
 
           {/* Tabs */}
           <div className="flex items-center border-b border-surface-200 mt-2 overflow-x-auto no-scrollbar">
-            {TABS.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`px-4 lg:px-6 py-3 text-[13px] font-bold transition-colors border-b-2 whitespace-nowrap flex-1 text-center ${
-                  activeTab === tab.id 
-                    ? 'border-[#1668F6] text-[#1668F6]' 
-                    : 'border-transparent text-surface-500 hover:text-surface-800'
-                }`}
-              >
-                {tab.label} <span className="text-[11px] font-medium ml-0.5">({tab.count})</span>
-              </button>
-            ))}
+            <button
+              type="button"
+              onClick={() => setActiveTab('all')}
+              className={`px-4 lg:px-6 py-3 text-[13px] font-bold transition-colors border-b-2 whitespace-nowrap flex-1 text-center cursor-pointer ${
+                activeTab === 'all' 
+                  ? 'border-[#1668F6] text-[#1668F6]' 
+                  : 'border-transparent text-surface-500 hover:text-surface-800'
+              }`}
+            >
+              All <span className="text-[11px] font-medium ml-0.5">({totalAllCount})</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('coupons')}
+              className={`px-4 lg:px-6 py-3 text-[13px] font-bold transition-colors border-b-2 whitespace-nowrap flex-1 text-center cursor-pointer ${
+                activeTab === 'coupons' 
+                  ? 'border-[#1668F6] text-[#1668F6]' 
+                  : 'border-transparent text-surface-500 hover:text-surface-800'
+              }`}
+            >
+              Coupons <span className="text-[11px] font-medium ml-0.5">({totalCouponsCount})</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('banks')}
+              className={`px-4 lg:px-6 py-3 text-[13px] font-bold transition-colors border-b-2 whitespace-nowrap flex-1 text-center cursor-pointer ${
+                activeTab === 'banks' 
+                  ? 'border-[#1668F6] text-[#1668F6]' 
+                  : 'border-transparent text-surface-500 hover:text-surface-800'
+              }`}
+            >
+              Bank Offers <span className="text-[11px] font-medium ml-0.5">({totalBanksCount})</span>
+            </button>
           </div>
 
           {/* Search Bar */}
@@ -154,124 +187,202 @@ export function CouponsClient() {
             </div>
             <input 
               type="text"
-              placeholder="Search coupon code"
+              placeholder="Search coupon code or bank offer"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-11 pr-[90px] py-3.5 bg-white border border-surface-200 rounded-xl focus:outline-none focus:border-[#1668F6] text-[13px] text-[#192168] placeholder:text-surface-400"
             />
             <div className="absolute inset-y-1.5 right-1.5">
-              <button className="flex items-center justify-center gap-1.5 px-4 py-2 h-full bg-[#1668F6] text-white rounded-lg text-[13px] font-bold hover:bg-blue-700 transition-colors">
+              <button 
+                type="button"
+                className="flex items-center justify-center gap-1.5 px-4 py-2 h-full bg-[#1668F6] text-white rounded-lg text-[13px] font-bold hover:bg-blue-700 transition-colors cursor-pointer"
+              >
                 <Search className="w-4 h-4" /> Search
               </button>
             </div>
           </div>
 
           {/* Available Coupons */}
-          <div className="mt-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-[15px] font-extrabold text-[#192168]">Available Coupons</h3>
-              <button className="text-[12px] font-bold text-[#1668F6] hover:underline">View T&C</button>
-            </div>
+          {(activeTab === 'all' || activeTab === 'coupons') && (
+            <div className="mt-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-[15px] font-extrabold text-[#192168]">Available Store Coupons</h3>
+                <span className="text-[12px] font-bold text-slate-500">{filteredCoupons.length} Available</span>
+              </div>
 
-            <div className="flex flex-col gap-4">
-              {AVAILABLE_COUPONS.map((coupon) => (
-                <div key={coupon.id} className="flex border border-surface-200 rounded-xl overflow-hidden bg-white">
-                  {/* Left Ticket Stub */}
-                  <div className={`w-[90px] sm:w-[110px] flex flex-col items-center justify-center shrink-0 border-r border-dashed border-surface-200 relative ${coupon.bgClass}`}>
-                    {/* Semi-circle cutouts to mimic ticket */}
-                    <div className="absolute -top-2 -right-2 w-4 h-4 rounded-full bg-white border border-surface-200 border-t-transparent border-l-transparent transform -rotate-45" />
-                    <div className="absolute -bottom-2 -right-2 w-4 h-4 rounded-full bg-white border border-surface-200 border-b-transparent border-l-transparent transform rotate-45" />
-                    
-                    <span className="text-[10px] font-bold opacity-80 mb-0.5">{coupon.type}</span>
-                    <span className="text-[20px] font-black leading-none">{coupon.amount}</span>
-                    <span className="text-[11px] font-bold opacity-80 mt-1">OFF</span>
-                  </div>
+              {isLoading ? (
+                <div className="py-12 text-center text-xs text-slate-400">Loading coupons...</div>
+              ) : filteredCoupons.length === 0 ? (
+                <div className="p-8 text-center text-xs text-slate-500 border border-dashed border-slate-200 rounded-xl">
+                  No coupons found matching &ldquo;{searchQuery}&rdquo;.
+                </div>
+              ) : (
+                <div className="flex flex-col gap-4">
+                  {filteredCoupons.map((coupon) => {
+                    const isCopied = copiedCode === coupon.code;
+                    const isExpanded = expandedCouponId === coupon.id;
+                    const discountDisplay = coupon.discountType === 'percentage'
+                      ? `${coupon.discountValue}%`
+                      : `₹${coupon.discountValue}`;
 
-                  {/* Right Content */}
-                  <div className="flex-1 p-3.5 flex flex-row items-center justify-between gap-2 min-w-0">
-                    <div className="flex-1 min-w-0 pr-2">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[15px] font-extrabold text-[#192168] tracking-wide">{coupon.code}</span>
-                        {coupon.tag && (
-                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${
-                            coupon.tag === 'Best Deal' ? 'bg-[#E8F8F1] text-[#10B981]' : 'bg-[#FDF4FF] text-[#9333EA]'
-                          }`}>
-                            {coupon.tag}
-                          </span>
+                    return (
+                      <div 
+                        key={coupon.id || coupon.code} 
+                        className="flex flex-col border border-surface-200 rounded-2xl overflow-hidden bg-white shadow-2xs hover:border-blue-200 transition-all"
+                      >
+                        <div className="flex min-h-[96px]">
+                          {/* Left Ticket Stub */}
+                          <div className="w-[90px] sm:w-[110px] flex flex-col items-center justify-center shrink-0 border-r border-dashed border-surface-200 relative bg-[#EFF6FF] text-[#1D4ED8]">
+                            {/* Semi-circle cutouts */}
+                            <div className="absolute -top-2 -right-2 w-4 h-4 rounded-full bg-white border border-surface-200 border-t-transparent border-l-transparent transform -rotate-45" />
+                            <div className="absolute -bottom-2 -right-2 w-4 h-4 rounded-full bg-white border border-surface-200 border-b-transparent border-l-transparent transform rotate-45" />
+                            
+                            <span className="text-[10px] font-bold uppercase opacity-80 mb-0.5">
+                              {coupon.discountType === 'percentage' ? 'PERCENT' : 'FLAT'}
+                            </span>
+                            <span className="text-[20px] font-black leading-none">{discountDisplay}</span>
+                            <span className="text-[11px] font-bold opacity-80 mt-1">OFF</span>
+                          </div>
+
+                          {/* Right Content */}
+                          <div className="flex-1 p-3.5 flex flex-row items-center justify-between gap-2 min-w-0">
+                            <div className="flex-1 min-w-0 pr-2">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-[15px] font-extrabold text-[#192168] tracking-wide font-mono">
+                                  {coupon.code}
+                                </span>
+                                {coupon.tag && (
+                                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#E8F8F1] text-[#10B981]">
+                                    {coupon.tag}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-[12px] font-medium text-surface-800 line-clamp-2 leading-snug mb-1">
+                                {coupon.title}
+                              </p>
+                              {coupon.description && (
+                                <p className="text-[11px] text-surface-500 line-clamp-1 mb-1.5">
+                                  {coupon.description}
+                                </p>
+                              )}
+                              <div className="flex items-center gap-1.5 text-surface-500">
+                                <Clock className="w-3.5 h-3.5" />
+                                <span className="text-[10px]">
+                                  {coupon.endDate ? `Valid till ${coupon.endDate}` : 'Limited period offer'}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="flex flex-col items-center justify-center gap-2 shrink-0">
+                              <button 
+                                type="button"
+                                onClick={() => handleCopyCode(coupon.code)}
+                                className={`w-full min-w-[80px] px-4 py-2 rounded-xl text-[12px] font-bold transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                                  isCopied 
+                                    ? 'bg-emerald-600 text-white' 
+                                    : 'bg-[#1668F6] hover:bg-blue-700 text-white shadow-2xs'
+                                }`}
+                              >
+                                {isCopied ? (
+                                  <>
+                                    <Check className="w-3.5 h-3.5" />
+                                    <span>Copied!</span>
+                                  </>
+                                ) : (
+                                  <span>Copy</span>
+                                )}
+                              </button>
+
+                              <button 
+                                type="button"
+                                onClick={() => setExpandedCouponId(isExpanded ? null : coupon.id)}
+                                className="flex items-center justify-center gap-0.5 text-[11px] font-bold text-[#1668F6] hover:underline cursor-pointer"
+                              >
+                                <span>{isExpanded ? 'Hide Details' : 'View Details'}</span>
+                                {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Expandable Details Accordion */}
+                        {isExpanded && (
+                          <div className="px-4 py-3 bg-slate-50 border-t border-slate-100 text-xs text-slate-600 space-y-1 animate-in fade-in duration-150">
+                            <p className="font-bold text-slate-800">Terms & Conditions:</p>
+                            <ul className="list-disc list-inside space-y-0.5 text-[11px] text-slate-600">
+                              <li>Minimum order value of ₹{coupon.minOrderValue.toLocaleString('en-IN')} required.</li>
+                              {coupon.maxDiscount && (
+                                <li>Maximum discount capped at ₹{coupon.maxDiscount.toLocaleString('en-IN')}.</li>
+                              )}
+                              <li>Valid on all eligible store products unless specified otherwise.</li>
+                              <li>Applicable during checkout in the &ldquo;Apply Coupon&rdquo; price details drawer.</li>
+                            </ul>
+                          </div>
                         )}
                       </div>
-                      <p className="text-[11px] text-surface-600 line-clamp-2 leading-snug mb-2">
-                        {coupon.title}
-                      </p>
-                      <div className="flex items-center gap-1.5 text-surface-500">
-                        <Clock className="w-3.5 h-3.5" />
-                        <span className="text-[10px]">{coupon.validity}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col items-center justify-center gap-2 shrink-0">
-                      <button className="w-full px-5 py-2 bg-[#1668F6] text-white rounded-lg text-[12px] font-bold hover:bg-blue-700 transition-colors">
-                        Copy
-                      </button>
-                      <button className="flex items-center justify-center gap-0.5 text-[10px] font-bold text-[#1668F6]">
-                        View Details <ChevronDown className="w-3 h-3" />
-                      </button>
-                    </div>
-                  </div>
+                    );
+                  })}
                 </div>
-              ))}
+              )}
             </div>
-          </div>
+          )}
 
           {/* Bank Offers */}
-          <div className="mt-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-[15px] font-extrabold text-[#192168]">Bank Offers</h3>
-              <button className="text-[12px] font-bold text-[#1668F6] hover:underline">View All</button>
-            </div>
-
-            <div className="flex overflow-x-auto no-scrollbar gap-3 pb-2 -mx-4 px-4 lg:mx-0 lg:px-0">
-              {BANK_OFFERS.map((offer) => (
-                <div key={offer.id} className="w-[160px] shrink-0 border border-surface-200 rounded-xl p-4 bg-white flex flex-col items-center text-center">
-                  <div className="font-black italic text-sm tracking-tight flex items-center justify-center gap-1 mb-3 h-6">
-                    {offer.id === 1 && <span className="text-[#1668F6] flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-[#1668F6] flex items-center justify-center"><div className="w-1.5 h-1.5 bg-white rounded-full"></div></div> SBI Card</span>}
-                    {offer.id === 2 && <span className="text-[#004b8d] flex items-center gap-1"><div className="w-3 h-3 bg-red-600"></div> HDFC BANK</span>}
-                    {offer.id === 3 && <span className="text-[#EA580C] flex items-center gap-1"><i>i</i>ICICI Bank</span>}
-                    {offer.id === 4 && <span className="text-[#BE123C] flex items-center gap-1"><div className="border-b-[8px] border-l-[8px] border-b-[#BE123C] border-l-transparent"></div> AXIS BANK</span>}
-                  </div>
-                  <h4 className="text-[12px] font-extrabold text-[#192168] leading-tight mb-1">{offer.title}</h4>
-                  <p className="text-[10px] text-surface-500 mb-3">{offer.desc}</p>
-                  <span className="text-[9px] text-surface-400 mt-auto">T&C Apply</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Promotional Banner */}
-          <div className="mt-4 rounded-[14px] overflow-hidden relative bg-[#E8F0FE] p-5 flex flex-col items-start justify-center min-h-[160px]">
-            <span className="text-[#192168] text-[9px] font-bold uppercase tracking-wider mb-1">Super Saver Deal!</span>
-            <h3 className="text-[26px] font-black text-[#1668F6] leading-none mb-1">Upto 80% Off</h3>
-            <p className="text-[11px] text-[#192168] mb-4">Big savings on top categories</p>
-            <button className="px-5 py-2 bg-[#1668F6] text-white rounded-lg text-[12px] font-bold hover:bg-blue-700 transition-colors z-10 shadow-sm">
-              Shop Now
-            </button>
-
-            {/* Shopping bag graphic approximation */}
-            <div className="absolute right-0 bottom-0 w-32 h-32 pointer-events-none overflow-hidden">
-              <div className="absolute bottom-[-10px] right-2 w-20 h-24 bg-[#1668F6] rounded-md transform border-t-[3px] border-[#3B82F6] flex items-center justify-center">
-                <span className="text-yellow-400 font-black text-4xl italic">V</span>
+          {(activeTab === 'all' || activeTab === 'banks') && (
+            <div className="mt-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-[15px] font-extrabold text-[#192168]">Instant Bank & Payment Offers</h3>
+                <span className="text-[12px] font-bold text-slate-500">{filteredBankOffers.length} Offers</span>
               </div>
-              <div className="absolute bottom-16 right-7 w-10 h-10 border-[3px] border-[#1668F6] rounded-t-full border-b-transparent"></div>
-              
-              <div className="absolute bottom-2 right-1 w-6 h-6 bg-rose-500 rounded-sm z-20"><div className="w-full h-1 bg-yellow-400 absolute top-1/2 -translate-y-1/2"></div><div className="h-full w-1 bg-yellow-400 absolute left-1/2 -translate-x-1/2"></div></div>
-              <div className="absolute bottom-0 right-16 w-8 h-8 bg-yellow-400 rounded-sm z-20"><div className="w-full h-1.5 bg-rose-500 absolute top-1/2 -translate-y-1/2"></div><div className="h-full w-1.5 bg-rose-500 absolute left-1/2 -translate-x-1/2"></div></div>
-              
-              <div className="absolute top-8 right-20 w-5 h-5 bg-yellow-400 rounded-sm flex items-center justify-center text-[#192168] text-[10px] font-bold transform -rotate-12">%</div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 pb-2">
+                {filteredBankOffers.map((offer) => (
+                  <div key={offer.id} className="border border-surface-200 rounded-2xl p-4 bg-white flex flex-col justify-between shadow-2xs hover:border-blue-200 transition-all">
+                    <div>
+                      <div className="font-black italic text-sm tracking-tight flex items-center gap-1.5 mb-2.5">
+                        <span className={`${offer.logoColor} font-bold`}>{offer.bank}</span>
+                      </div>
+                      <h4 className="text-[13px] font-extrabold text-[#192168] leading-tight mb-1">
+                        {offer.title}
+                      </h4>
+                      <p className="text-[11px] text-surface-600 mb-2">{offer.desc}</p>
+                    </div>
+                    <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400">
+                      <span>{offer.terms}</span>
+                      <span className="font-bold text-blue-600">T&C</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-            {/* Confetti dots */}
-            <div className="absolute top-4 right-10 w-1.5 h-1.5 bg-rose-400 rounded-full"></div>
-            <div className="absolute bottom-8 right-24 w-1.5 h-1.5 bg-blue-400 rounded-full"></div>
-            <div className="absolute top-10 right-28 w-1 h-1 bg-yellow-400 rounded-full"></div>
+          )}
+
+          {/* Promotional White-Label Banner */}
+          <div className="mt-4 rounded-2xl overflow-hidden relative bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="relative z-10 max-w-md">
+              <div className="flex items-center gap-1.5 text-blue-700 text-xs font-bold uppercase tracking-wider mb-1">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Super Saver Neighbourhood Deal</span>
+              </div>
+              <h3 className="text-2xl lg:text-3xl font-black text-[#192168] leading-tight mb-1">
+                Shop Local & Save Big
+              </h3>
+              <p className="text-xs text-slate-600 mb-4 leading-relaxed">
+                Discover exclusive discounts, rapid 30-minute doorstep delivery, and authentic neighbourhood inventory across local stores.
+              </p>
+              <button 
+                type="button"
+                onClick={() => router.push('/stores')}
+                className="px-6 py-2.5 bg-[#1668F6] text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-2 cursor-pointer"
+              >
+                <ShoppingBag className="w-4 h-4" />
+                <span>Explore Nearby Stores</span>
+              </button>
+            </div>
+
+            <div className="w-24 h-24 rounded-2xl bg-blue-100/60 border border-blue-200 flex items-center justify-center shrink-0 text-blue-600">
+              <Ticket className="w-12 h-12" />
+            </div>
           </div>
 
         </div>
@@ -279,4 +390,3 @@ export function CouponsClient() {
     </div>
   );
 }
-

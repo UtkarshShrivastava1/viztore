@@ -21,10 +21,12 @@ import {
   Camera,
 } from 'lucide-react';
 import { useStoreManagementStore, StoreSection } from '../../stores/storeManagementStore.js';
+import { getOptimizedImageUrl } from '../../lib/imageUtils.js';
 
 export const StoreOverviewView: React.FC = () => {
   const {
     sections,
+    curatedProducts,
     kpis,
     storeLogo,
     storeBanner,
@@ -43,21 +45,41 @@ export const StoreOverviewView: React.FC = () => {
   const [bannerPreview, setBannerPreview] = useState(storeBanner);
   const [isSavedNotice, setIsSavedNotice] = useState(false);
 
-  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  React.useEffect(() => {
+    if (storeDescription) setDescText(storeDescription);
+  }, [storeDescription]);
+
+  React.useEffect(() => {
+    if (storeLogo) setLogoPreview(storeLogo);
+  }, [storeLogo]);
+
+  React.useEffect(() => {
+    if (storeBanner) setBannerPreview(storeBanner);
+  }, [storeBanner]);
+
+  const handleLogoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const url = URL.createObjectURL(file);
-      setLogoPreview(url);
-      setStoreLogo(url);
+      try {
+        const url = await getOptimizedImageUrl(file, 'stores');
+        setLogoPreview(url);
+        setStoreLogo(url);
+      } catch (err) {
+        console.error('Failed to update logo:', err);
+      }
     }
   };
 
-  const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBannerChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const url = URL.createObjectURL(file);
-      setBannerPreview(url);
-      setStoreBanner(url);
+      try {
+        const url = await getOptimizedImageUrl(file, 'stores');
+        setBannerPreview(url);
+        setStoreBanner(url);
+      } catch (err) {
+        console.error('Failed to update banner:', err);
+      }
     }
   };
 
@@ -259,7 +281,9 @@ export const StoreOverviewView: React.FC = () => {
                       </td>
 
                       <td className="py-2.5 px-2.5 text-center font-bold text-slate-800">
-                        {sec.productCount}
+                        {isLastAlwaysOn
+                          ? (curatedProducts.length || sec.productCount)
+                          : (Array.isArray(sec.productIds) ? sec.productIds.length : sec.productCount)}
                       </td>
 
                       <td className="py-2.5 px-2.5 text-slate-600 font-medium">
@@ -281,16 +305,14 @@ export const StoreOverviewView: React.FC = () => {
                             className="flex items-center gap-1.5 group"
                           >
                             <div
-                              className={`w-7 h-4 rounded-full transition-colors flex items-center p-0.5 ${
-                                sec.isActive ? 'bg-emerald-500 justify-end' : 'bg-slate-300 justify-start'
-                              }`}
+                              className={`w-7 h-4 rounded-full transition-colors flex items-center p-0.5 ${sec.isActive ? 'bg-emerald-500 justify-end' : 'bg-slate-300 justify-start'
+                                }`}
                             >
                               <div className="w-3 h-3 rounded-full bg-white shadow-xs" />
                             </div>
                             <span
-                              className={`text-[10px] font-bold ${
-                                sec.isActive ? 'text-emerald-600' : 'text-slate-400'
-                              }`}
+                              className={`text-[10px] font-bold ${sec.isActive ? 'text-emerald-600' : 'text-slate-400'
+                                }`}
                             >
                               {sec.isActive ? 'Active' : 'Inactive'}
                             </span>

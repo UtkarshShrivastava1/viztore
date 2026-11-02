@@ -21,6 +21,26 @@ export const MerchantNavbar: React.FC<MerchantNavbarProps> = ({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navRef = useRef<HTMLDivElement>(null);
+  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleMouseEnter = (type: 'sell' | 'learn') => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    hoverTimeoutRef.current = setTimeout(() => {
+      setOpenDropdown(type);
+    }, 150);
+  };
+
+  const handleMouseLeave = () => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    hoverTimeoutRef.current = setTimeout(() => {
+      setOpenDropdown(null);
+    }, 150);
+  };
+
+  const toggleDropdown = (type: 'sell' | 'learn') => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    setOpenDropdown((prev) => (prev === type ? null : type));
+  };
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -70,21 +90,24 @@ export const MerchantNavbar: React.FC<MerchantNavbarProps> = ({
           onClick={() => handleLinkClick('/')}
           className="flex items-center gap-2.5 cursor-pointer group"
         >
-          <div className="w-9 h-9 rounded-xl bg-[#0052ff] text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
-            <ShoppingBag className="w-5 h-5 fill-white/20" />
-          </div>
-          <span className="text-2xl font-black text-[#0052ff] tracking-tight">
-            {branding.appName}
-          </span>
+          <img
+            src="/images/logo-dark.png"
+            alt={branding.appName}
+            className="h-11 sm:h-12 md:h-[52px] w-auto object-contain group-hover:opacity-90 transition-opacity"
+          />
         </div>
 
         {/* Desktop Nav Items */}
         <nav className="hidden lg:flex items-center gap-1 xl:gap-2">
           {/* Sell Online Dropdown trigger */}
-          <div className="relative">
+          <div
+            className="relative"
+            onMouseEnter={() => handleMouseEnter('sell')}
+            onMouseLeave={handleMouseLeave}
+          >
             <button
               type="button"
-              onClick={() => setOpenDropdown(openDropdown === 'sell' ? null : 'sell')}
+              onClick={() => toggleDropdown('sell')}
               className={`px-3.5 py-2 rounded-xl text-sm font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
                 openDropdown === 'sell' || currentRoute.startsWith('/sell-online')
                   ? 'bg-blue-50 text-[#0038ed]'
@@ -149,10 +172,14 @@ export const MerchantNavbar: React.FC<MerchantNavbarProps> = ({
           </button>
 
           {/* Learn Dropdown trigger */}
-          <div className="relative">
+          <div
+            className="relative"
+            onMouseEnter={() => handleMouseEnter('learn')}
+            onMouseLeave={handleMouseLeave}
+          >
             <button
               type="button"
-              onClick={() => setOpenDropdown(openDropdown === 'learn' ? null : 'learn')}
+              onClick={() => toggleDropdown('learn')}
               className={`px-3.5 py-2 rounded-xl text-sm font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
                 openDropdown === 'learn' ||
                 currentRoute.startsWith('/learn') ||

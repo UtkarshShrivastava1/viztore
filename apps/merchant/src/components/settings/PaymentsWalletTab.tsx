@@ -17,14 +17,17 @@ import { useSettingsStore } from '../../stores/settingsStore.js';
 import { branding } from '@repo/shared-types';
 
 export const PaymentsWalletTab: React.FC = () => {
-  const { paymentsWallet, updatePaymentsWallet } = useSettingsStore();
+  const { paymentsWallet, updatePaymentsWallet, saveAllChanges } = useSettingsStore();
   const [formData, setFormData] = useState({ ...paymentsWallet });
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     updatePaymentsWallet(formData);
-    setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 2500);
+    const success = await saveAllChanges();
+    if (success) {
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 2500);
+    }
   };
 
   return (

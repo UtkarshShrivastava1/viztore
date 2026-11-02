@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Search,
   Plus,
@@ -23,7 +23,12 @@ export const SupportTicketsTab: React.FC = () => {
     setPriorityFilter,
     setSelectedTicketId,
     setIsCreateTicketModalOpen,
+    fetchTickets,
   } = useSupportStore();
+
+  useEffect(() => {
+    fetchTickets();
+  }, [fetchTickets]);
 
   const filteredTickets = tickets.filter((t) => {
     const matchSearch =

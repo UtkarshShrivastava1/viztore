@@ -21,6 +21,7 @@ describe('MongoDB Compound Indexes Audit & Boot Verification (Task B-05)', () =>
     expect(modelNames).toContain('Quote');
     expect(modelNames).toContain('Delivery');
     expect(modelNames).toContain('Outbox');
+    expect(modelNames).toContain('User');
   });
 
   it('2. verifies Order model specification enforces the ESR rule', () => {
@@ -45,15 +46,25 @@ describe('MongoDB Compound Indexes Audit & Boot Verification (Task B-05)', () =>
     expect(rules).toContainEqual({ isActive: 1, category: 1, storeId: 1 });
   });
 
-  it('4. verifies Store model specification enforces 2dsphere spatial discovery', () => {
+  it('4. verifies Store model specification enforces 2dsphere spatial discovery and GST uniqueness', () => {
     const storeSpec = CANONICAL_INDEX_SPECIFICATIONS.find((s) => s.modelName === 'Store');
     expect(storeSpec).toBeDefined();
 
     const rules = storeSpec!.criticalRules.map((r) => r.fields);
     expect(rules).toContainEqual({ location: '2dsphere' });
+    expect(rules).toContainEqual({ 'legalDetails.gstin': 1 });
   });
 
-  it('5. executes ensureIndexes() and synchronizes registered models successfully', async () => {
+  it('5. verifies User model specification enforces role-scoped tenancy uniqueness (AUDIT-004 & AUDIT-013)', () => {
+    const userSpec = CANONICAL_INDEX_SPECIFICATIONS.find((s) => s.modelName === 'User');
+    expect(userSpec).toBeDefined();
+
+    const rules = userSpec!.criticalRules.map((r) => r.fields);
+    expect(rules).toContainEqual({ email: 1, role: 1 });
+    expect(rules).toContainEqual({ phone: 1, role: 1 });
+  });
+
+  it('6. executes ensureIndexes() and synchronizes registered models successfully', async () => {
     // Mock registered models in Mongoose
     vi.spyOn(mongoose, 'modelNames').mockReturnValue(['Order', 'Store']);
 
@@ -73,6 +84,10 @@ describe('MongoDB Compound Indexes Audit & Boot Verification (Task B-05)', () =>
         {
           name: 'approvalStatus_1_isActive_1_category_1',
           key: { approvalStatus: 1, isActive: 1, category: 1 },
+        },
+        {
+          name: 'legalDetails_gstin_unique_sparse',
+          key: { 'legalDetails.gstin': 1 },
         },
       ]),
     });
@@ -112,7 +127,7 @@ describe('MongoDB Compound Indexes Audit & Boot Verification (Task B-05)', () =>
     expect(health.issues).toHaveLength(0);
   });
 
-  it('6. detects missing compound indexes and flags warning gracefully', async () => {
+  it('7. detects missing compound indexes and flags warning gracefully', async () => {
     vi.spyOn(mongoose, 'modelNames').mockReturnValue(['Order']);
 
     // Order listIndexes is missing the auto-expiry status_1_createdAt_1 index
@@ -141,7 +156,7 @@ describe('MongoDB Compound Indexes Audit & Boot Verification (Task B-05)', () =>
     expect(summary.results[0].missingRules.length).toBeGreaterThan(0);
   });
 
-  it('7. catches index creation exceptions gracefully without throwing unhandled rejection', async () => {
+  it('8. catches index creation exceptions gracefully without throwing unhandled rejection', async () => {
     vi.spyOn(mongoose, 'modelNames').mockReturnValue(['Order']);
 
     const mockOrderModel = {

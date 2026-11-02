@@ -28,6 +28,163 @@ describe('Auth Service Unit Tests', () => {
     });
   });
 
+  describe('registerUser & Role-Scoped Tenancy (AUDIT-004 & AUDIT-013)', () => {
+    it('should register a customer successfully when no conflict in customer namespace', async () => {
+      vi.spyOn(UserModel, 'findOne').mockResolvedValue(null);
+
+      const mockSave = vi.fn().mockResolvedValue(true);
+      const mockUserDoc = {
+        _id: 'cust-123',
+        fullName: 'Rahul Sharma',
+        email: 'rahul@example.com',
+        phone: '9876543210',
+        role: UserRole.CUSTOMER,
+        save: mockSave,
+        toJSON: vi.fn().mockReturnValue({
+          _id: 'cust-123',
+          fullName: 'Rahul Sharma',
+          email: 'rahul@example.com',
+          phone: '9876543210',
+          role: UserRole.CUSTOMER,
+        }),
+      };
+
+      (UserModel as any).mockImplementation(function () {
+        return mockUserDoc;
+      });
+
+      const result = await authService.registerUser({
+        fullName: 'Rahul Sharma',
+        email: 'rahul@example.com',
+        phone: '9876543210',
+        password: 'Password@123',
+        role: UserRole.CUSTOMER,
+      });
+
+      expect(result.user.email).toBe('rahul@example.com');
+      expect(result.user.role).toBe(UserRole.CUSTOMER);
+      expect(result.tokens).toHaveProperty('accessToken');
+      expect(UserModel.findOne).toHaveBeenCalledWith({
+        email: 'rahul@example.com',
+        role: UserRole.CUSTOMER,
+      });
+    });
+
+    it('should allow merchant registration with the same email/phone as an existing customer (AUDIT-004)', async () => {
+      // UserModel.findOne checks { email, role: 'merchant' } -> returns null (no merchant exists with this email)
+      vi.spyOn(UserModel, 'findOne').mockResolvedValue(null);
+
+      const mockSave = vi.fn().mockResolvedValue(true);
+      const mockMerchantDoc = {
+        _id: 'merch-456',
+        fullName: 'Rahul Merchant',
+        email: 'rahul@example.com',
+        phone: '9876543210',
+        role: UserRole.MERCHANT,
+        save: mockSave,
+        toJSON: vi.fn().mockReturnValue({
+          _id: 'merch-456',
+          fullName: 'Rahul Merchant',
+          email: 'rahul@example.com',
+          phone: '9876543210',
+          role: UserRole.MERCHANT,
+        }),
+      };
+
+      (UserModel as any).mockImplementation(function () {
+        return mockMerchantDoc;
+      });
+
+      const result = await authService.registerUser({
+        fullName: 'Rahul Merchant',
+        email: 'rahul@example.com',
+        phone: '9876543210',
+        password: 'Password@123',
+        role: UserRole.MERCHANT,
+      });
+
+      expect(result.user.role).toBe(UserRole.MERCHANT);
+      expect(UserModel.findOne).toHaveBeenCalledWith({
+        email: 'rahul@example.com',
+        role: UserRole.MERCHANT,
+      });
+    });
+
+    it('should reject registration if email is already registered under the SAME role (AUDIT-013)', async () => {
+      vi.spyOn(UserModel, 'findOne').mockResolvedValueOnce({ _id: 'existing-cust' } as any);
+
+      await expect(
+        authService.registerUser({
+          fullName: 'Duplicate User',
+          email: 'rahul@example.com',
+          phone: '9876543210',
+          password: 'Password@123',
+          role: UserRole.CUSTOMER,
+        }),
+      ).rejects.toThrow(/already exists for role: customer/);
+    });
+
+    it('should reject registration if mobile number is already registered under the SAME role (AUDIT-013)', async () => {
+      vi.spyOn(UserModel, 'findOne')
+        .mockResolvedValueOnce(null) // email check passes
+        .mockResolvedValueOnce({ _id: 'existing-phone' } as any); // phone check fails
+
+      await expect(
+        authService.registerUser({
+          fullName: 'Duplicate Phone',
+          email: 'unique@example.com',
+          phone: '9876543210',
+          password: 'Password@123',
+          role: UserRole.CUSTOMER,
+        }),
+      ).rejects.toThrow(/already exists for role: customer/);
+    });
+  });
+
+  describe('loginUser & Role-Scoped Authentication (AUDIT-004)', () => {
+    it('should authenticate user for specified role when credentials match', async () => {
+      const mockUser = {
+        _id: 'merch-1',
+        fullName: 'Store Owner',
+        email: 'owner@example.com',
+        role: UserRole.MERCHANT,
+        isActive: true,
+        comparePassword: vi.fn().mockResolvedValue(true),
+        save: vi.fn().mockResolvedValue(true),
+        toJSON: vi.fn().mockReturnValue({ _id: 'merch-1', role: UserRole.MERCHANT }),
+      };
+
+      vi.spyOn(UserModel, 'findOne').mockReturnValue({
+        select: vi.fn().mockResolvedValue(mockUser),
+      } as any);
+
+      const result = await authService.loginUser({
+        identifier: 'owner@example.com',
+        password: 'Password@123',
+        role: UserRole.MERCHANT,
+      });
+
+      expect(result.user._id).toBe('merch-1');
+      expect(mockUser.comparePassword).toHaveBeenCalledWith('Password@123');
+    });
+
+    it('should throw ROLE_MISMATCH if user exists under another role', async () => {
+      vi.spyOn(UserModel, 'findOne')
+        .mockReturnValueOnce({
+          select: vi.fn().mockResolvedValue(null), // merchant lookup returns null
+        } as any)
+        .mockResolvedValueOnce({ _id: 'cust-1', role: UserRole.CUSTOMER } as any); // general lookup finds customer
+
+      await expect(
+        authService.loginUser({
+          identifier: 'user@example.com',
+          password: 'Password@123',
+          role: UserRole.MERCHANT,
+        }),
+      ).rejects.toThrow(/No merchant account found/);
+    });
+  });
+
   describe('findUserById', () => {
     it('should query UserModel by id and return user', async () => {
       const mockUser = {

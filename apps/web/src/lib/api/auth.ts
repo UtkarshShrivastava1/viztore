@@ -37,12 +37,14 @@ export const authApi = {
 
   /**
    * Login existing customer (supports email or 10-digit mobile number)
+   * Scopes authentication to customer namespace (AUDIT-004).
    */
   login: async (payload: LoginPayload): Promise<AuthSessionResponse> => {
     const identifier = (payload.identifier || payload.email || '').trim();
     const res = await api.post<AuthSessionResponse>('/auth/login', {
       identifier,
       password: payload.password,
+      role: 'customer',
     });
     return res.data;
   },

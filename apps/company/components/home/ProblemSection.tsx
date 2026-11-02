@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { XCircle, CheckCircle2 } from "lucide-react";
 import SectionHeading from "../ui/SectionHeading";
-import { branding } from "@repo/shared-types/branding.config";
+import { branding } from "@/config/company";
 
 const retailerProblems = [
   {

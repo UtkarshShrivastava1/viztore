@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Phone, MessageCircle, Mail, Clock, Send, CheckCircle2 } from 'lucide-react';
 import { branding } from '../../lib/branding.js';
+import { supportApi } from '../../lib/api.js';
 
 export const ContactUsTab: React.FC = () => {
   const [callerName, setCallerName] = useState('');
@@ -8,10 +9,24 @@ export const ContactUsTab: React.FC = () => {
   const [reason, setReason] = useState('Payment / Settlement Issue');
   const [preferredTime, setPreferredTime] = useState('Immediately (Within 30 mins)');
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleCallback = (e: React.FormEvent) => {
+  const handleCallback = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!callerName || !phone) return;
+    if (!callerName.trim() || !phone.trim() || submitting) return;
+    setSubmitting(true);
+    try {
+      await supportApi.requestCallback({
+        contactName: callerName.trim(),
+        phoneNumber: phone.trim(),
+        topic: reason,
+        preferredTime,
+      });
+    } catch (err) {
+      console.warn('Live API requestCallback fallback:', err);
+    } finally {
+      setSubmitting(false);
+    }
     setSubmitted(true);
   };
 

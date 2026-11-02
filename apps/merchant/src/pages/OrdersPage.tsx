@@ -7,6 +7,7 @@ import { OrdersToolbar } from '../components/orders/OrdersToolbar.js';
 import { OrdersTable } from '../components/orders/OrdersTable.js';
 import { OrderDetailModal } from '../components/orders/OrderDetailModal.js';
 import { branding } from '@repo/shared-types/branding.config';
+import { printMerchantInvoice } from '../lib/printInvoice.js';
 
 interface OrdersPageProps {
   onOpenCreateOrder?: () => void;
@@ -110,57 +111,7 @@ export const OrdersPage: React.FC<OrdersPageProps> = ({ onOpenCreateOrder }) => 
   };
 
   const handlePrint = (order: MerchantOrderRecord) => {
-    const printWindow = window.open('', '_blank');
-    if (printWindow) {
-      printWindow.document.write(`
-        <html>
-          <head>
-            <title>Invoice - ${order.orderNumber}</title>
-            <style>
-              body { font-family: sans-serif; padding: 24px; color: #1e293b; }
-              .header { border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 16px; }
-              .otp { font-size: 20px; font-weight: bold; background: #fef3c7; padding: 8px 12px; border-radius: 6px; display: inline-block; }
-              table { width: 100%; border-collapse: collapse; margin-top: 16px; }
-              th, td { border: 1px solid #cbd5e1; padding: 8px; text-align: left; }
-              th { background: #f1f5f9; }
-            </style>
-          </head>
-          <body>
-            <div class="header">
-              <h2>${branding.appName} Merchant Invoice</h2>
-              <p>Order ID: <strong>${order.orderNumber}</strong> | Date: ${order.timestamps.createdAt.replace('\n', ' ')}</p>
-              <div class="otp">Delivery Runner OTP: ${order.otp}</div>
-            </div>
-            <p><strong>Customer:</strong> ${order.customer.name} (${order.customer.phone})</p>
-            <p><strong>Delivery Address:</strong><br/>${order.deliveryAddress.fullText.replace(/\n/g, '<br/>')}</p>
-            <table>
-              <thead>
-                <tr>
-                  <th>Item</th>
-                  <th>Qty</th>
-                  <th>Price</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${order.items
-                  .map(
-                    (i) => `
-                  <tr>
-                    <td>${i.name} ${i.variant ? `(${i.variant})` : ''}</td>
-                    <td>${i.quantity}</td>
-                    <td>₹${i.price * i.quantity}</td>
-                  </tr>`
-                  )
-                  .join('')}
-              </tbody>
-            </table>
-            <h3>Total: ₹${order.pricing.totalAmount} (${order.payment.status} via ${order.payment.mode})</h3>
-            <script>window.print();</script>
-          </body>
-        </html>
-      `);
-      printWindow.document.close();
-    }
+    printMerchantInvoice(order);
   };
 
   const totalCount = orders.length;

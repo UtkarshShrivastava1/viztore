@@ -61,6 +61,7 @@ export const CANONICAL_INDEX_SPECIFICATIONS: ModelIndexSpecification[] = [
     criticalRules: [
       { fields: { location: '2dsphere' } },                   // Hyperlocal spatial discovery
       { fields: { approvalStatus: 1, isActive: 1, category: 1 } }, // Active approved store queries
+      { fields: { 'legalDetails.gstin': 1 }, options: { unique: true, sparse: true } }, // Statutory GST uniqueness (AUDIT-013)
     ],
   },
   {
@@ -91,6 +92,36 @@ export const CANONICAL_INDEX_SPECIFICATIONS: ModelIndexSpecification[] = [
     modelName: 'Outbox',
     criticalRules: [
       { fields: { status: 1, availableAt: 1, createdAt: 1 } }, // Transactional outbox polling
+    ],
+  },
+  {
+    modelName: 'User',
+    criticalRules: [
+      { fields: { email: 1, role: 1 }, options: { unique: true } }, // Role-scoped tenancy (AUDIT-004)
+      { fields: { phone: 1, role: 1 }, options: { unique: true } }, // Strict mobile uniqueness per role (AUDIT-013)
+    ],
+  },
+  {
+    modelName: 'Customer',
+    criticalRules: [
+      { fields: { storeId: 1, phone: 1 } },
+      { fields: { storeId: 1, customerCode: 1 }, options: { unique: true } },
+    ],
+  },
+  {
+    modelName: 'Return',
+    criticalRules: [
+      { fields: { storeId: 1, status: 1 } },
+      { fields: { storeId: 1, createdAt: -1 } },
+      { fields: { returnNumber: 1 }, options: { unique: true } },
+    ],
+  },
+  {
+    modelName: 'Settlement',
+    criticalRules: [
+      { fields: { storeId: 1, status: 1 } },
+      { fields: { storeId: 1, createdAt: -1 } },
+      { fields: { settlementId: 1 }, options: { unique: true } },
     ],
   },
 ];

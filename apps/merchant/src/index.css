@@ -24,6 +24,30 @@
   background: rgba(148, 163, 184, 0.6);
 }
 
+/* Hide native scrollbars when explicitly requested */
+.no-scrollbar::-webkit-scrollbar,
+.scrollbar-none::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+.no-scrollbar,
+.scrollbar-none {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
+/* Global Number Input UX: Remove native WebKit & Firefox spinners */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none !important;
+  margin: 0 !important;
+}
+input[type="number"] {
+  -moz-appearance: textfield !important;
+  appearance: textfield !important;
+}
+
 /* Leaflet Map overrides for dark dashboard theme */
 .leaflet-container {
   width: 100%;
@@ -53,6 +77,21 @@
   button,
   input[type="checkbox"],
   .breadcrumbs {
+    display: none !important;
+  }
+
+  /* Strip modal backdrops & overlays so they never print as gray/black slabs */
+  .fixed.inset-0,
+  .backdrop-blur-xs,
+  [class*="backdrop-blur"],
+  [class*="bg-black/"],
+  [class*="bg-slate-900/"] {
+    background: transparent !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Hide background application container if print dialog is invoked */
+  body.printing-modal #root {
     display: none !important;
   }
 
@@ -121,4 +160,21 @@
     margin: 8mm;
     size: auto;
   }
+}
+
+/* Clean Date Input UX: eliminate duplicate calendar icon when Lucide icon is present */
+.relative > input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0 !important;
+  position: absolute !important;
+  right: 0 !important;
+  top: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  cursor: pointer !important;
+}
+
+/* Global Radio & Checkbox UX: Always show cursor-pointer */
+input[type="radio"],
+input[type="checkbox"] {
+  cursor: pointer !important;
 }

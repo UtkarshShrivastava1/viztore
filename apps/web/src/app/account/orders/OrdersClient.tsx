@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { 
-  ShoppingBag, CheckCircle2, Truck, XCircle, ChevronRight, Loader2, ArrowLeft 
+  ShoppingBag, CheckCircle2, Truck, XCircle, ChevronRight, Loader2, ArrowLeft, Calendar
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
 import { AccountSidebar } from '@/components/account/AccountSidebar';
@@ -12,7 +12,7 @@ import { ordersApi } from '@/lib/api/orders.js';
 import type { IOrder } from '@repo/shared-types';
 import { OrderStatus } from '@repo/shared-types';
 
-const tabs = ['All Orders', 'Delivered', 'To Be Delivered', 'Cancelled', 'Returns'];
+const tabs = ['All Orders', 'In-Store Holds', 'Delivered', 'To Be Delivered', 'Cancelled', 'Returns'];
 
 interface DisplayOrder {
   id: string;
@@ -26,6 +26,7 @@ interface DisplayOrder {
   total: number;
   image: string;
   reserveTill?: string;
+  rawStatus?: OrderStatus;
 }
 
 export function OrdersClient() {
@@ -36,12 +37,19 @@ export function OrdersClient() {
   const [isLoading, setIsLoading] = useState(true);
 
   const mapBackendOrder = (order: IOrder): DisplayOrder => {
+    const isReserve = order.fulfilmentMode === 'reserve' || order.orderNumber?.toUpperCase().includes('RES-') || Boolean((order as any).isReserved);
     let displayStatus: DisplayOrder['status'] = 'To Be Delivered';
     if (order.status === OrderStatus.DELIVERED) {
       displayStatus = 'Delivered';
     } else if (order.status === OrderStatus.CANCELLED) {
       displayStatus = 'Cancelled';
+    } else if (isReserve) {
+      displayStatus = 'Reserved';
     }
+
+    const reserveTill = order.reserveExpiresAt
+      ? new Date(order.reserveExpiresAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+      : undefined;
 
     const firstItem = order.items?.[0];
     const totalItems = order.items?.reduce((acc, curr) => acc + (curr.quantity || 1), 0) || 1;
@@ -58,16 +66,18 @@ export function OrdersClient() {
       : 'Recent Order';
 
     return {
-      id: `#${order.orderNumber || (order._id || order.id || '').slice(-6).toUpperCase()}`,
+      id: order.orderNumber ? (order.orderNumber.startsWith('#') ? order.orderNumber : `#${order.orderNumber}`) : `#ORD-${(order._id || order.id || '000000').slice(-6).toUpperCase()}`,
       rawId: order._id || order.id || order.orderNumber,
-      type: 'regular',
+      type: isReserve ? 'reserve' : 'regular',
+      rawStatus: order.status,
       status: displayStatus,
+      reserveTill,
       date: formattedDate,
       productName: firstItem ? `${firstItem.name}${additionalCount}` : 'Marketplace Item',
       variants: firstItem ? `Qty: ${firstItem.quantity} • Unit: ₹${firstItem.unitPrice}` : `Total items: ${totalItems}`,
       price: firstItem ? firstItem.unitPrice * firstItem.quantity : order.grandTotal,
       total: order.grandTotal,
-      image: 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&q=80&w=200&h=200',
+      image: (firstItem as any)?.imageUrl || (firstItem as any)?.image || 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?auto=format&fit=crop&q=80&w=200&h=200',
     };
   };
 
@@ -98,9 +108,10 @@ export function OrdersClient() {
 
   const filteredOrders = orders.filter((order) => {
     if (activeTab === 'All Orders') return true;
+    if (activeTab === 'In-Store Holds') return order.type === 'reserve' || order.status === 'Reserved';
     if (activeTab === 'Delivered') return order.status === 'Delivered';
     if (activeTab === 'Cancelled') return order.status === 'Cancelled';
-    if (activeTab === 'To Be Delivered') return order.status === 'To Be Delivered';
+    if (activeTab === 'To Be Delivered') return order.status === 'To Be Delivered' && order.type !== 'reserve';
     if (activeTab === 'Returns') return order.status === 'Returns';
     return true;
   });
@@ -194,7 +205,10 @@ export function OrdersClient() {
                   let statusColor = 'text-emerald-600';
                   let StatusIcon = CheckCircle2;
 
-                  if (order.status === 'To Be Delivered') {
+                  if (order.status === 'Reserved') {
+                    statusColor = 'text-indigo-600';
+                    StatusIcon = Calendar;
+                  } else if (order.status === 'To Be Delivered') {
                     statusColor = 'text-orange-500';
                     StatusIcon = Truck;
                   } else if (order.status === 'Cancelled') {
@@ -243,12 +257,22 @@ export function OrdersClient() {
                         <div className="text-[12px] font-medium text-surface-600">
                           Total Amount: <span className="font-bold text-[#192168]">₹{order.total.toLocaleString('en-IN')}</span>
                         </div>
-                        <Link 
-                          href={`/account/orders/${order.rawId}`}
-                          className="px-4 py-1.5 rounded-md border border-[#1668F6] text-[#1668F6] text-[12px] font-bold hover:bg-blue-50 transition-colors block text-center"
-                        >
-                          Order Details
-                        </Link>
+                        <div className="flex items-center gap-2">
+                          {(order.rawStatus === OrderStatus.PENDING || order.rawStatus === OrderStatus.CONFIRMED) && (
+                            <Link 
+                              href={`/account/orders/${order.rawId}`}
+                              className="px-3 py-1.5 rounded-md border border-rose-200 text-rose-600 text-[11px] font-semibold hover:bg-rose-50 transition-colors block text-center"
+                            >
+                              Cancel Order
+                            </Link>
+                          )}
+                          <Link 
+                            href={`/account/orders/${order.rawId}`}
+                            className="px-4 py-1.5 rounded-md border border-[#1668F6] text-[#1668F6] text-[12px] font-bold hover:bg-blue-50 transition-colors block text-center"
+                          >
+                            Order Details
+                          </Link>
+                        </div>
                       </div>
 
                     </div>

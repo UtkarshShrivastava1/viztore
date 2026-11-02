@@ -6,9 +6,10 @@ import { useOnboardingStore } from '../../stores/onboardingStore.js';
 import { Input } from '../ui/Input.js';
 import { Button } from '../ui/Button.js';
 import { Card } from '../ui/Card.js';
-import { MapPin, Store, Navigation, ArrowRight, ArrowLeft, Crosshair } from 'lucide-react';
+import { MapPin, Store, Navigation, ArrowRight, ArrowLeft, Crosshair, Loader2 } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
+import { reverseGeocode } from '../../lib/location/geocoding.js';
 
 // Custom Map Marker Icon
 const markerIcon = new L.Icon({
@@ -39,9 +40,10 @@ export const Step4StoreLocation: React.FC = () => {
   const { draft, updateDraft, nextStep, prevStep } = useOnboardingStore();
 
   const [mapCoords, setMapCoords] = useState<[number, number]>([
-    draft.step4?.location?.coordinates?.[1] || 12.9716, // lat
-    draft.step4?.location?.coordinates?.[0] || 77.5946, // lng
+    draft.step4?.location?.coordinates?.[1] || 21.1920, // lat
+    draft.step4?.location?.coordinates?.[0] || 81.3780, // lng
   ]);
+  const [isResolving, setIsResolving] = useState(false);
 
   const {
     register,
@@ -72,12 +74,26 @@ export const Step4StoreLocation: React.FC = () => {
 
   const deliveryRadius = watch('deliveryRadiusKm');
 
-  const handleMapCoordChange = (newCoords: [number, number]) => {
+  const handleMapCoordChange = async (newCoords: [number, number]) => {
     setMapCoords(newCoords);
     setValue('location', {
       type: 'Point',
       coordinates: [newCoords[1], newCoords[0]], // [lng, lat]
     });
+
+    setIsResolving(true);
+    try {
+      const resolved = await reverseGeocode(newCoords[0], newCoords[1]);
+      if (resolved.roadOrArea) setValue('address.street', resolved.roadOrArea);
+      if (resolved.landmark) setValue('address.landmark', resolved.landmark);
+      if (resolved.city) setValue('address.city', resolved.city);
+      if (resolved.state) setValue('address.state', resolved.state);
+      if (resolved.pincode) setValue('address.pincode', resolved.pincode);
+    } catch {
+      // Ignore
+    } finally {
+      setIsResolving(false);
+    }
   };
 
   const handleDetectGPS = () => {
@@ -108,7 +124,7 @@ export const Step4StoreLocation: React.FC = () => {
     <Card className="max-w-2xl mx-auto">
       <div className="mb-6">
         <span className="text-xs font-semibold text-brand-400 uppercase tracking-wider">Step 4 of 6</span>
-        <h2 className="text-2xl font-bold text-slate-100 mt-1">Store Setup & Geolocation</h2>
+        <h2 className="text-2xl font-bold text-slate-100 mt-1">Store Setup &amp; Geolocation</h2>
         <p className="text-sm text-slate-400 mt-1">
           Set up your digital storefront name and map coordinates for nearby customer discovery (3–4 km).
         </p>
@@ -125,7 +141,7 @@ export const Step4StoreLocation: React.FC = () => {
 
           <Input
             label="Store Display Name"
-            placeholder="e.g. Royal Footwear & Accessories"
+            placeholder="e.g. Royal Footwear &amp; Accessories"
             leftIcon={<Store className="w-4 h-4" />}
             error={errors.storeDisplayName?.message}
             {...register('storeDisplayName')}
@@ -141,7 +157,15 @@ export const Step4StoreLocation: React.FC = () => {
 
         {/* Detailed Address Block */}
         <div className="border border-slate-800 rounded-xl p-4 bg-slate-950/40 space-y-3">
-          <span className="text-xs font-semibold text-slate-300 uppercase tracking-wider block">Physical Shop Address</span>
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-slate-300 uppercase tracking-wider block">Physical Shop Address</span>
+            {isResolving && (
+              <span className="text-xs text-blue-400 flex items-center gap-1 animate-pulse">
+                <Loader2 className="w-3 h-3 animate-spin" />
+                Auto-filling address from map...
+              </span>
+            )}
+          </div>
 
           <Input
             placeholder="Shop No., Building Name, Street"
@@ -155,7 +179,7 @@ export const Step4StoreLocation: React.FC = () => {
               {...register('address.landmark')}
             />
             <Input
-              placeholder="City (e.g. Bengaluru)"
+              placeholder="City (e.g. Bhilai)"
               error={errors.address?.city?.message}
               {...register('address.city')}
             />
@@ -172,12 +196,12 @@ export const Step4StoreLocation: React.FC = () => {
           <div className="flex items-center justify-between">
             <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
               <MapPin className="w-4 h-4 text-brand-400" />
-              <span>Map Pin Drop & Hyperlocal Delivery Radius</span>
+              <span>Map Pin Drop &amp; Hyperlocal Delivery Radius</span>
             </label>
             <button
               type="button"
               onClick={handleDetectGPS}
-              className="inline-flex items-center gap-1 text-xs text-brand-400 hover:text-brand-300 transition-colors"
+              className="inline-flex items-center gap-1 text-xs text-brand-400 hover:text-brand-300 transition-colors cursor-pointer"
             >
               <Crosshair className="w-3.5 h-3.5" />
               <span>Detect My GPS</span>

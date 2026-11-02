@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Plus, Calendar } from 'lucide-react';
 import { useExpenseStore } from '../../stores/expenseStore.js';
@@ -8,6 +8,7 @@ export const AddExpenseModal: React.FC = () => {
     isAddExpenseModalOpen,
     setIsAddExpenseModalOpen,
     setIsAddVendorOpen,
+    vendors,
     createExpenseRecord,
     isSubmitting,
   } = useExpenseStore();
@@ -16,13 +17,32 @@ export const AddExpenseModal: React.FC = () => {
   const [customType, setCustomType] = useState('');
   const [isAddingCustomType, setIsAddingCustomType] = useState(false);
   const [vendor, setVendor] = useState('');
-  const [date, setDate] = useState('2024-05-11');
+  const [date, setDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [referenceNo, setReferenceNo] = useState('');
   const [notes, setNotes] = useState('');
   const [amount, setAmount] = useState<number | ''>('');
   const [tax, setTax] = useState<number | ''>('');
   const [paymentMethod, setPaymentMethod] = useState('');
   const [paymentTerms, setPaymentTerms] = useState('Immediate');
+
+  const prevVendorsLen = useRef(vendors?.length || 0);
+  useEffect(() => {
+    if (vendors && vendors.length > prevVendorsLen.current) {
+      if (vendors[0]?.vendorName) {
+        setVendor(vendors[0].vendorName);
+      }
+    }
+    prevVendorsLen.current = vendors?.length || 0;
+  }, [vendors]);
+
+  useEffect(() => {
+    if (!isAddExpenseModalOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsAddExpenseModalOpen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isAddExpenseModalOpen, setIsAddExpenseModalOpen]);
 
   if (!isAddExpenseModalOpen) return null;
 
@@ -57,7 +77,7 @@ export const AddExpenseModal: React.FC = () => {
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+    <div onClick={(e) => { if (e.target === e.currentTarget) setIsAddExpenseModalOpen(false); }} className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
@@ -146,13 +166,23 @@ export const AddExpenseModal: React.FC = () => {
                     required
                   >
                     <option value="">Select or add vendor</option>
-                    <option value="Airtel Broadband">Airtel Broadband</option>
-                    <option value="Jio Telecom">Jio Telecom</option>
-                    <option value="Office Landlord">Office Landlord</option>
-                    <option value="Sharma Enterprises">Sharma Enterprises</option>
-                    <option value="Local Stationery Store">Local Stationery Store</option>
-                    <option value="Google Ads">Google Ads</option>
-                    <option value="Meta Ads">Meta Ads</option>
+                    {vendors && vendors.length > 0 ? (
+                      vendors.map((v) => (
+                        <option key={v.id} value={v.vendorName}>
+                          {v.vendorName}
+                        </option>
+                      ))
+                    ) : (
+                      <>
+                        <option value="Airtel Broadband">Airtel Broadband</option>
+                        <option value="Jio Telecom">Jio Telecom</option>
+                        <option value="Office Landlord">Office Landlord</option>
+                        <option value="Sharma Enterprises">Sharma Enterprises</option>
+                        <option value="Local Stationery Store">Local Stationery Store</option>
+                        <option value="Google Ads">Google Ads</option>
+                        <option value="Meta Ads">Meta Ads</option>
+                      </>
+                    )}
                   </select>
                   <button
                     type="button"

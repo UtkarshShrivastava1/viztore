@@ -89,6 +89,13 @@ export const expenseController = {
     return ApiResponse.created(res, purchase, 'Purchase record created successfully');
   }),
 
+  receivePurchase: catchAsync(async (req: Request, res: Response) => {
+    const storeId = await extractStoreId(req);
+    const purchaseId = req.params.id as string;
+    const purchase = await expenseService.receivePurchaseOrder(storeId, purchaseId);
+    return ApiResponse.success(res, purchase, 'Purchase order received and stock updated successfully');
+  }),
+
   getCreditNotes: catchAsync(async (req: Request, res: Response) => {
     const storeId = await extractStoreId(req);
     const creditNotes = await expenseService.getCreditNotes(storeId);

@@ -19,7 +19,7 @@ export const PaymentHistoryTab: React.FC = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All Statuses');
-  const [dateRange, setDateRange] = useState('10 May 2024 - 16 May 2024');
+  const [dateRange, setDateRange] = useState('01 Oct 2026 - 31 Oct 2026');
   const [currentPage, setCurrentPage] = useState(1);
 
   const filteredPayouts = payouts.filter((p) => {
@@ -40,7 +40,7 @@ export const PaymentHistoryTab: React.FC = () => {
   const clearFilters = () => {
     setSearchQuery('');
     setStatusFilter('All Statuses');
-    setDateRange('10 May 2024 - 16 May 2024');
+    setDateRange('01 Oct 2026 - 31 Oct 2026');
     setCurrentPage(1);
   };
 
@@ -130,7 +130,14 @@ export const PaymentHistoryTab: React.FC = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 text-slate-700 text-[11px]">
-            {filteredPayouts.map((p) => (
+            {filteredPayouts.length === 0 ? (
+              <tr>
+                <td colSpan={8} className="py-10 text-center text-slate-400 text-xs">
+                  No payouts found
+                </td>
+              </tr>
+            ) : (
+              filteredPayouts.map((p) => (
               <tr key={p.id} className="hover:bg-slate-50/70 transition-colors">
                 <td className="py-2 px-3 font-bold text-slate-900 whitespace-nowrap">
                   {p.payoutId}
@@ -171,7 +178,8 @@ export const PaymentHistoryTab: React.FC = () => {
                   </button>
                 </td>
               </tr>
-            ))}
+            ))
+            )}
           </tbody>
         </table>
       </div>
@@ -179,7 +187,7 @@ export const PaymentHistoryTab: React.FC = () => {
       {/* Pagination Matching 10.1.png */}
       <div className="p-3.5 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
         <div>
-          Showing 1 to {filteredPayouts.length} of 28 payouts
+          Showing {filteredPayouts.length === 0 ? 0 : 1} to {filteredPayouts.length} of {filteredPayouts.length} payouts
         </div>
         <div className="flex items-center gap-1">
           <button

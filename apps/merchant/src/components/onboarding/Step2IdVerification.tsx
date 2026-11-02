@@ -83,6 +83,7 @@ export const Step2IdVerification: React.FC<Step2IdVerificationProps> = ({ onCont
       const extractedPan = clean.substring(2, 12);
       if (/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(extractedPan)) {
         setPan(extractedPan);
+        setIsPanVerified(true);
       }
     }
   };
@@ -257,6 +258,11 @@ export const Step2IdVerification: React.FC<Step2IdVerificationProps> = ({ onCont
         <div>
           <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
             10-Digit PAN Number <span className="text-rose-500">*</span>
+            {gstin.length >= 15 && (
+              <span className="ml-2 text-[10px] text-emerald-600 font-semibold normal-case bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                ✓ Auto-extracted &amp; locked from GSTIN
+              </span>
+            )}
           </label>
           <div className="flex items-center justify-between border border-slate-200 rounded-xl px-3.5 py-2.5 bg-white focus-within:border-[#0038ed] focus-within:ring-2 focus-within:ring-blue-100 transition-all shadow-2xs">
             <input
@@ -264,11 +270,16 @@ export const Step2IdVerification: React.FC<Step2IdVerificationProps> = ({ onCont
               maxLength={10}
               placeholder="e.g. ABCDE1234F"
               value={pan}
+              readOnly={gstin.length >= 15}
               onChange={(e) => {
-                setPan(e.target.value.toUpperCase());
-                setIsPanVerified(false);
+                if (gstin.length < 15) {
+                  setPan(e.target.value.toUpperCase());
+                  setIsPanVerified(false);
+                }
               }}
-              className="w-full text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none uppercase font-mono tracking-wider font-semibold"
+              className={`w-full text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none uppercase font-mono tracking-wider font-semibold ${
+                gstin.length >= 15 ? 'bg-slate-50 cursor-not-allowed opacity-90' : ''
+              }`}
             />
             <button
               type="button"

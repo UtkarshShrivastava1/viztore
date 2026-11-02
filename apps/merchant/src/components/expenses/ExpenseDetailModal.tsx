@@ -2,6 +2,7 @@ import React from 'react';
 import { X, Receipt, Printer, CheckCircle2, AlertTriangle, FileText, Download } from 'lucide-react';
 import { Expense } from '../../stores/expenseStore.js';
 import { branding } from '../../lib/branding.js';
+import { downloadDocumentPdf, printFormattedDocument, VoucherDocumentData } from '../../lib/pdfEngine.js';
 
 interface ExpenseDetailModalProps {
   expense: Expense | null;
@@ -15,6 +16,39 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
   onClose,
 }) => {
   if (!isOpen || !expense) return null;
+
+  const docData: VoucherDocumentData = {
+    title: 'EXPENSE VOUCHER',
+    referenceNo: expense.referenceNumber || expense.id,
+    voucherType: 'Expense',
+    date: expense.date,
+    time: expense.time,
+    vendorOrCustomer: {
+      name: expense.vendor || 'General Supplier',
+      city: 'Local',
+    },
+    items: [
+      {
+        name: expense.name,
+        description: expense.subtitle || expense.category,
+        qty: 1,
+        unit: 'Service',
+        rate: expense.amount,
+        taxPercent: 0,
+        total: expense.amount,
+      },
+    ],
+    financials: {
+      subtotal: expense.amount,
+      taxAmount: expense.tax || 0,
+      totalAmount: expense.totalAmount || expense.amount,
+      paidAmount: expense.status === 'Paid' ? (expense.totalAmount || expense.amount) : 0,
+      paymentMethod: expense.paymentMethod,
+      referenceTxnId: expense.referenceNumber,
+    },
+    notes: expense.notes,
+    filename: `Expense_${expense.id}`,
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
@@ -34,7 +68,7 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200 transition-colors"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200 transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -98,19 +132,27 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
           </div>
 
           {/* Action buttons */}
-          <div className="pt-2 flex items-center justify-between gap-3">
+          <div className="pt-2 flex items-center justify-between gap-2.5">
             <button
               type="button"
-              onClick={() => window.print()}
-              className="px-4 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors shadow-2xs"
+              onClick={() => downloadDocumentPdf(docData)}
+              className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
             >
-              <Printer className="w-3.5 h-3.5" />
-              Print Voucher
+              <Download className="w-3.5 h-3.5 text-white" />
+              <span>Download PDF</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => printFormattedDocument(docData)}
+              className="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
+            >
+              <Printer className="w-3.5 h-3.5 text-slate-500" />
+              <span>Print Voucher</span>
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-colors shadow-2xs"
+              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors shadow-2xs cursor-pointer"
             >
               Close
             </button>

@@ -81,6 +81,50 @@ const InvoiceRowMoreAction: React.FC<{
   );
 };
 
+function isDateWithinRange(dateStr: string, range: string): boolean {
+  if (!dateStr || range === 'All' || range === 'All Time') return true;
+
+  const parsed = new Date(dateStr);
+  if (isNaN(parsed.getTime())) return true;
+
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+
+  switch (range) {
+    case 'Today':
+      return parsed >= startOfToday && parsed <= endOfToday;
+
+    case 'This Week': {
+      const day = now.getDay();
+      const diffToMonday = (day === 0 ? -6 : 1) - day;
+      const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diffToMonday);
+      return parsed >= startOfWeek && parsed <= endOfToday;
+    }
+
+    case 'This Month': {
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+      return parsed >= startOfMonth && parsed <= endOfMonth;
+    }
+
+    case 'Last Month': {
+      const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
+      return parsed >= startOfLastMonth && parsed <= endOfLastMonth;
+    }
+
+    case 'This Year': {
+      const startOfYear = new Date(now.getFullYear(), 0, 1);
+      const endOfYear = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
+      return parsed >= startOfYear && parsed <= endOfYear;
+    }
+
+    default:
+      return true;
+  }
+}
+
 export const InvoicesTableView: React.FC = () => {
   const {
     invoices,
@@ -105,6 +149,11 @@ export const InvoicesTableView: React.FC = () => {
     openCreateInvoiceModal,
   } = useBillingStore();
 
+    const [visibleCount, setVisibleCount] = useState<number>(10);
+
+  React.useEffect(() => {
+    setVisibleCount(10);
+  }, [invoiceCurrentTab, invoiceSearchQuery, invoiceStatusFilter, invoiceTypeFilter, invoicePaymentFilter, invoiceDateRange]);
   const [activeMenuInvoiceId, setActiveMenuInvoiceId] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [printModalInvoice, setPrintModalInvoice] = useState<IInvoice | null>(null);
@@ -582,7 +631,7 @@ export const InvoicesTableView: React.FC = () => {
                   </td>
                 </tr>
               ) : (
-                filteredInvoices.map((inv) => (
+                filteredInvoices.slice(0, visibleCount).map((inv) => (
                   <tr key={inv.id} className="hover:bg-slate-50/70 transition-colors group">
                     <td className="py-3 px-4">
                       <span className="font-bold text-blue-600 hover:underline cursor-pointer">
@@ -820,7 +869,7 @@ export const InvoicesTableView: React.FC = () => {
                 type="button"
                 disabled={paymentAmount <= 0}
                 onClick={() => {
-                  recordPayment(recordPaymentInvoice.id, paymentAmount, paymentMode);
+                  recordPayment(recordPaymentInvoice.id, paymentAmount, paymentMode, paymentNotes);
                   setToastNotification({
                     message: `Payment of ₹${paymentAmount.toFixed(2)} (${paymentMode.toUpperCase()}) recorded for ${recordPaymentInvoice.invoiceNo}`,
                     type: 'success',

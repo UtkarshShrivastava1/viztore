@@ -61,8 +61,8 @@ export const CreateCouponWizard: React.FC<CreateCouponWizardProps> = ({ onClose 
     'Women Fashion',
   ]);
 
-  const [startDate, setStartDate] = useState('2024-05-20');
-  const [endDate, setEndDate] = useState('2024-06-20');
+  const [startDate, setStartDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [endDate, setEndDate] = useState(() => new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0]);
   const [showOnStore, setShowOnStore] = useState(true);
   const [multiplePerCustomer, setMultiplePerCustomer] = useState(true);
   const [combineOffers, setCombineOffers] = useState(false);

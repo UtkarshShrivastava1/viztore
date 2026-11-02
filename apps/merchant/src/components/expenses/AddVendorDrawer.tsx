@@ -184,18 +184,22 @@ export const AddVendorDrawer: React.FC<AddVendorDrawerProps> = ({
     if (createVendorRecord) {
       try {
         await createVendorRecord({
+          vendorName: companyName.trim() || displayName.trim() || 'New Vendor',
+          contactPerson: contactPerson.trim() || displayName.trim() || companyName.trim() || 'Manager',
           name: displayName.trim() || companyName.trim() || 'New Vendor',
           companyName: companyName.trim() || displayName.trim() || undefined,
           phone: phone.trim() || '9876543210',
+          email: email.trim() || undefined,
           gstin: gstin.trim() || undefined,
           pan: pan.trim() || undefined,
           address: addressLine.trim() || undefined,
-          city: city.trim() || undefined,
+          city: city.trim() || 'Raipur',
           pincode: pincode.trim() || undefined,
           category: category || 'General',
           paymentTerms: paymentTerms || 'Due on Receipt',
           openingBalance: parseFloat(openingBalance) || 0,
           creditLimit: parseFloat(creditLimit) || 0,
+          status: isActive ? 'Active' : 'Inactive',
         });
       } catch (err) {
         console.error('Failed to sync vendor to cloud:', err);
@@ -205,6 +209,48 @@ export const AddVendorDrawer: React.FC<AddVendorDrawerProps> = ({
     if (onSaved) onSaved();
     closeAddVendor();
     onClose();
+  };
+
+  const handleNext = () => {
+    setFormError('');
+    if (activeTab === 'basic') {
+      if (!companyName.trim() && !displayName.trim()) {
+        setFormError('Please enter a company name or display name before proceeding.');
+        return;
+      }
+      if (gstin.trim() && !validateGSTIN(gstin.trim())) {
+        setGstinError('Invalid GSTIN format (15 characters alphanumeric).');
+        setFormError('Please resolve the highlighted validation errors.');
+        return;
+      }
+      if (pan.trim() && !validatePAN(pan.trim())) {
+        setPanError('Invalid PAN format (10 characters alphanumeric).');
+        setFormError('Please resolve the highlighted validation errors.');
+        return;
+      }
+      setActiveTab('address');
+    } else if (activeTab === 'address') {
+      if (pincode.trim() && !validatePIN(pincode.trim())) {
+        setPincodeError('Please enter a valid 6-digit Indian PIN code.');
+        setFormError('Please resolve the highlighted validation errors.');
+        return;
+      }
+      setActiveTab('contact');
+    } else if (activeTab === 'contact') {
+      if (phone.trim() && !validatePhone(phone.trim())) {
+        setPhoneError('Please enter a valid 10-digit Indian mobile number.');
+        setFormError('Please resolve the highlighted validation errors.');
+        return;
+      }
+      setActiveTab('other');
+    }
+  };
+
+  const handleBack = () => {
+    setFormError('');
+    if (activeTab === 'address') setActiveTab('basic');
+    else if (activeTab === 'contact') setActiveTab('address');
+    else if (activeTab === 'other') setActiveTab('contact');
   };
 
   const handleDrawerClose = () => {
@@ -231,7 +277,7 @@ export const AddVendorDrawer: React.FC<AddVendorDrawerProps> = ({
               {selectedVendor ? 'Edit Vendor' : 'Add Vendor'}
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              Add vendor details to create purchase orders, bills, expenses and more.
+              Step {activeTab === 'basic' ? '1' : activeTab === 'address' ? '2' : activeTab === 'contact' ? '3' : '4'} of 4: Add vendor details to create purchase orders, bills, and expenses.
             </p>
           </div>
           <button
@@ -243,26 +289,37 @@ export const AddVendorDrawer: React.FC<AddVendorDrawerProps> = ({
           </button>
         </div>
 
-        {/* 4 Sub Tabs matching mockup 8.12.png */}
-        <div className="px-6 pt-3 border-b border-slate-100 flex items-center gap-6 text-xs bg-white shrink-0">
-          {(['basic', 'address', 'contact', 'other'] as const).map((tab) => (
+        {/* 4 Sub Tabs with Step Numbers */}
+        <div className="px-6 pt-3 border-b border-slate-100 flex items-center gap-6 text-xs bg-white shrink-0 overflow-x-auto">
+          {(['basic', 'address', 'contact', 'other'] as const).map((tab, idx) => (
             <button
               key={tab}
               type="button"
               onClick={() => setActiveTab(tab)}
-              className={`pb-3 font-bold capitalize transition-colors relative cursor-pointer ${
+              className={`pb-3 font-bold capitalize transition-colors relative cursor-pointer flex items-center gap-1.5 ${
                 activeTab === tab
                   ? 'text-blue-600 border-b-2 border-blue-600'
                   : 'text-slate-500 hover:text-slate-800'
               }`}
             >
-              {tab === 'basic'
-                ? 'Basic Details'
-                : tab === 'address'
-                ? 'Address'
-                : tab === 'contact'
-                ? 'Contact Persons'
-                : 'Other Details'}
+              <span
+                className={`w-4 h-4 rounded-full text-[10px] flex items-center justify-center font-bold transition-colors ${
+                  activeTab === tab
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-slate-100 text-slate-500'
+                }`}
+              >
+                {idx + 1}
+              </span>
+              <span>
+                {tab === 'basic'
+                  ? 'Basic Details'
+                  : tab === 'address'
+                  ? 'Address'
+                  : tab === 'contact'
+                  ? 'Contact Persons'
+                  : 'Other Details'}
+              </span>
             </button>
           ))}
         </div>
@@ -606,10 +663,11 @@ export const AddVendorDrawer: React.FC<AddVendorDrawerProps> = ({
                 <input
                   type="text"
                   maxLength={6}
+                  inputMode="numeric"
                   placeholder="6-digit PIN"
                   value={pincode}
                   onChange={(e) => {
-                    setPincode(e.target.value);
+                    setPincode(e.target.value.replace(/\D/g, '').slice(0, 6));
                     if (pincodeError) setPincodeError('');
                   }}
                   onBlur={() => {
@@ -668,10 +726,11 @@ export const AddVendorDrawer: React.FC<AddVendorDrawerProps> = ({
                 <input
                   type="tel"
                   maxLength={10}
+                  inputMode="numeric"
                   placeholder="10-digit mobile number (e.g. 9876543210)"
                   value={phone}
                   onChange={(e) => {
-                    setPhone(e.target.value);
+                    setPhone(e.target.value.replace(/\D/g, '').slice(0, 10));
                     if (phoneError) setPhoneError('');
                   }}
                   onBlur={() => {
@@ -732,9 +791,11 @@ export const AddVendorDrawer: React.FC<AddVendorDrawerProps> = ({
                   </label>
                   <input
                     type="text"
-                    placeholder="Enter bank account number"
+                    maxLength={18}
+                    inputMode="numeric"
+                    placeholder="Enter bank account number (9-18 digits)"
                     value={accountNumber}
-                    onChange={(e) => setAccountNumber(e.target.value)}
+                    onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, '').slice(0, 18))}
                     className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-mono font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-2xs"
                   />
                 </div>
@@ -748,7 +809,7 @@ export const AddVendorDrawer: React.FC<AddVendorDrawerProps> = ({
                     maxLength={11}
                     placeholder="e.g. SBIN0001234"
                     value={ifscCode}
-                    onChange={(e) => setIfscCode(e.target.value.toUpperCase())}
+                    onChange={(e) => setIfscCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 11))}
                     className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-mono uppercase font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-2xs"
                   />
                 </div>
@@ -790,23 +851,77 @@ export const AddVendorDrawer: React.FC<AddVendorDrawerProps> = ({
           )}
         </div>
 
-        {/* Sticky Footer matching mockup 8.12.png */}
-        <div className="p-4 border-t border-slate-100 bg-white flex items-center justify-end gap-3 shrink-0">
-          <button
-            type="button"
-            onClick={handleDrawerClose}
-            className="px-4 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition-colors shadow-2xs cursor-pointer"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            disabled={isSubmitting}
-            onClick={handleSave}
-            className="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-colors shadow-2xs cursor-pointer"
-          >
-            {isSubmitting ? 'Saving Vendor...' : 'Save Vendor'}
-          </button>
+        {/* Sticky Footer matching mockup 8.12.png with Step-by-Step Wizard Navigation */}
+        <div className="p-4 border-t border-slate-100 bg-white flex items-center justify-between gap-3 shrink-0">
+          <div>
+            {activeTab !== 'basic' ? (
+              <button
+                type="button"
+                onClick={handleBack}
+                className="px-4 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition-colors shadow-2xs cursor-pointer flex items-center gap-1.5"
+              >
+                <span>←</span>
+                <span>Back</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleDrawerClose}
+                className="px-4 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition-colors shadow-2xs cursor-pointer"
+              >
+                Cancel
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            {activeTab !== 'basic' && (
+              <button
+                type="button"
+                onClick={handleDrawerClose}
+                className="px-3 py-2 text-slate-500 hover:text-slate-700 text-xs font-medium rounded-xl transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+            )}
+
+            {activeTab !== 'other' ? (
+              <>
+                <button
+                  type="button"
+                  disabled={isSubmitting}
+                  onClick={handleSave}
+                  className="px-3.5 py-2 text-slate-600 hover:text-slate-900 border border-slate-200 hover:bg-slate-50 text-xs font-semibold rounded-xl transition-colors cursor-pointer"
+                  title="Save vendor with current details without completing remaining steps"
+                >
+                  Quick Save
+                </button>
+                <button
+                  type="button"
+                  onClick={handleNext}
+                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-colors shadow-2xs cursor-pointer flex items-center gap-1.5"
+                >
+                  <span>
+                    {activeTab === 'basic'
+                      ? 'Next: Address'
+                      : activeTab === 'address'
+                      ? 'Next: Contact Persons'
+                      : 'Next: Other Details'}
+                  </span>
+                  <span>→</span>
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                disabled={isSubmitting}
+                onClick={handleSave}
+                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-colors shadow-2xs cursor-pointer flex items-center gap-1.5"
+              >
+                {isSubmitting ? 'Saving Vendor...' : 'Save Vendor ✓'}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>,

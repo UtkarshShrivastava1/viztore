@@ -1,16 +1,17 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   MapPin, X, Navigation, Check, Search, Home, Briefcase, 
-  Building2, Sparkles, Compass, Loader2
+  Compass, Loader2
 } from 'lucide-react';
 import { useLocationStore } from '@/stores/location.store';
 import { useAuthStore } from '@/stores/auth.store';
+import { useAddressStore } from '@/stores/addressStore';
 import { 
   reverseGeocode, 
   searchLocalities, 
-  KNOWN_HUBS, 
   type GeocodedLocation 
 } from '@/lib/location/geocoding';
 
@@ -20,13 +21,15 @@ interface LocationModalProps {
 }
 
 export const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose }) => {
+  const [mounted, setMounted] = useState(false);
   const { 
     setLocation, 
     locality: currentLocality,
     formattedAddress: currentFormatted,
     address: currentAddress 
   } = useLocationStore();
-  const { user, isAuthenticated } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
+  const { addresses, fetchAddresses, selectDeliveryAddress } = useAddressStore();
   
   const [searchInput, setSearchInput] = useState('');
   const [searchResults, setSearchResults] = useState<GeocodedLocation[]>([]);
@@ -37,14 +40,22 @@ export const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose })
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    if (!isOpen) {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      if (isAuthenticated) {
+        fetchAddresses().catch(() => {});
+      }
+    } else {
       setSearchInput('');
       setSearchResults([]);
       setErrorMsg(null);
       setIsDetecting(false);
       setIsSearching(false);
     }
-  }, [isOpen]);
+  }, [isOpen, isAuthenticated, fetchAddresses]);
 
   // Live autocomplete search with 280ms debounce
   useEffect(() => {
@@ -74,12 +85,11 @@ export const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose })
     };
   }, [searchInput]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
   const handleSelectLocation = async (loc: GeocodedLocation & { placeId?: string }) => {
     let resolvedLoc = { ...loc };
 
-    // If result has a Google Place ID, resolve high-precision coordinates and address components
     if (loc.placeId && !loc.placeId.startsWith('hub_')) {
       try {
         const res = await fetch(`/api/location/place-details?placeId=${encodeURIComponent(loc.placeId)}`);
@@ -135,7 +145,7 @@ export const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose })
       (error) => {
         setIsDetecting(false);
         if (error.code === error.PERMISSION_DENIED) {
-          setErrorMsg('Location access was denied. Please pick a locality from the list or search below.');
+          setErrorMsg('Location access was denied. Please search your area or street below.');
         } else {
           setErrorMsg('Could not detect GPS location. Please search your area or street below.');
         }
@@ -144,12 +154,27 @@ export const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose })
     );
   };
 
-  const hubList = Object.values(KNOWN_HUBS);
+  // Filter saved addresses matching searchInput
+  const matchingSavedAddresses = searchInput.trim()
+    ? addresses.filter((a) => {
+        const q = searchInput.toLowerCase();
+        return (
+          a.label.toLowerCase().includes(q) ||
+          a.street.toLowerCase().includes(q) ||
+          a.city.toLowerCase().includes(q) ||
+          (a.landmark && a.landmark.toLowerCase().includes(q)) ||
+          a.pincode.includes(q)
+        );
+      })
+    : addresses;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+  const modalContent = (
+    <div 
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in"
+      onClick={onClose}
+    >
       <div 
-        className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[85vh]"
+        className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[85vh] z-[10000]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header Ribbon */}
@@ -174,7 +199,7 @@ export const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose })
         </div>
 
         {/* Modal Scrollable Body */}
-        <div className="p-6 space-y-5 overflow-y-auto flex-1">
+        <div className="p-6 space-y-4 overflow-y-auto flex-1">
           {/* Current Active Location Card */}
           <div className="rounded-2xl border border-blue-100 bg-[#E8F0FE]/50 p-3.5 flex items-start gap-3">
             <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-[#1668F6] text-white shrink-0 mt-0.5">
@@ -192,26 +217,6 @@ export const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose })
               <p className="text-[11px] text-slate-600 line-clamp-2 mt-0.5 leading-snug">
                 {currentFormatted || currentAddress}
               </p>
-            </div>
-          </div>
-
-          {/* Map Pin-Drop Preview */}
-          <div className="relative w-full h-28 rounded-2xl overflow-hidden border border-slate-200 cursor-pointer group" onClick={handleDetectGPS}>
-            <div className="absolute inset-0 bg-blue-50/50">
-              <svg viewBox="0 0 700 220" preserveAspectRatio="xMidYMid slice" className="h-full w-full opacity-60">
-                <path d="M-10 160 C 120 120, 220 190, 340 140 S 560 90, 710 130" stroke="#C7DCF7" strokeWidth="10" fill="none" />
-                <g stroke="#FFFFFF" strokeWidth="2.2" opacity="0.85">
-                  <path d="M0 20 L700 35" /><path d="M0 55 L700 45" /><path d="M40 0 L60 220" /><path d="M120 0 L100 220" />
-                </g>
-              </svg>
-            </div>
-            <div className="absolute inset-0 flex items-center justify-center">
-               <div className="w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center group-hover:-translate-y-1 transition-transform">
-                  <MapPin className="w-5 h-5 text-[#1668F6]" fill="#1668F6" fillOpacity={0.2} />
-               </div>
-            </div>
-            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-white/90 px-3 py-1 rounded-full shadow-xs">
-               <span className="text-[10px] font-bold text-[#192168]">Click to pin drop live location</span>
             </div>
           </div>
 
@@ -304,28 +309,21 @@ export const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose })
             )}
           </div>
 
-          {/* Saved Addresses (if authenticated) */}
-          {isAuthenticated && user?.addresses && user.addresses.length > 0 && (
+          {/* Saved Addresses (from useAddressStore) */}
+          {matchingSavedAddresses.length > 0 && (
             <div className="space-y-2">
               <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                Saved Delivery Addresses
+                {searchInput.trim() ? 'Matching Saved Addresses' : 'Saved Delivery Addresses'}
               </h3>
               <div className="space-y-2">
-                {user.addresses.map((addr) => {
+                {matchingSavedAddresses.map((addr) => {
                   const isCurrent = currentFormatted.includes(addr.street) || currentAddress.includes(addr.street);
                   return (
                     <button
-                      key={addr._id || addr.street}
+                      key={addr.id}
                       type="button"
                       onClick={() => {
-                        const coords = addr.coordinates || [81.3800, 21.1938];
-                        const full = `${addr.street}, ${addr.city}, ${addr.state || 'Chhattisgarh'} - ${addr.pincode || '490006'}`;
-                        setLocation(coords[0], coords[1], full, {
-                          locality: addr.street.split(',')[0],
-                          city: addr.city,
-                          pincode: addr.pincode,
-                          formattedAddress: full,
-                        });
+                        selectDeliveryAddress(addr);
                         onClose();
                       }}
                       className={`w-full flex items-start gap-3 p-3 rounded-2xl border text-left transition-all cursor-pointer ${
@@ -335,7 +333,7 @@ export const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose })
                       }`}
                     >
                       <div className="mt-0.5 p-2 rounded-xl bg-slate-100 text-[#192168]">
-                        {addr.label === 'Work' ? <Briefcase className="w-4 h-4" /> : <Home className="w-4 h-4" />}
+                        {addr.type === 'work' ? <Briefcase className="w-4 h-4" /> : <Home className="w-4 h-4" />}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
@@ -352,61 +350,6 @@ export const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose })
               </div>
             </div>
           )}
-
-          {/* Popular Hyperlocal Delivery Hubs */}
-          <div className="space-y-2.5">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                Popular Localities in Delivery Zone
-              </h3>
-              <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
-                <Sparkles className="w-3 h-3" />
-                Active Hubs
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {hubList.map((hub) => {
-                const isSelected = currentFormatted.includes(hub.locality);
-                return (
-                  <button
-                    key={`${hub.locality}-${hub.city}`}
-                    type="button"
-                    onClick={() => handleSelectLocation({
-                      lng: hub.lng,
-                      lat: hub.lat,
-                      locality: hub.locality,
-                      city: hub.city,
-                      state: hub.state,
-                      pincode: hub.pincode,
-                      formattedAddress: hub.formattedAddress,
-                      address: hub.formattedAddress,
-                    })}
-                    className={`flex items-start gap-2.5 p-2.5 rounded-2xl border text-left transition-all cursor-pointer ${
-                      isSelected
-                        ? 'border-[#1668F6] bg-blue-50/60 ring-1 ring-[#1668F6]'
-                        : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50'
-                    }`}
-                  >
-                    <div className="flex items-center justify-center w-7 h-7 rounded-xl bg-blue-50 text-[#1668F6] shrink-0 mt-0.5">
-                      <Building2 className="w-3.5 h-3.5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-xs font-bold text-[#192168] truncate">
-                          {hub.locality}
-                        </h4>
-                        {isSelected && <Check className="w-3.5 h-3.5 text-[#1668F6] stroke-[3]" />}
-                      </div>
-                      <p className="text-[10px] text-slate-500 line-clamp-1 mt-0.5">
-                        {hub.city} {hub.pincode ? `(${hub.pincode})` : ''}
-                      </p>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
         </div>
 
         {/* Footer info ribbon */}
@@ -418,4 +361,6 @@ export const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose })
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 };

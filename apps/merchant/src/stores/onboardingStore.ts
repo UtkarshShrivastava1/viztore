@@ -10,6 +10,20 @@ import {
   StoreCategory,
 } from '@repo/shared-types';
 
+export interface OnboardingPaymentData {
+  planId: 'starter' | 'growth';
+  planName: string;
+  basePrice: number;
+  discountAmount: number;
+  finalAmount: number;
+  couponCode?: string | null;
+  paymentStatus: 'PENDING' | 'PAID' | 'COUPON_WAIVED';
+  paymentDraftId?: string | null;
+  razorpayOrderId?: string | null;
+  razorpayPaymentId?: string | null;
+  isFree?: boolean;
+}
+
 interface OnboardingDraft {
   step1?: Partial<OnboardingStep1Dto>;
   step2?: Partial<OnboardingStep2Dto>;
@@ -17,6 +31,7 @@ interface OnboardingDraft {
   step4?: Partial<OnboardingStep4Dto>;
   step5?: Partial<OnboardingStep5Dto>;
   step6?: Partial<OnboardingStep6Dto>;
+  payment?: Partial<OnboardingPaymentData>;
 }
 
 interface OnboardingStore {
@@ -31,6 +46,7 @@ interface OnboardingStore {
   prevStep: () => void;
   updateDraft: <K extends keyof OnboardingDraft>(stepKey: K, data: OnboardingDraft[K]) => void;
   updateStep: (stepNumber: 1 | 2 | 3 | 4 | 5 | 6, data: any) => void;
+  updatePayment: (data: Partial<OnboardingPaymentData>) => void;
   setUnderReview: (underReview: boolean, storeId?: string) => void;
   setIsUnderReview: (underReview: boolean, storeId?: string) => void;
   resetOnboarding: () => void;
@@ -92,6 +108,17 @@ export const useOnboardingStore = create<OnboardingStore>()(
             },
           };
         }),
+
+      updatePayment: (data) =>
+        set((state) => ({
+          draft: {
+            ...state.draft,
+            payment: {
+              ...state.draft.payment,
+              ...data,
+            },
+          },
+        })),
 
       setUnderReview: (underReview, storeId) =>
         set({ isUnderReview: underReview, storeId }),

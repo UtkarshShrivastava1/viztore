@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { useStoreManagementStore } from '../../stores/storeManagementStore.js';
 import { branding } from '../../lib/branding.js';
+import { printHtmlDocument } from '../../lib/pdfEngine.js';
 
 export const StoreQrLinkView: React.FC = () => {
   const { storeSlug, setActiveSubTab } = useStoreManagementStore();
@@ -34,11 +35,36 @@ export const StoreQrLinkView: React.FC = () => {
       ? branding.domain
       : `${branding.appName.toLowerCase().replace(/\s+/g, '')}.in`;
 
-  const storeUrl = `https://${displayDomain}/${storeSlug || 'fashionhub'}`;
+  const isDev = typeof window !== 'undefined' && window.location.hostname === 'localhost';
+  const storeUrl = isDev ? `${window.location.protocol}//${window.location.hostname}:3000/stores/${storeSlug || 'fashionhub'}` : `https://${displayDomain}/stores/${storeSlug || 'fashionhub'}`;
   const qrRef = useRef<SVGSVGElement>(null);
 
+  const fallbackCopyText = (text: string) => {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-9999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+      document.execCommand('copy');
+    } catch {}
+    document.body.removeChild(textArea);
+  };
+
   const handleCopy = () => {
-    navigator.clipboard.writeText(storeUrl);
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(storeUrl).catch(() => {
+          fallbackCopyText(storeUrl);
+        });
+      } else {
+        fallbackCopyText(storeUrl);
+      }
+    } catch {
+      fallbackCopyText(storeUrl);
+    }
     setCopied(true);
     setActionNotice('Store link copied to clipboard!');
     setTimeout(() => {
@@ -94,7 +120,37 @@ export const StoreQrLinkView: React.FC = () => {
   };
 
   const handlePrint = () => {
-    window.print();
+    const standeeEl = document.querySelector('.print-standee-container');
+    if (standeeEl) {
+      const standeeHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>QR Standee - ${branding.appName}</title>
+  <style>
+    @page { size: A5 portrait; margin: 10mm; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: #ffffff !important;
+      color: #0f172a;
+      padding: 16px;
+    }
+    div, p, span { color: inherit; }
+  </style>
+</head>
+<body>
+  ${standeeEl.innerHTML}
+</body>
+</html>`;
+      printHtmlDocument(standeeHtml);
+    } else {
+      window.print();
+    }
   };
 
   const handleSocialShare = (platform: 'whatsapp' | 'instagram' | 'facebook' | 'more') => {

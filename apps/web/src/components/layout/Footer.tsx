@@ -1,3 +1,5 @@
+'use client';
+import { usePathname } from 'next/navigation';
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -5,6 +7,8 @@ import { Instagram, Facebook, Youtube, Linkedin, MapPin, Heart, Circle } from 'l
 import { branding } from '@repo/shared-types';
 
 export function Footer() {
+  const pathname = usePathname();
+  if (pathname?.startsWith('/rider')) return null;
   return (
     <footer className="w-full bg-gradient-to-b from-blue-50 via-blue-600 to-[#00174F] text-black">
       <div className="max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-24 pt-16 pb-24 md:pb-8">
@@ -14,10 +18,10 @@ export function Footer() {
           <div className="flex flex-col space-y-6">
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
-                <Image src="/logo_v.png" alt={`${branding.appName} Logo`} width={48} height={48} className="object-contain" style={{ width: 'auto', height: 'auto' }} />
-                <span className="text-4xl font-bold tracking-tight text-black">{branding.appName.toLowerCase()}</span>
+                <Image src="/images/logo-dark.png" alt={`${branding.appName} Logo`} width={140} height={46} className="h-10 md:h-11 w-auto object-contain" />
+
               </div>
-              <p className="text-blue-700 text-sm font-medium mt-1 ml-[56px]">
+              <p className="text-blue-700 text-sm font-medium mt-1">
                 Making Local Stores <span className="font-bold">Visible.</span>
               </p>
             </div>
@@ -99,15 +103,15 @@ export function Footer() {
             
             <ul className="flex flex-col space-y-3 mt-4 text-[15px] font-medium">
               {[
-                { label: 'About Us', href: '/about' },
-                { label: 'Contact Us', href: '/contact' },
-                { label: 'Partner with Us', href: '/partner' },
-                { label: 'Customer Terms & Conditions', href: '/terms' },
-                { label: 'Seller Terms & Conditions', href: '/seller-terms' },
-                { label: 'Careers', href: '/careers' },
-                { label: 'Privacy Policy', href: '/privacy' },
-                { label: 'Refund and Cancellation Policy', href: '/refund' },
-                { label: 'Grievance Redressal', href: '/grievance' },
+                { label: 'About Us', href: '/account/support' },
+                { label: 'Contact Us', href: '/account/support' },
+                { label: 'Partner with Us', href: '/account/sell' },
+                { label: 'Customer Terms & Conditions', href: '/account/terms' },
+                { label: 'Seller Terms & Conditions', href: '/account/terms' },
+                { label: 'Careers', href: '/account/support' },
+                { label: 'Privacy Policy', href: '/account/privacy' },
+                { label: 'Refund and Cancellation Policy', href: '/account/terms' },
+                { label: 'Grievance Redressal', href: '/account/support' },
               ].map((link) => (
                 <li key={link.href}>
                   <Link href={link.href} className="hover:text-white transition-colors">

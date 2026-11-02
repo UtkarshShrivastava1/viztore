@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { branding } from '../../lib/branding.js';
 
-export type OnboardingMainStep = 1 | 2 | 3 | 4;
+export type OnboardingMainStep = 1 | 2 | 3 | 4 | 5;
 
 interface OnboardingSidebarProps {
   activeMainStep: OnboardingMainStep;
@@ -55,12 +55,20 @@ export const OnboardingSidebar: React.FC<OnboardingSidebarProps> = ({
       icon: Landmark,
       description: 'Secure instant payouts and automated T+1 UPI direct settlements.',
     },
+    {
+      stepNumber: 5,
+      title: 'Plan & Store Activation',
+      substeps: ['Choose Plan', 'Coupon & Payment'],
+      icon: Sparkles,
+      description: 'Select commercial plan, redeem pilot coupon, and launch storefront.',
+    },
   ];
 
   return (
     <div className="bg-white/90 backdrop-blur-md border border-slate-200/90 rounded-3xl p-6 sm:p-8 flex flex-col justify-between shadow-xl shadow-slate-200/30">
       <div className="space-y-6">
         <div>
+          <img src="/images/logo-dark.png" alt={branding.appName} className="h-7 w-auto object-contain mb-3" />
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/60 text-[#0038ed] text-[11px] font-bold uppercase tracking-wider mb-2.5">
             <Sparkles className="w-3.5 h-3.5 text-[#0038ed]" />
             <span>Digital Merchant Onboarding</span>
@@ -70,7 +78,7 @@ export const OnboardingSidebar: React.FC<OnboardingSidebarProps> = ({
             Welcome to {branding.appName}
           </h2>
           <p className="text-xs sm:text-[13px] text-slate-500 mt-1.5 leading-relaxed max-w-sm">
-            Complete these 4 simple steps to digitize your retail store and discover customers in your 3–4 km neighborhood.
+            Complete these 5 simple steps to digitize your retail store and discover customers in your 3–4 km neighborhood.
           </p>
         </div>
 
