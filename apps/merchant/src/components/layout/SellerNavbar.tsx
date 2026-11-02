@@ -21,6 +21,26 @@ export const SellerNavbar: React.FC<SellerNavbarProps> = ({
 }) => {
   const [openDropdown, setOpenDropdown] = useState<'sell' | 'learn' | null>(null);
   const navRef = useRef<HTMLDivElement>(null);
+  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleMouseEnter = (type: 'sell' | 'learn') => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    hoverTimeoutRef.current = setTimeout(() => {
+      setOpenDropdown(type);
+    }, 100);
+  };
+
+  const handleMouseLeave = () => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    hoverTimeoutRef.current = setTimeout(() => {
+      setOpenDropdown(null);
+    }, 150);
+  };
+
+  const toggleDropdown = (type: 'sell' | 'learn') => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    setOpenDropdown((prev) => (prev === type ? null : type));
+  };
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -66,10 +86,14 @@ export const SellerNavbar: React.FC<SellerNavbarProps> = ({
         {/* Desktop Nav Items */}
         <div className="hidden lg:flex items-center gap-2 text-[13px] font-medium text-slate-700">
           {/* Sell Online Dropdown */}
-          <div className="relative">
+          <div
+            className="relative"
+            onMouseEnter={() => handleMouseEnter('sell')}
+            onMouseLeave={handleMouseLeave}
+          >
             <button
               type="button"
-              onClick={() => setOpenDropdown(openDropdown === 'sell' ? null : 'sell')}
+              onClick={() => toggleDropdown('sell')}
               className={`px-3 py-1.5 rounded-lg flex items-center gap-1 hover:text-[#0038ed] transition-colors cursor-pointer ${
                 openDropdown === 'sell' ? 'bg-blue-50 text-[#0038ed]' : ''
               }`}
@@ -117,10 +141,14 @@ export const SellerNavbar: React.FC<SellerNavbarProps> = ({
           </button>
 
           {/* Learn Dropdown */}
-          <div className="relative">
+          <div
+            className="relative"
+            onMouseEnter={() => handleMouseEnter('learn')}
+            onMouseLeave={handleMouseLeave}
+          >
             <button
               type="button"
-              onClick={() => setOpenDropdown(openDropdown === 'learn' ? null : 'learn')}
+              onClick={() => toggleDropdown('learn')}
               className={`px-3 py-1.5 rounded-lg flex items-center gap-1 hover:text-[#0038ed] transition-colors cursor-pointer ${
                 openDropdown === 'learn' ? 'bg-blue-50 text-[#0038ed]' : ''
               }`}

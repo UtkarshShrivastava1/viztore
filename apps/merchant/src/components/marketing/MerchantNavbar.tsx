@@ -37,6 +37,11 @@ export const MerchantNavbar: React.FC<MerchantNavbarProps> = ({
     }, 150);
   };
 
+  const toggleDropdown = (type: 'sell' | 'learn') => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    setOpenDropdown((prev) => (prev === type ? null : type));
+  };
+
   // Close dropdown on click outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -95,10 +100,14 @@ export const MerchantNavbar: React.FC<MerchantNavbarProps> = ({
         {/* Desktop Nav Items */}
         <nav className="hidden lg:flex items-center gap-1 xl:gap-2">
           {/* Sell Online Dropdown trigger */}
-          <div className="relative">
+          <div
+            className="relative"
+            onMouseEnter={() => handleMouseEnter('sell')}
+            onMouseLeave={handleMouseLeave}
+          >
             <button
               type="button"
-              onClick={() => setOpenDropdown(openDropdown === 'sell' ? null : 'sell')}
+              onClick={() => toggleDropdown('sell')}
               className={`px-3.5 py-2 rounded-xl text-sm font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
                 openDropdown === 'sell' || currentRoute.startsWith('/sell-online')
                   ? 'bg-blue-50 text-[#0038ed]'
@@ -163,10 +172,14 @@ export const MerchantNavbar: React.FC<MerchantNavbarProps> = ({
           </button>
 
           {/* Learn Dropdown trigger */}
-          <div className="relative">
+          <div
+            className="relative"
+            onMouseEnter={() => handleMouseEnter('learn')}
+            onMouseLeave={handleMouseLeave}
+          >
             <button
               type="button"
-              onClick={() => setOpenDropdown(openDropdown === 'learn' ? null : 'learn')}
+              onClick={() => toggleDropdown('learn')}
               className={`px-3.5 py-2 rounded-xl text-sm font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
                 openDropdown === 'learn' ||
                 currentRoute.startsWith('/learn') ||
