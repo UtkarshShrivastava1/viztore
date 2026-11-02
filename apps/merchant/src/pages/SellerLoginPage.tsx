@@ -260,38 +260,6 @@ export const SellerLoginPage: React.FC<SellerLoginPageProps> = ({
               : 'Start your hyperlocal digital storefront and discover nearby customers'}
           </p>
 
-          {/* Segmented Mode Switcher Tabs */}
-          <div className="grid grid-cols-2 p-1 bg-slate-100/80 rounded-xl mb-5 text-xs font-semibold">
-            <button
-              type="button"
-              onClick={() => {
-                setMode('login');
-                setError(null);
-              }}
-              className={`py-2 px-3 rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                mode === 'login'
-                  ? 'bg-white text-slate-900 shadow-xs font-bold'
-                  : 'text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              <span>Sign In</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setMode('register');
-                setError(null);
-              }}
-              className={`py-2 px-3 rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
-                mode === 'register'
-                  ? 'bg-white text-slate-900 shadow-xs font-bold'
-                  : 'text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              <span>Create Account</span>
-            </button>
-          </div>
-
           {/* Error Banner */}
           {error && (
             <div className="mb-4 p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-600 text-xs font-medium flex items-start gap-2 animate-in fade-in duration-150">
