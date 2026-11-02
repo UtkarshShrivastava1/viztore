@@ -5,61 +5,35 @@ import {
   X,
   Mail,
   Lock,
-  User,
-  Phone,
-  Store,
   ArrowRight,
   Loader2,
   AlertCircle,
-  Sparkles,
 } from 'lucide-react';
 import { SellerLandingPage } from './SellerLandingPage.js';
 import { branding } from '../lib/branding.js';
 import { api } from '../lib/api.js';
 import { useAuthStore } from '../stores/authStore.js';
-import { useOnboardingStore } from '../stores/onboardingStore.js';
-import {
-  cleanName,
-  cleanEmail,
-  cleanPhoneNumber,
-  validateEmail,
-  validatePassword,
-  validatePersonName,
-} from '@repo/shared-types';
 
 interface SellerLoginPageProps {
   onLoginSuccess: () => void;
   onGoToRegister: () => void;
   onGoToHome?: () => void;
-  initialMode?: 'login' | 'register';
 }
 
 export const SellerLoginPage: React.FC<SellerLoginPageProps> = ({
   onLoginSuccess,
   onGoToRegister,
   onGoToHome,
-  initialMode = 'login',
 }) => {
-  const [mode, setMode] = useState<'login' | 'register'>(initialMode);
-
   // Login form state
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  // Quick Register form state
-  const [regFullName, setRegFullName] = useState('');
-  const [regPhone, setRegPhone] = useState('');
-  const [regEmail, setRegEmail] = useState('');
-  const [regPassword, setRegPassword] = useState('');
-  const [regConfirmPassword, setRegConfirmPassword] = useState('');
-  const [showRegPassword, setShowRegPassword] = useState(false);
-
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const { setAuth } = useAuthStore();
-  const { updateStep } = useOnboardingStore();
 
   const handleClose = () => {
     if (onGoToHome) {
@@ -112,87 +86,6 @@ export const SellerLoginPage: React.FC<SellerLoginPageProps> = ({
     }
   };
 
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const sanitizedName = cleanName(regFullName) || 'Merchant Partner';
-    const nameCheck = validatePersonName(sanitizedName);
-    if (!nameCheck.isValid) {
-      setError(nameCheck.error || 'Please enter a valid full name (at least 2 characters).');
-      return;
-    }
-
-    const cleanPhone = cleanPhoneNumber(regPhone);
-    if (!cleanPhone || cleanPhone.length !== 10 || !/^[6-9]\d{9}$/.test(cleanPhone)) {
-      setError('Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9.');
-      return;
-    }
-
-    const normalizedEmail = cleanEmail(regEmail);
-    const emailCheck = validateEmail(normalizedEmail);
-    if (!emailCheck.isValid) {
-      setError(emailCheck.error || 'Please enter a valid email address.');
-      return;
-    }
-
-    if (regPassword !== regConfirmPassword) {
-      setError('Passwords do not match. Please re-enter your password.');
-      return;
-    }
-
-    const passwordCheck = validatePassword(regPassword);
-    if (!passwordCheck.isValid) {
-      setError(passwordCheck.error || 'Password must be at least 8 characters and contain letters, numbers, and special characters.');
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      let authRes: any;
-      try {
-        authRes = await api.post('/auth/register', {
-          fullName: sanitizedName,
-          email: normalizedEmail,
-          phone: cleanPhone,
-          password: regPassword,
-          role: 'merchant',
-        });
-      } catch (regErr: any) {
-        if (regErr?.message?.includes('already exists') || regErr?.status === 409) {
-          authRes = await api.post('/auth/login', {
-            identifier: normalizedEmail,
-            password: regPassword,
-            role: 'merchant',
-          });
-        } else {
-          throw regErr;
-        }
-      }
-
-      if (authRes?.tokens?.accessToken && authRes?.user) {
-        await setAuth(authRes.user, authRes.tokens.accessToken, authRes.tokens.refreshToken);
-      }
-
-      // Sync into onboarding draft store
-      updateStep(1, {
-        fullName: sanitizedName,
-        mobileNumber: cleanPhone,
-        email: normalizedEmail,
-        password: regPassword,
-        confirmPassword: regConfirmPassword,
-      });
-
-      // Transition to onboarding
-      onGoToRegister();
-    } catch (err: any) {
-      setError(err.message || 'Registration failed. Please check your details.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <div className="relative min-h-screen font-sans selection:bg-[#0038ed] selection:text-white overflow-x-hidden">
       {/* Autofill CSS Reset to prevent harsh browser yellow backgrounds */}
@@ -208,7 +101,7 @@ export const SellerLoginPage: React.FC<SellerLoginPageProps> = ({
 
       {/* Underlying Landing Page with Backdrop Blur filter */}
       <div className="filter blur-[3px] pointer-events-none opacity-85 select-none">
-        <SellerLandingPage onStartSelling={() => {}} onLogin={() => {}} />
+        <SellerLandingPage onStartSelling={onGoToRegister} onLogin={() => {}} />
       </div>
 
       {/* Floating Centered Modal Backdrop with Click-to-Dismiss */}
@@ -250,14 +143,12 @@ export const SellerLoginPage: React.FC<SellerLoginPageProps> = ({
               </span>
             </div>
             <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
-              {mode === 'login' ? 'Merchant Login' : 'Create Seller Account'}
+              Merchant Login
             </h2>
           </div>
 
           <p className="text-xs text-slate-500 mb-5 leading-relaxed">
-            {mode === 'login'
-              ? 'Access your merchant store management dashboard and live orders'
-              : 'Start your hyperlocal digital storefront and discover nearby customers'}
+            Access your merchant store management dashboard and live orders
           </p>
 
           {/* Error Banner */}
@@ -269,270 +160,104 @@ export const SellerLoginPage: React.FC<SellerLoginPageProps> = ({
           )}
 
           {/* LOGIN FORM */}
-          {mode === 'login' ? (
-            <form onSubmit={handleLogin} className="space-y-3.5">
-              {/* Username / Phone / Email */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Email or Phone Number
+          <form onSubmit={handleLogin} className="space-y-3.5">
+            {/* Username / Phone / Email */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Email or Phone Number
+              </label>
+              <div className="flex items-center border border-slate-200 rounded-xl px-3.5 py-2.5 bg-slate-50/40 hover:bg-white focus-within:bg-white focus-within:border-[#0038ed] focus-within:ring-3 focus-within:ring-[#0038ed]/10 transition-all">
+                <Mail className="w-4 h-4 text-slate-400 mr-2.5 shrink-0" />
+                <input
+                  type="text"
+                  id="merchant-login-id"
+                  name="identifier"
+                  autoComplete="username"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  placeholder="Enter phone or email"
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
+                  className="modal-input w-full text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 bg-transparent focus:outline-none"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Password */}
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs font-semibold text-slate-700">
+                  Password
                 </label>
-                <div className="flex items-center border border-slate-200 rounded-xl px-3.5 py-2.5 bg-slate-50/40 hover:bg-white focus-within:bg-white focus-within:border-[#0038ed] focus-within:ring-3 focus-within:ring-[#0038ed]/10 transition-all">
-                  <Mail className="w-4 h-4 text-slate-400 mr-2.5 shrink-0" />
-                  <input
-                    type="text"
-                    id="merchant-login-id"
-                    name="identifier"
-                    autoComplete="username"
-                    autoCapitalize="none"
-                    spellCheck={false}
-                    placeholder="Enter phone or email"
-                    value={identifier}
-                    onChange={(e) => setIdentifier(e.target.value)}
-                    className="modal-input w-full text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 bg-transparent focus:outline-none"
-                    required
-                  />
-                </div>
+                <a
+                  href={`mailto:${branding.supportEmail}?subject=Password%20Reset%20Request`}
+                  className="text-[11px] font-semibold text-[#0038ed] hover:underline"
+                >
+                  Forgot?
+                </a>
               </div>
-
-              {/* Password */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-semibold text-slate-700">
-                    Password
-                  </label>
-                  <a
-                    href={`mailto:${branding.supportEmail}?subject=Password%20Reset%20Request`}
-                    className="text-[11px] font-semibold text-[#0038ed] hover:underline"
-                  >
-                    Forgot?
-                  </a>
-                </div>
-                <div className="flex items-center border border-slate-200 rounded-xl px-3.5 py-2.5 bg-slate-50/40 hover:bg-white focus-within:bg-white focus-within:border-[#0038ed] focus-within:ring-3 focus-within:ring-[#0038ed]/10 transition-all">
-                  <Lock className="w-4 h-4 text-slate-400 mr-2.5 shrink-0" />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    id="merchant-login-password"
-                    name="password"
-                    autoComplete="current-password"
-                    placeholder="Enter your password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="modal-input w-full text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 bg-transparent focus:outline-none pr-2"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="text-xs font-semibold text-slate-400 hover:text-slate-600 ml-1 shrink-0 cursor-pointer select-none"
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
-
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full py-3 px-6 rounded-xl bg-[#0038ed] hover:bg-[#002fcf] text-white font-bold text-sm shadow-md shadow-blue-600/20 transition-all cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2 mt-2"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Signing in...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Login to Dashboard</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
-              </button>
-
-              {/* Switch to Register */}
-              <div className="pt-3 text-center border-t border-slate-100">
-                <span className="text-xs text-slate-500 block mb-2">New merchant on {branding.appName}?</span>
+              <div className="flex items-center border border-slate-200 rounded-xl px-3.5 py-2.5 bg-slate-50/40 hover:bg-white focus-within:bg-white focus-within:border-[#0038ed] focus-within:ring-3 focus-within:ring-[#0038ed]/10 transition-all">
+                <Lock className="w-4 h-4 text-slate-400 mr-2.5 shrink-0" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  id="merchant-login-password"
+                  name="password"
+                  autoComplete="current-password"
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="modal-input w-full text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 bg-transparent focus:outline-none pr-2"
+                  required
+                />
                 <button
                   type="button"
-                  onClick={() => {
-                    setMode('register');
-                    setError(null);
-                  }}
-                  className="w-full py-2.5 px-4 rounded-xl border border-blue-200 text-[#0038ed] bg-blue-50/40 hover:bg-blue-50 font-semibold text-xs sm:text-sm transition-all cursor-pointer"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="text-xs font-semibold text-slate-400 hover:text-slate-600 ml-1 shrink-0 cursor-pointer select-none"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
-                  Create your seller account
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
-            </form>
-          ) : (
-            /* REGISTER FORM */
-            <form onSubmit={handleRegister} className="space-y-3">
-              {/* Full Name */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Full Name / Proprietor Name *
-                </label>
-                <div className="flex items-center border border-slate-200 rounded-xl px-3 py-2 bg-slate-50/40 hover:bg-white focus-within:bg-white focus-within:border-[#0038ed] focus-within:ring-3 focus-within:ring-[#0038ed]/10 transition-all">
-                  <User className="w-4 h-4 text-slate-400 mr-2 shrink-0" />
-                  <input
-                    type="text"
-                    id="merchant-reg-name"
-                    name="name"
-                    autoComplete="name"
-                    maxLength={100}
-                    placeholder="e.g. Ramesh Kumar"
-                    value={regFullName}
-                    onChange={(e) => setRegFullName(e.target.value)}
-                    className="modal-input w-full text-xs text-slate-900 placeholder:text-slate-400 bg-transparent focus:outline-none"
-                    required
-                  />
-                </div>
-              </div>
+            </div>
 
-              {/* Mobile Phone */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Mobile Number (10 digits) *
-                </label>
-                <div className="flex items-center border border-slate-200 rounded-xl px-3 py-2 bg-slate-50/40 hover:bg-white focus-within:bg-white focus-within:border-[#0038ed] focus-within:ring-3 focus-within:ring-[#0038ed]/10 transition-all">
-                  <Phone className="w-4 h-4 text-slate-400 mr-1.5 shrink-0" />
-                  <span className="text-xs font-semibold text-slate-500 mr-1.5 select-none">+91</span>
-                  <input
-                    type="tel"
-                    id="merchant-reg-phone"
-                    name="tel"
-                    inputMode="numeric"
-                    autoComplete="tel"
-                    maxLength={10}
-                    placeholder="9876543210"
-                    value={regPhone}
-                    onChange={(e) => setRegPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                    className="modal-input w-full text-xs text-slate-900 placeholder:text-slate-400 bg-transparent focus:outline-none"
-                    required
-                  />
-                </div>
-              </div>
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full py-3 px-6 rounded-xl bg-[#0038ed] hover:bg-[#002fcf] text-white font-bold text-sm shadow-md shadow-blue-600/20 transition-all cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2 mt-2"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Signing in...</span>
+                </>
+              ) : (
+                <>
+                  <span>Login to Dashboard</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
 
-              {/* Email */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Email Address *
-                </label>
-                <div className="flex items-center border border-slate-200 rounded-xl px-3 py-2 bg-slate-50/40 hover:bg-white focus-within:bg-white focus-within:border-[#0038ed] focus-within:ring-3 focus-within:ring-[#0038ed]/10 transition-all">
-                  <Mail className="w-4 h-4 text-slate-400 mr-2 shrink-0" />
-                  <input
-                    type="email"
-                    id="merchant-reg-email"
-                    name="email"
-                    autoComplete="email"
-                    autoCapitalize="none"
-                    spellCheck={false}
-                    maxLength={100}
-                    placeholder="store.owner@example.com"
-                    value={regEmail}
-                    onChange={(e) => setRegEmail(e.target.value)}
-                    className="modal-input w-full text-xs text-slate-900 placeholder:text-slate-400 bg-transparent focus:outline-none"
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Password & Confirm Password */}
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
-                    Password *
-                  </label>
-                  <div className="flex items-center border border-slate-200 rounded-xl px-2.5 py-2 bg-slate-50/40 hover:bg-white focus-within:bg-white focus-within:border-[#0038ed] transition-all">
-                    <Lock className="w-3.5 h-3.5 text-slate-400 mr-1.5 shrink-0" />
-                    <input
-                      type={showRegPassword ? 'text' : 'password'}
-                      id="merchant-reg-password"
-                      name="new-password"
-                      autoComplete="new-password"
-                      minLength={8}
-                      maxLength={128}
-                      placeholder="Min 8 chars"
-                      value={regPassword}
-                      onChange={(e) => setRegPassword(e.target.value)}
-                      className="modal-input w-full text-xs text-slate-900 placeholder:text-slate-400 bg-transparent focus:outline-none"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
-                    Confirm *
-                  </label>
-                  <div className="flex items-center border border-slate-200 rounded-xl px-2.5 py-2 bg-slate-50/40 hover:bg-white focus-within:bg-white focus-within:border-[#0038ed] transition-all">
-                    <Lock className="w-3.5 h-3.5 text-slate-400 mr-1.5 shrink-0" />
-                    <input
-                      type={showRegPassword ? 'text' : 'password'}
-                      id="merchant-reg-confirm-password"
-                      name="confirm-password"
-                      autoComplete="new-password"
-                      minLength={8}
-                      maxLength={128}
-                      placeholder="Repeat"
-                      value={regConfirmPassword}
-                      onChange={(e) => setRegConfirmPassword(e.target.value)}
-                      className="modal-input w-full text-xs text-slate-900 placeholder:text-slate-400 bg-transparent focus:outline-none"
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => setShowRegPassword(!showRegPassword)}
-                  className="text-[11px] font-medium text-slate-500 hover:text-slate-800 flex items-center gap-1 cursor-pointer select-none"
-                >
-                  {showRegPassword ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                  <span>{showRegPassword ? 'Hide password' : 'Show password'}</span>
-                </button>
-              </div>
-
-              {/* Submit Button */}
+            {/* Switch to Register -> Routes Directly to Canonical Onboarding Portal /register */}
+            <div className="pt-3 text-center border-t border-slate-100">
+              <span className="text-xs text-slate-500 block mb-2">New merchant on {branding.appName}?</span>
               <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full py-3 px-6 rounded-xl bg-[#0038ed] hover:bg-[#002fcf] text-white font-bold text-sm shadow-md shadow-blue-600/20 transition-all cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2 mt-1"
+                type="button"
+                onClick={() => {
+                  if (onGoToRegister) {
+                    onGoToRegister();
+                  } else {
+                    window.location.href = '/register';
+                  }
+                }}
+                className="w-full py-2.5 px-4 rounded-xl border border-blue-200 text-[#0038ed] bg-blue-50/40 hover:bg-blue-50 font-semibold text-xs sm:text-sm transition-all cursor-pointer"
               >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Creating account...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Create Account &amp; Continue</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
+                Create your seller account
               </button>
-
-              {/* Switch to Login */}
-              <div className="pt-2 text-center border-t border-slate-100">
-                <span className="text-xs text-slate-500">
-                  Already registered?{' '}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMode('login');
-                      setError(null);
-                    }}
-                    className="font-bold text-[#0038ed] hover:underline cursor-pointer"
-                  >
-                    Sign In
-                  </button>
-                </span>
-              </div>
-            </form>
-          )}
+            </div>
+          </form>
 
           {/* Legal Terms Footer */}
           <p className="text-[11px] text-slate-500 text-center pt-3.5 leading-relaxed">

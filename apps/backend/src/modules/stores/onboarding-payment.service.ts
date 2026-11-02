@@ -6,6 +6,8 @@ import {
   ONBOARDING_PLANS,
   PRECODED_ONBOARDING_COUPONS,
   IOnboardingPaymentRecord,
+  findActiveSalesRep,
+  ISalesRepConfig,
 } from '@repo/shared-types';
 import { AppError } from '../../shared/utils/AppError.js';
 import {
@@ -23,6 +25,11 @@ export interface CouponValidationResult {
   planId?: OnboardingPlanId;
   description?: string;
   message?: string;
+  salesRep?: {
+    salesId: string;
+    name: string;
+    territory: string;
+  };
 }
 
 export interface CreateOrderResult {
@@ -34,18 +41,37 @@ export interface CreateOrderResult {
   razorpayOrderId?: string | null;
   planId: OnboardingPlanId;
   couponCode?: string | null;
+  salesId?: string | null;
 }
 
 /**
  * Validates a pre-coded promotional onboarding coupon against a commercial plan
+ * Swaad Setu Pattern: All promotional codes & waivers REQUIRE an active Sales Representative ID
  */
 export async function validateCoupon(
   couponCode: string,
-  planId: OnboardingPlanId = 'starter',
+  salesId?: string | null,
+  planId: OnboardingPlanId = 'standard',
 ): Promise<CouponValidationResult> {
   const plan = ONBOARDING_PLANS[planId];
   if (!plan) {
     return { valid: false, message: 'Invalid commercial plan selected' };
+  }
+
+  const cleanSalesId = salesId?.trim().toUpperCase();
+  if (!cleanSalesId) {
+    return {
+      valid: false,
+      message: 'A valid Sales Representative ID is required to apply promotional coupons or waivers',
+    };
+  }
+
+  const salesRep: ISalesRepConfig | null = findActiveSalesRep(cleanSalesId);
+  if (!salesRep) {
+    return {
+      valid: false,
+      message: `Invalid or inactive Sales Representative ID "${cleanSalesId}". Please check with your field agent`,
+    };
   }
 
   const cleanCode = couponCode.trim().toUpperCase();
@@ -57,6 +83,20 @@ export async function validateCoupon(
 
   if (coupon.expiresAt && new Date(coupon.expiresAt) < new Date()) {
     return { valid: false, message: 'Coupon code has expired' };
+  }
+
+  if (coupon.allowedSalesReps && !coupon.allowedSalesReps.includes(salesRep.salesId)) {
+    return {
+      valid: false,
+      message: `Coupon ${cleanCode} is not authorized for Field Agent ID ${salesRep.salesId}`,
+    };
+  }
+
+  if (coupon.allowedPlans && !coupon.allowedPlans.includes(plan.id)) {
+    return {
+      valid: false,
+      message: `Coupon ${cleanCode} is not applicable for ${plan.name}`,
+    };
   }
 
   let discountAmount = 0;
@@ -83,6 +123,11 @@ export async function validateCoupon(
     finalAmount,
     planId,
     description: coupon.description,
+    salesRep: {
+      salesId: salesRep.salesId,
+      name: salesRep.name,
+      territory: salesRep.territory,
+    },
   };
 }
 
@@ -91,8 +136,9 @@ export async function validateCoupon(
  */
 export async function createPaymentOrder(
   ownerId: string,
-  planId: OnboardingPlanId,
+  planId: OnboardingPlanId = 'standard',
   couponCode?: string | null,
+  salesId?: string | null,
   metadata: Record<string, any> = {},
 ): Promise<CreateOrderResult> {
   const plan = ONBOARDING_PLANS[planId];
@@ -103,19 +149,31 @@ export async function createPaymentOrder(
   let discountAmount = 0;
   let finalAmount = plan.basePrice;
   let cleanCoupon: string | null = null;
+  let cleanSalesId: string | null = null;
+
+  if (salesId && salesId.trim()) {
+    cleanSalesId = salesId.trim().toUpperCase();
+    const salesRep = findActiveSalesRep(cleanSalesId);
+    if (!salesRep) {
+      throw AppError.badRequest(`Invalid or inactive Sales Representative ID "${cleanSalesId}"`);
+    }
+  }
 
   if (couponCode && couponCode.trim()) {
-    const couponValidation = await validateCoupon(couponCode, planId);
+    if (!cleanSalesId) {
+      throw AppError.badRequest('A valid Sales Representative ID is required to apply promotional coupons');
+    }
+    const couponValidation = await validateCoupon(couponCode, cleanSalesId, planId);
     if (!couponValidation.valid) {
       throw AppError.badRequest(couponValidation.message || 'Invalid coupon code applied');
     }
+    cleanCoupon = couponValidation.code || couponCode.trim().toUpperCase();
     discountAmount = couponValidation.discountAmount || 0;
-    finalAmount = couponValidation.finalAmount ?? plan.basePrice;
-    cleanCoupon = couponValidation.code || null;
+    finalAmount = couponValidation.finalAmount ?? (plan.basePrice - discountAmount);
   }
 
-  // Phase 1: 100% Free / Waiver bypass (e.g. FREE100, LAUNCH100)
-  if (finalAmount === 0) {
+  // Phase 1: Zero-Amount / 100% Free Promo Bypass (e.g. FREE100, LAUNCH100)
+  if (finalAmount <= 0) {
     const draft = await OnboardingPaymentDraftModel.create({
       ownerId: new mongoose.Types.ObjectId(ownerId),
       planId: plan.id,
@@ -125,9 +183,11 @@ export async function createPaymentOrder(
       finalAmount: 0,
       currency: 'INR',
       couponCode: cleanCoupon,
+      salesId: cleanSalesId,
       status: 'COUPON_WAIVED',
       isFree: true,
       metadata,
+      verifiedAt: new Date(),
     });
 
     return {
@@ -137,6 +197,7 @@ export async function createPaymentOrder(
       currency: 'INR',
       planId: plan.id,
       couponCode: cleanCoupon,
+      salesId: cleanSalesId,
     };
   }
 
@@ -160,6 +221,8 @@ export async function createPaymentOrder(
           ownerId,
           planId: plan.id,
           couponCode: cleanCoupon || '',
+          salesId: cleanSalesId || '',
+          platform: 'viztore',
         },
       });
       razorpayOrderId = order.id;
@@ -182,6 +245,7 @@ export async function createPaymentOrder(
     finalAmount,
     currency: 'INR',
     couponCode: cleanCoupon,
+    salesId: cleanSalesId,
     status: 'PENDING',
     isFree: false,
     razorpayOrderId,
@@ -197,6 +261,7 @@ export async function createPaymentOrder(
     razorpayOrderId,
     planId: plan.id,
     couponCode: cleanCoupon,
+    salesId: cleanSalesId,
   };
 }
 
@@ -262,6 +327,9 @@ export async function verifyPayment(
 export function buildPaymentRecordFromDraft(
   draft: IOnboardingPaymentDraftDocument,
 ): IOnboardingPaymentRecord {
+  const expiresAt = new Date();
+  expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+
   return {
     planId: draft.planId,
     planName: draft.planName,
@@ -269,13 +337,13 @@ export function buildPaymentRecordFromDraft(
     basePrice: draft.basePrice,
     discountAmount: draft.discountAmount,
     finalAmountPaid: draft.finalAmount,
-    currency: 'INR',
-    couponCode: draft.couponCode,
-    paymentStatus: draft.isFree ? 'COUPON_WAIVED' : 'PAID',
-    razorpayOrderId: draft.razorpayOrderId,
-    razorpayPaymentId: draft.razorpayPaymentId,
+    currency: draft.currency || 'INR',
+    couponCode: draft.couponCode || null,
+    salesId: draft.salesId || null,
+    paymentStatus: draft.status,
+    razorpayOrderId: draft.razorpayOrderId || null,
+    razorpayPaymentId: draft.razorpayPaymentId || null,
     paidAt: draft.verifiedAt || new Date(),
-    expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1-year validity
+    expiresAt,
   };
 }
-

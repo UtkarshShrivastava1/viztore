@@ -22,6 +22,7 @@ export const validateCoupon: RequestHandler = catchAsync(async (req: Request, re
 
   const result = await onboardingPaymentService.validateCoupon(
     parsed.data.couponCode,
+    parsed.data.salesId,
     parsed.data.planId,
   );
 
@@ -52,6 +53,7 @@ export const createPaymentOrder: RequestHandler = catchAsync(async (req: Request
     req.user.sub,
     parsed.data.planId,
     parsed.data.couponCode,
+    parsed.data.salesId,
     {
       merchantEmail: parsed.data.merchantEmail,
       merchantPhone: parsed.data.merchantPhone,
@@ -82,4 +84,3 @@ export const verifyPayment: RequestHandler = catchAsync(async (req: Request, res
 
   return ApiResponse.success(res, result, 'Payment verified successfully');
 });
-

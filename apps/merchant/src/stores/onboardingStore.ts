@@ -11,12 +11,13 @@ import {
 } from '@repo/shared-types';
 
 export interface OnboardingPaymentData {
-  planId: 'starter' | 'growth';
+  planId: string;
   planName: string;
   basePrice: number;
   discountAmount: number;
   finalAmount: number;
   couponCode?: string | null;
+  salesId?: string | null;
   paymentStatus: 'PENDING' | 'PAID' | 'COUPON_WAIVED';
   paymentDraftId?: string | null;
   razorpayOrderId?: string | null;

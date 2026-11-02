@@ -6,13 +6,11 @@ import {
   ArrowRight,
   ArrowLeft,
   ShieldCheck,
-  Zap,
   Gift,
-  HelpCircle,
   Loader2,
   AlertCircle,
   X,
-  CreditCard,
+  UserCheck,
 } from 'lucide-react';
 import {
   OnboardingPlanId,
@@ -38,10 +36,17 @@ interface AppliedCouponState {
   description: string;
 }
 
+interface SalesRepState {
+  salesId: string;
+  name: string;
+  territory: string;
+}
+
 const PRESET_COUPON_CHIPS = [
   { code: 'FREE100', label: 'FREE100 (100% Free Pilot)' },
   { code: 'WELCOME50', label: 'WELCOME50 (50% Off)' },
   { code: 'LAUNCH100', label: 'LAUNCH100 (Pilot Waiver)' },
+  { code: 'STORE100', label: 'STORE100 (Field Pass)' },
 ];
 
 export const Step5SubscriptionPayment: React.FC<Step5SubscriptionPaymentProps> = ({
@@ -51,7 +56,10 @@ export const Step5SubscriptionPayment: React.FC<Step5SubscriptionPaymentProps> =
   const { draft, updatePayment } = useOnboardingStore();
   const { user } = useAuthStore();
 
-  const [selectedPlanId, setSelectedPlanId] = useState<OnboardingPlanId>('starter');
+  const [selectedPlanId, setSelectedPlanId] = useState<OnboardingPlanId>('standard');
+  const [salesIdInput, setSalesIdInput] = useState('');
+  const [salesRepInfo, setSalesRepInfo] = useState<SalesRepState | null>(null);
+
   const [couponInput, setCouponInput] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCouponState | null>(null);
   const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
@@ -60,18 +68,25 @@ export const Step5SubscriptionPayment: React.FC<Step5SubscriptionPaymentProps> =
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const selectedPlan: IOnboardingPlan = ONBOARDING_PLANS[selectedPlanId];
+  const selectedPlan: IOnboardingPlan = ONBOARDING_PLANS[selectedPlanId] || ONBOARDING_PLANS.standard;
 
   // Re-calculate or re-validate coupon if user changes plans
   useEffect(() => {
-    if (appliedCoupon) {
+    if (appliedCoupon && salesIdInput.trim()) {
       validateAndApplyCoupon(appliedCoupon.code, selectedPlanId);
     }
   }, [selectedPlanId]);
 
   const validateAndApplyCoupon = async (codeToValidate: string, planId: OnboardingPlanId) => {
     const cleanCode = codeToValidate.trim().toUpperCase();
+    const cleanSalesId = salesIdInput.trim().toUpperCase();
+
     if (!cleanCode) return;
+
+    if (!cleanSalesId) {
+      setCouponError('Please enter your Sales Representative ID to apply promotional codes.');
+      return;
+    }
 
     setIsValidatingCoupon(true);
     setCouponError(null);
@@ -79,6 +94,7 @@ export const Step5SubscriptionPayment: React.FC<Step5SubscriptionPaymentProps> =
     try {
       const res = await api.post<any>('/stores/onboarding/payment/validate-coupon', {
         couponCode: cleanCode,
+        salesId: cleanSalesId,
         planId,
       });
 
@@ -91,14 +107,17 @@ export const Step5SubscriptionPayment: React.FC<Step5SubscriptionPaymentProps> =
           finalAmount: res.data.finalAmount,
           description: res.data.description,
         });
+        if (res.data.salesRep) {
+          setSalesRepInfo(res.data.salesRep);
+        }
         setCouponInput(res.data.code);
         setCouponError(null);
       } else {
-        setCouponError(res.data?.message || 'Invalid coupon code');
+        setCouponError(res.data?.message || 'Invalid coupon or Sales Representative ID');
         setAppliedCoupon(null);
       }
     } catch (err: any) {
-      setCouponError(err.response?.data?.error?.message || err.message || 'Invalid or expired coupon code');
+      setCouponError(err.response?.data?.error?.message || err.message || 'Invalid or unauthorized coupon code');
       setAppliedCoupon(null);
     } finally {
       setIsValidatingCoupon(false);
@@ -208,9 +227,11 @@ export const Step5SubscriptionPayment: React.FC<Step5SubscriptionPaymentProps> =
       }
 
       // 2. Create Onboarding Payment Order
+      const cleanSalesId = salesIdInput.trim().toUpperCase() || null;
       const orderRes = await api.post<any>('/stores/onboarding/payment/create-order', {
         planId: selectedPlanId,
         couponCode: appliedCoupon?.code || null,
+        salesId: cleanSalesId,
         merchantEmail: draft.step1?.email,
         merchantPhone: draft.step1?.mobileNumber,
         storeName: draft.step4?.storeDisplayName,
@@ -233,6 +254,7 @@ export const Step5SubscriptionPayment: React.FC<Step5SubscriptionPaymentProps> =
           discountAmount,
           finalAmount: 0,
           couponCode: appliedCoupon?.code || null,
+          salesId: cleanSalesId,
           paymentStatus: 'COUPON_WAIVED',
           paymentDraftId: orderData.draftId,
           isFree: true,
@@ -268,18 +290,15 @@ export const Step5SubscriptionPayment: React.FC<Step5SubscriptionPaymentProps> =
         modal: {
           ondismiss: () => {
             setIsProcessing(false);
-            setError('Payment cancelled. You can change your plan or try again.');
           },
         },
         handler: async (response: any) => {
           try {
-            // Verify HMAC signature
             await api.post('/stores/onboarding/payment/verify', {
               draftId: orderData.draftId,
-              razorpayOrderId: response.razorpay_order_id,
               razorpayPaymentId: response.razorpay_payment_id,
+              razorpayOrderId: response.razorpay_order_id,
               razorpaySignature: response.razorpay_signature,
-              isFree: false,
             });
 
             updatePayment({
@@ -289,14 +308,12 @@ export const Step5SubscriptionPayment: React.FC<Step5SubscriptionPaymentProps> =
               discountAmount,
               finalAmount: finalPayable,
               couponCode: appliedCoupon?.code || null,
+              salesId: cleanSalesId,
               paymentStatus: 'PAID',
               paymentDraftId: orderData.draftId,
-              razorpayOrderId: response.razorpay_order_id,
-              razorpayPaymentId: response.razorpay_payment_id,
               isFree: false,
             });
 
-            // Submit complete onboarding
             await finalizeStoreSubmission(orderData.draftId);
             onComplete();
           } catch (verifyErr: any) {
@@ -327,10 +344,10 @@ export const Step5SubscriptionPayment: React.FC<Step5SubscriptionPaymentProps> =
           <span>Step 5: Commercial Plan &amp; Store Activation</span>
         </div>
         <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-          Select Your Commercial Plan
+          Standard Storefront &amp; Retail OS License
         </h2>
         <p className="text-xs sm:text-sm text-slate-500 mt-1">
-          Choose a commercial plan for your digital storefront. Use a promotional code to waive fees for pilot retailer rollouts.
+          Complete retail suite: Hyperlocal discovery, in-house counter POS, delivery &amp; billing. Use a promotional code to waive fees for pilot retailer rollouts.
         </p>
       </div>
 
@@ -341,121 +358,153 @@ export const Step5SubscriptionPayment: React.FC<Step5SubscriptionPaymentProps> =
         </div>
       )}
 
-      {/* Plan Selection Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-        {(Object.keys(ONBOARDING_PLANS) as OnboardingPlanId[]).map((planKey) => {
-          const plan = ONBOARDING_PLANS[planKey];
-          const isSelected = selectedPlanId === plan.id;
+      {/* Plan Selection Card - Standard All-Inclusive */}
+      <div className="mb-8">
+        <div
+          className="relative rounded-3xl p-6 sm:p-8 border-2 border-[#0038ed] bg-gradient-to-br from-blue-50/30 via-white to-indigo-50/20 shadow-lg shadow-blue-500/5 transition-all"
+        >
+          <div className="absolute -top-3.5 right-6 bg-[#0038ed] text-white text-[11px] font-extrabold uppercase px-3 py-0.5 rounded-full shadow-sm tracking-wide">
+            Official Launch License
+          </div>
 
-          return (
-            <div
-              key={plan.id}
-              onClick={() => setSelectedPlanId(plan.id)}
-              className={`relative rounded-2xl p-5 border-2 transition-all cursor-pointer flex flex-col justify-between ${
-                isSelected
-                  ? 'border-[#0038ed] bg-blue-50/20 shadow-md shadow-blue-500/5'
-                  : 'border-slate-200/80 hover:border-slate-300 bg-white'
-              }`}
-            >
-              {plan.isPopular && (
-                <div className="absolute -top-3 right-4 bg-[#0038ed] text-white text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full shadow-xs">
-                  Most Popular
-                </div>
-              )}
-
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-extrabold text-slate-900 text-base">{plan.name}</h3>
-                  <div
-                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
-                      isSelected ? 'border-[#0038ed] bg-[#0038ed]' : 'border-slate-300'
-                    }`}
-                  >
-                    {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
-                  </div>
-                </div>
-
-                <p className="text-xs text-slate-500 mb-4">{plan.tagline}</p>
-
-                <div className="mb-5 flex items-baseline gap-1.5">
-                  <span className="text-2xl sm:text-3xl font-black text-slate-900">
-                    ₹{plan.basePrice.toLocaleString('en-IN')}
-                  </span>
-                  <span className="text-xs text-slate-500 font-semibold">/ year</span>
-                </div>
-
-                {/* Features List */}
-                <div className="space-y-2.5 text-xs text-slate-700">
-                  {plan.features.map((feature, idx) => (
-                    <div key={idx} className="flex items-start gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                      <span>{feature}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-slate-500">
-                <span>Billing Cycle: Annual</span>
-                <span className={isSelected ? 'text-[#0038ed] font-bold' : ''}>
-                  {isSelected ? 'Selected' : 'Select Plan'}
-                </span>
-              </div>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-100">
+            <div>
+              <h3 className="font-black text-slate-900 text-lg sm:text-xl">
+                {selectedPlan.name}
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-500 mt-1">{selectedPlan.tagline}</p>
             </div>
-          );
-        })}
+
+            <div className="flex items-baseline gap-2 bg-white px-5 py-3 rounded-2xl border border-blue-100 shadow-xs">
+              <span className="text-3xl sm:text-4xl font-black text-[#0038ed]">
+                ₹{selectedPlan.basePrice.toLocaleString('en-IN')}
+              </span>
+              <span className="text-xs text-slate-500 font-bold uppercase">/ 1 Year License</span>
+            </div>
+          </div>
+
+          {/* Features Grid */}
+          <div className="pt-6">
+            <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">
+              Included All-In-One Capabilities:
+            </h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-slate-700">
+              {selectedPlan.features.map((feature, idx) => (
+                <div key={idx} className="flex items-start gap-2.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                  <span className="font-medium">{feature}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Promotional Coupon Box */}
-      <div className="bg-slate-50/80 border border-slate-200/80 rounded-2xl p-5 mb-8">
+      {/* Promotional Coupon & Sales Representative Box */}
+      <div className="bg-slate-50/80 border border-slate-200/80 rounded-2xl p-5 sm:p-6 mb-8">
         <div className="flex items-center gap-2 mb-2">
           <Tag className="w-4 h-4 text-[#0038ed]" />
-          <h4 className="text-xs sm:text-sm font-bold text-slate-900">Have a Promotional Code?</h4>
+          <h4 className="text-xs sm:text-sm font-bold text-slate-900">Field Representative &amp; Promotional Code</h4>
         </div>
-        <p className="text-xs text-slate-500 mb-4">
-          Enter a launch promo or field waiver code to discount or completely waive your annual onboarding fee.
+        <p className="text-xs text-slate-500 mb-5">
+          Enter your authorized Sales Representative ID and promo code to apply promotional partner discounts or 100% pilot waivers.
         </p>
 
-        {/* Coupon Input Row */}
-        <div className="flex flex-col sm:flex-row gap-2.5 mb-3">
-          <div className="relative flex-1">
+        {/* Input Rows: Sales ID and Coupon Code */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+          {/* Salesperson ID Input */}
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
+              <UserCheck className="w-3.5 h-3.5 text-[#0038ed]" />
+              <span>Salesperson ID *</span>
+            </label>
             <input
               type="text"
-              placeholder="e.g. FREE100, WELCOME50"
-              value={couponInput}
+              placeholder="e.g. SALES-01, SALES-02, AGENT-PILOT"
+              value={salesIdInput}
               onChange={(e) => {
-                setCouponInput(e.target.value.toUpperCase());
+                setSalesIdInput(e.target.value.toUpperCase());
                 setCouponError(null);
               }}
               disabled={!!appliedCoupon || isValidatingCoupon}
-              className="w-full text-xs sm:text-sm uppercase font-bold tracking-wider px-4 py-2.5 rounded-xl border border-slate-200 bg-white placeholder:text-slate-400 focus:outline-none focus:border-[#0038ed] focus:ring-2 focus:ring-[#0038ed]/10 transition-all disabled:opacity-60"
+              className="w-full text-xs sm:text-sm uppercase font-bold tracking-wider px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white placeholder:text-slate-400 focus:outline-none focus:border-[#0038ed] focus:ring-2 focus:ring-[#0038ed]/10 transition-all disabled:opacity-60"
             />
-            {appliedCoupon && (
-              <button
-                type="button"
-                onClick={handleRemoveCoupon}
-                className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 cursor-pointer"
-                title="Remove coupon"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
           </div>
 
+          {/* Coupon Code Input */}
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
+              <Tag className="w-3.5 h-3.5 text-[#0038ed]" />
+              <span>Promotional Coupon Code</span>
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="e.g. FREE100, WELCOME50"
+                value={couponInput}
+                onChange={(e) => {
+                  setCouponInput(e.target.value.toUpperCase());
+                  setCouponError(null);
+                }}
+                disabled={!!appliedCoupon || isValidatingCoupon}
+                className="w-full text-xs sm:text-sm uppercase font-bold tracking-wider px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white placeholder:text-slate-400 focus:outline-none focus:border-[#0038ed] focus:ring-2 focus:ring-[#0038ed]/10 transition-all disabled:opacity-60 pr-10"
+              />
+              {appliedCoupon && (
+                <button
+                  type="button"
+                  onClick={handleRemoveCoupon}
+                  className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 cursor-pointer"
+                  title="Remove coupon"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Action Button & Suggestions */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+          {/* Quick Suggestion Chips */}
+          {!appliedCoupon ? (
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-[11px] text-slate-400 font-medium">Try:</span>
+              {PRESET_COUPON_CHIPS.map((chip) => (
+                <button
+                  key={chip.code}
+                  type="button"
+                  onClick={() => {
+                    setCouponInput(chip.code);
+                    if (!salesIdInput.trim()) {
+                      setSalesIdInput('SALES-01');
+                    }
+                  }}
+                  className="inline-flex items-center gap-1 text-[11px] font-bold text-[#0038ed] bg-blue-50/80 hover:bg-blue-100/70 border border-blue-200/70 px-2 py-0.5 rounded-lg transition-all cursor-pointer"
+                >
+                  <Gift className="w-3 h-3" />
+                  <span>{chip.code}</span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div />
+          )}
+
+          {/* Validate Button */}
           {appliedCoupon ? (
             <button
               type="button"
               onClick={handleRemoveCoupon}
-              className="px-5 py-2.5 rounded-xl border border-rose-200 text-rose-600 bg-rose-50/60 hover:bg-rose-50 font-bold text-xs sm:text-sm transition-all cursor-pointer"
+              className="px-5 py-2 rounded-xl border border-rose-200 text-rose-600 bg-rose-50/60 hover:bg-rose-50 font-bold text-xs transition-all cursor-pointer self-end"
             >
-              Remove
+              Remove Code
             </button>
           ) : (
             <button
               type="button"
               onClick={() => validateAndApplyCoupon(couponInput, selectedPlanId)}
               disabled={!couponInput.trim() || isValidatingCoupon}
-              className="px-6 py-2.5 rounded-xl bg-[#0038ed] hover:bg-[#002fcf] text-white font-bold text-xs sm:text-sm transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5"
+              className="px-5 py-2.5 rounded-xl bg-[#0038ed] hover:bg-[#002fcf] text-white font-bold text-xs sm:text-sm transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-1.5 self-end"
             >
               {isValidatingCoupon ? (
                 <>
@@ -463,36 +512,25 @@ export const Step5SubscriptionPayment: React.FC<Step5SubscriptionPaymentProps> =
                   <span>Validating...</span>
                 </>
               ) : (
-                <span>Apply Code</span>
+                <span>Verify &amp; Apply Code</span>
               )}
             </button>
           )}
         </div>
 
-        {/* Quick Suggestion Chips */}
-        {!appliedCoupon && (
-          <div className="flex flex-wrap items-center gap-2 pt-1">
-            <span className="text-[11px] text-slate-400 font-medium">Try:</span>
-            {PRESET_COUPON_CHIPS.map((chip) => (
-              <button
-                key={chip.code}
-                type="button"
-                onClick={() => {
-                  setCouponInput(chip.code);
-                  validateAndApplyCoupon(chip.code, selectedPlanId);
-                }}
-                className="inline-flex items-center gap-1 text-[11px] font-bold text-[#0038ed] bg-blue-50/80 hover:bg-blue-100/70 border border-blue-200/70 px-2.5 py-1 rounded-lg transition-all cursor-pointer"
-              >
-                <Gift className="w-3 h-3" />
-                <span>{chip.label}</span>
-              </button>
-            ))}
+        {/* Verified Sales Rep Info Badge */}
+        {salesRepInfo && appliedCoupon && (
+          <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-xl flex items-center gap-2 text-xs text-[#0038ed] animate-in fade-in">
+            <ShieldCheck className="w-4 h-4 text-[#0038ed] shrink-0" />
+            <span>
+              Authorized Field Representative: <strong>{salesRepInfo.name}</strong> ({salesRepInfo.territory} &bull; {salesRepInfo.salesId})
+            </span>
           </div>
         )}
 
         {/* Applied Coupon Feedback Alert */}
         {appliedCoupon && (
-          <div className="mt-3 p-3 bg-emerald-50 border border-emerald-200/90 rounded-xl flex items-center justify-between text-xs text-emerald-800 animate-in fade-in">
+          <div className="mt-2.5 p-3 bg-emerald-50 border border-emerald-200/90 rounded-xl flex items-center justify-between text-xs text-emerald-800 animate-in fade-in">
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
               <span>
@@ -508,7 +546,7 @@ export const Step5SubscriptionPayment: React.FC<Step5SubscriptionPaymentProps> =
 
         {/* Coupon Error */}
         {couponError && (
-          <div className="mt-2 text-xs text-rose-600 font-semibold flex items-center gap-1.5">
+          <div className="mt-2.5 text-xs text-rose-600 font-semibold flex items-center gap-1.5">
             <AlertCircle className="w-3.5 h-3.5 shrink-0" />
             <span>{couponError}</span>
           </div>
@@ -590,4 +628,3 @@ export const Step5SubscriptionPayment: React.FC<Step5SubscriptionPaymentProps> =
     </div>
   );
 };
-

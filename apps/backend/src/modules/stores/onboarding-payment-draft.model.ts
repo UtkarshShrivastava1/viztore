@@ -10,6 +10,7 @@ export interface IOnboardingPaymentDraftDocument extends Document {
   finalAmount: number;
   currency: 'INR';
   couponCode?: string | null;
+  salesId?: string | null;
   status: OnboardingPaymentStatus;
   razorpayOrderId?: string | null;
   razorpayPaymentId?: string | null;
@@ -31,14 +32,14 @@ const onboardingPaymentDraftSchema = new Schema<IOnboardingPaymentDraftDocument>
     },
     planId: {
       type: String,
-      enum: ['starter', 'growth'],
+      enum: ['standard', 'starter', 'growth'],
       required: true,
-      default: 'starter',
+      default: 'standard',
     },
     planName: {
       type: String,
       required: true,
-      default: 'Starter Hyperlocal Storefront',
+      default: 'Standard All-Inclusive Storefront & Retail OS',
     },
     basePrice: {
       type: Number,
@@ -61,6 +62,13 @@ const onboardingPaymentDraftSchema = new Schema<IOnboardingPaymentDraftDocument>
       trim: true,
       uppercase: true,
       default: null,
+    },
+    salesId: {
+      type: String,
+      trim: true,
+      uppercase: true,
+      default: null,
+      index: true,
     },
     status: {
       type: String,
@@ -111,4 +119,3 @@ export const OnboardingPaymentDraftModel: Model<IOnboardingPaymentDraftDocument>
     'OnboardingPaymentDraft',
     onboardingPaymentDraftSchema,
   );
-

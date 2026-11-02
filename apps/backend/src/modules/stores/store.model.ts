@@ -86,14 +86,15 @@ const bankDetailsSchema = new Schema<IStoreBankDetails>(
 
 const onboardingPaymentSchema = new Schema(
   {
-    planId: { type: String, enum: ['starter', 'growth'], default: 'starter' },
-    planName: { type: String, default: 'Starter Hyperlocal Storefront' },
+    planId: { type: String, enum: ['standard', 'starter', 'growth'], default: 'standard' },
+    planName: { type: String, default: 'Standard All-Inclusive Storefront & Retail OS' },
     billingCycle: { type: String, default: 'yearly' },
-    basePrice: { type: Number, default: 4999 },
+    basePrice: { type: Number, default: 12000 },
     discountAmount: { type: Number, default: 0 },
-    finalAmountPaid: { type: Number, default: 4999 },
+    finalAmountPaid: { type: Number, default: 12000 },
     currency: { type: String, default: 'INR' },
     couponCode: { type: String, trim: true, uppercase: true, default: null },
+    salesId: { type: String, trim: true, uppercase: true, default: null },
     paymentStatus: {
       type: String,
       enum: ['PENDING', 'PAID', 'COUPON_WAIVED', 'FAILED'],
@@ -256,6 +257,7 @@ const storeSchema = new Schema<IStoreDocument>(
     bankDetails: {
       type: bankDetailsSchema,
     },
+    salesId: { type: String, trim: true, uppercase: true, default: null, index: true },
     onboardingPayment: {
       type: onboardingPaymentSchema,
       default: null,

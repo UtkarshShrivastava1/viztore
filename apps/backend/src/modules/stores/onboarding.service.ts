@@ -202,6 +202,9 @@ export async function submitCompleteOnboarding(
     store.deliveryRadiusKm = dto.step4.deliveryRadiusKm;
     if (onboardingPaymentRecord) {
       store.onboardingPayment = onboardingPaymentRecord as any;
+      if (onboardingPaymentRecord.salesId) {
+        store.salesId = onboardingPaymentRecord.salesId;
+      }
     }
     store.legalDetails = {
       gstin: dto.step2.gstin,
@@ -232,6 +235,7 @@ export async function submitCompleteOnboarding(
       location: dto.step4.location,
       operatingHours: dto.step5.operatingHours,
       deliveryRadiusKm: dto.step4.deliveryRadiusKm,
+      salesId: onboardingPaymentRecord?.salesId || null,
       onboardingPayment: onboardingPaymentRecord,
       legalDetails: {
         gstin: dto.step2.gstin,

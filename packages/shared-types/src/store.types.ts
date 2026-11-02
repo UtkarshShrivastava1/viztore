@@ -123,6 +123,7 @@ export interface IStore {
   reviewCount: number;
   legalDetails?: IStoreLegalDetails;
   bankDetails?: IStoreBankDetails;
+  salesId?: string | null;
   onboardingPayment?: IOnboardingPaymentRecord | null;
   settings?: IStoreSettings;
   email?: string;
