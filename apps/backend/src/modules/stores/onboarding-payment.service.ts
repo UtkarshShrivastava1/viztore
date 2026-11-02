@@ -142,8 +142,8 @@ export async function createPaymentOrder(
 
   // Phase 2: Paid Razorpay Order Initiation
   let razorpayOrderId: string | null = null;
-  const keyId = process.env.RAZORPAY_KEY_ID;
-  const keySecret = process.env.RAZORPAY_KEY_SECRET;
+  const keyId = process.env.RAZORPAY_KEY_ID?.trim();
+  const keySecret = process.env.RAZORPAY_KEY_SECRET?.trim();
 
   if (keyId && keySecret) {
     try {
@@ -229,7 +229,7 @@ export async function verifyPayment(
   }
 
   // Paid verification: HMAC-SHA256 signature verification
-  const keySecret = process.env.RAZORPAY_KEY_SECRET;
+  const keySecret = process.env.RAZORPAY_KEY_SECRET?.trim();
   if (keySecret && razorpayOrderId && razorpayPaymentId && razorpaySignature) {
     const expectedSignature = crypto
       .createHmac('sha256', keySecret)
