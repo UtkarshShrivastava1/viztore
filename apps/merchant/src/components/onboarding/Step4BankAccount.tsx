@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { AlertCircle, ArrowLeft, CheckCircle2, Building2, ShieldCheck, Check } from 'lucide-react';
+import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle2, Building2, ShieldCheck, Check } from 'lucide-react';
 import { useOnboardingStore } from '../../stores/onboardingStore.js';
 import { api } from '../../lib/api.js';
 import { useAuthStore } from '../../stores/authStore.js';

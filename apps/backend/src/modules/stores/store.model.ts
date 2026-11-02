@@ -84,6 +84,29 @@ const bankDetailsSchema = new Schema<IStoreBankDetails>(
   { _id: false },
 );
 
+const onboardingPaymentSchema = new Schema(
+  {
+    planId: { type: String, enum: ['starter', 'growth'], default: 'starter' },
+    planName: { type: String, default: 'Starter Hyperlocal Storefront' },
+    billingCycle: { type: String, default: 'yearly' },
+    basePrice: { type: Number, default: 4999 },
+    discountAmount: { type: Number, default: 0 },
+    finalAmountPaid: { type: Number, default: 4999 },
+    currency: { type: String, default: 'INR' },
+    couponCode: { type: String, trim: true, uppercase: true, default: null },
+    paymentStatus: {
+      type: String,
+      enum: ['PENDING', 'PAID', 'COUPON_WAIVED', 'FAILED'],
+      default: 'PENDING',
+    },
+    razorpayOrderId: { type: String, default: null },
+    razorpayPaymentId: { type: String, default: null },
+    paidAt: { type: Date, default: null },
+    expiresAt: { type: Date, default: null },
+  },
+  { _id: false },
+);
+
 const storeSettingsSchema = new Schema(
   {
     billing: {
@@ -232,6 +255,10 @@ const storeSchema = new Schema<IStoreDocument>(
     },
     bankDetails: {
       type: bankDetailsSchema,
+    },
+    onboardingPayment: {
+      type: onboardingPaymentSchema,
+      default: null,
     },
     customTaxonomy: {
       categories: [{ type: String, trim: true }],

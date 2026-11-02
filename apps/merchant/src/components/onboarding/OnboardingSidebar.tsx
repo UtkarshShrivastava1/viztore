@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { branding } from '../../lib/branding.js';
 
-export type OnboardingMainStep = 1 | 2 | 3 | 4;
+export type OnboardingMainStep = 1 | 2 | 3 | 4 | 5;
 
 interface OnboardingSidebarProps {
   activeMainStep: OnboardingMainStep;
@@ -55,6 +55,13 @@ export const OnboardingSidebar: React.FC<OnboardingSidebarProps> = ({
       icon: Landmark,
       description: 'Secure instant payouts and automated T+1 UPI direct settlements.',
     },
+    {
+      stepNumber: 5,
+      title: 'Plan & Store Activation',
+      substeps: ['Choose Plan', 'Coupon & Payment'],
+      icon: Sparkles,
+      description: 'Select commercial plan, redeem pilot coupon, and launch storefront.',
+    },
   ];
 
   return (
@@ -71,7 +78,7 @@ export const OnboardingSidebar: React.FC<OnboardingSidebarProps> = ({
             Welcome to {branding.appName}
           </h2>
           <p className="text-xs sm:text-[13px] text-slate-500 mt-1.5 leading-relaxed max-w-sm">
-            Complete these 4 simple steps to digitize your retail store and discover customers in your 3–4 km neighborhood.
+            Complete these 5 simple steps to digitize your retail store and discover customers in your 3–4 km neighborhood.
           </p>
         </div>
 

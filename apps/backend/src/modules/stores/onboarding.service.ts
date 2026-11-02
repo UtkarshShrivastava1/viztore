@@ -7,6 +7,8 @@ import {
 } from '@repo/shared-types';
 import { StoreModel } from './store.model.js';
 import { UserModel } from '../auth/auth.model.js';
+import { OnboardingPaymentDraftModel } from './onboarding-payment-draft.model.js';
+import { buildPaymentRecordFromDraft } from './onboarding-payment.service.js';
 import { AppError } from '../../shared/utils/AppError.js';
 import { logger } from '../../shared/utils/logger.js';
 
@@ -171,6 +173,23 @@ export async function submitCompleteOnboarding(
 
   const slug = generateSlug(dto.step4.storeDisplayName);
 
+  // Link onboarding payment if provided or found for this owner
+  let onboardingPaymentRecord = null;
+  if (dto.paymentDraftId) {
+    const draft = await OnboardingPaymentDraftModel.findById(dto.paymentDraftId);
+    if (draft) {
+      onboardingPaymentRecord = buildPaymentRecordFromDraft(draft);
+    }
+  } else {
+    const draft = await OnboardingPaymentDraftModel.findOne({
+      ownerId: userId,
+      status: { $in: ['PAID', 'COUPON_WAIVED'] },
+    }).sort({ createdAt: -1 });
+    if (draft) {
+      onboardingPaymentRecord = buildPaymentRecordFromDraft(draft);
+    }
+  }
+
   if (store) {
     // Update existing store draft
     store.name = dto.step4.storeDisplayName;
@@ -181,6 +200,9 @@ export async function submitCompleteOnboarding(
     store.location = dto.step4.location;
     store.operatingHours = dto.step5.operatingHours;
     store.deliveryRadiusKm = dto.step4.deliveryRadiusKm;
+    if (onboardingPaymentRecord) {
+      store.onboardingPayment = onboardingPaymentRecord as any;
+    }
     store.legalDetails = {
       gstin: dto.step2.gstin,
       pan: dto.step2.pan,
@@ -210,6 +232,7 @@ export async function submitCompleteOnboarding(
       location: dto.step4.location,
       operatingHours: dto.step5.operatingHours,
       deliveryRadiusKm: dto.step4.deliveryRadiusKm,
+      onboardingPayment: onboardingPaymentRecord,
       legalDetails: {
         gstin: dto.step2.gstin,
         pan: dto.step2.pan,

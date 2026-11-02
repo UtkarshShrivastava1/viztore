@@ -33,6 +33,7 @@
     "mongo-sanitize": "^1.1.0",
     "mongoose": "^8.10.1",
     "multer": "^2.4.0",
+    "razorpay": "^2.9.8",
     "socket.io": "^4.8.1",
     "swagger-jsdoc": "^6.3.0",
     "swagger-ui-express": "^5.0.1",

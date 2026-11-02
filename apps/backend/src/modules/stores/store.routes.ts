@@ -13,6 +13,7 @@ import { authGuard } from '../../shared/middlewares/authGuard.js';
 import { roleGuard } from '../../shared/middlewares/roleGuard.js';
 import * as storeController from './store.controller.js';
 import * as onboardingController from './onboarding.controller.js';
+import * as onboardingPaymentController from './onboarding-payment.controller.js';
 
 const router = Router();
 
@@ -42,6 +43,34 @@ router.get(
   authGuard,
   onboardingController.getOnboardingStatus,
 );
+
+// ==========================================
+// Merchant Onboarding Commercial Plan & Payment Routes
+// ==========================================
+router.get(
+  '/onboarding/payment/plans',
+  onboardingPaymentController.getPlans,
+);
+
+router.post(
+  '/onboarding/payment/validate-coupon',
+  onboardingPaymentController.validateCoupon,
+);
+
+router.post(
+  '/onboarding/payment/create-order',
+  authGuard,
+  roleGuard(UserRole.MERCHANT, UserRole.ADMIN),
+  onboardingPaymentController.createPaymentOrder,
+);
+
+router.post(
+  '/onboarding/payment/verify',
+  authGuard,
+  roleGuard(UserRole.MERCHANT, UserRole.ADMIN),
+  onboardingPaymentController.verifyPayment,
+);
+
 
 // ==========================================
 // Super Admin Queue & Review Endpoints

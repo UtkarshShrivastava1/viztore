@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { IOnboardingPaymentRecord } from './onboarding-payment.types.js';
 
 export enum StoreCategory {
   FASHION = 'fashion',
@@ -122,6 +123,7 @@ export interface IStore {
   reviewCount: number;
   legalDetails?: IStoreLegalDetails;
   bankDetails?: IStoreBankDetails;
+  onboardingPayment?: IOnboardingPaymentRecord | null;
   settings?: IStoreSettings;
   email?: string;
   customTaxonomy?: IStoreCustomTaxonomy;

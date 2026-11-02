@@ -79,6 +79,7 @@ export const completeOnboardingSchema = z.object({
   step4: onboardingStep4Schema,
   step5: onboardingStep5Schema,
   step6: onboardingStep6Schema,
+  paymentDraftId: z.string().optional(),
 });
 
 export type OnboardingStep1Dto = z.infer<typeof onboardingStep1Schema>;
