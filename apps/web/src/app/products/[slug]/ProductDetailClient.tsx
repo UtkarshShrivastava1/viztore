@@ -39,6 +39,94 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
   );
   const toggleWishlistStore = useWishlistFlyoutStore((state) => state.toggleItem);
   const [isCopied, setIsCopied] = useState(false);
+  const [selectedImageIdx, setSelectedImageIdx] = useState(0);
+  const [qty, setQty] = useState(1);
+  const [isAdded, setIsAdded] = useState(false);
+  const [showDetails, setShowDetails] = useState(true);
+
+  // Safe extraction of store and category metadata for recommendations (unconditional hook execution)
+  const rawStoreId = product?.storeId;
+  const storeId = typeof rawStoreId === 'object' && rawStoreId !== null
+    ? (rawStoreId as { _id?: string })._id || String(rawStoreId)
+    : String(rawStoreId || 'store-main');
+  const storeName = product?.storeName || (typeof rawStoreId === 'object' && (rawStoreId as { name?: string })?.name) || 'Official Store';
+  const categoryParam = typeof product?.category === 'string' ? product.category : (product?.category as any)?.name;
+
+  // Fetch store products for "More Products from this Store" (Called unconditionally before early returns)
+  const { data: storeProducts = [] } = useQuery({
+    queryKey: ['store-products-recommendations', storeId, product?._id],
+    queryFn: async () => {
+      if (!storeId || storeId === 'store-main') return [];
+      try {
+        const res = await fetchProducts({ storeId, limit: 8 });
+        return (res.products || []).filter((p: any) => p._id !== product?._id);
+      } catch {
+        return [];
+      }
+    },
+    enabled: !!storeId && storeId !== 'store-main' && !!product?._id,
+  });
+
+  // Fetch category products for "You May Also Like" (Called unconditionally before early returns)
+  const { data: categoryProducts = [] } = useQuery({
+    queryKey: ['category-products-recommendations', categoryParam, product?._id],
+    queryFn: async () => {
+      if (!categoryParam) return [];
+      try {
+        const res = await fetchProducts({ category: categoryParam, limit: 8 });
+        return (res.products || []).filter((p: any) => p._id !== product?._id);
+      } catch {
+        return [];
+      }
+    },
+    enabled: !!categoryParam && !!product?._id,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-transparent pt-16">
+        <main className="max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-24 py-6 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="skeleton aspect-square rounded-2xl" />
+            <div className="space-y-4">
+              <div className="skeleton h-8 w-3/4 rounded" />
+              <div className="skeleton h-6 w-1/2 rounded" />
+              <div className="skeleton h-4 w-full rounded" />
+              <div className="skeleton h-4 w-4/5 rounded" />
+              <div className="skeleton h-12 w-40 rounded-xl mt-6" />
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div className="min-h-screen bg-transparent pt-16">
+        <main className="max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-24 py-20 text-center">
+          <Package className="w-16 h-16 mx-auto text-surface-600 mb-4" />
+          <h1 className="text-xl font-bold text-surface-700">Product not found</h1>
+          <p className="text-sm text-surface-500 mt-2">This product may have been removed.</p>
+          <Link href="/products" className="inline-block mt-6 px-6 py-2.5 rounded-xl bg-brand-500 text-white text-sm font-semibold hover:bg-brand-600 transition-colors">
+            Browse Products
+          </Link>
+        </main>
+      </div>
+    );
+  }
+
+  const selectedVariant = product.variants[selectedVariantIdx] || product.variants[0];
+  const allImages = selectedVariant?.images?.length > 0
+    ? selectedVariant.images
+    : product.variants.flatMap((v) => v.images).filter(Boolean);
+
+  const discount = selectedVariant && selectedVariant.mrp > 0
+    ? Math.round(((selectedVariant.mrp - selectedVariant.price) / selectedVariant.mrp) * 100)
+    : 0;
+
+  const sizes = Array.from(new Set(product.variants.filter((v) => v.size && v.isActive).map((v) => v.size!)));
+  const colors = Array.from(new Set(product.variants.filter((v) => v.color && v.isActive).map((v) => v.color!)));
 
   const handleToggleWishlist = () => {
     if (!product || !selectedVariant) return;
@@ -89,93 +177,6 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
       console.warn('Failed to copy to clipboard', err);
     }
   };
-  const [selectedImageIdx, setSelectedImageIdx] = useState(0);
-  const [qty, setQty] = useState(1);
-  const [isAdded, setIsAdded] = useState(false);
-  const [showDetails, setShowDetails] = useState(true); // Open by default as per screenshot
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-transparent pt-16">
-        <main className="max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-24 py-6 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="skeleton aspect-square rounded-2xl" />
-            <div className="space-y-4">
-              <div className="skeleton h-8 w-3/4 rounded" />
-              <div className="skeleton h-6 w-1/2 rounded" />
-              <div className="skeleton h-4 w-full rounded" />
-              <div className="skeleton h-4 w-4/5 rounded" />
-              <div className="skeleton h-12 w-40 rounded-xl mt-6" />
-            </div>
-          </div>
-        </main>
-      </div>
-    );
-  }
-
-  if (!product) {
-    return (
-      <div className="min-h-screen bg-transparent pt-16">
-        <main className="max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-24 py-20 text-center">
-          <Package className="w-16 h-16 mx-auto text-surface-600 mb-4" />
-          <h1 className="text-xl font-bold text-surface-700">Product not found</h1>
-          <p className="text-sm text-surface-500 mt-2">This product may have been removed.</p>
-          <Link href="/products" className="inline-block mt-6 px-6 py-2.5 rounded-xl bg-brand-500 text-white text-sm font-semibold hover:bg-brand-600 transition-colors">
-            Browse Products
-          </Link>
-        </main>
-      </div>
-    );
-  }
-
-  const selectedVariant = product.variants[selectedVariantIdx] || product.variants[0];
-  const allImages = selectedVariant?.images?.length > 0
-    ? selectedVariant.images
-    : product.variants.flatMap((v) => v.images).filter(Boolean);
-
-  const discount = selectedVariant.mrp > 0
-    ? Math.round(((selectedVariant.mrp - selectedVariant.price) / selectedVariant.mrp) * 100)
-    : 0;
-
-  const sizes = Array.from(new Set(product.variants.filter((v) => v.size && v.isActive).map((v) => v.size!)));
-  const colors = Array.from(new Set(product.variants.filter((v) => v.color && v.isActive).map((v) => v.color!)));
-
-  const rawStoreId = product.storeId;
-  const storeId = typeof rawStoreId === 'object' && rawStoreId !== null
-    ? (rawStoreId as { _id?: string })._id || String(rawStoreId)
-    : String(rawStoreId || 'store-main');
-  const storeName = product.storeName || (typeof rawStoreId === 'object' && (rawStoreId as { name?: string })?.name) || 'Official Store';
-
-  // Fetch store products for "More Products from this Store"
-  const { data: storeProducts = [] } = useQuery({
-    queryKey: ['store-products-recommendations', storeId, product?._id],
-    queryFn: async () => {
-      if (!storeId || storeId === 'store-main') return [];
-      try {
-        const res = await fetchProducts({ storeId, limit: 8 });
-        return (res.products || []).filter((p: any) => p._id !== product?._id);
-      } catch {
-        return [];
-      }
-    },
-    enabled: !!storeId && !!product?._id,
-  });
-
-  // Fetch category products for "You May Also Like"
-  const categoryParam = typeof product?.category === 'string' ? product.category : (product?.category as any)?.name;
-  const { data: categoryProducts = [] } = useQuery({
-    queryKey: ['category-products-recommendations', categoryParam, product?._id],
-    queryFn: async () => {
-      if (!categoryParam) return [];
-      try {
-        const res = await fetchProducts({ category: categoryParam, limit: 8 });
-        return (res.products || []).filter((p: any) => p._id !== product?._id);
-      } catch {
-        return [];
-      }
-    },
-    enabled: !!categoryParam && !!product?._id,
-  });
 
   const handleAddToCart = () => {
     if (!product || !selectedVariant) return;
