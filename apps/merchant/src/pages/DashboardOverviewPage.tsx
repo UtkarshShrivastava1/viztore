@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { GreetingHeader, KpiCards } from '../components/dashboard/SalesOverview.js';
 import { LiveOrderAlerts } from '../components/dashboard/LiveOrderAlerts.js';
 import { RevenueChart } from '../components/dashboard/RevenueChart.js';
@@ -10,6 +10,8 @@ import { QuickAccessPanel } from '../components/dashboard/QuickAccessPanel.js';
 import { AnnouncementsBar } from '../components/dashboard/AnnouncementsBar.js';
 import { DashboardTab } from '../components/dashboard/Sidebar.js';
 import { useAuthStore } from '../stores/authStore.js';
+import { useOrderStore } from '../stores/orderStore.js';
+import { useCatalogStore } from '../stores/catalogStore.js';
 import { AlertTriangle } from 'lucide-react';
 
 interface DashboardOverviewPageProps {
@@ -23,7 +25,44 @@ export const DashboardOverviewPage: React.FC<DashboardOverviewPageProps> = ({
   onOpenAddProduct,
   onOpenBulkUpload,
 }) => {
-  const { isStoreActive, setStoreActive } = useAuthStore();
+  const { currentStore, isStoreActive, setStoreActive, isAuthenticated } = useAuthStore();
+  const { fetchOrders } = useOrderStore();
+  const { fetchProducts } = useCatalogStore();
+
+  const syncDashboardData = useCallback(() => {
+    const storeId = currentStore?._id || currentStore?.id;
+    fetchOrders(storeId).catch(() => {});
+    fetchProducts(storeId).catch(() => {});
+  }, [currentStore, fetchOrders, fetchProducts]);
+
+  // 1. Initial live hydration on mount or when currentStore / auth changes
+  useEffect(() => {
+    syncDashboardData();
+  }, [syncDashboardData]);
+
+  // 2. Continuous Live Sync on window focus, tab visibility & 20s heartbeat
+  useEffect(() => {
+    const handleVisibilityOrFocus = () => {
+      if (document.visibilityState === 'visible') {
+        syncDashboardData();
+      }
+    };
+
+    window.addEventListener('visibilitychange', handleVisibilityOrFocus);
+    window.addEventListener('focus', handleVisibilityOrFocus);
+
+    const heartbeat = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        syncDashboardData();
+      }
+    }, 20000);
+
+    return () => {
+      window.removeEventListener('visibilitychange', handleVisibilityOrFocus);
+      window.removeEventListener('focus', handleVisibilityOrFocus);
+      clearInterval(heartbeat);
+    };
+  }, [syncDashboardData]);
 
   return (
     <div className="space-y-3.5 max-w-[1600px] mx-auto">

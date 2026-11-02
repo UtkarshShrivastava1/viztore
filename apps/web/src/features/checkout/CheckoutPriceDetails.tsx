@@ -22,7 +22,7 @@ export function CheckoutPriceDetails({ storeId }: { storeId?: string }) {
     removeCoupon
   } = useCheckoutStore();
   const { isAuthenticated, user, openAuthModal } = useAuthStore();
-  const { address: locationAddress } = useLocationStore();
+  const { city: locationCity, pincode: locationPincode } = useLocationStore();
 
   const totalItemCount = getItemCount(storeId);
   const subtotal = getSubtotal(storeId);
@@ -50,13 +50,25 @@ export function CheckoutPriceDetails({ storeId }: { storeId?: string }) {
       return;
     }
 
+    if (fulfillmentType !== 'pickup' && fulfillmentType !== 'reserve') {
+      if (!shippingAddress?.street || shippingAddress.street.trim() === '') {
+        alert('Please provide a delivery address before placing your order.');
+        const addBtn = document.querySelector('[data-testid="add-delivery-address-btn"]') as HTMLButtonElement | null;
+        if (addBtn) {
+          addBtn.click();
+          addBtn.scrollIntoView({ behavior: 'smooth' });
+        }
+        return;
+      }
+    }
+
     const finalAddress = {
       fullName: shippingAddress?.fullName || user?.fullName || 'Customer',
       phone: shippingAddress?.phone || user?.phone || '9876543210',
-      street: shippingAddress?.street || locationAddress || '123 Market Street',
-      city: shippingAddress?.city || 'Local City',
-      state: shippingAddress?.state || 'State',
-      postalCode: shippingAddress?.postalCode || '452001',
+      street: shippingAddress?.street || (fulfillmentType === 'pickup' ? 'Store Pickup' : 'Customer Address'),
+      city: (shippingAddress?.city && shippingAddress.city !== 'Local City') ? shippingAddress.city : (locationCity || 'Bhilai'),
+      state: (shippingAddress?.state && shippingAddress.state !== 'State') ? shippingAddress.state : 'Chhattisgarh',
+      postalCode: (shippingAddress?.postalCode && shippingAddress.postalCode !== '452001') ? shippingAddress.postalCode : (locationPincode || '490006'),
       country: 'IN',
     };
 

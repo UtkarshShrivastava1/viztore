@@ -70,25 +70,28 @@ describe('OrderRepository (Clean Architecture Repository Unit Tests)', () => {
   });
 
   it('updateStatus sets deliveredAt timestamp when status is DELIVERED', async () => {
+    const updateImpl = async (_idOrQuery: any, update: any) => ({
+      _id: '507f1f77bcf86cd799439011',
+      orderNumber: 'ORD-12345678-ABCDEF',
+      userId: 'user-999',
+      storeId: 'store-888',
+      items: [],
+      shippingAddress: baseDto.shippingAddress,
+      subtotal: 100,
+      tax: 5,
+      shippingFee: 49,
+      grandTotal: 154,
+      status: update.$set.status,
+      deliveredAt: update.$set.deliveredAt,
+      deliveryOtp: '4821',
+      toObject() {
+        return this;
+      },
+    });
+
     const fakeModel: any = {
-      findByIdAndUpdate: vi.fn().mockImplementation(async (_id, update) => ({
-        _id: '507f1f77bcf86cd799439011',
-        orderNumber: 'ORD-12345678-ABCDEF',
-        userId: 'user-999',
-        storeId: 'store-888',
-        items: [],
-        shippingAddress: baseDto.shippingAddress,
-        subtotal: 100,
-        tax: 5,
-        shippingFee: 49,
-        grandTotal: 154,
-        status: update.$set.status,
-        deliveredAt: update.$set.deliveredAt,
-        deliveryOtp: '4821',
-        toObject() {
-          return this;
-        },
-      })),
+      findByIdAndUpdate: vi.fn().mockImplementation(updateImpl),
+      findOneAndUpdate: vi.fn().mockImplementation(updateImpl),
     };
 
     const repo = createOrderRepository(fakeModel);

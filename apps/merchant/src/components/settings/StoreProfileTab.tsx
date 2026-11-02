@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Store,
   Upload,
@@ -15,11 +15,43 @@ import {
   Lightbulb,
 } from 'lucide-react';
 import { useSettingsStore } from '../../stores/settingsStore.js';
+import { useAuthStore } from '../../stores/authStore.js';
 import { branding } from '@repo/shared-types';
 
 export const StoreProfileTab: React.FC = () => {
   const { storeProfile, updateStoreProfile, setActiveSubTab } = useSettingsStore();
-  const [formData, setFormData] = useState({ ...storeProfile });
+  const { currentStore, user } = useAuthStore();
+  
+  const [formData, setFormData] = useState(() => {
+    const base = { ...storeProfile };
+    if (currentStore?.name && (base.displayName === 'Fashion Hub' || !base.displayName)) {
+      base.displayName = currentStore.name;
+    }
+    if (user?.email && (base.email === 'fashionhub@gmail.com' || !base.email)) {
+      base.email = user.email;
+    }
+    if (user?.phone && (base.phone === '+91 98765 43210' || !base.phone)) {
+      base.phone = user.phone;
+    }
+    return base;
+  });
+
+  useEffect(() => {
+    if (currentStore?.name && storeProfile.displayName === 'Fashion Hub') {
+      const updated: Partial<typeof storeProfile> = {
+        displayName: currentStore.name,
+      };
+      if (user?.email && (storeProfile.email === 'fashionhub@gmail.com' || !storeProfile.email)) {
+        updated.email = user.email;
+      }
+      if (user?.phone && (storeProfile.phone === '+91 98765 43210' || !storeProfile.phone)) {
+        updated.phone = user.phone;
+      }
+      updateStoreProfile(updated);
+      setFormData((prev) => ({ ...prev, ...updated }));
+    }
+  }, [currentStore, user, storeProfile.displayName, updateStoreProfile]);
+
   const [showBanner, setShowBanner] = useState(true);
   const [saveSuccess, setSaveSuccess] = useState(false);
 

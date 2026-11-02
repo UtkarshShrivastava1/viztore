@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { IUser } from '@repo/shared-types';
 import { api, storesApi } from '../lib/api.js';
+import { initialDefaultKpis } from './catalogStore.js';
 
 interface AuthState {
   user: IUser | null;
@@ -52,6 +53,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         localStorage.setItem('current_store', JSON.stringify(primaryStore));
         localStorage.setItem('is_store_active', JSON.stringify(isActive));
         set({ currentStore: primaryStore, isStoreActive: isActive });
+
+        // Instantly trigger background data hydration for dashboard
+        const storeId = primaryStore._id || primaryStore.id;
+        import('./orderStore.js').then(({ useOrderStore }) => {
+          useOrderStore.getState().fetchOrders(storeId).catch(() => {});
+        }).catch(() => {});
+        import('./catalogStore.js').then(({ useCatalogStore }) => {
+          useCatalogStore.getState().fetchProducts(storeId).catch(() => {});
+        }).catch(() => {});
       }
     } catch (err) {
       console.warn('Could not fetch merchant store from API:', err);
@@ -91,6 +101,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     localStorage.removeItem('is_store_active');
     localStorage.removeItem('merchant_active_order_tab');
     set({ user: null, currentStore: null, accessToken: null, isAuthenticated: false });
+
+    // Cleanly reset order and catalog stores on logout
+    import('./orderStore.js').then(({ useOrderStore }) => {
+      useOrderStore.setState({ orders: [], selectedOrderIds: [], searchQuery: '' });
+    }).catch(() => {});
+    import('./catalogStore.js').then(({ useCatalogStore }) => {
+      useCatalogStore.setState({
+        products: [],
+        kpis: initialDefaultKpis,
+      });
+    }).catch(() => {});
   },
 
   initialize: () => {
@@ -115,6 +136,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({ user, currentStore, accessToken: token, isAuthenticated: true, isStoreActive });
         // Background refresh active store
         get().fetchCurrentStore();
+
+        if (currentStore) {
+          const storeId = currentStore._id || currentStore.id;
+          import('./orderStore.js').then(({ useOrderStore }) => {
+            useOrderStore.getState().fetchOrders(storeId).catch(() => {});
+          }).catch(() => {});
+          import('./catalogStore.js').then(({ useCatalogStore }) => {
+            useCatalogStore.getState().fetchProducts(storeId).catch(() => {});
+          }).catch(() => {});
+        }
       } catch {
         localStorage.clear();
       }

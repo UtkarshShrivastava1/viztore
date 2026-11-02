@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   X,
   Printer,
@@ -10,8 +10,12 @@ import {
   CreditCard,
   Key,
   MessageCircle,
+  Copy,
+  Check,
 } from 'lucide-react';
 import { MerchantOrderRecord } from '../../stores/orderStore.js';
+import { useAuthStore } from '../../stores/authStore.js';
+import { branding } from '../../lib/branding.js';
 
 interface OrderDetailModalProps {
   order: MerchantOrderRecord | null;
@@ -26,31 +30,93 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
   onClose,
   onPrint,
 }) => {
+  const [copied, setCopied] = useState(false);
+
   if (!isOpen || !order) return null;
 
-  const handleWhatsAppDispatch = () => {
-    const itemsText = order.items
-      .map((item, idx) => `${idx + 1}. ${item.name} (x${item.quantity}) - ₹${item.price * item.quantity}`)
-      .join('\n');
+  const getWebUrl = () => {
+    if (import.meta.env.VITE_STOREFRONT_URL) {
+      return import.meta.env.VITE_STOREFRONT_URL;
+    }
+    if (typeof window !== 'undefined') {
+      const host = window.location.hostname;
+      if (host === 'localhost' || host === '127.0.0.1') {
+        return 'http://localhost:3000';
+      }
+      return `${window.location.protocol}//${host.replace('partner.', 'shop.').replace('merchant.', 'web.')}`;
+    }
+    return 'https://viztore-web.vercel.app';
+  };
 
-    const text = 
-`🚚 *DELIVERY DISPATCH MANIFEST — ${order.orderNumber}*
-━━━━━━━━━━━━━━━━━━━━━━
-🏪 *Store Pickup:* Merchant Store Partner
-📍 *Drop Address:* ${order.deliveryAddress.fullText || `${order.deliveryAddress.street}, ${order.deliveryAddress.city}`}
-👤 *Customer:* ${order.customer.name}
-📞 *Customer Phone:* ${order.customer.phone}
+  const getRunUrl = () => {
+    return `${getWebUrl()}/rider/run/${order.id || order.orderNumber}`;
+  };
 
-📦 *Items to Deliver:*
-${itemsText}
+  const buildFleetBroadcastText = () => {
+    const store = useAuthStore.getState().currentStore;
+    const storeName = store?.name || 'Store Partner';
+    const storeLocality = store?.address?.locality || store?.address?.city || '';
+    const pickupDisplay = storeLocality ? `${storeName} (${storeLocality})` : storeName;
 
-💰 *Bill Amount:* ₹${order.pricing.totalAmount.toLocaleString('en-IN')} (${order.payment.paymentMethod})
-🔑 *Handshake OTP (Collect from Customer):* *${order.otp}*
-━━━━━━━━━━━━━━━━━━━━━━
-_Please collect package from store and verify 4-digit OTP upon customer handover._`;
+    const street = order.deliveryAddress?.street || '';
+    const streetParts = street.split(',').map((p) => p.trim()).filter(Boolean);
+    const streetLocality = streetParts[0] || '';
+    let streetCity = '';
+    for (let i = streetParts.length - 1; i >= 0; i--) {
+      const rawPart = streetParts[i];
+      if (!rawPart) continue;
+      const part = rawPart.replace(/-\s*\d+$/, '').trim();
+      if (!/^\d+$/.test(part) && !/chhattisgarh|state|india/i.test(part) && part.length > 2) {
+        streetCity = part;
+        break;
+      }
+    }
 
+    let locality = order.deliveryAddress?.locality?.trim() || '';
+    let city = order.deliveryAddress?.city?.trim() || '';
+    if (locality.toLowerCase() === 'local city' || locality.toLowerCase() === 'city') locality = '';
+    if (city.toLowerCase() === 'local city' || city.toLowerCase() === 'city') city = '';
+
+    const resolvedLocality = locality || streetLocality;
+    const resolvedCity = city || streetCity || 'Local Area';
+
+    const dropArea = (resolvedLocality && resolvedCity && resolvedLocality.toLowerCase() === resolvedCity.toLowerCase())
+      ? resolvedCity
+      : [resolvedLocality, resolvedCity].filter(Boolean).filter((v, idx, arr) => arr.indexOf(v) === idx).join(', ') || street || 'Local Customer Area';
+
+    const itemsCount = order.itemsSummary?.count || order.items?.length || 1;
+    const itemsTitle = order.itemsSummary?.title || order.items?.[0]?.name || 'Packaged parcel';
+
+    const isCod = order.payment?.paymentMethod === 'Cash on Delivery';
+    const paymentText = isCod
+      ? `Cash on Delivery (Collect ₹${order.pricing.totalAmount.toLocaleString('en-IN')} cash)`
+      : 'Prepaid Online (₹0 cash to collect)';
+
+    return [
+      `🛵 *NEW DELIVERY RUN — #${order.orderNumber}*`,
+      `━━━━━━━━━━━━━━━━━━━━━━`,
+      `🏪 *Pickup Store:* ${pickupDisplay}`,
+      `🏠 *Drop Area:* ${dropArea}`,
+      `📦 *Items:* ${itemsCount} item${itemsCount > 1 ? 's' : ''} (${itemsTitle})`,
+      `💰 *Rider Payout:* ₹40`,
+      `💳 *Payment:* ${paymentText}`,
+      `━━━━━━━━━━━━━━━━━━━━━━`,
+      `👉 *Tap to Accept & Claim Run:*`,
+      `${getRunUrl()}`,
+    ].join('\n');
+  };
+
+  const handleBroadcastToFleet = () => {
+    const text = buildFleetBroadcastText();
     const waUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
     window.open(waUrl, '_blank');
+  };
+
+  const handleCopyRunLink = () => {
+    const text = buildFleetBroadcastText();
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
   };
 
   const handlePrint = () => {
@@ -85,12 +151,26 @@ _Please collect package from store and verify 4-digit OTP upon customer handover
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={handleWhatsAppDispatch}
+              onClick={handleBroadcastToFleet}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#25D366] hover:bg-[#1EBE5D] text-white text-xs font-bold transition-all shadow-sm"
-              title="Send Delivery Manifest to Rider on WhatsApp"
+              title="Broadcast Run to WhatsApp Fleet Group"
             >
               <MessageCircle className="w-3.5 h-3.5 fill-current" />
-              <span>WhatsApp Rider</span>
+              <span>Broadcast Run</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleCopyRunLink}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all ${
+                copied
+                  ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                  : 'border-slate-200 hover:bg-slate-100 text-slate-700'
+              }`}
+              title="Copy Run Link to Clipboard"
+            >
+              {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-slate-500" />}
+              <span>{copied ? 'Copied Link!' : 'Copy Link'}</span>
             </button>
 
             <button

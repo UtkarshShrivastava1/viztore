@@ -21,6 +21,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
+import { useLocationStore } from '@/stores/location.store';
 import { AccountSidebar } from '@/components/account/AccountSidebar';
 import { userApi } from '@/lib/api/user.js';
 import type { CreateAddressDto } from '@repo/shared-types';
@@ -28,6 +29,7 @@ import type { CreateAddressDto } from '@repo/shared-types';
 export function AddAddressClient() {
   const router = useRouter();
   const { user, isAuthenticated, openAuthModal } = useAuthStore();
+  const { address: locationAddress, city: locationCity, locality: locationLocality, pincode: locationPincode, isSet: isLocationSet } = useLocationStore();
 
   const [addressType, setAddressType] = useState<'home' | 'work' | 'other'>('home');
   const [customLabel, setCustomLabel] = useState('');
@@ -35,11 +37,11 @@ export function AddAddressClient() {
   // Form fields
   const [fullName, setFullName] = useState(user?.fullName || '');
   const [mobileNumber, setMobileNumber] = useState(user?.phone || '');
-  const [pincode, setPincode] = useState('');
+  const [pincode, setPincode] = useState('490006');
   const [locality, setLocality] = useState('');
   const [streetAddress, setStreetAddress] = useState('');
-  const [city, setCity] = useState('');
-  const [state, setState] = useState('Maharashtra');
+  const [city, setCity] = useState('Bhilai');
+  const [state, setState] = useState('Chhattisgarh');
   const [landmark, setLandmark] = useState('');
   const [alternatePhone, setAlternatePhone] = useState('');
   const [isDefault, setIsDefault] = useState(true);
@@ -49,6 +51,16 @@ export function AddAddressClient() {
   const [isLocating, setIsLocating] = useState(false);
 
   const handleUseCurrentLocation = () => {
+    // If location is already detected and available in location store, use it instantly
+    if (isLocationSet && locationAddress) {
+      setStreetAddress(locationAddress);
+      if (locationLocality) setLocality(locationLocality);
+      if (locationCity) setCity(locationCity);
+      if (locationPincode) setPincode(locationPincode);
+      setState('Chhattisgarh');
+      return;
+    }
+
     if (!navigator.geolocation) {
       alert('Geolocation is not supported by your browser.');
       return;
@@ -63,10 +75,9 @@ export function AddAddressClient() {
           const data = await res.json();
           if (data && data.address) {
             if (data.address.postcode) setPincode(data.address.postcode);
-            if (data.address.city || data.address.town || data.address.village) {
-              setCity(data.address.city || data.address.town || data.address.village);
-            }
-            if (data.address.state) setState(data.address.state);
+            const rawCity = data.address.city || data.address.town || data.address.village || 'Bhilai';
+            setCity(rawCity.toLowerCase().includes('durg') ? 'Durg' : 'Bhilai');
+            setState('Chhattisgarh');
             if (data.address.suburb || data.address.neighbourhood) {
               setLocality(data.address.suburb || data.address.neighbourhood);
             }
@@ -106,9 +117,9 @@ export function AddAddressClient() {
       recipientName: fullName.trim(),
       phone: mobileNumber.trim(),
       street: locality ? `${streetAddress.trim()}, ${locality.trim()}` : streetAddress.trim(),
-      city: city.trim(),
-      state: state.trim() || 'Maharashtra',
-      pincode: pincode.trim(),
+      city: city.trim() || 'Bhilai',
+      state: 'Chhattisgarh',
+      pincode: pincode.trim() || (city === 'Durg' ? '491001' : '490006'),
       isDefault: isDefault,
     };
 
@@ -295,14 +306,24 @@ export function AddAddressClient() {
                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                       <Building2 className="w-4 h-4 text-surface-400" />
                     </div>
-                    <input 
-                      type="text" 
+                    <select 
                       value={city}
-                      onChange={(e) => setCity(e.target.value)}
-                      placeholder="Enter city or district" 
+                      onChange={(e) => {
+                        const newCity = e.target.value;
+                        setCity(newCity);
+                        if (!pincode || pincode === '490006' || pincode === '491001') {
+                          setPincode(newCity === 'Durg' ? '491001' : '490006');
+                        }
+                      }}
                       required
-                      className="bg-white w-full pl-10 pr-4 py-3 rounded-lg border border-surface-200 focus:outline-none focus:border-[#1668F6] text-[13px] text-surface-800 placeholder:text-surface-400" 
-                    />
+                      className="bg-white w-full pl-10 pr-10 py-3 rounded-lg border border-surface-200 focus:outline-none focus:border-[#1668F6] text-[13px] text-surface-800 appearance-none cursor-pointer font-medium" 
+                    >
+                      <option value="Bhilai">Bhilai</option>
+                      <option value="Durg">Durg</option>
+                    </select>
+                    <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none">
+                      <ChevronRight className="w-4 h-4 text-surface-400 rotate-90" />
+                    </div>
                   </div>
                 </div>
                 <div className="flex flex-col gap-1.5">
@@ -314,19 +335,9 @@ export function AddAddressClient() {
                     <select 
                       value={state}
                       onChange={(e) => setState(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 rounded-lg border border-surface-200 focus:outline-none focus:border-[#1668F6] text-[13px] text-surface-800 bg-white appearance-none cursor-pointer"
+                      className="w-full pl-10 pr-10 py-3 rounded-lg border border-surface-200 focus:outline-none focus:border-[#1668F6] text-[13px] text-surface-800 bg-slate-50/60 appearance-none cursor-pointer font-medium"
                     >
-                      <option value="Maharashtra">Maharashtra</option>
-                      <option value="Karnataka">Karnataka</option>
-                      <option value="Delhi">Delhi</option>
-                      <option value="Madhya Pradesh">Madhya Pradesh</option>
-                      <option value="Gujarat">Gujarat</option>
-                      <option value="Tamil Nadu">Tamil Nadu</option>
-                      <option value="Uttar Pradesh">Uttar Pradesh</option>
-                      <option value="West Bengal">West Bengal</option>
-                      <option value="Telangana">Telangana</option>
-                      <option value="Bihar">Bihar</option>
-                      <option value="Rajasthan">Rajasthan</option>
+                      <option value="Chhattisgarh">Chhattisgarh</option>
                     </select>
                     <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none">
                       <ChevronRight className="w-4 h-4 text-surface-400 rotate-90" />

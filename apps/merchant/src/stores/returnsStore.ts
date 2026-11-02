@@ -367,12 +367,12 @@ interface ReturnsState {
 }
 
 export const useReturnsStore = create<ReturnsState>((set, get) => ({
-  returns: [],
+  returns: mockReturnsList,
   activeTab: 'All Returns',
   searchQuery: '',
   statusFilter: 'All Statuses',
   typeFilter: 'All Types',
-  dateRange: 'Last 7 Days',
+  dateRange: 'All Time',
   selectedReturnIds: [],
   selectedReturn: null,
   activeView: 'overview',
@@ -395,7 +395,7 @@ export const useReturnsStore = create<ReturnsState>((set, get) => ({
       searchQuery: '',
       statusFilter: 'All Statuses',
       typeFilter: 'All Types',
-      dateRange: 'Last 7 Days',
+      dateRange: 'All Time',
       activeTab: 'All Returns',
     }),
 

@@ -32,6 +32,7 @@ export default function SearchBar({
       <button
         type="button"
         aria-label="Notifications"
+        suppressHydrationWarning
         className="relative text-white hover:opacity-85 transition-opacity shrink-0"
       >
         <Bell className="h-[25px] w-[25px]" strokeWidth={1.75} />

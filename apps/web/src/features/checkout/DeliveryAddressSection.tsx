@@ -10,7 +10,7 @@ import type { IAddress } from '@repo/shared-types';
 
 export function DeliveryAddressSection() {
   const { user, isAuthenticated } = useAuthStore();
-  const { address: locationAddress } = useLocationStore();
+  const { address: locationAddress, city: locationCity, pincode: locationPincode, isSet: isLocationSet } = useLocationStore();
   const { shippingAddress, setShippingAddress } = useCheckoutStore();
 
   const [savedAddresses, setSavedAddresses] = useState<IAddress[]>([]);
@@ -25,53 +25,61 @@ export function DeliveryAddressSection() {
   const [state, setState] = useState('');
   const [postalCode, setPostalCode] = useState('');
 
-  // Default initial address setup
-  useEffect(() => {
-    if (!shippingAddress) {
-      setShippingAddress({
-        fullName: user?.fullName || 'Customer',
-        phone: user?.phone || '9876543210',
-        street: locationAddress || '123 Market Street',
-        city: 'Local City',
-        state: 'State',
-        postalCode: '452001',
-        country: 'IN',
-      });
-    }
-  }, [user, locationAddress, shippingAddress, setShippingAddress]);
-
-  // Fetch saved user addresses if authenticated
+  // Fetch saved user addresses if authenticated, or use active GPS if available
   useEffect(() => {
     if (isAuthenticated) {
       userApi.getAddresses()
         .then((addrs) => {
-          if (Array.isArray(addrs)) {
+          if (Array.isArray(addrs) && addrs.length > 0) {
             setSavedAddresses(addrs);
             const defaultAddr = addrs.find((a) => a.isDefault) || addrs[0];
-            if (defaultAddr && (!shippingAddress || shippingAddress.fullName === 'Customer')) {
+            if (defaultAddr && (!shippingAddress?.street || shippingAddress.fullName === 'Customer')) {
               setShippingAddress({
                 fullName: defaultAddr.recipientName || user?.fullName || 'Customer',
                 phone: defaultAddr.phone || user?.phone || '9876543210',
                 street: `${defaultAddr.street}${defaultAddr.landmark ? `, Near ${defaultAddr.landmark}` : ''}`,
-                city: defaultAddr.city,
-                state: defaultAddr.state,
-                postalCode: defaultAddr.pincode,
+                city: defaultAddr.city || locationCity || 'Bhilai',
+                state: defaultAddr.state || 'Chhattisgarh',
+                postalCode: defaultAddr.pincode || locationPincode || '490006',
                 country: 'IN',
               });
+              return;
             }
+          }
+          // If no saved addresses exist on profile, but user has detected GPS location
+          if (isLocationSet && locationAddress && !shippingAddress?.street) {
+            setShippingAddress({
+              fullName: user?.fullName || '',
+              phone: user?.phone || '',
+              street: locationAddress,
+              city: locationCity || 'Bhilai',
+              state: 'Chhattisgarh',
+              postalCode: locationPincode || '490006',
+              country: 'IN',
+            });
           }
         })
         .catch(() => {});
+    } else if (isLocationSet && locationAddress && !shippingAddress?.street) {
+      setShippingAddress({
+        fullName: '',
+        phone: '',
+        street: locationAddress,
+        city: locationCity || 'Bhilai',
+        state: 'Chhattisgarh',
+        postalCode: locationPincode || '490006',
+        country: 'IN',
+      });
     }
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, isLocationSet, locationAddress, locationCity, locationPincode, shippingAddress?.street, setShippingAddress]);
 
   const handleOpenEdit = () => {
     setFullName(shippingAddress?.fullName || user?.fullName || '');
     setPhone(shippingAddress?.phone || user?.phone || '');
-    setStreet(shippingAddress?.street || locationAddress || '');
-    setCity(shippingAddress?.city || 'Local City');
-    setState(shippingAddress?.state || 'State');
-    setPostalCode(shippingAddress?.postalCode || '452001');
+    setStreet(shippingAddress?.street || (isLocationSet ? locationAddress : ''));
+    setCity(shippingAddress?.city && shippingAddress.city !== 'Local City' ? shippingAddress.city : (locationCity || 'Bhilai'));
+    setState(shippingAddress?.state && shippingAddress.state !== 'State' ? shippingAddress.state : 'Chhattisgarh');
+    setPostalCode(shippingAddress?.postalCode && shippingAddress.postalCode !== '452001' ? shippingAddress.postalCode : (locationPincode || '490006'));
     setIsEditing(true);
     setIsModalOpen(true);
   };
@@ -84,15 +92,33 @@ export function DeliveryAddressSection() {
       fullName: fullName.trim(),
       phone: phone.trim(),
       street: street.trim(),
-      city: (city.trim() || 'Local City'),
-      state: (state.trim() || 'State'),
-      postalCode: postalCode.trim(),
+      city: city.trim() && city.trim() !== 'Local City' ? city.trim() : (locationCity || 'Bhilai'),
+      state: state.trim() && state.trim() !== 'State' ? state.trim() : 'Chhattisgarh',
+      postalCode: postalCode.trim() && postalCode.trim() !== '452001' ? postalCode.trim() : (locationPincode || '490006'),
       country: 'IN',
     };
 
     setShippingAddress(newAddress);
     setIsModalOpen(false);
     setIsEditing(false);
+
+    // Auto-save to customer profile if authenticated
+    if (isAuthenticated) {
+      userApi.addAddress({
+        label: 'Home',
+        recipientName: newAddress.fullName,
+        phone: newAddress.phone,
+        street: newAddress.street,
+        city: newAddress.city,
+        state: newAddress.state,
+        pincode: newAddress.postalCode,
+        isDefault: savedAddresses.length === 0,
+      }).then((updatedList) => {
+        if (Array.isArray(updatedList) && updatedList.length > 0) {
+          setSavedAddresses(updatedList);
+        }
+      }).catch((err) => console.warn('Could not auto-save address to profile:', err));
+    }
   };
 
   const handleSelectSaved = (addr: IAddress) => {
@@ -108,42 +134,81 @@ export function DeliveryAddressSection() {
     setIsModalOpen(false);
   };
 
+  const hasStreet = Boolean(shippingAddress?.street?.trim());
+  const isGpsDetected = isLocationSet && locationAddress && shippingAddress?.street?.includes(locationAddress);
+  const isSavedProfileAddress = savedAddresses.some(
+    (a) => shippingAddress?.street && shippingAddress.street.includes(a.street)
+  );
+
   return (
     <div className="mb-6">
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-sm font-bold text-[#192168]">1. Delivery Address</h2>
-        <button 
-          type="button" 
-          onClick={handleOpenEdit}
-          className="text-[11px] font-bold text-[#1668F6] hover:underline flex items-center gap-1"
-        >
-          <Edit2 className="w-3 h-3" />
-          <span>Change</span>
-        </button>
+        {hasStreet ? (
+          <button 
+            type="button" 
+            onClick={handleOpenEdit}
+            className="text-[11px] font-bold text-[#1668F6] hover:underline flex items-center gap-1"
+          >
+            <Edit2 className="w-3 h-3" />
+            <span>Change</span>
+          </button>
+        ) : null}
       </div>
 
-      <div className="rounded-xl border border-gray-200 p-4 bg-white shadow-sm flex items-start gap-3">
-        <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-50 text-[#1668F6]">
-          <MapPin className="h-4 w-4" />
-        </div>
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-0.5">
-            <h3 className="text-sm font-bold text-gray-900">
-              {shippingAddress?.fullName || user?.fullName || 'Customer Delivery'}
-            </h3>
-            <span className="inline-block rounded border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[9px] font-bold text-emerald-700">
-              Primary
-            </span>
+      {!hasStreet ? (
+        <div className="rounded-xl border border-dashed border-amber-300 bg-amber-50/50 p-4 text-center">
+          <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center mx-auto mb-2">
+            <MapPin className="w-5 h-5" />
           </div>
-          <p className="text-[11px] font-medium text-gray-700 mb-1">
-            {shippingAddress?.phone || user?.phone || '+91 98765 43210'}
+          <h3 className="text-xs font-bold text-gray-900 mb-1">No Delivery Address Set</h3>
+          <p className="text-[11px] text-gray-600 mb-3 max-w-sm mx-auto">
+            Please add your delivery destination to ensure accurate hyperlocal delivery.
           </p>
-          <p className="text-[12px] text-gray-600 leading-snug pr-4">
-            {shippingAddress?.street || locationAddress || '123 Commercial Hub, Main Road'}<br />
-            {shippingAddress?.city || 'Local City'}, {shippingAddress?.state || 'State'} - {shippingAddress?.postalCode || '452001'}
-          </p>
+          <button
+            type="button"
+            data-testid="add-delivery-address-btn"
+            onClick={handleOpenEdit}
+            className="px-4 py-2 bg-[#1668F6] text-white text-xs font-bold rounded-xl hover:bg-blue-700 transition shadow-sm inline-flex items-center gap-1.5"
+          >
+            <Edit2 className="w-3.5 h-3.5" />
+            <span>Add Delivery Address</span>
+          </button>
         </div>
-      </div>
+      ) : (
+        <div className="rounded-xl border border-gray-200 p-4 bg-white shadow-sm flex items-start gap-3">
+          <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-50 text-[#1668F6]">
+            <MapPin className="h-4 w-4" />
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-0.5">
+              <h3 className="text-sm font-bold text-gray-900">
+                {shippingAddress?.fullName || user?.fullName || 'Customer Delivery'}
+              </h3>
+              {isSavedProfileAddress ? (
+                <span className="inline-block rounded border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[9px] font-bold text-emerald-700">
+                  Saved Address
+                </span>
+              ) : isGpsDetected ? (
+                <span className="inline-block rounded border border-blue-200 bg-blue-50 px-1.5 py-0.5 text-[9px] font-bold text-blue-700">
+                  📍 GPS Detected
+                </span>
+              ) : (
+                <span className="inline-block rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 text-[9px] font-bold text-gray-700">
+                  Custom
+                </span>
+              )}
+            </div>
+            <p className="text-[11px] font-medium text-gray-700 mb-1">
+              {shippingAddress?.phone || user?.phone || '+91 98765 43210'}
+            </p>
+            <p className="text-[12px] text-gray-600 leading-snug pr-4">
+              {shippingAddress?.street}<br />
+              {(shippingAddress?.city && shippingAddress.city !== 'Local City') ? shippingAddress.city : (locationCity || 'Bhilai')}, {(shippingAddress?.state && shippingAddress.state !== 'State') ? shippingAddress.state : 'Chhattisgarh'} - {(shippingAddress?.postalCode && shippingAddress.postalCode !== '452001') ? shippingAddress.postalCode : (locationPincode || '490006')}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Address Picker / Edit Modal */}
       {isModalOpen && (
@@ -233,25 +298,30 @@ export function DeliveryAddressSection() {
               <div className="grid grid-cols-3 gap-2">
                 <div>
                   <label className="block text-[10px] font-bold text-gray-700 mb-1">City</label>
-                  <input
-                    type="text"
-                    required
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    placeholder="City"
-                    className="w-full px-2 py-2 text-xs rounded-xl border border-gray-200 focus:outline-none focus:border-[#1668F6]"
-                  />
+                  <select
+                    value={city || 'Bhilai'}
+                    onChange={(e) => {
+                      const newCity = e.target.value;
+                      setCity(newCity);
+                      if (!postalCode || postalCode === '490006' || postalCode === '491001') {
+                        setPostalCode(newCity === 'Durg' ? '491001' : '490006');
+                      }
+                    }}
+                    className="w-full px-2 py-2 text-xs rounded-xl border border-gray-200 focus:outline-none focus:border-[#1668F6] bg-white cursor-pointer font-medium"
+                  >
+                    <option value="Bhilai">Bhilai</option>
+                    <option value="Durg">Durg</option>
+                  </select>
                 </div>
                 <div>
                   <label className="block text-[10px] font-bold text-gray-700 mb-1">State</label>
-                  <input
-                    type="text"
-                    required
-                    value={state}
+                  <select
+                    value={state || 'Chhattisgarh'}
                     onChange={(e) => setState(e.target.value)}
-                    placeholder="State"
-                    className="w-full px-2 py-2 text-xs rounded-xl border border-gray-200 focus:outline-none focus:border-[#1668F6]"
-                  />
+                    className="w-full px-2 py-2 text-xs rounded-xl border border-gray-200 focus:outline-none focus:border-[#1668F6] bg-slate-50 cursor-pointer font-medium"
+                  >
+                    <option value="Chhattisgarh">Chhattisgarh</option>
+                  </select>
                 </div>
                 <div>
                   <label className="block text-[10px] font-bold text-gray-700 mb-1">Pincode</label>
@@ -261,7 +331,7 @@ export function DeliveryAddressSection() {
                     pattern="[0-9]{6}"
                     value={postalCode}
                     onChange={(e) => setPostalCode(e.target.value)}
-                    placeholder="6 Digits"
+                    placeholder="490006"
                     className="w-full px-2 py-2 text-xs rounded-xl border border-gray-200 focus:outline-none focus:border-[#1668F6]"
                   />
                 </div>

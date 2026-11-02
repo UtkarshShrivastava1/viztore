@@ -114,26 +114,26 @@ export const Step2Signature: React.FC<Step2SignatureProps> = ({ onContinue, onBa
     setSignatureAdded(false);
   };
 
-  const handleAddSignature = () => {
+  const handleAddSignature = (): boolean => {
     if (activeTab === 'draw') {
       const canvas = canvasRef.current;
       if (!canvas || !hasDrawn) {
         setError('Please draw your signature first or switch to Create mode');
-        return;
+        return false;
       }
       const dataUrl = canvas.toDataURL('image/png');
       updateStep(3, {
         signatureType: 'draw',
         signatureData: dataUrl,
-        authorizedSignatoryName: typedName || 'Authorized Signatory',
+        authorizedSignatoryName: typedName || draft.step1?.fullName || 'Authorized Signatory',
         signatoryDesignation: 'proprietor' as any,
         consentDate: new Date().toISOString(),
       });
     } else {
-      const nameToUse = typedName?.trim();
+      const nameToUse = typedName?.trim() || draft.step1?.fullName?.trim();
       if (!nameToUse) {
-        setError('Please enter your name to create a signature');
-        return;
+        setError('Please enter your name to create an electronic signature');
+        return false;
       }
       updateStep(3, {
         signatureType: 'generate',
@@ -146,34 +146,47 @@ export const Step2Signature: React.FC<Step2SignatureProps> = ({ onContinue, onBa
 
     setSignatureAdded(true);
     setError(null);
+    return true;
   };
 
   const handleFinalContinue = () => {
     if (!signatureAdded) {
-      handleAddSignature();
+      const ok = handleAddSignature();
+      if (!ok) return;
     }
     onContinue();
   };
 
   return (
-    <div className="bg-white border border-slate-200/80 rounded-2xl p-6 sm:p-8 lg:p-9 shadow-xs">
+    <div className="bg-white border border-slate-200/90 rounded-3xl p-6 sm:p-8 lg:p-9 shadow-xl shadow-slate-200/40 relative">
       {/* Header with Step 2 Badge */}
-      <div className="flex items-center gap-2.5 mb-1">
-        <div className="w-7 h-7 rounded-full bg-[#0038ed] text-white font-bold text-xs flex items-center justify-center shadow-2xs shrink-0">
-          2
+      <div className="flex items-center justify-between pb-5 mb-6 border-b border-slate-100">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#0038ed] to-blue-500 text-white font-extrabold text-sm flex items-center justify-center shadow-md shadow-blue-600/25 shrink-0">
+            2
+          </div>
+          <div>
+            <h2 className="text-xs sm:text-sm font-black tracking-wider text-[#0038ed] uppercase">
+              Electronic Signature
+            </h2>
+            <p className="text-xs text-slate-400 mt-0.5">Legally compliant merchant consent</p>
+          </div>
         </div>
-        <h2 className="text-xs sm:text-[13px] font-bold tracking-wider text-[#0038ed] uppercase">
-          ID &amp; SIGNATURE VERIFICATION
-        </h2>
+
+        <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-500 bg-slate-50 px-2.5 py-1 rounded-full border border-slate-200/60">
+          <Check className="w-3.5 h-3.5 text-emerald-600" />
+          <span>IT Act 2000 Compliant</span>
+        </div>
       </div>
 
       <p className="text-xs text-slate-500 mb-5">
-        Please provide your e-signature to verify your identity.
+        Draw your signature or generate an official electronic signature using your name.
       </p>
 
       {error && (
-        <div className="mb-5 p-3 bg-rose-50 border border-rose-200 rounded-lg text-rose-600 text-xs font-medium">
-          {error}
+        <div className="mb-5 p-3.5 bg-rose-50 border border-rose-200/80 rounded-xl text-rose-600 text-xs font-semibold flex items-center gap-2 animate-in fade-in">
+          <div className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
+          <span>{error}</span>
         </div>
       )}
 

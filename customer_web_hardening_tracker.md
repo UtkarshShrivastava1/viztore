@@ -11,11 +11,11 @@
 
 | Total Reported | In Progress | Resolved & Verified | Pending Verification |
 |:---:|:---:|:---:|:---:|
-| **5** | **0** | **5** | **0** |
+| **6** | **0** | **6** | **0** |
 
 ```mermaid
 pie title Customer Web Defect Resolution
-    "Resolved & Verified" : 5
+    "Resolved & Verified" : 6
     "In Progress" : 0
     "Reported / Pending" : 0
 ```
@@ -25,12 +25,13 @@ pie title Customer Web Defect Resolution
 ## 📋 Itemized Defect & Hardening Log
 
 | Fix ID | Route / Screen | Component / Element | Reported Issue & Severity | Root Cause Diagnosis | Patch Deliverables | Status |
-|:---:|---|---|---|---|---|:---:|
+|---|---|---|---|---|---|:---:|
 | **CW-FIX-01** | Global, Auth Modal, Hero Banner | `AuthModal`, `HeroBannerCarousel`, `Logo`, `orderExpiryWorker` | **High**: User registration blocked (`NetworkError` / CORS null status), 404 on banner & favicon, demo button in auth modal | Backend crashed on boot via circular ESM import in `orderExpiryWorker.ts`; missing public assets; demo button in modal | Lazy worker getter, backend alive on `:5000`, favicon added, banner CDN assets, demo button purged, Next.js build clean | 🟢 **RESOLVED** |
 | **CW-FIX-02** | `/account/logout`, `/account/logged-out`, `/account`, Header | `LogoutClient`, `LoggedOutPage`, `AccountClient`, `DesktopHeader`, `auth.store` | **High**: Logout simulated with `setTimeout`; user remained authenticated as "John S" across header and profile after logout | `LogoutClient` had fake `setTimeout` and never called `logout()` or backend `/auth/logout`; persisted localStorage remained intact | Wired `authApi.logout()`, purged `customer-auth-storage`, added unauth gate to `/account`, fixed header name condition | 🟢 **RESOLVED** |
 | **CW-FIX-03** | `/account/logged-out`, Auth Modal, `/account/edit-profile` | `LoggedOutPage`, `AuthModal`, `EditProfilePage`, `LogoutClient` | **High**: Successful sign-in kept user stuck on `/account/logged-out` screen instead of homepage; demo Google OAuth fake user; stale webpack cache on dev restart | `AuthModal` did not navigate to `/` on auth success from logout screens; `LoggedOutPage` had mount-time `logout()` that erased auth on reload; fake Google OAuth mock | Added `handleSuccessfulAuth` with automatic homepage redirect, decoupled `LoggedOutPage` to auto-redirect authenticated users to `/`, wired live explore card routes, removed fake Google OAuth mock data, guarded `EditProfilePage`, purged `.next` cache | 🟢 **RESOLVED** |
 | **CW-FIX-04** | Global Desktop Header, Mobile Location Bar, Location Modal | `DesktopHeader`, `LocationBar`, `LocationModal`, `location.store`, `geocoding.ts` | **Medium-High**: Location engine lacked Blinkit/Zomato level assurance; header only rendered truncated city name; modal had no autocomplete or full address display | `DesktopHeader` truncated with `split(',')[0]`; `KNOWN_HUBS` 2km radius intercepted reverse geocode with city names; modal had no live search debounce | Built live OpenStreetMap reverse geocoding & 280ms autocomplete engine; upgraded `location.store` with two-tier `locality` + `formattedAddress`; redesigned `DesktopHeader`, `LocationBar`, and `LocationModal` with rich address cards | 🟢 **RESOLVED** |
 | **CW-FIX-05** | Global Location Engine, Location Modal, Next.js API Routes | `google-places.ts`, `LocationModal.tsx`, `geocoding.ts`, `/api/location/*` | **High**: Live GPS detection and typing locality names did not autocomplete in browser; OpenStreetMap blocked by browser CORS and lacked Indian locality coverage | Browser CORS policy blocks client-side Nominatim queries with unsafe `User-Agent` headers; OSM lacks Indian colony/society indexing | Integrated Google Maps Platform (Places API New Autocomplete + searchNearby + Place Details); built server-side proxy routes in Next.js (`/api/location/*`); added session token & solution tracking (`gmp_git_agentskills_v1`); verified live resolution | 🟢 **RESOLVED** |
+| **CW-FIX-06** | `/stores/[slug]`, Storefront & Catalog, Product Cards | `ProductCard.tsx`, `StoreStorefrontClient.tsx`, `TrendingDeals.tsx` | **High / Enhancement**: Products lacked inline quantity display (+1, +2) and +/- steppers; store page lacked live catalog search, sort selectors, and sticky cart action bar | Product cards only offered static 1-shot Add button; store pages lacked in-store search, multi-metric sorting, and floating quick-checkout cart bar | Built reactive quantity steppers (`[-] [qty] [+]`) connected directly to `useCartStore`, in-store real-time product search, multi-criteria sort selector, floating bottom cart drawer trigger, and social proof badges | 🟢 **RESOLVED** |
 
 ---
 

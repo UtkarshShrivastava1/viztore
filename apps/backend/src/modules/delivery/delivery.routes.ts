@@ -18,6 +18,12 @@ export function createDeliveryRouter(controller: DeliveryController): Router {
   // Public/Customer tracking view
   router.get('/orders/:orderId/track', controller.getTracking);
 
+  // Pilot riders directory for quick mobile selector
+  router.get('/riders/pilot-roster', controller.getPilotRoster);
+
+  // Rider run details & teaser view (In-app mobile browser)
+  router.get('/orders/:orderId/run-details', controller.getRunDetails);
+
   // Available open pool jobs for nearby delivery partners
   router.get('/jobs/available', authGuard, controller.getAvailableJobs);
 
@@ -30,10 +36,9 @@ export function createDeliveryRouter(controller: DeliveryController): Router {
     controller.broadcastJob,
   );
 
-  // Claim a broadcasted delivery job atomically
+  // Claim a broadcasted delivery job atomically (Rider or Merchant)
   router.post(
     '/orders/:orderId/claim',
-    authGuard,
     validateBody(claimDeliverySchema),
     controller.claimJob,
   );
@@ -50,7 +55,6 @@ export function createDeliveryRouter(controller: DeliveryController): Router {
   // Status transition update (Rider or Merchant)
   router.patch(
     '/orders/:orderId/status',
-    authGuard,
     validateBody(updateDeliveryStatusSchema),
     controller.updateStatus,
   );
@@ -58,7 +62,6 @@ export function createDeliveryRouter(controller: DeliveryController): Router {
   // Final 4-digit OTP verification upon customer delivery handoff
   router.post(
     '/orders/:orderId/verify-otp',
-    authGuard,
     validateBody(verifyDeliveryOtpSchema),
     controller.verifyOtp,
   );

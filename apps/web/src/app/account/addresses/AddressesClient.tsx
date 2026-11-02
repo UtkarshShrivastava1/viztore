@@ -14,9 +14,11 @@ import {
   Circle, 
   ShieldCheck, 
   ArrowLeft,
-  Loader2
+  Loader2,
+  Navigation
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
+import { useLocationStore } from '@/stores/location.store';
 import { AccountSidebar } from '@/components/account/AccountSidebar';
 import { userApi } from '@/lib/api/user.js';
 import type { IAddress } from '@repo/shared-types';
@@ -35,6 +37,7 @@ interface AddressData {
 export function AddressesClient() {
   const router = useRouter();
   const { user, isAuthenticated } = useAuthStore();
+  const { address: locationAddress, city: locationCity, pincode: locationPincode, isSet: isLocationSet } = useLocationStore();
   const [addresses, setAddresses] = useState<AddressData[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
@@ -113,6 +116,32 @@ export function AddressesClient() {
     }
   };
 
+  const handleSaveGpsLocation = async () => {
+    if (!locationAddress) return;
+    try {
+      setActionLoadingId('gps-save');
+      const updated = await userApi.addAddress({
+        label: 'Home',
+        recipientName: user?.fullName || 'Customer',
+        phone: user?.phone || '9876543210',
+        street: locationAddress,
+        city: locationCity || 'Bhilai',
+        state: 'Chhattisgarh',
+        pincode: locationPincode || '490006',
+        isDefault: addresses.length === 0,
+      });
+      if (Array.isArray(updated) && updated.length > 0) {
+        setAddresses(updated.map(mapBackendAddress));
+      } else {
+        await loadAddresses();
+      }
+    } catch (err) {
+      console.error('Failed to save GPS location as delivery address:', err);
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
   const getIconConfig = (type: string) => {
     switch (type) {
       case 'home':
@@ -164,21 +193,59 @@ export function AddressesClient() {
               <p className="text-sm font-medium">Loading your saved addresses...</p>
             </div>
           ) : addresses.length === 0 ? (
-            /* Empty State */
-            <div className="border border-dashed border-[#E5E7EB] bg-white rounded-[14px] p-8 lg:p-12 text-center flex flex-col items-center justify-center my-4">
-              <div className="w-16 h-16 rounded-full bg-[#E8F0FE] flex items-center justify-center mb-4">
-                <MapPin className="w-8 h-8 text-[#1668F6]" />
+            /* Empty State with Smart GPS Auto-Detection */
+            <div className="flex flex-col gap-4 my-2">
+              {isLocationSet && locationAddress && (
+                <div className="border border-blue-200 bg-gradient-to-r from-blue-50/90 via-white to-blue-50/40 rounded-[14px] p-4 lg:p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                      <Navigation className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xs font-bold text-gray-900">Current Device Location</span>
+                        <span className="text-[10px] font-extrabold bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                          GPS Detected
+                        </span>
+                      </div>
+                      <p className="text-[12px] text-gray-600 leading-snug max-w-xl">
+                        {locationAddress}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={actionLoadingId === 'gps-save'}
+                    onClick={handleSaveGpsLocation}
+                    className="px-4 py-2.5 bg-[#1668F6] hover:bg-blue-700 text-white text-[12px] font-bold rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 shrink-0 disabled:opacity-50"
+                  >
+                    {actionLoadingId === 'gps-save' ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Plus className="w-4 h-4" />
+                        <span>Save as Delivery Address</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+
+              <div className="border border-dashed border-[#E5E7EB] bg-white rounded-[14px] p-8 lg:p-12 text-center flex flex-col items-center justify-center">
+                <div className="w-16 h-16 rounded-full bg-[#E8F0FE] flex items-center justify-center mb-4">
+                  <MapPin className="w-8 h-8 text-[#1668F6]" />
+                </div>
+                <h3 className="text-[16px] lg:text-[18px] font-bold text-[#192168] mb-1">No Addresses Saved Yet</h3>
+                <p className="text-[13px] text-surface-500 max-w-md mb-6 leading-relaxed">
+                  Add your home or office address to enable instant 1-click checkout and hyperlocal delivery tracking.
+                </p>
+                <Link 
+                  href="/account/addresses/add" 
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-[#1668F6] text-white text-[13px] font-bold rounded-xl shadow-sm hover:bg-blue-700 transition-colors"
+                >
+                  <Plus className="w-4 h-4" /> Add Your First Address
+                </Link>
               </div>
-              <h3 className="text-[16px] lg:text-[18px] font-bold text-[#192168] mb-1">No Addresses Saved Yet</h3>
-              <p className="text-[13px] text-surface-500 max-w-md mb-6 leading-relaxed">
-                Add your home or office address to enable instant 1-click checkout and hyperlocal delivery tracking.
-              </p>
-              <Link 
-                href="/account/addresses/add" 
-                className="inline-flex items-center gap-2 px-6 py-3 bg-[#1668F6] text-white text-[13px] font-bold rounded-xl shadow-sm hover:bg-blue-700 transition-colors"
-              >
-                <Plus className="w-4 h-4" /> Add Your First Address
-              </Link>
             </div>
           ) : (
             /* Addresses List */

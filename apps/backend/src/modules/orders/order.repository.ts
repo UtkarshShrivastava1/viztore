@@ -191,12 +191,19 @@ export function createOrderRepository(
     };
   }
 
+  function buildOrderQuery(id: string) {
+    if (isValidObjectId(id)) return { _id: id };
+    const clean = id.replace(/^#+/, '');
+    return {
+      $or: [{ orderNumber: clean }, { orderNumber: `#${clean}` }, { orderNumber: id }],
+    };
+  }
+
   async function updateStatus(
     id: string,
     status: OrderStatus,
     options?: { session?: ClientSession },
   ): Promise<OrderResponse | null> {
-    if (!isValidObjectId(id)) return null;
     const update: any = {
       $set: {
         status,
@@ -210,10 +217,20 @@ export function createOrderRepository(
         },
       },
     };
-    const order = await model.findByIdAndUpdate(id, update, {
-      new: true,
-      session: options?.session,
-    });
+
+    let order;
+    if (isValidObjectId(id) && typeof model.findByIdAndUpdate === 'function') {
+      order = await model.findByIdAndUpdate(id, update, {
+        new: true,
+        session: options?.session,
+      });
+    } else {
+      const query = buildOrderQuery(id);
+      order = await model.findOneAndUpdate(query, update, {
+        new: true,
+        session: options?.session,
+      });
+    }
     return order ? toResponse(order) : null;
   }
 
@@ -225,9 +242,14 @@ export function createOrderRepository(
     auditEntry: IOrderStatusHistoryEntry,
     session?: ClientSession,
   ): Promise<OrderResponse | null> {
-    if (!isValidObjectId(id)) return null;
+    const baseQuery = buildOrderQuery(id);
+    const query = {
+      ...baseQuery,
+      version: expectedVersion,
+      status: expectedStatus,
+    };
     const updated = await model.findOneAndUpdate(
-      { _id: id, version: expectedVersion, status: expectedStatus },
+      query,
       {
         $set: {
           status: newStatus,

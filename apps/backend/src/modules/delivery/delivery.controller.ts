@@ -21,6 +21,8 @@ export interface DeliveryController {
   claimJob: RequestHandler;
   updateStatus: RequestHandler;
   verifyOtp: RequestHandler;
+  getPilotRoster: RequestHandler;
+  getRunDetails: RequestHandler;
 }
 
 export function createDeliveryController(service: IDeliveryService): DeliveryController {
@@ -101,6 +103,23 @@ export function createDeliveryController(service: IDeliveryService): DeliveryCon
     return ApiResponse.success(res, delivery, 'Delivery completed and verified successfully');
   });
 
+  const getPilotRoster: RequestHandler = catchAsync(async (_req: Request, res: Response) => {
+    const roster = service.getPilotRoster();
+    return ApiResponse.success(res, roster, 'Pilot rider roster retrieved successfully');
+  });
+
+  const getRunDetails: RequestHandler = catchAsync(async (req: Request, res: Response) => {
+    const orderId = req.params.orderId as string;
+    const riderId = req.query.riderId as string | undefined;
+
+    const details = await service.getRunDetails(orderId, riderId);
+    if (!details) {
+      throw AppError.notFound('Run details not found for this order', 'RUN_NOT_FOUND');
+    }
+
+    return ApiResponse.success(res, details, 'Rider run details retrieved successfully');
+  });
+
   return {
     getTracking,
     assignRider,
@@ -109,6 +128,8 @@ export function createDeliveryController(service: IDeliveryService): DeliveryCon
     claimJob,
     updateStatus,
     verifyOtp,
+    getPilotRoster,
+    getRunDetails,
   };
 }
 

@@ -309,6 +309,47 @@ describe('DeliveryService Unit Tests', () => {
         }),
       ).rejects.toThrow(/claimed/i);
     });
+
+    it('should return the 5-rider pilot roster', () => {
+      const service = createDeliveryService(mockRepo, mockBus, mockOrderFacade);
+      const roster = service.getPilotRoster();
+      expect(roster).toHaveLength(5);
+      expect(roster[0].name).toBe('Raju Sharma');
+      expect(roster[1].name).toBe('Vikram Patel');
+    });
+
+    it('should return run details with teaser for unassigned order', async () => {
+      const service = createDeliveryService(mockRepo, mockBus, mockOrderFacade);
+      const details = await service.getRunDetails('order-123');
+      expect(details).not.toBeNull();
+      expect(details?.orderId).toBe('order-123');
+      expect(details?.isClaimed).toBe(false);
+      expect(details?.isClaimedByCaller).toBe(false);
+      expect(details?.pickupDetails).toBeUndefined(); // Redacted before claim
+    });
+
+    it('should return unlocked run details when caller is the assigned rider', async () => {
+      mockRepo.findByOrderId = vi.fn().mockResolvedValue({
+        ...sampleDelivery,
+        status: DeliveryStatus.ASSIGNED,
+        rider: {
+          id: 'RDR-001',
+          name: 'Raju Sharma',
+          phone: '9876543210',
+          vehicleType: VehicleType.MOTORCYCLE,
+        },
+      });
+
+      const service = createDeliveryService(mockRepo, mockBus, mockOrderFacade);
+      const details = await service.getRunDetails('order-123', 'RDR-001');
+
+      expect(details).not.toBeNull();
+      expect(details?.isClaimed).toBe(true);
+      expect(details?.isClaimedByCaller).toBe(true);
+      expect(details?.pickupDetails).toBeDefined();
+      expect(details?.pickupDetails?.navigationUrl).toContain('google.com/maps');
+      expect(details?.dropoffDetails).toBeDefined();
+    });
   });
 });
 

@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import {
   OnboardingStep1Dto,
   OnboardingStep2Dto,
@@ -48,60 +49,80 @@ const defaultStep5: OnboardingStep5Dto = {
   },
 };
 
-export const useOnboardingStore = create<OnboardingStore>((set) => ({
-  currentStep: 1,
-  draft: {
-    step5: defaultStep5,
-    step4: {
-      location: { type: 'Point', coordinates: [77.5946, 12.9716] },
-      deliveryRadiusKm: 4,
-    },
-  },
-  isSubmitting: false,
-  isUnderReview: false,
-  storeId: undefined,
-
-  setStep: (step) => set({ currentStep: step }),
-  nextStep: () => set((state) => ({ currentStep: Math.min(6, state.currentStep + 1) })),
-  prevStep: () => set((state) => ({ currentStep: Math.max(1, state.currentStep - 1) })),
-
-  updateDraft: (stepKey, data) =>
-    set((state) => ({
+export const useOnboardingStore = create<OnboardingStore>()(
+  persist(
+    (set) => ({
+      currentStep: 1,
       draft: {
-        ...state.draft,
-        [stepKey]: {
-          ...state.draft[stepKey],
-          ...data,
+        step5: defaultStep5,
+        step4: {
+          location: { type: 'Point', coordinates: [81.3780, 21.1920] },
+          deliveryRadiusKm: 4,
         },
       },
-    })),
-
-  updateStep: (stepNumber, data) =>
-    set((state) => {
-      const key = `step${stepNumber}` as keyof OnboardingDraft;
-      return {
-        draft: {
-          ...state.draft,
-          [key]: {
-            ...state.draft[key],
-            ...data,
-          },
-        },
-      };
-    }),
-
-  setUnderReview: (underReview, storeId) =>
-    set({ isUnderReview: underReview, storeId }),
-
-  setIsUnderReview: (underReview, storeId) =>
-    set({ isUnderReview: underReview, storeId }),
-
-  resetOnboarding: () =>
-    set({
-      currentStep: 1,
-      draft: { step5: defaultStep5 },
       isSubmitting: false,
       isUnderReview: false,
       storeId: undefined,
+
+      setStep: (step) => set({ currentStep: step }),
+      nextStep: () => set((state) => ({ currentStep: Math.min(6, state.currentStep + 1) })),
+      prevStep: () => set((state) => ({ currentStep: Math.max(1, state.currentStep - 1) })),
+
+      updateDraft: (stepKey, data) =>
+        set((state) => ({
+          draft: {
+            ...state.draft,
+            [stepKey]: {
+              ...state.draft[stepKey],
+              ...data,
+            },
+          },
+        })),
+
+      updateStep: (stepNumber, data) =>
+        set((state) => {
+          const key = `step${stepNumber}` as keyof OnboardingDraft;
+          return {
+            draft: {
+              ...state.draft,
+              [key]: {
+                ...state.draft[key],
+                ...data,
+              },
+            },
+          };
+        }),
+
+      setUnderReview: (underReview, storeId) =>
+        set({ isUnderReview: underReview, storeId }),
+
+      setIsUnderReview: (underReview, storeId) =>
+        set({ isUnderReview: underReview, storeId }),
+
+      resetOnboarding: () =>
+        set({
+          currentStep: 1,
+          draft: {
+            step5: defaultStep5,
+            step4: {
+              location: { type: 'Point', coordinates: [81.3780, 21.1920] },
+              deliveryRadiusKm: 4,
+            },
+          },
+          isSubmitting: false,
+          isUnderReview: false,
+          storeId: undefined,
+        }),
     }),
-}));
+    {
+      name: 'merchant_onboarding_draft',
+      partialize: (state) => ({
+        currentStep: state.currentStep,
+        draft: state.draft,
+        isUnderReview: state.isUnderReview,
+        storeId: state.storeId,
+      }),
+    }
+  )
+);
+

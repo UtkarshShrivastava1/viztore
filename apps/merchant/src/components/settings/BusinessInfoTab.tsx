@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   FileText,
   CheckCircle2,
@@ -10,11 +10,33 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { useSettingsStore } from '../../stores/settingsStore.js';
+import { useAuthStore } from '../../stores/authStore.js';
 import { branding } from '@repo/shared-types';
 
 export const BusinessInfoTab: React.FC = () => {
   const { businessInfo, updateBusinessInfo, setActiveSubTab } = useSettingsStore();
-  const [formData, setFormData] = useState({ ...businessInfo });
+  const { currentStore } = useAuthStore();
+  
+  const [formData, setFormData] = useState(() => {
+    const base = { ...businessInfo };
+    if (currentStore?.name && (base.businessName === 'Fashion Hub' || !base.businessName)) {
+      base.businessName = currentStore.name;
+      base.legalBusinessName = `${currentStore.name} Retail`;
+    }
+    return base;
+  });
+
+  useEffect(() => {
+    if (currentStore?.name && businessInfo.businessName === 'Fashion Hub') {
+      const updated = {
+        businessName: currentStore.name,
+        legalBusinessName: `${currentStore.name} Retail`,
+      };
+      updateBusinessInfo(updated);
+      setFormData((prev) => ({ ...prev, ...updated }));
+    }
+  }, [currentStore, businessInfo.businessName, updateBusinessInfo]);
+
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   const handleSave = () => {

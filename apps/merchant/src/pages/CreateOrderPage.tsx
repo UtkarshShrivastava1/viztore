@@ -133,9 +133,9 @@ export const CreateOrderPage: React.FC<CreateOrderPageProps> = ({ onBack }) => {
       deliveryAddress: {
         street: deliveryAddress,
         locality: 'Local Delivery Area',
-        city: 'Local City',
-        state: 'Local State',
-        pincode: '110024',
+        city: 'Bhilai',
+        state: 'Chhattisgarh',
+        pincode: '490006',
         fullText: `${customerName}\n${deliveryAddress}`,
       },
       items: items.map((i) => ({

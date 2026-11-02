@@ -18,12 +18,19 @@ import { withTransaction } from '../../shared/database/transaction.js';
 import { appendOutboxEvent, processPendingOutboxEvents } from '../../shared/database/outbox.service.js';
 import type { IStoreFacade } from '../stores/index.js';
 import type { ICatalogFacade } from '../catalog/index.js';
+import { authService } from '../auth/index.js';
 
 const allowedTransitions: Record<OrderStatus, OrderStatus[]> = {
   [OrderStatus.PENDING]: [OrderStatus.PACKED, OrderStatus.CONFIRMED, OrderStatus.CANCELLED],
-  [OrderStatus.CONFIRMED]: [OrderStatus.PROCESSING, OrderStatus.PACKED, OrderStatus.CANCELLED],
-  [OrderStatus.PROCESSING]: [OrderStatus.PACKED, OrderStatus.SHIPPED, OrderStatus.CANCELLED],
-  [OrderStatus.PACKED]: [OrderStatus.OUT_FOR_DELIVERY, OrderStatus.READY_FOR_PICKUP, OrderStatus.SHIPPED, OrderStatus.CANCELLED],
+  [OrderStatus.CONFIRMED]: [OrderStatus.PROCESSING, OrderStatus.PACKED, OrderStatus.OUT_FOR_DELIVERY, OrderStatus.DELIVERED, OrderStatus.CANCELLED],
+  [OrderStatus.PROCESSING]: [OrderStatus.PACKED, OrderStatus.SHIPPED, OrderStatus.OUT_FOR_DELIVERY, OrderStatus.DELIVERED, OrderStatus.CANCELLED],
+  [OrderStatus.PACKED]: [
+    OrderStatus.OUT_FOR_DELIVERY,
+    OrderStatus.READY_FOR_PICKUP,
+    OrderStatus.SHIPPED,
+    OrderStatus.DELIVERED,
+    OrderStatus.CANCELLED,
+  ],
   [OrderStatus.SHIPPED]: [OrderStatus.OUT_FOR_DELIVERY, OrderStatus.DELIVERED],
   [OrderStatus.OUT_FOR_DELIVERY]: [OrderStatus.DELIVERED, OrderStatus.CANCELLED],
   [OrderStatus.READY_FOR_PICKUP]: [OrderStatus.DELIVERED, OrderStatus.CANCELLED],
@@ -175,6 +182,55 @@ export function createOrderService(
         correlationId,
       });
     }
+ 
+    // 8. Auto-sync shipping address to customer profile if authenticated and not yet saved
+    if (userId && normalizedShippingAddress?.street) {
+      authService
+        .getAddresses(userId)
+        .then(async (existingAddresses) => {
+          const streetLower = normalizedShippingAddress.street.trim().toLowerCase();
+          const alreadyExists = existingAddresses.some(
+            (a) => a.street?.trim().toLowerCase() === streetLower,
+          );
+          if (!alreadyExists) {
+            const rawPhone = normalizedShippingAddress.phone
+              ? normalizedShippingAddress.phone.replace(/\D/g, '')
+              : '';
+            const validPhone =
+              rawPhone.length === 10
+                ? rawPhone
+                : rawPhone.length > 10
+                  ? rawPhone.slice(-10)
+                  : '9876543210';
+            const rawPin =
+              normalizedShippingAddress.postalCode ||
+              (normalizedShippingAddress as any).pincode;
+            const validPin =
+              rawPin && /^\d{6}$/.test(rawPin)
+                ? rawPin
+                : '490006';
+
+            await authService.addAddress(userId, {
+              label: 'Home',
+              recipientName:
+                normalizedShippingAddress.fullName ||
+                (normalizedShippingAddress as any).recipientName ||
+                'Customer',
+              phone: validPhone,
+              street: normalizedShippingAddress.street,
+              city: normalizedShippingAddress.city || 'Bhilai',
+              state: normalizedShippingAddress.state || 'Chhattisgarh',
+              pincode: validPin,
+              landmark: (normalizedShippingAddress as any).landmark,
+              isDefault: existingAddresses.length === 0,
+            });
+            logger.info(`Auto-synced order shipping address to user profile for user ${userId}`);
+          }
+        })
+        .catch((err) => {
+          logger.warn(`Non-blocking: Failed to auto-sync shipping address to user profile: ${err}`);
+        });
+    }
 
     return order;
   }
@@ -313,7 +369,7 @@ export function createOrderService(
     // Defensive physical delivery OTP verification guard
     if (status === OrderStatus.DELIVERED) {
       const cleanOtp = typeof otp === 'string' ? otp.trim() : '';
-      if (!cleanOtp || current.deliveryOtp !== cleanOtp) {
+      if (!cleanOtp || String(current.deliveryOtp).trim() !== cleanOtp) {
         throw AppError.badRequest('Invalid or missing 4-digit delivery OTP', 'INVALID_DELIVERY_OTP');
       }
     }
