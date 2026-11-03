@@ -1,18 +1,23 @@
 import React from 'react';
 import { Printer, Sparkles } from 'lucide-react';
 import { ProductItem } from '../../../stores/catalogStore.js';
+import { useAuthStore } from '../../../stores/authStore.js';
 import { branding } from '@repo/shared-types/branding.config';
 import { getBarcodeStickerSpecs } from '../../../lib/taxonomyHelper.js';
 
 interface BarcodeLabelPreviewProps {
   product: Partial<ProductItem>;
+  storeName?: string;
   onPrint?: () => void;
 }
 
 export const BarcodeLabelPreview: React.FC<BarcodeLabelPreviewProps> = ({
   product,
+  storeName,
   onPrint,
 }) => {
+  const { currentStore, user } = useAuthStore();
+  const storeDisplayName = (storeName || currentStore?.name || user?.fullName || branding.appName).toUpperCase();
   const mrp = Number(product.mrp ?? 899);
   const sellingPrice = Number(product.price ?? 599);
   const savings = Math.max(0, mrp - sellingPrice);
@@ -28,12 +33,12 @@ export const BarcodeLabelPreview: React.FC<BarcodeLabelPreviewProps> = ({
       </div>
 
       <div className="w-full max-w-[270px] bg-white rounded-xl border-2 border-slate-300 shadow-sm p-3.5 flex flex-col items-center text-center select-none">
-        {/* White-Label Header */}
-        <div className="w-full flex items-center justify-between border-b border-dashed border-slate-300 pb-1.5 mb-1.5">
-          <span className="text-[10px] font-black uppercase tracking-wider text-slate-800">
-            {branding.appName} Retail Tag
+        {/* Merchant Store Header */}
+        <div className="w-full flex items-center justify-between border-b border-dashed border-slate-300 pb-1.5 mb-1.5 gap-2">
+          <span className="text-[10px] font-black uppercase tracking-wider text-slate-800 truncate text-left" title={storeDisplayName}>
+            {storeDisplayName}
           </span>
-          <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1 py-0.2 rounded-sm border border-emerald-200">
+          <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1 py-0.2 rounded-sm border border-emerald-200 shrink-0">
             GENUINE
           </span>
         </div>

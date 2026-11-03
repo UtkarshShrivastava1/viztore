@@ -1,12 +1,15 @@
 import React, { useRef } from 'react';
 import { X, Printer, Tag, Sparkles } from 'lucide-react';
 import { useCatalogStore } from '../../stores/catalogStore.js';
+import { useAuthStore } from '../../stores/authStore.js';
 import { branding } from '@repo/shared-types/branding.config';
 import { printHtmlDocument } from '../../lib/pdfEngine.js';
 
 export const ProductLabelPrintModal: React.FC = () => {
   const { isPrintLabelModalOpen, closePrintLabelModal, selectedProductForLabel } =
     useCatalogStore();
+  const { currentStore, user } = useAuthStore();
+  const storeDisplayName = (currentStore?.name || user?.fullName || branding.appName).toUpperCase();
   const printAreaRef = useRef<HTMLDivElement>(null);
 
   if (!isPrintLabelModalOpen || !selectedProductForLabel) return null;
@@ -25,7 +28,7 @@ export const ProductLabelPrintModal: React.FC = () => {
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>Label - ${product.name}</title>
+  <title>Label - ${product.name} | ${storeDisplayName}</title>
   <style>
     @page { size: 50mm 35mm; margin: 1mm; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -93,12 +96,12 @@ export const ProductLabelPrintModal: React.FC = () => {
             id="printable-barcode-label"
             className="w-[320px] bg-white rounded-xl border-2 border-slate-300 shadow-md p-4 flex flex-col items-center text-center select-none"
           >
-            {/* Header: Dynamic White-Label Brand App Name */}
-            <div className="w-full flex items-center justify-between border-b border-dashed border-slate-300 pb-2 mb-2">
-              <span className="text-[11px] font-black uppercase tracking-wider text-slate-800">
-                {branding.appName} Retail Tag
+            {/* Header: Dynamic Merchant Store Name */}
+            <div className="w-full flex items-center justify-between border-b border-dashed border-slate-300 pb-2 mb-2 gap-2">
+              <span className="text-[11px] font-black uppercase tracking-wider text-slate-800 truncate text-left" title={storeDisplayName}>
+                {storeDisplayName}
               </span>
-              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-sm border border-emerald-200">
+              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-sm border border-emerald-200 shrink-0">
                 GENUINE
               </span>
             </div>
