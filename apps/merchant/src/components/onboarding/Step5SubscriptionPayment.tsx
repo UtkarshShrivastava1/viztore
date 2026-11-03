@@ -6,7 +6,6 @@ import {
   ArrowRight,
   ArrowLeft,
   ShieldCheck,
-  Gift,
   Loader2,
   AlertCircle,
   X,
@@ -42,12 +41,6 @@ interface SalesRepState {
   territory: string;
 }
 
-const PRESET_COUPON_CHIPS = [
-  { code: 'FREE100', label: 'FREE100 (100% Free Pilot)' },
-  { code: 'WELCOME50', label: 'WELCOME50 (50% Off)' },
-  { code: 'LAUNCH100', label: 'LAUNCH100 (Pilot Waiver)' },
-  { code: 'STORE100', label: 'STORE100 (Field Pass)' },
-];
 
 export const Step5SubscriptionPayment: React.FC<Step5SubscriptionPaymentProps> = ({
   onBack,
@@ -466,33 +459,8 @@ export const Step5SubscriptionPayment: React.FC<Step5SubscriptionPaymentProps> =
           </div>
         </div>
 
-        {/* Action Button & Suggestions */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
-          {/* Quick Suggestion Chips */}
-          {!appliedCoupon ? (
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-[11px] text-slate-400 font-medium">Try:</span>
-              {PRESET_COUPON_CHIPS.map((chip) => (
-                <button
-                  key={chip.code}
-                  type="button"
-                  onClick={() => {
-                    setCouponInput(chip.code);
-                    if (!salesIdInput.trim()) {
-                      setSalesIdInput('SALES-01');
-                    }
-                  }}
-                  className="inline-flex items-center gap-1 text-[11px] font-bold text-[#0038ed] bg-blue-50/80 hover:bg-blue-100/70 border border-blue-200/70 px-2 py-0.5 rounded-lg transition-all cursor-pointer"
-                >
-                  <Gift className="w-3 h-3" />
-                  <span>{chip.code}</span>
-                </button>
-              ))}
-            </div>
-          ) : (
-            <div />
-          )}
-
+        {/* Action Button */}
+        <div className="flex justify-end pt-1">
           {/* Validate Button */}
           {appliedCoupon ? (
             <button
