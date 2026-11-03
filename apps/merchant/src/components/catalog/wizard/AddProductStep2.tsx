@@ -38,6 +38,42 @@ const samplePerspectiveViews = [
   },
 ];
 
+async function compressImageFile(file: File, maxWidth = 1600, maxHeight = 1600, quality = 0.82): Promise<string> {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+        if (width > maxWidth || height > maxHeight) {
+          if (width > height) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          } else {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        } else {
+          resolve((e.target?.result as string) || '');
+        }
+      };
+      img.onerror = () => resolve((e.target?.result as string) || '');
+      img.src = (e.target?.result as string) || '';
+    };
+    reader.onerror = () => resolve('');
+    reader.readAsDataURL(file);
+  });
+}
+
 export const AddProductStep2: React.FC = () => {
   const { draftProduct, updateDraftProduct, setWizardStep } = useCatalogStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -77,19 +113,15 @@ export const AddProductStep2: React.FC = () => {
           }
         }
       } catch (err) {
-        console.warn('Cloudinary upload fallback to local preview:', err);
-        // Fallback to data URL if network/offline
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const result = e.target?.result as string;
-          if (result) {
-            const current = useCatalogStore.getState().draftProduct.images || [];
-            if (current.length < 10) {
-              updateDraftProduct({ images: [...current, result] });
-            }
+        console.warn('Cloudinary upload fallback to optimized local preview:', err);
+        // Fallback to compressed data URL if offline/network issue
+        const compressedBase64 = await compressImageFile(file);
+        if (compressedBase64) {
+          const current = useCatalogStore.getState().draftProduct.images || [];
+          if (current.length < 10) {
+            updateDraftProduct({ images: [...current, compressedBase64] });
           }
-        };
-        reader.readAsDataURL(file);
+        }
       }
     }
 

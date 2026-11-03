@@ -10,17 +10,21 @@ export const ProductLabelPrintModal: React.FC = () => {
   const { isPrintLabelModalOpen, closePrintLabelModal, selectedProductForLabel } =
     useCatalogStore();
   const { currentStore, user } = useAuthStore();
-  const storeDisplayName = (currentStore?.name || user?.fullName || branding.appName).toUpperCase();
   const printAreaRef = useRef<HTMLDivElement>(null);
 
-  if (!isPrintLabelModalOpen || !selectedProductForLabel) return null;
-
   const product = selectedProductForLabel;
+  const storeDisplayName = (currentStore?.name || user?.fullName || branding.appName).toUpperCase();
+  const { subtitle } = React.useMemo(
+    () => (product ? getBarcodeStickerSpecs(product) : { subtitle: '' }),
+    [product]
+  );
+
+  if (!isPrintLabelModalOpen || !product) return null;
+
   const mrp = product.mrp || product.price || 0;
   const sellingPrice = product.price;
   const savings = Math.max(0, mrp - sellingPrice);
   const discountPct = mrp > 0 ? Math.round((savings / mrp) * 100) : 0;
-  const { subtitle } = React.useMemo(() => getBarcodeStickerSpecs(product), [product]);
 
   const handlePrint = () => {
     if (printAreaRef.current) {

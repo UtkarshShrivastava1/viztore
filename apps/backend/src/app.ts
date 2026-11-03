@@ -88,8 +88,8 @@ export function createApp(): Express {
   app.use('/api', limiter);
 
   // Body Parsing
-  app.use(express.json({ limit: '10mb' }));
-  app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+  app.use(express.json({ limit: '50mb' }));
+  app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
   // Sanitize NoSQL injection attempts in body/query/params
   app.use((req: Request, _res: Response, next: NextFunction) => {

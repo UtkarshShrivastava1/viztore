@@ -51,6 +51,7 @@ import { ContactSupportPage } from './pages/marketing/ContactSupportPage.js';
 import { TermsPage } from './pages/marketing/legal/TermsPage.js';
 import { PrivacyPage } from './pages/marketing/legal/PrivacyPage.js';
 import { RefundPolicyPage } from './pages/marketing/legal/RefundPolicyPage.js';
+import { ErrorBoundary } from './components/common/ErrorBoundary.js';
 
 export type AppView = 'landing' | 'login' | 'onboarding' | 'dashboard';
 
@@ -326,89 +327,91 @@ export const App: React.FC = () => {
               isResizingSidebar ? '' : 'transition-[margin] duration-300'
             }`}
           >
-            {currentTab === 'overview' && (
-              <DashboardOverviewPage
-                onNavigate={(tab) => handleSelectTab(tab)}
-                onOpenAddProduct={() => {
-                  useCatalogStore.getState().setWizardStep(1);
-                  useCatalogStore.getState().resetDraftProduct();
-                  useCatalogStore.getState().setActiveView('wizard');
-                  handleSelectTab('catalog');
-                }}
-                onOpenCreateOrder={() => navigate('/dashboard/orders/create')}
-              />
-            )}
+            <ErrorBoundary>
+              {currentTab === 'overview' && (
+                <DashboardOverviewPage
+                  onNavigate={(tab) => handleSelectTab(tab)}
+                  onOpenAddProduct={() => {
+                    useCatalogStore.getState().setWizardStep(1);
+                    useCatalogStore.getState().resetDraftProduct();
+                    useCatalogStore.getState().setActiveView('wizard');
+                    handleSelectTab('catalog');
+                  }}
+                  onOpenCreateOrder={() => navigate('/dashboard/orders/create')}
+                />
+              )}
 
-            {currentTab === 'orders' &&
-              (isCreateOrderView ? (
-                <CreateOrderPage onBack={() => navigate('/dashboard/orders')} />
-              ) : (
-                <OrdersPage onOpenCreateOrder={() => navigate('/dashboard/orders/create')} />
-              ))}
+              {currentTab === 'orders' &&
+                (isCreateOrderView ? (
+                  <CreateOrderPage onBack={() => navigate('/dashboard/orders')} />
+                ) : (
+                  <OrdersPage onOpenCreateOrder={() => navigate('/dashboard/orders/create')} />
+                ))}
 
-            {currentTab === 'catalog' && <CatalogPage />}
+              {currentTab === 'catalog' && <CatalogPage />}
 
-            {currentTab === 'inventory' && <InventoryPage />}
+              {currentTab === 'inventory' && <InventoryPage />}
 
-            {currentTab === 'billing' && <BillingPage />}
+              {currentTab === 'billing' && <BillingPage />}
 
-            {currentTab === 'customers' && <CustomersPage />}
+              {currentTab === 'customers' && <CustomersPage />}
 
-            {currentTab === 'wallet' && (
-              <WalletPage onNavigateHome={() => handleSelectTab('overview')} />
-            )}
+              {currentTab === 'wallet' && (
+                <WalletPage onNavigateHome={() => handleSelectTab('overview')} />
+              )}
 
-            {currentTab === 'expenses' && (
-              <ExpensesPage onNavigateHome={() => handleSelectTab('overview')} />
-            )}
+              {currentTab === 'expenses' && (
+                <ExpensesPage onNavigateHome={() => handleSelectTab('overview')} />
+              )}
 
-            {currentTab === 'assets' && (
-              <AssetsPage onNavigateHome={() => handleSelectTab('overview')} />
-            )}
+              {currentTab === 'assets' && (
+                <AssetsPage onNavigateHome={() => handleSelectTab('overview')} />
+              )}
 
-            {currentTab === 'returns' && (
-              <ReturnsPage onNavigateHome={() => handleSelectTab('overview')} />
-            )}
+              {currentTab === 'returns' && (
+                <ReturnsPage onNavigateHome={() => handleSelectTab('overview')} />
+              )}
 
-            {currentTab === 'payouts' && (
-              <PayoutsPage onNavigateHome={() => handleSelectTab('overview')} />
-            )}
+              {currentTab === 'payouts' && (
+                <PayoutsPage onNavigateHome={() => handleSelectTab('overview')} />
+              )}
 
-            {currentTab === 'analytics' && (
-              <AnalyticsPage onNavigateHome={() => handleSelectTab('overview')} />
-            )}
+              {currentTab === 'analytics' && (
+                <AnalyticsPage onNavigateHome={() => handleSelectTab('overview')} />
+              )}
 
-            {currentTab === 'marketing' && (
-              <MarketingPage onNavigateHome={() => handleSelectTab('overview')} />
-            )}
+              {currentTab === 'marketing' && (
+                <MarketingPage onNavigateHome={() => handleSelectTab('overview')} />
+              )}
 
-            {currentTab === 'store' && <StoreManagementPage />}
+              {currentTab === 'store' && <StoreManagementPage />}
 
-            {currentTab === 'settings' && (
-              <SettingsPage
-                onNavigateToBillingSettings={() => {
-                  handleSelectTab('billing');
-                  useBillingStore.getState().setActiveView('settings');
-                }}
-                onNavigateToSupport={() => handleSelectTab('support')}
-              />
-            )}
+              {currentTab === 'settings' && (
+                <SettingsPage
+                  onNavigateToBillingSettings={() => {
+                    handleSelectTab('billing');
+                    useBillingStore.getState().setActiveView('settings');
+                  }}
+                  onNavigateToSupport={() => handleSelectTab('support')}
+                />
+              )}
 
-            {currentTab === 'support' && (
-              <SupportPage onNavigateHome={() => handleSelectTab('overview')} />
-            )}
+              {currentTab === 'support' && (
+                <SupportPage onNavigateHome={() => handleSelectTab('overview')} />
+              )}
 
-            {/* Fallback placeholder for other modules */}
-            {!VALID_TABS.includes(currentTab) && (
-              <div className="p-8 text-center bg-white rounded-2xl border border-slate-200/80 shadow-2xs max-w-xl mx-auto mt-8">
-                <h3 className="text-base font-bold text-slate-800 capitalize">
-                  {currentTab.replace(/_/g, ' ')} Module
-                </h3>
-                <p className="text-xs text-slate-500 mt-1">
-                  Operational analytics and live controls active for this merchant vertical.
-                </p>
-              </div>
-            )}
+              {/* Fallback placeholder for other modules */}
+              {!VALID_TABS.includes(currentTab) && (
+                <div className="p-8 text-center bg-white rounded-2xl border border-slate-200/80 shadow-2xs max-w-xl mx-auto mt-8">
+                  <h3 className="text-base font-bold text-slate-800 capitalize">
+                    {currentTab.replace(/_/g, ' ')} Module
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Operational analytics and live controls active for this merchant vertical.
+                  </p>
+                </div>
+              )}
+            </ErrorBoundary>
           </main>
         </div>
 

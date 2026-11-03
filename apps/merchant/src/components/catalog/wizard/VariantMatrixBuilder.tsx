@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Layers,
   Sparkles,
@@ -142,6 +142,8 @@ export const VariantMatrixBuilder: React.FC = () => {
   const [matrixRows, setMatrixRows] = useState<ProductVariantItem[]>(() => {
     return (draftProduct.variants as ProductVariantItem[]) || [];
   });
+  const matrixRowsRef = useRef(matrixRows);
+  matrixRowsRef.current = matrixRows;
 
   const syncWithStore = (rows: ProductVariantItem[]) => {
     const totalStock = rows.reduce((acc, r) => (r.isActive ? acc + (r.stock || 0) : acc), 0);
@@ -159,58 +161,59 @@ export const VariantMatrixBuilder: React.FC = () => {
   // Auto-generate and sync matrix whenever selected sizes, colors, or base pricing changes
   useEffect(() => {
     if (selectedSizes.length > 0 && selectedColors.length > 0) {
-      setMatrixRows((prevRows) => {
-        const rowMap = new Map(prevRows.map((r) => [`${r.color}__${r.size}`, r]));
-        const updatedRows: ProductVariantItem[] = [];
+      const prevRows: ProductVariantItem[] = matrixRowsRef.current || [];
+      const rowMap = new Map<string, ProductVariantItem>(
+        prevRows.map((r: ProductVariantItem) => [`${r.color}__${r.size}`, r])
+      );
+      const updatedRows: ProductVariantItem[] = [];
 
-        selectedColors.forEach((c) => {
-          selectedSizes.forEach((s) => {
-            const key = `${c.name}__${s}`;
-            const existing = rowMap.get(key);
-            if (existing) {
-              const targetPrice = existing.isCustomPrice
-                ? existing.price
-                : (basePrice > 0 ? basePrice : (existing.price || Number(bulkPriceInput) || 0));
-              const targetMrp = existing.isCustomPrice
-                ? existing.mrp
-                : (baseMrp > 0 ? baseMrp : (existing.mrp || Number(bulkMrpInput) || targetPrice || 0));
+      selectedColors.forEach((c) => {
+        selectedSizes.forEach((s) => {
+          const key = `${c.name}__${s}`;
+          const existing = rowMap.get(key);
+          if (existing) {
+            const targetPrice = existing.isCustomPrice
+              ? existing.price
+              : (basePrice > 0 ? basePrice : (existing.price || Number(bulkPriceInput) || 0));
+            const targetMrp = existing.isCustomPrice
+              ? existing.mrp
+              : (baseMrp > 0 ? baseMrp : (existing.mrp || Number(bulkMrpInput) || targetPrice || 0));
 
-              updatedRows.push({
-                ...existing,
-                colorHex: c.hex || existing.colorHex,
-                price: targetPrice,
-                mrp: targetMrp,
-              });
-            } else {
-              const cleanColor = c.name.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 4);
-              const cleanSize = s.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-              const sku = `${baseSku}-${cleanColor}-${cleanSize}`;
-              const barcode = `890${Math.floor(1000000000 + Math.random() * 9000000000)}`;
+            updatedRows.push({
+              ...existing,
+              colorHex: c.hex || existing.colorHex,
+              price: targetPrice,
+              mrp: targetMrp,
+            });
+          } else {
+            const cleanColor = c.name.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 4);
+            const cleanSize = s.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+            const sku = `${baseSku}-${cleanColor}-${cleanSize}`;
+            const barcode = `890${Math.floor(1000000000 + Math.random() * 9000000000)}`;
 
-              const targetPrice = Number(bulkPriceInput) || (basePrice > 0 ? basePrice : 0);
-              const targetMrp = Number(bulkMrpInput) || (baseMrp > 0 ? baseMrp : targetPrice);
+            const targetPrice = Number(bulkPriceInput) || (basePrice > 0 ? basePrice : 0);
+            const targetMrp = Number(bulkMrpInput) || (baseMrp > 0 ? baseMrp : targetPrice);
 
-              updatedRows.push({
-                id: `VAR-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
-                sku,
-                barcode,
-                color: c.name,
-                colorHex: c.hex,
-                size: s,
-                price: targetPrice,
-                costPrice: baseCost || 0,
-                mrp: targetMrp,
-                stock: Number(bulkStockInput) || 15,
-                isActive: true,
-              });
-            }
-          });
+            updatedRows.push({
+              id: `VAR-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
+              sku,
+              barcode,
+              color: c.name,
+              colorHex: c.hex,
+              size: s,
+              price: targetPrice,
+              costPrice: baseCost || 0,
+              mrp: targetMrp,
+              stock: Number(bulkStockInput) || 15,
+              isActive: true,
+            });
+          }
         });
-
-        syncWithStore(updatedRows);
-        return updatedRows;
       });
-    } else if (matrixRows.length > 0) {
+
+      setMatrixRows(updatedRows);
+      syncWithStore(updatedRows);
+    } else if (matrixRowsRef.current.length > 0) {
       setMatrixRows([]);
       syncWithStore([]);
     }
