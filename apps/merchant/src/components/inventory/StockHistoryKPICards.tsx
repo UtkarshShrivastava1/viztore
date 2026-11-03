@@ -11,22 +11,22 @@ import { useInventoryStore } from '../../stores/inventoryStore.js';
 export const StockHistoryKPICards: React.FC = () => {
   const { transactions } = useInventoryStore();
 
-  const totalTransactions = transactions.length > 10 ? transactions.length : 582;
+  const totalTransactions = transactions.length;
   const stockInUnits = transactions
     .filter((t) => t.type === 'stock_in')
-    .reduce((sum, t) => sum + Math.abs(t.quantity), 0) || 1248;
+    .reduce((sum, t) => sum + Math.abs(t.quantity), 0);
   const stockOutUnits = transactions
     .filter((t) => t.type === 'stock_out')
-    .reduce((sum, t) => sum + Math.abs(t.quantity), 0) || 968;
+    .reduce((sum, t) => sum + Math.abs(t.quantity), 0);
   const netChangeUnits = stockInUnits - stockOutUnits;
-  const productsAffected = new Set(transactions.map((t) => t.productId)).size || 156;
+  const productsAffected = new Set(transactions.map((t) => t.productId)).size;
 
   const cards = [
     {
       id: 'total-tx',
       title: 'Total Transactions',
       value: totalTransactions.toLocaleString(),
-      subtitle: 'In selected period',
+      subtitle: totalTransactions === 0 ? 'No movements recorded' : 'In selected period',
       icon: Boxes,
       iconBg: 'bg-[#ebf3ff] text-[#2563eb]',
     },
@@ -35,6 +35,7 @@ export const StockHistoryKPICards: React.FC = () => {
       title: 'Stock In (Added)',
       value: `+${stockInUnits.toLocaleString()} Units`,
       valueColor: 'text-emerald-600',
+      subtitle: stockInUnits === 0 ? 'No incoming restocks' : 'Total units received',
       icon: ArrowUpCircle,
       iconBg: 'bg-[#ecfdf5] text-[#16a34a]',
     },
@@ -43,6 +44,7 @@ export const StockHistoryKPICards: React.FC = () => {
       title: 'Stock Out (Deducted)',
       value: `-${stockOutUnits.toLocaleString()} Units`,
       valueColor: 'text-rose-600',
+      subtitle: stockOutUnits === 0 ? 'No outbound deductions' : 'Sales & adjustments',
       icon: ArrowDownCircle,
       iconBg: 'bg-[#fef2f2] text-[#dc2626]',
     },
@@ -51,6 +53,7 @@ export const StockHistoryKPICards: React.FC = () => {
       title: 'Net Change',
       value: `${netChangeUnits >= 0 ? '+' : ''}${netChangeUnits.toLocaleString()} Units`,
       valueColor: netChangeUnits >= 0 ? 'text-emerald-600' : 'text-rose-600',
+      subtitle: 'Net inventory movement',
       icon: BarChart3,
       iconBg: 'bg-[#ebf3ff] text-[#2563eb]',
     },
@@ -58,6 +61,7 @@ export const StockHistoryKPICards: React.FC = () => {
       id: 'products-affected',
       title: 'Products Affected',
       value: productsAffected.toLocaleString(),
+      subtitle: productsAffected === 0 ? '0 items affected' : `${productsAffected} unique items`,
       icon: Package,
       iconBg: 'bg-[#f5f3ff] text-[#7c3aed]',
     },

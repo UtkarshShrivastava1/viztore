@@ -357,12 +357,38 @@ export const useInventoryStore = create<InventoryStoreState>((set, get) => ({
 
   setItemsFromProducts: (products: ProductItem[]) => {
     const items: InventoryItem[] = products.map((p) => {
-      const stock = p.stock || 0;
+      const variantList = p.variants || [];
+      const variantCount = variantList.length;
+      const stock =
+        variantCount > 0
+          ? variantList.reduce((acc, v) => acc + (Number(v.stock) || 0), 0)
+          : Number(p.stock) || 0;
+
       const reserved = defaultReservedBySku[p.sku] ?? Math.min(stock, Math.floor(stock * 0.1));
       const available = Math.max(0, stock - reserved);
       const lowThresh = p.lowStockThreshold ?? 10;
       const status: 'in_stock' | 'low_stock' | 'out_of_stock' =
         stock <= 0 ? 'out_of_stock' : stock <= lowThresh ? 'low_stock' : 'in_stock';
+
+      const stockValue =
+        variantCount > 0
+          ? variantList.reduce(
+              (acc, v) =>
+                acc + (Number(v.stock) || 0) * (Number(v.price) || Number(p.price) || 0),
+              0
+            )
+          : Math.round(stock * (Number(p.price) || 0));
+
+      let variantSummary = '';
+      if (variantCount > 1) {
+        const uniqueSpecs = Array.from(new Set(variantList.map((v) => v.size).filter(Boolean)));
+        const uniqueColors = Array.from(new Set(variantList.map((v) => v.color).filter(Boolean)));
+        const parts = [];
+        if (uniqueSpecs.length) parts.push(uniqueSpecs.slice(0, 3).join(', '));
+        if (uniqueColors.length) parts.push(uniqueColors.slice(0, 2).join(', '));
+        variantSummary = `${variantCount} Variants • ${parts.join(' • ')}`;
+      }
+
       return {
         id: p.id,
         name: p.name,
@@ -377,11 +403,11 @@ export const useInventoryStore = create<InventoryStoreState>((set, get) => ({
         available,
         status,
         lowStockThreshold: lowThresh,
-        stockValue: Math.round(stock * (p.price || 500)),
+        stockValue,
         lastUpdated: p.updatedAt || 'Recent',
         imageUrl: p.images[0] || '',
-        size: p.attributes?.size || p.variants?.[0]?.size || '',
-        color: p.attributes?.color || p.variants?.[0]?.color || '',
+        size: variantSummary || p.attributes?.size || p.variants?.[0]?.size || '',
+        color: variantSummary ? '' : (p.attributes?.color || p.variants?.[0]?.color || ''),
       };
     });
 
