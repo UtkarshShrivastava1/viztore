@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { customersApi } from '../lib/api.js';
+import { toast } from './toastStore.js';
 
 export type CustomerType = 'Individual' | 'Business' | 'Retailer' | 'Wholesaler';
 export type CustomerStatus = 'active' | 'inactive';
@@ -454,6 +455,7 @@ export const useCustomerStore = create<CustomerState>((set, get) => ({
         kpis: computeCustomerKPIs(updatedCustomers),
       };
     });
+    toast.success("Customer Registered Successfully!", `${customerData.name} has been added to directory.`);
 
     try {
       const res = await customersApi.create({
@@ -628,6 +630,7 @@ export const useCustomerStore = create<CustomerState>((set, get) => ({
         kpis: computeCustomerKPIs(updated),
       };
     });
+    toast.success("Customer Removed", "Customer removed from directory.");
 
     try {
       await customersApi.recordPayment(customerId, {

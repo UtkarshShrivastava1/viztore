@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { useInventoryStore } from './inventoryStore.js';
 import { DEFAULT_INDIAN_STATE } from '@repo/shared-types';
 import { billingApi } from '../lib/api.js';
+import { toast } from './toastStore.js';
 
 export type InvoiceStatus = 'draft' | 'issued' | 'paid' | 'partially_paid' | 'overdue' | 'cancelled';
 export type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'declined' | 'expired' | 'converted' | 'cancelled';
@@ -1313,6 +1314,7 @@ export const useBillingStore = create<BillingStoreState>((set, get) => ({
       isCreateInvoiceModalOpen: false,
       activeInvoiceForModal: null,
     }));
+    toast.success("Invoice Created Successfully!", `Invoice #${responseInvoice!.invoiceNo} generated.`);
 
     return responseInvoice;
   },

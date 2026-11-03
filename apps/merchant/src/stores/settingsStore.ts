@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { storesApi } from '../lib/api.js';
 import { useAuthStore } from './authStore.js';
+import { toast } from './toastStore.js';
 
 export type SettingsSubTab =
   | 'store_profile'
@@ -705,6 +706,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       const storeId = store?._id || store?.id;
       if (!storeId) {
         set({ isSaving: false, isDirty: false, saveSuccess: true });
+        toast.success("Settings Saved!", "Your store preferences have been updated.");
         setTimeout(() => set({ saveSuccess: false }), 3000);
         return true;
       }
@@ -793,6 +795,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       }
 
       set({ isSaving: false, isDirty: false, saveSuccess: true });
+      toast.success("Settings Saved!", "Your store preferences have been updated.");
       setTimeout(() => {
         set({ saveSuccess: false });
       }, 3000);

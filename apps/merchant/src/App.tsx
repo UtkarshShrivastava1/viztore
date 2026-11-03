@@ -28,6 +28,7 @@ import { useCatalogStore } from './stores/catalogStore.js';
 import { Sidebar, DashboardTab } from './components/dashboard/Sidebar.js';
 import { Header } from './components/dashboard/Header.js';
 import { LiveOrderSocketListener } from './components/dashboard/LiveOrderSocketListener.js';
+import { GlobalToastContainer } from './components/common/GlobalToastContainer.js';
 import { WelcomeGuideModal } from './components/dashboard/WelcomeGuideModal.js';
 
 // Marketing Website Pages & Layout
@@ -273,6 +274,7 @@ export const App: React.FC = () => {
         }
         className="min-h-screen bg-[#f8fafc] text-slate-800 flex flex-col"
       >
+        <GlobalToastContainer />
         {/* Real-time Socket.io Incoming Order Alert & Melodic Chime Engine */}
         <LiveOrderSocketListener
           onNavigateToOrder={() => {
@@ -551,7 +553,9 @@ export const App: React.FC = () => {
   }
 
   return (
-    <MerchantPublicLayout
+    <>
+      <GlobalToastContainer />
+      <MerchantPublicLayout
       currentRoute={pathname}
       onNavigate={navigateTo}
       onGoToLogin={() => navigate('/login')}
@@ -559,5 +563,6 @@ export const App: React.FC = () => {
     >
       {pageContent}
     </MerchantPublicLayout>
+    </>
   );
 };

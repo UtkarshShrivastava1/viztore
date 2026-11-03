@@ -3,6 +3,7 @@ import { api, catalogApi } from '../lib/api.js';
 import { useAuthStore } from './authStore.js';
 import { recordCustomCategory, recordCustomBrand } from '../lib/customTaxonomyStorage.js';
 import { isElectronicsCategory, isFootwearCategory, isGroceryCategory, getPreloadedAttributes } from '../lib/taxonomyHelper.js';
+import { toast } from './toastStore.js';
 
 export interface StorageLocation {
   warehouse: string;
@@ -1264,6 +1265,7 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
         updatedAt: 'Just now',
       };
       const updatedList = [duplicated, ...state.products];
+      toast.success("Product Duplicated", `Created duplicate of "${target.name}".`);
       return { products: updatedList, kpis: calculateKPIs(updatedList) };
     }),
 
@@ -1282,6 +1284,7 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
       const updatedList = state.products.map((p) =>
         p.id === id ? { ...p, status: newStatus as any } : p
       );
+      toast.success("Status Updated", `"${product.name}" is now ${newStatus === "active" ? "Active" : "Inactive"}.`);
       return { products: updatedList, kpis: calculateKPIs(updatedList) };
     });
   },
@@ -1316,6 +1319,7 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
             }
           : p
       );
+      toast.success("Stock Updated", `Stock updated to ${newStock} units.`);
       return { products: updatedList, kpis: calculateKPIs(updatedList) };
     });
 
@@ -1371,6 +1375,7 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
         selectedProductIds: state.selectedProductIds.filter((item) => item !== id),
       };
     });
+    toast.success("Product Deleted", "Product removed from catalog.");
   },
 
   openStockModal: (product) =>

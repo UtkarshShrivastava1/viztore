@@ -1,6 +1,7 @@
 import React from 'react';
 import { ChevronRight, Bookmark, ArrowLeft, Eye } from 'lucide-react';
 import { useCatalogStore } from '../stores/catalogStore.js';
+import { toast } from '../stores/toastStore.js';
 import { CatalogWizardStepper } from '../components/catalog/wizard/CatalogWizardStepper.js';
 import { AddProductStep1 } from '../components/catalog/wizard/AddProductStep1.js';
 import { AddProductStep2 } from '../components/catalog/wizard/AddProductStep2.js';
@@ -16,14 +17,16 @@ export const AddProductWizardPage: React.FC = () => {
 
   const handleSaveAsDraft = async () => {
     try {
-      await saveDraftAsProduct();
-      setToastMessage('Product saved as draft!');
+      const saved = await saveDraftAsProduct();
+      toast.success(
+        'Product Saved as Draft 💾',
+        `"${saved.name || 'Product'}" has been preserved in your drafts.`
+      );
       setTimeout(() => {
         setActiveView('list');
-      }, 900);
+      }, 500);
     } catch (err: any) {
-      setToastMessage(`Failed to save draft: ${err?.message || 'Unknown error'}`);
-      setTimeout(() => setToastMessage(null), 3500);
+      toast.error('Failed to save draft', err?.message || 'Please try again.');
     }
   };
 

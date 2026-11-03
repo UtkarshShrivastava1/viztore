@@ -10,6 +10,7 @@ import {
   Send,
 } from 'lucide-react';
 import { useCatalogStore } from '../stores/catalogStore.js';
+import { toast } from '../stores/toastStore.js';
 import { ProductGalleryPreview } from '../components/catalog/preview/ProductGalleryPreview.js';
 import { BarcodeLabelPreview } from '../components/catalog/preview/BarcodeLabelPreview.js';
 import { SummaryReviewCards } from '../components/catalog/preview/SummaryReviewCards.js';
@@ -26,12 +27,6 @@ export const ProductPreviewSubmitPage: React.FC = () => {
   } = useCatalogStore();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-
-  const showToast = (type: 'success' | 'error', message: string) => {
-    setToast({ type, message });
-    setTimeout(() => setToast(null), 3500);
-  };
 
   const handleBackToEdit = () => {
     setWizardStep(3);
@@ -42,12 +37,15 @@ export const ProductPreviewSubmitPage: React.FC = () => {
     setIsSubmitting(true);
     try {
       const saved = await saveDraftAsProduct();
-      showToast('success', `Product "${saved.name}" published successfully!`);
+      toast.success(
+        'Product Saved Successfully! 🎉',
+        `"${saved.name}" has been published and added to your active catalog.`
+      );
       setTimeout(() => {
         setActiveView('list');
-      }, 1000);
+      }, 600);
     } catch (err: any) {
-      showToast('error', `Failed to publish product: ${err?.message || 'Unknown error'}`);
+      toast.error('Failed to publish product', err?.message || 'Please check your inputs and try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -57,10 +55,13 @@ export const ProductPreviewSubmitPage: React.FC = () => {
     setIsSubmitting(true);
     try {
       const saved = await saveDraftAsProduct();
-      showToast('success', `Product "${saved.name}" published! Opening barcode label printer...`);
+      toast.success(
+        'Product Saved & Ready to Print 🏷️',
+        `"${saved.name}" published. Opening barcode sticker printer...`
+      );
       openPrintLabelModal(saved);
     } catch (err: any) {
-      showToast('error', `Failed to publish product: ${err?.message || 'Unknown error'}`);
+      toast.error('Failed to publish product', err?.message || 'Please check your inputs and try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -69,13 +70,16 @@ export const ProductPreviewSubmitPage: React.FC = () => {
   const handleSaveAsDraft = async () => {
     setIsSubmitting(true);
     try {
-      await saveDraftAsProduct();
-      showToast('success', 'Product saved as draft!');
+      const saved = await saveDraftAsProduct();
+      toast.success(
+        'Draft Saved Successfully 💾',
+        `"${saved.name || 'Product'}" has been preserved in your drafts.`
+      );
       setTimeout(() => {
         setActiveView('list');
-      }, 1000);
+      }, 600);
     } catch (err: any) {
-      showToast('error', `Failed to save draft: ${err?.message || 'Unknown error'}`);
+      toast.error('Failed to save draft', err?.message || 'Please check your inputs and try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -154,7 +158,7 @@ export const ProductPreviewSubmitPage: React.FC = () => {
             className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 shadow-2xs transition-colors cursor-pointer"
           >
             <Bookmark className="w-3.5 h-3.5 text-slate-500" />
-            <span>Save Product</span>
+            <span>{isSubmitting ? 'Saving...' : 'Save Product'}</span>
           </button>
 
           <button
@@ -173,34 +177,11 @@ export const ProductPreviewSubmitPage: React.FC = () => {
             className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs transition-colors cursor-pointer"
           >
             <Printer className="w-3.5 h-3.5" />
-            <span>Save &amp; Print Label</span>
+            <span>{isSubmitting ? 'Saving...' : 'Save & Print Label'}</span>
             <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
           </button>
         </div>
       </div>
-
-      {/* Toast Alert */}
-      {toast && (
-        <div
-          className={`p-3 rounded-xl border text-xs flex items-center justify-between shadow-xs ${
-            toast.type === 'success'
-              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-              : 'bg-rose-50 border-rose-200 text-rose-800'
-          }`}
-        >
-          <div className="flex items-center gap-2">
-            <CheckCircle className="w-4 h-4 shrink-0" />
-            <span className="font-medium">{toast.message}</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setToast(null)}
-            className="text-slate-400 hover:text-slate-600 cursor-pointer"
-          >
-            ×
-          </button>
-        </div>
-      )}
 
       {/* Hero Preview Card */}
       <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-xs">
@@ -345,7 +326,7 @@ export const ProductPreviewSubmitPage: React.FC = () => {
             className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 shadow-2xs transition-colors cursor-pointer"
           >
             <Bookmark className="w-3.5 h-3.5 text-slate-500" />
-            <span>Save Product</span>
+            <span>{isSubmitting ? 'Saving...' : 'Save Product'}</span>
           </button>
 
           <button
@@ -364,7 +345,7 @@ export const ProductPreviewSubmitPage: React.FC = () => {
             className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs transition-colors cursor-pointer"
           >
             <Printer className="w-3.5 h-3.5" />
-            <span>Save &amp; Print Label</span>
+            <span>{isSubmitting ? 'Saving...' : 'Save & Print Label'}</span>
             <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
           </button>
         </div>

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { ProductItem } from './catalogStore.js';
 import { useCatalogStore } from './catalogStore.js';
+import { toast } from './toastStore.js';
 
 export interface InventoryItem {
   id: string;
@@ -599,6 +600,7 @@ export const useInventoryStore = create<InventoryStoreState>((set, get) => ({
       transactions: [newTx, ...get().transactions],
       adjustDrawerItem: null,
     });
+    toast.success("Stock Adjusted Successfully", "Inventory quantity has been updated.");
   },
 
   bulkAdjustStock: async (adjustments) => {
@@ -658,6 +660,7 @@ export const useInventoryStore = create<InventoryStoreState>((set, get) => ({
       transactions: [...newTxs, ...get().transactions],
       viewMode: 'overview',
     });
+    toast.success("Bulk Adjustments Saved", "All inventory adjustments applied successfully.");
   },
 
   duplicateItem: (productId) => {
