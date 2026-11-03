@@ -18,12 +18,42 @@ interface AuthState {
   initialize: () => void;
 }
 
+const initialToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+const initialUserRaw = typeof window !== 'undefined' ? localStorage.getItem('user_session') : null;
+const initialStoreRaw = typeof window !== 'undefined' ? localStorage.getItem('current_store') : null;
+const initialActiveRaw = typeof window !== 'undefined' ? localStorage.getItem('is_store_active') : null;
+
+let initialUser: IUser | null = null;
+if (initialUserRaw) {
+  try {
+    initialUser = JSON.parse(initialUserRaw);
+  } catch {
+    localStorage.removeItem('user_session');
+  }
+}
+
+let initialStore: any = null;
+if (initialStoreRaw) {
+  try {
+    initialStore = JSON.parse(initialStoreRaw);
+  } catch {
+    localStorage.removeItem('current_store');
+  }
+}
+
+let initialActive = true;
+if (initialActiveRaw !== null) {
+  try {
+    initialActive = JSON.parse(initialActiveRaw);
+  } catch {}
+}
+
 export const useAuthStore = create<AuthState>((set, get) => ({
-  user: null,
-  currentStore: null,
-  accessToken: null,
-  isAuthenticated: false,
-  isStoreActive: true,
+  user: initialUser,
+  currentStore: initialStore,
+  accessToken: initialToken,
+  isAuthenticated: Boolean(initialToken && initialUser),
+  isStoreActive: initialActive,
 
   setAuth: async (user, token, refreshToken) => {
     localStorage.setItem('access_token', token);
@@ -147,7 +177,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           }).catch(() => {});
         }
       } catch {
-        localStorage.clear();
+        localStorage.removeItem('user_session');
+        set({ isAuthenticated: false });
       }
     } else {
       set({ isStoreActive });

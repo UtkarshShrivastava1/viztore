@@ -127,7 +127,14 @@ export const useOnboardingStore = create<OnboardingStore>()(
       setIsUnderReview: (underReview, storeId) =>
         set({ isUnderReview: underReview, storeId }),
 
-      resetOnboarding: () =>
+      resetOnboarding: () => {
+        try {
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('merchant_onboarding_draft');
+          }
+        } catch {
+          // ignore storage remove errors
+        }
         set({
           currentStep: 1,
           draft: {
@@ -140,7 +147,8 @@ export const useOnboardingStore = create<OnboardingStore>()(
           isSubmitting: false,
           isUnderReview: false,
           storeId: undefined,
-        }),
+        });
+      },
     }),
     {
       name: 'merchant_onboarding_draft',

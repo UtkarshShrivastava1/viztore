@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, RefreshCw, Plus, Minus, AlertTriangle } from 'lucide-react';
+import { X, RefreshCw, Plus, Minus, AlertTriangle, Loader2, AlertCircle } from 'lucide-react';
 import { useCatalogStore } from '../../stores/catalogStore.js';
 
 export const UpdateStockModal: React.FC = () => {
@@ -10,6 +10,8 @@ export const UpdateStockModal: React.FC = () => {
   const [lowThreshold, setLowThreshold] = useState(10);
   const [reason, setReason] = useState('Restock / New Inward');
   const [note, setNote] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (selectedProductForStock) {
@@ -17,6 +19,7 @@ export const UpdateStockModal: React.FC = () => {
       setLowThreshold(selectedProductForStock.lowStockThreshold || 10);
       setReason('Restock / New Inward');
       setNote('');
+      setErrorMessage(null);
     }
   }, [selectedProductForStock]);
 
@@ -24,10 +27,18 @@ export const UpdateStockModal: React.FC = () => {
 
   const product = selectedProductForStock;
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    updateStock(product.id, Math.max(0, quantity), Math.max(0, lowThreshold));
-    closeStockModal();
+    setIsSubmitting(true);
+    setErrorMessage(null);
+    try {
+      await updateStock(product.id, Math.max(0, quantity), Math.max(0, lowThreshold));
+      closeStockModal();
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Failed to update stock. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const diff = quantity - product.stock;
@@ -162,21 +173,35 @@ export const UpdateStockModal: React.FC = () => {
             />
           </div>
 
+          {/* Error Message if Update Fails */}
+          {errorMessage && (
+            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-center gap-2 text-xs text-rose-700 animate-in fade-in">
+              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+              <span>{errorMessage}</span>
+            </div>
+          )}
+
           {/* Footer Buttons */}
           <div className="pt-2 flex items-center justify-end gap-2.5 border-t border-slate-100">
             <button
               type="button"
+              disabled={isSubmitting}
               onClick={closeStockModal}
-              className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+              className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs transition-colors cursor-pointer"
+              disabled={isSubmitting}
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs transition-colors cursor-pointer disabled:opacity-60"
             >
-              <RefreshCw className="w-3.5 h-3.5" />
-              <span>Update Stock</span>
+              {isSubmitting ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <RefreshCw className="w-3.5 h-3.5" />
+              )}
+              <span>{isSubmitting ? 'Saving...' : 'Update Stock'}</span>
             </button>
           </div>
         </form>

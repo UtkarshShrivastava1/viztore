@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Info, ArrowRight, CheckCircle2, ShieldCheck, MapPin } from 'lucide-react';
-import { branding } from '../../lib/branding.js';
+import { Info, ArrowRight, ShieldCheck, MapPin } from 'lucide-react';
 import { useOnboardingStore } from '../../stores/onboardingStore.js';
 import { api } from '../../lib/api.js';
 
@@ -67,7 +66,6 @@ export const Step2IdVerification: React.FC<Step2IdVerificationProps> = ({ onCont
   const [isPanVerified, setIsPanVerified] = useState(Boolean(draft.step2?.pan));
   const [error, setError] = useState<string | null>(null);
 
-  // Auto-extract PAN & State code on GSTIN typing
   const handleGstinChange = (value: string) => {
     const clean = value.toUpperCase().trim();
     setGstin(clean);
@@ -117,7 +115,6 @@ export const Step2IdVerification: React.FC<Step2IdVerificationProps> = ({ onCont
       setIsGstinVerified(true);
       setIsPanVerified(true);
     } catch {
-      // Offline fallback
       const extractedPan = gstin.length >= 12 ? gstin.slice(2, 12).toUpperCase() : 'ABCDE1234F';
       const state = GST_STATE_MAP[gstin.substring(0, 2)] || 'Chhattisgarh';
       setPan(extractedPan);
@@ -141,9 +138,13 @@ export const Step2IdVerification: React.FC<Step2IdVerificationProps> = ({ onCont
       setIsVerifyingPan(false);
       setIsPanVerified(true);
       if (!legalName) {
-        setLegalName(draft.step1?.fullName || 'National Retail Merchants Ltd');
+        setLegalName(
+          draft.step1?.fullName
+            ? `${draft.step1.fullName} Enterprises`
+            : 'Proprietorship Merchant',
+        );
       }
-    }, 400);
+    }, 600);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -168,9 +169,9 @@ export const Step2IdVerification: React.FC<Step2IdVerificationProps> = ({ onCont
   };
 
   return (
-    <div className="bg-white border border-slate-200/90 rounded-3xl p-6 sm:p-8 lg:p-9 shadow-xl shadow-slate-200/40 relative">
+    <div className="bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 lg:p-7 shadow-xl shadow-slate-200/40 relative lg:h-full flex flex-col justify-between overflow-hidden">
       {/* Header with Step 2 Badge */}
-      <div className="flex items-center justify-between pb-5 mb-6 border-b border-slate-100">
+      <div className="flex items-center justify-between pb-3 mb-2.5 border-b border-slate-100 shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#0038ed] to-blue-500 text-white font-extrabold text-sm flex items-center justify-center shadow-md shadow-blue-600/25 shrink-0">
             2
@@ -179,146 +180,151 @@ export const Step2IdVerification: React.FC<Step2IdVerificationProps> = ({ onCont
             <h2 className="text-xs sm:text-sm font-black tracking-wider text-[#0038ed] uppercase">
               ID &amp; Signature Verification
             </h2>
-            <p className="text-xs text-slate-400 mt-0.5">Government GSTIN / PAN legal compliance</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">Government GSTIN / PAN legal compliance</p>
           </div>
         </div>
 
-        <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-500 bg-slate-50 px-2.5 py-1 rounded-full border border-slate-200/60">
+        <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-500 bg-slate-50 px-2.5 py-1 rounded-full border border-slate-200/60 font-medium">
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
           <span>Govt Tax Records Match</span>
         </div>
       </div>
 
       {error && (
-        <div className="mb-5 p-3.5 bg-rose-50 border border-rose-200/80 rounded-xl text-rose-600 text-xs font-semibold flex items-center gap-2 animate-in fade-in">
+        <div className="mb-2.5 p-2.5 bg-rose-50 border border-rose-200/80 rounded-xl text-rose-600 text-xs font-semibold flex items-center gap-2 shrink-0 animate-in fade-in">
           <div className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* GSTIN Field */}
-        <div>
-          <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-            Enter 15-Digit GSTIN <span className="text-rose-500">*</span>
-          </label>
-          <div className="flex items-center justify-between border border-slate-200 rounded-xl px-3.5 py-2.5 bg-white focus-within:border-[#0038ed] focus-within:ring-2 focus-within:ring-blue-100 transition-all shadow-2xs">
-            <input
-              type="text"
-              maxLength={15}
-              placeholder="e.g. 22ABCDE1234F1Z5"
-              value={gstin}
-              onChange={(e) => handleGstinChange(e.target.value)}
-              className="w-full text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none uppercase font-mono tracking-wider font-semibold"
-            />
-            <button
-              type="button"
-              disabled={isVerifyingGstin || isGstinVerified}
-              onClick={handleVerifyGstin}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold border transition-all ml-2 whitespace-nowrap cursor-pointer ${
-                isGstinVerified
-                  ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
-                  : 'bg-blue-50 text-[#0038ed] border-blue-200/60 hover:bg-blue-100'
-              }`}
-            >
-              {isVerifyingGstin ? 'Verifying...' : isGstinVerified ? 'Verified ✓' : 'Verify GSTIN'}
-            </button>
-          </div>
-
-          {/* Live Detected State Badge */}
-          {detectedState && (
-            <div className="flex items-center gap-1.5 mt-1.5 text-xs text-slate-600 font-medium animate-in fade-in">
-              <MapPin className="w-3.5 h-3.5 text-[#0038ed]" />
-              <span>
-                Jurisdiction: <strong className="text-slate-900">{detectedState}</strong> (State Code {gstin.substring(0, 2)})
-              </span>
+      <form
+        onSubmit={handleSubmit}
+        className="flex-1 flex flex-col justify-between overflow-hidden min-h-0"
+      >
+        <div className="flex-1 overflow-y-auto pr-1 sm:pr-2 min-h-0 space-y-2.5 scrollbar-thin">
+          {/* GSTIN Field */}
+          <div>
+            <label className="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+              Enter 15-Digit GSTIN <span className="text-rose-500">*</span>
+            </label>
+            <div className="flex items-center justify-between border border-slate-200 rounded-xl px-3 py-2 bg-white focus-within:border-[#0038ed] focus-within:ring-2 focus-within:ring-blue-100 transition-all shadow-2xs">
+              <input
+                type="text"
+                maxLength={15}
+                placeholder="e.g. 22ABCDE1234F1Z5"
+                value={gstin}
+                onChange={(e) => handleGstinChange(e.target.value)}
+                className="w-full text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none uppercase font-mono tracking-wider font-semibold"
+              />
+              <button
+                type="button"
+                disabled={isVerifyingGstin || isGstinVerified}
+                onClick={handleVerifyGstin}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ml-2 whitespace-nowrap cursor-pointer ${
+                  isGstinVerified
+                    ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
+                    : 'bg-blue-50 text-[#0038ed] border-blue-200/60 hover:bg-blue-100'
+                }`}
+              >
+                {isVerifyingGstin ? 'Verifying...' : isGstinVerified ? 'Verified ✓' : 'Verify GSTIN'}
+              </button>
             </div>
-          )}
-        </div>
 
-        {/* Info Callout Box */}
-        <div className="p-3 bg-blue-50/70 border border-blue-100 rounded-xl flex items-center gap-2 text-xs text-slate-600">
-          <Info className="w-4 h-4 text-[#0038ed] shrink-0" />
-          <span>
-            GSTIN is required for commercial catalog sales on {branding.appName}. PAN is automatically extracted from your GSTIN.
-          </span>
-        </div>
-
-        {/* OR Divider */}
-        <div className="relative my-2 text-center">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-slate-200/80" />
-          </div>
-          <span className="relative bg-white px-3 text-[11px] font-bold text-slate-400 uppercase tracking-widest">
-            OR Enter PAN Directly
-          </span>
-        </div>
-
-        {/* PAN Field */}
-        <div>
-          <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-            10-Digit PAN Number <span className="text-rose-500">*</span>
-            {gstin.length >= 15 && (
-              <span className="ml-2 text-[10px] text-emerald-600 font-semibold normal-case bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                ✓ Auto-extracted &amp; locked from GSTIN
-              </span>
+            {/* Live Detected State Badge */}
+            {detectedState && (
+              <div className="flex items-center gap-1.5 mt-1 text-[11px] text-slate-600 font-medium animate-in fade-in">
+                <MapPin className="w-3 h-3 text-[#0038ed]" />
+                <span>
+                  Jurisdiction: <strong className="text-slate-900">{detectedState}</strong> (State Code {gstin.substring(0, 2)})
+                </span>
+              </div>
             )}
-          </label>
-          <div className="flex items-center justify-between border border-slate-200 rounded-xl px-3.5 py-2.5 bg-white focus-within:border-[#0038ed] focus-within:ring-2 focus-within:ring-blue-100 transition-all shadow-2xs">
+          </div>
+
+          {/* Info Callout Box */}
+          <div className="p-2.5 bg-blue-50/70 border border-blue-100 rounded-xl flex items-center gap-2 text-[11px] text-slate-600">
+            <Info className="w-3.5 h-3.5 text-[#0038ed] shrink-0" />
+            <span>
+              GSTIN is required for commercial sales. PAN is automatically extracted from your GSTIN.
+            </span>
+          </div>
+
+          {/* OR Divider */}
+          <div className="relative my-0.5 text-center">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-slate-200/80" />
+            </div>
+            <span className="relative bg-white px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              OR Enter PAN Directly
+            </span>
+          </div>
+
+          {/* PAN Field */}
+          <div>
+            <label className="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+              10-Digit PAN Number <span className="text-rose-500">*</span>
+              {gstin.length >= 15 && (
+                <span className="ml-2 text-[9px] text-emerald-600 font-semibold normal-case bg-emerald-50 px-1.5 py-0.2 rounded-full border border-emerald-200">
+                  ✓ Auto-extracted &amp; locked
+                </span>
+              )}
+            </label>
+            <div className="flex items-center justify-between border border-slate-200 rounded-xl px-3 py-2 bg-white focus-within:border-[#0038ed] focus-within:ring-2 focus-within:ring-blue-100 transition-all shadow-2xs">
+              <input
+                type="text"
+                maxLength={10}
+                placeholder="e.g. ABCDE1234F"
+                value={pan}
+                readOnly={gstin.length >= 15}
+                onChange={(e) => {
+                  if (gstin.length < 15) {
+                    setPan(e.target.value.toUpperCase());
+                    setIsPanVerified(false);
+                  }
+                }}
+                className={`w-full text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none uppercase font-mono tracking-wider font-semibold ${
+                  gstin.length >= 15 ? 'bg-slate-50 cursor-not-allowed opacity-90' : ''
+                }`}
+              />
+              <button
+                type="button"
+                disabled={isVerifyingPan || isPanVerified}
+                onClick={handleVerifyPan}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ml-2 whitespace-nowrap cursor-pointer ${
+                  isPanVerified
+                    ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
+                    : 'bg-blue-50 text-[#0038ed] border-blue-200/60 hover:bg-blue-100'
+                }`}
+              >
+                {isVerifyingPan ? 'Verifying...' : isPanVerified ? 'Verified ✓' : 'Verify PAN'}
+              </button>
+            </div>
+          </div>
+
+          {/* Business Legal Name */}
+          <div>
+            <label className="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+              Business Legal Name <span className="text-rose-500">*</span>
+            </label>
             <input
               type="text"
-              maxLength={10}
-              placeholder="e.g. ABCDE1234F"
-              value={pan}
-              readOnly={gstin.length >= 15}
-              onChange={(e) => {
-                if (gstin.length < 15) {
-                  setPan(e.target.value.toUpperCase());
-                  setIsPanVerified(false);
-                }
-              }}
-              className={`w-full text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none uppercase font-mono tracking-wider font-semibold ${
-                gstin.length >= 15 ? 'bg-slate-50 cursor-not-allowed opacity-90' : ''
-              }`}
+              placeholder="Legal name as registered with GST / Income Tax"
+              value={legalName}
+              onChange={(e) => setLegalName(e.target.value)}
+              className="w-full text-xs sm:text-sm border border-slate-200 rounded-xl px-3 py-2 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#0038ed] focus:ring-2 focus:ring-blue-100 transition-all shadow-2xs font-medium"
+              required
             />
-            <button
-              type="button"
-              disabled={isVerifyingPan || isPanVerified}
-              onClick={handleVerifyPan}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold border transition-all ml-2 whitespace-nowrap cursor-pointer ${
-                isPanVerified
-                  ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
-                  : 'bg-blue-50 text-[#0038ed] border-blue-200/60 hover:bg-blue-100'
-              }`}
-            >
-              {isVerifyingPan ? 'Verifying...' : isPanVerified ? 'Verified ✓' : 'Verify PAN'}
-            </button>
+            <span className="text-[10px] text-slate-400 mt-0.5 block">
+              This name will appear on statutory tax invoices and official customer receipts.
+            </span>
           </div>
         </div>
 
-        {/* Business Legal Name */}
-        <div>
-          <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-            Business Legal Name <span className="text-rose-500">*</span>
-          </label>
-          <input
-            type="text"
-            placeholder="Legal name as registered with GST / Income Tax"
-            value={legalName}
-            onChange={(e) => setLegalName(e.target.value)}
-            className="w-full text-xs sm:text-sm border border-slate-200 rounded-xl px-3.5 py-3 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#0038ed] focus:ring-2 focus:ring-blue-100 transition-all shadow-2xs font-medium"
-            required
-          />
-          <span className="text-[11px] text-slate-400 mt-1 block">
-            This name will appear on statutory tax invoices and official customer receipts.
-          </span>
-        </div>
-
-        {/* Continue Button */}
-        <div className="pt-2">
+        {/* DOCKED BOTTOM ACTION BAR (Never Clipped) */}
+        <div className="shrink-0 pt-3 border-t border-slate-100 bg-white">
           <button
             type="submit"
-            className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-[#0038ed] to-blue-600 hover:from-[#002fcf] hover:to-blue-700 text-white font-bold text-sm shadow-lg shadow-blue-600/25 transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-[0.99]"
+            className="w-full py-2.5 px-6 rounded-xl bg-gradient-to-r from-[#0038ed] to-blue-600 hover:from-[#002fcf] hover:to-blue-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-blue-600/25 transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-[0.99]"
           >
             <span>Confirm &amp; Proceed to Signature</span>
             <ArrowRight className="w-4 h-4" />
@@ -328,4 +334,3 @@ export const Step2IdVerification: React.FC<Step2IdVerificationProps> = ({ onCont
     </div>
   );
 };
-

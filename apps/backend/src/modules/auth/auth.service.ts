@@ -40,7 +40,7 @@ export function generateTokenPair(user: { _id: string; role: UserRole; email: st
   return {
     accessToken,
     refreshToken,
-    expiresIn: 15 * 60, // 15 mins in seconds
+    expiresIn: 30 * 24 * 60 * 60, // 30 days in seconds
   };
 }
 
@@ -194,15 +194,45 @@ export async function refreshAccessToken(refreshToken: string): Promise<AuthToke
   try {
     const decoded = jwt.verify(refreshToken, env.JWT_REFRESH_SECRET) as { sub: string };
 
-    const user = await UserModel.findById(decoded.sub).select('+refreshToken');
+    const user = await UserModel.findById(decoded.sub).select(
+      '+refreshToken +previousRefreshToken +previousRefreshTokenExpiresAt',
+    );
     if (!user || !user.isActive) {
       throw AppError.unauthorized('Invalid session. Please login again.', 'INVALID_SESSION');
     }
 
-    if (user.refreshToken !== refreshToken) {
-      throw AppError.unauthorized('Session has expired or was revoked. Please login again.', 'SESSION_REVOKED');
+    const isCurrentToken = user.refreshToken === refreshToken;
+    const isGraceToken =
+      user.previousRefreshToken === refreshToken &&
+      user.previousRefreshTokenExpiresAt &&
+      new Date() < user.previousRefreshTokenExpiresAt;
+
+    if (!isCurrentToken && !isGraceToken) {
+      throw AppError.unauthorized(
+        'Session has expired or was revoked. Please login again.',
+        'SESSION_REVOKED',
+      );
     }
 
+    // If request comes with a recent token within grace window (e.g. concurrent race condition across tabs)
+    if (isGraceToken && user.refreshToken) {
+      const payload: JwtTokenPayload = {
+        sub: user._id.toString(),
+        role: user.role,
+        email: user.email,
+        phone: user.phone,
+      };
+      const accessToken = jwt.sign(payload, env.JWT_ACCESS_SECRET, {
+        expiresIn: (env.JWT_ACCESS_EXPIRY || '30d') as jwt.SignOptions['expiresIn'],
+      });
+      return {
+        accessToken,
+        refreshToken: user.refreshToken,
+        expiresIn: 30 * 24 * 60 * 60,
+      };
+    }
+
+    // Rotate refresh token with a 5-minute concurrency grace period for existing in-flight requests
     const tokens = generateTokenPair({
       _id: user._id.toString(),
       role: user.role,
@@ -210,6 +240,8 @@ export async function refreshAccessToken(refreshToken: string): Promise<AuthToke
       phone: user.phone,
     });
 
+    user.previousRefreshToken = user.refreshToken;
+    user.previousRefreshTokenExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
     user.refreshToken = tokens.refreshToken;
     await user.save();
 
@@ -365,7 +397,9 @@ export async function deleteAddress(userId: string, addressId: string): Promise<
  * Logout User / Revoke Refresh Token
  */
 export async function logoutUser(userId: string): Promise<void> {
-  await UserModel.findByIdAndUpdate(userId, { $unset: { refreshToken: 1 } });
+  await UserModel.findByIdAndUpdate(userId, {
+    $unset: { refreshToken: 1, previousRefreshToken: 1, previousRefreshTokenExpiresAt: 1 },
+  });
 }
 
 /**

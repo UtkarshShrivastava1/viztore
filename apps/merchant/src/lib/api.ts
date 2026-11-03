@@ -14,17 +14,8 @@ export class ApiError extends Error {
   }
 }
 
-let isRefreshing = false;
-let refreshSubscribers: ((token: string) => void)[] = [];
-
-function subscribeTokenRefresh(cb: (token: string) => void) {
-  refreshSubscribers.push(cb);
-}
-
-function onRefreshed(token: string) {
-  refreshSubscribers.forEach((cb) => cb(token));
-  refreshSubscribers = [];
-}
+// Promise-based Singleton Mutex for Safe, Concurrency-Proof Token Refresh
+let refreshPromise: Promise<string | null> | null = null;
 
 async function performTokenRefresh(): Promise<string | null> {
   const refreshToken = localStorage.getItem('refresh_token');
@@ -45,16 +36,36 @@ async function performTokenRefresh(): Promise<string | null> {
       localStorage.setItem('refresh_token', newRefreshToken);
       return newAccessToken;
     }
+
+    // Only if server explicitly rejected the token as REVOKED or INVALID
+    if (
+      res.status === 401 &&
+      (json?.error?.code === 'SESSION_REVOKED' ||
+        json?.error?.code === 'INVALID_REFRESH_TOKEN')
+    ) {
+      console.warn('Session explicitly revoked by server. Session will require manual login.');
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('user_session');
+      localStorage.removeItem('current_store');
+      return null;
+    }
   } catch (err) {
-    console.warn('Silent token refresh failed:', err);
+    // Transient network error / server timeout: DO NOT purge credentials!
+    console.warn('Silent token refresh failed due to network / transient issue:', err);
+    return null;
   }
 
-  // If refresh failed completely, purge auth to prevent loops
-  localStorage.removeItem('access_token');
-  localStorage.removeItem('refresh_token');
-  localStorage.removeItem('user_session');
-  localStorage.removeItem('current_store');
   return null;
+}
+
+function getRefreshedToken(): Promise<string | null> {
+  if (!refreshPromise) {
+    refreshPromise = performTokenRefresh().finally(() => {
+      refreshPromise = null;
+    });
+  }
+  return refreshPromise;
 }
 
 export async function request<T>(
@@ -88,43 +99,22 @@ export async function request<T>(
     headers,
   });
 
-  // Handle 401 Unauthorized via automatic token refresh
+  // Handle 401 Unauthorized via atomic promise-based refresh mutex
   if (
     response.status === 401 &&
     !cleanEndpoint.includes('/auth/login') &&
     !cleanEndpoint.includes('/auth/refresh-token')
   ) {
-    if (!isRefreshing) {
-      isRefreshing = true;
-      const newToken = await performTokenRefresh();
-      isRefreshing = false;
-
-      if (newToken) {
-        onRefreshed(newToken);
-        const retryHeaders: HeadersInit = {
-          ...headers,
-          Authorization: `Bearer ${newToken}`,
-        };
-        response = await fetch(`${API_BASE_URL}${cleanEndpoint}`, {
-          ...options,
-          headers: retryHeaders,
-        });
-      }
-    } else {
-      const newToken = await new Promise<string | null>((resolve) => {
-        subscribeTokenRefresh((t) => resolve(t));
+    const newToken = await getRefreshedToken();
+    if (newToken) {
+      const retryHeaders: HeadersInit = {
+        ...headers,
+        Authorization: `Bearer ${newToken}`,
+      };
+      response = await fetch(`${API_BASE_URL}${cleanEndpoint}`, {
+        ...options,
+        headers: retryHeaders,
       });
-
-      if (newToken) {
-        const retryHeaders: HeadersInit = {
-          ...headers,
-          Authorization: `Bearer ${newToken}`,
-        };
-        response = await fetch(`${API_BASE_URL}${cleanEndpoint}`, {
-          ...options,
-          headers: retryHeaders,
-        });
-      }
     }
   }
 

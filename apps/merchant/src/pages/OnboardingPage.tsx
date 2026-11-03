@@ -20,7 +20,15 @@ interface OnboardingPageProps {
   onNavigate?: (route: string) => void;
 }
 
-export type SubStepKey = '1_account' | '2_id' | '2_signature' | '3_store' | '3_business' | '4_bank' | '5_plan' | 'success';
+export type SubStepKey =
+  | '1_account'
+  | '2_id'
+  | '2_signature'
+  | '3_store'
+  | '3_business'
+  | '4_bank'
+  | '5_plan'
+  | 'success';
 
 export const OnboardingPage: React.FC<OnboardingPageProps> = ({
   onEnterDashboard,
@@ -41,7 +49,6 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
     }
   };
 
-  // Derive active main step (1, 2, 3, 4, 5) for the sidebar indicator
   const getActiveMainStep = (): OnboardingMainStep => {
     if (subStep.startsWith('1_')) return 1;
     if (subStep.startsWith('2_')) return 2;
@@ -73,7 +80,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
             }}
           />
         </div>
-        <footer className="py-6 border-t border-slate-200 text-center text-xs text-slate-500 bg-white">
+        <footer className="py-2.5 border-t border-slate-200 text-center text-xs text-slate-500 bg-white">
           &copy; {new Date().getFullYear()} {branding.appName}. Hyperlocal Retail Commerce Infrastructure.
         </footer>
       </div>
@@ -92,7 +99,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
         <div className="flex-1 py-10 px-4 sm:px-6 flex items-center justify-center">
           <RegistrationSuccessView onEnterDashboard={onEnterDashboard} />
         </div>
-        <footer className="py-6 border-t border-slate-200 text-center text-xs text-slate-500 bg-white">
+        <footer className="py-2.5 border-t border-slate-200 text-center text-xs text-slate-500 bg-white">
           &copy; {new Date().getFullYear()} {branding.appName}. Hyperlocal Retail Commerce Infrastructure.
         </footer>
       </div>
@@ -100,8 +107,8 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
   }
 
   return (
-    <div className="min-h-screen bg-[#f3f6fc] flex flex-col justify-between font-sans selection:bg-[#0038ed] selection:text-white">
-      {/* Top Seller Navigation Bar with full dropdown wiring */}
+    <div className="min-h-screen lg:h-screen lg:overflow-hidden bg-[#f3f6fc] flex flex-col justify-between font-sans selection:bg-[#0038ed] selection:text-white">
+      {/* Top Seller Navigation Bar */}
       <MerchantNavbar
         currentRoute="/register"
         onNavigate={handleNavigate}
@@ -109,15 +116,20 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
         onGoToSignup={() => setSubStep('1_account')}
       />
 
-      {/* Main Split-Screen Onboarding Section */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-8 lg:p-12">
-        {/* Mobile Horizontal Progress Bar Indicator */}
-        <div className="lg:hidden mb-6 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
+      {/* Main Single-Screen Onboarding Section */}
+      <main className="flex-1 max-w-[1340px] w-full mx-auto px-3 sm:px-6 py-2 sm:py-3 lg:px-6 lg:py-2 flex flex-col justify-center min-h-0">
+        {/* Mobile / Tablet Horizontal Progress Bar (Hidden on desktop lg:) */}
+        <div className="lg:hidden mb-3 bg-white p-3 sm:p-4 rounded-2xl border border-slate-200/80 shadow-xs">
           <div className="flex items-center justify-between text-xs font-bold text-slate-700 mb-2">
-            <span className="text-[#0038ed] uppercase tracking-wide">
-              Step {activeMainStep} of 5
-            </span>
-            <span className="text-slate-500">
+            <div className="flex items-center gap-2">
+              <span className="w-5 h-5 rounded-full bg-[#0038ed] text-white flex items-center justify-center text-[10px] font-black">
+                {activeMainStep}
+              </span>
+              <span className="text-[#0038ed] uppercase tracking-wide font-extrabold text-[11px]">
+                Step {activeMainStep} of 5
+              </span>
+            </div>
+            <span className="text-slate-600 font-semibold text-xs">
               {activeMainStep === 1 && 'Mobile & Email'}
               {activeMainStep === 2 && 'Identity Verification'}
               {activeMainStep === 3 && 'Store Details'}
@@ -125,7 +137,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
               {activeMainStep === 5 && 'Plan & Activation'}
             </span>
           </div>
-          <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+          <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
             <div
               className="bg-gradient-to-r from-[#0038ed] to-blue-500 h-full rounded-full transition-all duration-300"
               style={{ width: `${(activeMainStep / 5) * 100}%` }}
@@ -133,11 +145,12 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
-          {/* Left Column: Progress Sidebar & Trust Badges (Screen 3.png left) */}
-          <div className="lg:col-span-5">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-5 xl:gap-6 items-stretch lg:h-full lg:max-h-[calc(100vh-105px)] min-h-0">
+          {/* Left Column: Progress Sidebar (Hidden on mobile/tablet to avoid duplicate scrolling, displayed cleanly on lg:) */}
+          <div className="hidden lg:flex lg:col-span-5 xl:col-span-4 lg:h-full flex-col min-h-0">
             <OnboardingSidebar
               activeMainStep={activeMainStep}
+              subStep={subStep}
               onSelectStep={(step) => {
                 if (step === 1) setSubStep('1_account');
                 if (step === 2) setSubStep('2_id');
@@ -149,7 +162,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
           </div>
 
           {/* Right Column: Step Form Content */}
-          <div className="lg:col-span-7">
+          <div className="lg:col-span-7 xl:col-span-8 lg:h-full flex flex-col min-h-0">
             {subStep === '1_account' && (
               <Step1MobileEmail
                 onContinue={() => setSubStep('2_id')}
@@ -200,7 +213,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({
       </main>
 
       {/* Footer */}
-      <footer className="py-6 border-t border-slate-200 text-center text-xs text-slate-500 bg-white">
+      <footer className="py-2 border-t border-slate-200 text-center text-[11px] sm:text-xs text-slate-500 bg-white shrink-0">
         &copy; {new Date().getFullYear()} {branding.appName}. Hyperlocal Retail Commerce Infrastructure.
       </footer>
     </div>

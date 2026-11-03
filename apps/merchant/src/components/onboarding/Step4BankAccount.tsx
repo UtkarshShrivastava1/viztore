@@ -107,8 +107,9 @@ export const Step4BankAccount: React.FC<Step4BankAccountProps> = ({ onBack, onCo
 
     updateStep(6, step6Data);
 
-    // 1. Ensure user is authenticated as merchant
-    if (!useAuthStore.getState().isAuthenticated && draft.step1?.email && draft.step1?.password) {
+    // Ensure user is authenticated as merchant
+    const currentToken = localStorage.getItem('access_token');
+    if ((!useAuthStore.getState().isAuthenticated || !currentToken) && draft.step1?.email && draft.step1?.password) {
       try {
         let authRes: any;
         try {
@@ -123,79 +124,25 @@ export const Step4BankAccount: React.FC<Step4BankAccountProps> = ({ onBack, onCo
           authRes = await api.post('/auth/login', {
             identifier: draft.step1.email.toLowerCase().trim(),
             password: draft.step1.password,
+            role: 'merchant',
           });
         }
         if (authRes?.tokens?.accessToken && authRes?.user) {
           await useAuthStore.getState().setAuth(authRes.user, authRes.tokens.accessToken, authRes.tokens.refreshToken);
         }
       } catch (authErr) {
-        console.warn('Could not auto-authenticate user before submit:', authErr);
+        console.warn('Could not auto-authenticate user in Step 4:', authErr);
       }
     }
 
-    // 2. Submit complete 6-step onboarding payload with Bhilai/Chhattisgarh default geography
-    const payload = {
-      step1: draft.step1,
-      step2: {
-        gstin: draft.step2?.gstin || '22ABCDE1234F1Z5',
-        pan: draft.step2?.pan || 'ABCDE1234F',
-        legalBusinessName: draft.step2?.legalBusinessName || accountHolderName || 'Hyperlocal Retail Store',
-      },
-      step3: {
-        signatureType: draft.step3?.signatureType || 'generate',
-        signatureData: draft.step3?.signatureData || 'Authorized Signatory',
-        authorizedSignatoryName: draft.step3?.authorizedSignatoryName || accountHolderName || 'Authorized Signatory',
-      },
-      step4: {
-        merchantFullName: draft.step4?.merchantFullName || draft.step1?.fullName || 'Retail Merchant',
-        storeDisplayName: draft.step4?.storeDisplayName || 'Fresh Express Mart',
-        description: draft.step4?.description || 'Hyperlocal retail store and provisions',
-        address: {
-          street: draft.step4?.address?.street || 'Shop 12, Akashganga Complex, Supela',
-          landmark: draft.step4?.address?.landmark || 'Near Supela Clock Tower',
-          city: draft.step4?.address?.city || 'Bhilai',
-          state: draft.step4?.address?.state || 'Chhattisgarh',
-          pincode: draft.step4?.address?.pincode || '490023',
-        },
-        location: draft.step4?.location || {
-          type: 'Point',
-          coordinates: [81.378, 21.192],
-        },
-        deliveryRadiusKm: draft.step4?.deliveryRadiusKm || 4,
-      },
-      step5: draft.step5 || {
-        primaryCategory: 'fashion',
-        operatingHours: {
-          monday: { open: '09:00', close: '21:00', isOpen: true },
-          tuesday: { open: '09:00', close: '21:00', isOpen: true },
-          wednesday: { open: '09:00', close: '21:00', isOpen: true },
-          thursday: { open: '09:00', close: '21:00', isOpen: true },
-          friday: { open: '09:00', close: '21:00', isOpen: true },
-          saturday: { open: '09:00', close: '21:00', isOpen: true },
-          sunday: { open: '10:00', close: '20:00', isOpen: true },
-        },
-      },
-      step6: step6Data,
-    };
-
-    try {
-      await api.post<any>('/stores/onboarding/submit', payload);
-      useOnboardingStore.getState().setUnderReview(false);
-      await useAuthStore.getState().fetchCurrentStore();
-      onComplete();
-    } catch (err: any) {
-      console.warn('Backend store onboarding submit fallback:', err);
-      useOnboardingStore.getState().setUnderReview(false);
-      onComplete();
-    } finally {
-      setIsSubmitting(false);
-    }
+    onComplete();
+    setIsSubmitting(false);
   };
 
   return (
-    <div className="bg-white border border-slate-200/90 rounded-3xl p-6 sm:p-8 lg:p-9 shadow-xl shadow-slate-200/40 relative">
+    <div className="bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 lg:p-7 shadow-xl shadow-slate-200/40 relative lg:h-full flex flex-col justify-between overflow-hidden">
       {/* Header with Step 4 Badge */}
-      <div className="flex items-center justify-between pb-5 mb-6 border-b border-slate-100">
+      <div className="flex items-center justify-between pb-3 mb-2.5 border-b border-slate-100 shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#0038ed] to-blue-500 text-white font-extrabold text-sm flex items-center justify-center shadow-md shadow-blue-600/25 shrink-0">
             4
@@ -204,125 +151,127 @@ export const Step4BankAccount: React.FC<Step4BankAccountProps> = ({ onBack, onCo
             <h2 className="text-xs sm:text-sm font-black tracking-wider text-[#0038ed] uppercase">
               Bank Account &amp; Payouts
             </h2>
-            <p className="text-xs text-slate-400 mt-0.5">Automated daily direct settlement account</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">Automated daily direct settlement account</p>
           </div>
         </div>
 
         <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-600 bg-slate-50 px-2.5 py-1 rounded-full border border-slate-200/60 font-medium">
           <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
-          <span>NPCI / RBI Settlement Standard</span>
+          <span>NPCI / RBI Standard</span>
         </div>
       </div>
 
-      <p className="text-xs text-slate-500 mb-5 leading-relaxed">
-        Link your commercial bank account to receive automated daily payouts and customer order settlements.
-      </p>
-
-      {/* Compliance Warning Notice Banner */}
-      <div className="mb-5 p-3.5 bg-amber-50/80 border border-amber-200/90 rounded-xl flex items-start gap-2.5 text-xs text-amber-900 leading-relaxed shadow-2xs">
-        <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-        <span>
-          Bank account should be in the name of the registered business or legal proprietor name as per PAN/GSTIN records.
-        </span>
-      </div>
-
       {error && (
-        <div className="mb-5 p-3.5 bg-rose-50 border border-rose-200/80 rounded-xl text-rose-600 text-xs font-semibold flex items-center gap-2 animate-in fade-in">
+        <div className="mb-2.5 p-2.5 bg-rose-50 border border-rose-200/80 rounded-xl text-rose-600 text-xs font-semibold flex items-center gap-2 shrink-0 animate-in fade-in">
           <div className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Account Holder Name */}
-        <div>
-          <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-            Account Holder Name <span className="text-rose-500">*</span>
-          </label>
-          <input
-            type="text"
-            placeholder="Account holder name as per bank passbook / statement"
-            value={accountHolderName}
-            onChange={(e) => setAccountHolderName(e.target.value)}
-            className="w-full text-xs sm:text-sm border border-slate-200 rounded-xl px-3.5 py-3 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#0038ed] focus:ring-2 focus:ring-blue-100 transition-all shadow-2xs font-medium"
-            required
-          />
-        </div>
+      <form
+        onSubmit={handleSubmit}
+        className="flex-1 flex flex-col justify-between overflow-hidden min-h-0"
+      >
+        <div className="flex-1 overflow-y-auto pr-1 sm:pr-2 min-h-0 space-y-2.5 scrollbar-thin">
+          <p className="text-xs text-slate-500 leading-relaxed">
+            Link your commercial bank account to receive automated daily payouts and customer order settlements.
+          </p>
 
-        {/* Account Number */}
-        <div>
-          <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-            Bank Account Number <span className="text-rose-500">*</span>
-          </label>
-          <input
-            type="password"
-            placeholder="Enter Bank Account Number (9–18 digits)"
-            value={accountNumber}
-            onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, ''))}
-            className="w-full text-xs sm:text-sm border border-slate-200 rounded-xl px-3.5 py-3 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#0038ed] focus:ring-2 focus:ring-blue-100 transition-all shadow-2xs font-mono tracking-wider font-semibold"
-            required
-          />
-        </div>
+          {/* Compliance Warning Notice Banner */}
+          <div className="p-2.5 bg-amber-50/80 border border-amber-200/90 rounded-xl flex items-start gap-2 text-xs text-amber-900 leading-relaxed shadow-2xs">
+            <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            <span>
+              Bank account should be in the name of the registered business or legal proprietor name as per PAN/GSTIN records.
+            </span>
+          </div>
 
-        {/* Confirm Account Number */}
-        <div>
-          <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-            Confirm Bank Account Number <span className="text-rose-500">*</span>
-          </label>
-          <input
-            type="text"
-            placeholder="Re-enter Bank Account Number to verify"
-            value={confirmAccountNumber}
-            onChange={(e) => setConfirmAccountNumber(e.target.value.replace(/\D/g, ''))}
-            className="w-full text-xs sm:text-sm border border-slate-200 rounded-xl px-3.5 py-3 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#0038ed] focus:ring-2 focus:ring-blue-100 transition-all shadow-2xs font-mono tracking-wider font-semibold"
-            required
-          />
-        </div>
-
-        {/* IFSC Code */}
-        <div>
-          <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-            IFSC Code <span className="text-rose-500">*</span>
-          </label>
-          <div className="relative">
+          {/* Account Holder Name */}
+          <div>
+            <label className="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+              Account Holder Name <span className="text-rose-500">*</span>
+            </label>
             <input
               type="text"
-              maxLength={11}
-              placeholder="e.g. SBIN0001234, HDFC0000123"
-              value={ifscCode}
-              onChange={(e) => setIfscCode(e.target.value.toUpperCase())}
-              className="w-full text-xs sm:text-sm border border-slate-200 rounded-xl px-3.5 py-3 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#0038ed] focus:ring-2 focus:ring-blue-100 transition-all shadow-2xs font-mono uppercase tracking-wider font-bold"
+              placeholder="Account holder name as per bank passbook"
+              value={accountHolderName}
+              onChange={(e) => setAccountHolderName(e.target.value)}
+              className="w-full text-xs sm:text-sm border border-slate-200 rounded-xl px-3 py-2 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#0038ed] focus:ring-2 focus:ring-blue-100 transition-all font-medium"
               required
             />
+          </div>
+
+          {/* Account Number & Confirm Account Number in 2 Columns */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div>
+              <label className="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                Bank Account Number <span className="text-rose-500">*</span>
+              </label>
+              <input
+                type="password"
+                placeholder="9–18 digits"
+                value={accountNumber}
+                onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, ''))}
+                className="w-full text-xs sm:text-sm border border-slate-200 rounded-xl px-3 py-2 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#0038ed] focus:ring-2 focus:ring-blue-100 transition-all font-mono tracking-wider font-semibold"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                Confirm Account Number <span className="text-rose-500">*</span>
+              </label>
+              <input
+                type="text"
+                placeholder="Re-enter to verify"
+                value={confirmAccountNumber}
+                onChange={(e) => setConfirmAccountNumber(e.target.value.replace(/\D/g, ''))}
+                className="w-full text-xs sm:text-sm border border-slate-200 rounded-xl px-3 py-2 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#0038ed] focus:ring-2 focus:ring-blue-100 transition-all font-mono tracking-wider font-semibold"
+                required
+              />
+            </div>
+          </div>
+
+          {/* IFSC Code */}
+          <div>
+            <label className="block text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+              IFSC Code <span className="text-rose-500">*</span>
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                maxLength={11}
+                placeholder="e.g. SBIN0001234, HDFC0000123"
+                value={ifscCode}
+                onChange={(e) => setIfscCode(e.target.value.toUpperCase())}
+                className="w-full text-xs sm:text-sm border border-slate-200 rounded-xl px-3 py-2 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#0038ed] focus:ring-2 focus:ring-blue-100 transition-all font-mono uppercase tracking-wider font-bold pr-28"
+                required
+              />
+              {detectedBank && (
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-200 text-[10px] font-semibold">
+                  <Check className="w-3 h-3 text-emerald-600" />
+                  <span>Verified</span>
+                </div>
+              )}
+            </div>
+
+            {/* Dynamic Detected Bank Badge */}
             {detectedBank && (
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-200 text-xs font-semibold">
-                <Check className="w-3.5 h-3.5 text-emerald-600" />
-                <span className="hidden sm:inline">Bank Identified</span>
+              <div className="mt-1.5 p-2 bg-blue-50/70 border border-blue-200/60 rounded-xl flex items-center gap-2 text-xs text-blue-900 font-medium">
+                <Building2 className="w-3.5 h-3.5 text-[#0038ed] shrink-0" />
+                <span>
+                  Detected Bank: <strong className="font-bold text-slate-900">{detectedBank}</strong>
+                </span>
               </div>
             )}
           </div>
-
-          {/* Dynamic Detected Bank Badge */}
-          {detectedBank ? (
-            <div className="mt-2.5 p-2.5 bg-blue-50/70 border border-blue-200/60 rounded-xl flex items-center gap-2.5 text-xs text-blue-900 font-medium">
-              <Building2 className="w-4 h-4 text-[#0038ed] shrink-0" />
-              <span>
-                Detected Bank: <strong className="font-bold text-slate-900">{detectedBank}</strong>
-              </span>
-            </div>
-          ) : (
-            <span className="text-[11px] text-slate-400 mt-1 block">
-              11-character bank branch identifier printed on cheque book or passbook.
-            </span>
-          )}
         </div>
 
-        {/* Action Buttons */}
-        <div className="pt-4 flex items-center gap-3">
+        {/* DOCKED BOTTOM ACTION BAR (Never Clipped) */}
+        <div className="shrink-0 pt-3 border-t border-slate-100 flex items-center justify-between gap-3 bg-white">
           <button
             type="button"
             onClick={onBack}
-            className="w-32 py-3.5 px-4 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+            className="py-2.5 px-4 rounded-xl border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Back</span>
@@ -331,14 +280,14 @@ export const Step4BankAccount: React.FC<Step4BankAccountProps> = ({ onBack, onCo
           <button
             type="submit"
             disabled={isSubmitting}
-            className="flex-1 py-3.5 px-6 rounded-xl bg-gradient-to-r from-[#0038ed] to-blue-600 hover:from-[#002fcf] hover:to-blue-700 text-white font-bold text-sm shadow-lg shadow-blue-600/25 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 active:scale-[0.99]"
+            className="py-2.5 px-6 rounded-xl bg-gradient-to-r from-[#0038ed] to-blue-600 hover:from-[#002fcf] hover:to-blue-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-blue-600/25 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 active:scale-[0.99]"
           >
             {isSubmitting ? (
-              <span>Submitting Application...</span>
+              <span>Saving Account...</span>
             ) : (
               <>
-                <span>Complete Registration &amp; Open Store</span>
-                <CheckCircle2 className="w-4 h-4" />
+                <span>Proceed to Commercial Plan &amp; Activation</span>
+                <ArrowRight className="w-4 h-4" />
               </>
             )}
           </button>

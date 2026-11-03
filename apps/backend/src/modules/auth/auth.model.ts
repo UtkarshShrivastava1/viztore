@@ -5,6 +5,8 @@ import { IUser, IUserAddress, UserRole } from '@repo/shared-types';
 export interface IUserDocument extends Omit<IUser, '_id'>, Document {
   password?: string;
   refreshToken?: string;
+  previousRefreshToken?: string;
+  previousRefreshTokenExpiresAt?: Date;
   favoriteStores?: mongoose.Types.ObjectId[];
   wishlist?: mongoose.Types.ObjectId[];
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -87,6 +89,14 @@ const userSchema = new Schema<IUserDocument>(
       type: String,
       select: false,
     },
+    previousRefreshToken: {
+      type: String,
+      select: false,
+    },
+    previousRefreshTokenExpiresAt: {
+      type: Date,
+      select: false,
+    },
   },
   {
     timestamps: true,
@@ -94,6 +104,8 @@ const userSchema = new Schema<IUserDocument>(
       transform(_doc, ret: Record<string, unknown>) {
         delete ret.password;
         delete ret.refreshToken;
+        delete ret.previousRefreshToken;
+        delete ret.previousRefreshTokenExpiresAt;
         delete ret.__v;
         return ret;
       },

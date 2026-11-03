@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation, useSearchParams, Navigate } from 'react-router-dom';
 import { useAuthStore } from './stores/authStore.js';
+import { api } from './lib/api.js';
 import { useOnboardingStore } from './stores/onboardingStore.js';
 import { SellerLoginPage } from './pages/SellerLoginPage.js';
 import { OnboardingPage } from './pages/OnboardingPage.js';
@@ -111,6 +112,17 @@ export const App: React.FC = () => {
   useEffect(() => {
     initialize();
   }, [initialize]);
+
+  // Proactive Session Keep-Alive Heartbeat (keeps merchant session alive indefinitely)
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const interval = setInterval(() => {
+      api.get('/stores/mine').catch(() => {});
+    }, 15 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [isAuthenticated]);
 
   // Determine view mode based on Route path & hostname
   const pathname = location.pathname.toLowerCase();

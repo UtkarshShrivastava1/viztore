@@ -1208,26 +1208,23 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
   },
 
   updateStock: async (id, newStock, lowStockThreshold) => {
-    try {
-      if (/^[0-9a-fA-F]{24}$/.test(id)) {
-        const product = get().products.find((p) => p.id === id);
-        if (product) {
-          const updatedVariants = [
-            {
-              sku: product.sku,
-              price: product.price,
-              mrp: product.mrp || product.price,
-              stock: newStock,
-              images: product.images,
-              isActive: product.status !== 'inactive',
-            },
-          ];
-          await catalogApi.updateProduct(id, { variants: updatedVariants });
-        }
+    if (/^[0-9a-fA-F]{24}$/.test(id)) {
+      const product = get().products.find((p) => p.id === id);
+      if (product) {
+        const updatedVariants = [
+          {
+            sku: product.sku,
+            price: product.price,
+            mrp: product.mrp || product.price,
+            stock: newStock,
+            images: product.images,
+            isActive: product.status !== 'inactive',
+          },
+        ];
+        await catalogApi.updateProduct(id, { variants: updatedVariants });
       }
-    } catch (err) {
-      console.warn('Failed to update product stock on server:', err);
     }
+
     set((state) => {
       const updatedList = state.products.map((p) =>
         p.id === id

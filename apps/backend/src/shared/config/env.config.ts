@@ -39,8 +39,8 @@ const envSchema = z.object({
   // JWT
   JWT_ACCESS_SECRET: z.string().min(16, 'JWT_ACCESS_SECRET must be at least 16 chars'),
   JWT_REFRESH_SECRET: z.string().min(16, 'JWT_REFRESH_SECRET must be at least 16 chars'),
-  JWT_ACCESS_EXPIRY: z.string().default('15m'),
-  JWT_REFRESH_EXPIRY: z.string().default('7d'),
+  JWT_ACCESS_EXPIRY: z.string().default('30d'),
+  JWT_REFRESH_EXPIRY: z.string().default('365d'),
 
   // Client URLs for CORS
   CLIENT_WEB_URL: z.string().default('http://localhost:3000'),

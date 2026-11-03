@@ -24,7 +24,7 @@ describe('Auth Service Unit Tests', () => {
       expect(tokens).toHaveProperty('refreshToken');
       expect(typeof tokens.accessToken).toBe('string');
       expect(typeof tokens.refreshToken).toBe('string');
-      expect(tokens.expiresIn).toBe(900);
+      expect(tokens.expiresIn).toBe(30 * 24 * 60 * 60);
     });
   });
 

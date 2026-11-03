@@ -55,12 +55,17 @@ export const RegistrationSuccessView: React.FC<RegistrationSuccessViewProps> = (
       ? `•••• •••• ${rawAccount.slice(-4)}`
       : `•••• ${rawAccount}`;
 
+  const handleEnterDashboard = () => {
+    useOnboardingStore.getState().resetOnboarding();
+    onEnterDashboard();
+  };
+
   // Countdown timer auto-transitioning to dashboard
   useEffect(() => {
     if (isPaused) return;
 
     if (countdown <= 0) {
-      onEnterDashboard();
+      handleEnterDashboard();
       return;
     }
 
@@ -224,7 +229,7 @@ export const RegistrationSuccessView: React.FC<RegistrationSuccessViewProps> = (
 
           <button
             type="button"
-            onClick={onEnterDashboard}
+            onClick={handleEnterDashboard}
             className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-[#0038ed] hover:bg-blue-700 text-white font-bold text-sm shadow-xl shadow-blue-600/25 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer group hover:scale-[1.01]"
           >
             <span>Launch Merchant Dashboard Now</span>
