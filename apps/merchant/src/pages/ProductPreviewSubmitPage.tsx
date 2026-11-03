@@ -81,9 +81,9 @@ export const ProductPreviewSubmitPage: React.FC = () => {
     }
   };
 
-  const mrp = Number(draftProduct.mrp ?? 699);
-  const price = Number(draftProduct.price ?? 599);
-  const cost = Number(draftProduct.costPrice ?? 350);
+  const mrp = Number(draftProduct.mrp ?? draftProduct.price ?? 0);
+  const price = Number(draftProduct.price ?? 0);
+  const cost = Number(draftProduct.costPrice ?? 0);
   const discountPct = mrp > price ? Math.round(((mrp - price) / mrp) * 100) : 0;
   const margin = price - cost;
   const marginPct = price > 0 ? Math.round((margin / price) * 100) : 0;

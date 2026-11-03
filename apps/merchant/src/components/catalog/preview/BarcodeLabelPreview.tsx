@@ -18,8 +18,8 @@ export const BarcodeLabelPreview: React.FC<BarcodeLabelPreviewProps> = ({
 }) => {
   const { currentStore, user } = useAuthStore();
   const storeDisplayName = (storeName || currentStore?.name || user?.fullName || branding.appName).toUpperCase();
-  const mrp = Number(product.mrp ?? 899);
-  const sellingPrice = Number(product.price ?? 599);
+  const sellingPrice = Number(product.price ?? 0);
+  const mrp = Number(product.mrp ?? (sellingPrice > 0 ? sellingPrice : 0));
   const savings = Math.max(0, mrp - sellingPrice);
   const discountPct = mrp > 0 ? Math.round((savings / mrp) * 100) : 0;
   const { subtitle } = React.useMemo(() => getBarcodeStickerSpecs(product), [product]);

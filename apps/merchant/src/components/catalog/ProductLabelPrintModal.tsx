@@ -15,7 +15,7 @@ export const ProductLabelPrintModal: React.FC = () => {
   if (!isPrintLabelModalOpen || !selectedProductForLabel) return null;
 
   const product = selectedProductForLabel;
-  const mrp = product.mrp || product.price + 300;
+  const mrp = product.mrp || product.price || 0;
   const sellingPrice = product.price;
   const savings = Math.max(0, mrp - sellingPrice);
   const discountPct = mrp > 0 ? Math.round((savings / mrp) * 100) : 0;

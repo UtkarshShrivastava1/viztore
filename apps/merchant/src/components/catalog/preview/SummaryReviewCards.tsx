@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import {
   Edit2,
   FolderTree,
@@ -283,9 +283,9 @@ export const SummaryReviewCards: React.FC<SummaryReviewCardsProps> = ({ product 
           </button>
         </div>
         <div className="space-y-1 text-xs text-slate-600">
-          <div>Warehouse: <strong className="text-slate-800">{storage.warehouse}</strong></div>
+          <div>Warehouse: <strong className="text-slate-800">{storage.warehouse || "Not specified"}</strong></div>
           <div>
-            Location: {storage.room ? `${storage.room} • ` : ''}Rack: {storage.rack || '-'} • Shelf: {storage.shelf || '-'} • Bin: {storage.bin || '-'}
+            Location: {storage.room ? `${storage.room} â€¢ ` : ''}Rack: {storage.rack || '-'} â€¢ Shelf: {storage.shelf || '-'} â€¢ Bin: {storage.bin || '-'}
           </div>
         </div>
       </div>
@@ -309,8 +309,8 @@ export const SummaryReviewCards: React.FC<SummaryReviewCardsProps> = ({ product 
           </button>
         </div>
         <div className="grid grid-cols-2 gap-1.5 text-xs text-slate-600">
-          <div>Selling Price: <strong className="text-slate-900">₹{product.price}</strong></div>
-          <div>MRP: <strong className="text-slate-500 line-through">₹{product.mrp}</strong></div>
+          <div>Selling Price: <strong className="text-slate-900">{product.price ? `₹${product.price}` : "Not set"}</strong></div>
+          <div>MRP: <strong className="text-slate-500 line-through">{product.mrp ? `₹${product.mrp}` : "-"}</strong></div>
           <div>Tax Rate: <strong className="text-slate-800">{tax.rate}% ({(tax.category || 'Standard').replace(/\s*\(\d+%\)/, '')})</strong></div>
           <div>Tax Inclusive: <strong className="text-slate-800">{tax.inclusive ? 'Yes' : 'No'}</strong></div>
         </div>

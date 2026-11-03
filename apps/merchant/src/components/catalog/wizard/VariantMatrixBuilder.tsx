@@ -72,9 +72,9 @@ export const VariantMatrixBuilder: React.FC = () => {
   const isFash = isFashionCategory(draftProduct.category, draftProduct.subCategory);
 
   const baseSku = draftProduct.sku || `SKU-${Date.now().toString().slice(-6)}`;
-  const basePrice = draftProduct.price ?? 499;
-  const baseMrp = draftProduct.mrp ?? 699;
-  const baseCost = draftProduct.costPrice ?? 300;
+  const basePrice = draftProduct.price ?? 0;
+  const baseMrp = draftProduct.mrp ?? 0;
+  const baseCost = draftProduct.costPrice ?? 0;
 
   // Presets and titles according to category
   const activePrimaryPresets = isElect
@@ -134,8 +134,8 @@ export const VariantMatrixBuilder: React.FC = () => {
   }, [draftProduct.category, draftProduct.subCategory]);
 
   // Bulk control values
-  const [bulkPriceInput, setBulkPriceInput] = useState<string>(String(basePrice));
-  const [bulkMrpInput, setBulkMrpInput] = useState<string>(String(baseMrp));
+  const [bulkPriceInput, setBulkPriceInput] = useState<string>(basePrice > 0 ? String(basePrice) : '');
+  const [bulkMrpInput, setBulkMrpInput] = useState<string>(baseMrp > 0 ? String(baseMrp) : '');
   const [bulkStockInput, setBulkStockInput] = useState<string>('15');
 
   // Matrix Rows

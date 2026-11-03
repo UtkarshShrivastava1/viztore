@@ -13,6 +13,7 @@ import {
   Info,
 } from 'lucide-react';
 import { useCatalogStore } from '../../../stores/catalogStore.js';
+import { useAuthStore } from '../../../stores/authStore.js';
 import { VariantMatrixBuilder } from './VariantMatrixBuilder.js';
 import { findTaxonomy, isFashionCategory, isFootwearCategory, isElectronicsCategory, isGroceryCategory } from '../../../lib/taxonomyHelper.js';
 
@@ -68,6 +69,8 @@ const sizeOptions = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 
 export const AddProductStep3: React.FC = () => {
   const { draftProduct, updateDraftProduct, setWizardStep, setActiveView } = useCatalogStore();
+  const { currentStore } = useAuthStore();
+  const activeStoreName = currentStore?.name || 'Main Store';
 
   const [tagInput, setTagInput] = useState('');
   const [copiedSku, setCopiedSku] = useState(false);
@@ -83,24 +86,24 @@ export const AddProductStep3: React.FC = () => {
   const attributes = draftProduct.attributes || {};
   const status = draftProduct.status || 'active';
   const storage = draftProduct.storageLocation || {
-    warehouse: 'Main Warehouse',
-    room: 'Room 101',
-    rack: 'R-05',
-    shelf: 'S-02',
-    bin: 'B-03',
-    description: 'Near window side, second rack',
+    warehouse: activeStoreName,
+    room: '',
+    rack: '',
+    shelf: '',
+    bin: '',
+    description: '',
   };
-  const price = draftProduct.price ?? 599;
-  const costPrice = draftProduct.costPrice ?? 350;
-  const mrp = draftProduct.mrp ?? 699;
+  const price = draftProduct.price !== undefined && draftProduct.price !== null ? draftProduct.price : '';
+  const costPrice = draftProduct.costPrice !== undefined && draftProduct.costPrice !== null ? draftProduct.costPrice : '';
+  const mrp = draftProduct.mrp !== undefined && draftProduct.mrp !== null ? draftProduct.mrp : '';
   const tax = draftProduct.tax || {
     category: matchedTaxonomy?.category ? `${matchedTaxonomy.category} (${matchedTaxonomy.gstRate ?? 18}%)` : 'Standard (18%)',
     rate: matchedTaxonomy?.gstRate ?? 18,
     inclusive: true,
-    amount: 28.52,
+    amount: 0,
   };
-  const stock = draftProduct.stock ?? 120;
-  const lowStockThreshold = draftProduct.lowStockThreshold ?? 10;
+  const stock = draftProduct.stock !== undefined && draftProduct.stock !== null ? draftProduct.stock : '';
+  const lowStockThreshold = draftProduct.lowStockThreshold !== undefined && draftProduct.lowStockThreshold !== null ? draftProduct.lowStockThreshold : '';
   const trackInventory = draftProduct.trackInventory ?? true;
   const hasVariants = attributes.hasVariants === 'true';
 
@@ -129,17 +132,27 @@ export const AddProductStep3: React.FC = () => {
     setTimeout(() => setCopiedSku(false), 2000);
   };
 
-  const handlePriceChange = (val: number) => {
-    const newRate = tax.rate || 5;
-    const taxAmt = Number(((val * newRate) / 100).toFixed(2));
+  const handlePriceChange = (valStr: string) => {
+    if (valStr === '') {
+      updateDraftProduct({
+        price: undefined,
+        tax: { ...tax, amount: 0 },
+      });
+      return;
+    }
+    const parsed = parseFloat(valStr);
+    const safeNum = isNaN(parsed) ? undefined : parsed;
+    const newRate = tax.rate || 0;
+    const taxAmt = safeNum !== undefined ? Number(((safeNum * newRate) / 100).toFixed(2)) : 0;
     updateDraftProduct({
-      price: val,
+      price: safeNum,
       tax: { ...tax, amount: taxAmt },
     });
   };
 
   const handleTaxRateChange = (rateVal: number) => {
-    const taxAmt = Number(((price * rateVal) / 100).toFixed(2));
+    const currentPrice = Number(draftProduct.price || 0);
+    const taxAmt = Number(((currentPrice * rateVal) / 100).toFixed(2));
     updateDraftProduct({
       tax: { ...tax, rate: rateVal, amount: taxAmt },
     });
@@ -150,10 +163,10 @@ export const AddProductStep3: React.FC = () => {
     updateDraftProduct({
       sku: currentSku,
       status,
-      stock,
-      price,
-      costPrice,
-      mrp,
+      stock: Number(draftProduct.stock || 0),
+      price: draftProduct.price !== undefined ? draftProduct.price : 0,
+      costPrice: draftProduct.costPrice,
+      mrp: draftProduct.mrp,
       storageLocation: storage,
       tax,
       attributes,
@@ -650,20 +663,59 @@ export const AddProductStep3: React.FC = () => {
 
           <div className="space-y-2 text-xs">
             <div>
-              <label className="block text-[11px] font-medium text-slate-600 mb-1">
-                Warehouse / Store <span className="text-rose-500">*</span>
-              </label>
-              <select
-                value={storage.warehouse}
-                onChange={(e) =>
-                  updateDraftProduct({ storageLocation: { ...storage, warehouse: e.target.value } })
-                }
-                className="w-full px-2 py-1.5 text-xs bg-white border border-slate-200 rounded-lg cursor-pointer"
-              >
-                <option value="Main Warehouse">Main Warehouse</option>
-                <option value="North Hub">North Hub</option>
-                <option value="Retail Outlet Shelf">Retail Outlet Shelf</option>
-              </select>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-[11px] font-medium text-slate-600">
+                  Warehouse / Store Location <span className="text-rose-500">*</span>
+                </label>
+                <span className="text-[10px] text-slate-400">Select or type custom</span>
+              </div>
+              <div className="relative">
+                <input
+                  type="text"
+                  list="warehouse-locations-list"
+                  value={storage.warehouse || ''}
+                  onChange={(e) =>
+                    updateDraftProduct({ storageLocation: { ...storage, warehouse: e.target.value } })
+                  }
+                  placeholder={`e.g. ${activeStoreName}, Main Godown, Backroom...`}
+                  className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:border-blue-500 font-medium text-slate-900 placeholder:font-normal placeholder:text-slate-400"
+                />
+                <datalist id="warehouse-locations-list">
+                  <option value={activeStoreName} />
+                  <option value={`${activeStoreName} (Store Front / Display)`} />
+                  <option value={`${activeStoreName} (Backroom Storage)`} />
+                  <option value="Main Warehouse" />
+                  <option value="Central Godown" />
+                  <option value="Retail Outlet Shelf" />
+                </datalist>
+              </div>
+
+              {/* Quick Preset Buttons */}
+              <div className="flex flex-wrap gap-1 mt-1.5">
+                {[
+                  activeStoreName,
+                  `${activeStoreName} Backroom`,
+                  'Main Warehouse',
+                  'Central Godown',
+                ].filter(Boolean).map((locPreset) => (
+                  <button
+                    key={locPreset}
+                    type="button"
+                    onClick={() =>
+                      updateDraftProduct({
+                        storageLocation: { ...storage, warehouse: locPreset },
+                      })
+                    }
+                    className={`px-2 py-0.5 rounded text-[10px] font-medium transition-colors cursor-pointer border ${
+                      storage.warehouse === locPreset
+                        ? 'bg-blue-50 text-blue-700 border-blue-300 font-bold'
+                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    + {locPreset}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className="grid grid-cols-4 gap-2">
@@ -672,10 +724,11 @@ export const AddProductStep3: React.FC = () => {
                 <input
                   type="text"
                   value={storage.room || ''}
+                  placeholder="e.g. 101"
                   onChange={(e) =>
                     updateDraftProduct({ storageLocation: { ...storage, room: e.target.value } })
                   }
-                  className="w-full px-2 py-1 text-xs border border-slate-200 rounded-md"
+                  className="w-full px-2 py-1 text-xs border border-slate-200 rounded-md placeholder:text-slate-300"
                 />
               </div>
               <div>
@@ -683,10 +736,11 @@ export const AddProductStep3: React.FC = () => {
                 <input
                   type="text"
                   value={storage.rack || ''}
+                  placeholder="e.g. R-05"
                   onChange={(e) =>
                     updateDraftProduct({ storageLocation: { ...storage, rack: e.target.value } })
                   }
-                  className="w-full px-2 py-1 text-xs border border-slate-200 rounded-md"
+                  className="w-full px-2 py-1 text-xs border border-slate-200 rounded-md placeholder:text-slate-300"
                 />
               </div>
               <div>
@@ -694,10 +748,11 @@ export const AddProductStep3: React.FC = () => {
                 <input
                   type="text"
                   value={storage.shelf || ''}
+                  placeholder="e.g. S-02"
                   onChange={(e) =>
                     updateDraftProduct({ storageLocation: { ...storage, shelf: e.target.value } })
                   }
-                  className="w-full px-2 py-1 text-xs border border-slate-200 rounded-md"
+                  className="w-full px-2 py-1 text-xs border border-slate-200 rounded-md placeholder:text-slate-300"
                 />
               </div>
               <div>
@@ -705,10 +760,11 @@ export const AddProductStep3: React.FC = () => {
                 <input
                   type="text"
                   value={storage.bin || ''}
+                  placeholder="e.g. B-03"
                   onChange={(e) =>
                     updateDraftProduct({ storageLocation: { ...storage, bin: e.target.value } })
                   }
-                  className="w-full px-2 py-1 text-xs border border-slate-200 rounded-md"
+                  className="w-full px-2 py-1 text-xs border border-slate-200 rounded-md placeholder:text-slate-300"
                 />
               </div>
             </div>
@@ -725,8 +781,8 @@ export const AddProductStep3: React.FC = () => {
                     storageLocation: { ...storage, description: e.target.value },
                   })
                 }
-                placeholder="e.g. Near window side, second rack"
-                className="w-full px-2 py-1.5 text-xs border border-slate-200 rounded-lg"
+                placeholder="e.g. Near billing counter, second rack"
+                className="w-full px-2 py-1.5 text-xs border border-slate-200 rounded-lg placeholder:text-slate-300"
               />
             </div>
           </div>
@@ -749,9 +805,11 @@ export const AddProductStep3: React.FC = () => {
               <input
                 type="number"
                 step="0.01"
+                min="0"
+                placeholder="e.g. 1299"
                 value={price}
-                onChange={(e) => handlePriceChange(parseFloat(e.target.value) || 0)}
-                className="w-full px-2.5 py-1.5 text-xs font-bold text-slate-900 border border-slate-200 rounded-lg"
+                onChange={(e) => handlePriceChange(e.target.value)}
+                className="w-full px-2.5 py-1.5 text-xs font-bold text-slate-900 border border-slate-200 rounded-lg placeholder:text-slate-400 placeholder:font-normal focus:outline-hidden focus:border-blue-500"
               />
             </div>
 
@@ -762,11 +820,14 @@ export const AddProductStep3: React.FC = () => {
               <input
                 type="number"
                 step="0.01"
+                min="0"
+                placeholder="e.g. 799"
                 value={costPrice}
-                onChange={(e) =>
-                  updateDraftProduct({ costPrice: parseFloat(e.target.value) || 0 })
-                }
-                className="w-full px-2.5 py-1.5 text-xs border border-slate-200 rounded-lg"
+                onChange={(e) => {
+                  const val = e.target.value === '' ? undefined : parseFloat(e.target.value);
+                  updateDraftProduct({ costPrice: isNaN(val as number) ? undefined : val });
+                }}
+                className="w-full px-2.5 py-1.5 text-xs border border-slate-200 rounded-lg placeholder:text-slate-400 focus:outline-hidden focus:border-blue-500"
               />
             </div>
 
@@ -777,9 +838,14 @@ export const AddProductStep3: React.FC = () => {
               <input
                 type="number"
                 step="0.01"
+                min="0"
+                placeholder="e.g. 1999"
                 value={mrp}
-                onChange={(e) => updateDraftProduct({ mrp: parseFloat(e.target.value) || 0 })}
-                className="w-full px-2.5 py-1.5 text-xs border border-slate-200 rounded-lg"
+                onChange={(e) => {
+                  const val = e.target.value === '' ? undefined : parseFloat(e.target.value);
+                  updateDraftProduct({ mrp: isNaN(val as number) ? undefined : val });
+                }}
+                className="w-full px-2.5 py-1.5 text-xs border border-slate-200 rounded-lg placeholder:text-slate-400 focus:outline-hidden focus:border-blue-500"
               />
             </div>
 
@@ -826,7 +892,7 @@ export const AddProductStep3: React.FC = () => {
                         category: `Standard (${sug.rate}%)`,
                         rate: sug.rate,
                         inclusive: true,
-                        amount: Number(((Number(draftProduct.price || 599) * sug.rate) / 100).toFixed(2))
+                        amount: Number(((Number(draftProduct.price || 0) * sug.rate) / 100).toFixed(2))
                       }
                     })}
                     className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 hover:bg-blue-50 text-slate-600 hover:text-blue-700 border border-slate-200 transition-colors"
@@ -935,11 +1001,14 @@ export const AddProductStep3: React.FC = () => {
                 <div className="relative">
                   <input
                     type="number"
+                    min="0"
+                    placeholder="e.g. 50"
                     value={stock}
-                    onChange={(e) =>
-                      updateDraftProduct({ stock: parseInt(e.target.value) || 0 })
-                    }
-                    className="w-full pr-8 pl-2 py-1.5 text-xs font-bold text-slate-900 border border-slate-200 rounded-lg"
+                    onChange={(e) => {
+                      const val = e.target.value === '' ? undefined : parseInt(e.target.value);
+                      updateDraftProduct({ stock: isNaN(val as number) ? undefined : val });
+                    }}
+                    className="w-full pr-8 pl-2 py-1.5 text-xs font-bold text-slate-900 border border-slate-200 rounded-lg placeholder:text-slate-400 placeholder:font-normal focus:outline-hidden focus:border-blue-500"
                   />
                   <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">
                     Pcs
@@ -954,11 +1023,14 @@ export const AddProductStep3: React.FC = () => {
                 <div className="relative">
                   <input
                     type="number"
+                    min="0"
+                    placeholder="e.g. 5"
                     value={lowStockThreshold}
-                    onChange={(e) =>
-                      updateDraftProduct({ lowStockThreshold: parseInt(e.target.value) || 0 })
-                    }
-                    className="w-full pr-8 pl-2 py-1.5 text-xs border border-slate-200 rounded-lg"
+                    onChange={(e) => {
+                      const val = e.target.value === '' ? undefined : parseInt(e.target.value);
+                      updateDraftProduct({ lowStockThreshold: isNaN(val as number) ? undefined : val });
+                    }}
+                    className="w-full pr-8 pl-2 py-1.5 text-xs border border-slate-200 rounded-lg placeholder:text-slate-400 focus:outline-hidden focus:border-blue-500"
                   />
                   <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400">
                     Pcs
