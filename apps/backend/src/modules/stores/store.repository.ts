@@ -45,8 +45,8 @@ export function createStoreRepository(
   }
 
 
-  async function findNearby(query: NearbyStoresQueryDto): Promise<IStore[]> {
-    const { lng, lat, radiusKm = 4, category, search } = query;
+    async function findNearby(query: NearbyStoresQueryDto): Promise<IStore[]> {
+    const { lng, lat, radiusKm = 50, category, search, city } = query;
     const maxDistanceInMeters = radiusKm * 1000;
 
     const filter: Record<string, unknown> = {
@@ -63,14 +63,28 @@ export function createStoreRepository(
       approvalStatus: StoreApprovalStatus.APPROVED,
     };
 
+    if (city) {
+      const cleanCity = city.trim().toLowerCase();
+      if (
+        cleanCity.includes('bhilai') ||
+        cleanCity.includes('durg') ||
+        cleanCity.includes('supela') ||
+        cleanCity.includes('power house')
+      ) {
+        filter['address.city'] = { $in: [/bhilai/i, /durg/i] };
+      } else {
+        filter['address.city'] = new RegExp(cleanCity, 'i');
+      }
+    }
+
     if (category) filter.category = category;
     if (search) filter.name = { $regex: search, $options: 'i' };
 
-    const stores = await storeModel.find(filter).limit(query.limit || 20).lean();
+    const stores = await storeModel.find(filter).limit(query.limit || 50).lean();
     return stores as unknown as IStore[];
   }
 
-  async function update(id: string, dto: UpdateStoreDto): Promise<IStore | null> {
+async function update(id: string, dto: UpdateStoreDto): Promise<IStore | null> {
     const store = await storeModel.findByIdAndUpdate(
       id,
       { $set: dto },

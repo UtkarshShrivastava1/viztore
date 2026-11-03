@@ -732,3 +732,4 @@ export function getCanonicalCategoryBySlug(slug: string): CanonicalCategory | un
 
   return undefined;
 }
+

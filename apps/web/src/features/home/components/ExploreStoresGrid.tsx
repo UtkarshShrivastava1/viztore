@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { ChevronRight, Zap, Truck, RotateCcw, ShieldCheck, Headphones, Star } from 'lucide-react';
 import { useAllStores } from '@/hooks/useAllStores';
+import { useLocationStore } from '@/stores/location.store';
 import { type IStore } from '@repo/shared-types';
 
 const trustItems = [
@@ -32,7 +33,8 @@ const fallbackStoreMeta = [
 ];
 
 export function ExploreStoresGrid() {
-  const { data: storesResponse, isLoading } = useAllStores({ limit: 6 });
+  const { city } = useLocationStore();
+  const { data: storesResponse, isLoading } = useAllStores({ limit: 6, city });
   const liveStores = storesResponse?.stores && storesResponse.stores.length > 0 ? storesResponse.stores : [];
 
   const displayStores: IStore[] = liveStores;

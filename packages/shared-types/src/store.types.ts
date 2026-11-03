@@ -297,11 +297,12 @@ export const updateStoreSchema = createStoreSchema.partial().extend({
 export const nearbyStoresQuerySchema = z.object({
   lng: z.coerce.number().min(-180).max(180),
   lat: z.coerce.number().min(-90).max(90),
-  radiusKm: z.coerce.number().min(0.1).max(25).default(4),
+  radiusKm: z.coerce.number().min(0.1).max(100).default(50).optional(),
+  city: z.string().optional(),
   category: z.nativeEnum(StoreCategory).optional(),
   search: z.string().optional(),
   page: z.coerce.number().min(1).default(1),
-  limit: z.coerce.number().min(1).max(50).default(20),
+  limit: z.coerce.number().max(100).default(50),
 });
 
 export const approveStoreSchema = z.object({

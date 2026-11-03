@@ -44,12 +44,16 @@ export function StoresClient({ searchParams }: StoresClientProps) {
     return found?.category;
   }, [selectedCategoryTab]);
 
-  const { data: nearbyStores, isLoading: nearbyLoading } = useNearbyStores(lng, lat, 10, activeCategory);
-  const { data: allStoresResponse, isLoading: allLoading } = useAllStores({ category: activeCategory });
+  const { data: nearbyStores, isLoading: nearbyLoading } = useNearbyStores(lng, lat, 50, activeCategory, city);
+  const { data: allStoresResponse, isLoading: allLoading } = useAllStores({ category: activeCategory, city });
 
   const rawStores = useMemo(() => {
     const list = nearbyStores && nearbyStores.length > 0 ? nearbyStores : (allStoresResponse?.stores || []);
-    return list;
+    return [...list].sort((a: any, b: any) => {
+      const distA = typeof a.distanceKm === 'number' && !isNaN(a.distanceKm) ? a.distanceKm : 9999;
+      const distB = typeof b.distanceKm === 'number' && !isNaN(b.distanceKm) ? b.distanceKm : 9999;
+      return distA - distB;
+    });
   }, [nearbyStores, allStoresResponse]);
 
   const filteredStores = useMemo(() => {

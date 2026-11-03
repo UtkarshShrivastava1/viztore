@@ -67,8 +67,33 @@ function calculateDistanceKm(
 /**
  * Hyperlocal Store Discovery via Native 2dsphere $near Spatial Query
  */
+/**
+ * Helper to resolve city filter with Durg-Bhilai twin-city agglomeration exception
+ */
+export function buildCityFilter(city?: string): Record<string, unknown> | null {
+  if (!city || !city.trim()) return null;
+  const cleanCity = city.trim().toLowerCase();
+
+  // Durg-Bhilai twin-city agglomeration exception (our current primary operational focus)
+  const isTwinCityDurgBhilai =
+    cleanCity.includes('bhilai') ||
+    cleanCity.includes('durg') ||
+    cleanCity.includes('supela') ||
+    cleanCity.includes('power house');
+
+  if (isTwinCityDurgBhilai) {
+    return {
+      'address.city': { $in: [/bhilai/i, /durg/i] },
+    };
+  }
+
+  return {
+    'address.city': new RegExp(cleanCity, 'i'),
+  };
+}
+
 export async function findNearbyStores(query: NearbyStoresQueryDto): Promise<IStore[]> {
-  const { lng, lat, radiusKm = 4, category, search } = query;
+  const { lng, lat, radiusKm = 50, category, search, city } = query;
   const maxDistanceInMeters = radiusKm * 1000;
 
   const filter: Record<string, unknown> = {
@@ -85,6 +110,13 @@ export async function findNearbyStores(query: NearbyStoresQueryDto): Promise<ISt
     approvalStatus: StoreApprovalStatus.APPROVED,
   };
 
+  if (city) {
+    const cityFilter = buildCityFilter(city);
+    if (cityFilter) {
+      Object.assign(filter, cityFilter);
+    }
+  }
+
   if (category) {
     filter.category = category;
   }
@@ -94,7 +126,7 @@ export async function findNearbyStores(query: NearbyStoresQueryDto): Promise<ISt
   }
 
   const stores = await StoreModel.find(filter)
-    .limit(query.limit || 20)
+    .limit(query.limit || 50)
     .lean();
 
   const mapped = stores.map((s) => {
@@ -110,6 +142,7 @@ export async function findNearbyStores(query: NearbyStoresQueryDto): Promise<ISt
     };
   });
 
+  // Sort strictly in increasing order of distance (nearer to far)
   mapped.sort((a, b) => {
     const distA = typeof a.distanceKm === 'number' ? a.distanceKm : 9999;
     const distB = typeof b.distanceKm === 'number' ? b.distanceKm : 9999;
@@ -233,7 +266,12 @@ export async function listAllStores(params: {
   };
 
   if (params.category) filter.category = params.category;
-  if (params.city) filter['address.city'] = new RegExp(params.city, 'i');
+  if (params.city) {
+    const cityFilter = buildCityFilter(params.city);
+    if (cityFilter) {
+      Object.assign(filter, cityFilter);
+    }
+  }
   if (params.search) filter.name = new RegExp(params.search, 'i');
 
   const [stores, total] = await Promise.all([

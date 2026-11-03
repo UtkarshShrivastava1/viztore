@@ -41,8 +41,9 @@ export const updateStoreSchema = createStoreSchema.partial();
 export const nearbyStoresQuerySchema = z.object({
   lng: z.coerce.number().min(-180).max(180),
   lat: z.coerce.number().min(-90).max(90),
-  radiusKm: z.coerce.number().positive().max(50).default(4),
+  radiusKm: z.coerce.number().positive().max(100).default(50).optional(),
+  city: z.string().optional(),
   category: z.nativeEnum(StoreCategory).optional(),
   search: z.string().optional(),
-  limit: z.coerce.number().positive().max(100).default(20),
+  limit: z.coerce.number().positive().max(100).default(50),
 });

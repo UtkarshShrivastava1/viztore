@@ -4,11 +4,12 @@ import { api } from "./client";
 export async function fetchNearbyStores(
   lng: number,
   lat: number,
-  radiusKm = 4,
+  radiusKm = 50,
   category?: StoreCategory,
+  city?: string,
 ): Promise<IStore[]> {
   try {
-    const res = await api.get<IStore[]>('stores/nearby', { lng, lat, radiusKm, category });
+    const res = await api.get<IStore[]>('stores/nearby', { lng, lat, radiusKm, category, city });
     return res.data;
   } catch (err) {
     console.error('Error fetching nearby stores:', err);
