@@ -930,7 +930,7 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
         category: product.category || 'fashion',
         subCategory: product.subCategory || '',
         productType: product.productType || '',
-        brand: product.brand || 'Generic',
+        brand: product.brand || '',
       },
       wizardStep: 1,
       activeView: 'wizard',
@@ -1059,6 +1059,10 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
       ];
     }
 
+    const resolvedBrand = (draftProduct.brand && draftProduct.brand.trim() && draftProduct.brand !== 'Generic / Unbranded')
+      ? draftProduct.brand.trim()
+      : 'Generic';
+
     const payload = {
       storeId,
       name: draftProduct.name || 'Untitled Product',
@@ -1068,7 +1072,7 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
       subType: draftProduct.productType
         ? draftProduct.productType.toLowerCase().trim().replace(/[\s-]+/g, '_')
         : undefined,
-      brand: draftProduct.brand || 'Generic',
+      brand: resolvedBrand,
       hsnCode: draftProduct.hsnCode || undefined,
       gstRate: draftProduct.tax?.rate ?? 18,
       tags: draftProduct.tags || [],
@@ -1105,7 +1109,7 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
         category: draftProduct.category || 'General',
         subCategory: draftProduct.subCategory || 'General',
         productType: draftProduct.productType || 'Standard',
-        brand: draftProduct.brand || 'Generic',
+        brand: resolvedBrand,
         stock: Number(draftProduct.stock ?? 100),
         lowStockThreshold: Number(draftProduct.lowStockThreshold ?? 10),
         status: draftProduct.status || 'active',

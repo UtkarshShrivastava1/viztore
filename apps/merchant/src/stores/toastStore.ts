@@ -64,3 +64,4 @@ export const toast = {
   dismiss: (id: string) => useToastStore.getState().removeToast(id),
   clear: () => useToastStore.getState().clearToasts(),
 };
+

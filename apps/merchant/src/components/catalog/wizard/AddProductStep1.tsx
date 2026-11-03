@@ -231,7 +231,7 @@ export const AddProductStep1: React.FC = () => {
     }
   }, [category, subCategory, productType]);
 
-  const brand = draftProduct.brand || 'Generic / Unbranded';
+  const brand = draftProduct.brand || '';
   const hsnCode = draftProduct.hsnCode || getCategoryFallbackHsn(category, subCategory);
 
   const matchedHsn = React.useMemo(() => {
@@ -449,6 +449,9 @@ export const AddProductStep1: React.FC = () => {
 
   const handleContinue = (e: React.FormEvent) => {
     e.preventDefault();
+    if (brand && brand !== draftProduct.brand) {
+      updateDraftProduct({ brand });
+    }
     setWizardStep(2);
   };
 

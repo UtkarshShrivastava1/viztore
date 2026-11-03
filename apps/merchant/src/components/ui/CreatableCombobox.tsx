@@ -39,21 +39,44 @@ export const CreatableCombobox: React.FC<CreatableComboboxProps> = ({
     setQuery(value || '');
   }, [value]);
 
+  // Combined options: custom options + props options (deduplicated)
+  const allOptions = Array.from(new Set([...customOptions, ...options]));
+
+  const commitQuery = (overrideQuery?: string) => {
+    const textToCommit = (overrideQuery !== undefined ? overrideQuery : query).trim();
+    if (!textToCommit) {
+      if (value) {
+        onChange('');
+        setQuery('');
+      }
+      return;
+    }
+    // Check if there is an exact or case-insensitive match among allOptions
+    const matchedOption = allOptions.find(
+      (opt) => opt.toLowerCase() === textToCommit.toLowerCase()
+    );
+    const resolvedValue = matchedOption || textToCommit;
+
+    if (resolvedValue !== value) {
+      if (allowCreate && !allOptions.includes(resolvedValue)) {
+        setCustomOptions((prev) => [resolvedValue, ...prev]);
+      }
+      onChange(resolvedValue);
+      setQuery(resolvedValue);
+    }
+  };
+
   // Click outside listener
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setIsOpen(false);
-        // Reset query back to selected value if user typed but didn't select
-        setQuery(value || '');
+        commitQuery();
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [value]);
-
-  // Combined options: custom options + props options (deduplicated)
-  const allOptions = Array.from(new Set([...customOptions, ...options]));
+  }, [value, query, allOptions, allowCreate]);
 
   // Filter options based on query
   const filteredOptions = query.trim()
@@ -127,6 +150,12 @@ export const CreatableCombobox: React.FC<CreatableComboboxProps> = ({
             setQuery(e.target.value);
             if (!isOpen) setIsOpen(true);
           }}
+          onBlur={(e) => {
+            if (containerRef.current && containerRef.current.contains(e.relatedTarget as Node)) {
+              return;
+            }
+            commitQuery();
+          }}
           onKeyDown={handleKeyDown}
           className={`w-full ${
             leftIcon ? 'pl-9' : 'pl-3'
@@ -137,6 +166,7 @@ export const CreatableCombobox: React.FC<CreatableComboboxProps> = ({
           {value && !disabled && (
             <button
               type="button"
+              onMouseDown={(e) => e.preventDefault()}
               onClick={() => {
                 onChange('');
                 setQuery('');
@@ -152,6 +182,7 @@ export const CreatableCombobox: React.FC<CreatableComboboxProps> = ({
           <button
             type="button"
             disabled={disabled}
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => {
               if (!disabled) {
                 setIsOpen((prev) => !prev);
@@ -176,6 +207,7 @@ export const CreatableCombobox: React.FC<CreatableComboboxProps> = ({
               <div className="p-1">
                 <button
                   type="button"
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={handleCreate}
                   className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-blue-600 bg-blue-50/70 hover:bg-blue-100/70 rounded-lg transition-colors cursor-pointer"
                 >
@@ -197,6 +229,7 @@ export const CreatableCombobox: React.FC<CreatableComboboxProps> = ({
                     <button
                       key={opt}
                       type="button"
+                      onMouseDown={(e) => e.preventDefault()}
                       onClick={() => handleSelect(opt)}
                       className={`w-full flex items-center justify-between px-3 py-2 text-left transition-colors cursor-pointer ${
                         isSelected
