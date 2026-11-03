@@ -1,17 +1,34 @@
-'use client';
-
 import React from 'react';
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
+import { branding } from '@repo/shared-types';
+import { WebSiteJsonLd } from '@/components/seo';
 import { HeroBannerCarousel } from '@/features/home/components/HeroBannerCarousel';
 import { TrustValuePropsBar } from '@/features/home/components/TrustValuePropsBar';
 import { StoresNearYouRail } from '@/features/home/components/StoresNearYouRail';
 import { BestDealsGrid } from '@/features/home/components/BestDealsGrid';
 import { ExploreStoresGrid } from '@/features/home/components/ExploreStoresGrid';
 
+export const metadata: Metadata = {
+  title: `${branding.appName} — Fast Local Store Delivery & Deals Near You`,
+  description: `Shop online from local stores in your neighbourhood. Find groceries, fashion, electronics, and daily essentials with fast 3–4 km delivery. ${branding.tagline}`,
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    title: `${branding.appName} — Fast Local Store Delivery & Deals Near You`,
+    description: `Shop online from local stores in your neighbourhood. Find groceries, fashion, electronics, and daily essentials with fast 3–4 km delivery.`,
+    url: '/',
+  },
+};
+
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-white">
+      {/* Search Engine Rich Snippet JSON-LD */}
+      <WebSiteJsonLd />
+
       <main className="mx-auto space-y-6 sm:space-y-10 pb-20 md:pb-16 bg-[#FAFCFF] min-h-screen">
         {/* ── 1. HERO SECTION (Carousel + Side Trust Perks) ─────────── */}
         <section className="max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-24 pt-4 sm:pt-6 space-y-3 sm:space-y-4">

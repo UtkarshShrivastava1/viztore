@@ -19,22 +19,74 @@ const inter = Inter({
 
 export const viewport = {
   themeColor: branding.themeColor,
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
 };
 
+const siteUrl = branding.domain.startsWith('http')
+  ? branding.domain
+  : `https://${branding.domain}`;
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: {
     default: `${branding.appName} — ${branding.tagline}`,
     template: `%s | ${branding.appName}`,
   },
-  description: `Discover local stores and products near you. ${branding.tagline}`,
-  keywords: ['local shopping', 'nearby stores', 'hyperlocal', 'e-commerce', 'shop local'],
-  authors: [{ name: branding.appName }],
+  description: `Discover verified local stores and order products near you with 3–4 km instant delivery. ${branding.tagline}`,
+  keywords: [
+    branding.appName,
+    'hyperlocal delivery',
+    'local stores near me',
+    'online shopping India',
+    'nearby shops',
+    'instant delivery',
+    'support local retailers',
+    'buy local',
+  ],
+  authors: [{ name: branding.appName, url: siteUrl }],
+  creator: branding.appName,
+  publisher: branding.appName,
+  alternates: {
+    canonical: '/',
+  },
+  formatDetection: {
+    email: false,
+    address: true,
+    telephone: true,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
   openGraph: {
     title: `${branding.appName} — ${branding.tagline}`,
-    description: `Discover local stores and products near you. ${branding.tagline}`,
+    description: `Discover verified local stores and order products near you with 3–4 km instant delivery. ${branding.tagline}`,
+    url: siteUrl,
     siteName: branding.appName,
+    locale: 'en_IN',
     type: 'website',
   },
+  twitter: {
+    card: 'summary_large_image',
+    title: `${branding.appName} — ${branding.tagline}`,
+    description: `Discover verified local stores and order products near you with 3–4 km instant delivery. ${branding.tagline}`,
+  },
+  ...(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
+    ? {
+        verification: {
+          google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+        },
+      }
+    : {}),
 };
 
 export default function RootLayout({

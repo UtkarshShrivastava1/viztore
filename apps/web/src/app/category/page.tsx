@@ -1,13 +1,36 @@
 import React from 'react';
+import type { Metadata } from 'next';
+import { branding } from '@repo/shared-types';
+import { BreadcrumbJsonLd } from '@/components/seo';
 import { AllCategoriesHero } from '@/features/catalog/AllCategoriesHero';
 import { AllCategoriesGrid } from '@/features/catalog/AllCategoriesGrid';
 import { CategoryPromoCards } from '@/features/catalog/CategoryPromoCards';
 import { TrendingDeals } from '@/features/catalog/TrendingDeals';
 import { MobileCategoryExplorer } from '@/features/category/MobileCategoryExplorer';
 
+export const metadata: Metadata = {
+  title: `Shop by Category — Browse All Departments | ${branding.appName}`,
+  description: `Explore grocery, fashion, electronics, beauty, footwear, and home living from nearby local stores on ${branding.appName}.`,
+  alternates: {
+    canonical: '/category',
+  },
+  openGraph: {
+    title: `Shop by Category | ${branding.appName}`,
+    description: `Explore all product departments available for fast delivery from local retailers.`,
+    url: '/category',
+  },
+};
+
 export default function AllCategoriesPage() {
   return (
     <div className="min-h-screen bg-white md:bg-transparent pb-16 lg:pb-0">
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'Home', item: '/' },
+          { name: 'Categories', item: '/category' },
+        ]}
+      />
+
       {/* Mobile View: High-fidelity Split Category Explorer */}
       <div className="md:hidden">
         <MobileCategoryExplorer />

@@ -1,5 +1,7 @@
 import React from 'react';
+import type { Metadata } from 'next';
 import Link from 'next/link';
+import { BreadcrumbJsonLd } from '@/components/seo';
 import {
   ShieldCheck,
   RotateCcw,
@@ -177,6 +179,36 @@ CATEGORY_PROFILES['sports'] = {
   ],
 };
 
+export async function generateMetadata({
+  params,
+}: {
+  params: { slug: string };
+}): Promise<Metadata> {
+  const rawSlug = (params?.slug || '').toLowerCase();
+  const profile = CATEGORY_PROFILES[rawSlug];
+  const title = profile?.title || rawSlug.replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  const tagline = profile?.tagline || `Discover verified local stores and products in ${title} on ${branding.appName}.`;
+
+  return {
+    title: `${title} — Shop Online from Local Stores | ${branding.appName}`,
+    description: tagline,
+    alternates: {
+      canonical: `/category/${rawSlug}`,
+    },
+    openGraph: {
+      title: `${title} | ${branding.appName}`,
+      description: tagline,
+      url: `/category/${rawSlug}`,
+      ...(profile?.heroImage ? { images: [{ url: profile.heroImage, alt: title }] } : {}),
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${title} | ${branding.appName}`,
+      description: tagline,
+    },
+  };
+}
+
 export default function CategoryDynamicPage({
   params,
 }: {
@@ -188,6 +220,13 @@ export default function CategoryDynamicPage({
   if (rawSlug === 'fashion') {
     return (
       <div className="min-h-screen bg-transparent pb-16 lg:pb-0">
+        <BreadcrumbJsonLd
+          items={[
+            { name: 'Home', item: '/' },
+            { name: 'Categories', item: '/category' },
+            { name: 'Fashion', item: '/category/fashion' },
+          ]}
+        />
         <main className="max-w-[1920px] mx-auto lg:px-6 lg:py-4">
           <Breadcrumbs items={[{ label: 'Home', href: '/' }, { label: 'Fashion' }]} />
 
@@ -256,6 +295,13 @@ export default function CategoryDynamicPage({
 
   return (
     <div className="min-h-screen bg-transparent pb-16 lg:pb-0">
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'Home', item: '/' },
+          { name: 'Categories', item: '/category' },
+          { name: config.title, item: `/category/${rawSlug}` },
+        ]}
+      />
       <main className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-4 space-y-6">
         {/* Breadcrumbs */}
         <Breadcrumbs
