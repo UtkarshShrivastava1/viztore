@@ -22,8 +22,8 @@ export const InventoryKPICards: React.FC = () => {
       id: 'total-products',
       title: 'Total Products',
       value: totalProductsDisplay,
-      change: '12%',
-      isPositive: true,
+      insight: count === 0 ? 'Catalog is empty' : `${items.length} variant${items.length === 1 ? '' : 's'} tracked`,
+      isPositive: count > 0,
       icon: Package,
       iconBg: 'bg-[#ebf3ff] text-[#2563eb]',
     },
@@ -31,8 +31,8 @@ export const InventoryKPICards: React.FC = () => {
       id: 'total-stock',
       title: 'Total Stock (Units)',
       value: totalStockDisplay,
-      change: '8%',
-      isPositive: true,
+      insight: totalStock === 0 ? 'No stock on hand' : `Avg ${(totalStock / Math.max(1, items.length)).toFixed(0)} units / SKU`,
+      isPositive: totalStock > 0,
       icon: ShoppingBag,
       iconBg: 'bg-[#ecfdf5] text-[#16a34a]',
     },
@@ -40,8 +40,9 @@ export const InventoryKPICards: React.FC = () => {
       id: 'low-stock',
       title: 'Low Stock',
       value: lowStockDisplay,
-      change: '5%',
-      isPositive: false,
+      insight: lowStockCount === 0 ? '✓ Healthy stock levels' : `⚠ ${lowStockCount} item${lowStockCount === 1 ? '' : 's'} near limit`,
+      isPositive: lowStockCount === 0,
+      isWarning: lowStockCount > 0,
       icon: AlertTriangle,
       iconBg: 'bg-[#fff7ed] text-[#ea580c]',
     },
@@ -49,8 +50,9 @@ export const InventoryKPICards: React.FC = () => {
       id: 'out-of-stock',
       title: 'Out of Stock',
       value: outOfStockDisplay,
-      change: '3%',
-      isPositive: false,
+      insight: outOfStockCount === 0 ? '✓ 0 stockout alerts' : `✕ ${outOfStockCount} item${outOfStockCount === 1 ? '' : 's'} unavailable`,
+      isPositive: outOfStockCount === 0,
+      isDanger: outOfStockCount > 0,
       icon: PackageX,
       iconBg: 'bg-[#fef2f2] text-[#dc2626]',
     },
@@ -58,8 +60,8 @@ export const InventoryKPICards: React.FC = () => {
       id: 'stock-value',
       title: 'Stock Value',
       value: stockValueDisplay,
-      change: '15%',
-      isPositive: true,
+      insight: totalStockValue === 0 ? '₹0 inventory valuation' : 'At retail selling price',
+      isPositive: totalStockValue > 0,
       icon: Boxes,
       iconBg: 'bg-[#ebf3ff] text-[#2563eb]',
     },
@@ -90,14 +92,21 @@ export const InventoryKPICards: React.FC = () => {
             <div className="flex items-center gap-1.5 mt-1 text-[11px] truncate">
               {card.isPositive ? (
                 <span className="font-semibold text-emerald-600 flex items-center">
-                  &uarr; {card.change}
+                  {card.insight}
+                </span>
+              ) : card.isWarning ? (
+                <span className="font-semibold text-amber-600 flex items-center">
+                  {card.insight}
+                </span>
+              ) : card.isDanger ? (
+                <span className="font-semibold text-rose-600 flex items-center">
+                  {card.insight}
                 </span>
               ) : (
-                <span className="font-semibold text-rose-600 flex items-center">
-                  &darr; {card.change}
+                <span className="text-slate-400 font-normal">
+                  {card.insight}
                 </span>
               )}
-              <span className="text-slate-400 font-normal">from last month</span>
             </div>
           </div>
         );

@@ -208,7 +208,12 @@ export const InvoicesTableView: React.FC = () => {
       id: 'total-invoices',
       title: 'Total Invoices',
       value: invoices.length.toLocaleString('en-IN'),
-      change: invoices.length > 0 ? '+100%' : '0%',
+      insight:
+        invoices.length === 0
+          ? 'No invoices issued'
+          : `${invoices.filter((i) => i.status === 'paid').length} paid • ${
+              invoices.filter((i) => i.status !== 'paid' && i.status !== 'cancelled').length
+            } pending`,
       isPositive: invoices.length > 0,
       icon: FileText,
       iconColor: 'text-amber-500',
@@ -218,7 +223,7 @@ export const InvoicesTableView: React.FC = () => {
       id: 'total-sales',
       title: 'Total Sales',
       value: `₹${totalSales.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`,
-      change: totalSales > 0 ? '+100%' : '0%',
+      insight: totalSales === 0 ? 'No billed sales' : `${invoices.length} invoices generated`,
       isPositive: totalSales > 0,
       icon: ShoppingBag,
       iconColor: 'text-indigo-600',
@@ -228,7 +233,12 @@ export const InvoicesTableView: React.FC = () => {
       id: 'paid-amount',
       title: 'Paid Amount',
       value: `₹${paidTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`,
-      change: paidTotal > 0 ? '+100%' : '0%',
+      insight:
+        paidTotal === 0
+          ? '₹0 collected'
+          : totalSales > 0
+          ? `${Math.round((paidTotal / totalSales) * 100)}% collected`
+          : 'All cleared',
       isPositive: paidTotal > 0,
       icon: CreditCard,
       iconColor: 'text-emerald-600',
@@ -238,7 +248,10 @@ export const InvoicesTableView: React.FC = () => {
       id: 'outstanding-amount',
       title: 'Outstanding Amount',
       value: `₹${outstandingTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`,
-      change: outstandingTotal > 0 ? 'Active' : '0%',
+      insight:
+        outstandingTotal === 0
+          ? '✓ Zero outstanding'
+          : `${invoices.filter((i) => i.status === 'issued' || i.status === 'partially_paid').length} unpaid`,
       isPositive: outstandingTotal === 0,
       icon: Clock,
       iconColor: 'text-amber-600',
@@ -248,8 +261,12 @@ export const InvoicesTableView: React.FC = () => {
       id: 'overdue-amount',
       title: 'Overdue Amount',
       value: `₹${overdueTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`,
-      change: overdueTotal > 0 ? 'Requires Action' : 'None',
+      insight:
+        overdueTotal === 0
+          ? '✓ 0 overdue payments'
+          : `⚠ ${invoices.filter((i) => i.status === 'overdue').length} overdue`,
       isPositive: overdueTotal === 0,
+      isDanger: overdueTotal > 0,
       icon: AlertTriangle,
       iconColor: 'text-rose-600',
       iconBg: 'bg-rose-50',
@@ -403,17 +420,20 @@ export const InvoicesTableView: React.FC = () => {
                 <div className="text-2xl font-bold text-slate-900 tracking-tight leading-none">
                   {card.value}
                 </div>
-                <div className="flex items-center gap-1.5 mt-2 text-xs">
+                <div className="flex items-center gap-1.5 mt-2 text-xs truncate">
                   {card.isPositive ? (
                     <span className="font-semibold text-emerald-600 flex items-center">
-                      &uarr; {card.change}
+                      {card.insight}
+                    </span>
+                  ) : card.isDanger ? (
+                    <span className="font-semibold text-rose-600 flex items-center">
+                      {card.insight}
                     </span>
                   ) : (
-                    <span className="font-semibold text-rose-600 flex items-center">
-                      &darr; {card.change}
+                    <span className="text-slate-400 font-normal">
+                      {card.insight}
                     </span>
                   )}
-                  <span className="text-slate-400 font-normal">from last month</span>
                 </div>
               </div>
             </div>

@@ -37,11 +37,19 @@ export const WalletKPIBar: React.FC = () => {
             ₹ {usedThisMonth.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
           </h4>
           <div className="flex items-center gap-1.5 text-[10px] mt-0.5 truncate">
-            <span className="inline-flex items-center text-rose-600 font-bold">
-              <TrendingDown className="w-3 h-3 mr-0.5 inline" />
-              {Math.abs(usedChangePercent)}%
-            </span>
-            <span className="text-slate-400">from last month</span>
+            {usedThisMonth === 0 ? (
+              <span className="text-slate-400">No deductions recorded this cycle</span>
+            ) : usedChangePercent !== 0 ? (
+              <>
+                <span className="inline-flex items-center text-rose-600 font-bold">
+                  <TrendingDown className="w-3 h-3 mr-0.5 inline" />
+                  {Math.abs(usedChangePercent)}%
+                </span>
+                <span className="text-slate-400">vs previous period</span>
+              </>
+            ) : (
+              <span className="text-slate-400">Recorded deductions</span>
+            )}
           </div>
         </div>
       </div>

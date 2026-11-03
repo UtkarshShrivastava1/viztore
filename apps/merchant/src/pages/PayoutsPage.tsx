@@ -257,9 +257,13 @@ export const PayoutsPage: React.FC<PayoutsPageProps> = ({ onNavigateHome }) => {
             <div className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate">
               ₹ {totalPayoutsMonth.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
             </div>
-            <span className="text-[10px] text-emerald-600 font-semibold mt-0.5 block truncate">
-              &uarr; 12.5% <span className="text-slate-400 font-normal">vs Last Month</span>
-            </span>
+            {totalPayoutsMonth === 0 ? (
+              <span className="text-[10px] text-slate-400 mt-0.5 block truncate">No settlements this cycle</span>
+            ) : (
+              <span className="text-[10px] text-emerald-600 font-semibold mt-0.5 block truncate">
+                Automated bank settlement active
+              </span>
+            )}
           </div>
         </div>
       </div>

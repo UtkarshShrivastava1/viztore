@@ -1,9 +1,20 @@
 import React from 'react';
-import { Users, ShoppingCart, Wallet, ArrowUp, ArrowDown } from 'lucide-react';
+import { Users, ShoppingCart, Wallet } from 'lucide-react';
 import { useCustomerStore } from '../../stores/customerStore.js';
 
 export const CustomerKPIBar: React.FC = () => {
-  const { kpis } = useCustomerStore();
+  const { kpis, customers } = useCustomerStore();
+
+  const totalCount = customers.length > 0 ? customers.length : kpis.totalCustomers;
+  const activeCount = customers.filter((c) => c.status === 'active').length;
+  const totalSales =
+    customers.length > 0
+      ? customers.reduce((sum, c) => sum + (c.totalSales || 0), 0)
+      : kpis.totalSales;
+  const totalOutstanding =
+    customers.length > 0
+      ? customers.reduce((sum, c) => sum + (c.outstandingAmount || 0), 0)
+      : kpis.totalOutstanding;
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
@@ -15,11 +26,14 @@ export const CustomerKPIBar: React.FC = () => {
         <div className="min-w-0">
           <span className="text-[11px] font-semibold text-slate-500 block truncate">Total Customers</span>
           <div className="text-lg font-black text-slate-900 leading-tight mt-0.5 truncate">
-            {kpis.totalCustomers.toLocaleString('en-IN')}
+            {totalCount.toLocaleString('en-IN')}
           </div>
           <div className="flex items-center gap-1 text-[10px] text-emerald-600 font-bold mt-0.5 truncate">
-            <ArrowUp className="w-3 h-3 stroke-[2.5]" />
-            <span>{kpis.totalCustomersGrowth}% from last month</span>
+            {totalCount === 0 ? (
+              <span className="text-slate-400 font-normal">No customer accounts registered</span>
+            ) : (
+              <span>{activeCount} active in directory</span>
+            )}
           </div>
         </div>
       </div>
@@ -32,11 +46,14 @@ export const CustomerKPIBar: React.FC = () => {
         <div className="min-w-0">
           <span className="text-[11px] font-semibold text-slate-500 block truncate">Total Sales</span>
           <div className="text-lg font-black text-slate-900 leading-tight mt-0.5 truncate">
-            ₹{kpis.totalSales.toLocaleString('en-IN')}
+            ₹{totalSales.toLocaleString('en-IN')}
           </div>
           <div className="flex items-center gap-1 text-[10px] text-emerald-600 font-bold mt-0.5 truncate">
-            <ArrowUp className="w-3 h-3 stroke-[2.5]" />
-            <span>{kpis.totalSalesGrowth}% from last month</span>
+            {totalSales === 0 ? (
+              <span className="text-slate-400 font-normal">No sales recorded yet</span>
+            ) : (
+              <span>Cumulative retail revenue</span>
+            )}
           </div>
         </div>
       </div>
@@ -49,11 +66,14 @@ export const CustomerKPIBar: React.FC = () => {
         <div className="min-w-0">
           <span className="text-[11px] font-semibold text-slate-500 block truncate">Total Outstanding</span>
           <div className="text-lg font-black text-slate-900 leading-tight mt-0.5 truncate">
-            ₹{kpis.totalOutstanding.toLocaleString('en-IN')}
+            ₹{totalOutstanding.toLocaleString('en-IN')}
           </div>
-          <div className="flex items-center gap-1 text-[10px] text-rose-600 font-bold mt-0.5 truncate">
-            <ArrowDown className="w-3 h-3 stroke-[2.5]" />
-            <span>{Math.abs(kpis.totalOutstandingChange)}% from last month</span>
+          <div className="flex items-center gap-1 text-[10px] mt-0.5 truncate">
+            {totalOutstanding === 0 ? (
+              <span className="text-emerald-600 font-semibold">✓ Zero outstanding dues</span>
+            ) : (
+              <span className="text-rose-600 font-bold">Active credit balance across accounts</span>
+            )}
           </div>
         </div>
       </div>
