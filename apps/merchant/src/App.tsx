@@ -28,7 +28,7 @@ import { useCatalogStore } from './stores/catalogStore.js';
 import { Sidebar, DashboardTab } from './components/dashboard/Sidebar.js';
 import { Header } from './components/dashboard/Header.js';
 import { LiveOrderSocketListener } from './components/dashboard/LiveOrderSocketListener.js';
-import { WelcomeGuideModal, WelcomeGuideLauncher } from './components/dashboard/WelcomeGuideModal.js';
+import { WelcomeGuideModal } from './components/dashboard/WelcomeGuideModal.js';
 
 // Marketing Website Pages & Layout
 import { MerchantPublicLayout } from './components/marketing/MerchantPublicLayout.js';
@@ -421,11 +421,6 @@ export const App: React.FC = () => {
             }
           }}
         />
-
-        {/* Floating Quick Start Guide Launcher at bottom right */}
-        {!isWelcomeGuideOpen && (
-          <WelcomeGuideLauncher onOpen={() => setIsWelcomeGuideOpen(true)} />
-        )}
       </div>
     );
   }
