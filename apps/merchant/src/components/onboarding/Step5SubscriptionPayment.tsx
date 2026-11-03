@@ -416,7 +416,7 @@ export const Step5SubscriptionPayment: React.FC<Step5SubscriptionPaymentProps> =
             </label>
             <input
               type="text"
-              placeholder="e.g. SALES-01, SALES-02, AGENT-PILOT"
+              placeholder=""
               value={salesIdInput}
               onChange={(e) => {
                 setSalesIdInput(e.target.value.toUpperCase());
@@ -436,7 +436,7 @@ export const Step5SubscriptionPayment: React.FC<Step5SubscriptionPaymentProps> =
             <div className="relative">
               <input
                 type="text"
-                placeholder="e.g. FREE100, WELCOME50"
+                placeholder=""
                 value={couponInput}
                 onChange={(e) => {
                   setCouponInput(e.target.value.toUpperCase());
