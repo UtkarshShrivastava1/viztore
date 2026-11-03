@@ -44,6 +44,10 @@ const productVariantSchema = new Schema<IProductVariant>(
       required: [true, 'Variant MRP is required'],
       min: 0,
     },
+    costPrice: {
+      type: Number,
+      min: 0,
+    },
     stock: {
       type: Number,
       default: 0,
@@ -53,9 +57,21 @@ const productVariantSchema = new Schema<IProductVariant>(
       type: [String],
       default: [],
     },
+    image: {
+      type: String,
+      trim: true,
+    },
     isActive: {
       type: Boolean,
       default: true,
+    },
+    isCustomPrice: {
+      type: Boolean,
+      default: false,
+    },
+    barcode: {
+      type: String,
+      trim: true,
     },
   },
   { _id: false },
@@ -113,9 +129,81 @@ const productSchema = new Schema<IProductDocument>(
       trim: true,
       index: true,
     },
-    brand: {
+        brand: {
       type: String,
       trim: true,
+      index: true,
+    },
+    barcode: {
+      type: String,
+      trim: true,
+      index: true,
+    },
+    sku: {
+      type: String,
+      trim: true,
+      uppercase: true,
+      index: true,
+    },
+    images: {
+      type: [String],
+      default: [],
+    },
+    costPrice: {
+      type: Number,
+      min: 0,
+    },
+    lowStockThreshold: {
+      type: Number,
+      min: 0,
+      default: 10,
+    },
+    storageLocation: {
+      warehouse: { type: String, trim: true, default: '' },
+      room: { type: String, trim: true, default: '' },
+      rack: { type: String, trim: true, default: '' },
+      shelf: { type: String, trim: true, default: '' },
+      bin: { type: String, trim: true, default: '' },
+      description: { type: String, trim: true, default: '' },
+    },
+    countryOfOrigin: {
+      type: String,
+      trim: true,
+      default: 'India',
+    },
+    warranty: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    isReturnable: {
+      type: Boolean,
+      default: true,
+    },
+    weight: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    dimensions: {
+      length: { type: String, trim: true, default: '' },
+      width: { type: String, trim: true, default: '' },
+      height: { type: String, trim: true, default: '' },
+    },
+    material: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    careInstructions: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    status: {
+      type: String,
+      enum: ['active', 'inactive', 'draft', 'out_of_stock'],
+      default: 'active',
       index: true,
     },
     hsnCode: {

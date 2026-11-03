@@ -253,20 +253,44 @@ export function mapApiProductToProductItem(p: any): ProductItem {
     });
   }
 
+  const effectiveCostPrice = typeof p.costPrice === 'number'
+    ? p.costPrice
+    : (typeof primaryVariant.costPrice === 'number'
+        ? primaryVariant.costPrice
+        : Math.round((p.basePrice || primaryVariant.price || 0) * 0.6));
+
+  const effectiveStorageLocation = p.storageLocation && typeof p.storageLocation === 'object'
+    ? {
+        warehouse: p.storageLocation.warehouse || 'Main Warehouse',
+        room: p.storageLocation.room || '',
+        rack: p.storageLocation.rack || '',
+        shelf: p.storageLocation.shelf || '',
+        bin: p.storageLocation.bin || '',
+        description: p.storageLocation.description || '',
+      }
+    : {
+        warehouse: 'Main Warehouse',
+        room: 'Room 101',
+        rack: 'R-05',
+        shelf: 'S-02',
+        bin: 'B-03',
+        description: 'Standard storage location',
+      };
+
   return {
     id: p._id || p.id,
     name: p.name || 'Product',
-    sku: primaryVariant.sku || `SKU-${(p._id || '').slice(-6)}`,
+    sku: p.sku || primaryVariant.sku || `SKU-${(p._id || '').slice(-6)}`,
     barcode: p.barcode || primaryVariant.barcode || '8901234567890',
     category: p.category || 'General',
     subCategory: p.subCategory || 'General',
     productType: p.subType || p.subCategory || 'Standard',
     brand: p.brand || 'Generic',
     stock: stock,
-    lowStockThreshold: p.lowStockThreshold || 10,
+    lowStockThreshold: typeof p.lowStockThreshold === 'number' ? p.lowStockThreshold : 10,
     status: status,
     price: p.basePrice || primaryVariant.price || 0,
-    costPrice: Math.round((p.basePrice || primaryVariant.price || 0) * 0.6),
+    costPrice: effectiveCostPrice,
     mrp: p.baseMrp || primaryVariant.mrp || p.basePrice || 0,
     images: images,
     variants: Array.isArray(p.variants)
@@ -278,26 +302,21 @@ export function mapApiProductToProductItem(p: any): ProductItem {
           colorHex: v.colorHex || getColorHex(v.color),
           price: typeof v.price === 'number' ? v.price : (p.basePrice || 0),
           mrp: typeof v.mrp === 'number' ? v.mrp : (p.baseMrp || v.price || p.basePrice || 0),
+          costPrice: typeof v.costPrice === 'number' ? v.costPrice : effectiveCostPrice,
           stock: typeof v.stock === 'number' ? v.stock : 0,
           isActive: v.isActive !== false,
           image: v.images?.[0] || v.image || images[0],
           barcode: v.barcode || p.barcode,
+          isCustomPrice: v.isCustomPrice,
         }))
       : [],
     attributes: attributesMap,
-    storageLocation: p.storageLocation || {
-      warehouse: 'Main Warehouse',
-      room: 'Room 101',
-      rack: 'R-05',
-      shelf: 'S-02',
-      bin: 'B-03',
-      description: 'Standard storage location',
-    },
+    storageLocation: effectiveStorageLocation,
     tax: p.tax || {
-      category: 'GST Standard (18%)',
-      rate: 18,
+      category: p.category ? `${p.category} (${p.gstRate ?? 18}%)` : 'GST Standard (18%)',
+      rate: p.gstRate ?? 18,
       inclusive: true,
-      amount: Math.round((p.basePrice || 0) * 0.18),
+      amount: Math.round((p.basePrice || 0) * ((p.gstRate ?? 18) / 100)),
     },
     updatedAt: p.updatedAt
       ? new Intl.DateTimeFormat('en-GB', {
@@ -306,20 +325,20 @@ export function mapApiProductToProductItem(p: any): ProductItem {
           year: 'numeric',
         }).format(new Date(p.updatedAt))
       : 'Recent',
-    productIdentification: 'new',
-    hsnCode: p.hsnCode || '61091000',
+    productIdentification: p.productIdentification || 'new',
+    hsnCode: p.hsnCode || '',
     description: p.description || '',
-    tags: p.tags || [],
-    trackInventory: true,
-    countryOfOrigin: 'India',
-    warranty: 'Standard Manufacturer Warranty',
-    isReturnable: true,
-    weight: '0.250',
-    dimensions: { length: '30', width: '20', height: '2' },
-    material: 'Standard Material',
-    careInstructions: 'Handle with care',
-    metaTitle: p.name,
-    metaDescription: p.description,
+    tags: Array.isArray(p.tags) ? p.tags : [],
+    trackInventory: p.trackInventory !== false,
+    countryOfOrigin: p.countryOfOrigin || 'India',
+    warranty: p.warranty || '',
+    isReturnable: p.isReturnable !== false,
+    weight: p.weight || '',
+    dimensions: p.dimensions || { length: '', width: '', height: '' },
+    material: p.material || attributesMap.Material || attributesMap.fabric || '',
+    careInstructions: p.careInstructions || '',
+    metaTitle: p.metaTitle || p.name,
+    metaDescription: p.metaDescription || p.description,
   };
 }
 
@@ -894,7 +913,7 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
       },
       wizardStep: 1,
     }),
-  loadProductIntoDraft: (product) => {
+    loadProductIntoDraft: (product) => {
     const rawImages = Array.isArray(product.images) && product.images.length > 0
       ? [...product.images]
       : ((product as any).imageUrl ? [(product as any).imageUrl] : []);
@@ -917,7 +936,7 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
         ...product,
         price: product.price ?? 0,
         mrp: product.mrp ?? product.price ?? 0,
-        costPrice: product.costPrice ?? Math.round(Number(product.price || 0) * 0.7),
+        costPrice: product.costPrice,
         stock: product.stock ?? 0,
         lowStockThreshold: product.lowStockThreshold ?? 10,
         images: rawImages,
@@ -931,6 +950,24 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
         subCategory: product.subCategory || '',
         productType: product.productType || '',
         brand: product.brand || '',
+        storageLocation: product.storageLocation || {
+          warehouse: 'Main Warehouse',
+          room: '',
+          rack: '',
+          shelf: '',
+          bin: '',
+          description: '',
+        },
+        countryOfOrigin: product.countryOfOrigin || 'India',
+        warranty: product.warranty || '',
+        isReturnable: product.isReturnable ?? true,
+        weight: product.weight || '',
+        dimensions: product.dimensions || { length: '', width: '', height: '' },
+        material: product.material || normalizedAttributes.Material || normalizedAttributes.fabric || '',
+        careInstructions: product.careInstructions || '',
+        metaTitle: product.metaTitle || product.name || '',
+        metaDescription: product.metaDescription || product.description || '',
+        status: product.status || 'active',
       },
       wizardStep: 1,
       activeView: 'wizard',
@@ -1063,7 +1100,7 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
       ? draftProduct.brand.trim()
       : 'Generic';
 
-    const payload = {
+        const payload = {
       storeId,
       name: draftProduct.name || 'Untitled Product',
       description: draftProduct.description || '',
@@ -1073,8 +1110,22 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
         ? draftProduct.productType.toLowerCase().trim().replace(/[\s-]+/g, '_')
         : undefined,
       brand: resolvedBrand,
+      barcode: draftProduct.barcode || undefined,
+      sku: baseSku,
+      images,
       hsnCode: draftProduct.hsnCode || undefined,
       gstRate: draftProduct.tax?.rate ?? 18,
+      costPrice: draftProduct.costPrice !== undefined ? Number(draftProduct.costPrice) : undefined,
+      lowStockThreshold: Number(draftProduct.lowStockThreshold ?? 10),
+      storageLocation: draftProduct.storageLocation,
+      countryOfOrigin: draftProduct.countryOfOrigin || 'India',
+      warranty: draftProduct.warranty || undefined,
+      isReturnable: draftProduct.isReturnable ?? true,
+      weight: draftProduct.weight || undefined,
+      dimensions: draftProduct.dimensions,
+      material: draftProduct.material || draftProduct.attributes?.Material || draftProduct.attributes?.fabric || undefined,
+      careInstructions: draftProduct.careInstructions || undefined,
+      status: draftProduct.status || 'active',
       tags: draftProduct.tags || [],
       attributes: attributesArray,
       variants,

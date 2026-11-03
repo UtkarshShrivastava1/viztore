@@ -91,15 +91,35 @@ export interface ITaxonomySearchMatch {
 }
 
 export interface IProductVariant {
+  id?: string;
   sku: string;
   size?: string;
   color?: string;
   colorHex?: string;
   price: number;
   mrp: number;
+  costPrice?: number;
   stock: number;
   images: string[];
+  image?: string;
   isActive: boolean;
+  isCustomPrice?: boolean;
+  barcode?: string;
+}
+
+export interface IProductStorageLocation {
+  warehouse?: string;
+  room?: string;
+  rack?: string;
+  shelf?: string;
+  bin?: string;
+  description?: string;
+}
+
+export interface IProductDimensions {
+  length?: string;
+  width?: string;
+  height?: string;
 }
 
 export interface IProduct {
@@ -113,8 +133,21 @@ export interface IProduct {
   subCategory?: string;
   subType?: ProductSubType | string;
   brand?: string;
+  barcode?: string;
+  sku?: string;
+  images?: string[];
   hsnCode?: string;
   gstRate?: number;
+  costPrice?: number;
+  lowStockThreshold?: number;
+  storageLocation?: IProductStorageLocation;
+  countryOfOrigin?: string;
+  warranty?: string;
+  isReturnable?: boolean;
+  weight?: string;
+  dimensions?: IProductDimensions;
+  material?: string;
+  careInstructions?: string;
   tags: string[];
   attributes: IProductAttribute[];
   variants: IProductVariant[];
@@ -124,6 +157,7 @@ export interface IProduct {
   totalStock: number;     // Sum of all variant stocks (computed)
   isFeatured: boolean;
   isActive: boolean;
+  status?: string;
   rating: number;
   reviewCount: number;
   createdAt: string;
@@ -163,15 +197,35 @@ export const productAttributeSchema = z.object({
 });
 
 export const productVariantSchema = z.object({
-  sku: z.string().min(1, 'SKU is required').max(50),
-  size: z.string().max(20).optional(),
-  color: z.string().max(50).optional(),
+  id: z.string().optional(),
+  sku: z.string().min(1, 'SKU is required').max(100),
+  size: z.string().max(100).optional(),
+  color: z.string().max(100).optional(),
   colorHex: z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Must be a valid hex color').optional(),
   price: z.number().min(0, 'Price must be non-negative'),
   mrp: z.number().min(0, 'MRP must be non-negative'),
+  costPrice: z.number().min(0).optional(),
   stock: z.number().int().min(0, 'Stock must be non-negative').default(0),
   images: z.array(z.string()).default([]),
+  image: z.string().optional(),
   isActive: z.boolean().default(true),
+  isCustomPrice: z.boolean().optional(),
+  barcode: z.string().optional(),
+});
+
+export const storageLocationSchema = z.object({
+  warehouse: z.string().optional(),
+  room: z.string().optional(),
+  rack: z.string().optional(),
+  shelf: z.string().optional(),
+  bin: z.string().optional(),
+  description: z.string().optional(),
+});
+
+export const dimensionsSchema = z.object({
+  length: z.string().optional(),
+  width: z.string().optional(),
+  height: z.string().optional(),
 });
 
 export const createProductSchema = z.object({
@@ -188,9 +242,23 @@ export const createProductSchema = z.object({
     return val.toLowerCase().trim().replace(/[\s-]+/g, '_');
   }, z.string().max(100).optional()),
   brand: z.string().max(100).optional(),
+  barcode: z.string().max(100).optional(),
+  sku: z.string().max(100).optional(),
+  images: z.array(z.string()).default([]),
   hsnCode: z.string().max(20).optional(),
   gstRate: z.number().min(0).max(100).optional(),
-  tags: z.array(z.string().max(50)).max(20).default([]),
+  costPrice: z.number().min(0).optional(),
+  lowStockThreshold: z.number().int().min(0).optional(),
+  storageLocation: storageLocationSchema.optional(),
+  countryOfOrigin: z.string().max(100).optional(),
+  warranty: z.string().max(200).optional(),
+  isReturnable: z.boolean().optional(),
+  weight: z.string().max(50).optional(),
+  dimensions: dimensionsSchema.optional(),
+  material: z.string().max(200).optional(),
+  careInstructions: z.string().max(500).optional(),
+  status: z.enum(['active', 'inactive', 'draft', 'out_of_stock']).optional(),
+  tags: z.array(z.string().max(100)).max(50).default([]),
   attributes: z.array(productAttributeSchema).max(50).default([]),
   variants: z.array(productVariantSchema).min(1, 'At least one variant is required').max(100),
   isFeatured: z.boolean().default(false),
