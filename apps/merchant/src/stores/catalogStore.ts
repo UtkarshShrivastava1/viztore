@@ -33,6 +33,7 @@ export interface ProductVariantItem {
   stock: number;
   isActive: boolean;
   image?: string;
+  isCustomPrice?: boolean;
 }
 
 export interface ProductItem {
@@ -981,8 +982,17 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
     if (hasVariants && Array.isArray(draftProduct.variants) && draftProduct.variants.length > 0) {
       // Use existing user-configured variants from VariantMatrixBuilder
       variants = draftProduct.variants.map((v, i) => {
-        const vPrice = Number(v.price || effectiveBasePrice || 0);
-        const vMrp = Number(v.mrp || effectiveBaseMrp || vPrice || 0);
+        // Authoritative resolution:
+        // If variant has an explicit custom price, use it;
+        // If effectiveBasePrice is set (> 0) and variant does not have custom override, use effectiveBasePrice!
+        const vPrice = (v.isCustomPrice && typeof v.price === 'number' && v.price > 0)
+          ? Number(v.price)
+          : (effectiveBasePrice > 0 ? effectiveBasePrice : Number(v.price || 0));
+
+        const vMrp = (v.isCustomPrice && typeof v.mrp === 'number' && v.mrp > 0)
+          ? Number(v.mrp)
+          : (effectiveBaseMrp > 0 ? effectiveBaseMrp : Number(v.mrp || vPrice || 0));
+
         const hex = v.colorHex || getColorHex(v.color);
         return {
           id: v.id || `var-${Date.now()}-${i}`,
@@ -996,6 +1006,7 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
           images: v.image ? [v.image] : images,
           image: v.image || images[0],
           isActive: v.isActive !== false,
+          isCustomPrice: v.isCustomPrice,
         };
       });
     } else if (hasVariants) {

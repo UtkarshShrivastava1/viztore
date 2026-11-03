@@ -4,6 +4,7 @@ import { useCatalogStore } from '../../stores/catalogStore.js';
 import { useAuthStore } from '../../stores/authStore.js';
 import { branding } from '@repo/shared-types/branding.config';
 import { printHtmlDocument } from '../../lib/pdfEngine.js';
+import { getBarcodeStickerSpecs } from '../../lib/taxonomyHelper.js';
 
 export const ProductLabelPrintModal: React.FC = () => {
   const { isPrintLabelModalOpen, closePrintLabelModal, selectedProductForLabel } =
@@ -19,8 +20,7 @@ export const ProductLabelPrintModal: React.FC = () => {
   const sellingPrice = product.price;
   const savings = Math.max(0, mrp - sellingPrice);
   const discountPct = mrp > 0 ? Math.round((savings / mrp) * 100) : 0;
-  const sizeAttr = product.attributes?.size || 'M';
-  const colorAttr = product.attributes?.color || 'Black';
+  const { subtitle } = React.useMemo(() => getBarcodeStickerSpecs(product), [product]);
 
   const handlePrint = () => {
     if (printAreaRef.current) {
@@ -111,16 +111,10 @@ export const ProductLabelPrintModal: React.FC = () => {
               <h4 className="text-xs font-bold text-slate-900 line-clamp-2 leading-snug">
                 {product.name}
               </h4>
-              <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-600 font-medium">
-                <span>
-                  Size: <strong className="text-slate-900">{sizeAttr}</strong>
-                </span>
-                <span>•</span>
-                <span>
-                  Color: <strong className="text-slate-900">{colorAttr}</strong>
-                </span>
-                <span>•</span>
-                <span>{product.brand}</span>
+              <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-600 font-medium truncate">
+                {subtitle && <span><strong className="text-slate-900">{subtitle}</strong></span>}
+                {subtitle && <span>•</span>}
+                <span>{product.brand || 'GEN'}</span>
               </div>
             </div>
 

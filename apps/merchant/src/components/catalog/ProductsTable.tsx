@@ -170,8 +170,28 @@ export const ProductsTable: React.FC = () => {
               </tr>
             ) : (
               paginatedProducts.map((product) => {
-                const sizeAttr = product.attributes?.size || 'M';
-                const colorAttr = product.attributes?.color || 'Black';
+                const variantsList = Array.isArray(product.variants) ? product.variants : [];
+                const distinctSizes = Array.from(new Set(variantsList.map((v) => v.size).filter(Boolean)));
+                const distinctColors = Array.from(new Set(variantsList.map((v) => v.color).filter(Boolean)));
+                const variantCount = variantsList.length;
+
+                let variantText = '';
+                if (variantCount > 1) {
+                  const sampleSpecs = [...distinctSizes, ...distinctColors].slice(0, 3).join(', ');
+                  variantText = `${variantCount} Variants${sampleSpecs ? ` • ${sampleSpecs}` : ''}`;
+                } else if (variantCount === 1 && variantsList[0]) {
+                  const v = variantsList[0];
+                  const parts: string[] = [];
+                  if (v?.size && v.size !== 'Standard') parts.push(`Size: ${v.size}`);
+                  if (v?.color && v.color !== 'Standard') parts.push(`Color: ${v.color}`);
+                  variantText = parts.join(' • ');
+                } else {
+                  const parts: string[] = [];
+                  if (product.attributes?.size) parts.push(`Size: ${product.attributes.size}`);
+                  if (product.attributes?.color) parts.push(`Color: ${product.attributes.color}`);
+                  variantText = parts.join(' • ');
+                }
+
                 const mainImg =
                   product.images?.[0] ||
                   'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=150&q=80';
@@ -213,10 +233,11 @@ export const ProductsTable: React.FC = () => {
                           >
                             {product.name}
                           </div>
-                          <div className="text-[11px] text-slate-400 mt-0.5 truncate">
-                            Size: <span className="font-medium text-slate-600">{sizeAttr}</span> •
-                            Color: <span className="font-medium text-slate-600">{colorAttr}</span>
-                          </div>
+                          {variantText ? (
+                            <div className="text-[11px] text-blue-600 font-medium mt-0.5 truncate">
+                              {variantText}
+                            </div>
+                          ) : null}
                         </div>
                       </div>
                     </td>

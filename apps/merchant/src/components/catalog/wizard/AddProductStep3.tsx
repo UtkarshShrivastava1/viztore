@@ -144,9 +144,19 @@ export const AddProductStep3: React.FC = () => {
     const safeNum = isNaN(parsed) ? undefined : parsed;
     const newRate = tax.rate || 0;
     const taxAmt = safeNum !== undefined ? Number(((safeNum * newRate) / 100).toFixed(2)) : 0;
+
+    // Synchronize price to matrix variants that don't have custom price overrides
+    const updatedVariants = safeNum !== undefined && Array.isArray(draftProduct.variants)
+      ? draftProduct.variants.map((v) => ({
+          ...v,
+          price: v.isCustomPrice ? v.price : safeNum,
+        }))
+      : draftProduct.variants;
+
     updateDraftProduct({
       price: safeNum,
       tax: { ...tax, amount: taxAmt },
+      ...(updatedVariants ? { variants: updatedVariants } : {}),
     });
   };
 
@@ -160,17 +170,32 @@ export const AddProductStep3: React.FC = () => {
 
   const handleSubmitToPreview = (e: React.FormEvent) => {
     e.preventDefault();
+    const effectivePrice = draftProduct.price !== undefined ? draftProduct.price : 0;
+    const effectiveMrp = draftProduct.mrp !== undefined ? draftProduct.mrp : effectivePrice;
+    const effectiveCost = draftProduct.costPrice;
+
+    // Ensure all existing variants take the authoritative price and MRP from Section 5
+    const syncedVariants = Array.isArray(draftProduct.variants)
+      ? draftProduct.variants.map((v) => ({
+          ...v,
+          price: (v.isCustomPrice && typeof v.price === 'number' && v.price > 0) ? v.price : effectivePrice,
+          mrp: (v.isCustomPrice && typeof v.mrp === 'number' && v.mrp > 0) ? v.mrp : effectiveMrp,
+          costPrice: effectiveCost !== undefined ? effectiveCost : v.costPrice,
+        }))
+      : [];
+
     updateDraftProduct({
       sku: currentSku,
       status,
       stock: Number(draftProduct.stock || 0),
-      price: draftProduct.price !== undefined ? draftProduct.price : 0,
-      costPrice: draftProduct.costPrice,
-      mrp: draftProduct.mrp,
+      price: effectivePrice,
+      costPrice: effectiveCost,
+      mrp: effectiveMrp,
       storageLocation: storage,
       tax,
       attributes,
       tags,
+      variants: syncedVariants,
     });
     setActiveView('preview');
   };
@@ -806,7 +831,7 @@ export const AddProductStep3: React.FC = () => {
                 type="number"
                 step="0.01"
                 min="0"
-                placeholder="e.g. 1299"
+                placeholder="0.00"
                 value={price}
                 onChange={(e) => handlePriceChange(e.target.value)}
                 className="w-full px-2.5 py-1.5 text-xs font-bold text-slate-900 border border-slate-200 rounded-lg placeholder:text-slate-400 placeholder:font-normal focus:outline-hidden focus:border-blue-500"
@@ -821,7 +846,7 @@ export const AddProductStep3: React.FC = () => {
                 type="number"
                 step="0.01"
                 min="0"
-                placeholder="e.g. 799"
+                placeholder="0.00"
                 value={costPrice}
                 onChange={(e) => {
                   const val = e.target.value === '' ? undefined : parseFloat(e.target.value);
@@ -839,11 +864,21 @@ export const AddProductStep3: React.FC = () => {
                 type="number"
                 step="0.01"
                 min="0"
-                placeholder="e.g. 1999"
+                placeholder="0.00"
                 value={mrp}
                 onChange={(e) => {
                   const val = e.target.value === '' ? undefined : parseFloat(e.target.value);
-                  updateDraftProduct({ mrp: isNaN(val as number) ? undefined : val });
+                  const safeVal = isNaN(val as number) ? undefined : val;
+                  const updatedVariants = safeVal !== undefined && Array.isArray(draftProduct.variants)
+                    ? draftProduct.variants.map((v) => ({
+                        ...v,
+                        mrp: v.isCustomPrice ? v.mrp : safeVal,
+                      }))
+                    : draftProduct.variants;
+                  updateDraftProduct({
+                    mrp: safeVal,
+                    ...(updatedVariants ? { variants: updatedVariants } : {}),
+                  });
                 }}
                 className="w-full px-2.5 py-1.5 text-xs border border-slate-200 rounded-lg placeholder:text-slate-400 focus:outline-hidden focus:border-blue-500"
               />

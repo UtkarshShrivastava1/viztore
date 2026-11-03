@@ -380,8 +380,8 @@ export const useInventoryStore = create<InventoryStoreState>((set, get) => ({
         stockValue: Math.round(stock * (p.price || 500)),
         lastUpdated: p.updatedAt || 'Recent',
         imageUrl: p.images[0] || '',
-        size: p.attributes?.size || 'M',
-        color: p.attributes?.color || 'Black',
+        size: p.attributes?.size || p.variants?.[0]?.size || '',
+        color: p.attributes?.color || p.variants?.[0]?.color || '',
       };
     });
 

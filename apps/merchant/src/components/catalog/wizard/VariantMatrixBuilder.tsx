@@ -168,17 +168,27 @@ export const VariantMatrixBuilder: React.FC = () => {
             const key = `${c.name}__${s}`;
             const existing = rowMap.get(key);
             if (existing) {
+              const targetPrice = existing.isCustomPrice
+                ? existing.price
+                : (basePrice > 0 ? basePrice : (existing.price || Number(bulkPriceInput) || 0));
+              const targetMrp = existing.isCustomPrice
+                ? existing.mrp
+                : (baseMrp > 0 ? baseMrp : (existing.mrp || Number(bulkMrpInput) || targetPrice || 0));
+
               updatedRows.push({
                 ...existing,
                 colorHex: c.hex || existing.colorHex,
-                price: existing.price || Number(bulkPriceInput) || basePrice || 0,
-                mrp: existing.mrp || Number(bulkMrpInput) || baseMrp || 0,
+                price: targetPrice,
+                mrp: targetMrp,
               });
             } else {
               const cleanColor = c.name.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 4);
               const cleanSize = s.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
               const sku = `${baseSku}-${cleanColor}-${cleanSize}`;
               const barcode = `890${Math.floor(1000000000 + Math.random() * 9000000000)}`;
+
+              const targetPrice = Number(bulkPriceInput) || (basePrice > 0 ? basePrice : 0);
+              const targetMrp = Number(bulkMrpInput) || (baseMrp > 0 ? baseMrp : targetPrice);
 
               updatedRows.push({
                 id: `VAR-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
@@ -187,9 +197,9 @@ export const VariantMatrixBuilder: React.FC = () => {
                 color: c.name,
                 colorHex: c.hex,
                 size: s,
-                price: Number(bulkPriceInput) || basePrice || 0,
+                price: targetPrice,
                 costPrice: baseCost || 0,
-                mrp: Number(bulkMrpInput) || baseMrp || 0,
+                mrp: targetMrp,
                 stock: Number(bulkStockInput) || 15,
                 isActive: true,
               });
@@ -244,7 +254,7 @@ export const VariantMatrixBuilder: React.FC = () => {
   const applyPriceToAll = () => {
     const val = Number(bulkPriceInput);
     if (isNaN(val) || val <= 0) return;
-    const updated = matrixRows.map((r) => ({ ...r, price: val }));
+    const updated = matrixRows.map((r) => ({ ...r, price: val, isCustomPrice: true }));
     setMatrixRows(updated);
     syncWithStore(updated);
   };
@@ -252,7 +262,7 @@ export const VariantMatrixBuilder: React.FC = () => {
   const applyMrpToAll = () => {
     const val = Number(bulkMrpInput);
     if (isNaN(val) || val <= 0) return;
-    const updated = matrixRows.map((r) => ({ ...r, mrp: val }));
+    const updated = matrixRows.map((r) => ({ ...r, mrp: val, isCustomPrice: true }));
     setMatrixRows(updated);
     syncWithStore(updated);
   };
@@ -269,7 +279,11 @@ export const VariantMatrixBuilder: React.FC = () => {
     const updated = [...matrixRows];
     const target = updated[index];
     if (target) {
-      updated[index] = { ...target, [field]: value };
+      updated[index] = {
+        ...target,
+        [field]: value,
+        ...(field === 'price' || field === 'mrp' ? { isCustomPrice: true } : {}),
+      };
       setMatrixRows(updated);
       syncWithStore(updated);
     }

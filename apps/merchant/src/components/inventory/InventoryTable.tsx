@@ -312,10 +312,13 @@ export const InventoryTable: React.FC = () => {
                             >
                               {item.name}
                             </div>
-                            <div className="text-[11px] text-slate-400 mt-0.5 truncate">
-                              Size: <span className="font-medium text-slate-600">{item.size || 'M'}</span> • Color:{' '}
-                              <span className="font-medium text-slate-600">{item.color || 'Black'}</span>
-                            </div>
+                            {(item.size || item.color) ? (
+                              <div className="text-[11px] text-slate-400 mt-0.5 truncate">
+                                {item.size && <span>Size: <span className="font-medium text-slate-600">{item.size}</span></span>}
+                                {item.size && item.color && <span> • </span>}
+                                {item.color && <span>Color: <span className="font-medium text-slate-600">{item.color}</span></span>}
+                              </div>
+                            ) : null}
                           </div>
                         </div>
                       </td>
