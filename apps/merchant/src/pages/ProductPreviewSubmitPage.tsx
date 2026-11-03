@@ -188,7 +188,12 @@ export const ProductPreviewSubmitPage: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* Left (4 cols): Product Gallery Carousel */}
           <div className="lg:col-span-4">
-            <ProductGalleryPreview images={draftProduct.images || []} />
+            <ProductGalleryPreview
+              images={draftProduct.images || []}
+              category={draftProduct.category}
+              subCategory={draftProduct.subCategory}
+              name={draftProduct.name}
+            />
           </div>
 
           {/* Center (5 cols): Product Details & Spec Chips */}

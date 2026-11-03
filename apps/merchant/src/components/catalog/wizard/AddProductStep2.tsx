@@ -14,27 +14,97 @@ import { WizardHelpSidebar } from './WizardHelpSidebar.js';
 import { mediaApi } from '../../../lib/api.js';
 import { CameraBarcodeScannerModal } from '../CameraBarcodeScannerModal.js';
 import { lookupMasterProduct } from '../../../lib/masterCatalogService.js';
+import { isElectronicsCategory, isFootwearCategory, isGroceryCategory } from '../../../lib/taxonomyHelper.js';
 
-const samplePerspectiveViews = [
+const ELECTRONICS_PERSPECTIVE_VIEWS = [
+  {
+    title: 'Front Display',
+    image: 'https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?auto=format&fit=crop&w=600&q=80',
+  },
+  {
+    title: 'Camera Module',
+    image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=600&q=80',
+  },
+  {
+    title: 'Side Profile',
+    image: 'https://images.unsplash.com/photo-1580910051074-3eb694886505?auto=format&fit=crop&w=600&q=80',
+  },
+  {
+    title: 'Back Finish',
+    image: 'https://images.unsplash.com/photo-1565849904461-04a58ad377e0?auto=format&fit=crop&w=600&q=80',
+  },
+  {
+    title: 'Box / Specs',
+    image: 'https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?auto=format&fit=crop&w=600&q=80',
+  },
+];
+
+const FOOTWEAR_PERSPECTIVE_VIEWS = [
+  {
+    title: 'Side Profile',
+    image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=80',
+  },
+  {
+    title: 'Top Down',
+    image: 'https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?auto=format&fit=crop&w=600&q=80',
+  },
+  {
+    title: 'Sole Grip',
+    image: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=600&q=80',
+  },
+  {
+    title: 'Heel Detail',
+    image: 'https://images.unsplash.com/photo-1608231387042-66d1773070a5?auto=format&fit=crop&w=600&q=80',
+  },
+  {
+    title: 'Insole / Tag',
+    image: 'https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=600&q=80',
+  },
+];
+
+const GROCERY_PERSPECTIVE_VIEWS = [
+  {
+    title: 'Front Pack',
+    image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=600&q=80',
+  },
+  {
+    title: 'Nutrition Label',
+    image: 'https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?auto=format&fit=crop&w=600&q=80',
+  },
+  {
+    title: 'Seal & Batch',
+    image: 'https://images.unsplash.com/photo-1588964895597-cfccd6e2dbf9?auto=format&fit=crop&w=600&q=80',
+  },
+  {
+    title: 'Fresh Pack',
+    image: 'https://images.unsplash.com/photo-1579113800032-c38bd7635818?auto=format&fit=crop&w=600&q=80',
+  },
+  {
+    title: 'Ingredients',
+    image: 'https://images.unsplash.com/photo-1584473457406-6240486418e9?auto=format&fit=crop&w=600&q=80',
+  },
+];
+
+const APPAREL_PERSPECTIVE_VIEWS = [
   {
     title: 'Front View',
-    image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=200&q=80',
+    image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=600&q=80',
   },
   {
     title: 'Back View',
-    image: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=200&q=80',
+    image: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=600&q=80',
   },
   {
     title: 'Side View',
-    image: 'https://images.unsplash.com/photo-1618354691373-d851c5c3a990?auto=format&fit=crop&w=200&q=80',
+    image: 'https://images.unsplash.com/photo-1618354691373-d851c5c3a990?auto=format&fit=crop&w=600&q=80',
   },
   {
     title: 'Neck Shot',
-    image: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&w=200&q=80',
+    image: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&w=600&q=80',
   },
   {
     title: 'Fabric / Zoom',
-    image: 'https://images.unsplash.com/photo-1598033129183-c4f50c736f10?auto=format&fit=crop&w=200&q=80',
+    image: 'https://images.unsplash.com/photo-1598033129183-c4f50c736f10?auto=format&fit=crop&w=600&q=80',
   },
 ];
 
@@ -88,6 +158,28 @@ export const AddProductStep2: React.FC = () => {
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<string | null>(null);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
+
+  const samplePerspectiveViews = React.useMemo(() => {
+    if (
+      isElectronicsCategory(draftProduct.category, draftProduct.subCategory) ||
+      /mobile|phone|samsung|galaxy|iphone|electronics|gadget|laptop/i.test(`${draftProduct.name} ${draftProduct.category}`)
+    ) {
+      return ELECTRONICS_PERSPECTIVE_VIEWS;
+    }
+    if (
+      isFootwearCategory(draftProduct.category, draftProduct.subCategory) ||
+      /shoe|footwear|sneaker|boot|sandal/i.test(`${draftProduct.name} ${draftProduct.category}`)
+    ) {
+      return FOOTWEAR_PERSPECTIVE_VIEWS;
+    }
+    if (
+      isGroceryCategory(draftProduct.category, draftProduct.subCategory) ||
+      /grocery|food|snack|spice|beverage/i.test(`${draftProduct.name} ${draftProduct.category}`)
+    ) {
+      return GROCERY_PERSPECTIVE_VIEWS;
+    }
+    return APPAREL_PERSPECTIVE_VIEWS;
+  }, [draftProduct.category, draftProduct.subCategory, draftProduct.name]);
 
   const handleFilesSelected = async (files: FileList | null) => {
     if (!files) return;

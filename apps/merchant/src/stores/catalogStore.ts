@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { api, catalogApi } from '../lib/api.js';
 import { useAuthStore } from './authStore.js';
 import { recordCustomCategory, recordCustomBrand } from '../lib/customTaxonomyStorage.js';
-import { isElectronicsCategory, isFootwearCategory, isGroceryCategory, getPreloadedAttributes } from '../lib/taxonomyHelper.js';
+import { isElectronicsCategory, isFootwearCategory, isGroceryCategory, getCategoryFallbackImage, getPreloadedAttributes } from '../lib/taxonomyHelper.js';
 import { toast } from './toastStore.js';
 
 export interface StorageLocation {
@@ -34,6 +34,7 @@ export interface ProductVariantItem {
   stock: number;
   isActive: boolean;
   image?: string;
+  images?: string[];
   isCustomPrice?: boolean;
 }
 
@@ -239,7 +240,7 @@ export function mapApiProductToProductItem(p: any): ProductItem {
     images.push(...p.images);
   }
   if (images.length === 0) {
-    images.push('https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=600&q=80');
+    images.push(getCategoryFallbackImage(p.category, p.subCategory, p.name));
   }
 
   const stock = typeof p.totalStock === 'number' ? p.totalStock : primaryVariant.stock || 0;
@@ -1003,8 +1004,11 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
       }));
 
     // 3. Fallback sample image if none provided
-    const defaultImage =
-      'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=600&q=80';
+    const defaultImage = getCategoryFallbackImage(
+      draftProduct.category,
+      draftProduct.subCategory,
+      draftProduct.name
+    );
     const images =
       draftProduct.images && draftProduct.images.length > 0
         ? draftProduct.images
@@ -1049,8 +1053,8 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
           price: vPrice,
           mrp: vMrp,
           stock: Number(v.stock ?? 10),
-          images: v.image ? [v.image] : images,
-          image: v.image || images[0],
+          images: (Array.isArray(v.images) && v.images.length > 0) ? v.images : (v.image ? [v.image] : images),
+          image: v.image || (Array.isArray(v.images) && v.images[0]) || images[0],
           isActive: v.isActive !== false,
           isCustomPrice: v.isCustomPrice,
         };
@@ -1263,18 +1267,16 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
       throw new Error('No active merchant store found for bulk product import');
     }
 
-    const defaultImage =
-      'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=600&q=80';
-
     const formattedPayloads = productsData.map((item, idx) => {
       const price = Number(item.price || 499);
       const mrp = Number(item.mrp || item.price || 699);
       const stock = Number(item.stock || 20);
       const sku = (item.sku || `PRD-BLK-${Date.now()}-${idx + 1}`).toUpperCase();
       const cat = (item.category || 'fashion').toLowerCase().trim().replace(/[\s-]+/g, '_');
+      const fallbackImage = getCategoryFallbackImage(item.category, item.subCategory, item.name);
       const images = Array.isArray(item.images) && item.images.length > 0
         ? item.images
-        : [item.image || defaultImage];
+        : [item.image || fallbackImage];
 
       return {
         storeId,

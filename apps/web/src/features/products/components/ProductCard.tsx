@@ -30,7 +30,10 @@ export function ProductCard({ product, badge }: ProductCardProps) {
     ? Math.round(((product.baseMrp - product.basePrice) / product.baseMrp) * 100)
     : 0;
 
-  const firstImage = product.variants?.[0]?.images?.[0];
+  const firstImage =
+    product.images?.[0] ||
+    product.variants?.[0]?.images?.[0] ||
+    product.variants?.[0]?.image;
 
   // Deterministic rating calculation for modern social proof
   const charCodeSum = (product._id || product.name || 'P')

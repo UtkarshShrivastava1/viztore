@@ -1,17 +1,22 @@
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, Image as ImageIcon } from 'lucide-react';
+import { getCategoryFallbackImage } from '../../../lib/taxonomyHelper.js';
 
 interface ProductGalleryPreviewProps {
   images: string[];
+  category?: string;
+  subCategory?: string;
+  name?: string;
 }
 
-export const ProductGalleryPreview: React.FC<ProductGalleryPreviewProps> = ({ images }) => {
+export const ProductGalleryPreview: React.FC<ProductGalleryPreviewProps> = ({ images, category, subCategory, name }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
+  const fallback = getCategoryFallbackImage(category, subCategory, name);
   const validImages =
     images && images.length > 0
       ? images
-      : ['https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=600&q=80'];
+      : [fallback];
 
   const prevImage = () => {
     setCurrentIndex((prev) => (prev === 0 ? validImages.length - 1 : prev - 1));
@@ -62,19 +67,23 @@ export const ProductGalleryPreview: React.FC<ProductGalleryPreviewProps> = ({ im
 
       {/* Thumbnails Row */}
       {validImages.length > 1 && (
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
-          {validImages.map((img, i) => (
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
+          {validImages.map((imgUrl, idx) => (
             <button
-              key={i}
               type="button"
-              onClick={() => setCurrentIndex(i)}
-              className={`w-12 h-12 rounded-lg border-2 overflow-hidden shrink-0 transition-all cursor-pointer ${
-                currentIndex === i
-                  ? 'border-blue-600 ring-2 ring-blue-100'
-                  : 'border-slate-200 opacity-70 hover:opacity-100'
+              key={idx}
+              onClick={() => setCurrentIndex(idx)}
+              className={`relative w-12 h-12 rounded-lg border-2 overflow-hidden shrink-0 transition-all cursor-pointer ${
+                currentIndex === idx
+                  ? 'border-blue-600 ring-2 ring-blue-100 shadow-2xs'
+                  : 'border-slate-200 hover:border-slate-300 opacity-70 hover:opacity-100'
               }`}
             >
-              <img src={img} alt={`Thumbnail ${i + 1}`} className="w-full h-full object-cover" />
+              <img
+                src={imgUrl}
+                alt={`Thumbnail ${idx + 1}`}
+                className="w-full h-full object-cover"
+              />
             </button>
           ))}
         </div>

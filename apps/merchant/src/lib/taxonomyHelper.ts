@@ -116,6 +116,75 @@ export function isFashionCategory(category?: string, subCategory?: string): bool
 }
 
 /**
+ * Returns a high-definition, category-appropriate fallback image URL
+ * so that electronics, footwear, groceries, etc. never incorrectly default to apparel images.
+ */
+export function getCategoryFallbackImage(category?: string, subCategory?: string, name?: string): string {
+  const text = `${category || ''} ${subCategory || ''} ${name || ''}`.toLowerCase();
+
+  if (
+    isElectronicsCategory(category, subCategory) ||
+    text.includes('mobile') ||
+    text.includes('phone') ||
+    text.includes('samsung') ||
+    text.includes('iphone') ||
+    text.includes('galaxy') ||
+    text.includes('smart') ||
+    text.includes('laptop') ||
+    text.includes('gadget') ||
+    text.includes('camera') ||
+    text.includes('audio') ||
+    text.includes('headphone')
+  ) {
+    return 'https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?auto=format&fit=crop&w=800&q=80';
+  }
+
+  if (
+    isFootwearCategory(category, subCategory) ||
+    text.includes('shoe') ||
+    text.includes('sneaker') ||
+    text.includes('boot') ||
+    text.includes('sandal')
+  ) {
+    return 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80';
+  }
+
+  if (
+    isGroceryCategory(category, subCategory) ||
+    text.includes('groc') ||
+    text.includes('food') ||
+    text.includes('snack') ||
+    text.includes('spice') ||
+    text.includes('grain')
+  ) {
+    return 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=800&q=80';
+  }
+
+  if (
+    text.includes('beauty') ||
+    text.includes('cosmetic') ||
+    text.includes('skincare') ||
+    text.includes('perfume') ||
+    text.includes('makeup')
+  ) {
+    return 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=800&q=80';
+  }
+
+  if (
+    text.includes('appliance') ||
+    text.includes('kitchen') ||
+    text.includes('refrigerator') ||
+    text.includes('microwave') ||
+    text.includes('mixer')
+  ) {
+    return 'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?auto=format&fit=crop&w=800&q=80';
+  }
+
+  // Fashion / Apparel fallback
+  return 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80';
+}
+
+/**
  * Find matching taxonomy schema from taxonomies.json.
  */
 export function findTaxonomy(

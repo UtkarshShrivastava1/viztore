@@ -23,7 +23,10 @@ export function DealProductCard({ product }: DealProductCardProps) {
     ? Math.round(((product.baseMrp - product.basePrice) / product.baseMrp) * 100)
     : 0;
 
-  const firstImage = product.variants?.[0]?.images?.[0];
+  const firstImage =
+    product.images?.[0] ||
+    product.variants?.[0]?.images?.[0] ||
+    product.variants?.[0]?.image;
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
