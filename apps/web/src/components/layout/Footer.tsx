@@ -1,120 +1,196 @@
 'use client';
-import { usePathname } from 'next/navigation';
+
 import React from 'react';
-import Link from 'next/link';
 import Image from 'next/image';
-import { Instagram, Facebook, Youtube, Linkedin, MapPin, Heart, Circle } from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import {
+  Instagram,
+  Linkedin,
+  Youtube,
+  Facebook,
+  MapPin,
+} from 'lucide-react';
 import { branding } from '@repo/shared-types';
+
+const supportLinks = [
+  { label: 'About Us', href: '/account/support' },
+  { label: 'Contact Us', href: '/account/support' },
+  { label: 'Partner with Us', href: '/account/sell' },
+  { label: 'Customer Terms & Conditions', href: '/account/terms' },
+  { label: 'Seller Terms & Conditions', href: '/account/terms' },
+  { label: 'Careers', href: '/account/support' },
+  { label: 'Privacy Policy', href: '/account/privacy' },
+  { label: 'Refund and Cancellation Policy', href: '/account/terms' },
+  { label: 'Grievance Redressal', href: '/account/support' },
+];
 
 export function Footer() {
   const pathname = usePathname();
   if (pathname?.startsWith('/rider')) return null;
-  return (
-    <footer className="w-full bg-gradient-to-b from-blue-50 via-blue-600 to-[#00174F] text-black">
-      <div className="max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-24 pt-16 pb-24 md:pb-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 lg:gap-24">
-          
-          {/* Column 1: Brand & Social */}
-          <div className="flex flex-col space-y-6">
-            <div className="flex flex-col">
-              <div className="flex items-center gap-2">
-                <Image src="/images/logo-dark.png" alt={`${branding.appName} Logo`} width={140} height={46} className="h-10 md:h-11 w-auto object-contain" />
 
-              </div>
-              <p className="text-blue-700 text-sm font-medium mt-1">
-                Making Local Stores <span className="font-bold">Visible.</span>
+  return (
+    <footer className="w-full bg-gradient-to-b from-blue-50 via-blue-600 to-[#00174F] text-slate-900">
+      <div className="max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-24 pt-16 pb-24 md:pb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-0">
+          
+          {/* Column 1: Logo, Description & Follow Us */}
+          <div className="lg:col-span-5 lg:pr-12 lg:border-r lg:border-slate-300/40 flex flex-col justify-between">
+            <div>
+              <Link href="/" className="inline-block">
+                <Image
+                  src="/images/logo-dark.png"
+                  alt={`${branding.appName} - ${branding.tagline}`}
+                  width={200}
+                  height={52}
+                  priority
+                  className="h-11 md:h-12 w-auto object-contain"
+                />
+              </Link>
+              <p className="text-blue-700 text-sm font-semibold mt-2">
+                Making Local Stores <span className="font-extrabold">Visible.</span>
+              </p>
+              <p className="mt-4 max-w-sm text-sm font-medium leading-relaxed text-slate-800">
+                Discover and shop from local stores in your city. Support local businesses
+                and find everything you need, all in one place.
               </p>
             </div>
-            
-            <p className="text-[15px] font-medium leading-relaxed max-w-sm">
-              Discover and shop from local stores in your city. Support local businesses and find everything you need, all in one place.
-            </p>
 
-            <div className="space-y-3">
-              <h4 className="font-bold text-lg">Follow Us</h4>
+            <div className="mt-8">
+              <h4 className="text-base font-bold text-slate-900 mb-4">Follow Us</h4>
               <div className="flex items-center gap-3">
-                <a href="#" className="flex items-center justify-center w-10 h-10 rounded bg-white hover:bg-gray-100 transition-colors shadow-sm">
-                  <Instagram className="w-5 h-5 text-black" />
+                <a
+                  href="https://instagram.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Instagram"
+                  className="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-[#061755] shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md hover:bg-slate-50"
+                >
+                  <Instagram size={20} />
                 </a>
-                <a href="#" className="flex items-center justify-center w-10 h-10 rounded bg-white hover:bg-gray-100 transition-colors shadow-sm">
-                  <Linkedin className="w-5 h-5 text-black" />
+                <a
+                  href="https://linkedin.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="LinkedIn"
+                  className="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-[#061755] shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md hover:bg-slate-50"
+                >
+                  <Linkedin size={20} />
                 </a>
-                <a href="#" className="flex items-center justify-center w-10 h-10 rounded bg-white hover:bg-gray-100 transition-colors shadow-sm">
-                  <Youtube className="w-5 h-5 text-black" />
+                <a
+                  href="https://youtube.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="YouTube"
+                  className="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-[#061755] shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md hover:bg-slate-50"
+                >
+                  <Youtube size={20} />
                 </a>
-                <a href="#" className="flex items-center justify-center w-10 h-10 rounded bg-white hover:bg-gray-100 transition-colors shadow-sm">
-                  <Facebook className="w-5 h-5 text-black" />
-                </a>
-              </div>
-            </div>
-
-            <div className="space-y-3 pt-2">
-              <h4 className="font-bold text-lg">Download the App</h4>
-              <div className="flex items-center gap-3">
-                {/* Google Play Button */}
-                <a href="#" className="flex items-center gap-2 bg-black text-white px-3 py-2 rounded-lg hover:bg-gray-900 transition-colors border border-gray-800">
-                  <svg viewBox="0 0 24 24" className="w-6 h-6 fill-current text-white"><path d="M3.609 1.814L13.792 12 3.61 22.186a1.996 1.996 0 01-.609-1.423V3.237c0-.528.216-1.04.608-1.423zM21.037 10.378l-5.69-3.284-2.822 2.822 2.83 2.83 5.682-3.284a1.002 1.002 0 000-1.748L21.037 10.378zM14.28 6.035L4.542.423A2.001 2.001 0 003.568.125l10.712 10.71zM14.288 17.965l-2.828-2.828-7.892 7.892c.31.258.718.36 1.134.258l9.586-5.322z" fillRule="evenodd" clipRule="evenodd" fill="#000" /></svg>
-                  <div className="flex flex-col">
-                    <span className="text-[10px] uppercase leading-none font-semibold text-gray-300">GET IT ON</span>
-                    <span className="text-sm font-bold leading-none mt-0.5">Google Play</span>
-                  </div>
-                </a>
-                {/* App Store Button */}
-                <a href="#" className="flex items-center gap-2 bg-black text-white px-3 py-2 rounded-lg hover:bg-gray-900 transition-colors border border-gray-800">
-                  <svg viewBox="0 0 24 24" className="w-7 h-7 fill-current"><path d="M16.365 14.232c-.035 3.322 2.88 4.437 2.923 4.453-.027.086-.456 1.564-1.493 3.08-.897 1.31-1.83 2.613-3.3 2.636-1.444.024-1.92-.857-3.56-.857-1.64 0-2.164.834-3.56.88-1.517.05-2.583-1.426-3.48-2.736-1.83-2.658-3.235-7.51-1.353-10.783.932-1.624 2.597-2.65 4.38-2.674 1.417-.024 2.76.953 3.633.953.87 0 2.518-1.18 4.218-1.002 1.802.188 3.447 1.09 4.394 2.622-3.708 2.162-3.125 7.42-.79 8.428h-.012zm-3.083-10.985c.783-.948 1.306-2.26 1.164-3.57-1.11.045-2.482.737-3.29 1.684-.716.837-1.343 2.18-1.176 3.468 1.237.095 2.514-.64 3.302-1.582z"/></svg>
-                  <div className="flex flex-col">
-                    <span className="text-[10px] uppercase leading-none font-semibold text-gray-300">Download on the</span>
-                    <span className="text-sm font-bold leading-none mt-0.5">App Store</span>
-                  </div>
+                <a
+                  href="https://facebook.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Facebook"
+                  className="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-[#061755] shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md hover:bg-slate-50"
+                >
+                  <Facebook size={20} />
                 </a>
               </div>
             </div>
           </div>
 
-          {/* Column 2: Address */}
-          <div className="flex flex-col space-y-4">
-            <h3 className="text-xl font-bold pb-2 relative">
-              Our Address
-              <div className="absolute bottom-0 left-0 w-10 h-1 bg-blue-600 rounded"></div>
-            </h3>
-            
-            <div className="flex gap-4 mt-4">
-              <div className="bg-white/90 shadow-sm p-2 rounded-xl flex-shrink-0 w-12 h-12 flex items-center justify-center">
-                <MapPin className="w-6 h-6 text-blue-600" />
+          {/* Column 2: Our Address & Download the App */}
+          <div className="lg:col-span-4 lg:px-10 lg:border-r lg:border-slate-300/40 flex flex-col justify-between">
+            <div>
+              <div>
+                <h4 className="text-base font-bold text-slate-900">Our Address</h4>
+                <div className="mt-2 h-1 w-10 rounded-full bg-[#0070F3] shadow-sm shadow-blue-500/50" />
               </div>
-              <div className="flex flex-col space-y-2 pt-1 text-[15px] font-medium">
-                <span className="font-bold text-lg leading-none">{branding.legalEntity}</span>
-                <p className="leading-relaxed">
-                  Startup Enclave, CSIT Campus,<br/>
-                  Shivaji Nagar, Balod Road,<br/>
-                  Durg, Chhattisgarh 491001<br/>
-                  India
-                </p>
+
+              <div className="mt-6 flex items-start gap-4">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white shadow-md shadow-black/10">
+                  <MapPin className="h-7 w-7 text-[#0066FF]" />
+                </div>
+                <div className="text-sm leading-relaxed">
+                  <h5 className="font-bold text-slate-900 text-base">{branding.legalEntity || 'Company Platform Services'}</h5>
+                  <p className="mt-1 text-slate-800 font-medium leading-relaxed">
+                    {branding.companyAddress || 'Startup Enclave, Campus Road, Sector 4, Durg, CG 491001, India'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-8">
+              <h4 className="text-base font-bold text-slate-900 mb-3">Download the App</h4>
+              <div className="flex flex-wrap items-center gap-3">
+                {/* Google Play Button */}
+                <a
+                  href="#"
+                  className="inline-flex items-center gap-2.5 rounded-xl border border-white/20 bg-black/90 px-3.5 py-2 transition-all duration-200 hover:border-white/50 hover:bg-black active:scale-[0.98] shadow-sm"
+                >
+                  <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M3.609 1.814L13.793 12 3.61 22.186A2.215 2.215 0 013 20.615V3.385c0-.609.224-1.17.609-1.571z"
+                      fill="#00D2FF"
+                    />
+                    <path
+                      d="M17.186 8.607L13.793 12l3.393 3.393 3.844-2.219a1.353 1.353 0 000-2.348l-3.844-2.219z"
+                      fill="#FFCE00"
+                    />
+                    <path
+                      d="M3.609 1.814l10.184 10.186 3.393-3.393L6.155.857a2.535 2.535 0 00-2.546.957z"
+                      fill="#00F076"
+                    />
+                    <path
+                      d="M13.793 12L3.609 22.186a2.535 2.535 0 002.546.957l11.031-6.35-3.393-3.393z"
+                      fill="#FF3A44"
+                    />
+                  </svg>
+                  <div className="text-left">
+                    <div className="text-[9px] font-semibold uppercase tracking-wider text-slate-300 leading-none">
+                      GET IT ON
+                    </div>
+                    <div className="text-sm font-semibold text-white leading-tight">
+                      Google Play
+                    </div>
+                  </div>
+                </a>
+
+                {/* Apple Store Button */}
+                <a
+                  href="#"
+                  className="inline-flex items-center gap-2.5 rounded-xl border border-white/20 bg-black/90 px-3.5 py-2 transition-all duration-200 hover:border-white/50 hover:bg-black active:scale-[0.98] shadow-sm"
+                >
+                  <svg className="h-5 w-5 shrink-0 fill-current text-white" viewBox="0 0 170 170">
+                    <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.35.13-9.16-1.9-14.42-6.08-3.7-3.04-7.58-7.78-11.65-14.21-6.38-10.08-11.41-21.72-15.09-34.92-3.69-13.2-5.53-25.29-5.53-36.27 0-14.89 3.69-27.14 11.07-36.75 7.38-9.61 16.73-14.51 28.05-14.7 4.9.12 10.36 1.43 16.39 3.92 6.03 2.49 10.05 3.79 12.06 3.92 1.68 0 5.86-1.4 12.54-4.21 6.68-2.81 12.44-4.11 17.28-3.92 15.54 1.12 27.27 7.04 35.19 17.76-13.75 8.35-20.47 19.78-20.15 34.28.32 11.22 4.63 20.67 12.92 28.35 8.29 7.68 18.23 12.18 29.83 13.51-2.58 7.84-5.69 15.61-9.33 23.32zM119.22 31.84c0-7.72 2.76-14.93 8.28-21.63 5.53-6.7 12.43-10.74 20.7-12.11.22 1.34.33 2.57.33 3.69 0 7.61-2.85 15.04-8.56 22.3-5.71 7.26-12.63 11.39-20.75 12.39-0.01-1.57 0-3.11 0-4.64z" />
+                  </svg>
+                  <div className="text-left">
+                    <div className="text-[9px] font-medium text-slate-300 leading-none">
+                      Download on the
+                    </div>
+                    <div className="text-sm font-semibold text-white leading-tight">
+                      App Store
+                    </div>
+                  </div>
+                </a>
               </div>
             </div>
           </div>
 
           {/* Column 3: Support */}
-          <div className="flex flex-col space-y-4">
-            <h3 className="text-xl font-bold pb-2 relative">
-              Support
-              <div className="absolute bottom-0 left-0 w-10 h-1 bg-blue-600 rounded"></div>
-            </h3>
-            
-            <ul className="flex flex-col space-y-3 mt-4 text-[15px] font-medium">
-              {[
-                { label: 'About Us', href: '/account/support' },
-                { label: 'Contact Us', href: '/account/support' },
-                { label: 'Partner with Us', href: '/account/sell' },
-                { label: 'Customer Terms & Conditions', href: '/account/terms' },
-                { label: 'Seller Terms & Conditions', href: '/account/terms' },
-                { label: 'Careers', href: '/account/support' },
-                { label: 'Privacy Policy', href: '/account/privacy' },
-                { label: 'Refund and Cancellation Policy', href: '/account/terms' },
-                { label: 'Grievance Redressal', href: '/account/support' },
-              ].map((link) => (
-                <li key={link.href}>
-                  <Link href={link.href} className="hover:text-white transition-colors">
+          <div className="lg:col-span-3 lg:pl-10">
+            <div>
+              <h4 className="text-base font-bold text-slate-900">Support</h4>
+              <div className="mt-2 h-1 w-10 rounded-full bg-[#0070F3] shadow-sm shadow-blue-500/50" />
+            </div>
+
+            <ul className="mt-6 flex flex-col gap-2.5">
+              {supportLinks.map((link) => (
+                <li key={link.label}>
+                  <Link
+                    href={link.href}
+                    className="text-sm font-medium text-slate-800 transition-colors duration-150 hover:text-white"
+                  >
                     {link.label}
                   </Link>
                 </li>
@@ -123,20 +199,24 @@ export function Footer() {
           </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="mt-16 pt-6 border-t border-white/20 flex flex-col md:flex-row items-center justify-between gap-4 text-white">
-          <p className="text-sm font-medium">
-            © {new Date().getFullYear()} <span className="font-bold">{branding.appName}</span>. All rights reserved.
+        {/* Bottom Sub-Bar */}
+        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/20 pt-7 pb-2 sm:flex-row text-xs md:text-sm text-blue-100/85">
+          <p>
+            © {new Date().getFullYear()} <strong className="font-bold text-white">{branding.appName}</strong>. All rights reserved.
           </p>
-          
-          <div className="flex items-center gap-4 text-sm font-medium">
-            <div className="flex items-center gap-1.5">
-              Made with <Heart className="w-4 h-4 text-red-500 fill-current" /> in India
-            </div>
-            <div className="h-4 w-px bg-white/40"></div>
-            <div className="flex items-center gap-1.5">
-              <Circle className="w-3 h-3 text-green-400 fill-current" /> Service Active
-            </div>
+
+          <div className="flex flex-wrap items-center gap-4">
+            <span className="flex items-center gap-1.5 text-blue-100/90 font-medium">
+              Made with <span className="text-red-500 text-sm">❤️</span> in India
+            </span>
+            <span className="text-white/30">|</span>
+            <span className="flex items-center gap-2">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
+              </span>
+              <span className="text-white font-medium">Service Active</span>
+            </span>
           </div>
         </div>
       </div>
