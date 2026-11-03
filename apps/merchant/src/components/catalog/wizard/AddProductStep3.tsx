@@ -10,6 +10,7 @@ import {
   ArrowLeft,
   X,
   Sparkles,
+  Info,
 } from 'lucide-react';
 import { useCatalogStore } from '../../../stores/catalogStore.js';
 import { VariantMatrixBuilder } from './VariantMatrixBuilder.js';
@@ -178,65 +179,125 @@ export const AddProductStep3: React.FC = () => {
               Add relevant keywords and tags to make your product easy to search.
             </p>
 
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-semibold text-slate-700">
-                  Tags / Keywords <span className="text-rose-500">*</span>
+                <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                  <Tag className="w-3.5 h-3.5 text-blue-600" />
+                  <span>Tags / Search Keywords</span>
+                  <span className="text-rose-500">*</span>
                 </label>
-                <span className="text-[10px] text-slate-400 font-mono">{tags.length}/30</span>
+                <span className="text-[10px] text-slate-500 font-semibold bg-slate-100 px-2 py-0.5 rounded-full font-mono">
+                  {tags.length}/30 tags
+                </span>
               </div>
 
-              {/* Tag input and active pills */}
-              <div onClick={() => tagInputRef.current?.focus()} className="min-h-[70px] p-2 bg-slate-50 border border-slate-200 rounded-lg flex flex-wrap gap-1.5 items-center cursor-text focus-within:bg-white focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 transition-all">
-                {tags.map((t, idx) => (
-                  <span
-                    key={idx}
-                    className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200"
-                  >
-                    <span>{t}</span>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveTag(idx)}
-                      className="hover:text-blue-900 cursor-pointer"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </span>
-                ))}
-                <input
-                  type="text"
-                  value={tagInput}
-                  onChange={(e) => setTagInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleAddTag(tagInput);
+              {/* Explicit Clear Input Field with integrated [ + Add ] button */}
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <Tag className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ',') {
+                        e.preventDefault();
+                        if (tagInput.trim()) {
+                          handleAddTag(tagInput.replace(/,/g, ''));
+                        }
+                      }
+                    }}
+                    ref={tagInputRef}
+                    placeholder="Type keyword & press Enter (e.g. Cotton, Slim Fit)..."
+                    className="w-full pl-9 pr-3 py-2 text-xs bg-white border border-slate-300 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#0038ed] focus:ring-2 focus:ring-blue-100 transition-all shadow-2xs font-medium"
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (tagInput.trim()) {
+                      handleAddTag(tagInput.replace(/,/g, ''));
                     }
                   }}
-                  ref={tagInputRef}
-                  placeholder="+ Add tag (press Enter)"
-                  className="text-xs bg-transparent border-none outline-hidden placeholder-slate-400 flex-1 min-w-[120px]"
-                />
+                  disabled={!tagInput.trim() || tags.length >= 30}
+                  className="px-3.5 py-2 rounded-xl bg-[#0038ed] hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-2xs cursor-pointer disabled:cursor-not-allowed shrink-0"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add</span>
+                </button>
+              </div>
+
+              {/* Active Tags Showcase Container */}
+              <div className="min-h-[52px] p-2.5 bg-slate-50/80 border border-slate-200/90 rounded-xl">
+                {tags.length === 0 ? (
+                  <div className="text-[11px] text-slate-400 flex items-center gap-1.5 py-1 px-1">
+                    <Info className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span>No keywords added yet. Type above or click suggestions below.</span>
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {tags.map((t, idx) => (
+                      <span
+                        key={idx}
+                        className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-lg text-xs font-semibold bg-white text-blue-700 border border-blue-200 shadow-2xs group hover:border-blue-400 transition-all"
+                      >
+                        <span>{t}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveTag(idx)}
+                          className="w-4 h-4 rounded-md flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer transition-colors"
+                          title="Remove tag"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    ))}
+                    {tags.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => updateDraftProduct({ tags: [] })}
+                        className="text-[11px] font-bold text-rose-500 hover:text-rose-700 hover:underline px-2 py-0.5 cursor-pointer ml-auto"
+                      >
+                        Clear All
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
-          </div>
 
-          {/* Popular Suggestions */}
-          <div className="mt-3 pt-3 border-t border-slate-100">
-            <div className="text-[11px] font-semibold text-slate-600 mb-1.5">
-              Popular Suggestions
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {popularTagSuggestions.map((sug) => (
-                <button
-                  key={sug}
-                  type="button"
-                  onClick={() => handleAddTag(sug)}
-                  className="px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 hover:bg-blue-50 hover:text-blue-600 text-slate-600 border border-slate-200/80 transition-colors cursor-pointer"
-                >
-                  {sug}
-                </button>
-              ))}
+            {/* Popular Suggestions with + indicator */}
+            <div className="mt-3 pt-3 border-t border-slate-100">
+              <div className="text-[11px] font-bold text-slate-600 mb-1.5 flex items-center justify-between">
+                <span>Quick Suggestions:</span>
+                <span className="text-[10px] text-slate-400 font-normal">Click to add</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {popularTagSuggestions.map((sug) => {
+                  const isAdded = tags.includes(sug.toLowerCase());
+                  return (
+                    <button
+                      key={sug}
+                      type="button"
+                      disabled={isAdded || tags.length >= 30}
+                      onClick={() => handleAddTag(sug)}
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-medium border transition-all cursor-pointer flex items-center gap-1 ${
+                        isAdded
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200 cursor-default opacity-80'
+                          : 'bg-white hover:bg-blue-50 text-slate-700 hover:text-blue-600 border-slate-200 hover:border-blue-300 shadow-2xs active:scale-95'
+                      }`}
+                    >
+                      {isAdded ? (
+                        <Check className="w-3 h-3 text-emerald-600" />
+                      ) : (
+                        <Plus className="w-3 h-3 text-slate-400" />
+                      )}
+                      <span>{sug}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
