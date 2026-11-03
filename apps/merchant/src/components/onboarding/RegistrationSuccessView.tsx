@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   CheckCircle2,
   Sparkles,
@@ -24,45 +24,59 @@ export const RegistrationSuccessView: React.FC<RegistrationSuccessViewProps> = (
   onEnterDashboard,
 }) => {
   const { currentStore, user } = useAuthStore();
-  const { draft } = useOnboardingStore();
-
   const [countdown, setCountdown] = useState<number>(5);
   const [isPaused, setIsPaused] = useState<boolean>(false);
+  const hasTransitionedRef = useRef<boolean>(false);
 
-  // Derive merchant store details from draft or currentStore
-  const storeName =
-    currentStore?.name ||
-    draft.step4?.storeDisplayName ||
-    'Fresh Express Mart';
-  const merchantName =
-    user?.fullName ||
-    draft.step4?.merchantFullName ||
-    draft.step1?.fullName ||
-    'Retail Merchant';
-  const category =
-    draft.step5?.primaryCategory ||
-    (currentStore as any)?.category ||
-    'Provisions & Supermarket';
-  const locality =
-    draft.step4?.address?.city
+  // Snapshot merchant store details on mount to preserve display during reset/unmount
+  const [storeName] = useState(() => {
+    const draft = useOnboardingStore.getState().draft;
+    return currentStore?.name || draft.step4?.storeDisplayName || 'Fresh Express Mart';
+  });
+
+  const [merchantName] = useState(() => {
+    const draft = useOnboardingStore.getState().draft;
+    return user?.fullName || draft.step4?.merchantFullName || draft.step1?.fullName || 'Retail Merchant';
+  });
+
+  const [category] = useState(() => {
+    const draft = useOnboardingStore.getState().draft;
+    return draft.step5?.primaryCategory || (currentStore as any)?.category || 'Provisions & Supermarket';
+  });
+
+  const [locality] = useState(() => {
+    const draft = useOnboardingStore.getState().draft;
+    return draft.step4?.address?.city
       ? `${draft.step4.address.street || 'Supela'}, ${draft.step4.address.city}, CG`
       : 'Bhilai, Chhattisgarh';
-  const deliveryRadius = draft.step4?.deliveryRadiusKm || 4;
-  const bankName = draft.step6?.bankName || 'State Bank of India';
-  const rawAccount = draft.step6?.accountNumber || '1234567890';
-  const maskedAccount =
-    rawAccount.length > 4
-      ? `•••• •••• ${rawAccount.slice(-4)}`
-      : `•••• ${rawAccount}`;
+  });
 
-  const handleEnterDashboard = () => {
+  const [deliveryRadius] = useState(() => {
+    const draft = useOnboardingStore.getState().draft;
+    return draft.step4?.deliveryRadiusKm || 4;
+  });
+
+  const [bankName] = useState(() => {
+    const draft = useOnboardingStore.getState().draft;
+    return draft.step6?.bankName || 'State Bank of India';
+  });
+
+  const [maskedAccount] = useState(() => {
+    const draft = useOnboardingStore.getState().draft;
+    const rawAccount = draft.step6?.accountNumber || '1234567890';
+    return rawAccount.length > 4 ? `•••• •••• ${rawAccount.slice(-4)}` : `•••• ${rawAccount}`;
+  });
+
+  const handleEnterDashboard = useCallback(() => {
+    if (hasTransitionedRef.current) return;
+    hasTransitionedRef.current = true;
     useOnboardingStore.getState().resetOnboarding();
     onEnterDashboard();
-  };
+  }, [onEnterDashboard]);
 
   // Countdown timer auto-transitioning to dashboard
   useEffect(() => {
-    if (isPaused) return;
+    if (isPaused || hasTransitionedRef.current) return;
 
     if (countdown <= 0) {
       handleEnterDashboard();
@@ -70,11 +84,17 @@ export const RegistrationSuccessView: React.FC<RegistrationSuccessViewProps> = (
     }
 
     const timer = setInterval(() => {
-      setCountdown((prev) => prev - 1);
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [countdown, isPaused, onEnterDashboard]);
+  }, [countdown, isPaused, handleEnterDashboard]);
 
   const progressPercent = Math.max(0, Math.min(100, ((5 - countdown) / 5) * 100));
 
