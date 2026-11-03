@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import Link from 'next/link';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Store as StoreIcon } from 'lucide-react';
 import { HomeStoreCard } from './HomeStoreCard';
 import { useNearbyStores } from '@/hooks/useNearbyStores';
 import { useAllStores } from '@/hooks/useAllStores';
@@ -27,7 +27,7 @@ function calculateDistanceKm(coord1: [number, number], coord2: [number, number])
 }
 
 export function StoresNearYouRail() {
-  const { lng, lat, city } = useLocationStore();
+  const { lng, lat, city, locality } = useLocationStore();
   const { data: nearbyStores, isLoading: nearbyLoading } = useNearbyStores(lng, lat, 50, undefined, city);
   const { data: allStoresResponse, isLoading: allLoading } = useAllStores({ limit: 10, city });
 
@@ -58,16 +58,18 @@ export function StoresNearYouRail() {
       });
   }, [liveStores, lng, lat]);
 
+  const locationLabel = locality || city || 'Bhilai-Durg';
+
   return (
-    <section className="space-y-3.5 w-full">
+    <section className="space-y-4 w-full">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-[#0B1538]">
+          <h2 className="text-xl sm:text-2xl font-extrabold text-[#0B1538]">
             Stores Near You
           </h2>
-          <p className="text-xs text-slate-500 font-medium">
-            Local stores in {city || 'Bhilai-Durg'} sorted by nearest distance
+          <p className="text-xs sm:text-sm text-slate-500 font-medium mt-0.5">
+            Neighborhood retailers near {locationLabel} sorted by nearest distance
           </p>
         </div>
         <Link
@@ -79,17 +81,26 @@ export function StoresNearYouRail() {
       </div>
 
       {/* 5-Column Compact Grid on Desktop, Horizontal Scroll Rail on Mobile */}
-      <div className="flex sm:grid sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 overflow-x-auto scrollbar-hide pb-1 snap-x snap-mandatory">
+      <div className="flex sm:grid sm:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4 overflow-x-auto scrollbar-hide pb-2 snap-x snap-mandatory">
         {storesLoading ? (
           Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="w-[155px] sm:w-auto shrink-0 snap-start aspect-[16/14] rounded-2xl bg-surface-100 animate-pulse" />
+            <div key={i} className="w-[165px] sm:w-auto shrink-0 snap-start aspect-[16/14] rounded-2xl bg-surface-100 animate-pulse" />
           ))
-        ) : (
+        ) : displayStores.length > 0 ? (
           displayStores.slice(0, 5).map((store, i) => (
-            <div key={store._id || i} className="w-[155px] sm:w-auto shrink-0 snap-start">
+            <div key={store._id || i} className="w-[165px] sm:w-auto shrink-0 snap-start">
               <HomeStoreCard store={store} index={i} />
             </div>
           ))
+        ) : (
+          <div className="col-span-full w-full py-8 text-center bg-white rounded-2xl border border-gray-100 p-6 flex flex-col items-center justify-center">
+            <StoreIcon className="w-10 h-10 text-slate-300 mb-2" />
+            <h3 className="text-sm font-bold text-slate-700">Expanding to more stores in {locationLabel}</h3>
+            <p className="text-xs text-slate-400 mt-1 max-w-sm">We are actively onboarding verified local retailers in your immediate neighborhood.</p>
+            <Link href="/stores" className="mt-3 text-xs font-bold text-[#1668F6] hover:underline">
+              Browse all regional stores →
+            </Link>
+          </div>
         )}
       </div>
     </section>

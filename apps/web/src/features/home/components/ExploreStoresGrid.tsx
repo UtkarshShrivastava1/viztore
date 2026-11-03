@@ -44,8 +44,8 @@ export function ExploreStoresGrid() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-[#0B1538]">Explore Stores</h2>
-          <p className="text-xs sm:text-sm text-gray-500 mt-0.5">Shop from top local stores near you</p>
+          <h2 className="text-xl sm:text-2xl font-extrabold text-[#0B1538]">Explore Stores</h2>
+          <p className="text-xs sm:text-sm text-slate-500 font-medium mt-0.5">Top-rated neighborhood retailers in {city || 'Bhilai-Durg'}</p>
         </div>
         <Link
           href="/stores"
@@ -73,9 +73,9 @@ export function ExploreStoresGrid() {
               <Link
                 href={`/stores/${store.slug || store._id}`}
                 key={store._id || index}
-                className="group flex flex-row sm:flex-col bg-white rounded-2xl border border-gray-100 shadow-2xs hover:shadow-lg hover:border-blue-100 transition-all duration-300 overflow-hidden"
+                className="group flex flex-row sm:flex-col bg-white rounded-2xl border border-gray-100 shadow-2xs hover:shadow-lg hover:border-blue-100 transition-all duration-300 overflow-hidden hover:-translate-y-1"
               >
-                {/* Banner Image (Compact split thumbnail on mobile matching Mob 1.1.png, 16:9 on desktop) */}
+                {/* Banner Image */}
                 <div className="relative w-32 sm:w-full h-28 sm:h-auto sm:aspect-[16/9] overflow-hidden bg-gray-100 shrink-0">
                   <img
                     src={banner}
@@ -86,34 +86,35 @@ export function ExploreStoresGrid() {
                       (e.target as HTMLImageElement).src = fallbackStoreImages[index % fallbackStoreImages.length];
                     }}
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 </div>
 
                 {/* Details */}
-                <div className="p-3 sm:p-5 flex flex-col flex-1 justify-between min-w-0">
+                <div className="p-3.5 sm:p-5 flex flex-col flex-1 justify-between min-w-0">
                   <div>
                     <div className="flex items-center justify-between gap-2">
-                      <h3 className="text-sm sm:text-lg font-bold text-[#0B1538] group-hover:text-[#1668F6] transition-colors truncate">
+                      <h3 className="text-sm sm:text-lg font-extrabold text-[#0B1538] group-hover:text-[#1668F6] transition-colors truncate">
                         {store.name}
                       </h3>
                       <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-hover:text-[#1668F6] group-hover:translate-x-1 transition-all shrink-0" />
                     </div>
 
                     {/* Rating */}
-                    <div className="flex items-center gap-1.5 mt-0.5 sm:mt-1">
+                    <div className="flex items-center gap-1.5 mt-1">
                       <span className="text-xs sm:text-sm font-bold text-gray-800">{store.rating ? Number(store.rating).toFixed(1) : meta.rating}</span>
                       <Star className="w-3 sm:w-3.5 h-3 sm:h-3.5 fill-emerald-500 text-emerald-500" />
-                      <span className="text-[11px] sm:text-xs text-gray-400">({meta.count})</span>
+                      <span className="text-[11px] sm:text-xs text-slate-400">({meta.count})</span>
                     </div>
 
                     {/* Description / Category */}
-                    <p className="text-xs sm:text-sm text-gray-500 line-clamp-1 mt-1">
+                    <p className="text-xs sm:text-sm text-slate-500 font-medium line-clamp-1 mt-1">
                       {categoryText}
                     </p>
                   </div>
 
                   {/* Fast Delivery Pill */}
                   <div className="pt-2 sm:pt-3">
-                    <div className="inline-flex items-center gap-1 bg-[#F5F8FF] text-[#1668F6] text-[10px] sm:text-xs font-semibold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md">
+                    <div className="inline-flex items-center gap-1 bg-[#F5F8FF] text-[#1668F6] text-[10px] sm:text-xs font-bold px-2.5 py-1 rounded-md border border-blue-100/50">
                       <Zap className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-current" /> Fast Delivery
                     </div>
                   </div>
@@ -124,17 +125,17 @@ export function ExploreStoresGrid() {
         )}
       </div>
 
-      {/* Trust Ecosystem Bar (Matching Web 1.1.png) */}
-      <div className="mt-8 sm:mt-12 bg-[#F5F8FF] rounded-2xl p-6 lg:p-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 divide-y sm:divide-y-0 sm:divide-x divide-gray-200/60">
+      {/* Trust Ecosystem Bar */}
+      <div className="mt-8 sm:mt-12 bg-gradient-to-r from-blue-50/70 via-indigo-50/50 to-blue-50/70 rounded-2xl p-6 lg:p-8 border border-blue-100/60 shadow-xs">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 divide-y sm:divide-y-0 sm:divide-x divide-blue-200/40">
           {trustItems.map((item, index) => (
             <div key={item.label} className={`flex items-center gap-4 ${index !== 0 ? 'pt-6 sm:pt-0 sm:pl-6 lg:pl-10' : 'sm:pl-4'}`}>
-              <div className="shrink-0 text-[#1668F6] p-3 bg-white rounded-2xl shadow-2xs">
-                <item.icon strokeWidth={1.5} className="w-6 h-6" />
+              <div className="shrink-0 text-[#1668F6] p-3 bg-white rounded-2xl shadow-xs border border-blue-100/50">
+                <item.icon strokeWidth={1.75} className="w-6 h-6" />
               </div>
               <div className="flex flex-col">
-                <h4 className="text-sm sm:text-base font-bold text-gray-900 leading-snug">{item.label}</h4>
-                <p className="text-xs sm:text-sm text-gray-500 leading-snug mt-0.5">{item.description}</p>
+                <h4 className="text-sm sm:text-base font-extrabold text-[#0B1538] leading-snug">{item.label}</h4>
+                <p className="text-xs sm:text-sm text-slate-500 font-medium leading-snug mt-0.5">{item.description}</p>
               </div>
             </div>
           ))}

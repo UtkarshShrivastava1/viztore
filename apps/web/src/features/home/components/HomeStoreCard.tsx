@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Star, MapPin, Heart } from 'lucide-react';
+import { Star, MapPin, Heart, ShieldCheck } from 'lucide-react';
 import type { IStore } from '@repo/shared-types';
 import { useFavoriteStoresStore } from '@/stores/favoriteStoresStore';
 
@@ -38,7 +38,7 @@ export function HomeStoreCard({ store, index = 0 }: HomeStoreCardProps) {
   return (
     <Link
       href={`/stores/${store.slug || store._id}`}
-      className="group bg-white rounded-2xl border border-gray-100/90 shadow-2xs hover:shadow-md hover:border-blue-100 transition-all duration-300 overflow-hidden flex flex-col w-full shrink-0 relative"
+      className="group bg-white rounded-2xl border border-gray-100 shadow-2xs hover:shadow-lg hover:border-blue-100 transition-all duration-300 overflow-hidden flex flex-col w-full shrink-0 relative hover:-translate-y-1"
     >
       {/* 16:10 Store Banner */}
       <div className="relative aspect-[16/10] w-full overflow-hidden bg-surface-100">
@@ -47,10 +47,13 @@ export function HomeStoreCard({ store, index = 0 }: HomeStoreCardProps) {
           alt={store.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           loading="lazy"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = storeFallbackImages[index % storeFallbackImages.length];
+          }}
         />
 
         {/* Distance / ETA Pill */}
-        <span className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full bg-white/95 backdrop-blur-xs text-[11px] font-bold text-gray-800 shadow-2xs flex items-center gap-1 border border-gray-100/80 leading-none z-10">
+        <span className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full bg-white/95 backdrop-blur-xs text-[11px] font-extrabold text-gray-800 shadow-2xs flex items-center gap-1 border border-gray-100/80 leading-none z-10">
           <MapPin className="w-3 h-3 text-emerald-600" /> {badgeText}
         </span>
 
@@ -73,31 +76,38 @@ export function HomeStoreCard({ store, index = 0 }: HomeStoreCardProps) {
           <Heart className={`w-4 h-4 transition-transform duration-150 active:scale-75 ${isFav ? 'fill-rose-500 text-rose-500' : ''}`} />
         </button>
 
-        {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        {/* Gradient Overlay on Hover */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </div>
 
       {/* Info Container */}
-      <div className="p-3.5 flex flex-col gap-1.5 flex-1">
-        <div className="flex items-center justify-between gap-1">
-          <h3 className="font-extrabold text-[15px] text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-1">
-            {store.name}
-          </h3>
-          <span className="flex items-center gap-0.5 text-xs font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded shrink-0">
-            <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-            {rating}
-          </span>
+      <div className="p-3.5 flex flex-col gap-1.5 flex-1 justify-between bg-white">
+        <div>
+          <div className="flex items-center justify-between gap-1">
+            <h3 className="font-extrabold text-sm sm:text-[15px] text-[#0B1538] group-hover:text-[#1668F6] transition-colors line-clamp-1 leading-snug">
+              {store.name}
+            </h3>
+            <span className="flex items-center gap-0.5 text-xs font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded shrink-0">
+              <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+              {rating}
+            </span>
+          </div>
+
+          <p className="text-xs text-slate-500 font-medium line-clamp-1 mt-0.5">
+            {store.description || `${store.category || 'Retail'} • Fresh & Local`}
+          </p>
         </div>
 
-        <p className="text-xs text-gray-500 line-clamp-1">
-          {store.description || `${store.category || 'Retail'} • Fresh & Local`}
-        </p>
-
-        {store.address?.city && (
-          <span className="text-[11px] text-gray-400 font-medium">
-            {store.address.city}
+        <div className="flex items-center justify-between pt-1 text-[11px] text-slate-400 font-medium border-t border-gray-50">
+          <span className="flex items-center gap-1 text-emerald-700 font-bold">
+            <ShieldCheck className="w-3.5 h-3.5" /> Verified
           </span>
-        )}
+          {store.address?.city && (
+            <span className="truncate max-w-[100px] text-right">
+              {store.address.city}
+            </span>
+          )}
+        </div>
       </div>
     </Link>
   );
