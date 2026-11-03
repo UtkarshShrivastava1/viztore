@@ -186,6 +186,45 @@ export function calculateKPIs(products: ProductItem[]): CatalogKPIs {
   };
 }
 
+export function getColorHex(colorName?: string): string {
+  if (!colorName) return '#64748b';
+  const name = colorName.toLowerCase().trim();
+  const map: Record<string, string> = {
+    'space black': '#1c1b1f',
+    'black': '#0f172a',
+    'natural titanium': '#8e8a84',
+    'titanium': '#8e8a84',
+    'silver': '#e2e8f0',
+    'white': '#ffffff',
+    'midnight': '#191f28',
+    'starlight': '#f0ece1',
+    'deep blue': '#1e3a8a',
+    'blue': '#2563eb',
+    'navy': '#1e3a8a',
+    'navy blue': '#1e3a8a',
+    'royal blue': '#2563eb',
+    'desert titanium': '#d4bba2',
+    'gold': '#ffd700',
+    'rose gold': '#b76e79',
+    'green': '#15803d',
+    'dark green': '#14532d',
+    'olive green': '#4d7c0f',
+    'red': '#dc2626',
+    'crimson red': '#dc2626',
+    'maroon': '#800000',
+    'yellow': '#eab308',
+    'mustard yellow': '#d97706',
+    'grey': '#64748b',
+    'gray': '#64748b',
+    'heather grey': '#64748b',
+    'beige': '#f5f5dc',
+    'purple': '#9333ea',
+    'pink': '#ec4899',
+    'orange': '#ea580c',
+  };
+  return map[name] || '#64748b';
+}
+
 export function mapApiProductToProductItem(p: any): ProductItem {
   const primaryVariant = p.variants?.[0] || {};
   const images: string[] = [];
@@ -228,6 +267,21 @@ export function mapApiProductToProductItem(p: any): ProductItem {
     costPrice: Math.round((p.basePrice || primaryVariant.price || 0) * 0.6),
     mrp: p.baseMrp || primaryVariant.mrp || p.basePrice || 0,
     images: images,
+    variants: Array.isArray(p.variants)
+      ? p.variants.map((v: any, idx: number) => ({
+          id: v._id || v.id || `var-${idx}`,
+          sku: v.sku || `${p.sku || 'SKU'}-${idx}`,
+          size: v.size || '',
+          color: v.color || '',
+          colorHex: v.colorHex || getColorHex(v.color),
+          price: typeof v.price === 'number' ? v.price : (p.basePrice || 0),
+          mrp: typeof v.mrp === 'number' ? v.mrp : (p.baseMrp || v.price || p.basePrice || 0),
+          stock: typeof v.stock === 'number' ? v.stock : 0,
+          isActive: v.isActive !== false,
+          image: v.images?.[0] || v.image || images[0],
+          barcode: v.barcode || p.barcode,
+        }))
+      : [],
     attributes: attributesMap,
     storageLocation: p.storageLocation || {
       warehouse: 'Main Warehouse',
@@ -920,22 +974,30 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
     // 4. Construct variants (single or multi-variant matrix)
     const baseSku = (draftProduct.sku || `PRD-${Date.now()}`).toUpperCase();
     const hasVariants = draftProduct.attributes?.hasVariants === 'true';
+    const effectiveBasePrice = Number(draftProduct.price || 0);
+    const effectiveBaseMrp = Number(draftProduct.mrp || draftProduct.price || 0);
     let variants = [];
 
     if (hasVariants && Array.isArray(draftProduct.variants) && draftProduct.variants.length > 0) {
       // Use existing user-configured variants from VariantMatrixBuilder
-      variants = draftProduct.variants.map((v, i) => ({
-        id: v.id || `var-${Date.now()}-${i}`,
-        sku: v.sku || `${baseSku}-${v.size || v.color || 'VAR'}`,
-        size: v.size || 'Standard',
-        color: v.color || 'Standard',
-        price: Number(v.price ?? draftProduct.price ?? 599),
-        mrp: Number(v.mrp ?? draftProduct.mrp ?? draftProduct.price ?? 699),
-        stock: Number(v.stock ?? 10),
-        images: v.image ? [v.image] : images,
-        image: v.image || images[0],
-        isActive: v.isActive !== false,
-      }));
+      variants = draftProduct.variants.map((v, i) => {
+        const vPrice = Number(v.price || effectiveBasePrice || 0);
+        const vMrp = Number(v.mrp || effectiveBaseMrp || vPrice || 0);
+        const hex = v.colorHex || getColorHex(v.color);
+        return {
+          id: v.id || `var-${Date.now()}-${i}`,
+          sku: (v.sku || `${baseSku}-${v.size || v.color || 'VAR'}`).toUpperCase(),
+          size: v.size || 'Standard',
+          color: v.color || 'Standard',
+          ...(hex ? { colorHex: hex } : {}),
+          price: vPrice,
+          mrp: vMrp,
+          stock: Number(v.stock ?? 10),
+          images: v.image ? [v.image] : images,
+          image: v.image || images[0],
+          isActive: v.isActive !== false,
+        };
+      });
     } else if (hasVariants) {
       // Intelligent category-aware fallback if rows were not generated
       const isElect = isElectronicsCategory(draftProduct.category, draftProduct.subCategory);
@@ -950,27 +1012,33 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
             ? ['500g', '1 kg', '2 kg']
             : ['S', 'M', 'L', 'XL'];
 
+      const fallbackColor = draftProduct.attributes?.color || (isElect ? 'Space Black' : 'Black');
+      const hex = getColorHex(fallbackColor);
+
       variants = primaryOptions.map((opt, i) => ({
         id: `var-${Date.now()}-${i}`,
         sku: `${baseSku}-${opt.replace(/[^a-zA-Z0-9]/g, '')}`,
         size: opt,
-        color: draftProduct.attributes?.color || 'Standard',
-        price: Number(draftProduct.price ?? 599),
-        mrp: Number(draftProduct.mrp ?? draftProduct.price ?? 699),
+        color: fallbackColor,
+        ...(hex ? { colorHex: hex } : {}),
+        price: effectiveBasePrice,
+        mrp: effectiveBaseMrp,
         stock: Math.max(1, Math.floor(Number(draftProduct.stock ?? 10) / primaryOptions.length)),
         images,
         image: images[0],
         isActive: draftProduct.status !== 'inactive',
       }));
     } else {
+      const hex = getColorHex(draftProduct.attributes?.color);
       variants = [
         {
           id: `var-${Date.now()}-0`,
           sku: baseSku,
           size: draftProduct.attributes?.size || 'Standard',
           color: draftProduct.attributes?.color || 'Standard',
-          price: Number(draftProduct.price ?? 599),
-          mrp: Number(draftProduct.mrp ?? draftProduct.price ?? 699),
+          ...(hex ? { colorHex: hex } : {}),
+          price: effectiveBasePrice,
+          mrp: effectiveBaseMrp,
           stock: Number(draftProduct.stock ?? 10),
           images,
           image: images[0],
@@ -1029,9 +1097,9 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
         stock: Number(draftProduct.stock ?? 100),
         lowStockThreshold: Number(draftProduct.lowStockThreshold ?? 10),
         status: draftProduct.status || 'active',
-        price: Number(draftProduct.price ?? 599),
-        costPrice: Number(draftProduct.costPrice ?? 350),
-        mrp: Number(draftProduct.mrp ?? 899),
+        price: effectiveBasePrice,
+        costPrice: Number(draftProduct.costPrice || 0),
+        mrp: effectiveBaseMrp,
         images,
         variants,
         attributes: draftProduct.attributes || {},

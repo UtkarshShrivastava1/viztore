@@ -156,6 +156,56 @@ export const VariantMatrixBuilder: React.FC = () => {
     });
   };
 
+  // Auto-generate and sync matrix whenever selected sizes, colors, or base pricing changes
+  useEffect(() => {
+    if (selectedSizes.length > 0 && selectedColors.length > 0) {
+      setMatrixRows((prevRows) => {
+        const rowMap = new Map(prevRows.map((r) => [`${r.color}__${r.size}`, r]));
+        const updatedRows: ProductVariantItem[] = [];
+
+        selectedColors.forEach((c) => {
+          selectedSizes.forEach((s) => {
+            const key = `${c.name}__${s}`;
+            const existing = rowMap.get(key);
+            if (existing) {
+              updatedRows.push({
+                ...existing,
+                colorHex: c.hex || existing.colorHex,
+                price: existing.price || Number(bulkPriceInput) || basePrice || 0,
+                mrp: existing.mrp || Number(bulkMrpInput) || baseMrp || 0,
+              });
+            } else {
+              const cleanColor = c.name.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 4);
+              const cleanSize = s.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+              const sku = `${baseSku}-${cleanColor}-${cleanSize}`;
+              const barcode = `890${Math.floor(1000000000 + Math.random() * 9000000000)}`;
+
+              updatedRows.push({
+                id: `VAR-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
+                sku,
+                barcode,
+                color: c.name,
+                colorHex: c.hex,
+                size: s,
+                price: Number(bulkPriceInput) || basePrice || 0,
+                costPrice: baseCost || 0,
+                mrp: Number(bulkMrpInput) || baseMrp || 0,
+                stock: Number(bulkStockInput) || 15,
+                isActive: true,
+              });
+            }
+          });
+        });
+
+        syncWithStore(updatedRows);
+        return updatedRows;
+      });
+    } else if (matrixRows.length > 0) {
+      setMatrixRows([]);
+      syncWithStore([]);
+    }
+  }, [selectedSizes, selectedColors, baseSku, basePrice, baseMrp, baseCost]);
+
   // Generate or regenerate matrix when requested
   const generateMatrix = () => {
     const newRows: ProductVariantItem[] = [];

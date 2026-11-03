@@ -23,6 +23,40 @@ interface ProductDetailClientProps {
   slug: string;
 }
 
+const COLOR_HEX_MAP: Record<string, string> = {
+  'space black': '#1c1b1f',
+  'black': '#111827',
+  'jet black': '#0a0a0a',
+  'natural titanium': '#9a958d',
+  'desert titanium': '#c4b5a0',
+  'white titanium': '#e3e4e5',
+  'black titanium': '#282829',
+  'silver': '#e5e7eb',
+  'white': '#ffffff',
+  'midnight': '#191f2c',
+  'starlight': '#f0ece1',
+  'deep blue': '#1e3a8a',
+  'blue': '#2563eb',
+  'navy': '#1e293b',
+  'dark green': '#14532d',
+  'green': '#16a34a',
+  'red': '#dc2626',
+  'gold': '#d4af37',
+  'rose gold': '#b76e79',
+  'purple': '#7c3aed',
+  'yellow': '#eab308',
+  'gray': '#6b7280',
+  'grey': '#6b7280',
+};
+
+function resolveColorHex(colorName?: string, explicitHex?: string): string {
+  if (explicitHex && explicitHex.startsWith('#')) return explicitHex;
+  if (!colorName) return '#64748b';
+  const clean = colorName.trim().toLowerCase();
+  if (clean.startsWith('#')) return clean;
+  return COLOR_HEX_MAP[clean] || '#64748b';
+}
+
 export function ProductDetailClient({ slug }: ProductDetailClientProps) {
   const router = useRouter();
   const { addItem, openCart } = useCartStore();
@@ -33,7 +67,7 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
     enabled: !!slug,
   });
 
-  const [selectedVariantIdx] = useState(0);
+  const [selectedVariantIdx, setSelectedVariantIdx] = useState(0);
   const isWishlisted = useWishlistFlyoutStore((state) =>
     product ? state.items.some((i) => i.id === product._id || i.productId === product._id) : false
   );
@@ -163,8 +197,35 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
     ? Math.round(((selectedVariant.mrp - selectedVariant.price) / selectedVariant.mrp) * 100)
     : 0;
 
-  const sizes = Array.from(new Set(product.variants.filter((v) => v.size && v.isActive).map((v) => v.size!)));
-  const colors = Array.from(new Set(product.variants.filter((v) => v.color && v.isActive).map((v) => v.color!)));
+  const sizes = Array.from(new Set(variants.filter((v) => v.size && v.isActive !== false).map((v) => v.size!)));
+  const colors = Array.from(new Set(variants.filter((v) => v.color && v.isActive !== false).map((v) => v.color!)));
+
+  const currentColor = selectedVariant?.color || (variants.find((v) => v.color)?.color) || '';
+  const currentSize = selectedVariant?.size || (variants.find((v) => v.size)?.size) || '';
+
+  const handleSelectColor = (colorName: string) => {
+    const matchExact = variants.findIndex((v) => v.color?.toLowerCase() === colorName.toLowerCase() && v.size === currentSize && v.isActive !== false);
+    if (matchExact !== -1) {
+      setSelectedVariantIdx(matchExact);
+      return;
+    }
+    const matchColor = variants.findIndex((v) => v.color?.toLowerCase() === colorName.toLowerCase() && v.isActive !== false);
+    if (matchColor !== -1) {
+      setSelectedVariantIdx(matchColor);
+    }
+  };
+
+  const handleSelectSize = (sizeName: string) => {
+    const matchExact = variants.findIndex((v) => v.size === sizeName && v.color?.toLowerCase() === currentColor.toLowerCase() && v.isActive !== false);
+    if (matchExact !== -1) {
+      setSelectedVariantIdx(matchExact);
+      return;
+    }
+    const matchSize = variants.findIndex((v) => v.size === sizeName && v.isActive !== false);
+    if (matchSize !== -1) {
+      setSelectedVariantIdx(matchSize);
+    }
+  };
 
   const handleToggleWishlist = () => {
     if (!product || !selectedVariant) return;
@@ -363,26 +424,46 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
             {colors.length > 0 && (
               <div className="space-y-3">
                 <h3 className="text-[13px] font-extrabold text-[#192168]">
-                  Color: <span className="font-bold text-surface-500 ml-1 capitalize">{colors[0]}</span>
+                  Color: <span className="font-bold text-surface-500 ml-1 capitalize">{currentColor || colors[0]}</span>
                 </h3>
-                <div className="flex items-center flex-wrap gap-2">
-                  {colors.map((c, i) => (
-                    <button
-                      key={c}
-                      className={`w-10 h-10 rounded-xl border-2 transition-all ${
-                        i === 0 ? 'border-[#1668F6] p-[2px]' : 'border-surface-200 hover:border-surface-300'
-                      }`}
-                    >
-                      <div className="w-full h-full rounded-lg" style={{ backgroundColor: c, border: '1px solid #e5e7eb' }} title={c} />
-                    </button>
-                  ))}
+                <div className="flex items-center flex-wrap gap-2.5">
+                  {colors.map((c) => {
+                    const isSelected = c.toLowerCase() === currentColor.toLowerCase();
+                    const variantForColor = variants.find((v) => v.color?.toLowerCase() === c.toLowerCase());
+                    const hex = resolveColorHex(c, (variantForColor as any)?.colorHex);
+                    return (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => handleSelectColor(c)}
+                        title={c}
+                        className={`group relative flex items-center gap-2 px-3 py-1.5 rounded-xl border-2 transition-all ${
+                          isSelected
+                            ? 'border-[#1668F6] bg-blue-50/50 shadow-xs'
+                            : 'border-surface-200 bg-white hover:border-[#192168]'
+                        }`}
+                      >
+                        <span
+                          className="w-4 h-4 rounded-full border border-black/15 shrink-0 shadow-inner"
+                          style={{ backgroundColor: hex }}
+                        />
+                        <span className={`text-xs font-bold ${isSelected ? 'text-[#1668F6]' : 'text-surface-700'}`}>
+                          {c}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
 
             {/* Select Size */}
             <div className="pt-2">
-              <SizeSelector sizes={sizes} />
+              <SizeSelector
+                sizes={sizes}
+                selectedSize={currentSize}
+                onSelectSize={handleSelectSize}
+              />
             </div>
 
             {/* Quantity and Actions Row */}
