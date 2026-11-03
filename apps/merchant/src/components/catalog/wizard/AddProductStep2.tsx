@@ -10,6 +10,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { useCatalogStore } from '../../../stores/catalogStore.js';
+import { toast } from '../../../stores/toastStore.js';
 import { WizardHelpSidebar } from './WizardHelpSidebar.js';
 import { mediaApi } from '../../../lib/api.js';
 import { CameraBarcodeScannerModal } from '../CameraBarcodeScannerModal.js';
@@ -192,6 +193,7 @@ export const AddProductStep2: React.FC = () => {
 
     const fileList = Array.from(files).slice(0, limit);
 
+    let uploadedCount = 0;
     for (let i = 0; i < fileList.length; i++) {
       const file = fileList[i];
       if (!file) continue;
@@ -202,19 +204,31 @@ export const AddProductStep2: React.FC = () => {
           const current = useCatalogStore.getState().draftProduct.images || [];
           if (current.length < 10) {
             updateDraftProduct({ images: [...current, uploadRes.url] });
+            uploadedCount++;
           }
         }
-      } catch (err) {
+      } catch (err: any) {
         console.warn('Cloudinary upload fallback to optimized local preview:', err);
         // Fallback to compressed data URL if offline/network issue
-        const compressedBase64 = await compressImageFile(file);
-        if (compressedBase64) {
-          const current = useCatalogStore.getState().draftProduct.images || [];
-          if (current.length < 10) {
-            updateDraftProduct({ images: [...current, compressedBase64] });
+        try {
+          const compressedBase64 = await compressImageFile(file, 800, 800, 0.7);
+          if (compressedBase64) {
+            const current = useCatalogStore.getState().draftProduct.images || [];
+            if (current.length < 10) {
+              updateDraftProduct({ images: [...current, compressedBase64] });
+            }
           }
+        } catch {
+          // ignore
         }
       }
+    }
+
+    if (uploadedCount > 0) {
+      toast.success(
+        'Images Uploaded to Cloudinary! ☁️',
+        `${uploadedCount} photo${uploadedCount > 1 ? 's' : ''} securely hosted on Cloudinary CDN and attached to product.`
+      );
     }
 
     setIsUploadingImage(false);

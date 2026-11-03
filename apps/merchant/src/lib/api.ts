@@ -143,26 +143,32 @@ export const api = {
   get: <T>(endpoint: string, options?: RequestInit) =>
     request<T>(endpoint, { method: 'GET', ...options }),
 
-  post: <T>(endpoint: string, body?: unknown, options?: RequestInit) =>
-    request<T>(endpoint, {
+  post: <T>(endpoint: string, body?: unknown, options?: RequestInit) => {
+    const isForm = typeof FormData !== 'undefined' && body instanceof FormData;
+    return request<T>(endpoint, {
       method: 'POST',
-      body: body ? JSON.stringify(body) : undefined,
+      body: isForm ? (body as FormData) : (body !== undefined ? JSON.stringify(body) : undefined),
       ...options,
-    }),
+    });
+  },
 
-  patch: <T>(endpoint: string, body?: unknown, options?: RequestInit) =>
-    request<T>(endpoint, {
+  patch: <T>(endpoint: string, body?: unknown, options?: RequestInit) => {
+    const isForm = typeof FormData !== 'undefined' && body instanceof FormData;
+    return request<T>(endpoint, {
       method: 'PATCH',
-      body: body ? JSON.stringify(body) : undefined,
+      body: isForm ? (body as FormData) : (body !== undefined ? JSON.stringify(body) : undefined),
       ...options,
-    }),
+    });
+  },
 
-  put: <T>(endpoint: string, body?: unknown, options?: RequestInit) =>
-    request<T>(endpoint, {
+  put: <T>(endpoint: string, body?: unknown, options?: RequestInit) => {
+    const isForm = typeof FormData !== 'undefined' && body instanceof FormData;
+    return request<T>(endpoint, {
       method: 'PUT',
-      body: body ? JSON.stringify(body) : undefined,
+      body: isForm ? (body as FormData) : (body !== undefined ? JSON.stringify(body) : undefined),
       ...options,
-    }),
+    });
+  },
 
   delete: <T>(endpoint: string, options?: RequestInit) =>
     request<T>(endpoint, { method: 'DELETE', ...options }),
