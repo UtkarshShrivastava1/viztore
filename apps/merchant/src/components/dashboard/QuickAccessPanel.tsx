@@ -11,10 +11,11 @@ import {
   BarChart3,
 } from 'lucide-react';
 import { DashboardTab } from './Sidebar.js';
+import { useCatalogStore } from '../../stores/catalogStore.js';
 
 interface QuickAccessPanelProps {
   onNavigate: (tab: DashboardTab) => void;
-  onOpenAddProduct: () => void;
+  onOpenAddProduct?: () => void;
   onOpenBulkUpload?: () => void;
   onOpenCreateOrder?: () => void;
   onOpenAddCustomer?: () => void;
@@ -47,7 +48,12 @@ export const QuickAccessPanel: React.FC<QuickAccessPanelProps> = ({
       icon: PlusCircle,
       color: 'text-emerald-600 bg-emerald-50',
       borderColor: 'border-emerald-200/80',
-      onClick: onOpenAddProduct,
+      onClick: onOpenAddProduct || (() => {
+        useCatalogStore.getState().setWizardStep(1);
+        useCatalogStore.getState().resetDraftProduct();
+        useCatalogStore.getState().setActiveView('wizard');
+        onNavigate('catalog');
+      }),
     },
     {
       label: 'Adjust Stock',

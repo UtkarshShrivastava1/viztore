@@ -26,14 +26,12 @@ interface WelcomeGuideModalProps {
   isOpen: boolean;
   onClose: () => void;
   onNavigate: (tab: DashboardTab, subTab?: string) => void;
-  onOpenAddProduct: () => void;
 }
 
 export const WelcomeGuideModal: React.FC<WelcomeGuideModalProps> = ({
   isOpen,
   onClose,
   onNavigate,
-  onOpenAddProduct,
 }) => {
   const { currentStore, user } = useAuthStore();
   const { products } = useCatalogStore();
@@ -117,16 +115,20 @@ export const WelcomeGuideModal: React.FC<WelcomeGuideModalProps> = ({
       badge: 'Step 1 • Essential',
       description: 'Upload your items with photos, barcode, price, and stock levels so nearby customers can discover and buy.',
       icon: Package,
-      actionLabel: 'Add First Product',
+      actionLabel: 'Launch Product Wizard',
       onAction: () => {
         markStepDone('add_product');
         onClose();
-        onOpenAddProduct();
+        useCatalogStore.getState().setWizardStep(1);
+        useCatalogStore.getState().resetDraftProduct();
+        useCatalogStore.getState().setActiveView('wizard');
+        onNavigate('catalog');
       },
       secondaryLabel: 'Browse Catalog',
       onSecondary: () => {
         markStepDone('add_product');
         onClose();
+        useCatalogStore.getState().setActiveView('list');
         onNavigate('catalog');
       },
     },

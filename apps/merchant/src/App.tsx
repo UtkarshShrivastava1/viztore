@@ -27,8 +27,6 @@ import { useSettingsStore } from './stores/settingsStore.js';
 import { useCatalogStore } from './stores/catalogStore.js';
 import { Sidebar, DashboardTab } from './components/dashboard/Sidebar.js';
 import { Header } from './components/dashboard/Header.js';
-import { AddProductModal } from './components/catalog/AddProductModal.js';
-import { BulkUploadModal } from './components/catalog/BulkUploadModal.js';
 import { LiveOrderSocketListener } from './components/dashboard/LiveOrderSocketListener.js';
 import { WelcomeGuideModal, WelcomeGuideLauncher } from './components/dashboard/WelcomeGuideModal.js';
 
@@ -105,10 +103,6 @@ export const App: React.FC = () => {
     return DEFAULT_SIDEBAR_WIDTH;
   });
   const [isResizingSidebar, setIsResizingSidebar] = useState(false);
-
-  // Global modals
-  const [isGlobalAddOpen, setIsGlobalAddOpen] = useState(false);
-  const [isGlobalBulkOpen, setIsGlobalBulkOpen] = useState(false);
 
   // Welcome & Quick Start Guide Modal
   const [isWelcomeGuideOpen, setIsWelcomeGuideOpen] = useState(() => {
@@ -333,8 +327,12 @@ export const App: React.FC = () => {
             {currentTab === 'overview' && (
               <DashboardOverviewPage
                 onNavigate={(tab) => handleSelectTab(tab)}
-                onOpenAddProduct={() => setIsGlobalAddOpen(true)}
-                onOpenBulkUpload={() => setIsGlobalBulkOpen(true)}
+                onOpenAddProduct={() => {
+                  useCatalogStore.getState().setWizardStep(1);
+                  useCatalogStore.getState().resetDraftProduct();
+                  useCatalogStore.getState().setActiveView('wizard');
+                  handleSelectTab('catalog');
+                }}
                 onOpenCreateOrder={() => navigate('/dashboard/orders/create')}
               />
             )}
@@ -412,34 +410,6 @@ export const App: React.FC = () => {
           </main>
         </div>
 
-        {/* Global Modals */}
-        <AddProductModal
-          isOpen={isGlobalAddOpen}
-          onClose={() => setIsGlobalAddOpen(false)}
-          onAddProduct={(p) => {
-            useCatalogStore.getState().updateDraftProduct({
-              name: p.name,
-              category: p.category,
-              sku: p.sku,
-              price: p.price,
-              mrp: p.mrp,
-              stock: p.stock,
-              images: p.imageUrl ? [p.imageUrl] : [],
-            });
-            useCatalogStore.getState().saveDraftAsProduct().catch(() => {});
-            setIsGlobalAddOpen(false);
-          }}
-        />
-
-        <BulkUploadModal
-          isOpen={isGlobalBulkOpen}
-          onClose={() => setIsGlobalBulkOpen(false)}
-          onBulkSuccess={(_c) => {
-            setIsGlobalBulkOpen(false);
-            useCatalogStore.getState().fetchProducts().catch(() => {});
-          }}
-        />
-
         {/* Welcome & Quick Start Guide Modal */}
         <WelcomeGuideModal
           isOpen={isWelcomeGuideOpen}
@@ -450,7 +420,6 @@ export const App: React.FC = () => {
               useSettingsStore.getState().setActiveSubTab(subTab as any);
             }
           }}
-          onOpenAddProduct={() => setIsGlobalAddOpen(true)}
         />
 
         {/* Floating Quick Start Guide Launcher at bottom right */}

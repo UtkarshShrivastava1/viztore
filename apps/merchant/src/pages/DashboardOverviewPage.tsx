@@ -18,8 +18,8 @@ import { AlertTriangle } from 'lucide-react';
 
 interface DashboardOverviewPageProps {
   onNavigate: (tab: DashboardTab) => void;
-  onOpenAddProduct: () => void;
-  onOpenBulkUpload: () => void;
+  onOpenAddProduct?: () => void;
+  onOpenBulkUpload?: () => void;
   onOpenCreateOrder?: () => void;
 }
 
