@@ -83,25 +83,47 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
     if (product?.brand) {
       list.push({ label: 'Brand', value: product.brand });
     }
-    const rawAttrs = product?.attributes;
-    if (Array.isArray(rawAttrs)) {
-      rawAttrs.forEach((attr: any) => {
-        if (attr && attr.key && attr.value) {
-          list.push({ label: String(attr.key), value: String(attr.value) });
-        }
-      });
-    } else if (rawAttrs && typeof rawAttrs === 'object') {
-      Object.entries(rawAttrs).forEach(([k, v]) => {
-        if (v && typeof v === 'string') {
-          list.push({ label: k.charAt(0).toUpperCase() + k.slice(1), value: v });
-        }
-      });
+    const catName = typeof product?.category === 'string' ? product.category : (product?.category as any)?.name;
+    if (catName) {
+      list.push({ label: 'Category', value: catName.charAt(0).toUpperCase() + catName.slice(1) });
     }
     if (product?.subCategory) {
       list.push({ label: 'Sub-Category', value: product.subCategory });
     }
     if (product?.subType) {
-      list.push({ label: 'Type', value: product.subType });
+      list.push({ label: 'Product Type', value: product.subType });
+    }
+
+    const rawAttrs = product?.attributes;
+    if (Array.isArray(rawAttrs)) {
+      rawAttrs.forEach((attr: any) => {
+        if (attr && attr.key && attr.value) {
+          const keyLower = String(attr.key).toLowerCase().trim();
+          if (keyLower !== 'hasvariants' && keyLower !== 'totalvariants' && keyLower !== 'brand') {
+            list.push({ label: String(attr.key), value: String(attr.value) });
+          }
+        }
+      });
+    } else if (rawAttrs && typeof rawAttrs === 'object') {
+      Object.entries(rawAttrs).forEach(([k, v]) => {
+        const keyLower = k.toLowerCase().trim();
+        if (keyLower !== 'hasvariants' && keyLower !== 'totalvariants' && keyLower !== 'brand' && v) {
+          list.push({ label: k.charAt(0).toUpperCase() + k.slice(1), value: String(v) });
+        }
+      });
+    }
+
+    if ((product as any)?.hsnCode) {
+      list.push({ label: 'HSN Code', value: String((product as any).hsnCode) });
+    }
+    if ((product as any)?.gstRate !== undefined && (product as any)?.gstRate !== null) {
+      list.push({ label: 'GST Rate', value: String((product as any).gstRate) + '%' });
+    }
+    if ((product as any)?.countryOfOrigin) {
+      list.push({ label: 'Country of Origin', value: (product as any).countryOfOrigin });
+    }
+    if ((product as any)?.warranty) {
+      list.push({ label: 'Warranty', value: (product as any).warranty });
     }
     return list;
   }, [product]);
@@ -463,6 +485,8 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
                 sizes={sizes}
                 selectedSize={currentSize}
                 onSelectSize={handleSelectSize}
+                category={categoryParam}
+                subCategory={product.subCategory}
               />
             </div>
 
@@ -550,28 +574,21 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
                  </span>
                </button>
                
-               <div className={`${showDetails ? 'block' : 'hidden md:block'} animate-fade-in`}>
+               <div className={'animate-fade-in ' + (showDetails ? 'block' : 'hidden md:block')}>
                  <div className="flex flex-col border-t border-surface-100">
-                   <div className="flex items-center py-2.5 border-b border-surface-100">
-                     <div className="w-1/3 text-[13px] font-medium text-surface-500">Brand</div>
-                     <div className="w-2/3 text-[13px] font-medium text-[#192168]">{product.brand || product.storeName || 'Official Store'}</div>
-                   </div>
-                   <div className="flex items-center py-2.5 border-b border-surface-100">
-                     <div className="w-1/3 text-[13px] font-medium text-surface-500">Fabric</div>
-                     <div className="w-2/3 text-[13px] font-medium text-[#192168]">100% Cotton</div>
-                   </div>
-                   <div className="flex items-center py-2.5 border-b border-surface-100">
-                     <div className="w-1/3 text-[13px] font-medium text-surface-500">Fit</div>
-                     <div className="w-2/3 text-[13px] font-medium text-[#192168]">Regular Fit</div>
-                   </div>
-                   <div className="flex items-center py-2.5 border-b border-surface-100">
-                     <div className="w-1/3 text-[13px] font-medium text-surface-500">Neck</div>
-                     <div className="w-2/3 text-[13px] font-medium text-[#192168]">Round Neck</div>
-                   </div>
-                   <div className="flex items-center py-2.5 border-b border-surface-100">
-                     <div className="w-1/3 text-[13px] font-medium text-surface-500">Sleeve</div>
-                     <div className="w-2/3 text-[13px] font-medium text-[#192168]">Short Sleeve</div>
-                   </div>
+                   {productAttributesList.length > 0 ? (
+                     productAttributesList.map((item, idx) => (
+                       <div key={idx} className="flex items-center py-2.5 border-b border-surface-100">
+                         <div className="w-1/3 text-[13px] font-medium text-surface-500">{item.label}</div>
+                         <div className="w-2/3 text-[13px] font-medium text-[#192168]">{item.value}</div>
+                       </div>
+                     ))
+                   ) : (
+                     <div className="flex items-center py-2.5 border-b border-surface-100">
+                       <div className="w-1/3 text-[13px] font-medium text-surface-500">Brand</div>
+                       <div className="w-2/3 text-[13px] font-medium text-[#192168]">{product.brand || product.storeName || 'Official Store'}</div>
+                     </div>
+                   )}
                  </div>
                </div>
              </div>
@@ -589,17 +606,10 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
                  </span>
                </div>
                
-               <div className={`${showDetails ? 'block' : 'hidden md:block'} animate-fade-in`}>
-                 <p className="text-[13px] font-medium text-[#192168] leading-relaxed">
-                   {product.description || 'Upgrade your everyday style with this solid round neck T-shirt from U.S. Polo Assn. Made from soft and breathable cotton fabric, this t-shirt offers all-day comfort and a timeless look. Pair it with jeans or chinos for a smart casual look.'}
+               <div className={'animate-fade-in ' + (showDetails ? 'block' : 'hidden md:block')}>
+                 <p className="text-[13px] font-medium text-[#192168] leading-relaxed whitespace-pre-line">
+                   {product.description || 'No detailed specifications or description provided for this product.'}
                  </p>
-                 <ul className="list-disc pl-5 mt-4 space-y-1.5 text-[13px] font-medium text-[#192168]">
-                   <li>Pure cotton fabric for ultimate comfort</li>
-                   <li>Classic round neck design</li>
-                   <li>Regular fit</li>
-                   <li>Embroidered logo on chest</li>
-                   <li>Suitable for everyday wear</li>
-                 </ul>
                </div>
              </div>
 
