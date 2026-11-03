@@ -401,3 +401,4 @@ export const WelcomeGuideLauncher: React.FC<WelcomeGuideLauncherProps> = ({ onOp
     </button>
   );
 };
+
