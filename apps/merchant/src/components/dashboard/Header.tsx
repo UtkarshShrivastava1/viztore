@@ -6,6 +6,7 @@ import {
   HelpCircle,
   ChevronDown,
   Store,
+  Rocket,
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore.js';
 import { NotificationsDrawer } from './drawers/NotificationsDrawer.js';
@@ -24,6 +25,7 @@ interface HeaderProps {
   onNavigateToSettings?: (subTab?: string) => void;
   onNavigateToSupport?: () => void;
   onNavigate?: (tab: DashboardTab, subTab?: string) => void;
+  onOpenWelcomeGuide?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -34,6 +36,7 @@ export const Header: React.FC<HeaderProps> = ({
   onNavigateToSettings,
   onNavigateToSupport,
   onNavigate,
+  onOpenWelcomeGuide,
 }) => {
   const { user, currentStore, isStoreActive, setStoreActive } = useAuthStore();
 
@@ -135,6 +138,19 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <HelpCircle className="w-5 h-5" />
           </button>
+
+          {/* Quick Start Guide Button */}
+          {onOpenWelcomeGuide && (
+            <button
+              type="button"
+              onClick={onOpenWelcomeGuide}
+              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-slate-600 hover:text-[#0038ed] hover:bg-blue-50 border border-transparent hover:border-blue-200 text-xs font-bold transition-all cursor-pointer"
+              title="Quick Start Guide"
+            >
+              <Rocket className="w-3.5 h-3.5 text-[#0038ed]" />
+              <span>Guide</span>
+            </button>
+          )}
 
           <div className="h-6 w-px bg-slate-200 hidden sm:block mx-1" />
 

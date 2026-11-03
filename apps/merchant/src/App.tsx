@@ -30,6 +30,7 @@ import { Header } from './components/dashboard/Header.js';
 import { AddProductModal } from './components/catalog/AddProductModal.js';
 import { BulkUploadModal } from './components/catalog/BulkUploadModal.js';
 import { LiveOrderSocketListener } from './components/dashboard/LiveOrderSocketListener.js';
+import { WelcomeGuideModal, WelcomeGuideLauncher } from './components/dashboard/WelcomeGuideModal.js';
 
 // Marketing Website Pages & Layout
 import { MerchantPublicLayout } from './components/marketing/MerchantPublicLayout.js';
@@ -108,6 +109,25 @@ export const App: React.FC = () => {
   // Global modals
   const [isGlobalAddOpen, setIsGlobalAddOpen] = useState(false);
   const [isGlobalBulkOpen, setIsGlobalBulkOpen] = useState(false);
+
+  // Welcome & Quick Start Guide Modal
+  const [isWelcomeGuideOpen, setIsWelcomeGuideOpen] = useState(() => {
+    try {
+      const isUrlWelcome = searchParams.get('welcome') === 'true';
+      const isSessionWelcome = sessionStorage.getItem('show_merchant_welcome') === 'true';
+      if (isUrlWelcome || isSessionWelcome) {
+        sessionStorage.removeItem('show_merchant_welcome');
+        return true;
+      }
+    } catch {}
+    return false;
+  });
+
+  useEffect(() => {
+    if (searchParams.get('welcome') === 'true') {
+      setIsWelcomeGuideOpen(true);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     initialize();
@@ -215,7 +235,12 @@ export const App: React.FC = () => {
   if (isRegisterRoute) {
     return (
       <OnboardingPage
-        onEnterDashboard={() => navigate('/dashboard')}
+        onEnterDashboard={() => {
+          try {
+            sessionStorage.setItem('show_merchant_welcome', 'true');
+          } catch {}
+          navigate('/dashboard?welcome=true');
+        }}
         onGoToLogin={() => navigate('/login')}
         onGoToHome={() => navigate('/')}
         onNavigate={navigateTo}
@@ -297,6 +322,7 @@ export const App: React.FC = () => {
             }}
             onNavigateToSupport={() => handleSelectTab('support')}
             onNavigate={(tab) => handleSelectTab(tab)}
+            onOpenWelcomeGuide={() => setIsWelcomeGuideOpen(true)}
           />
 
           <main
@@ -413,6 +439,24 @@ export const App: React.FC = () => {
             useCatalogStore.getState().fetchProducts().catch(() => {});
           }}
         />
+
+        {/* Welcome & Quick Start Guide Modal */}
+        <WelcomeGuideModal
+          isOpen={isWelcomeGuideOpen}
+          onClose={() => setIsWelcomeGuideOpen(false)}
+          onNavigate={(tab, subTab) => {
+            handleSelectTab(tab);
+            if (subTab && tab === 'settings') {
+              useSettingsStore.getState().setActiveSubTab(subTab as any);
+            }
+          }}
+          onOpenAddProduct={() => setIsGlobalAddOpen(true)}
+        />
+
+        {/* Floating Quick Start Guide Launcher at bottom right */}
+        {!isWelcomeGuideOpen && (
+          <WelcomeGuideLauncher onOpen={() => setIsWelcomeGuideOpen(true)} />
+        )}
       </div>
     );
   }
