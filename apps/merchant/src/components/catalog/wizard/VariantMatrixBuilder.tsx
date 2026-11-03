@@ -126,7 +126,7 @@ export const VariantMatrixBuilder: React.FC = () => {
   const [customColorName, setCustomColorName] = useState('');
   const [customColorHex, setCustomColorHex] = useState('#6366f1');
 
-  
+
   // Synchronize variant presets whenever the product category or subcategory changes
   useEffect(() => {
     setSelectedSizes(initialSizes);
@@ -400,11 +400,10 @@ export const VariantMatrixBuilder: React.FC = () => {
                   key={sz}
                   type="button"
                   onClick={() => toggleSize(sz)}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
-                    isSelected
-                      ? 'bg-blue-600 border-blue-600 text-white shadow-xs'
-                      : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
-                  }`}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold border transition-all cursor-pointer ${isSelected
+                    ? 'bg-blue-600 border-blue-600 text-white shadow-xs'
+                    : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
+                    }`}
                 >
                   {sz}
                 </button>
@@ -450,11 +449,10 @@ export const VariantMatrixBuilder: React.FC = () => {
                   key={col.name}
                   type="button"
                   onClick={() => toggleColor(col)}
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
-                    isSelected
-                      ? 'bg-white border-blue-600 text-blue-900 ring-1 ring-blue-600 shadow-2xs'
-                      : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
-                  }`}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${isSelected
+                    ? 'bg-white border-blue-600 text-blue-900 ring-1 ring-blue-600 shadow-2xs'
+                    : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
+                    }`}
                 >
                   <span
                     className="w-3 h-3 rounded-full border border-slate-300 shrink-0"
@@ -587,9 +585,8 @@ export const VariantMatrixBuilder: React.FC = () => {
                 {matrixRows.map((row, idx) => (
                   <tr
                     key={row.id}
-                    className={`transition-colors ${
-                      row.isActive ? 'hover:bg-slate-50/80' : 'bg-slate-50 opacity-60'
-                    }`}
+                    className={`transition-colors ${row.isActive ? 'hover:bg-slate-50/80' : 'bg-slate-50 opacity-60'
+                      }`}
                   >
                     {/* Active Checkbox */}
                     <td className="p-2.5 text-center">

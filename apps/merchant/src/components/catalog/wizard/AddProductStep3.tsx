@@ -145,11 +145,19 @@ export const AddProductStep3: React.FC = () => {
     const newRate = tax.rate || 0;
     const taxAmt = safeNum !== undefined ? Number(((safeNum * newRate) / 100).toFixed(2)) : 0;
 
-    // Synchronize price to matrix variants that don't have custom price overrides
+    // Synchronize price to matrix variants
+    const distinctPrices = Array.isArray(draftProduct.variants)
+      ? new Set(draftProduct.variants.map((v) => v.price).filter((p) => typeof p === 'number' && p > 0))
+      : new Set();
+    const hasDistinctVariantPrices = distinctPrices.size > 1;
+
     const updatedVariants = safeNum !== undefined && Array.isArray(draftProduct.variants)
       ? draftProduct.variants.map((v) => ({
           ...v,
-          price: v.isCustomPrice ? v.price : safeNum,
+          price: (hasDistinctVariantPrices && v.isCustomPrice && typeof v.price === 'number' && v.price > 0)
+            ? v.price
+            : safeNum,
+          ...(hasDistinctVariantPrices ? {} : { isCustomPrice: false }),
         }))
       : draftProduct.variants;
 
@@ -174,12 +182,22 @@ export const AddProductStep3: React.FC = () => {
     const effectiveMrp = draftProduct.mrp !== undefined ? draftProduct.mrp : effectivePrice;
     const effectiveCost = draftProduct.costPrice;
 
+    // Check if variants have different individual prices
+    const distinctPrices = Array.isArray(draftProduct.variants)
+      ? new Set(draftProduct.variants.map((v) => v.price).filter((p) => typeof p === 'number' && p > 0))
+      : new Set();
+    const hasDistinctVariantPrices = distinctPrices.size > 1;
+
     // Ensure all existing variants take the authoritative price and MRP from Section 5
     const syncedVariants = Array.isArray(draftProduct.variants)
       ? draftProduct.variants.map((v) => ({
           ...v,
-          price: (v.isCustomPrice && typeof v.price === 'number' && v.price > 0) ? v.price : effectivePrice,
-          mrp: (v.isCustomPrice && typeof v.mrp === 'number' && v.mrp > 0) ? v.mrp : effectiveMrp,
+          price: (hasDistinctVariantPrices && v.isCustomPrice && typeof v.price === 'number' && v.price > 0)
+            ? v.price
+            : (effectivePrice > 0 ? effectivePrice : (typeof v.price === 'number' ? v.price : 0)),
+          mrp: (hasDistinctVariantPrices && v.isCustomPrice && typeof v.mrp === 'number' && v.mrp > 0)
+            ? v.mrp
+            : (effectiveMrp > 0 ? effectiveMrp : (typeof v.mrp === 'number' ? v.mrp : effectivePrice)),
           costPrice: effectiveCost !== undefined ? effectiveCost : v.costPrice,
         }))
       : [];

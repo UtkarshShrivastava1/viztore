@@ -1018,16 +1018,24 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
     let variants = [];
 
     if (hasVariants && Array.isArray(draftProduct.variants) && draftProduct.variants.length > 0) {
+      // Check if variants have different individual prices
+      const distinctPrices = new Set(
+        draftProduct.variants
+          .map((v) => v.price)
+          .filter((p) => typeof p === 'number' && p > 0)
+      );
+      const hasDistinctVariantPrices = distinctPrices.size > 1;
+
       // Use existing user-configured variants from VariantMatrixBuilder
       variants = draftProduct.variants.map((v, i) => {
         // Authoritative resolution:
-        // If variant has an explicit custom price, use it;
-        // If effectiveBasePrice is set (> 0) and variant does not have custom override, use effectiveBasePrice!
-        const vPrice = (v.isCustomPrice && typeof v.price === 'number' && v.price > 0)
+        // If variants have distinct prices per variant (different specs), keep custom variant price.
+        // If all variants share the base price, or if effectiveBasePrice is set, update to effectiveBasePrice!
+        const vPrice = (hasDistinctVariantPrices && v.isCustomPrice && typeof v.price === 'number' && v.price > 0)
           ? Number(v.price)
           : (effectiveBasePrice > 0 ? effectiveBasePrice : Number(v.price || 0));
 
-        const vMrp = (v.isCustomPrice && typeof v.mrp === 'number' && v.mrp > 0)
+        const vMrp = (hasDistinctVariantPrices && v.isCustomPrice && typeof v.mrp === 'number' && v.mrp > 0)
           ? Number(v.mrp)
           : (effectiveBaseMrp > 0 ? effectiveBaseMrp : Number(v.mrp || vPrice || 0));
 
