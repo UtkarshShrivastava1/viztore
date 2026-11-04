@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Printer,
   Eye,
-  MessageSquare,
   MessageCircle,
   MoreHorizontal,
   Phone,
@@ -18,7 +17,6 @@ import {
   Key,
   MapPin,
   ExternalLink,
-  ChevronDown,
 } from 'lucide-react';
 import {
   OrderTab,
@@ -53,7 +51,6 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
     verifyPickup,
     deliverOrder,
     claimReservation,
-    releaseReservation,
   } = useOrderStore();
 
   const [otpModalOrder, setOtpModalOrder] = useState<MerchantOrderRecord | null>(null);
@@ -62,6 +59,15 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
   const [contactOrder, setContactOrder] = useState<MerchantOrderRecord | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [openActionId, setOpenActionId] = useState<string | null>(null);
+
+  // Close more actions menu on external click
+  useEffect(() => {
+    const handleOutsideClick = () => setOpenActionId(null);
+    if (openActionId) {
+      window.addEventListener('click', handleOutsideClick);
+      return () => window.removeEventListener('click', handleOutsideClick);
+    }
+  }, [openActionId]);
 
   const handleCopy = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
@@ -160,7 +166,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden w-full">
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden w-full transition-all">
       {/* Bulk Action Bar (when rows selected) */}
       {selectedOrderIds.length > 0 && (
         <div className="bg-blue-50/90 border-b border-blue-200/80 px-4 py-2.5 flex items-center justify-between animate-in fade-in">
@@ -197,25 +203,24 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
       )}
 
       {/* 
-        Zero-Horizontal-Scroll Responsive Table
-        table-fixed w-full ensures 100% width adherence with zero horizontal overflow!
+        Horizontal-scroll protected table with guaranteed column widths.
+        min-w-[1060px] guarantees cells never squash or cause buttons to overflow into adjacent columns.
       */}
-      <div className="w-full overflow-hidden">
-        <table className="w-full table-fixed text-left text-xs border-collapse">
-          {/* Column Width Definitions: Total = 100% */}
+      <div className="w-full overflow-x-auto">
+        <table className="w-full min-w-[1060px] table-fixed text-left text-xs border-collapse">
+          {/* Precise Column Proportions: Total = 100% */}
           <colgroup>
-            <col className="w-[4%]" />
-            <col className="w-[22%]" />
-            <col className="w-[22%]" />
-            <col className="w-[26%]" />
-            <col className="w-[12%]" />
-            <col className="w-[14%]" />
+            <col className="w-[3.5%]" />
+            <col className="w-[18%]" />
+            <col className="w-[19%]" />
+            <col className="w-[23%]" />
+            <col className="w-[15%]" />
+            <col className="w-[21.5%]" />
           </colgroup>
 
           {/* Table Header */}
-          <thead className="bg-[#f8fafc] text-slate-600 text-[11px] font-bold uppercase tracking-wider border-b border-slate-200 select-none">
+          <thead className="bg-[#f8fafc] text-slate-500 text-[11px] font-bold uppercase tracking-wider border-b border-slate-200 select-none">
             <tr>
-              {/* Checkbox */}
               <th className="py-3 px-3 text-center">
                 <input
                   type="checkbox"
@@ -225,20 +230,10 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
                   title="Select all orders in this stage"
                 />
               </th>
-
-              {/* Order & Timeline */}
               <th className="py-3 px-3.5">Order &amp; Timeline</th>
-
-              {/* Customer & Delivery */}
               <th className="py-3 px-3.5">Customer &amp; Area</th>
-
-              {/* Items & Smart Specs */}
               <th className="py-3 px-3.5">Items &amp; Specs</th>
-
-              {/* Pricing & OTP */}
-              <th className="py-3 px-3">Amount &amp; OTP</th>
-
-              {/* Actions Hub */}
+              <th className="py-3 px-3.5">Amount &amp; OTP</th>
               <th className="py-3 px-3.5 text-right">Actions</th>
             </tr>
           </thead>
@@ -262,6 +257,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
                 const isSelected = selectedOrderIds.includes(order.id);
                 const isCopied = copiedId === order.id;
                 const isOtpCopied = copiedId === `otp-${order.id}`;
+                const isPickupOtpCopied = copiedId === `pickup-otp-${order.id}`;
                 const parsedTitle = parseProductTitle(
                   order.itemsSummary.title || order.items[0]?.name || 'Packaged parcel'
                 );
@@ -270,7 +266,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
                 return (
                   <tr
                     key={order.id}
-                    className={`transition-colors hover:bg-slate-50/80 ${
+                    className={`transition-colors hover:bg-slate-50/75 ${
                       isSelected ? 'bg-blue-50/40' : ''
                     }`}
                   >
@@ -288,13 +284,13 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
                     <td className="py-3 px-3.5 align-middle min-w-0">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         {order.status === 'new' && (
-                          <span className="text-[9px] font-black uppercase px-1.5 py-0.2 rounded-md bg-blue-600 text-white shadow-2xs tracking-wider">
+                          <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md bg-blue-600 text-white shadow-2xs tracking-wider">
                             New
                           </span>
                         )}
                         <span
                           onClick={() => onViewOrder(order)}
-                          className="font-bold text-xs text-blue-600 hover:text-blue-800 cursor-pointer font-mono hover:underline truncate max-w-[150px]"
+                          className="font-bold text-xs text-blue-600 hover:text-blue-800 cursor-pointer font-mono hover:underline truncate max-w-[155px]"
                           title="Click to view complete order details"
                         >
                           {order.orderNumber}
@@ -315,7 +311,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
 
                       {/* Sub-row: Order Type pill + Timestamp */}
                       <div className="flex items-center gap-1.5 mt-1 text-[11px] text-slate-500">
-                        <span className="font-semibold text-[10px] bg-slate-100 text-slate-700 px-1.5 py-0.2 rounded border border-slate-200/60 truncate max-w-[110px]">
+                        <span className="font-semibold text-[10px] bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded border border-slate-200/60 truncate max-w-[110px]">
                           {order.orderType === 'In-Store Hold (2h)' ? 'In-Store Hold' : order.orderType}
                         </span>
                         <span className="text-slate-400 text-[10px] flex items-center gap-1 shrink-0" title={timeInfo.full}>
@@ -325,7 +321,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
                       </div>
                     </td>
 
-                    {/* 3. Customer & Delivery Hub */}
+                    {/* 3. Customer & Area Hub */}
                     <td className="py-3 px-3.5 align-middle min-w-0">
                       <div className="flex items-center gap-2">
                         {/* Avatar Initials */}
@@ -359,7 +355,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
                       </div>
                     </td>
 
-                    {/* 4. Items & Smart Specs Hub (Solves variable length) */}
+                    {/* 4. Items & Smart Specs Hub */}
                     <td className="py-3 px-3.5 align-middle min-w-0">
                       <div className="flex items-start gap-2.5">
                         {/* Product Image Thumbnail */}
@@ -396,13 +392,13 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
                             </span>
                           </div>
 
-                          {/* Clean Spec Chips (Never breaks width) */}
+                          {/* Clean Spec Chips */}
                           <div className="flex items-center gap-1 mt-1 flex-wrap">
                             {parsedTitle.specs.length > 0 ? (
                               parsedTitle.specs.slice(0, 2).map((spec, i) => (
                                 <span
                                   key={i}
-                                  className="text-[9px] font-semibold bg-slate-100 text-slate-600 px-1.5 py-0.2 rounded border border-slate-200/60 truncate max-w-[95px]"
+                                  className="text-[9px] font-semibold bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded border border-slate-200/60 truncate max-w-[95px]"
                                   title={spec}
                                 >
                                   {spec}
@@ -432,57 +428,74 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
                       </div>
                     </td>
 
-                    {/* 5. Pricing & OTP Hub */}
-                    <td className="py-3 px-3 align-middle min-w-0">
-                      <div>
+                    {/* 5. Amount & OTP Hub (Cleanly stacked, zero overflow) */}
+                    <td className="py-3 px-3.5 align-middle min-w-0">
+                      <div className="flex flex-col gap-1">
                         <div className="font-black text-slate-900 text-sm">
                           ₹{order.pricing.totalAmount.toLocaleString('en-IN')}
                         </div>
-                        <div className="text-[10px] font-semibold text-emerald-600 mt-0.5">
-                          {order.payment.status} · {order.payment.mode}
-                        </div>
-                      </div>
 
-                      {/* 2-Leg OTP Badges */}
-                      {['accepted', 'ready_to_ship'].includes(order.status) && (order.pickupOtp || order.otp) ? (
-                        <div
-                          onClick={() => handleCopy(order.pickupOtp || order.otp, `pickup-otp-${order.id}`)}
-                          className="mt-1 px-1.5 py-0.5 rounded-md bg-blue-50 border border-blue-200/90 text-blue-900 inline-flex items-center gap-1 cursor-pointer hover:bg-blue-100 transition-colors shadow-2xs"
-                          title="Click to copy Leg 1 Rider Pickup OTP"
-                        >
-                          <Key className="w-2.5 h-2.5 text-blue-600 shrink-0" />
-                          <span className="font-mono font-black text-[11px] tracking-wider">
-                            Pickup: {order.pickupOtp || order.otp}
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                              order.payment.status === 'Paid'
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
+                                : 'bg-amber-50 text-amber-700 border border-amber-200/60'
+                            }`}
+                          >
+                            <span
+                              className={`w-1.5 h-1.5 rounded-full ${
+                                order.payment.status === 'Paid' ? 'bg-emerald-500' : 'bg-amber-500'
+                              }`}
+                            />
+                            {order.payment.status} · {order.payment.mode}
                           </span>
-                          {copiedId === `pickup-otp-${order.id}` ? (
-                            <Check className="w-2.5 h-2.5 text-blue-600" />
-                          ) : (
-                            <Copy className="w-2.5 h-2.5 text-blue-400 opacity-60" />
-                          )}
                         </div>
-                      ) : ['shipped', 'delivered'].includes(order.status) && order.otp ? (
-                        <div
-                          onClick={() => handleCopy(order.otp, `otp-${order.id}`)}
-                          className="mt-1 px-1.5 py-0.5 rounded-md bg-amber-50 border border-amber-200/90 text-amber-900 inline-flex items-center gap-1 cursor-pointer hover:bg-amber-100 transition-colors shadow-2xs"
-                          title="Click to copy delivery runner OTP"
-                        >
-                          <ShieldCheck className="w-2.5 h-2.5 text-amber-600 shrink-0" />
-                          <span className="font-mono font-black text-[11px] tracking-wider">
-                            Doorstep: {order.otp}
-                          </span>
-                          {isOtpCopied ? (
-                            <Check className="w-2.5 h-2.5 text-emerald-600" />
-                          ) : (
-                            <Copy className="w-2.5 h-2.5 text-amber-400 opacity-60" />
-                          )}
-                        </div>
-                      ) : null}
+
+                        {/* Dedicated 2-Leg OTP Badges */}
+                        {['accepted', 'ready_to_ship'].includes(order.status) &&
+                        (order.pickupOtp || order.otp) ? (
+                          <div
+                            onClick={() =>
+                              handleCopy(order.pickupOtp || order.otp, `pickup-otp-${order.id}`)
+                            }
+                            className="mt-0.5 px-1.5 py-0.5 rounded-md bg-blue-50 border border-blue-200 text-blue-900 inline-flex items-center gap-1 cursor-pointer hover:bg-blue-100 transition-colors shadow-2xs group w-fit"
+                            title="Click to copy Leg 1 Rider Pickup OTP"
+                          >
+                            <Key className="w-2.5 h-2.5 text-blue-600 shrink-0" />
+                            <span className="font-mono font-bold text-[10px] tracking-wide">
+                              Pickup: {order.pickupOtp || order.otp}
+                            </span>
+                            {isPickupOtpCopied ? (
+                              <Check className="w-2.5 h-2.5 text-emerald-600" />
+                            ) : (
+                              <Copy className="w-2.5 h-2.5 text-blue-400 opacity-60 group-hover:opacity-100" />
+                            )}
+                          </div>
+                        ) : ['shipped', 'delivered'].includes(order.status) && order.otp ? (
+                          <div
+                            onClick={() => handleCopy(order.otp, `otp-${order.id}`)}
+                            className="mt-0.5 px-1.5 py-0.5 rounded-md bg-amber-50 border border-amber-200 text-amber-900 inline-flex items-center gap-1 cursor-pointer hover:bg-amber-100 transition-colors shadow-2xs group w-fit"
+                            title="Click to copy delivery runner OTP"
+                          >
+                            <ShieldCheck className="w-2.5 h-2.5 text-amber-600 shrink-0" />
+                            <span className="font-mono font-bold text-[10px] tracking-wide">
+                              Doorstep: {order.otp}
+                            </span>
+                            {isOtpCopied ? (
+                              <Check className="w-2.5 h-2.5 text-emerald-600" />
+                            ) : (
+                              <Copy className="w-2.5 h-2.5 text-amber-400 opacity-60 group-hover:opacity-100" />
+                            )}
+                          </div>
+                        ) : null}
+                      </div>
                     </td>
 
-                    {/* 6. Action Center */}
+                    {/* 6. Action Center (Clean, organized, unjumbled) */}
                     <td className="py-3 px-3.5 text-right align-middle min-w-0">
-                      <div className="flex items-center justify-end gap-1.5">
-                        {/* Primary Action Button Based on Order Status */}
+                      <div className="flex items-center justify-end gap-1.5 shrink-0 flex-nowrap">
+                        {/* Status Primary Action */}
                         {order.status === 'new' && (
                           <>
                             <button
@@ -491,7 +504,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
                                 acceptOrder(order.id);
                                 onPrintOrder(order);
                               }}
-                              className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-colors shadow-2xs flex items-center gap-1 cursor-pointer"
+                              className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-colors shadow-2xs flex items-center gap-1 cursor-pointer shrink-0"
                               title="Accept order and print KOT invoice slip"
                             >
                               <Printer className="w-3 h-3" />
@@ -500,7 +513,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
                             <button
                               type="button"
                               onClick={() => rejectOrder(order.id)}
-                              className="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                              className="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer shrink-0"
                               title="Reject Order"
                             >
                               <X className="w-3.5 h-3.5" />
@@ -512,7 +525,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
                           <button
                             type="button"
                             onClick={() => markReadyToShip(order.id)}
-                            className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-colors shadow-2xs cursor-pointer"
+                            className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-colors shadow-2xs cursor-pointer shrink-0"
                           >
                             Ready to Ship
                           </button>
@@ -523,7 +536,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
                             <button
                               type="button"
                               onClick={() => broadcastOrderToFleet(order)}
-                              className="px-2.5 py-1.5 rounded-lg bg-[#25D366] hover:bg-[#1EBE5D] text-white font-bold text-xs transition-colors shadow-2xs flex items-center gap-1 cursor-pointer"
+                              className="px-2.5 py-1.5 rounded-lg bg-[#25D366] hover:bg-[#1EBE5D] text-white font-bold text-xs transition-colors shadow-2xs flex items-center gap-1 cursor-pointer shrink-0"
                               title="Broadcast Run to WhatsApp Delivery Group"
                             >
                               <MessageCircle className="w-3.5 h-3.5 fill-current" />
@@ -535,19 +548,11 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
                                 setOtpModalOrder(order);
                                 setOtpModalMode('pickup');
                               }}
-                              className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-colors shadow-2xs flex items-center gap-1 cursor-pointer"
+                              className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-colors shadow-2xs flex items-center gap-1 cursor-pointer shrink-0"
                               title="Verify Leg 1 Rider Pickup OTP"
                             >
                               <Key className="w-3 h-3" />
                               <span>Verify Pickup</span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => dispatchOrder(order.id)}
-                              className="px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-colors shadow-2xs cursor-pointer"
-                              title="Direct dispatch without OTP"
-                            >
-                              Ship
                             </button>
                           </>
                         )}
@@ -559,54 +564,112 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
                               setOtpModalOrder(order);
                               setOtpModalMode('delivery');
                             }}
-                            className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-colors shadow-2xs cursor-pointer"
+                            className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-colors shadow-2xs cursor-pointer shrink-0"
                           >
                             Verify OTP
                           </button>
                         )}
 
                         {order.status === 'delivered' && (
-                          <button
-                            type="button"
-                            onClick={() => onPrintOrder(order)}
-                            className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition-colors shadow-2xs flex items-center gap-1 cursor-pointer"
-                          >
-                            <Printer className="w-3 h-3" />
-                            <span>Print</span>
-                          </button>
+                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-emerald-50 text-emerald-700 font-bold text-[11px] border border-emerald-200/60 shrink-0">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                            <span>Delivered</span>
+                          </span>
                         )}
 
                         {order.orderType === 'In-Store Hold (2h)' && order.status !== 'delivered' && (
                           <button
                             type="button"
                             onClick={() => claimReservation(order.id)}
-                            className="px-2.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition-colors shadow-2xs cursor-pointer"
+                            className="px-2.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition-colors shadow-2xs cursor-pointer shrink-0"
                           >
                             Claim Hold
                           </button>
                         )}
 
-                        {/* View Details Eye */}
+                        {/* Quick View Details */}
                         <button
                           type="button"
                           onClick={() => onViewOrder(order)}
-                          className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-600 hover:text-blue-600 transition-colors cursor-pointer shrink-0"
+                          className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 hover:text-blue-600 transition-colors cursor-pointer shrink-0 shadow-2xs"
                           title="View complete order details"
                         >
                           <Eye className="w-3.5 h-3.5" />
                         </button>
 
-                        {/* Print Invoice Quick Tool (when not already shown) */}
-                        {order.status !== 'new' && order.status !== 'delivered' && (
+                        {/* Print Invoice Quick Tool */}
+                        <button
+                          type="button"
+                          onClick={() => onPrintOrder(order)}
+                          className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 hover:text-blue-600 transition-colors cursor-pointer shrink-0 shadow-2xs"
+                          title="Print Thermal Receipt / Invoice"
+                        >
+                          <Printer className="w-3.5 h-3.5" />
+                        </button>
+
+                        {/* More Actions Dropdown Menu */}
+                        <div className="relative shrink-0">
                           <button
                             type="button"
-                            onClick={() => onPrintOrder(order)}
-                            className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-600 hover:text-blue-600 transition-colors cursor-pointer shrink-0"
-                            title="Print Label / Invoice"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOpenActionId(openActionId === order.id ? null : order.id);
+                            }}
+                            className={`p-1.5 rounded-lg border transition-colors cursor-pointer shadow-2xs ${
+                              openActionId === order.id
+                                ? 'bg-slate-100 border-slate-300 text-slate-900'
+                                : 'border-slate-200 bg-white hover:bg-slate-100 text-slate-600'
+                            }`}
+                            title="More options"
                           >
-                            <Printer className="w-3.5 h-3.5" />
+                            <MoreHorizontal className="w-3.5 h-3.5" />
                           </button>
-                        )}
+
+                          {openActionId === order.id && (
+                            <div
+                              onClick={(e) => e.stopPropagation()}
+                              className="absolute right-0 mt-1.5 w-48 rounded-xl bg-white border border-slate-200 shadow-xl py-1 z-30 text-left animate-in fade-in-50 zoom-in-95 duration-100"
+                            >
+                              {order.status === 'ready_to_ship' && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setOpenActionId(null);
+                                    dispatchOrder(order.id);
+                                  }}
+                                  className="w-full text-left px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2 cursor-pointer"
+                                >
+                                  <Truck className="w-3.5 h-3.5 text-blue-600" />
+                                  <span>Direct Dispatch (Self)</span>
+                                </button>
+                              )}
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setOpenActionId(null);
+                                  setContactOrder(order);
+                                }}
+                                className="w-full text-left px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2 cursor-pointer"
+                              >
+                                <Phone className="w-3.5 h-3.5 text-emerald-600" />
+                                <span>Contact Customer</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setOpenActionId(null);
+                                  setTrackingOrder(order);
+                                }}
+                                className="w-full text-left px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2 cursor-pointer"
+                              >
+                                <MapPin className="w-3.5 h-3.5 text-blue-600" />
+                                <span>Track Delivery</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </td>
                   </tr>
@@ -629,7 +692,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
         </div>
       </div>
 
-      {/* Verify OTP Modal (Supports Leg 1 Pickup & Leg 2 Delivery) */}
+      {/* Verify OTP Modal */}
       <VerifyOtpModal
         order={otpModalOrder}
         isOpen={Boolean(otpModalOrder)}
