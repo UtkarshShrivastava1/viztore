@@ -34,6 +34,10 @@ export interface OrderPlacedPayload {
   grandTotal: number;
   itemsCount: number;
   customerPhone?: string;
+  customerName?: string;
+  storeName?: string;
+  storePhone?: string;
+  paymentMethod?: string;
   deliveryOtp?: string;
   correlationId?: string;
 }
@@ -45,8 +49,15 @@ export interface OrderStatusChangedPayload {
   newStatus: string;
   actorUserId?: string;
   customerPhone?: string;
+  customerName?: string;
   storeId?: string;
+  storeName?: string;
+  storePhone?: string;
   userId?: string;
+  riderName?: string;
+  riderPhone?: string;
+  grandTotal?: number;
+  reason?: string;
 }
 
 export interface PaymentSucceededPayload {
@@ -57,6 +68,7 @@ export interface PaymentSucceededPayload {
 
 export interface DeliveryAssignedPayload {
   orderId: string;
+  orderNumber?: string;
   riderId: string;
   estimatedMinutes: number;
   riderPhone?: string;
@@ -64,7 +76,14 @@ export interface DeliveryAssignedPayload {
   dispatchMessage?: string;
   pickupOtp?: string;
   customerPhone?: string;
+  customerName?: string;
   deliveryOtp?: string;
+  storeId?: string;
+  storeName?: string;
+  storePhone?: string;
+  pickupAddress?: string;
+  dropoffAddress?: string;
+  estimatedPayout?: number;
   userId?: string;
 }
 

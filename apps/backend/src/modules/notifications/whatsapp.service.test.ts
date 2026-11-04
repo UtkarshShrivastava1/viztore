@@ -3,14 +3,21 @@ import {
   createWhatsAppService,
   normalizePhoneNumber,
   generateFallbackUrl,
+  DeduplicationCache,
   buildOrderConfirmationMessage,
-  buildRiderDispatchMessage,
+  buildCustomerRiderAssignedMessage,
   buildOutForDeliveryMessage,
   buildDeliveryCompletedMessage,
+  buildOrderCancelledMessage,
+  buildMerchantNewOrderMessage,
+  buildMerchantRiderArrivingMessage,
+  buildMerchantDeliveryCompletedMessage,
+  buildRiderDispatchMessage,
+  buildRiderPickupConfirmedMessage,
 } from './whatsapp.service.js';
 import { branding } from '@repo/shared-types';
 
-describe('WhatsAppService Unit Tests (Task T-03 Audit)', () => {
+describe('WhatsAppService Unit Tests (Task T-03 Enterprise Hardening)', () => {
   describe('normalizePhoneNumber', () => {
     it('should normalize standard 10-digit Indian phone numbers with 91 prefix', () => {
       expect(normalizePhoneNumber('9876543210')).toBe('919876543210');
@@ -61,6 +68,22 @@ describe('WhatsAppService Unit Tests (Task T-03 Audit)', () => {
     });
   });
 
+  describe('DeduplicationCache', () => {
+    it('should detect duplicate dispatches with the same key within TTL', () => {
+      const cache = new DeduplicationCache(1000);
+      expect(cache.isDuplicate('test-key-1')).toBe(false);
+      expect(cache.isDuplicate('test-key-1')).toBe(true);
+      expect(cache.isDuplicate('test-key-2')).toBe(false);
+    });
+
+    it('should allow clearing the cache', () => {
+      const cache = new DeduplicationCache(1000);
+      expect(cache.isDuplicate('test-key-1')).toBe(false);
+      cache.clear();
+      expect(cache.isDuplicate('test-key-1')).toBe(false);
+    });
+  });
+
   describe('Message Builders & White-Label Compliance', () => {
     it('buildOrderConfirmationMessage formats full INR total and delivery OTP with zero brand leaks', () => {
       const msg = buildOrderConfirmationMessage({
@@ -82,20 +105,19 @@ describe('WhatsAppService Unit Tests (Task T-03 Audit)', () => {
       expect(msg).not.toMatch(/\bvzt\b/i);
     });
 
-    it('buildRiderDispatchMessage formats coordinates, order number, and OTP prompt', () => {
-      const msg = buildRiderDispatchMessage({
+    it('buildCustomerRiderAssignedMessage formats rider and ETA info', () => {
+      const msg = buildCustomerRiderAssignedMessage({
         orderNumber: 'ORD-20261021-X9Y8Z7',
-        riderName: 'Vikram Patel',
-        pickupAddress: 'Shop 12, Nehru Nagar',
-        dropoffAddress: 'B-402, Priyadarshini Parisar',
-        mapsUrl: 'https://maps.google.com/?q=21.21,81.38',
+        riderName: 'Rahul Verma',
+        riderPhone: '+91 9988776655',
+        etaMinutes: 18,
+        storeName: 'Daily Needs',
       });
 
-      expect(msg).toContain('ORD-20261021-X9Y8Z7');
-      expect(msg).toContain('Vikram Patel');
-      expect(msg).toContain('Shop 12, Nehru Nagar');
-      expect(msg).toContain('https://maps.google.com/?q=21.21,81.38');
-      expect(msg).toContain('4-digit Delivery OTP');
+      expect(msg).toContain('Rahul Verma');
+      expect(msg).toContain('~18 minutes');
+      expect(msg).toContain('Daily Needs');
+      expect(msg).not.toMatch(/viztore/i);
     });
 
     it('buildOutForDeliveryMessage and buildDeliveryCompletedMessage format cleanly', () => {
@@ -114,6 +136,81 @@ describe('WhatsAppService Unit Tests (Task T-03 Audit)', () => {
       });
       expect(completedMsg).toContain('Hi Ananya');
       expect(completedMsg).toContain('verified via OTP');
+    });
+
+    it('buildOrderCancelledMessage formats customer cancellation and refund guidance', () => {
+      const cancelMsg = buildOrderCancelledMessage({
+        orderNumber: 'ORD-999',
+        customerName: 'Priya',
+        reason: 'Out of stock at merchant',
+      });
+      expect(cancelMsg).toContain('Hi Priya');
+      expect(cancelMsg).toContain('Out of stock at merchant');
+      expect(cancelMsg).toContain('refund');
+    });
+
+    it('buildMerchantNewOrderMessage, buildMerchantRiderArrivingMessage, and buildMerchantDeliveryCompletedMessage format cleanly', () => {
+      const newOrderMsg = buildMerchantNewOrderMessage({
+        orderId: 'ord-1',
+        orderNumber: 'ORD-555',
+        itemsCount: 3,
+        grandTotal: 840,
+        customerName: 'Gaurav',
+        paymentMethod: 'cod',
+      });
+      expect(newOrderMsg).toContain('ORD-555');
+      expect(newOrderMsg).toContain('₹840');
+      expect(newOrderMsg).toContain('Gaurav');
+      expect(newOrderMsg).toContain('COD');
+
+      const arrivingMsg = buildMerchantRiderArrivingMessage({
+        orderId: 'ord-1',
+        orderNumber: 'ORD-555',
+        riderName: 'Kunal',
+        riderPhone: '9876500000',
+      });
+      expect(arrivingMsg).toContain('Kunal');
+      expect(arrivingMsg).toContain('Store Pickup OTP');
+
+      const fulfilledMsg = buildMerchantDeliveryCompletedMessage({
+        orderId: 'ord-1',
+        orderNumber: 'ORD-555',
+        riderName: 'Kunal',
+        customerName: 'Gaurav',
+        grandTotal: 840,
+      });
+      expect(fulfilledMsg).toContain('ORD-555');
+      expect(fulfilledMsg).toContain('Kunal');
+      expect(fulfilledMsg).toContain('Gaurav');
+      expect(fulfilledMsg).toContain('₹840');
+    });
+
+    it('buildRiderDispatchMessage formats coordinates, order number, and OTP prompt', () => {
+      const msg = buildRiderDispatchMessage({
+        orderNumber: 'ORD-20261021-X9Y8Z7',
+        riderName: 'Vikram Patel',
+        pickupAddress: 'Shop 12, Nehru Nagar',
+        dropoffAddress: 'B-402, Priyadarshini Parisar',
+        mapsUrl: 'https://maps.google.com/?q=21.21,81.38',
+      });
+
+      expect(msg).toContain('ORD-20261021-X9Y8Z7');
+      expect(msg).toContain('Vikram Patel');
+      expect(msg).toContain('Shop 12, Nehru Nagar');
+      expect(msg).toContain('https://maps.google.com/?q=21.21,81.38');
+      expect(msg).toContain('customer 4-digit Delivery OTP at doorstep');
+    });
+
+    it('buildRiderPickupConfirmedMessage formats dropoff instructions', () => {
+      const msg = buildRiderPickupConfirmedMessage({
+        orderNumber: 'ORD-777',
+        riderName: 'Vikram',
+        dropoffAddress: 'Sector 6, Street 14',
+        storeName: 'Sharma Grocery',
+      });
+      expect(msg).toContain('Sharma Grocery');
+      expect(msg).toContain('Sector 6, Street 14');
+      expect(msg).toContain('4-digit Delivery OTP');
     });
   });
 
@@ -151,6 +248,37 @@ describe('WhatsAppService Unit Tests (Task T-03 Audit)', () => {
       expect(result.fallbackUrl).toContain('https://wa.me/919876543210?text=');
       expect(result.fallbackUrl).toContain('ORD-98214');
     });
+
+    it('should suppress duplicate dispatch when dedupeKey is provided', async () => {
+      const testService = createWhatsAppService();
+      const first = await testService.sendTextMessage('9876543210', 'Duplicate test', 'dedupe:order:1001');
+      expect(first.success).toBe(true);
+      expect(first.duplicated).toBeFalsy();
+
+      const second = await testService.sendTextMessage('9876543210', 'Duplicate test', 'dedupe:order:1001');
+      expect(second.success).toBe(true);
+      expect(second.duplicated).toBe(true);
+    });
+
+    it('should dispatch merchant and rider notifications in dry-run mode', async () => {
+      const merchantAlert = await service.sendMerchantNewOrderAlert('9876543210', {
+        orderId: 'ord-100',
+        orderNumber: 'ORD-100',
+        itemsCount: 2,
+        grandTotal: 500,
+      });
+      expect(merchantAlert.success).toBe(true);
+      expect(merchantAlert.dryRun).toBe(true);
+
+      const riderDispatch = await service.sendRiderDispatch('9876543210', {
+        orderNumber: 'ORD-100',
+        riderName: 'Ashok',
+        pickupAddress: 'Shop 1',
+        dropoffAddress: 'House 2',
+      });
+      expect(riderDispatch.success).toBe(true);
+      expect(riderDispatch.dryRun).toBe(true);
+    });
   });
 
   describe('Live Meta API Dispatch & Failover on Error (Mocked Fetch)', () => {
@@ -166,7 +294,7 @@ describe('WhatsAppService Unit Tests (Task T-03 Audit)', () => {
       globalThis.fetch = originalFetch;
     });
 
-    it('should call Meta Graph API endpoint with valid headers and payload', async () => {
+    it('should call Meta Graph API endpoint with valid headers and payload for text message', async () => {
       const mockFetch = vi.fn().mockResolvedValue({
         ok: true,
         status: 200,
@@ -198,6 +326,86 @@ describe('WhatsAppService Unit Tests (Task T-03 Audit)', () => {
       expect(result.dryRun).toBe(false);
       expect(result.messageId).toBe('wamid.HBgMOTE5ODc2NTQzMjEwFQIAERgSMzEwM...');
       expect(result.fallbackUrl).toContain('https://wa.me/919876543210?text=');
+    });
+
+    it('should send interactive CTA URL button and record isInteractive: true', async () => {
+      const mockFetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          messaging_product: 'whatsapp',
+          messages: [{ id: 'wamid.CTA_SUCCESS_123' }],
+        }),
+      });
+      globalThis.fetch = mockFetch as unknown as typeof fetch;
+
+      const liveService = createWhatsAppService(testConfig);
+      const result = await liveService.sendInteractiveCtaMessage(
+        '9876543210',
+        'Your order has shipped!',
+        {
+          buttonText: 'Track Order',
+          buttonUrl: 'https://example.com/orders/track',
+          headerText: 'Delivery Update',
+        },
+      );
+
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      const [, options] = mockFetch.mock.calls[0];
+      const payload = JSON.parse(options.body);
+      expect(payload.type).toBe('interactive');
+      expect(payload.interactive.type).toBe('cta_url');
+      expect(payload.interactive.action.parameters.display_text).toBe('Track Order');
+      expect(payload.interactive.action.parameters.url).toBe('https://example.com/orders/track');
+      expect(payload.interactive.header.text).toBe('Delivery Update');
+
+      expect(result.success).toBe(true);
+      expect(result.isInteractive).toBe(true);
+      expect(result.messageId).toBe('wamid.CTA_SUCCESS_123');
+    });
+
+    it('should automatically failover to standard text message if interactive CTA returns error', async () => {
+      const mockFetch = vi
+        .fn()
+        // 1st call (interactive CTA) returns 400 error
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 400,
+          statusText: 'Bad Request',
+          json: async () => ({
+            error: {
+              message: 'Interactive messages are not supported for this user session',
+              type: 'OAuthException',
+              code: 100,
+            },
+          }),
+        })
+        // 2nd call (failover text message) succeeds
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          json: async () => ({
+            messaging_product: 'whatsapp',
+            messages: [{ id: 'wamid.FALLBACK_TEXT_456' }],
+          }),
+        });
+
+      globalThis.fetch = mockFetch as unknown as typeof fetch;
+
+      const liveService = createWhatsAppService(testConfig);
+      const result = await liveService.sendInteractiveCtaMessage(
+        '9876543210',
+        'Order Confirmed',
+        {
+          buttonText: 'Track Order',
+          buttonUrl: 'https://example.com/orders/track',
+        },
+      );
+
+      // Verify failover happened
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+      expect(result.success).toBe(true);
+      expect(result.messageId).toBe('wamid.FALLBACK_TEXT_456');
     });
 
     it('should provide 1-click fallbackUrl on Meta Graph API error response', async () => {

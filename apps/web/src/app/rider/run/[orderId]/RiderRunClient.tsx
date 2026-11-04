@@ -61,9 +61,9 @@ function calculateDistanceMeters(
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+    Math.cos((lat2 * Math.PI) / 180) *
+    Math.sin(dLon / 2) *
+    Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return Math.round(R * c);
 }
@@ -140,7 +140,7 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
 
       const isClaimedByMe = Boolean(
         details.isClaimedByCaller ||
-          (details.isClaimed && riderId && details.claimedByRider?.id === riderId),
+        (details.isClaimed && riderId && details.claimedByRider?.id === riderId),
       );
 
       if (details.isClaimed && !isClaimedByMe) {
@@ -175,7 +175,7 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
         .then((details) => {
           setRunDetails(details);
         })
-        .catch(() => {});
+        .catch(() => { });
     }, 5000);
     return () => clearInterval(interval);
   }, [orderId, selectedRider?.id, runDetails?.status]);
@@ -231,7 +231,7 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
               heading: coords.heading ?? undefined,
               speed: coords.speed ?? undefined,
             })
-            .catch(() => {});
+            .catch(() => { });
         }
       },
       (err) => {
@@ -349,12 +349,12 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
 
   const isClaimedByCaller = Boolean(
     runDetails?.isClaimedByCaller ||
-      (runDetails?.isClaimed && selectedRider?.id && runDetails?.claimedByRider?.id === selectedRider?.id),
+    (runDetails?.isClaimed && selectedRider?.id && runDetails?.claimedByRider?.id === selectedRider?.id),
   );
 
   const isClaimedByAnotherRider = Boolean(
     isAlreadyClaimedByOther ||
-      (runDetails?.isClaimed && !isClaimedByCaller),
+    (runDetails?.isClaimed && !isClaimedByCaller),
   );
 
   // Is COD check
@@ -666,27 +666,24 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
             PAYMENT MODE ALERT BANNER (CRITICAL FOR CASH COLLECTION)
         ========================================================================= */}
         <div
-          className={`p-4 sm:p-5 rounded-2xl border-2 shadow-xl transition-all ${
-            isCod
-              ? 'bg-amber-500/15 border-amber-500/50 text-amber-200'
-              : 'bg-emerald-500/15 border-emerald-500/50 text-emerald-200'
-          }`}
+          className={`p-4 sm:p-5 rounded-2xl border-2 shadow-xl transition-all ${isCod
+            ? 'bg-amber-500/15 border-amber-500/50 text-amber-200'
+            : 'bg-emerald-500/15 border-emerald-500/50 text-emerald-200'
+            }`}
         >
           <div className="flex items-start sm:items-center justify-between gap-3">
             <div className="flex items-start gap-3">
               <div
-                className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-xl ${
-                  isCod ? 'bg-amber-500 text-slate-950 font-black' : 'bg-emerald-500 text-slate-950'
-                }`}
+                className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 text-xl ${isCod ? 'bg-amber-500 text-slate-950 font-black' : 'bg-emerald-500 text-slate-950'
+                  }`}
               >
                 {isCod ? <Banknote className="w-6 h-6 stroke-[2.5]" /> : <ShieldCheck className="w-6 h-6 stroke-[2.5]" />}
               </div>
               <div>
                 <div className="flex items-center gap-2">
                   <span
-                    className={`text-[11px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md ${
-                      isCod ? 'bg-amber-500/30 text-amber-300' : 'bg-emerald-500/30 text-emerald-300'
-                    }`}
+                    className={`text-[11px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md ${isCod ? 'bg-amber-500/30 text-amber-300' : 'bg-emerald-500/30 text-emerald-300'
+                      }`}
                   >
                     {isCod ? 'Cash on Delivery (COD)' : 'Prepaid Online Order'}
                   </span>
@@ -720,7 +717,7 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
           </div>
         )}
 
-        
+
 
         {/* =========================================================================
             STATE: DELIVERED (SUCCESS SCREEN)
@@ -849,16 +846,14 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
             {/* Step Progress Tracker */}
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-3.5 flex items-center justify-between text-xs font-bold shadow-md">
               <div
-                className={`flex items-center gap-2 ${
-                  !isPickedUp ? 'text-emerald-400' : 'text-slate-400'
-                }`}
+                className={`flex items-center gap-2 ${!isPickedUp ? 'text-emerald-400' : 'text-slate-400'
+                  }`}
               >
                 <div
-                  className={`w-7 h-7 rounded-full flex items-center justify-center text-xs ${
-                    !isPickedUp
-                      ? 'bg-emerald-500 text-slate-950 font-black shadow-lg shadow-emerald-500/30'
-                      : 'bg-emerald-500/20 text-emerald-400'
-                  }`}
+                  className={`w-7 h-7 rounded-full flex items-center justify-center text-xs ${!isPickedUp
+                    ? 'bg-emerald-500 text-slate-950 font-black shadow-lg shadow-emerald-500/30'
+                    : 'bg-emerald-500/20 text-emerald-400'
+                    }`}
                 >
                   {isPickedUp ? <Check className="w-4 h-4" /> : '1'}
                 </div>
@@ -870,16 +865,14 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
               </div>
 
               <div
-                className={`flex items-center gap-2 ${
-                  isPickedUp ? 'text-emerald-400' : 'text-slate-500'
-                }`}
+                className={`flex items-center gap-2 ${isPickedUp ? 'text-emerald-400' : 'text-slate-500'
+                  }`}
               >
                 <div
-                  className={`w-7 h-7 rounded-full flex items-center justify-center text-xs ${
-                    isPickedUp
-                      ? 'bg-emerald-500 text-slate-950 font-black shadow-lg shadow-emerald-500/30'
-                      : 'bg-slate-800 text-slate-500'
-                  }`}
+                  className={`w-7 h-7 rounded-full flex items-center justify-center text-xs ${isPickedUp
+                    ? 'bg-emerald-500 text-slate-950 font-black shadow-lg shadow-emerald-500/30'
+                    : 'bg-slate-800 text-slate-500'
+                    }`}
                 >
                   2
                 </div>
@@ -889,11 +882,10 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
 
             {/* STEP 1: STORE PICKUP CARD */}
             <div
-              className={`p-5 rounded-2xl border transition-all ${
-                !isPickedUp
-                  ? 'bg-slate-900 border-blue-500/50 shadow-2xl ring-1 ring-blue-500/20'
-                  : 'bg-slate-900/50 border-slate-800 opacity-60'
-              }`}
+              className={`p-5 rounded-2xl border transition-all ${!isPickedUp
+                ? 'bg-slate-900 border-blue-500/50 shadow-2xl ring-1 ring-blue-500/20'
+                : 'bg-slate-900/50 border-slate-800 opacity-60'
+                }`}
             >
               <div className="flex items-start justify-between gap-4">
                 <div>
@@ -1048,20 +1040,18 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
                 {/* Step 2A: COD Cash Collection Confirmation Gate */}
                 {isCod && (
                   <div
-                    className={`p-4 sm:p-5 rounded-2xl border-2 transition-all ${
-                      isCashCollected
-                        ? 'bg-emerald-500/15 border-emerald-500/50 shadow-lg shadow-emerald-950/20'
-                        : 'bg-amber-500/15 border-amber-500/50 shadow-lg shadow-amber-950/20'
-                    }`}
+                    className={`p-4 sm:p-5 rounded-2xl border-2 transition-all ${isCashCollected
+                      ? 'bg-emerald-500/15 border-emerald-500/50 shadow-lg shadow-emerald-950/20'
+                      : 'bg-amber-500/15 border-amber-500/50 shadow-lg shadow-amber-950/20'
+                      }`}
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
                       <div className="flex items-start sm:items-center gap-3">
                         <div
-                          className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
-                            isCashCollected
-                              ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/30'
-                              : 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/30'
-                          }`}
+                          className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${isCashCollected
+                            ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/30'
+                            : 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/30'
+                            }`}
                         >
                           {isCashCollected ? (
                             <CheckCircle2 className="w-6 h-6 stroke-[2.5]" />
@@ -1072,11 +1062,10 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
                         <div>
                           <div className="flex items-center gap-2">
                             <span
-                              className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md ${
-                                isCashCollected
-                                  ? 'bg-emerald-500/30 text-emerald-300'
-                                  : 'bg-amber-500/30 text-amber-300'
-                              }`}
+                              className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md ${isCashCollected
+                                ? 'bg-emerald-500/30 text-emerald-300'
+                                : 'bg-amber-500/30 text-amber-300'
+                                }`}
                             >
                               Step 2A: Cash Collection
                             </span>
@@ -1106,11 +1095,10 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
                           setIsCashCollected((prev) => !prev);
                           setOtpError(null);
                         }}
-                        className={`w-full sm:w-auto px-5 py-3 rounded-xl font-black text-xs uppercase tracking-wider transition-all active:scale-98 cursor-pointer flex items-center justify-center gap-2 shadow-md ${
-                          isCashCollected
-                            ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-emerald-500/25'
-                            : 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/25 animate-pulse'
-                        }`}
+                        className={`w-full sm:w-auto px-5 py-3 rounded-xl font-black text-xs uppercase tracking-wider transition-all active:scale-98 cursor-pointer flex items-center justify-center gap-2 shadow-md ${isCashCollected
+                          ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-emerald-500/25'
+                          : 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/25 animate-pulse'
+                          }`}
                       >
                         {isCashCollected ? (
                           <>

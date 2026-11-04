@@ -244,11 +244,17 @@ export function createDeliveryService(
     if (updated && bus) {
       bus.emit(EVENTS.DELIVERY_ASSIGNED, {
         orderId,
+        orderNumber: delivery.orderNumber,
         riderId: dto.rider.id,
         estimatedMinutes: dto.estimatedMinutes,
         riderPhone: dto.rider.phone,
         riderName: dto.rider.name,
         dispatchMessage,
+        pickupOtp: delivery.pickupOtp,
+        pickupAddress: delivery.pickupLocation?.addressText,
+        dropoffAddress: delivery.dropoffLocation?.addressText,
+        estimatedPayout: delivery.estimatedPayout,
+        storeId: delivery.storeId,
       });
       logger.info(`[DeliveryService] Emitted DELIVERY_ASSIGNED for order ${orderId} to rider ${dto.rider.id}`);
     }
@@ -364,11 +370,17 @@ export function createDeliveryService(
       });
       bus.emit(EVENTS.DELIVERY_ASSIGNED, {
         orderId,
+        orderNumber: updated.orderNumber,
         riderId: dto.rider.id,
         estimatedMinutes,
         riderPhone: dto.rider.phone,
         riderName: dto.rider.name,
         dispatchMessage,
+        pickupOtp: updated.pickupOtp,
+        pickupAddress: updated.pickupLocation?.addressText,
+        dropoffAddress: updated.dropoffLocation?.addressText,
+        estimatedPayout: updated.estimatedPayout,
+        storeId: updated.storeId,
       });
       logger.info(`[DeliveryService] Order ${orderId} successfully claimed by rider ${dto.rider.id} (${dto.rider.name}) via open pool mutex`);
     }

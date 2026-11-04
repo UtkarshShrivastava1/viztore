@@ -66,9 +66,10 @@ export function createOrderService(
     }
 
     // 3. Verify store existence & active status via Store facade
+    let storeSnapshot: any = null;
     if (storeFacade) {
-      const store = await storeFacade.getStoreById(targetStoreId);
-      if (!store || !store.isActive) {
+      storeSnapshot = await storeFacade.getStoreById(targetStoreId);
+      if (!storeSnapshot || !storeSnapshot.isActive) {
         throw AppError.badRequest('Store not found or is currently inactive', 'STORE_INACTIVE');
       }
     }
@@ -197,10 +198,14 @@ export function createOrderService(
         orderNumber: order.orderNumber,
         userId: order.userId,
         storeId: order.storeId,
+        storeName: storeSnapshot?.name,
+        storePhone: storeSnapshot?.phone,
+        customerName: order.customerName || order.shippingAddress?.fullName,
         grandTotal: order.grandTotal,
         itemsCount: order.items.length,
         customerPhone: order.shippingAddress?.phone,
         deliveryOtp: order.deliveryOtp,
+        paymentMethod: order.paymentMethod,
         correlationId,
       });
     }
@@ -425,6 +430,10 @@ export function createOrderService(
     // Emit domain events
     if (bus && updated) {
       const resolvedUserId = (updated as any).userId || (current as any).userId;
+      const customerPhone = updated.shippingAddress?.phone || current.shippingAddress?.phone;
+      const customerName = (updated as any).customerName || updated.shippingAddress?.fullName || (current as any).customerName || current.shippingAddress?.fullName;
+      const grandTotal = updated.grandTotal || current.grandTotal;
+
       const payload = {
         orderId: updated.id,
         orderNumber: updated.orderNumber,
@@ -433,6 +442,9 @@ export function createOrderService(
         actorUserId,
         storeId: updated.storeId,
         userId: resolvedUserId ? resolvedUserId.toString() : undefined,
+        customerPhone,
+        customerName,
+        grandTotal,
       };
 
       if (status === OrderStatus.CONFIRMED || status === OrderStatus.PACKED) bus.emit(EVENTS.ORDER_CONFIRMED, payload);
