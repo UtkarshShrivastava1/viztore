@@ -204,6 +204,66 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
     enabled: !!categoryParam && !!product?._id,
   });
 
+  const variants = Array.isArray(product?.variants) && product.variants.length > 0 ? product.variants : [];
+  const selectedVariant = variants[selectedVariantIdx] || variants[0] || {
+    price: product?.basePrice || 0,
+    mrp: product?.baseMrp || product?.basePrice || 0,
+    images: Array.isArray((product as any)?.images) && (product as any)?.images.length > 0 ? (product as any)?.images : [],
+    sku: product?._id || 'STD-01',
+    stock: product?.totalStock || 10,
+    isActive: true,
+  };
+  const parentImages =
+    Array.isArray((product as any)?.images) && (product as any)?.images.length > 0
+      ? (product as any)?.images
+      : [];
+
+  const variantImages =
+    Array.isArray(selectedVariant?.images) && selectedVariant.images.length > 0
+      ? selectedVariant.images
+      : selectedVariant?.image
+        ? [selectedVariant.image]
+        : [];
+
+  const allImages =
+    selectedVariant?.useOriginalImages === false && variantImages.length > 0
+      ? variantImages
+      : parentImages.length > 0
+        ? parentImages
+        : variantImages.length > 0
+          ? variantImages
+          : ['/placeholder-product.png'];
+
+  const sizes = Array.from(new Set(variants.filter((v) => v.size && v.isActive !== false).map((v) => v.size!)));
+  const colors = Array.from(new Set(variants.filter((v) => v.color && v.isActive !== false).map((v) => v.color!)));
+
+  const currentColor = selectedVariant?.color || (variants.find((v) => v.color)?.color) || '';
+  const currentSize = selectedVariant?.size || (variants.find((v) => v.size)?.size) || '';
+
+  const sizePriceMap = React.useMemo(() => {
+    if (!product) return undefined;
+    const map: Record<string, { price: number; mrp?: number }> = {};
+    sizes.forEach((s) => {
+      const matchingVariant =
+        variants.find(
+          (v) =>
+            v.size === s &&
+            v.color?.toLowerCase() === currentColor.toLowerCase() &&
+            v.isActive !== false,
+        ) || variants.find((v) => v.size === s && v.isActive !== false);
+
+      if (matchingVariant && typeof matchingVariant.price === 'number') {
+        map[s] = {
+          price: matchingVariant.price,
+          mrp: matchingVariant.mrp,
+        };
+      }
+    });
+
+    const distinctPrices = new Set(Object.values(map).map((p) => p.price));
+    return distinctPrices.size > 1 ? map : undefined;
+  }, [sizes, variants, currentColor, product]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-transparent pt-16">
@@ -237,65 +297,6 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
       </div>
     );
   }
-
-  const variants = Array.isArray(product.variants) && product.variants.length > 0 ? product.variants : [];
-  const selectedVariant = variants[selectedVariantIdx] || variants[0] || {
-    price: product.basePrice || 0,
-    mrp: product.baseMrp || product.basePrice || 0,
-    images: Array.isArray((product as any).images) && (product as any).images.length > 0 ? (product as any).images : [],
-    sku: product._id || 'STD-01',
-    stock: product.totalStock || 10,
-    isActive: true,
-  };
-  const parentImages =
-    Array.isArray((product as any).images) && (product as any).images.length > 0
-      ? (product as any).images
-      : [];
-
-  const variantImages =
-    Array.isArray(selectedVariant?.images) && selectedVariant.images.length > 0
-      ? selectedVariant.images
-      : selectedVariant?.image
-        ? [selectedVariant.image]
-        : [];
-
-  const allImages =
-    selectedVariant?.useOriginalImages === false && variantImages.length > 0
-      ? variantImages
-      : parentImages.length > 0
-        ? parentImages
-        : variantImages.length > 0
-          ? variantImages
-          : ['/placeholder-product.png'];
-
-  const sizes = Array.from(new Set(variants.filter((v) => v.size && v.isActive !== false).map((v) => v.size!)));
-  const colors = Array.from(new Set(variants.filter((v) => v.color && v.isActive !== false).map((v) => v.color!)));
-
-  const currentColor = selectedVariant?.color || (variants.find((v) => v.color)?.color) || '';
-  const currentSize = selectedVariant?.size || (variants.find((v) => v.size)?.size) || '';
-
-  const sizePriceMap = React.useMemo(() => {
-    const map: Record<string, { price: number; mrp?: number }> = {};
-    sizes.forEach((s) => {
-      const matchingVariant =
-        variants.find(
-          (v) =>
-            v.size === s &&
-            v.color?.toLowerCase() === currentColor.toLowerCase() &&
-            v.isActive !== false,
-        ) || variants.find((v) => v.size === s && v.isActive !== false);
-
-      if (matchingVariant && typeof matchingVariant.price === 'number') {
-        map[s] = {
-          price: matchingVariant.price,
-          mrp: matchingVariant.mrp,
-        };
-      }
-    });
-
-    const distinctPrices = new Set(Object.values(map).map((p) => p.price));
-    return distinctPrices.size > 1 ? map : undefined;
-  }, [sizes, variants, currentColor]);
 
   const discount = selectedVariant && selectedVariant.mrp > 0
     ? Math.round(((selectedVariant.mrp - selectedVariant.price) / selectedVariant.mrp) * 100)
