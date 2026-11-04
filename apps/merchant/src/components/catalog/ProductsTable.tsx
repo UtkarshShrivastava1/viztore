@@ -6,6 +6,9 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Trash2,
+  Layers,
+  Barcode,
+  Sparkles,
 } from 'lucide-react';
 import { useCatalogStore, ProductItem } from '../../stores/catalogStore.js';
 import { ProductActionMenu } from './ProductActionMenu.js';
@@ -22,8 +25,13 @@ export const ProductsTable: React.FC = () => {
     statusFilter,
     currentPage,
     pageSize,
+    selectedProductIds,
     setCurrentPage,
     setPageSize,
+    toggleSelectAll,
+    toggleSelectProduct,
+    bulkDeleteSelectedProducts,
+    clearSelectedProducts,
   } = useCatalogStore();
 
   // Filter products based on live criteria
@@ -66,171 +74,237 @@ export const ProductsTable: React.FC = () => {
   const endIndex = Math.min(safePage * pageSize, totalFiltered);
   const paginatedProducts = filteredProducts.slice(startIndex, endIndex);
 
+  const isAllSelected =
+    paginatedProducts.length > 0 &&
+    paginatedProducts.every((p) => (selectedProductIds || []).includes(p.id));
+
   const getStockStatusBadge = (stock: number, lowThreshold: number) => {
     if (stock <= 0) {
-      return <span className="text-rose-600 text-[10px] font-semibold">Out of Stock</span>;
+      return (
+        <span className="inline-block text-[10px] font-bold text-rose-600 bg-rose-50 border border-rose-200/80 px-1.5 py-0.2 rounded">
+          Out of Stock
+        </span>
+      );
     }
     if (stock <= lowThreshold) {
-      return <span className="text-amber-600 text-[10px] font-semibold">Low Stock</span>;
+      return (
+        <span className="inline-block text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200/80 px-1.5 py-0.2 rounded">
+          Low Stock
+        </span>
+      );
     }
-    return <span className="text-emerald-600 text-[10px] font-medium">In Stock</span>;
+    return (
+      <span className="inline-block text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-1.5 py-0.2 rounded">
+        In Stock
+      </span>
+    );
   };
 
   const getStatusPill = (status: ProductItem['status']) => {
     switch (status) {
       case 'active':
         return (
-          <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80 whitespace-nowrap">
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs whitespace-nowrap">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
             Active
           </span>
         );
       case 'inactive':
         return (
-          <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 text-slate-600 border border-slate-200 whitespace-nowrap">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600 border border-slate-200 whitespace-nowrap">
+            <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
             Inactive
           </span>
         );
       case 'draft':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200/90 whitespace-nowrap shadow-2xs">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200 shadow-2xs whitespace-nowrap">
             <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
             Draft
           </span>
         );
       case 'out_of_stock':
         return (
-          <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-rose-50 text-rose-700 border border-rose-200 whitespace-nowrap">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 whitespace-nowrap">
+            <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
             Out of Stock
           </span>
         );
     }
   };
 
+  // Micro-capsule for variants (eliminates line-height explosion and long string wrapping)
+  const renderVariantCapsule = (product: ProductItem) => {
+    const variantsList = Array.isArray(product.variants) ? product.variants : [];
+    const variantCount = variantsList.length;
+
+    if (variantCount > 1) {
+      const distinctSizes = Array.from(new Set(variantsList.map((v) => v.size).filter(Boolean)));
+      const distinctColors = Array.from(new Set(variantsList.map((v) => v.color).filter(Boolean)));
+      const sampleSpecs = [...distinctSizes, ...distinctColors].slice(0, 2).join(', ');
+
+      return (
+        <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+            <Layers className="w-3 h-3 text-blue-500" />
+            <span>{variantCount} Variants</span>
+          </span>
+          {sampleSpecs && (
+            <span
+              className="text-[10px] text-slate-500 font-medium truncate max-w-[140px]"
+              title={[...distinctSizes, ...distinctColors].join(' • ')}
+            >
+              {sampleSpecs}
+            </span>
+          )}
+        </div>
+      );
+    }
+
+    if (variantCount === 1 && variantsList[0]) {
+      const v = variantsList[0];
+      const parts: string[] = [];
+      if (v?.size && v.size !== 'Standard') parts.push(v.size);
+      if (v?.color && v.color !== 'Standard') parts.push(v.color);
+      if (parts.length > 0) {
+        return (
+          <span className="inline-block mt-0.5 text-[10px] text-slate-500 font-medium truncate max-w-[150px]">
+            {parts.join(' • ')}
+          </span>
+        );
+      }
+    }
+
+    if (product.attributes?.size || product.attributes?.color) {
+      const parts: string[] = [];
+      if (product.attributes.size && product.attributes.size !== 'Standard') {
+        parts.push(product.attributes.size);
+      }
+      if (product.attributes.color && product.attributes.color !== 'Standard') {
+        parts.push(product.attributes.color);
+      }
+      if (parts.length > 0) {
+        return (
+          <span className="inline-block mt-0.5 text-[10px] text-slate-500 font-medium truncate max-w-[150px]">
+            {parts.join(' • ')}
+          </span>
+        );
+      }
+    }
+
+    return null;
+  };
+
   return (
-    <div className="bg-white rounded-xl border border-slate-200/80 shadow-2xs overflow-hidden flex flex-col">
+    <div className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs overflow-hidden flex flex-col">
+      {/* Zero-Scroll Responsive Table Container */}
       <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse table-auto min-w-[1150px]">
+        <table className="w-full text-left border-collapse text-xs">
           <thead>
-            <tr className="border-b border-slate-200/80 bg-slate-50/60 text-[11px] font-semibold text-slate-500 uppercase tracking-wider select-none">
-              <th className="py-2.5 px-3 w-8 text-center">
+            <tr className="border-b border-slate-200/80 bg-slate-50/70 text-[11px] font-bold text-slate-600 uppercase tracking-wider select-none">
+              {/* Checkbox */}
+              <th className="py-3 px-3 w-9 text-center">
                 <input
                   type="checkbox"
-                  checked={
-                    paginatedProducts.length > 0 &&
-                    paginatedProducts.every((p) =>
-                      (useCatalogStore.getState().selectedProductIds || []).includes(p.id)
-                    )
-                  }
-                  onChange={() => useCatalogStore.getState().toggleSelectAll()}
-                  className="rounded-sm border-slate-300 text-blue-600 focus:ring-blue-500/20 cursor-pointer"
+                  checked={isAllSelected}
+                  onChange={toggleSelectAll}
+                  className="rounded border-slate-300 text-blue-600 focus:ring-blue-500/20 cursor-pointer"
                   title="Select All"
                 />
               </th>
-              <th className="py-2.5 px-3 font-semibold text-slate-600 min-w-[240px] max-w-[280px]">Product</th>
-              <th className="py-2.5 px-2 font-semibold text-slate-600 whitespace-nowrap min-w-[140px]">
-                SKU
+
+              {/* Product */}
+              <th className="py-3 px-3 font-bold text-slate-700 min-w-[220px]">
+                Product
               </th>
-              <th className="py-2.5 px-2 font-semibold text-slate-600 whitespace-nowrap min-w-[110px]">
-                Barcode
+
+              {/* Identifiers: SKU & Barcode (Consolidated) */}
+              <th className="py-3 px-3 font-bold text-slate-700 w-36">
+                Identifiers
               </th>
-              <th className="py-2.5 px-2.5 font-semibold text-slate-600 whitespace-nowrap min-w-[170px]">
-                Category &amp; Type
+
+              {/* Category & Brand (Consolidated) */}
+              <th className="py-3 px-3 font-bold text-slate-700 w-44">
+                Category &amp; Brand
               </th>
-              <th className="py-2.5 px-2 font-semibold text-slate-600 whitespace-nowrap min-w-[100px]">
-                Brand
-              </th>
-              <th className="py-2.5 px-2 font-semibold text-slate-600 whitespace-nowrap min-w-[90px]">
+
+              {/* Stock */}
+              <th className="py-3 px-3 font-bold text-slate-700 w-24 text-right">
                 Stock
               </th>
-              <th className="py-2.5 px-2 font-semibold text-slate-600 whitespace-nowrap min-w-[90px]">
-                Status
-              </th>
-              <th className="py-2.5 px-2 font-semibold text-slate-600 whitespace-nowrap min-w-[90px]">
+
+              {/* Price */}
+              <th className="py-3 px-3 font-bold text-slate-700 w-24 text-right">
                 Price
               </th>
-              <th className="py-2.5 px-2 font-semibold text-slate-600 whitespace-nowrap min-w-[95px]">
-                <div className="flex items-center gap-1 cursor-pointer hover:text-slate-800 uppercase tracking-wider">
-                  <span>Updated</span>
-                  <ChevronDown className="w-3 h-3" />
-                </div>
+
+              {/* Status */}
+              <th className="py-3 px-3 font-bold text-slate-700 w-24 text-center">
+                Status
               </th>
-              <th className="py-2.5 px-2 font-semibold text-slate-600 text-center w-10">Actions</th>
+
+              {/* Updated */}
+              <th className="py-3 px-3 font-bold text-slate-700 w-24 text-right">
+                Updated
+              </th>
+
+              {/* Actions */}
+              <th className="py-3 px-3 font-bold text-slate-700 text-center w-12">
+                Actions
+              </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 text-xs">
+
+          <tbody className="divide-y divide-slate-100 bg-white">
             {paginatedProducts.length === 0 ? (
               <tr>
-                <td colSpan={11} className="py-12 text-center text-slate-400">
+                <td colSpan={9} className="py-16 text-center text-slate-400">
                   <div className="max-w-xs mx-auto space-y-1">
                     <p className="font-semibold text-slate-600 text-sm">No products found</p>
                     <p className="text-xs text-slate-400">
-                      Try adjusting your search criteria or clear current filters.
+                      Try adjusting your search query or reset the active filters.
                     </p>
                   </div>
                 </td>
               </tr>
             ) : (
               paginatedProducts.map((product) => {
-                const variantsList = Array.isArray(product.variants) ? product.variants : [];
-                const distinctSizes = Array.from(new Set(variantsList.map((v) => v.size).filter(Boolean)));
-                const distinctColors = Array.from(new Set(variantsList.map((v) => v.color).filter(Boolean)));
-                const variantCount = variantsList.length;
-
-                let variantText = '';
-                if (variantCount > 1) {
-                  const sampleSpecs = [...distinctSizes, ...distinctColors].slice(0, 3).join(', ');
-                  variantText = `${variantCount} Variants${sampleSpecs ? ` • ${sampleSpecs}` : ''}`;
-                } else if (variantCount === 1 && variantsList[0]) {
-                  const v = variantsList[0];
-                  const parts: string[] = [];
-                  if (v?.size && v.size !== 'Standard') parts.push(`Size: ${v.size}`);
-                  if (v?.color && v.color !== 'Standard') parts.push(`Color: ${v.color}`);
-                  variantText = parts.join(' • ');
-                } else {
-                  const parts: string[] = [];
-                  if (product.attributes?.size) parts.push(`Size: ${product.attributes.size}`);
-                  if (product.attributes?.color) parts.push(`Color: ${product.attributes.color}`);
-                  variantText = parts.join(' • ');
-                }
-
+                const isSelected = (selectedProductIds || []).includes(product.id);
+                const { date, time } = formatDateTime(product.updatedAt);
                 const mainImg =
                   product.images?.[0] ||
                   'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=150&q=80';
-                const isSelected = (
-                  useCatalogStore.getState().selectedProductIds || []
-                ).includes(product.id);
-                const { date, time } = formatDateTime(product.updatedAt);
 
                 return (
                   <tr
                     key={product.id}
-                    className={`hover:bg-slate-50/70 transition-colors ${
+                    className={`hover:bg-slate-50/80 transition-colors ${
                       isSelected ? 'bg-blue-50/30' : ''
                     }`}
                   >
                     {/* Checkbox */}
-                    <td className="py-2.5 px-3 w-8 text-center">
+                    <td className="py-3 px-3 w-9 text-center">
                       <input
                         type="checkbox"
                         checked={isSelected}
-                        onChange={() => useCatalogStore.getState().toggleSelectProduct(product.id)}
-                        className="rounded-sm border-slate-300 text-blue-600 focus:ring-blue-500/20 cursor-pointer"
+                        onChange={() => toggleSelectProduct(product.id)}
+                        className="rounded border-slate-300 text-blue-600 focus:ring-blue-500/20 cursor-pointer"
                       />
                     </td>
 
                     {/* Product */}
-                    <td className="py-2.5 px-3 min-w-[240px] max-w-[280px]">
-                      <div className="flex items-center gap-2.5">
+                    <td className="py-3 px-3 min-w-[220px]">
+                      <div className="flex items-center gap-3">
                         <img
                           src={mainImg}
                           alt={product.name}
-                          className="w-10 h-10 rounded-lg object-cover bg-slate-100 border border-slate-200/80 shrink-0"
+                          className="w-11 h-11 rounded-xl object-cover bg-slate-100 border border-slate-200/80 shrink-0 shadow-3xs"
                           loading="lazy"
                         />
-                        <div className="min-w-0 max-w-[200px] xl:max-w-[240px] overflow-hidden">
+                        <div className="min-w-0 max-w-[220px] xl:max-w-[260px]">
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <span
-                              className="font-semibold text-slate-800 text-xs truncate block max-w-[170px]"
+                              className="font-bold text-slate-900 text-xs truncate block max-w-[180px] xl:max-w-[210px] hover:text-blue-600 cursor-pointer transition-colors"
                               title={product.name}
                             >
                               {product.name}
@@ -241,67 +315,80 @@ export const ProductsTable: React.FC = () => {
                               </span>
                             )}
                           </div>
-                          {variantText ? (
-                            <div className="text-[11px] text-blue-600 font-medium mt-0.5 truncate">
-                              {variantText}
-                            </div>
-                          ) : null}
+                          {renderVariantCapsule(product)}
                         </div>
                       </div>
                     </td>
 
-                    {/* SKU */}
-                    <td className="py-2.5 px-2 font-mono text-[11px] font-medium text-slate-600 whitespace-nowrap">
-                      {product.sku}
-                    </td>
-
-                    {/* Barcode */}
-                    <td className="py-2.5 px-2 font-mono text-[11px] text-slate-500 whitespace-nowrap">
-                      {product.barcode}
-                    </td>
-
-                    {/* Hierarchy & Type with clean Title Case */}
-                    <td className="py-2.5 px-2.5 text-[11px] leading-tight whitespace-nowrap">
-                      <div className="font-medium text-slate-700">
-                        {formatCategoryTitle(product.category)} &gt;{' '}
-                        {formatCategoryTitle(product.subCategory)}
+                    {/* Identifiers (Consolidated SKU & Barcode) */}
+                    <td className="py-3 px-3 w-36 font-mono text-[11px]">
+                      <div className="font-semibold text-slate-800 tracking-tight truncate" title={product.sku}>
+                        {product.sku}
                       </div>
-                      <div className="text-[10px] text-slate-400 mt-0.5">
-                        {formatCategoryTitle(product.productType)}
+                      <div className="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5 truncate" title={product.barcode || 'No barcode'}>
+                        <Barcode className="w-3 h-3 text-slate-400 shrink-0" />
+                        <span>{product.barcode || '—'}</span>
                       </div>
                     </td>
 
-                    {/* Brand */}
-                    <td className="py-2.5 px-2 font-medium text-slate-700 whitespace-nowrap">
-                      {product.brand}
+                    {/* Category & Brand (Consolidated) */}
+                    <td className="py-3 px-3 w-44">
+                      <div className="text-[11px] font-semibold text-slate-700 truncate" title={`${product.category} > ${product.subCategory}`}>
+                        {formatCategoryTitle(product.category)} &gt; {formatCategoryTitle(product.subCategory)}
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                        <span className="inline-block px-1.5 py-0.2 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200/70">
+                          {product.brand || 'Unbranded'}
+                        </span>
+                        {product.productType && (
+                          <span className="text-[10px] text-slate-400 truncate max-w-[90px]">
+                            {formatCategoryTitle(product.productType)}
+                          </span>
+                        )}
+                      </div>
                     </td>
 
                     {/* Stock */}
-                    <td className="py-2.5 px-2 whitespace-nowrap">
-                      <div className="font-semibold text-slate-800 leading-tight">
+                    <td className="py-3 px-3 w-24 text-right">
+                      <div className="font-black text-slate-900 text-sm font-mono leading-tight">
                         {product.stock}
                       </div>
-                      <div>{getStockStatusBadge(product.stock, product.lowStockThreshold)}</div>
+                      <div className="mt-0.5">
+                        {getStockStatusBadge(product.stock, product.lowStockThreshold || 10)}
+                      </div>
                     </td>
-
-                    {/* Status */}
-                    <td className="py-2.5 px-2 whitespace-nowrap">{getStatusPill(product.status)}</td>
 
                     {/* Price */}
-                    <td className="py-2.5 px-2 font-bold text-slate-900 whitespace-nowrap">
-                      ₹{product.price.toLocaleString('en-IN')}
-                    </td>
-
-                    {/* Updated On */}
-                    <td className="py-2.5 px-2 text-slate-500 text-[11px] whitespace-nowrap">
-                      <div className="text-slate-600 font-medium whitespace-nowrap">{date}</div>
-                      {time && (
-                        <div className="text-[10px] text-slate-400 whitespace-nowrap">{time}</div>
+                    <td className="py-3 px-3 w-24 text-right">
+                      <div className="font-black text-slate-900 text-sm font-mono">
+                        ₹{product.price.toLocaleString('en-IN')}
+                      </div>
+                      {product.mrp && product.mrp > product.price && (
+                        <div className="text-[10px] text-slate-400 font-mono line-through mt-0.5">
+                          ₹{product.mrp.toLocaleString('en-IN')}
+                        </div>
                       )}
                     </td>
 
-                    {/* Actions Trigger */}
-                    <td className="py-2.5 px-2 text-center w-10">
+                    {/* Status */}
+                    <td className="py-3 px-3 w-24 text-center">
+                      {getStatusPill(product.status)}
+                    </td>
+
+                    {/* Updated */}
+                    <td className="py-3 px-3 w-24 text-right">
+                      <div className="text-slate-700 font-semibold text-[11px] whitespace-nowrap">
+                        {date}
+                      </div>
+                      {time && (
+                        <div className="text-[10px] text-slate-400 whitespace-nowrap">
+                          {time}
+                        </div>
+                      )}
+                    </td>
+
+                    {/* Actions Menu */}
+                    <td className="py-3 px-3 w-12 text-center">
                       <ProductActionMenu product={product} />
                     </td>
                   </tr>
@@ -312,8 +399,8 @@ export const ProductsTable: React.FC = () => {
         </table>
       </div>
 
-      {/* Footer Bar: Total count label and unified pagination controls */}
-      <div className="px-4 py-2.5 border-t border-slate-200/80 bg-slate-50/50 flex flex-col sm:flex-row items-center justify-between gap-2.5 text-xs">
+      {/* Footer Bar: Total count and pagination */}
+      <div className="px-4 py-3 border-t border-slate-200/80 bg-slate-50/50 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
         <div className="text-slate-600 font-medium">
           Total{' '}
           <span className="font-bold text-blue-600">{totalFiltered.toLocaleString()}</span>{' '}
@@ -328,28 +415,28 @@ export const ProductsTable: React.FC = () => {
               <select
                 value={pageSize}
                 onChange={(e) => setPageSize(Number(e.target.value))}
-                className="appearance-none bg-white border border-slate-200 rounded-md px-2 py-0.5 pr-5 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+                className="appearance-none bg-white border border-slate-200 rounded-lg px-2.5 py-1 pr-6 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer shadow-3xs"
               >
                 <option value={8}>8</option>
                 <option value={15}>15</option>
                 <option value={30}>30</option>
                 <option value={50}>50</option>
               </select>
-              <ChevronDown className="w-3 h-3 text-slate-400 absolute right-1 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <ChevronDown className="w-3 h-3 text-slate-400 absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
           </div>
 
-          <span className="text-slate-500 text-[11px] tabular-nums">
+          <span className="text-slate-500 text-[11px] tabular-nums font-mono">
             {totalFiltered === 0 ? 0 : startIndex + 1}-{endIndex} of{' '}
             {totalFiltered.toLocaleString()}
           </span>
 
-          <div className="inline-flex rounded-md shadow-2xs">
+          <div className="inline-flex rounded-lg shadow-3xs overflow-hidden border border-slate-200 bg-white">
             <button
               type="button"
               disabled={safePage <= 1}
               onClick={() => setCurrentPage(1)}
-              className="p-1.5 rounded-l-md border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              className="p-1.5 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
               title="First Page"
             >
               <ChevronsLeft className="w-3.5 h-3.5" />
@@ -358,7 +445,7 @@ export const ProductsTable: React.FC = () => {
               type="button"
               disabled={safePage <= 1}
               onClick={() => setCurrentPage(safePage - 1)}
-              className="p-1.5 border-y border-r border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              className="p-1.5 border-l border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
               title="Previous Page"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
@@ -367,7 +454,7 @@ export const ProductsTable: React.FC = () => {
               type="button"
               disabled={safePage >= totalPages}
               onClick={() => setCurrentPage(safePage + 1)}
-              className="p-1.5 border-y border-r border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              className="p-1.5 border-l border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
               title="Next Page"
             >
               <ChevronRight className="w-3.5 h-3.5" />
@@ -376,7 +463,7 @@ export const ProductsTable: React.FC = () => {
               type="button"
               disabled={safePage >= totalPages}
               onClick={() => setCurrentPage(totalPages)}
-              className="p-1.5 rounded-r-md border-y border-r border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              className="p-1.5 border-l border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
               title="Last Page"
             >
               <ChevronsRight className="w-3.5 h-3.5" />
@@ -386,17 +473,17 @@ export const ProductsTable: React.FC = () => {
       </div>
 
       {/* Floating Bulk Action Bar */}
-      {(useCatalogStore.getState().selectedProductIds || []).length > 0 && (
+      {(selectedProductIds || []).length > 0 && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-4 animate-in fade-in slide-in-from-bottom-4 border border-slate-700">
           <span className="text-xs font-bold">
-            {useCatalogStore.getState().selectedProductIds.length} products selected
+            {selectedProductIds.length} products selected
           </span>
           <button
             type="button"
             onClick={() => {
-              const count = useCatalogStore.getState().selectedProductIds.length;
+              const count = selectedProductIds.length;
               if (window.confirm(`Are you sure you want to delete ${count} selected products?`)) {
-                useCatalogStore.getState().bulkDeleteSelectedProducts();
+                bulkDeleteSelectedProducts();
               }
             }}
             className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
@@ -406,7 +493,7 @@ export const ProductsTable: React.FC = () => {
           </button>
           <button
             type="button"
-            onClick={() => useCatalogStore.getState().clearSelectedProducts()}
+            onClick={clearSelectedProducts}
             className="text-xs text-slate-400 hover:text-white cursor-pointer"
           >
             Cancel

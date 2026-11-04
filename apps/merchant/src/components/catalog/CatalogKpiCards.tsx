@@ -1,5 +1,5 @@
 import React from 'react';
-import { Package, ShoppingBag, AlertTriangle, AlertCircle, FileText } from 'lucide-react';
+import { Package, ShoppingBag, AlertTriangle, AlertCircle, FileText, CheckCircle2 } from 'lucide-react';
 import { useCatalogStore } from '../../stores/catalogStore.js';
 
 export const CatalogKpiCards: React.FC = () => {
@@ -14,120 +14,102 @@ export const CatalogKpiCards: React.FC = () => {
 
   const activePct = totalProducts > 0 ? Math.round((activeCount / totalProducts) * 100) : 0;
 
+  const cards = [
+    {
+      id: 'total',
+      title: 'Total Products',
+      value: totalProducts.toLocaleString(),
+      icon: Package,
+      topBorder: 'border-t-blue-600',
+      iconBg: 'bg-blue-50 text-blue-600 border-blue-100',
+      badge: totalProducts === 0 ? 'Empty Catalog' : `${totalStockUnits.toLocaleString()} units`,
+      subtext: totalProducts === 0 ? 'no items' : 'in inventory',
+      badgeColor: 'bg-blue-50 text-blue-700 border-blue-200',
+    },
+    {
+      id: 'active',
+      title: 'Active Products',
+      value: activeCount.toLocaleString(),
+      icon: ShoppingBag,
+      topBorder: 'border-t-emerald-600',
+      iconBg: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+      badge: `${activePct}% published`,
+      subtext: 'live & discoverable',
+      badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    },
+    {
+      id: 'low',
+      title: 'Low Stock',
+      value: lowStockCount.toLocaleString(),
+      icon: AlertTriangle,
+      topBorder: 'border-t-amber-500',
+      iconBg: 'bg-amber-50 text-amber-600 border-amber-100',
+      badge: lowStockCount === 0 ? '✓ Optimal levels' : `⚠ ${lowStockCount} items low`,
+      subtext: lowStockCount === 0 ? 'healthy stock' : 'needs reorder',
+      badgeColor: lowStockCount === 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200',
+    },
+    {
+      id: 'out',
+      title: 'Out of Stock',
+      value: outOfStockCount.toLocaleString(),
+      icon: AlertCircle,
+      topBorder: 'border-t-rose-500',
+      iconBg: 'bg-rose-50 text-rose-600 border-rose-100',
+      badge: outOfStockCount === 0 ? '✓ 0 stockouts' : `✕ ${outOfStockCount} unavailable`,
+      subtext: outOfStockCount === 0 ? 'full availability' : 'restock required',
+      badgeColor: outOfStockCount === 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200',
+    },
+    {
+      id: 'draft',
+      title: 'Draft',
+      value: draftCount.toLocaleString(),
+      icon: FileText,
+      topBorder: 'border-t-purple-600',
+      iconBg: 'bg-purple-50 text-purple-600 border-purple-100',
+      badge: draftCount === 0 ? '0 pending drafts' : `● ${draftCount} draft`,
+      subtext: draftCount === 0 ? 'all published' : 'awaiting review',
+      badgeColor: draftCount === 0 ? 'bg-slate-50 text-slate-600 border-slate-200' : 'bg-purple-50 text-purple-700 border-purple-200',
+    },
+  ];
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 mb-5">
-      {/* 1. Total Products */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-2xs hover:shadow-xs transition-shadow flex items-center gap-3.5">
-        <div className="w-11 h-11 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shrink-0">
-          <Package className="w-5 h-5" />
-        </div>
-        <div className="min-w-0">
-          <p className="text-[11px] font-semibold text-slate-500 block truncate">Total Products</p>
-          <h4 className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate">
-            {totalProducts.toLocaleString()}
-          </h4>
-          {totalProducts === 0 ? (
-            <span className="text-[10px] text-slate-400 font-normal mt-0.5 block truncate">Catalog is empty</span>
-          ) : (
-            <div className="flex items-center gap-1 text-[10px] font-semibold text-blue-600 mt-0.5 truncate">
-              <span>{totalStockUnits.toLocaleString()} units</span>
-              <span className="text-slate-400 font-normal">in inventory</span>
+      {cards.map((card) => {
+        const Icon = card.icon;
+        return (
+          <div
+            key={card.id}
+            className={`bg-white rounded-2xl border border-slate-200/80 border-t-4 ${card.topBorder} p-4 shadow-2xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group flex flex-col justify-between`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                {card.title}
+              </span>
+              <div
+                className={`w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 ${card.iconBg} shadow-3xs group-hover:scale-105 transition-transform`}
+              >
+                <Icon className="w-4 h-4" />
+              </div>
             </div>
-          )}
-        </div>
-      </div>
 
-      {/* 2. Active Products */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-2xs hover:shadow-xs transition-shadow flex items-center gap-3.5">
-        <div className="w-11 h-11 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
-          <ShoppingBag className="w-5 h-5" />
-        </div>
-        <div className="min-w-0">
-          <p className="text-[11px] font-semibold text-slate-500 block truncate">Active Products</p>
-          <h4 className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate">
-            {activeCount.toLocaleString()}
-          </h4>
-          {activeCount === 0 ? (
-            <span className="text-[10px] text-slate-400 font-normal mt-0.5 block truncate">0 live on storefront</span>
-          ) : (
-            <div className="flex items-center gap-1 text-[10px] font-semibold text-emerald-600 mt-0.5 truncate">
-              <span>{activePct}% published</span>
-              <span className="text-slate-400 font-normal">• live & discoverable</span>
+            <div className="mt-3">
+              <h4 className="text-2xl font-black text-slate-900 tracking-tight leading-none font-mono">
+                {card.value}
+              </h4>
+              <div className="flex items-center gap-1.5 mt-2.5 text-xs truncate">
+                <span
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-semibold text-[11px] border ${card.badgeColor}`}
+                >
+                  {card.badge}
+                </span>
+                <span className="text-[11px] text-slate-400 font-normal truncate">
+                  {card.subtext}
+                </span>
+              </div>
             </div>
-          )}
-        </div>
-      </div>
-
-      {/* 3. Low Stock */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-2xs hover:shadow-xs transition-shadow flex items-center gap-3.5">
-        <div className="w-11 h-11 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 shrink-0">
-          <AlertTriangle className="w-5 h-5" />
-        </div>
-        <div className="min-w-0">
-          <p className="text-[11px] font-semibold text-slate-500 block truncate">Low Stock</p>
-          <h4 className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate">
-            {lowStockCount}
-          </h4>
-          {lowStockCount === 0 ? (
-            <div className="flex items-center gap-1 text-[10px] font-semibold text-emerald-600 mt-0.5 truncate">
-              <span>✓ Optimal levels</span>
-              <span className="text-slate-400 font-normal">• healthy stock</span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-1 text-[10px] font-semibold text-amber-600 mt-0.5 truncate">
-              <span>⚠ Needs reorder</span>
-              <span className="text-slate-400 font-normal">({lowStockCount} {lowStockCount === 1 ? 'item' : 'items'} low)</span>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* 4. Out of Stock */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-2xs hover:shadow-xs transition-shadow flex items-center gap-3.5">
-        <div className="w-11 h-11 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-500 shrink-0">
-          <AlertCircle className="w-5 h-5" />
-        </div>
-        <div className="min-w-0">
-          <p className="text-[11px] font-semibold text-slate-500 block truncate">Out of Stock</p>
-          <h4 className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate">
-            {outOfStockCount}
-          </h4>
-          {outOfStockCount === 0 ? (
-            <div className="flex items-center gap-1 text-[10px] font-semibold text-emerald-600 mt-0.5 truncate">
-              <span>✓ 0 stockouts</span>
-              <span className="text-slate-400 font-normal">• full availability</span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-1 text-[10px] font-semibold text-rose-600 mt-0.5 truncate">
-              <span>✕ Immediate restock</span>
-              <span className="text-slate-400 font-normal">({outOfStockCount} unavailable)</span>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* 5. Draft */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-2xs hover:shadow-xs transition-shadow flex items-center gap-3.5">
-        <div className="w-11 h-11 rounded-xl bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600 shrink-0">
-          <FileText className="w-5 h-5" />
-        </div>
-        <div className="min-w-0">
-          <p className="text-[11px] font-semibold text-slate-500 block truncate">Draft</p>
-          <h4 className="text-lg font-black text-slate-900 tracking-tight mt-0.5 truncate">
-            {draftCount}
-          </h4>
-          {draftCount === 0 ? (
-            <div className="flex items-center gap-1 text-[10px] font-medium text-slate-400 mt-0.5 truncate">
-              <span>No pending drafts</span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-1 text-[10px] font-semibold text-purple-600 mt-0.5 truncate">
-              <span>● {draftCount} pending</span>
-              <span className="text-slate-400 font-normal">awaiting publish</span>
-            </div>
-          )}
-        </div>
-      </div>
+          </div>
+        );
+      })}
     </div>
   );
 };
