@@ -1,11 +1,25 @@
 import { useAuthStore } from '@/stores/auth.store';
 import type { ApiSuccessResponse } from '@repo/shared-types';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
-
 interface FetchOptions extends Omit<RequestInit, 'body'> {
   body?: unknown;
   params?: Record<string, string | number | boolean | string[] | undefined>;
+  timeoutMs?: number;
+}
+
+function getEffectiveApiBaseUrl(): string {
+  let baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    // Auto-detect production / remote staging preview when configured baseUrl is localhost
+    if (
+      (host === 'viztore.com' || host.endsWith('.viztore.com') || host.endsWith('.vercel.app') || (!host.includes('localhost') && !host.includes('127.0.0.1'))) &&
+      baseUrl.includes('localhost')
+    ) {
+      baseUrl = 'https://api.viztore.com/api/v1';
+    }
+  }
+  return baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;
 }
 
 /**
@@ -13,7 +27,7 @@ interface FetchOptions extends Omit<RequestInit, 'body'> {
  */
 function buildUrl(path: string, params?: FetchOptions['params']): string {
   const cleanPath = path.startsWith('/') ? path.slice(1) : path;
-  const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL : `${API_BASE_URL}/`;
+  const baseUrl = getEffectiveApiBaseUrl();
   const url = new URL(cleanPath, baseUrl);
 
   if (params) {
@@ -81,7 +95,7 @@ async function performTokenRefresh(): Promise<string | null> {
   if (!refreshToken) return null;
 
   try {
-    const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
+    const baseUrl = getEffectiveApiBaseUrl().replace(/\/$/, '');
     const res = await fetch(`${baseUrl}/auth/refresh-token`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -148,13 +162,23 @@ export async function apiClient<T>(
     ...(customHeaders as Record<string, string>),
   };
 
+  const timeoutMs = options.timeoutMs ?? 7000;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
   const config: RequestInit = {
     ...restOptions,
+    signal: options.signal || controller.signal,
     headers,
     ...(body ? { body: JSON.stringify(body) } : {}),
   };
 
-  let response = await fetch(url, config);
+  let response: Response;
+  try {
+    response = await fetch(url, config);
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   // Automatic 401 token refresh & retry
   const isAuthRoute = path.includes('/auth/login') || path.includes('/auth/register') || path.includes('/auth/refresh-token');

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import DotGridIcon from "@/components/ui/DotGridIcon";
 
 const TABS = ["ALL", "MEN", "WOMEN", "KIDS"] as const;
@@ -9,7 +9,6 @@ type Tab = (typeof TABS)[number];
 
 export default function CategoryTabs() {
   const [active, setActive] = useState<Tab>("ALL");
-  const router = useRouter();
 
   return (
     <div className="flex items-center justify-between px-4 pb-2.5 select-none">
@@ -40,15 +39,15 @@ export default function CategoryTabs() {
         })}
       </div>
 
-      {/* 4-Dots Grid Icon at the far right */}
-      <button
-        type="button"
-        onClick={() => router.push('/category')}
+      {/* 4-Dots Grid Icon at the far right with instant prefetching */}
+      <Link
+        href="/category"
+        prefetch={true}
         aria-label="All Categories"
-        className="text-white hover:opacity-85 transition-opacity p-2 shrink-0 mr-1"
+        className="text-white hover:opacity-85 transition-opacity p-2 shrink-0 mr-1 cursor-pointer"
       >
         <DotGridIcon className="h-6 w-6 text-white" />
-      </button>
+      </Link>
     </div>
   );
 }

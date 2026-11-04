@@ -2,7 +2,7 @@
 
 import { Heart, ShoppingCart } from "lucide-react";
 import Logo from '@/components/layout/Logo';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useCartStore } from '@/stores/cart.store';
 
 interface TopBarProps {
@@ -11,7 +11,6 @@ interface TopBarProps {
 }
 
 export default function TopBar({ wishlistCount = 0, cartCount = 0 }: TopBarProps) {
-  const router = useRouter();
   const openCart = useCartStore((state) => state.openCart);
 
   return (
@@ -19,12 +18,12 @@ export default function TopBar({ wishlistCount = 0, cartCount = 0 }: TopBarProps
       <Logo />
 
       <div className="flex items-center gap-4">
-        {/* Wishlist */}
-        <button
-          type="button"
+        {/* Wishlist with instant prefetching */}
+        <Link
+          href="/account/wishlist"
+          prefetch={true}
           aria-label="Wishlist"
-          className="relative text-white hover:opacity-85 transition-opacity"
-          onClick={() => router.push('/account/wishlist')}
+          className="relative text-white hover:opacity-85 transition-opacity cursor-pointer"
         >
           <Heart className="h-[23px] w-[23px]" strokeWidth={1.75} />
           {wishlistCount > 0 && (
@@ -32,13 +31,13 @@ export default function TopBar({ wishlistCount = 0, cartCount = 0 }: TopBarProps
               {wishlistCount}
             </span>
           )}
-        </button>
+        </Link>
 
         {/* Cart */}
         <button
           type="button"
           aria-label="Cart"
-          className="relative text-white hover:opacity-85 transition-opacity"
+          className="relative text-white hover:opacity-85 transition-opacity cursor-pointer"
           onClick={openCart}
         >
           <ShoppingCart className="h-[23px] w-[23px]" strokeWidth={1.75} />

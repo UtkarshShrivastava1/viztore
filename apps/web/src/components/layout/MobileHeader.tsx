@@ -1,6 +1,7 @@
 "use client";
 
 import { Heart, ShoppingCart, ChevronLeft } from "lucide-react";
+import Link from 'next/link';
 import TopBar from '@/components/layout/TopBar';
 import LocationBar from '@/components/layout/LocationBar';
 import SearchBar from '@/components/layout/SearchBar';
@@ -122,14 +123,14 @@ export function MobileHeader({
               {displayTitle ? displayTitle : <Logo theme="light" />}
             </div>
             <div className="flex items-center gap-3.5">
-              <button
-                type="button"
+              <Link
+                href="/account/wishlist"
+                prefetch={true}
                 aria-label="Wishlist"
                 className="text-white hover:text-white/80 transition-opacity cursor-pointer p-0.5"
-                onClick={() => router.push('/account/wishlist')}
               >
                 <Heart className="h-6 w-6 text-white" strokeWidth={1.75} />
-              </button>
+              </Link>
               <button
                 type="button"
                 aria-label="Shopping Cart"
