@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Search, Mic, Bell, CircleUserRound, X, TrendingUp, ArrowRight, Loader2 } from "lucide-react";
+import { Search, Mic, Bell, CircleUserRound, X, TrendingUp, ArrowRight, Loader2, LogIn } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth.store";
 import { useVoiceSearch } from "@/hooks/useVoiceSearch";
@@ -45,6 +45,7 @@ export default function SearchBar({
   const authUser = useAuthStore((state) => state.user);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const openAuthModal = useAuthStore((state) => state.openAuthModal);
+  const userInitial = authUser?.fullName?.trim().charAt(0).toUpperCase() || 'U';
 
   const { isListening, startListening, stopListening } = useVoiceSearch();
 
@@ -205,15 +206,34 @@ export default function SearchBar({
           )}
         </button>
 
-        {/* Profile Icon */}
-        <button
-          type="button"
-          onClick={handleProfileClick}
-          aria-label={isAuthenticated ? `Profile (${authUser?.fullName || "User"})` : "Sign In"}
-          className="text-white hover:opacity-85 transition-opacity shrink-0 cursor-pointer"
-        >
-          <CircleUserRound className="h-[25px] w-[25px]" strokeWidth={1.6} />
-        </button>
+        {/* Profile / Auth State Trigger */}
+        {isAuthenticated ? (
+          <button
+            type="button"
+            onClick={handleProfileClick}
+            aria-label={`Profile (${authUser?.fullName || "User"})`}
+            className="relative shrink-0 cursor-pointer group p-0.5 active:scale-95 transition-transform"
+          >
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-tr from-[#1668F6] to-[#4C82FB] font-black text-xs text-white shadow-md shadow-blue-500/40 border border-white/40 group-hover:scale-105 transition-transform">
+              {userInitial}
+            </div>
+            {/* Live Green Pulsing Beacon */}
+            <span className="absolute -bottom-0.5 -right-0.5 flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-400 border-2 border-[#011A5D]" />
+            </span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={handleProfileClick}
+            aria-label="Sign In"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 border border-white/20 text-white text-[11px] font-bold shrink-0 cursor-pointer active:scale-95 transition-all shadow-sm"
+          >
+            <LogIn className="h-3.5 w-3.5 text-blue-200" strokeWidth={2.2} />
+            <span>Sign In</span>
+          </button>
+        )}
       </div>
 
       {/* Autocomplete & Discovery Dropdown */}

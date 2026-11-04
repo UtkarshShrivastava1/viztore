@@ -188,3 +188,4 @@ const ToastCard: React.FC<ToastCardProps> = ({ toast, onDismiss, onNavigate }) =
     </div>
   );
 };
+
