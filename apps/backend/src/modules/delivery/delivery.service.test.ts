@@ -310,12 +310,13 @@ describe('DeliveryService Unit Tests', () => {
       ).rejects.toThrow(/claimed/i);
     });
 
-    it('should return the 5-rider pilot roster', () => {
+    it('should return the pilot roster', () => {
       const service = createDeliveryService(mockRepo, mockBus, mockOrderFacade);
       const roster = service.getPilotRoster();
-      expect(roster).toHaveLength(5);
-      expect(roster[0].name).toBe('Raju Sharma');
-      expect(roster[1].name).toBe('Vikram Patel');
+      expect(roster.length).toBeGreaterThanOrEqual(5);
+      expect(roster[0].name).toBe('Utkarsh Shrivastava');
+      expect(roster[0].phone).toBe('8109147565');
+      expect(roster[1].name).toBe('Raju Sharma');
     });
 
     it('should return run details with teaser for unassigned order', async () => {

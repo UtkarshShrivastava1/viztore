@@ -9,6 +9,7 @@ import { EVENTS } from '../../shared/events/eventTypes.js';
 import type { INotificationRepository, INotificationService } from './notification.types.js';
 import { createWhatsAppService, type IWhatsAppService } from './whatsapp.service.js';
 import { logger } from '../../shared/utils/logger.js';
+import { PILOT_RIDERS } from '@repo/shared-types';
 
 export interface NotificationModule {
   router: Router;
@@ -186,8 +187,30 @@ export function createNotificationModule(events: IEventBus = eventBus): Notifica
   });
 
   // -------------------------------------------------------------------------
-  // Event: delivery.pickup_verified (Store Clerk Verifies Leg 1 Pickup OTP)
+  // Event: DELIVERY_BROADCAST (Broadcasted to Pilot Rider Pool)
   // -------------------------------------------------------------------------
+  events.on(EVENTS.DELIVERY_BROADCAST, async (payload: any) => {
+    try {
+      // Outbound WhatsApp broadcast alert to all active pilot riders in roster
+      for (const rider of PILOT_RIDERS) {
+        if (rider.phone) {
+          await whatsapp.sendRiderDispatch(rider.phone, {
+            orderId: payload.orderId,
+            orderNumber: payload.orderNumber || payload.orderId,
+            riderName: rider.name,
+            riderPhone: rider.phone,
+            pickupAddress: payload.pickupArea || 'Store Pickup',
+            dropoffAddress: payload.dropoffArea || 'Customer Dropoff',
+            storeName: payload.storeName,
+            estimatedPayout: payload.estimatedPayout,
+          });
+        }
+      }
+    } catch (err) {
+      logger.warn(`[NotificationModule] Failed to process DELIVERY_BROADCAST notifications: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  });
+
   events.on('delivery.pickup_verified', async (payload: any) => {
     try {
       // 1. Outbound WhatsApp to Customer: Parcel picked up, Out for Delivery with Leg 2 OTP
