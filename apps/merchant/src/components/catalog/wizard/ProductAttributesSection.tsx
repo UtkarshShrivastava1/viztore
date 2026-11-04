@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Plus, Sparkles, Check, X, Trash2, Edit3 } from 'lucide-react';
 import { TaxonomyItem, TaxonomyAttribute, isElectronicsCategory, isFootwearCategory, isGroceryCategory, isFashionCategory } from '../../../lib/taxonomyHelper.js';
 import {
@@ -12,6 +12,7 @@ import { useAuthStore } from '../../../stores/authStore.js';
 import { toast } from '../../../stores/toastStore.js';
 
 interface ProductAttributesSectionProps {
+  brand?: string;
   category: string;
   subCategory: string;
   productType: string;
@@ -24,7 +25,28 @@ interface ProductAttributesSectionProps {
   onToggleVariants?: (hasVariants: boolean) => void;
 }
 
+// Redundant fields already captured in Step 1 (Basic Setup) or Step 2 (Pricing & Inventory)
+// These must never be asked again in the attributes grid to maintain a single source of truth.
+const EXCLUDED_PRODUCT_ATTRIBUTES = new Set([
+  'brand',
+  'brandname',
+  'price',
+  'mrp',
+  'costprice',
+  'discount',
+  'customerratings',
+  'customerreviews',
+  'offers',
+  'availability',
+  'stock',
+  'gstinvoiceavailable',
+  'hasvariants',
+  'totalvariants',
+  'shelflocation',
+]);
+
 export const ProductAttributesSection: React.FC<ProductAttributesSectionProps> = ({
+  brand = '',
   category,
   subCategory,
   productType,
@@ -38,6 +60,16 @@ export const ProductAttributesSection: React.FC<ProductAttributesSectionProps> =
 }) => {
   const currentStore = useAuthStore((state) => state.currentStore);
   const storeId = currentStore?._id || currentStore?.id || 'default';
+
+  // Automatically keep attributes.Brand synchronized with the single source of truth from Step 1
+  useEffect(() => {
+    if (brand && attributes.Brand !== brand) {
+      onChangeAttributes({
+        ...attributes,
+        Brand: brand,
+      });
+    }
+  }, [brand]);
 
   // Modal / inline creator state for brand-new custom specifications (e.g. 25th spec)
   const [isAddingSpec, setIsAddingSpec] = useState(false);
@@ -57,11 +89,24 @@ export const ProductAttributesSection: React.FC<ProductAttributesSectionProps> =
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storeId, category, subCategory, productType, refreshTrigger]);
 
-  // 2. Canonical attributes from taxonomy
-  const canonicalAttributes: TaxonomyAttribute[] = matchedTaxonomy?.attributes || [];
+  // 2. Canonical attributes from taxonomy, strictly excluding duplicate Step 1/2 fields
+  const canonicalAttributes = useMemo(() => {
+    const raw: TaxonomyAttribute[] = matchedTaxonomy?.attributes || [];
+    return raw.filter((attr) => {
+      const clean = attr.name.toLowerCase().replace(/['"’\s\-_/]/g, '');
+      return !EXCLUDED_PRODUCT_ATTRIBUTES.has(clean);
+    });
+  }, [matchedTaxonomy]);
+
+  const filteredTenantSpecs = useMemo(() => {
+    return tenantSpecs.filter((spec) => {
+      const clean = spec.name.toLowerCase().replace(/['"’\s\-_/]/g, '');
+      return !EXCLUDED_PRODUCT_ATTRIBUTES.has(clean);
+    });
+  }, [tenantSpecs]);
 
   // 3. Merged total specifications
-  const totalSpecsCount = canonicalAttributes.length + tenantSpecs.length;
+  const totalSpecsCount = canonicalAttributes.length + filteredTenantSpecs.length;
 
   // Handler: Update a single attribute value
   const handleUpdateAttribute = (key: string, value: string) => {
@@ -109,6 +154,12 @@ export const ProductAttributesSection: React.FC<ProductAttributesSectionProps> =
     const trimmedName = newSpecName.trim();
     if (!trimmedName) {
       toast.error('Specification name is required');
+      return;
+    }
+
+    const cleanName = trimmedName.toLowerCase().replace(/['"’\s\-_/]/g, '');
+    if (EXCLUDED_PRODUCT_ATTRIBUTES.has(cleanName)) {
+      toast.error(`"${trimmedName}" is already managed in Step 1/2 of product setup.`);
       return;
     }
 
@@ -402,7 +453,7 @@ export const ProductAttributesSection: React.FC<ProductAttributesSectionProps> =
             ))}
 
             {/* Tenant-added custom specifications */}
-            {tenantSpecs.map((spec, sIdx) => (
+            {filteredTenantSpecs.map((spec, sIdx) => (
               <div key={`custom-${sIdx}`} className="col-span-1">
                 {renderAttributeField(spec.name, spec.values || [], spec.isRequired, true)}
               </div>
@@ -439,7 +490,7 @@ export const ProductAttributesSection: React.FC<ProductAttributesSectionProps> =
             )}
 
             {/* Any tenant custom specs added to this unmapped product type */}
-            {tenantSpecs.map((spec, sIdx) => (
+            {filteredTenantSpecs.map((spec, sIdx) => (
               <div key={`custom-fb-${sIdx}`} className="col-span-1">
                 {renderAttributeField(spec.name, spec.values || [], spec.isRequired, true)}
               </div>

@@ -361,6 +361,7 @@ export const AddProductStep3: React.FC = () => {
 
         {/* 2. Product Attributes (4 cols) */}
         <ProductAttributesSection
+          brand={draftProduct.brand}
           category={draftProduct.category || ''}
           subCategory={draftProduct.subCategory || ''}
           productType={draftProduct.productType || ''}
