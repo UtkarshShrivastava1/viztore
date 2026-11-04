@@ -120,37 +120,6 @@ export const MerchantFooter: React.FC<MerchantFooterProps> = ({ onNavigate }) =>
                 <Facebook className="w-4 h-4" />
               </a>
             </div>
-
-            {/* Download the App */}
-            <div className="mt-7">
-              <div className="text-[13.5px] font-bold text-[#0c1427] mb-3">
-                Download the App
-              </div>
-              <div className="flex items-center gap-3">
-                <a
-                  href="#download-play"
-                  className="inline-block hover:opacity-90 transition-opacity"
-                  aria-label="Get it on Google Play"
-                >
-                  <img
-                    src="/images/google-play-badge.svg"
-                    alt="Get it on Google Play"
-                    className="h-[38px] w-auto shadow-xs rounded-md"
-                  />
-                </a>
-                <a
-                  href="#download-appstore"
-                  className="inline-block hover:opacity-90 transition-opacity"
-                  aria-label="Download on the App Store"
-                >
-                  <img
-                    src="/images/app-store-badge.svg"
-                    alt="Download on the App Store"
-                    className="h-[38px] w-auto shadow-xs rounded-md"
-                  />
-                </a>
-              </div>
-            </div>
           </div>
 
           {/* Columns 2-5: The 4 Middle Link Columns */}
