@@ -12,7 +12,7 @@ import {
 } from '@repo/shared-types';
 import { ProductModel } from './product.model.js';
 import { AppError } from '../../shared/utils/AppError.js';
-import { findStoreById, getMerchantStores } from '../stores/store.service.js';
+import { findStoreById, getMerchantStores, listAllStores } from '../stores/store.service.js';
 import { cacheAside, invalidateCache } from '../../shared/redis/cache.js';
 
 // ── Helpers ────────────────────────────────────────────────────────────
@@ -323,9 +323,55 @@ export async function listProducts(query: ProductQueryDto): Promise<IProductList
   if (subCategory) filter.subCategory = subCategory;
   if (subType) filter.subType = subType;
 
-  // Text search
-  if (search) {
-    filter.$text = { $search: search };
+  // Intelligent Multi-Field Search (Products, Categories, Subcategories, Brands, Store Names)
+  if (search && search.trim()) {
+    const rawSearch = search.trim();
+    // Escape regex special chars for safe substring matching
+    const escaped = rawSearch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(escaped, 'i');
+
+    // Extract individual word tokens for multi-term fuzzy matching
+    const tokens = rawSearch
+      .split(/\s+/)
+      .map((t) => t.replace(/[^a-zA-Z0-9]/g, '').trim())
+      .filter((t) => t.length >= 2);
+
+    // Cross-module service call to discover stores matching the search query
+    let storeIdsMatchingSearch: string[] = [];
+    try {
+      const storeRes = await listAllStores({ search: rawSearch, limit: 10 });
+      if (storeRes && storeRes.stores && storeRes.stores.length > 0) {
+        storeIdsMatchingSearch = storeRes.stores.map((s: any) => (s._id || s.id).toString());
+      }
+    } catch {
+      // Non-blocking store resolution
+    }
+
+    const orClauses: Array<Record<string, unknown>> = [
+      { name: regex },
+      { brand: regex },
+      { category: regex },
+      { subCategory: regex },
+      { subType: regex },
+      { tags: regex },
+      { description: regex },
+    ];
+
+    if (storeIdsMatchingSearch.length > 0) {
+      orClauses.push({ storeId: { $in: storeIdsMatchingSearch } });
+    }
+
+    // If multi-word search, also match if all tokens appear across fields
+    if (tokens.length > 1) {
+      const allTokensRegex = tokens.map((t) => new RegExp(t, 'i'));
+      orClauses.push({
+        $and: allTokensRegex.map((r) => ({
+          $or: [{ name: r }, { brand: r }, { tags: r }, { category: r }, { subCategory: r }],
+        })),
+      });
+    }
+
+    filter.$or = orClauses;
   }
 
   // Faceted filters on variant fields

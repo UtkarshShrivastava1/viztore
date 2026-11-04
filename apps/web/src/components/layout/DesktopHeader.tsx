@@ -19,6 +19,7 @@ import {
   LifeBuoy,
   LogOut,
   ShieldCheck,
+  Store,
 } from "lucide-react";
 import Logo from '@/components/layout/Logo';
 import Link from 'next/link';
@@ -36,7 +37,8 @@ import { useCartStore } from '@/stores/cart.store';
 import { useToastStore } from '@/stores/toast.store';
 import { useVoiceSearch } from '@/hooks/useVoiceSearch';
 import { fetchProducts } from '@/lib/api/catalog';
-import type { IProduct } from '@repo/shared-types';
+import { fetchAllStores } from '@/lib/api/stores';
+import type { IProduct, IStore } from '@repo/shared-types';
 
 const TRENDING_SEARCHES = [
   "T-Shirts",
@@ -86,6 +88,7 @@ export function DesktopHeader({
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isSearchLoading, setIsSearchLoading] = useState(false);
   const [suggestedProducts, setSuggestedProducts] = useState<IProduct[]>([]);
+  const [suggestedStores, setSuggestedStores] = useState<IStore[]>([]);
   const [searchCategory, setSearchCategory] = useState<string | null>(null);
 
   const headerRef = useRef<HTMLDivElement>(null);
@@ -207,11 +210,12 @@ export function DesktopHeader({
     }
   };
 
-  // Debounced product suggestions lookup
+  // Debounced product and store suggestions lookup
   useEffect(() => {
     const trimmed = searchQuery.trim();
     if (trimmed.length < 2) {
       setSuggestedProducts([]);
+      setSuggestedStores([]);
       setIsSearchLoading(false);
       return;
     }
@@ -219,15 +223,30 @@ export function DesktopHeader({
     setIsSearchLoading(true);
     const timer = setTimeout(async () => {
       try {
-        const res = await fetchProducts({ search: trimmed, limit: 4 });
-        setSuggestedProducts(res.products || []);
+        const [prodRes, storeRes] = await Promise.allSettled([
+          fetchProducts({ search: trimmed, limit: 6 }),
+          fetchAllStores({ search: trimmed, limit: 4 }),
+        ]);
+
+        if (prodRes.status === "fulfilled" && prodRes.value) {
+          setSuggestedProducts(prodRes.value.products || []);
+        } else {
+          setSuggestedProducts([]);
+        }
+
+        if (storeRes.status === "fulfilled" && storeRes.value) {
+          setSuggestedStores(storeRes.value.stores || []);
+        } else {
+          setSuggestedStores([]);
+        }
       } catch (err) {
         console.error("Autocomplete fetch error:", err);
         setSuggestedProducts([]);
+        setSuggestedStores([]);
       } finally {
         setIsSearchLoading(false);
       }
-    }, 250);
+    }, 200);
 
     return () => clearTimeout(timer);
   }, [searchQuery]);
@@ -330,6 +349,7 @@ export function DesktopHeader({
                     onClick={() => {
                       setSearchQuery("");
                       setSuggestedProducts([]);
+                      setSuggestedStores([]);
                       searchInputRef.current?.focus();
                     }}
                     aria-label="Clear search"
@@ -393,6 +413,51 @@ export function DesktopHeader({
                         <ArrowRight className="h-4 w-4 text-blue-500 shrink-0 group-hover:translate-x-1 transition-transform" />
                       </button>
 
+                      {/* Matching Stores Section */}
+                      {suggestedStores.length > 0 && (
+                        <div className="p-3 bg-blue-50/40 border-b border-slate-100">
+                          <div className="flex items-center justify-between px-2 py-1 mb-2">
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-blue-700 flex items-center gap-1.5">
+                              <Store className="h-3.5 w-3.5" />
+                              Matching Stores
+                            </span>
+                            <span className="text-[11px] text-slate-500">
+                              {suggestedStores.length} {suggestedStores.length === 1 ? 'store' : 'stores'} found
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            {suggestedStores.map((store) => (
+                              <button
+                                key={store._id || (store as any).id}
+                                type="button"
+                                onClick={() => {
+                                  setIsSearchOpen(false);
+                                  router.push(`/stores/${store.slug || store._id}`);
+                                }}
+                                className="flex items-center gap-2.5 p-2 rounded-xl bg-white hover:bg-blue-50/80 transition-colors text-left border border-slate-200/80 hover:border-blue-300 group cursor-pointer shadow-2xs"
+                              >
+                                <div className="h-9 w-9 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden border border-blue-200">
+                                  {store.logoUrl ? (
+                                    <img src={store.logoUrl} alt={store.name} className="h-full w-full object-cover" />
+                                  ) : (
+                                    <Store className="h-4.5 w-4.5 text-blue-600" />
+                                  )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-bold text-slate-800 truncate group-hover:text-blue-600 transition-colors">
+                                    {store.name}
+                                  </p>
+                                  <p className="text-[10.5px] text-slate-500 truncate mt-0.5">
+                                    {store.category ? <span className="capitalize font-medium text-blue-600">{store.category}</span> : null}
+                                    {store.address?.city && <span className="text-slate-400"> • {store.address.city}</span>}
+                                  </p>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
                       {/* Product Suggestions */}
                       <div className="p-3">
                         <div className="flex items-center justify-between px-2 py-1 mb-2">
@@ -405,7 +470,7 @@ export function DesktopHeader({
                         {suggestedProducts.length > 0 ? (
                           <div className="grid grid-cols-2 gap-2">
                             {suggestedProducts.map((p) => {
-                              const image = p.variants?.[0]?.images?.[0] || "/placeholder-product.png";
+                              const image = p.images?.[0] || p.variants?.[0]?.images?.[0] || p.variants?.[0]?.image || "/placeholder-product.png";
                               const price = p.basePrice ?? p.variants?.[0]?.price ?? 0;
                               const mrp = p.baseMrp ?? p.variants?.[0]?.mrp;
                               return (

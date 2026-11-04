@@ -272,7 +272,17 @@ export async function listAllStores(params: {
       Object.assign(filter, cityFilter);
     }
   }
-  if (params.search) filter.name = new RegExp(params.search, 'i');
+  if (params.search && params.search.trim()) {
+    const escaped = params.search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(escaped, 'i');
+    filter.$or = [
+      { name: regex },
+      { 'address.city': regex },
+      { 'address.street': regex },
+      { description: regex },
+      { category: regex },
+    ];
+  }
 
   const [stores, total] = await Promise.all([
     StoreModel.find(filter).skip(skip).limit(limit).sort({ rating: -1, createdAt: -1 }).lean(),

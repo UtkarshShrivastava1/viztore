@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Search, Mic, Bell, CircleUserRound, X, TrendingUp, ArrowRight, Loader2, LogIn } from "lucide-react";
+import { Search, Mic, Bell, CircleUserRound, X, TrendingUp, ArrowRight, Loader2, LogIn, Store } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth.store";
 import { useVoiceSearch } from "@/hooks/useVoiceSearch";
 import { fetchProducts } from "@/lib/api/catalog";
-import type { IProduct } from "@repo/shared-types";
+import { fetchAllStores } from "@/lib/api/stores";
+import type { IProduct, IStore } from "@repo/shared-types";
 
 interface SearchBarProps {
   placeholder?: string;
@@ -39,6 +40,7 @@ export default function SearchBar({
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [suggestedProducts, setSuggestedProducts] = useState<IProduct[]>([]);
+  const [suggestedStores, setSuggestedStores] = useState<IStore[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -60,11 +62,12 @@ export default function SearchBar({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Debounced product suggestions lookup
+  // Debounced product and store suggestions lookup
   useEffect(() => {
     const trimmed = query.trim();
     if (trimmed.length < 2) {
       setSuggestedProducts([]);
+      setSuggestedStores([]);
       setIsLoading(false);
       return;
     }
@@ -72,15 +75,30 @@ export default function SearchBar({
     setIsLoading(true);
     const timer = setTimeout(async () => {
       try {
-        const res = await fetchProducts({ search: trimmed, limit: 4 });
-        setSuggestedProducts(res.products || []);
+        const [prodRes, storeRes] = await Promise.allSettled([
+          fetchProducts({ search: trimmed, limit: 5 }),
+          fetchAllStores({ search: trimmed, limit: 3 }),
+        ]);
+
+        if (prodRes.status === "fulfilled" && prodRes.value) {
+          setSuggestedProducts(prodRes.value.products || []);
+        } else {
+          setSuggestedProducts([]);
+        }
+
+        if (storeRes.status === "fulfilled" && storeRes.value) {
+          setSuggestedStores(storeRes.value.stores || []);
+        } else {
+          setSuggestedStores([]);
+        }
       } catch (err) {
         console.error("Autocomplete fetch error:", err);
         setSuggestedProducts([]);
+        setSuggestedStores([]);
       } finally {
         setIsLoading(false);
       }
-    }, 250);
+    }, 200);
 
     return () => clearTimeout(timer);
   }, [query]);
@@ -166,6 +184,7 @@ export default function SearchBar({
               onClick={() => {
                 setQuery("");
                 setSuggestedProducts([]);
+                setSuggestedStores([]);
                 inputRef.current?.focus();
               }}
               aria-label="Clear search input"
@@ -276,6 +295,51 @@ export default function SearchBar({
                 <ArrowRight className="h-4 w-4 text-blue-500 shrink-0 group-hover:translate-x-0.5 transition-transform" />
               </button>
 
+              {/* Matching Stores Section */}
+              {suggestedStores.length > 0 && (
+                <div className="p-2 bg-blue-50/40 border-b border-slate-100">
+                  <div className="flex items-center justify-between px-2 py-1 mb-1">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-blue-700 flex items-center gap-1.5">
+                      <Store className="h-3.5 w-3.5" />
+                      Matching Stores
+                    </span>
+                    <span className="text-[10px] text-slate-500">
+                      {suggestedStores.length} {suggestedStores.length === 1 ? 'store' : 'stores'}
+                    </span>
+                  </div>
+                  <div className="space-y-1">
+                    {suggestedStores.map((store) => (
+                      <button
+                        key={store._id || (store as any).id}
+                        type="button"
+                        onClick={() => {
+                          setIsOpen(false);
+                          router.push(`/stores/${store.slug || store._id}`);
+                        }}
+                        className="w-full flex items-center gap-2.5 p-2 rounded-xl bg-white hover:bg-blue-50/80 transition-colors text-left border border-slate-200/80 hover:border-blue-300 group cursor-pointer shadow-2xs"
+                      >
+                        <div className="h-8 w-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden border border-blue-200">
+                          {store.logoUrl ? (
+                            <img src={store.logoUrl} alt={store.name} className="h-full w-full object-cover" />
+                          ) : (
+                            <Store className="h-4 w-4 text-blue-600" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-bold text-slate-800 truncate group-hover:text-blue-600 transition-colors">
+                            {store.name}
+                          </p>
+                          <p className="text-[10px] text-slate-500 truncate mt-0.5">
+                            {store.category ? <span className="capitalize font-medium text-blue-600">{store.category}</span> : null}
+                            {store.address?.city && <span className="text-slate-400"> • {store.address.city}</span>}
+                          </p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Matching Products */}
               <div className="p-2">
                 <div className="flex items-center justify-between px-2 py-1 mb-1">
@@ -288,7 +352,7 @@ export default function SearchBar({
                 {suggestedProducts.length > 0 ? (
                   <div className="space-y-1">
                     {suggestedProducts.map((p) => {
-                      const image = p.variants?.[0]?.images?.[0] || "/placeholder-product.png";
+                      const image = p.images?.[0] || p.variants?.[0]?.images?.[0] || p.variants?.[0]?.image || "/placeholder-product.png";
                       const price = p.basePrice ?? p.variants?.[0]?.price ?? 0;
                       const mrp = p.baseMrp ?? p.variants?.[0]?.mrp;
                       return (
@@ -297,7 +361,7 @@ export default function SearchBar({
                           type="button"
                           onClick={() => {
                             setIsOpen(false);
-                            router.push(`/product/${p._id}`);
+                            router.push(`/products/${p.slug || p._id}`);
                           }}
                           className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 transition-colors text-left group cursor-pointer"
                         >
