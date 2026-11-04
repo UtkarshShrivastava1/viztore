@@ -15,6 +15,7 @@ import {
   Check,
   Package,
   ShieldCheck,
+  Key,
   MapPin,
   ExternalLink,
   ChevronDown,
@@ -49,12 +50,14 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
     rejectOrder,
     markReadyToShip,
     dispatchOrder,
+    verifyPickup,
     deliverOrder,
     claimReservation,
     releaseReservation,
   } = useOrderStore();
 
   const [otpModalOrder, setOtpModalOrder] = useState<MerchantOrderRecord | null>(null);
+  const [otpModalMode, setOtpModalMode] = useState<'pickup' | 'delivery'>('delivery');
   const [trackingOrder, setTrackingOrder] = useState<MerchantOrderRecord | null>(null);
   const [contactOrder, setContactOrder] = useState<MerchantOrderRecord | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -440,8 +443,24 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
                         </div>
                       </div>
 
-                      {/* Monospace Runner OTP Badge */}
-                      {['accepted', 'ready_to_ship', 'shipped'].includes(order.status) && order.otp ? (
+                      {/* 2-Leg OTP Badges */}
+                      {['accepted', 'ready_to_ship'].includes(order.status) && (order.pickupOtp || order.otp) ? (
+                        <div
+                          onClick={() => handleCopy(order.pickupOtp || order.otp, `pickup-otp-${order.id}`)}
+                          className="mt-1 px-1.5 py-0.5 rounded-md bg-blue-50 border border-blue-200/90 text-blue-900 inline-flex items-center gap-1 cursor-pointer hover:bg-blue-100 transition-colors shadow-2xs"
+                          title="Click to copy Leg 1 Rider Pickup OTP"
+                        >
+                          <Key className="w-2.5 h-2.5 text-blue-600 shrink-0" />
+                          <span className="font-mono font-black text-[11px] tracking-wider">
+                            Pickup: {order.pickupOtp || order.otp}
+                          </span>
+                          {copiedId === `pickup-otp-${order.id}` ? (
+                            <Check className="w-2.5 h-2.5 text-blue-600" />
+                          ) : (
+                            <Copy className="w-2.5 h-2.5 text-blue-400 opacity-60" />
+                          )}
+                        </div>
+                      ) : ['shipped', 'delivered'].includes(order.status) && order.otp ? (
                         <div
                           onClick={() => handleCopy(order.otp, `otp-${order.id}`)}
                           className="mt-1 px-1.5 py-0.5 rounded-md bg-amber-50 border border-amber-200/90 text-amber-900 inline-flex items-center gap-1 cursor-pointer hover:bg-amber-100 transition-colors shadow-2xs"
@@ -449,7 +468,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
                         >
                           <ShieldCheck className="w-2.5 h-2.5 text-amber-600 shrink-0" />
                           <span className="font-mono font-black text-[11px] tracking-wider">
-                            OTP: {order.otp}
+                            Doorstep: {order.otp}
                           </span>
                           {isOtpCopied ? (
                             <Check className="w-2.5 h-2.5 text-emerald-600" />
@@ -512,8 +531,21 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
                             </button>
                             <button
                               type="button"
+                              onClick={() => {
+                                setOtpModalOrder(order);
+                                setOtpModalMode('pickup');
+                              }}
+                              className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-colors shadow-2xs flex items-center gap-1 cursor-pointer"
+                              title="Verify Leg 1 Rider Pickup OTP"
+                            >
+                              <Key className="w-3 h-3" />
+                              <span>Verify Pickup</span>
+                            </button>
+                            <button
+                              type="button"
                               onClick={() => dispatchOrder(order.id)}
                               className="px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-colors shadow-2xs cursor-pointer"
+                              title="Direct dispatch without OTP"
                             >
                               Ship
                             </button>
@@ -523,7 +555,10 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
                         {order.status === 'shipped' && (
                           <button
                             type="button"
-                            onClick={() => setOtpModalOrder(order)}
+                            onClick={() => {
+                              setOtpModalOrder(order);
+                              setOtpModalMode('delivery');
+                            }}
                             className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-colors shadow-2xs cursor-pointer"
                           >
                             Verify OTP
@@ -594,12 +629,13 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
         </div>
       </div>
 
-      {/* Verify OTP Modal */}
+      {/* Verify OTP Modal (Supports Leg 1 Pickup & Leg 2 Delivery) */}
       <VerifyOtpModal
         order={otpModalOrder}
         isOpen={Boolean(otpModalOrder)}
         onClose={() => setOtpModalOrder(null)}
-        onConfirm={deliverOrder}
+        mode={otpModalMode}
+        onConfirm={otpModalMode === 'pickup' ? verifyPickup : deliverOrder}
       />
 
       {/* Parcel Tracking Modal */}

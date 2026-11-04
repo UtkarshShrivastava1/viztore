@@ -22,6 +22,8 @@ import {
   Bike,
   Banknote,
   Route,
+  Key,
+  Copy,
 } from 'lucide-react';
 import { deliveryApi } from '@/lib/api/delivery';
 import { ApiError } from '@/lib/api/client';
@@ -82,6 +84,7 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isAlreadyClaimedByOther, setIsAlreadyClaimedByOther] = useState(false);
   const [claimedByName, setClaimedByName] = useState<string>('Another Partner');
+  const [isPickupOtpCopied, setIsPickupOtpCopied] = useState(false);
 
   // Geolocation & Live Telemetry State
   const [gpsStatus, setGpsStatus] = useState<GpsStatus>('searching');
@@ -162,6 +165,20 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
   useEffect(() => {
     fetchRun(selectedRider?.id);
   }, [orderId, selectedRider?.id]);
+
+  // Periodic background telemetry & status synchronization (every 5 seconds)
+  useEffect(() => {
+    if (!runDetails || runDetails.status === DeliveryStatus.DELIVERED) return;
+    const interval = setInterval(() => {
+      deliveryApi
+        .getRunDetails(orderId, selectedRider?.id)
+        .then((details) => {
+          setRunDetails(details);
+        })
+        .catch(() => {});
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [orderId, selectedRider?.id, runDetails?.status]);
 
   // Handle rider switch
   const handleRiderChange = (riderId: string) => {
@@ -324,6 +341,7 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
 
   const isDelivered = runDetails?.status === DeliveryStatus.DELIVERED;
   const isPickedUp =
+    Boolean(runDetails?.isPickupVerified) ||
     runDetails?.status === DeliveryStatus.PICKED_UP ||
     runDetails?.status === DeliveryStatus.IN_TRANSIT ||
     runDetails?.status === DeliveryStatus.ARRIVED ||
@@ -888,11 +906,46 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
                 </div>
                 <div className="text-right shrink-0">
                   <span className="text-[10px] font-bold text-slate-400 block">Pickup Code</span>
-                  <div className="text-base font-black text-emerald-400 font-mono bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
-                    {runDetails.pickupDetails?.pickupCode || runDetails.orderNumber.slice(-4)}
+                  <div className="text-base font-black text-blue-400 font-mono bg-blue-500/10 px-2.5 py-1 rounded-lg border border-blue-500/20">
+                    {runDetails.pickupOtp || runDetails.pickupDetails?.pickupCode || runDetails.orderNumber.slice(-4)}
                   </div>
                 </div>
               </div>
+
+              {/* High-Visibility Leg 1 Store Pickup OTP Handshake Box */}
+              {!isPickedUp && (
+                <div className="mt-4 p-4 rounded-2xl bg-gradient-to-br from-blue-950/60 to-slate-900 border-2 border-blue-500/40 text-center space-y-2.5 shadow-xl">
+                  <div className="flex items-center justify-center gap-1.5 text-xs font-black uppercase tracking-wider text-blue-400">
+                    <Key className="w-4 h-4" />
+                    <span>Show This 4-Digit Pickup OTP to Store Counter</span>
+                  </div>
+                  <div className="flex items-center justify-center gap-3">
+                    <div className="text-3xl sm:text-4xl font-mono font-black text-white tracking-widest bg-slate-950 px-6 py-2 rounded-2xl border border-blue-500/30 shadow-inner">
+                      {runDetails.pickupOtp || runDetails.pickupDetails?.pickupCode || runDetails.orderNumber.slice(-4)}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const code = runDetails.pickupOtp || runDetails.pickupDetails?.pickupCode || runDetails.orderNumber.slice(-4);
+                        navigator.clipboard.writeText(code);
+                        setIsPickupOtpCopied(true);
+                        setTimeout(() => setIsPickupOtpCopied(false), 2000);
+                      }}
+                      className="p-3 rounded-xl bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-500/40 cursor-pointer transition-colors"
+                      title="Copy Pickup OTP"
+                    >
+                      {isPickupOtpCopied ? <Check className="w-5 h-5 text-emerald-400" /> : <Copy className="w-5 h-5" />}
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-slate-300 max-w-sm mx-auto leading-relaxed">
+                    Merchant will enter this code on their dashboard to release the package to you.
+                  </p>
+                  <div className="pt-1 flex items-center justify-center gap-1.5 text-[11px] text-amber-400 font-semibold">
+                    <Radio className="w-3.5 h-3.5 animate-pulse" />
+                    <span>Awaiting store clerk verification (auto-advances)...</span>
+                  </div>
+                </div>
+              )}
 
               {/* Action Buttons for Pickup */}
               {!isPickedUp && (
@@ -940,10 +993,11 @@ export function RiderRunClient({ orderId }: RiderRunClientProps) {
                     type="button"
                     disabled={isSubmitting}
                     onClick={handleMarkPickedUp}
-                    className="w-full py-3.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 active:scale-98 cursor-pointer"
+                    className="w-full py-3.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all border border-slate-700 active:scale-98 cursor-pointer"
+                    title="Manual fallback if store clerk verified offline"
                   >
                     <PackageCheck className="w-4 h-4 stroke-[2.5]" />
-                    <span>I HAVE PICKED UP THE PACKAGE</span>
+                    <span>Manual Override: I Have Collected Parcel</span>
                   </button>
                 </div>
               )}

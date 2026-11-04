@@ -199,12 +199,16 @@ export interface RiderRunDetailsDto {
   };
   pickupCoordinates?: [number, number];
   dropoffCoordinates?: [number, number];
+  pickupOtp?: string;
+  isPickupVerified?: boolean;
+  pickupVerifiedAt?: string;
   pickupDetails?: {
     storeName: string;
     storePhone: string;
     pickupAddress: string;
     navigationUrl: string;
     pickupCode: string;
+    pickupOtp?: string;
   };
   dropoffDetails?: {
     customerName: string;

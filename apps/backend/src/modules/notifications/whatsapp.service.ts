@@ -25,6 +25,7 @@ export interface RiderDispatchParams {
   pickupAddress: string;
   dropoffAddress: string;
   mapsUrl: string;
+  pickupOtp?: string;
 }
 
 export interface OutForDeliveryParams {
@@ -107,17 +108,22 @@ export function buildOrderConfirmationMessage(params: OrderConfirmationParams): 
 }
 
 export function buildRiderDispatchMessage(params: RiderDispatchParams): string {
+  const pickupOtpLine = params.pickupOtp
+    ? `🔑 *Store Pickup OTP:* *${params.pickupOtp}*\n(Show this code to store clerk when collecting parcel)\n--------------------------------\n`
+    : '';
+
   return [
-    `🛵 *NEW DELIVERY ASSIGNMENT*`,
+    `🛵 *NEW DELIVERY ASSIGNMENT CONFIRMED!*`,
     `Order #${params.orderNumber}`,
-    `Assigned Rider: ${params.riderName}`,
+    `Assigned Partner: ${params.riderName}`,
     `--------------------------------`,
-    `📍 *Pickup:* ${params.pickupAddress}`,
-    `🏠 *Dropoff:* ${params.dropoffAddress}`,
-    `🗺️ *Turn-by-Turn Navigation:*`,
+    `📍 *Pickup Store:* ${params.pickupAddress}`,
+    `🏠 *Customer Dropoff:* ${params.dropoffAddress}`,
+    `--------------------------------`,
+    pickupOtpLine + `🗺️ *Rider Cockpit & Navigation:*`,
     `${params.mapsUrl}`,
     `--------------------------------`,
-    `⚠️ *Action Required:* Collect the 4-digit Delivery OTP from the customer upon physical package handoff to complete the delivery.`,
+    `⚠️ *Next Steps:* Show Pickup OTP to store clerk upon collection, then collect customer 4-digit Delivery OTP at doorstep.`,
   ].join('\n');
 }
 

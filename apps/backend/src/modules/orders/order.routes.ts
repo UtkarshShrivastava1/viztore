@@ -47,6 +47,12 @@ export function createOrderRouter(
     validateRequest({ body: verifyOtpSchema }),
     controller.verifyOtp,
   );
+  router.post(
+    '/:id/verify-pickup-otp',
+    deliveryOtpRateLimiter,
+    validateRequest({ body: verifyOtpSchema }),
+    controller.verifyPickupOtp,
+  );
   router.post('/:id/cancel', idempotencyMiddleware({ ttlSeconds: 300 }), controller.cancel);
 
   return router;

@@ -62,6 +62,7 @@ export interface DeliveryAssignedPayload {
   riderPhone?: string;
   riderName?: string;
   dispatchMessage?: string;
+  pickupOtp?: string;
   customerPhone?: string;
   deliveryOtp?: string;
   userId?: string;

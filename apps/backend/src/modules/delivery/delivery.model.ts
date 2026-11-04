@@ -76,6 +76,8 @@ const deliverySchema = new Schema<IDeliveryDocument>(
     estimatedPayout: { type: Number, default: 45 },
     broadcastedAt: { type: Date },
     claimedAt: { type: Date },
+    pickupOtp: { type: String },
+    pickupVerifiedAt: { type: Date },
   },
   {
     timestamps: true,

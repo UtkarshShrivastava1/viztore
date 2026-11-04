@@ -42,6 +42,11 @@ export function generateDeliveryOtp(): string {
   return String(crypto.randomInt(1000, 10000));
 }
 
+export function generatePickupOtp(): string {
+  // Cryptographically secure 4-digit store handover OTP (1000 - 9999)
+  return String(crypto.randomInt(1000, 10000));
+}
+
 export function isValidObjectId(id: string): boolean {
   return /^[a-f\d]{24}$/i.test(id);
 }

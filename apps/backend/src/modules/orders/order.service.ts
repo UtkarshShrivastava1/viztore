@@ -450,6 +450,40 @@ export function createOrderService(
     return Boolean(cleanOtp && order.deliveryOtp === cleanOtp);
   }
 
+  async function verifyPickupOtp(
+    id: string,
+    otp: string,
+    verifiedByUserId?: string,
+  ): Promise<{ valid: boolean; order?: OrderResponse }> {
+    const order = await repo.findById(id);
+    if (!order) {
+      throw AppError.notFound('Order not found', 'ORDER_NOT_FOUND');
+    }
+    const cleanOtp = typeof otp === 'string' ? otp.trim() : '';
+    if (!cleanOtp || (order as any).pickupOtp !== cleanOtp) {
+      return { valid: false };
+    }
+
+    const updated = await updateOrderStatus(
+      id,
+      OrderStatus.SHIPPED,
+      verifiedByUserId || 'store_staff',
+    );
+
+    if (bus) {
+      bus.emit('delivery.pickup_verified', {
+        orderId: id,
+        orderNumber: order.orderNumber,
+        storeId: order.storeId,
+        deliveryOtp: order.deliveryOtp,
+        customerPhone: order.shippingAddress?.phone,
+        verifiedAt: new Date().toISOString(),
+      });
+    }
+
+    return { valid: true, order: updated || order };
+  }
+
   async function cancelOrder(
     id: string,
     userId: string,
@@ -655,6 +689,7 @@ export function createOrderService(
     getAllOrders,
     updateOrderStatus,
     verifyDeliveryOtp,
+    verifyPickupOtp,
     cancelOrder,
     autoCancelStaleOrders,
     claimReservation,

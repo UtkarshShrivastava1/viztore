@@ -114,6 +114,24 @@ export function createOrderController(service: IOrderService) {
     return ApiResponse.success(res, { valid: isValid }, 'OTP verified successfully');
   });
 
+  const verifyPickupOtp: RequestHandler = catchAsync(async (req: Request, res: Response) => {
+    const orderId = req.params.id as string;
+    const { otp } = verifyOtpSchema.parse(req.body);
+    const authReq = req as AuthenticatedRequest;
+    const verifiedByUserId = getUserId(authReq);
+    const result = await service.verifyPickupOtp(orderId, otp, verifiedByUserId);
+
+    if (!result.valid) {
+      throw AppError.badRequest('Invalid 4-digit pickup OTP provided by delivery partner', 'INVALID_PICKUP_OTP');
+    }
+
+    return ApiResponse.success(
+      res,
+      result,
+      'Store pickup OTP verified successfully! Order is now out for delivery.',
+    );
+  });
+
   const cancel: RequestHandler = catchAsync(async (req: Request, res: Response) => {
     const authReq = req as AuthenticatedRequest;
     const userId = getUserId(authReq) || '';
@@ -196,6 +214,7 @@ export function createOrderController(service: IOrderService) {
     getAllOrders,
     updateStatus,
     verifyOtp,
+    verifyPickupOtp,
     cancel,
     claimReservation,
     releaseReservation,

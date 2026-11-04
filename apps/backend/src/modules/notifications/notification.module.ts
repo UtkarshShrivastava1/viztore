@@ -122,6 +122,22 @@ export function createNotificationModule(events: IEventBus = eventBus): Notifica
     }
   });
 
+  events.on('delivery.pickup_verified', async (payload: any) => {
+    try {
+      // Outbound WhatsApp to Customer when store verifies pickup (Leg 2 OTP dispatch)
+      if (payload.customerPhone && payload.deliveryOtp) {
+        await whatsapp.sendOutForDelivery(payload.customerPhone, {
+          orderNumber: payload.orderNumber || payload.orderId,
+          riderName: payload.riderName || 'Assigned Partner',
+          deliveryOtp: payload.deliveryOtp,
+          etaMinutes: 20,
+        });
+      }
+    } catch (err) {
+      logger.warn(`[NotificationModule] Failed to dispatch WA on delivery.pickup_verified: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  });
+
   const handleOrderDelivered = async (payload: any) => {
     try {
       // 1. In-app customer notification

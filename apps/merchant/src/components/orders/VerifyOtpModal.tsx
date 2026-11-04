@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Key, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { X, Key, CheckCircle2, AlertCircle, Loader2, PackageCheck } from 'lucide-react';
 import { MerchantOrderRecord } from '../../stores/orderStore.js';
 
 interface VerifyOtpModalProps {
@@ -8,6 +8,7 @@ interface VerifyOtpModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: (orderId: string, otp: string) => Promise<boolean>;
+  mode?: 'pickup' | 'delivery';
 }
 
 export const VerifyOtpModal: React.FC<VerifyOtpModalProps> = ({
@@ -15,11 +16,14 @@ export const VerifyOtpModal: React.FC<VerifyOtpModalProps> = ({
   isOpen,
   onClose,
   onConfirm,
+  mode,
 }) => {
   const [digits, setDigits] = useState<string[]>(['', '', '', '']);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
+
+  const isPickupMode = mode === 'pickup' || (mode === undefined && order?.status === 'ready_to_ship');
 
   const inputRefs = [
     useRef<HTMLInputElement>(null),
@@ -80,7 +84,11 @@ export const VerifyOtpModal: React.FC<VerifyOtpModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (fullOtp.length !== 4) {
-      setError('Please enter the complete 4-digit OTP provided by the runner/customer.');
+      setError(
+        isPickupMode
+          ? 'Please enter the 4-digit Store Pickup OTP provided by the delivery partner.'
+          : 'Please enter the complete 4-digit Delivery OTP provided by the customer.'
+      );
       return;
     }
 
@@ -94,15 +102,22 @@ export const VerifyOtpModal: React.FC<VerifyOtpModalProps> = ({
         onClose();
       }, 1200);
     } catch (err: any) {
-      setError(err?.message || 'Invalid delivery OTP. Please verify and try again.');
+      setError(
+        err?.message ||
+          (isPickupMode
+            ? 'Invalid pickup OTP. Please verify the code shown on the rider portal.'
+            : 'Invalid delivery OTP. Please verify and try again.')
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const expectedOtp = isPickupMode ? order.pickupOtp : order.otp;
+
   const handleQuickFillExpected = () => {
-    if (order.otp) {
-      const chars = String(order.otp).slice(0, 4).split('');
+    if (expectedOtp) {
+      const chars = String(expectedOtp).slice(0, 4).split('');
       while (chars.length < 4) chars.push('0');
       setDigits(chars);
       setError(null);
@@ -130,16 +145,31 @@ export const VerifyOtpModal: React.FC<VerifyOtpModalProps> = ({
         </button>
 
         {/* Modal Header Icon */}
-        <div className="w-14 h-14 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-4 shadow-2xs">
-          <Key className="w-7 h-7" />
+        <div
+          className={`w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-2xs ${
+            isPickupMode
+              ? 'bg-blue-50 border border-blue-100 text-blue-600'
+              : 'bg-emerald-50 border border-emerald-100 text-emerald-600'
+          }`}
+        >
+          {isPickupMode ? <PackageCheck className="w-7 h-7" /> : <Key className="w-7 h-7" />}
         </div>
 
         <h3 className="text-lg font-bold text-slate-900 text-center leading-snug mb-1">
-          Verify Delivery OTP
+          {isPickupMode ? 'Verify Rider Pickup OTP (Leg 1)' : 'Verify Delivery OTP (Leg 2)'}
         </h3>
         <p className="text-xs text-slate-500 text-center leading-relaxed mb-4">
-          Enter the 4-digit handshake OTP collected from the runner or customer to complete delivery for{' '}
-          <span className="font-bold text-slate-800">{order.orderNumber}</span>.
+          {isPickupMode ? (
+            <>
+              Enter the 4-digit Store Pickup OTP shown on the rider&apos;s phone to hand over parcel for{' '}
+              <span className="font-bold text-slate-800">{order.orderNumber}</span>.
+            </>
+          ) : (
+            <>
+              Enter the 4-digit handshake OTP collected from the runner or customer to complete delivery for{' '}
+              <span className="font-bold text-slate-800">{order.orderNumber}</span>.
+            </>
+          )}
         </p>
 
         {/* Order Details Brief Box */}
@@ -152,16 +182,16 @@ export const VerifyOtpModal: React.FC<VerifyOtpModalProps> = ({
             <span>Amount:</span>
             <span className="font-semibold text-slate-800">₹{order.pricing.totalAmount.toLocaleString('en-IN')}</span>
           </div>
-          {order.otp && (
+          {expectedOtp && (
             <div className="flex items-center justify-between pt-1 border-t border-slate-200 text-slate-600">
-              <span>Expected Runner OTP:</span>
+              <span>{isPickupMode ? 'Expected Rider Pickup OTP:' : 'Expected Customer OTP:'}</span>
               <button
                 type="button"
                 onClick={handleQuickFillExpected}
                 className="font-mono font-bold text-blue-600 hover:underline cursor-pointer flex items-center gap-1"
                 title="Click to auto-fill expected OTP"
               >
-                <span>{order.otp}</span>
+                <span>{expectedOtp}</span>
                 <span className="text-[10px] text-blue-500 font-normal">(Click to fill)</span>
               </button>
             </div>
@@ -178,7 +208,11 @@ export const VerifyOtpModal: React.FC<VerifyOtpModalProps> = ({
         {isSuccess && (
           <div className="mb-4 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center justify-center gap-2 animate-in fade-in duration-200">
             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-            <span>OTP Verified! Order Marked Delivered.</span>
+            <span>
+              {isPickupMode
+                ? 'Pickup Verified! Parcel Dispatched & Customer WhatsApp Sent.'
+                : 'OTP Verified! Order Marked Delivered.'}
+            </span>
           </div>
         )}
 
@@ -197,7 +231,7 @@ export const VerifyOtpModal: React.FC<VerifyOtpModalProps> = ({
                 onKeyDown={(e) => handleKeyDown(idx, e)}
                 onPaste={handlePaste}
                 disabled={isSubmitting || isSuccess}
-                className="w-12 h-14 sm:w-14 sm:h-16 text-center text-xl sm:text-2xl font-black font-mono border-2 border-slate-200 rounded-2xl bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 focus:outline-none transition-all shadow-2xs"
+                className="w-12 h-14 sm:w-14 sm:h-16 text-center text-xl sm:text-2xl font-black font-mono border-2 border-slate-200 rounded-2xl bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 focus:outline-hidden transition-all shadow-2xs"
               />
             ))}
           </div>
@@ -214,7 +248,9 @@ export const VerifyOtpModal: React.FC<VerifyOtpModalProps> = ({
             <button
               type="submit"
               disabled={isSubmitting || isSuccess || fullOtp.length !== 4}
-              className="w-1/2 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+              className={`w-1/2 py-2.5 px-4 rounded-xl text-white text-xs font-bold shadow-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 ${
+                isPickupMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-emerald-600 hover:bg-emerald-700'
+              }`}
             >
               {isSubmitting ? (
                 <>
@@ -227,7 +263,7 @@ export const VerifyOtpModal: React.FC<VerifyOtpModalProps> = ({
                   <span>Verified</span>
                 </>
               ) : (
-                <span>Confirm Delivery</span>
+                <span>{isPickupMode ? 'Release Parcel' : 'Confirm Delivery'}</span>
               )}
             </button>
           </div>

@@ -190,6 +190,9 @@ export const ordersApi = {
   verifyDeliveryOtp: (orderId: string, otp: string) =>
     api.post<any>(`/orders/${orderId}/verify-otp`, { otp }),
 
+  verifyPickupOtp: (orderId: string, otp: string) =>
+    api.post<any>(`/orders/${orderId}/verify-pickup-otp`, { otp }),
+
   getOrderInvoice: (orderId: string) =>
     api.get<any>(`/orders/${orderId}/invoice`),
 };

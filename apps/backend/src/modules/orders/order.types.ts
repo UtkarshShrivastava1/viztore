@@ -68,6 +68,9 @@ export interface OrderResponse {
   status: OrderStatus;
   deliveryOtp?: string;
   deliveredAt?: Date;
+  pickupOtp?: string;
+  pickupVerifiedAt?: Date;
+  pickupVerifiedBy?: string;
   version: number;
   paymentMethod?: string;
   paymentStatus?: string;
@@ -97,6 +100,9 @@ export interface OrderDocument extends Document {
   status: OrderStatus;
   deliveryOtp: string;
   deliveredAt?: Date;
+  pickupOtp?: string;
+  pickupVerifiedAt?: Date;
+  pickupVerifiedBy?: string;
   version: number;
   paymentMethod?: string;
   paymentStatus?: string;
@@ -189,6 +195,7 @@ export interface IOrderService {
     expectedVersion?: number,
   ): Promise<OrderResponse | null>;
   verifyDeliveryOtp(id: string, otp: string): Promise<boolean>;
+  verifyPickupOtp(id: string, otp: string, verifiedByUserId?: string): Promise<{ valid: boolean; order?: OrderResponse }>;
   cancelOrder(id: string, userId: string, isAdmin: boolean, expectedVersion?: number, reason?: string): Promise<OrderResponse | null>;
   autoCancelStaleOrders(olderThanMinutes?: number, batchLimit?: number): Promise<{ processed: number; cancelled: number; failed: number }>;
   claimReservation(orderId: string, actorUserId: string): Promise<OrderResponse | null>;

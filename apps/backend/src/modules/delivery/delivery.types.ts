@@ -59,6 +59,8 @@ export interface IDeliveryDocument extends Document {
   estimatedPayout?: number;
   broadcastedAt?: Date;
   claimedAt?: Date;
+  pickupOtp?: string;
+  pickupVerifiedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }

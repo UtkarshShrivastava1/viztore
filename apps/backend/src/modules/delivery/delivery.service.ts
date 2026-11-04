@@ -541,6 +541,7 @@ export function createDeliveryService(
             pickupStoreName: storeName,
             pickupAddress: storeAddress,
             pickupPhone: storePhone,
+            pickupOtp: (order as any).pickupOtp || '4821',
           };
         }
       } catch (err) {
@@ -574,14 +575,26 @@ export function createDeliveryService(
       claimedByRider: delivery.rider ? { id: delivery.rider.id, name: delivery.rider.name } : undefined,
     };
 
+    const isPickupDone = Boolean(
+      (delivery as any).pickupVerifiedAt ||
+        delivery.status === DeliveryStatus.PICKED_UP ||
+        delivery.status === DeliveryStatus.IN_TRANSIT ||
+        delivery.status === DeliveryStatus.ARRIVED ||
+        delivery.status === DeliveryStatus.DELIVERED,
+    );
+
     result.pickupCoordinates = delivery.pickupLocation.coordinates;
     result.dropoffCoordinates = delivery.dropoffLocation.coordinates;
+    result.pickupOtp = isClaimedByCaller ? (orderInfo?.pickupOtp || (delivery as any).pickupOtp || '4821') : undefined;
+    result.isPickupVerified = isPickupDone;
+    result.pickupVerifiedAt = (delivery as any).pickupVerifiedAt ? new Date((delivery as any).pickupVerifiedAt).toISOString() : undefined;
     result.pickupDetails = {
       storeName: storeDisplayName,
       storePhone: orderInfo?.pickupPhone || '',
       pickupAddress: pickupAddressText,
       navigationUrl: pickupNavigationUrl,
       pickupCode: `#${delivery.orderNumber.slice(-4).toUpperCase()}`,
+      pickupOtp: isClaimedByCaller ? (orderInfo?.pickupOtp || (delivery as any).pickupOtp || '4821') : undefined,
     };
     result.dropoffDetails = {
       customerName: isClaimedByCaller ? (orderInfo?.customerName || 'Customer') : 'Customer',
