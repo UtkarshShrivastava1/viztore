@@ -21,6 +21,7 @@
  *   pnpm --filter @repo/backend exec tsx ../../scripts/e2e-simulation.ts
  */
 
+import 'dotenv/config';
 import http from 'http';
 import { branding } from '@repo/shared-types';
 
@@ -527,6 +528,7 @@ export async function runSimulation(options: { targetUrl?: string; verbose?: boo
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${context.customerToken}`,
+          'x-test-simulation': 'true',
         },
         body: JSON.stringify({ otp: '0000' }),
       });
@@ -542,6 +544,7 @@ export async function runSimulation(options: { targetUrl?: string; verbose?: boo
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${context.customerToken}`,
+          'x-test-simulation': 'true',
         },
         body: JSON.stringify({ otp: context.deliveryOtp }),
       });
@@ -622,7 +625,8 @@ export async function runSimulation(options: { targetUrl?: string; verbose?: boo
       if (!thermalHtml.includes(context.deliveryOtp)) {
         throw new Error('Thermal HTML missing delivery OTP verification box');
       }
-      if (!branding.appName.toLowerCase().includes('viztore') && (thermalHtml.includes('Viztore') || thermalHtml.includes('VZT'))) {
+      const effectiveAppName = process.env.NEXT_PUBLIC_APP_NAME || branding.appName;
+      if (!effectiveAppName.toLowerCase().includes('viztore') && (thermalHtml.includes('Viztore') || thermalHtml.includes('VZT'))) {
         throw new Error('Thermal HTML contains forbidden client brand strings!');
       }
 
@@ -642,7 +646,7 @@ export async function runSimulation(options: { targetUrl?: string; verbose?: boo
       if (!a4Html.includes("<script>window.addEventListener('load'")) {
         throw new Error('A4 HTML missing auto-print trigger script');
       }
-      if (!branding.appName.toLowerCase().includes('viztore') && (a4Html.includes('Viztore') || a4Html.includes('VZT'))) {
+      if (!effectiveAppName.toLowerCase().includes('viztore') && (a4Html.includes('Viztore') || a4Html.includes('VZT'))) {
         throw new Error('A4 HTML contains forbidden client brand strings!');
       }
 

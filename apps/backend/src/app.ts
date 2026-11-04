@@ -73,10 +73,26 @@ export function createApp(): Express {
   // Request Rate Limiting
   const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: env.NODE_ENV === 'production' ? 300 : 1500, // relaxed for dev/testing
+    max: env.NODE_ENV === 'production' ? 10000 : 25000, // production-ready capacity for active marketplace users & shared NAT
     standardHeaders: true,
     legacyHeaders: false,
     validate: { xForwardedForHeader: false },
+    // Never throttle public read-only catalog, stores, categories, media, or health discovery requests
+    skip: (req: Request) => {
+      if (req.method === 'GET') {
+        const path = req.path || req.originalUrl || '';
+        if (
+          path.includes('/catalog') ||
+          path.includes('/stores') ||
+          path.includes('/media') ||
+          path.includes('/health') ||
+          path.includes('/ready')
+        ) {
+          return true;
+        }
+      }
+      return false;
+    },
     message: {
       success: false,
       error: {

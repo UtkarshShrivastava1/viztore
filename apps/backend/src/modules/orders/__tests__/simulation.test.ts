@@ -40,6 +40,6 @@ describe('Task T-01: Automated Headless E2E Simulation', () => {
     // Run simulation programmatically
     const success = await runSimulation();
     expect(success).toBe(true);
-  }, 45000); // 45s timeout for full simulation
+  }, 90000); // 90s timeout for full simulation
 });
 

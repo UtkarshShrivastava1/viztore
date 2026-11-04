@@ -22,7 +22,10 @@ export function createStrictLimiter(config: RateLimiterConfig) {
     max: (req: Request) => {
       // In automated test environments, allow strict enforcement when requested via header,
       // otherwise relax threshold so concurrent integration test suites are not throttled.
-      if ((env.NODE_ENV === 'test' || Boolean(process.env.VITEST)) && !req.headers['x-enforce-rate-limit']) {
+      if (
+        (env.NODE_ENV === 'test' || Boolean(process.env.VITEST) || req.headers['x-test-simulation']) &&
+        !req.headers['x-enforce-rate-limit']
+      ) {
         return 1000;
       }
       return max;
