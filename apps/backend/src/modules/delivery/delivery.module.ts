@@ -74,6 +74,14 @@ export function createDeliveryModule(
         },
         estimatedPayout: 40,
       });
+
+      // Automatically broadcast unassigned delivery job to rider fleet pool
+      try {
+        await service.broadcastJob(orderId, { radiusKm: 4, estimatedPayout: 40 });
+        logger.info(`[DeliveryModule] Auto-broadcasted order #${orderNumber} to rider pool`);
+      } catch (broadcastErr) {
+        logger.warn(`[DeliveryModule] Failed to auto-broadcast order #${orderNumber}: ${broadcastErr}`);
+      }
     } catch (err) {
       logger.warn(`[DeliveryModule] Failed to auto-initialize delivery on order confirmation: ${err instanceof Error ? err.message : String(err)}`);
     }

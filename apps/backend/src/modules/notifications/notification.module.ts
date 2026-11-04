@@ -29,8 +29,8 @@ export function createNotificationModule(events: IEventBus = eventBus): Notifica
   // Event: ORDER_PLACED
   // -------------------------------------------------------------------------
   events.on(EVENTS.ORDER_PLACED, async (payload) => {
+    // 1. Merchant In-App Notification (isolated)
     try {
-      // 1. Merchant In-App Notification
       await service.createNotification({
         recipientId: payload.storeId,
         recipientRole: 'merchant',
@@ -39,19 +39,29 @@ export function createNotificationModule(events: IEventBus = eventBus): Notifica
         message: `Order #${payload.orderNumber} placed for ₹${payload.grandTotal} (${payload.itemsCount} items).`,
         data: { orderId: payload.orderId, orderNumber: payload.orderNumber },
       });
+    } catch (err) {
+      logger.warn(`[NotificationModule] Merchant in-app notification failed on ORDER_PLACED: ${err}`);
+    }
 
-      // 2. Customer In-App Notification
-      await service.createNotification({
-        recipientId: payload.userId,
-        recipientRole: 'customer',
-        category: 'order',
-        title: 'Order Placed Successfully',
-        message: `Your order #${payload.orderNumber} has been received and is awaiting store confirmation.`,
-        data: { orderId: payload.orderId, orderNumber: payload.orderNumber },
-      });
+    // 2. Customer In-App Notification (isolated)
+    if (payload.userId) {
+      try {
+        await service.createNotification({
+          recipientId: payload.userId,
+          recipientRole: 'customer',
+          category: 'order',
+          title: 'Order Placed Successfully',
+          message: `Your order #${payload.orderNumber} has been received and is awaiting store confirmation.`,
+          data: { orderId: payload.orderId, orderNumber: payload.orderNumber },
+        });
+      } catch (err) {
+        logger.warn(`[NotificationModule] Customer in-app notification failed on ORDER_PLACED: ${err}`);
+      }
+    }
 
-      // 3. Outbound WhatsApp to Customer (Interactive Order Confirmation)
-      if (payload.customerPhone) {
+    // 3. Outbound WhatsApp to Customer (Interactive Order Placement Notice)
+    if (payload.customerPhone) {
+      try {
         await whatsapp.sendOrderConfirmation(payload.customerPhone, {
           orderId: payload.orderId,
           orderNumber: payload.orderNumber,
@@ -61,11 +71,16 @@ export function createNotificationModule(events: IEventBus = eventBus): Notifica
           storeName: payload.storeName,
           paymentMethod: payload.paymentMethod,
           customerName: payload.customerName,
+          statusText: 'Order Placed',
         });
+      } catch (err) {
+        logger.warn(`[NotificationModule] Customer WhatsApp failed on ORDER_PLACED: ${err}`);
       }
+    }
 
-      // 4. Outbound WhatsApp to Store Owner (Interactive New Order Alert)
-      if (payload.storePhone) {
+    // 4. Outbound WhatsApp to Store Owner (Interactive New Order Alert)
+    if (payload.storePhone) {
+      try {
         await whatsapp.sendMerchantNewOrderAlert(payload.storePhone, {
           orderId: payload.orderId,
           orderNumber: payload.orderNumber,
@@ -75,9 +90,9 @@ export function createNotificationModule(events: IEventBus = eventBus): Notifica
           grandTotal: payload.grandTotal,
           paymentMethod: payload.paymentMethod,
         });
+      } catch (err) {
+        logger.warn(`[NotificationModule] Merchant WhatsApp failed on ORDER_PLACED: ${err}`);
       }
-    } catch (err) {
-      logger.warn(`[NotificationModule] Failed to process ORDER_PLACED notifications: ${err instanceof Error ? err.message : String(err)}`);
     }
   });
 
@@ -85,17 +100,38 @@ export function createNotificationModule(events: IEventBus = eventBus): Notifica
   // Event: ORDER_CONFIRMED
   // -------------------------------------------------------------------------
   events.on(EVENTS.ORDER_CONFIRMED, async (payload) => {
-    try {
-      await service.createNotification({
-        recipientId: payload.userId || payload.orderId,
-        recipientRole: 'customer',
-        category: 'order',
-        title: 'Order Confirmed',
-        message: `Your order #${payload.orderNumber} is confirmed and is being packed.`,
-        data: { orderId: payload.orderId, orderNumber: payload.orderNumber },
-      });
-    } catch (err) {
-      logger.warn(`[NotificationModule] Failed to process ORDER_CONFIRMED notifications: ${err instanceof Error ? err.message : String(err)}`);
+    // 1. Customer In-App Notification
+    if (payload.userId) {
+      try {
+        await service.createNotification({
+          recipientId: payload.userId || payload.orderId,
+          recipientRole: 'customer',
+          category: 'order',
+          title: 'Order Confirmed',
+          message: `Your order #${payload.orderNumber} is confirmed and is being packed.`,
+          data: { orderId: payload.orderId, orderNumber: payload.orderNumber },
+        });
+      } catch (err) {
+        logger.warn(`[NotificationModule] Customer in-app notification failed on ORDER_CONFIRMED: ${err}`);
+      }
+    }
+
+    // 2. Outbound WhatsApp to Customer: Order Confirmed
+    if (payload.customerPhone) {
+      try {
+        await whatsapp.sendOrderConfirmation(payload.customerPhone, {
+          orderId: payload.orderId,
+          orderNumber: payload.orderNumber,
+          grandTotal: payload.grandTotal || 0,
+          itemsCount: payload.itemsCount || 1,
+          storeName: payload.storeName,
+          customerName: payload.customerName,
+          deliveryOtp: payload.deliveryOtp,
+          statusText: 'Order Confirmed',
+        });
+      } catch (err) {
+        logger.warn(`[NotificationModule] Customer WhatsApp failed on ORDER_CONFIRMED: ${err}`);
+      }
     }
   });
 
@@ -155,6 +191,7 @@ export function createNotificationModule(events: IEventBus = eventBus): Notifica
           pickupOtp: payload.pickupOtp,
           storeName: payload.storeName,
           estimatedPayout: payload.estimatedPayout,
+          dispatchMode: 'assigned',
         });
       }
 
@@ -194,16 +231,21 @@ export function createNotificationModule(events: IEventBus = eventBus): Notifica
       // Outbound WhatsApp broadcast alert to all active pilot riders in roster
       for (const rider of PILOT_RIDERS) {
         if (rider.phone) {
-          await whatsapp.sendRiderDispatch(rider.phone, {
-            orderId: payload.orderId,
-            orderNumber: payload.orderNumber || payload.orderId,
-            riderName: rider.name,
-            riderPhone: rider.phone,
-            pickupAddress: payload.pickupArea || 'Store Pickup',
-            dropoffAddress: payload.dropoffArea || 'Customer Dropoff',
-            storeName: payload.storeName,
-            estimatedPayout: payload.estimatedPayout,
-          });
+          try {
+            await whatsapp.sendRiderDispatch(rider.phone, {
+              orderId: payload.orderId,
+              orderNumber: payload.orderNumber || payload.orderId,
+              riderName: rider.name,
+              riderPhone: rider.phone,
+              pickupAddress: payload.pickupArea || payload.storeName || 'Store Pickup',
+              dropoffAddress: payload.dropoffArea || 'Customer Dropoff',
+              storeName: payload.storeName,
+              estimatedPayout: payload.estimatedPayout || 40,
+              dispatchMode: 'broadcast',
+            });
+          } catch (riderErr) {
+            logger.warn(`[NotificationModule] Failed to send WhatsApp broadcast to rider ${rider.phone}: ${riderErr}`);
+          }
         }
       }
     } catch (err) {
@@ -211,7 +253,7 @@ export function createNotificationModule(events: IEventBus = eventBus): Notifica
     }
   });
 
-  events.on('delivery.pickup_verified', async (payload: any) => {
+  events.on(EVENTS.DELIVERY_PICKUP_VERIFIED, async (payload: any) => {
     try {
       // 1. Outbound WhatsApp to Customer: Parcel picked up, Out for Delivery with Leg 2 OTP
       if (payload.customerPhone && payload.deliveryOtp) {

@@ -10,6 +10,7 @@ export const EVENTS = {
   DELIVERY_BROADCAST: 'delivery.broadcast',
   DELIVERY_CLAIMED: 'delivery.claimed',
   DELIVERY_LOCATION_UPDATED: 'delivery.location_updated',
+  DELIVERY_PICKUP_VERIFIED: 'delivery.pickup_verified',
   PRODUCT_OUT_OF_STOCK: 'product.outOfStock',
   NOTIFICATION_CREATED: 'notification.created',
   INVOICE_ISSUED: 'invoice.issued',
@@ -57,6 +58,8 @@ export interface OrderStatusChangedPayload {
   riderName?: string;
   riderPhone?: string;
   grandTotal?: number;
+  itemsCount?: number;
+  deliveryOtp?: string;
   reason?: string;
 }
 
@@ -156,6 +159,7 @@ export interface EventPayloadMap {
   [EVENTS.DELIVERY_BROADCAST]: DeliveryBroadcastPayload;
   [EVENTS.DELIVERY_CLAIMED]: DeliveryClaimedPayload;
   [EVENTS.DELIVERY_LOCATION_UPDATED]: DeliveryLocationPayload;
+  [EVENTS.DELIVERY_PICKUP_VERIFIED]: any;
   [EVENTS.PRODUCT_OUT_OF_STOCK]: ProductOutOfStockPayload;
   [EVENTS.NOTIFICATION_CREATED]: NotificationCreatedPayload;
   [EVENTS.INVOICE_ISSUED]: InvoiceEventPayload;

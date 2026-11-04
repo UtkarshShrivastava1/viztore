@@ -250,7 +250,7 @@ export function createDeliveryService(
         riderPhone: dto.rider.phone,
         riderName: dto.rider.name,
         dispatchMessage,
-        pickupOtp: delivery.pickupOtp,
+        pickupOtp: (delivery as any).pickupOtp,
         pickupAddress: delivery.pickupLocation?.addressText,
         dropoffAddress: delivery.dropoffLocation?.addressText,
         estimatedPayout: delivery.estimatedPayout,
@@ -376,7 +376,7 @@ export function createDeliveryService(
         riderPhone: dto.rider.phone,
         riderName: dto.rider.name,
         dispatchMessage,
-        pickupOtp: updated.pickupOtp,
+        pickupOtp: (updated as any).pickupOtp,
         pickupAddress: updated.pickupLocation?.addressText,
         dropoffAddress: updated.dropoffLocation?.addressText,
         estimatedPayout: updated.estimatedPayout,
@@ -490,6 +490,7 @@ export function createDeliveryService(
       pickupStoreName?: string;
       pickupAddress?: string;
       pickupPhone?: string;
+      pickupOtp?: string;
     } | null = null;
 
     if (orderFacade) {

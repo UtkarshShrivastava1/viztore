@@ -20,6 +20,7 @@ import { appendOutboxEvent, processPendingOutboxEvents } from '../../shared/data
 import type { IStoreFacade } from '../stores/index.js';
 import type { ICatalogFacade } from '../catalog/index.js';
 import { authService } from '../auth/index.js';
+import { findStoreById } from '../stores/store.service.js';
 
 const allowedTransitions: Record<OrderStatus, OrderStatus[]> = {
   [OrderStatus.PENDING]: [OrderStatus.PACKED, OrderStatus.CONFIRMED, OrderStatus.CANCELLED],
@@ -128,6 +129,23 @@ export function createOrderService(
     // 5. ACID Transaction: Atomic stock deduction + Order creation + Outbox event insertion
     const normalizedShippingAddress = normalizeAddress(dto.shippingAddress);
 
+    let customerPhone = dto.customerPhone || normalizedShippingAddress?.phone;
+    let customerName = dto.customerName || normalizedShippingAddress?.fullName;
+    let customerEmail = dto.customerEmail || (normalizedShippingAddress as any)?.email;
+
+    if (userId && (!customerPhone || !customerName || !customerEmail)) {
+      try {
+        const u = await authService.findUserById(userId);
+        if (u) {
+          if (!customerPhone && u.phone) customerPhone = u.phone;
+          if (!customerName && u.fullName) customerName = u.fullName;
+          if (!customerEmail && u.email) customerEmail = u.email;
+        }
+      } catch {
+        // ignore
+      }
+    }
+
     const order = await withTransaction(async (session) => {
       // Final inventory authority: sorted atomic deduction
       if (catalogFacade) {
@@ -138,9 +156,9 @@ export function createOrderService(
       }
 
       const createPayload = {
-        customerName: dto.customerName || normalizedShippingAddress?.fullName,
-        customerEmail: dto.customerEmail || (normalizedShippingAddress as any)?.email,
-        customerPhone: dto.customerPhone || normalizedShippingAddress?.phone,
+        customerName: customerName || dto.customerName || normalizedShippingAddress?.fullName,
+        customerEmail: customerEmail || dto.customerEmail || (normalizedShippingAddress as any)?.email,
+        customerPhone: customerPhone || dto.customerPhone || normalizedShippingAddress?.phone,
         ...dto,
         items: authoritativeItems,
         userId,
@@ -200,10 +218,10 @@ export function createOrderService(
         storeId: order.storeId,
         storeName: storeSnapshot?.name,
         storePhone: storeSnapshot?.phone,
-        customerName: order.customerName || order.shippingAddress?.fullName,
+        customerName: customerName || order.customerName || order.shippingAddress?.fullName,
         grandTotal: order.grandTotal,
         itemsCount: order.items.length,
-        customerPhone: order.shippingAddress?.phone,
+        customerPhone: customerPhone || order.customerPhone || order.shippingAddress?.phone,
         deliveryOtp: order.deliveryOtp,
         paymentMethod: order.paymentMethod,
         correlationId,
@@ -430,8 +448,33 @@ export function createOrderService(
     // Emit domain events
     if (bus && updated) {
       const resolvedUserId = (updated as any).userId || (current as any).userId;
-      const customerPhone = updated.shippingAddress?.phone || current.shippingAddress?.phone;
-      const customerName = (updated as any).customerName || updated.shippingAddress?.fullName || (current as any).customerName || current.shippingAddress?.fullName;
+      let customerPhone = (updated as any).customerPhone || (current as any).customerPhone || updated.shippingAddress?.phone || current.shippingAddress?.phone;
+      let customerName = (updated as any).customerName || updated.shippingAddress?.fullName || (current as any).customerName || current.shippingAddress?.fullName;
+
+      if (!customerPhone && resolvedUserId) {
+        try {
+          const u = await authService.findUserById(resolvedUserId.toString());
+          if (u?.phone) customerPhone = u.phone;
+          if (!customerName && u?.fullName) customerName = u.fullName;
+        } catch {
+          // ignore
+        }
+      }
+
+      let storeName = (current as any).storeName || (updated as any).storeName;
+      let storePhone = (current as any).storePhone || (updated as any).storePhone;
+      if (!storeName && updated.storeId) {
+        try {
+          const store = await findStoreById(updated.storeId);
+          if (store) {
+            storeName = store.name;
+            storePhone = store.phone;
+          }
+        } catch {
+          // ignore
+        }
+      }
+
       const grandTotal = updated.grandTotal || current.grandTotal;
 
       const payload = {
@@ -441,10 +484,13 @@ export function createOrderService(
         newStatus: status,
         actorUserId,
         storeId: updated.storeId,
+        storeName,
+        storePhone,
         userId: resolvedUserId ? resolvedUserId.toString() : undefined,
         customerPhone,
         customerName,
         grandTotal,
+        deliveryOtp: updated.deliveryOtp || current.deliveryOtp,
       };
 
       if (status === OrderStatus.CONFIRMED || status === OrderStatus.PACKED) bus.emit(EVENTS.ORDER_CONFIRMED, payload);
@@ -483,7 +529,7 @@ export function createOrderService(
     );
 
     if (bus) {
-      bus.emit('delivery.pickup_verified', {
+      bus.emit(EVENTS.DELIVERY_PICKUP_VERIFIED, {
         orderId: id,
         orderNumber: order.orderNumber,
         storeId: order.storeId,

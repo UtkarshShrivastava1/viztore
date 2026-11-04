@@ -34,6 +34,7 @@ export interface OrderConfirmationParams {
   customerName?: string;
   deliveryAddress?: string;
   ctaUrl?: string;
+  statusText?: string;
 }
 
 export interface CustomerRiderAssignedParams {
@@ -120,6 +121,7 @@ export interface RiderDispatchParams {
   pickupOtp?: string;
   storeName?: string;
   estimatedPayout?: number;
+  dispatchMode?: 'broadcast' | 'assigned';
 }
 
 export interface RiderPickupConfirmedParams {
@@ -257,19 +259,23 @@ export function generateFallbackUrl(rawPhone: string, message: string): string {
 // Message Builders
 // ---------------------------------------------------------------------------
 export function buildOrderConfirmationMessage(params: OrderConfirmationParams): string {
+  const isConfirmed = params.statusText ? params.statusText.toLowerCase().includes('confirm') : false;
+  const headline = isConfirmed ? '🛍️ *ORDER CONFIRMED & PREPARING!*' : '🛍️ *ORDER PLACED SUCCESSFULLY!*';
   const storeText = params.storeName ? `\n🏪 *Store:* ${params.storeName}` : '';
   const paymentText = params.paymentMethod ? `\n💳 *Payment Mode:* ${params.paymentMethod.toUpperCase()}` : '';
   const otpText = params.deliveryOtp ? `\n🔑 *Delivery Handoff OTP:* *${params.deliveryOtp}*` : '';
   const greeting = params.customerName ? `Hi *${params.customerName}*,\n\n` : '';
 
   return [
-    `🛍️ *ORDER CONFIRMED!*`,
+    headline,
     `Order #${params.orderNumber}`,
     `--------------------------------`,
     `${greeting}📦 *Items:* ${params.itemsCount}`,
     `💰 *Total Amount:* ₹${params.grandTotal.toLocaleString('en-IN')}${storeText}${paymentText}${otpText}`,
     `--------------------------------`,
-    `Your order is being prepared by your local neighborhood retailer. Keep your 4-digit Delivery OTP ready for when the rider arrives.`,
+    isConfirmed
+      ? 'Your order is confirmed and is actively being packed by your neighborhood store. A delivery runner will pick it up shortly!'
+      : 'Your order has been received by your local neighborhood retailer. Keep your 4-digit Delivery OTP ready for when the rider arrives.',
     `\nThank you for shopping local with *${branding.appName}*!`,
   ].join('\n');
 }
@@ -383,6 +389,24 @@ export function buildMerchantDeliveryCompletedMessage(params: MerchantDeliveryCo
 }
 
 export function buildRiderDispatchMessage(params: RiderDispatchParams): string {
+  if (params.dispatchMode === 'broadcast') {
+    const storeHeader = params.storeName ? ` (${params.storeName})` : '';
+    const payoutLine = params.estimatedPayout
+      ? `💵 *Delivery Earnings:* ₹${params.estimatedPayout}\n--------------------------------\n`
+      : '';
+    return [
+      `🛵 *NEW DELIVERY RUN AVAILABLE!*`,
+      `Order #${params.orderNumber}`,
+      `--------------------------------`,
+      `📍 *Pickup Store${storeHeader}:* ${params.pickupAddress}`,
+      `🏠 *Customer Dropoff:* ${params.dropoffAddress}`,
+      `--------------------------------`,
+      payoutLine +
+      `⚡ *Claim this run now* in your Rider Cockpit to start pickup and earn your delivery fee!`,
+      `\n*${branding.appName}* Hyperlocal Logistics`,
+    ].join('\n');
+  }
+
   const pickupOtpLine = params.pickupOtp
     ? `🔑 *Store Pickup OTP:* *${params.pickupOtp}*\n(Show this code to store clerk when collecting parcel)\n--------------------------------\n`
     : '';
@@ -664,16 +688,19 @@ export function createWhatsAppService(config?: WhatsAppServiceConfig): IWhatsApp
     const trackingUrl = params.ctaUrl || `${webBase}/orders/${params.orderId || params.orderNumber}/tracking`;
     const message = buildOrderConfirmationMessage(params);
 
+    const headerText = params.statusText || 'Order Placed';
+    const slug = headerText.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+
     return sendInteractiveCtaMessage(
       to,
       message,
       {
-        headerText: 'Order Placed',
+        headerText: headerText.slice(0, 60),
         buttonText: 'Track Order Live',
         buttonUrl: trackingUrl,
         footerText: `${branding.appName} Hyperlocal`,
       },
-      `cust:order_placed:${params.orderNumber}:${to}`,
+      `cust:${slug}:${params.orderNumber}:${to}`,
     );
   }
 
@@ -834,16 +861,17 @@ export function createWhatsAppService(config?: WhatsAppServiceConfig): IWhatsApp
       mapsUrl: params.mapsUrl || cockpitUrl,
     });
 
+    const isBroadcast = params.dispatchMode === 'broadcast';
     return sendInteractiveCtaMessage(
       to,
       message,
       {
-        headerText: 'Dispatch Order',
-        buttonText: 'Open Rider Cockpit',
+        headerText: isBroadcast ? 'Delivery Run Available' : 'Dispatch Order',
+        buttonText: isBroadcast ? 'Claim Delivery Run' : 'Open Rider Cockpit',
         buttonUrl: cockpitUrl,
         footerText: `${branding.appName} Delivery Fleet`,
       },
-      `rider:dispatched:${params.orderNumber}:${to}`,
+      `rider:${params.dispatchMode || 'dispatched'}:${params.orderNumber}:${to}`,
     );
   }
 
