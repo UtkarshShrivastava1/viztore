@@ -245,6 +245,7 @@ export function createDeliveryService(
       bus.emit(EVENTS.DELIVERY_ASSIGNED, {
         orderId,
         orderNumber: delivery.orderNumber,
+        userId: delivery.customerId,
         riderId: dto.rider.id,
         estimatedMinutes: dto.estimatedMinutes,
         riderPhone: dto.rider.phone,
@@ -371,6 +372,7 @@ export function createDeliveryService(
       bus.emit(EVENTS.DELIVERY_ASSIGNED, {
         orderId,
         orderNumber: updated.orderNumber,
+        userId: updated.customerId,
         riderId: dto.rider.id,
         estimatedMinutes,
         riderPhone: dto.rider.phone,

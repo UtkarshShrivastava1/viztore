@@ -255,6 +255,22 @@ export function createNotificationModule(events: IEventBus = eventBus): Notifica
 
   events.on(EVENTS.DELIVERY_PICKUP_VERIFIED, async (payload: any) => {
     try {
+      // 0. In-App Notification to Customer
+      if (payload.userId) {
+        try {
+          await service.createNotification({
+            recipientId: payload.userId,
+            recipientRole: 'customer',
+            category: 'order',
+            title: 'Out for Delivery',
+            message: `Your order #${payload.orderNumber || payload.orderId} is picked up and out for delivery! Share OTP ${payload.deliveryOtp || ''} on arrival.`,
+            data: { orderId: payload.orderId, orderNumber: payload.orderNumber },
+          });
+        } catch (inAppErr) {
+          logger.warn(`[NotificationModule] Customer in-app notification failed on DELIVERY_PICKUP_VERIFIED: ${inAppErr}`);
+        }
+      }
+
       // 1. Outbound WhatsApp to Customer: Parcel picked up, Out for Delivery with Leg 2 OTP
       if (payload.customerPhone && payload.deliveryOtp) {
         await whatsapp.sendOutForDelivery(payload.customerPhone, {

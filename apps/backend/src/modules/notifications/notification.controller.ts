@@ -20,7 +20,8 @@ export interface NotificationController {
 
 function resolveRecipientId(req: Request): string {
   const user = (req as any).user;
-  if (!user || !user.userId) {
+  const userId = user?.sub || user?.userId || user?.id;
+  if (!user || !userId) {
     throw AppError.unauthorized('Authentication required to access notifications', 'AUTH_REQUIRED');
   }
 
@@ -31,7 +32,7 @@ function resolveRecipientId(req: Request): string {
     if (user.storeId) return user.storeId;
   }
 
-  return user.userId;
+  return String(userId);
 }
 
 export function createNotificationController(service: INotificationService): NotificationController {

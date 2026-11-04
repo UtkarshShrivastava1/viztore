@@ -33,7 +33,7 @@ export function Footer() {
     <footer className="w-full bg-gradient-to-b from-blue-50 via-blue-600 to-[#00174F] text-slate-900">
       <div className="max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-24 pt-16 pb-24 md:pb-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-0">
-          
+
           {/* Column 1: Logo, Description & Follow Us */}
           <div className="lg:col-span-5 lg:pr-12 lg:border-r lg:border-slate-300/40 flex flex-col justify-between">
             <div>
@@ -112,7 +112,7 @@ export function Footer() {
                   <MapPin className="h-7 w-7 text-[#0066FF]" />
                 </div>
                 <div className="text-sm leading-relaxed">
-                  <h5 className="font-bold text-slate-900 text-base">{branding.legalEntity || 'Company Platform Services'}</h5>
+                  <h5 className="font-bold text-slate-900 text-base">{branding.legalEntity}</h5>
                   <p className="mt-1 text-slate-800 font-medium leading-relaxed">
                     {branding.companyAddress || 'Startup Enclave, Campus Road, Sector 4, Durg, CG 491001, India'}
                   </p>

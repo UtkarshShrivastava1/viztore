@@ -10,6 +10,7 @@ import { Footer } from '@/components/layout/Footer';
 import { AuthModal } from '@/components/auth/AuthModal';
 import { TopProgressBar } from '@/components/layout/TopProgressBar';
 import { ToastContainer } from '@/components/ui/ToastContainer';
+import { CustomerNotificationListener } from '@/components/notifications/CustomerNotificationListener';
 import './globals.css';
 
 const inter = Inter({
@@ -118,6 +119,7 @@ export default function RootLayout({
             <BottomNav />
             <AuthModal />
             <ToastContainer />
+            <CustomerNotificationListener />
           </Providers>
         </div>
       </body>

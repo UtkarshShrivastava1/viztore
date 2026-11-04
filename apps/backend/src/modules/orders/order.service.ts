@@ -532,6 +532,7 @@ export function createOrderService(
       bus.emit(EVENTS.DELIVERY_PICKUP_VERIFIED, {
         orderId: id,
         orderNumber: order.orderNumber,
+        userId: order.userId ? String(order.userId) : undefined,
         storeId: order.storeId,
         deliveryOtp: order.deliveryOtp,
         customerPhone: order.shippingAddress?.phone,

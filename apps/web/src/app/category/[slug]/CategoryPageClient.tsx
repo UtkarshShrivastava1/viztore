@@ -68,7 +68,7 @@ interface CategoryPageClientProps {
 
 export function CategoryPageClient({ category }: CategoryPageClientProps) {
   const searchParams = useSearchParams();
-  const initialSub = searchParams.get('sub') || 'all';
+  const initialSub = searchParams?.get('sub') || 'all';
 
   const [selectedSub, setSelectedSub] = useState<string>(initialSub);
   const [sortOption, setSortOption] = useState<ProductSortOption>(ProductSortOption.RELEVANCE);
