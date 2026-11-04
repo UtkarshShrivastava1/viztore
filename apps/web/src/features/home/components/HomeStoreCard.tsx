@@ -29,11 +29,10 @@ export function HomeStoreCard({ store, index = 0 }: HomeStoreCardProps) {
   const bannerImage = store.bannerUrl || storeFallbackImages[index % storeFallbackImages.length];
   const rating = store.rating ? Number(store.rating).toFixed(1) : fallbackRatings[index % fallbackRatings.length];
 
-  // Dynamic distance and ETA
+  // Dynamic distance and regional delivery
   const dist = typeof store.distanceKm === 'number' && !isNaN(store.distanceKm) ? store.distanceKm : null;
   const distanceStr = dist !== null ? `${dist.toFixed(1)} km` : null;
-  const etaMins = dist !== null ? Math.max(8, Math.round(5 + dist * 3.5)) : null;
-  const badgeText = distanceStr && etaMins ? `${distanceStr} • ${etaMins}m` : fallbackEtas[index % fallbackEtas.length];
+  const badgeText = distanceStr ? `${distanceStr} • Same-Day` : 'Same-Day Delivery';
 
   return (
     <Link

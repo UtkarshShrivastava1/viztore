@@ -165,3 +165,4 @@ export function playOrderInitiateSound(): void {
 export function playOrderSuccessChime(): void {
   orderSoundEngine.playSuccessChime();
 }
+

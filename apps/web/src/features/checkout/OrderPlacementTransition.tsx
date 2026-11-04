@@ -180,7 +180,7 @@ export function OrderPlacementTransition({
         <div className="flex items-center justify-between text-[11px] text-slate-400 border-t border-white/5 pt-4">
           <span className="flex items-center gap-1 text-slate-300">
             <Zap className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-            <span>3–4 km Instant Delivery</span>
+            <span>Same-Day Regional Delivery</span>
           </span>
           <span className="flex items-center gap-1 text-slate-400">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
@@ -191,3 +191,4 @@ export function OrderPlacementTransition({
     </div>
   );
 }
+

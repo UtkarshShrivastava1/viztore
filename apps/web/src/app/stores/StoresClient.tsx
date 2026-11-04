@@ -10,6 +10,7 @@ import { Search, Grid, List, CheckCircle2, Truck, ShieldCheck, X } from 'lucide-
 import { StoreCategory } from '@repo/shared-types';
 import { StoreCard } from '@/features/stores/components/StoreCard';
 import { StoreDirectoryCard } from '@/features/stores/StoreDirectoryCard';
+import { calculateHaversineDistanceKm } from '@/lib/location/distance';
 
 export const CATEGORY_TABS = [
   { id: 'all', label: 'All Stores' },
@@ -44,17 +45,37 @@ export function StoresClient({ searchParams }: StoresClientProps) {
     return found?.category;
   }, [selectedCategoryTab]);
 
-  const { data: nearbyStores, isLoading: nearbyLoading } = useNearbyStores(lng, lat, 50, activeCategory, city);
-  const { data: allStoresResponse, isLoading: allLoading } = useAllStores({ category: activeCategory, city });
+  // Regional discovery: Query nearby spatial up to 50 km + full network catalog
+  const { data: nearbyStores, isLoading: nearbyLoading } = useNearbyStores(lng, lat, 50, activeCategory);
+  const { data: allStoresResponse, isLoading: allLoading } = useAllStores({ category: activeCategory });
 
   const rawStores = useMemo(() => {
-    const list = nearbyStores && nearbyStores.length > 0 ? nearbyStores : (allStoresResponse?.stores || []);
-    return [...list].sort((a: any, b: any) => {
+    const storeMap = new Map<string, any>();
+    (nearbyStores || []).forEach((s: any) => {
+      const id = String(s._id || s.id || s.slug);
+      if (id) storeMap.set(id, s);
+    });
+    (allStoresResponse?.stores || []).forEach((s: any) => {
+      const id = String(s._id || s.id || s.slug);
+      if (id && !storeMap.has(id)) storeMap.set(id, s);
+    });
+
+    const list = Array.from(storeMap.values());
+    return list.map((s: any) => {
+      let dist = s.distanceKm;
+      if (typeof dist !== 'number' || isNaN(dist)) {
+        const coords = s.location?.coordinates;
+        if (Array.isArray(coords) && coords.length === 2 && lat && lng) {
+          dist = calculateHaversineDistanceKm(lat, lng, coords[1], coords[0]);
+        }
+      }
+      return { ...s, distanceKm: dist };
+    }).sort((a: any, b: any) => {
       const distA = typeof a.distanceKm === 'number' && !isNaN(a.distanceKm) ? a.distanceKm : 9999;
       const distB = typeof b.distanceKm === 'number' && !isNaN(b.distanceKm) ? b.distanceKm : 9999;
       return distA - distB;
     });
-  }, [nearbyStores, allStoresResponse]);
+  }, [nearbyStores, allStoresResponse, lat, lng]);
 
   const filteredStores = useMemo(() => {
     let list = rawStores;
@@ -68,14 +89,26 @@ export function StoresClient({ searchParams }: StoresClientProps) {
         return cat.includes(tabId) || tabLabel.includes(cat) || (activeObj?.category && cat === activeObj.category.toLowerCase());
       });
     }
-    // Search query match
+    // Search query match across name, description, address, locality, city, pincode, category
     if (searchQuery.trim()) {
       const q = searchQuery.trim().toLowerCase();
       list = list.filter((s: any) => {
         const name = (s.name || '').toLowerCase();
         const desc = (s.description || '').toLowerCase();
-        const cityStr = (s.location?.address?.city || '').toLowerCase();
-        return name.includes(q) || desc.includes(q) || cityStr.includes(q);
+        const street = (s.address?.street || s.location?.address?.street || '').toLowerCase();
+        const loc = (s.address?.locality || s.location?.address?.locality || '').toLowerCase();
+        const cityStr = (s.address?.city || s.location?.address?.city || '').toLowerCase();
+        const pin = String(s.address?.pincode || s.location?.address?.pincode || '');
+        const cat = (s.category || '').toLowerCase();
+        return (
+          name.includes(q) ||
+          desc.includes(q) ||
+          street.includes(q) ||
+          loc.includes(q) ||
+          cityStr.includes(q) ||
+          pin.includes(q) ||
+          cat.includes(q)
+        );
       });
     }
     return list;
@@ -131,7 +164,7 @@ export function StoresClient({ searchParams }: StoresClientProps) {
               </div>
               <div className="flex flex-col">
                 <p className="font-extrabold text-[13px] text-[#061842] leading-tight">Same Day Delivery</p>
-                <p className="text-[11px] text-surface-500 font-medium mt-0.5">3-4 km Radius</p>
+                <p className="text-[11px] text-surface-500 font-medium mt-0.5">Durg-Bhilai Regional (20 km)</p>
               </div>
             </div>
             <div className="flex items-center gap-3.5">

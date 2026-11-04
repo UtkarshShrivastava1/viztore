@@ -185,7 +185,7 @@ export const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose })
             </div>
             <div>
               <h2 className="text-base font-extrabold text-[#192168] leading-tight">Delivery Location</h2>
-              <p className="text-xs text-slate-500">Fast hyperlocal delivery within 3–4 km merchant radius</p>
+              <p className="text-xs text-slate-500">Same-day and 24–48h delivery across Durg & Bhilai (20 km radius)</p>
             </div>
           </div>
           <button
@@ -355,7 +355,7 @@ export const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose })
         {/* Footer info ribbon */}
         <div className="px-6 py-3 bg-slate-50 border-t border-slate-100 text-center shrink-0">
           <p className="text-[11px] text-slate-500">
-            Delivering within 3–4 km radius from nearby verified retailers.
+            Delivering across Durg & Bhilai within 20 km regional network.
           </p>
         </div>
       </div>

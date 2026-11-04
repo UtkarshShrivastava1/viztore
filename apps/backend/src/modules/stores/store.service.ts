@@ -74,16 +74,27 @@ export function buildCityFilter(city?: string): Record<string, unknown> | null {
   if (!city || !city.trim()) return null;
   const cleanCity = city.trim().toLowerCase();
 
-  // Durg-Bhilai twin-city agglomeration exception (our current primary operational focus)
+  // Durg-Bhilai regional agglomeration (entire twin-city area within ~20-25 km radius)
   const isTwinCityDurgBhilai =
     cleanCity.includes('bhilai') ||
     cleanCity.includes('durg') ||
     cleanCity.includes('supela') ||
-    cleanCity.includes('power house');
+    cleanCity.includes('power house') ||
+    cleanCity.includes('borsi') ||
+    cleanCity.includes('padmnabhpur') ||
+    cleanCity.includes('padmanabhpur') ||
+    cleanCity.includes('nehru nagar') ||
+    cleanCity.includes('smriti nagar') ||
+    cleanCity.includes('risali') ||
+    cleanCity.includes('charoda') ||
+    cleanCity.includes('jamul') ||
+    cleanCity.includes('kumhari') ||
+    cleanCity.includes('vaishali nagar') ||
+    cleanCity.includes('sector');
 
   if (isTwinCityDurgBhilai) {
     return {
-      'address.city': { $in: [/bhilai/i, /durg/i] },
+      'address.city': { $in: [/bhilai/i, /durg/i, /supela/i, /borsi/i] },
     };
   }
 
@@ -94,7 +105,7 @@ export function buildCityFilter(city?: string): Record<string, unknown> | null {
 
 export async function findNearbyStores(query: NearbyStoresQueryDto): Promise<IStore[]> {
   const { lng, lat, radiusKm = 50, category, search, city } = query;
-  const maxDistanceInMeters = radiusKm * 1000;
+  const maxDistanceInMeters = (radiusKm ?? 50) * 1000;
 
   const filter: Record<string, unknown> = {
     location: {
@@ -110,10 +121,15 @@ export async function findNearbyStores(query: NearbyStoresQueryDto): Promise<ISt
     approvalStatus: StoreApprovalStatus.APPROVED,
   };
 
+  // For regional twin-city operational focus, don't artificially restrict spatial $near
+  // by city string because spatial coordinates already find physically closest stores!
   if (city) {
-    const cityFilter = buildCityFilter(city);
-    if (cityFilter) {
-      Object.assign(filter, cityFilter);
+    const isTwinCity = /bhilai|durg|borsi|padm|supela|risali|nehru|smriti|sector|kumhari|jamul/i.test(city);
+    if (!isTwinCity) {
+      const cityFilter = buildCityFilter(city);
+      if (cityFilter) {
+        Object.assign(filter, cityFilter);
+      }
     }
   }
 
@@ -125,9 +141,24 @@ export async function findNearbyStores(query: NearbyStoresQueryDto): Promise<ISt
     filter.name = { $regex: search, $options: 'i' };
   }
 
-  const stores = await StoreModel.find(filter)
+  let stores = await StoreModel.find(filter)
     .limit(query.limit || 50)
     .lean();
+
+  // Resilient fallback: If spatial $near query returned 0 stores (e.g. coordinates outside or unindexed),
+  // return all active approved stores across the network so user is NEVER blocked!
+  if (stores.length === 0) {
+    const fallbackFilter: Record<string, unknown> = {
+      isActive: true,
+      approvalStatus: StoreApprovalStatus.APPROVED,
+    };
+    if (category) fallbackFilter.category = category;
+    if (search) fallbackFilter.name = { $regex: search, $options: 'i' };
+
+    stores = await StoreModel.find(fallbackFilter)
+      .limit(query.limit || 50)
+      .lean();
+  }
 
   const mapped = stores.map((s) => {
     const coords = (s as any).location?.coordinates;
@@ -144,8 +175,8 @@ export async function findNearbyStores(query: NearbyStoresQueryDto): Promise<ISt
 
   // Sort strictly in increasing order of distance (nearer to far)
   mapped.sort((a, b) => {
-    const distA = typeof a.distanceKm === 'number' ? a.distanceKm : 9999;
-    const distB = typeof b.distanceKm === 'number' ? b.distanceKm : 9999;
+    const distA = typeof a.distanceKm === 'number' && !isNaN(a.distanceKm) ? a.distanceKm : 9999;
+    const distB = typeof b.distanceKm === 'number' && !isNaN(b.distanceKm) ? b.distanceKm : 9999;
     return distA - distB;
   });
 
@@ -314,10 +345,20 @@ export async function listAllStores(params: {
     ];
   }
 
-  const [stores, total] = await Promise.all([
+  let [stores, total] = await Promise.all([
     StoreModel.find(filter).skip(skip).limit(limit).sort({ rating: -1, createdAt: -1 }).lean(),
     StoreModel.countDocuments(filter),
   ]);
+
+  // Resilient fallback: If strict city filter produced 0 results, fall back to regional pool
+  if (total === 0 && params.city) {
+    const fallbackFilter = { ...filter };
+    delete (fallbackFilter as any)['address.city'];
+    [stores, total] = await Promise.all([
+      StoreModel.find(fallbackFilter).skip(skip).limit(limit).sort({ rating: -1, createdAt: -1 }).lean(),
+      StoreModel.countDocuments(fallbackFilter),
+    ]);
+  }
 
   const totalPages = Math.ceil(total / limit);
 

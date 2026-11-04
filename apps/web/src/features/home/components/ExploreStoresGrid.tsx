@@ -34,7 +34,7 @@ const fallbackStoreMeta = [
 
 export function ExploreStoresGrid() {
   const { city } = useLocationStore();
-  const { data: storesResponse, isLoading } = useAllStores({ limit: 6, city });
+  const { data: storesResponse, isLoading } = useAllStores({ limit: 6 });
   const liveStores = storesResponse?.stores && storesResponse.stores.length > 0 ? storesResponse.stores : [];
 
   const displayStores: IStore[] = liveStores;
@@ -45,7 +45,7 @@ export function ExploreStoresGrid() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl sm:text-2xl font-extrabold text-[#0B1538]">Explore Stores</h2>
-          <p className="text-xs sm:text-sm text-slate-500 font-medium mt-0.5">Top-rated neighborhood retailers in {city || 'Bhilai-Durg'}</p>
+          <p className="text-xs sm:text-sm text-slate-500 font-medium mt-0.5">Top-rated retailers across Durg &amp; Bhilai • Same-day &amp; 24–48h delivery</p>
         </div>
         <Link
           href="/stores"

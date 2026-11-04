@@ -265,7 +265,7 @@ export function CategoryPageClient({ category }: CategoryPageClientProps) {
                 </h2>
               </div>
               <p className="text-xs text-slate-500 font-medium mt-0.5">
-                Nearby retailers operating in your 3-4 km radius ready for instant dispatch
+                Verified retailers across Durg & Bhilai ready for same-day & 24–48h delivery
               </p>
             </div>
             <Link

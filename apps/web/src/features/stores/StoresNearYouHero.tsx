@@ -86,7 +86,7 @@ export default function StoresNearYouHero({
             Discover trusted local stores around you.
           </p>
           <p className="text-[17px] text-[#8891B5]">
-            Shop from nearby stores and support your local community.
+            Same-day & 24–48h delivery across Durg & Bhilai.
           </p>
         </div>
 
