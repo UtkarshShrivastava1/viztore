@@ -532,29 +532,18 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
                         )}
 
                         {order.status === 'ready_to_ship' && (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => broadcastOrderToFleet(order)}
-                              className="px-2.5 py-1.5 rounded-lg bg-[#25D366] hover:bg-[#1EBE5D] text-white font-bold text-xs transition-colors shadow-2xs flex items-center gap-1 cursor-pointer shrink-0"
-                              title="Broadcast Run to WhatsApp Delivery Group"
-                            >
-                              <MessageCircle className="w-3.5 h-3.5 fill-current" />
-                              <span>Broadcast</span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setOtpModalOrder(order);
-                                setOtpModalMode('pickup');
-                              }}
-                              className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-colors shadow-2xs flex items-center gap-1 cursor-pointer shrink-0"
-                              title="Verify Leg 1 Rider Pickup OTP"
-                            >
-                              <Key className="w-3 h-3" />
-                              <span>Verify Pickup</span>
-                            </button>
-                          </>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setOtpModalOrder(order);
+                              setOtpModalMode('pickup');
+                            }}
+                            className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-colors shadow-2xs flex items-center gap-1 cursor-pointer shrink-0"
+                            title="Verify Leg 1 Rider Pickup OTP"
+                          >
+                            <Key className="w-3 h-3" />
+                            <span>Verify Pickup</span>
+                          </button>
                         )}
 
                         {order.status === 'shipped' && (
@@ -630,6 +619,22 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
                               onClick={(e) => e.stopPropagation()}
                               className="absolute right-0 mt-1.5 w-48 rounded-xl bg-white border border-slate-200 shadow-xl py-1 z-30 text-left animate-in fade-in-50 zoom-in-95 duration-100"
                             >
+                              {/* Manual WhatsApp Broadcast to Fleet */}
+                              {order.status !== 'delivered' && order.status !== 'cancelled' && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setOpenActionId(null);
+                                    broadcastOrderToFleet(order);
+                                  }}
+                                  className="w-full text-left px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors flex items-center gap-2 cursor-pointer"
+                                  title="Broadcast order run to WhatsApp delivery fleet"
+                                >
+                                  <MessageCircle className="w-3.5 h-3.5 text-emerald-600 fill-emerald-100" />
+                                  <span>Manual Broadcast</span>
+                                </button>
+                              )}
+
                               {order.status === 'ready_to_ship' && (
                                 <button
                                   type="button"
