@@ -174,7 +174,7 @@ export interface PilotRider {
 
 export const PILOT_RIDERS: PilotRider[] = [
   { id: 'RDR-001', name: 'Utkarsh Shrivastava', phone: '8109147565', zone: 'Durg / Bhilai Central', vehicleType: VehicleType.MOTORCYCLE },
-  { id: 'RDR-002', name: 'Harish Dewangan', phone: '9644837246', zone: 'Bhilai / Durg Hub', vehicleType: VehicleType.MOTORCYCLE },
+  { id: 'RDR-002', name: 'Harish Rao', phone: '9644837246', zone: 'Bhilai / Durg Hub', vehicleType: VehicleType.MOTORCYCLE },
   { id: 'RDR-003', name: 'Raju Sharma', phone: '9876543210', zone: 'Nehru Nagar / Smriti Nagar', vehicleType: VehicleType.MOTORCYCLE },
   { id: 'RDR-004', name: 'Vikram Patel', phone: '9876543211', zone: 'Supela / Vaishali Nagar', vehicleType: VehicleType.MOTORCYCLE },
   { id: 'RDR-005', name: 'Amit Verma', phone: '9876543212', zone: 'Durg Station / Market', vehicleType: VehicleType.MOTORCYCLE },

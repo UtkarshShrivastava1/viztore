@@ -316,7 +316,7 @@ describe('DeliveryService Unit Tests', () => {
       expect(roster.length).toBeGreaterThanOrEqual(5);
       expect(roster[0].name).toBe('Utkarsh Shrivastava');
       expect(roster[0].phone).toBe('8109147565');
-      expect(roster[1].name).toBe('Harish Dewangan');
+      expect(roster[1].name).toBe('Harish Rao');
       expect(roster[1].phone).toBe('9644837246');
     });
 
