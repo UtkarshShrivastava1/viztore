@@ -109,6 +109,7 @@ export interface IStore {
   slug: string;
   description?: string;
   category: StoreCategory;
+  businessCategories?: string[];
   phone?: string;
   logoUrl?: string;
   bannerUrl?: string;
@@ -215,6 +216,7 @@ export const createStoreSchema = z.object({
   name: z.string().min(2, 'Store name must be at least 2 characters').max(100),
   description: z.string().max(1000).optional(),
   category: z.nativeEnum(StoreCategory),
+  businessCategories: z.array(z.string()).optional(),
   location: geoPointSchema,
   address: storeAddressSchema,
   operatingHours: storeOperatingHoursSchema.optional(),

@@ -27,7 +27,11 @@ import { lookupMasterProduct, MasterCatalogProduct } from '../../../lib/masterCa
 import { CameraBarcodeScannerModal } from '../CameraBarcodeScannerModal.js';
 
 import masterTaxonomies from '../../../data/taxonomies.json';
-import { getPreloadedAttributes } from '../../../lib/taxonomyHelper.js';
+import {
+  getPreloadedAttributes,
+  getStoreAllowedCategories,
+  getCategoryPlaceholders,
+} from '../../../lib/taxonomyHelper.js';
 
 interface CategoryDefinition {
   subCategories: string[];
@@ -153,19 +157,38 @@ export const AddProductStep1: React.FC = () => {
     });
   }, [storeId, products]);
 
-  const defaultCategory = React.useMemo(() => {
-    return getStoreDefaultCategory(currentStore?.category);
-  }, [currentStore?.category]);
+  const [showAllCategories, setShowAllCategories] = React.useState(false);
 
-  const rawCat = draftProduct.category;
-  const category = rawCat ? normalizeCategoryName(rawCat) : defaultCategory;
+  const allowedCategories = React.useMemo(() => {
+    return getStoreAllowedCategories(
+      currentStore?.category,
+      currentStore?.businessCategories,
+      customTax.categories,
+    );
+  }, [currentStore?.category, currentStore?.businessCategories, customTax.categories]);
 
-  // All Category options = built-in keys + saved custom categories
+  // All Category options = built-in keys + saved custom categories, filtered by store business type unless showAllCategories is enabled
   const allCategoryOptions = React.useMemo(() => {
-    return Array.from(
+    const all = Array.from(
       new Set([...Object.keys(categoryCatalogTree), ...(customTax.categories || [])]),
     ).filter(Boolean);
-  }, [customTax.categories]);
+
+    if (allowedCategories.length > 0 && !showAllCategories) {
+      const filtered = all.filter((cat) => allowedCategories.includes(cat));
+      return filtered.length > 0 ? filtered : all;
+    }
+    return all;
+  }, [customTax.categories, allowedCategories, showAllCategories]);
+
+  const defaultCategory = React.useMemo((): string => {
+    if (allCategoryOptions.length > 0 && allCategoryOptions[0]) {
+      return allCategoryOptions[0];
+    }
+    return getStoreDefaultCategory(currentStore?.category);
+  }, [allCategoryOptions, currentStore?.category]);
+
+  const rawCat = draftProduct.category;
+  const category: string = (rawCat ? normalizeCategoryName(rawCat) : defaultCategory) || getStoreDefaultCategory(currentStore?.category);
 
   // Current Category definition = built-in tree + custom subCategories and productTypes
   const currentCategoryData = React.useMemo(() => {
@@ -322,15 +345,26 @@ export const AddProductStep1: React.FC = () => {
     const q = quickSearch.trim().toLowerCase();
     if (!q || q.length < 2) return [];
     return typedMasterTaxonomies
-      .filter(
-        (t) =>
+      .filter((t) => {
+        const normCat = normalizeCategoryName(t.category);
+        if (allowedCategories.length > 0 && !showAllCategories) {
+          if (!allowedCategories.includes(normCat)) {
+            return false;
+          }
+        }
+        return (
           t.productType.toLowerCase().includes(q) ||
           t.subcategory.toLowerCase().includes(q) ||
           t.category.toLowerCase().includes(q) ||
-          normalizeCategoryName(t.category).toLowerCase().includes(q),
-      )
+          normCat.toLowerCase().includes(q)
+        );
+      })
       .slice(0, 6);
-  }, [quickSearch]);
+  }, [quickSearch, allowedCategories, showAllCategories]);
+
+  const placeholders = React.useMemo(() => {
+    return getCategoryPlaceholders(category, subCategory, draftProduct.productType);
+  }, [category, subCategory, draftProduct.productType]);
 
   const selectHierarchy = (t: TaxonomyItem) => {
     const normCat = normalizeCategoryName(t.category);
@@ -621,9 +655,31 @@ export const AddProductStep1: React.FC = () => {
                 Category, Sub-category &amp; Product Type
               </h3>
             </div>
-            <p className="text-xs text-slate-500 ml-8 mb-3">
-              Choose or search across 350+ master retail categories and product types.
+            <p className="text-xs text-slate-500 ml-8 mb-2.5">
+              Choose or search across master retail categories and product types.
             </p>
+
+            {/* Business Category Scope Banner */}
+            <div className="ml-8 mb-3 flex items-center justify-between flex-wrap gap-2 text-xs bg-slate-50/90 border border-slate-200/80 rounded-lg px-3 py-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Business Type:</span>
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800 capitalize">
+                  {currentStore?.category ? String(currentStore.category).replace('_', ' ') : 'Store'}
+                </span>
+                <span className="text-[11px] text-slate-500 font-medium">
+                  {showAllCategories
+                    ? 'Showing all 350+ master retail categories'
+                    : `Filtered to ${allowedCategories.length} category scopes & isolated search`}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAllCategories((prev) => !prev)}
+                className="text-[11px] font-bold text-blue-600 hover:text-blue-700 hover:underline cursor-pointer transition-colors"
+              >
+                {showAllCategories ? '← Restrict to Store Business Scope' : '🌐 Show all retail categories'}
+              </button>
+            </div>
 
             {/* Quick Auto-Complete Bar */}
             <div className="ml-8 mb-4">
@@ -632,7 +688,7 @@ export const AddProductStep1: React.FC = () => {
                   type="text"
                   value={quickSearch}
                   onChange={(e) => setQuickSearch(e.target.value)}
-                  placeholder="⚡ Quick Search (e.g. Smartphones, T-Shirts, Laptop Bags, Rice, Kurta...)"
+                  placeholder={placeholders.quickSearchPlaceholder}
                   className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 hover:bg-white focus:bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
                 />
                 <Search className="w-4 h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />

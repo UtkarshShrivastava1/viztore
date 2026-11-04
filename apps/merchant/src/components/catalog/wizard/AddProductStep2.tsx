@@ -15,7 +15,12 @@ import { WizardHelpSidebar } from './WizardHelpSidebar.js';
 import { mediaApi } from '../../../lib/api.js';
 import { CameraBarcodeScannerModal } from '../CameraBarcodeScannerModal.js';
 import { lookupMasterProduct } from '../../../lib/masterCatalogService.js';
-import { isElectronicsCategory, isFootwearCategory, isGroceryCategory } from '../../../lib/taxonomyHelper.js';
+import {
+  isElectronicsCategory,
+  isFootwearCategory,
+  isGroceryCategory,
+  getCategoryPlaceholders,
+} from '../../../lib/taxonomyHelper.js';
 
 const ELECTRONICS_PERSPECTIVE_VIEWS = [
   {
@@ -159,6 +164,14 @@ export const AddProductStep2: React.FC = () => {
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<string | null>(null);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
+
+  const placeholders = React.useMemo(() => {
+    return getCategoryPlaceholders(
+      draftProduct.category,
+      draftProduct.subCategory,
+      draftProduct.productType,
+    );
+  }, [draftProduct.category, draftProduct.subCategory, draftProduct.productType]);
 
   const samplePerspectiveViews = React.useMemo(() => {
     if (
@@ -475,7 +488,7 @@ export const AddProductStep2: React.FC = () => {
                   maxLength={150}
                   value={name}
                   onChange={(e) => updateDraftProduct({ name: e.target.value })}
-                  placeholder="e.g. Men Black Round Neck T-Shirt"
+                  placeholder={placeholders.namePlaceholder}
                   className="w-full px-3 py-2 text-xs font-medium text-slate-800 bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                   required
                 />
@@ -529,7 +542,7 @@ export const AddProductStep2: React.FC = () => {
                 maxLength={1000}
                 value={description}
                 onChange={(e) => updateDraftProduct({ description: e.target.value })}
-                placeholder="Enter rich description highlighting fabric composition, fit details, style pairing, and key customer benefits..."
+                placeholder={placeholders.descPlaceholder}
                 className="w-full p-3 text-xs leading-relaxed text-slate-800 bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                 required
               />

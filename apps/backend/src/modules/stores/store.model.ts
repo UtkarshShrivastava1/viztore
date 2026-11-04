@@ -208,6 +208,7 @@ const storeSchema = new Schema<IStoreDocument>(
       required: [true, 'Store category is required'],
       index: true,
     },
+    businessCategories: [{ type: String, trim: true }],
     logoUrl: { type: String },
     bannerUrl: { type: String },
     mobileBannerUrl: { type: String },

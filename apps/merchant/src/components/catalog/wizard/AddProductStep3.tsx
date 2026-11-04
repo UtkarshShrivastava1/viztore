@@ -16,18 +16,14 @@ import { useCatalogStore } from '../../../stores/catalogStore.js';
 import { useAuthStore } from '../../../stores/authStore.js';
 import { VariantMatrixBuilder } from './VariantMatrixBuilder.js';
 import { ProductAttributesSection } from './ProductAttributesSection.js';
-import { findTaxonomy, isFashionCategory, isFootwearCategory, isElectronicsCategory, isGroceryCategory } from '../../../lib/taxonomyHelper.js';
-
-const popularTagSuggestions = [
-  'Cotton',
-  'T-Shirt',
-  'Round Neck',
-  'Men',
-  'Black',
-  'Casual',
-  'Comfort Fit',
-  'Summer Wear',
-];
+import {
+  findTaxonomy,
+  isFashionCategory,
+  isFootwearCategory,
+  isElectronicsCategory,
+  isGroceryCategory,
+  getContextualTagSuggestions,
+} from '../../../lib/taxonomyHelper.js';
 
 import masterTaxonomies from '../../../data/taxonomies.json';
 
@@ -80,6 +76,15 @@ export const AddProductStep3: React.FC = () => {
   const matchedTaxonomy = React.useMemo(() => {
     return findTaxonomy(draftProduct.category, draftProduct.subCategory, draftProduct.productType);
   }, [draftProduct.category, draftProduct.subCategory, draftProduct.productType]);
+
+  const dynamicTagSuggestions = React.useMemo(() => {
+    return getContextualTagSuggestions(
+      draftProduct.category,
+      draftProduct.subCategory,
+      draftProduct.productType,
+      draftProduct.brand,
+    );
+  }, [draftProduct.category, draftProduct.subCategory, draftProduct.productType, draftProduct.brand]);
 
   const dynamicAttributes: TaxonomyAttribute[] = matchedTaxonomy?.attributes || [];
 
@@ -331,7 +336,7 @@ export const AddProductStep3: React.FC = () => {
                 <span className="text-[10px] text-slate-400 font-normal">Click to add</span>
               </div>
               <div className="flex flex-wrap gap-1.5">
-                {popularTagSuggestions.map((sug) => {
+                {dynamicTagSuggestions.map((sug) => {
                   const isAdded = tags.includes(sug.toLowerCase());
                   return (
                     <button

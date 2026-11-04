@@ -468,3 +468,169 @@ export function getBarcodeStickerSpecs(product: Partial<ProductItem>): {
     brand: brand || 'Standard',
   };
 }
+
+export const STORE_CATEGORY_TAXONOMY_MAP: Record<string, string[]> = {
+  electronics: ['Electronics', 'Gaming', 'Auto Accessories'],
+  fashion: ["Men's Fashion", "Women's Fashion", 'Baby & Kids'],
+  footwear: ["Men's Fashion", "Women's Fashion", 'Sports'],
+  jewellery: ["Women's Fashion", "Men's Fashion"],
+  home_living: ['Home & Furniture', 'Industrial & Scientific Tools'],
+  beauty_care: ["Women's Fashion", 'Health & Nutrition', 'Medical Supplies'],
+  grocery_staples: ['Food Essentials', 'Health & Nutrition'],
+  sports_fitness: ['Sports', 'Exercise & Fitness'],
+  toys_baby: ['Baby & Kids', 'Gaming'],
+  books_stationery: ['Books', 'Stationery', 'Music', 'Movies & TV Shows'],
+  gifts: ['Books', 'Stationery', 'Home & Furniture', 'Baby & Kids'],
+  other: [],
+};
+
+export function normalizeStoreCategoryKey(raw?: string): string {
+  if (!raw) return '';
+  const cleaned = raw.toLowerCase().replace(/['"’\-_]/g, ' ').replace(/\s+/g, ' ').trim();
+  if (cleaned.includes('elect')) return 'electronics';
+  if (cleaned.includes('footwear') || cleaned.includes('shoe')) return 'footwear';
+  if (cleaned.includes('jewel')) return 'jewellery';
+  if (cleaned.includes('fashion') || cleaned.includes('cloth') || cleaned.includes('apparel')) return 'fashion';
+  if (cleaned.includes('home') || cleaned.includes('furnit')) return 'home_living';
+  if (cleaned.includes('beauty') || cleaned.includes('care') || cleaned.includes('cosmetic')) return 'beauty_care';
+  if (cleaned.includes('groc') || cleaned.includes('food') || cleaned.includes('staple')) return 'grocery_staples';
+  if (cleaned.includes('sport') || cleaned.includes('fitness')) return 'sports_fitness';
+  if (cleaned.includes('toy') || cleaned.includes('baby') || cleaned.includes('kid')) return 'toys_baby';
+  if (cleaned.includes('book') || cleaned.includes('station')) return 'books_stationery';
+  if (cleaned.includes('gift')) return 'gifts';
+  return cleaned.replace(/\s+store$/i, '').trim();
+}
+
+/**
+ * Returns the list of master taxonomy categories allowed for a store based on its
+ * onboarded category, businessCategories, and any custom merchant categories.
+ */
+export function getStoreAllowedCategories(
+  storeCategory?: string,
+  businessCategories?: string[],
+  customCategories?: string[],
+): string[] {
+  const allowed = new Set<string>();
+
+  const primaryKey = normalizeStoreCategoryKey(storeCategory);
+  if (primaryKey && STORE_CATEGORY_TAXONOMY_MAP[primaryKey]) {
+    STORE_CATEGORY_TAXONOMY_MAP[primaryKey].forEach((cat) => allowed.add(cat));
+  }
+
+  if (Array.isArray(businessCategories)) {
+    for (const bCat of businessCategories) {
+      const key = normalizeStoreCategoryKey(bCat);
+      if (key && STORE_CATEGORY_TAXONOMY_MAP[key]) {
+        STORE_CATEGORY_TAXONOMY_MAP[key].forEach((cat) => allowed.add(cat));
+      }
+    }
+  }
+
+  // Any custom categories created by this tenant are always permitted
+  if (Array.isArray(customCategories)) {
+    for (const c of customCategories) {
+      if (c && c.trim()) allowed.add(c.trim());
+    }
+  }
+
+  return Array.from(allowed);
+}
+
+/**
+ * Dynamic placeholders based on category, subcategory, and product type.
+ */
+export function getCategoryPlaceholders(
+  category?: string,
+  subCategory?: string,
+  productType?: string,
+): {
+  namePlaceholder: string;
+  descPlaceholder: string;
+  quickSearchPlaceholder: string;
+} {
+  const isElect = isElectronicsCategory(category, subCategory);
+  const isGroc = isGroceryCategory(category, subCategory);
+  const isFoot = isFootwearCategory(category, subCategory);
+
+  if (isElect) {
+    const pt = (productType || '').toLowerCase();
+    let nameEx = 'e.g. Samsung Galaxy S24 Ultra 5G (12GB RAM, 256GB Titanium)';
+    if (pt.includes('watch')) {
+      nameEx = 'e.g. Noise ColorFit Pro 5 Smartwatch with 1.85" AMOLED Display';
+    } else if (pt.includes('laptop')) {
+      nameEx = 'e.g. Apple MacBook Air M3 (16GB RAM, 512GB SSD, Space Gray)';
+    } else if (pt.includes('headphone') || pt.includes('earbud')) {
+      nameEx = 'e.g. Sony WH-1000XM5 Wireless Noise Canceling Headphones';
+    }
+    return {
+      namePlaceholder: nameEx,
+      descPlaceholder:
+        'Enter technical specifications, processor details, display size, camera specs, battery capacity, warranty terms, and box contents...',
+      quickSearchPlaceholder: '⚡ Quick Search (e.g. Smartphones, Laptops, Smartwatches, Headphones...)',
+    };
+  }
+
+  if (isGroc) {
+    return {
+      namePlaceholder: 'e.g. Fortune Sunlite Refined Sunflower Oil 1L Pouch',
+      descPlaceholder:
+        'Enter nutritional information, net weight, ingredients, shelf life, storage instructions, and FSSAI license details...',
+      quickSearchPlaceholder: '⚡ Quick Search (e.g. Rice, Atta, Cooking Oil, Spices, Pulses...)',
+    };
+  }
+
+  if (isFoot) {
+    return {
+      namePlaceholder: 'e.g. Nike Air Max Alpha Men Running Shoes - White/Navy (UK 9)',
+      descPlaceholder:
+        'Enter sole material, closure type, cushioning technology, ideal usage, care instructions, and comfort features...',
+      quickSearchPlaceholder: '⚡ Quick Search (e.g. Running Shoes, Sneakers, Formal Shoes, Sandals...)',
+    };
+  }
+
+  // Default / Fashion
+  return {
+    namePlaceholder: 'e.g. Classic Slim Fit Solid Pure Cotton Round Neck T-Shirt',
+    descPlaceholder:
+      'Enter rich description highlighting fabric composition, fit details, style pairing, occasion wear, and key customer benefits...',
+    quickSearchPlaceholder: '⚡ Quick Search (e.g. T-Shirts, Formal Shirts, Denim Jeans, Kurtas...)',
+  };
+}
+
+/**
+ * Dynamic contextual tag suggestions based on category, subcategory, product type, and brand.
+ */
+export function getContextualTagSuggestions(
+  category?: string,
+  subCategory?: string,
+  productType?: string,
+  brand?: string,
+): string[] {
+  const isElect = isElectronicsCategory(category, subCategory);
+  const isGroc = isGroceryCategory(category, subCategory);
+  const isFoot = isFootwearCategory(category, subCategory);
+
+  const tags: string[] = [];
+  if (brand && brand !== 'Generic / Unbranded') {
+    tags.push(brand);
+  }
+
+  if (isElect) {
+    tags.push('5G', 'AMOLED Display', 'Fast Charging', 'Bluetooth Calling', 'Waterproof IP68', 'Wireless', 'Type-C', '1 Year Warranty');
+    return Array.from(new Set(tags));
+  }
+
+  if (isGroc) {
+    tags.push('100% Organic', 'No Preservatives', 'Fresh Stock', 'FSSAI Certified', 'Rich in Protein', 'Daily Essential', 'Pack of 1', 'Store in Cool Place');
+    return Array.from(new Set(tags));
+  }
+
+  if (isFoot) {
+    tags.push('Cushioned Sole', 'Breathable Mesh', 'Lightweight', 'Running Shoes', 'Anti-Slip', 'Comfort Fit', 'Sports Wear', 'Lace-Up');
+    return Array.from(new Set(tags));
+  }
+
+  // Fashion / Default
+  tags.push('100% Pure Cotton', 'Breathable Fabric', 'Regular Fit', 'Round Neck', 'Casual Wear', 'Machine Wash', 'Trending Style', 'Premium Finish');
+  return Array.from(new Set(tags));
+}

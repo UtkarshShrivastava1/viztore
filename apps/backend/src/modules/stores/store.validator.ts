@@ -5,6 +5,7 @@ export const createStoreSchema = z.object({
   name: z.string().min(2, 'Store name must be at least 2 characters').max(100),
   description: z.string().max(500).optional(),
   category: z.nativeEnum(StoreCategory),
+  businessCategories: z.array(z.string()).optional(),
   phone: z.string().min(10, 'Valid phone number is required'),
   email: z.string().email('Invalid store email'),
   address: z.object({
