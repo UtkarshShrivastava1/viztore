@@ -112,7 +112,7 @@ export function Footer() {
                   <MapPin className="h-7 w-7 text-[#0066FF]" />
                 </div>
                 <div className="text-sm leading-relaxed">
-                  <h5 className="font-bold text-slate-900 text-base">{branding.legalEntity}</h5>
+                  <h5 className="font-bold text-slate-900 text-base">{branding.legalEntity || 'Viztore Retail Services Pvt. Ltd.'}</h5>
                   <p className="mt-1 text-slate-800 font-medium leading-relaxed">
                     {branding.companyAddress || 'Startup Enclave, Campus Road, Sector 4, Durg, CG 491001, India'}
                   </p>
