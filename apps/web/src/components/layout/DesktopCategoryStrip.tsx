@@ -119,7 +119,7 @@ export default function DesktopCategoryStrip({ activeId, onSelect }: DesktopCate
   };
 
   return (
-    <div className="w-full bg-[#FFFFFF] border-b border-slate-200/90 select-none shadow-[0_1px_3px_rgba(0,0,0,0.03)] relative z-40">
+    <div className={`w-full bg-[#FFFFFF] border-b border-slate-200/90 select-none shadow-[0_1px_3px_rgba(0,0,0,0.03)] relative ${isMoreOpen ? 'z-30' : 'z-20'}`}>
       <div className="max-w-[1920px] mx-auto px-3 sm:px-6">
         <nav
           aria-label="Categories"

@@ -131,7 +131,7 @@ export default function SearchBar({
   };
 
   return (
-    <div className="relative z-30 px-4 pb-3.5" ref={containerRef}>
+    <div className={`relative px-4 pb-3.5 ${isOpen ? "z-50" : "z-30"}`} ref={containerRef}>
       <div className="flex items-center gap-3.5">
         {/* Search Input Container */}
         <form

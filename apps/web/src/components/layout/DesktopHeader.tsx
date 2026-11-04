@@ -257,7 +257,9 @@ export function DesktopHeader({
     <div className="hidden md:block w-full" ref={headerRef}>
       {/* Top Navigation Bar */}
       <div
-        className="w-full relative z-30"
+        className={`w-full relative ${
+          isSearchOpen || isAccountMenuOpen || activeOverlay ? "z-50" : "z-40"
+        }`}
         style={{
           background: "linear-gradient(135deg, #011A5D 0%, #002275 60%, #032b8a 100%)",
         }}
@@ -296,7 +298,7 @@ export function DesktopHeader({
             </button>
 
             {/* Search Bar - Center and Large */}
-            <div className="relative flex flex-1 max-w-2xl mx-2" ref={searchContainerRef}>
+            <div className={`relative flex flex-1 max-w-2xl mx-2 ${isSearchOpen ? "z-50" : ""}`} ref={searchContainerRef}>
               <form
                 onSubmit={handleSearchSubmit}
                 className="flex flex-1 items-center gap-2.5 rounded-full bg-white px-4 py-2 shadow-sm transition-all focus-within:ring-2 focus-within:ring-[#4C82FB]/50 focus-within:shadow-md"
