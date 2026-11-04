@@ -9,6 +9,7 @@ import {
   Rocket,
 } from 'lucide-react';
 import { useAuthStore } from '../../stores/authStore.js';
+import { useStoreManagementStore } from '../../stores/storeManagementStore.js';
 import { NotificationsDrawer } from './drawers/NotificationsDrawer.js';
 import { HelpSupportDrawer } from './drawers/HelpSupportDrawer.js';
 import { SellerProfileDrawer } from './drawers/SellerProfileDrawer.js';
@@ -62,6 +63,8 @@ export const Header: React.FC<HeaderProps> = ({
 
   const storeName = currentStore?.name || user?.fullName || 'Fashion Hub';
   const avatarInitials = storeName.slice(0, 2).toUpperCase();
+  const managedLogo = useStoreManagementStore((s) => s.storeLogo);
+  const storeLogo = currentStore?.logoUrl || currentStore?.logo || managedLogo || '';
 
   const handleToggleStoreStatus = () => {
     if (isStoreActive) {
@@ -181,12 +184,12 @@ export const Header: React.FC<HeaderProps> = ({
             onClick={() => setIsProfileOpen(true)}
             className="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-xl border border-slate-200 hover:border-slate-300 bg-white transition-all shadow-2xs"
           >
-            <div className="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 font-bold text-xs flex items-center justify-center shrink-0">
-              {currentStore?.logo ? (
+            <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 font-bold text-xs flex items-center justify-center shrink-0 overflow-hidden border border-slate-200/60 shadow-3xs">
+              {storeLogo ? (
                 <img
-                  src={currentStore.logo}
+                  src={storeLogo}
                   alt={storeName}
-                  className="w-full h-full object-cover rounded-lg"
+                  className="w-full h-full object-cover"
                 />
               ) : (
                 avatarInitials

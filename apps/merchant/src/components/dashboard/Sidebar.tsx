@@ -234,12 +234,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
         )}
 
         {isCollapsed && (
-          <div className="w-8 h-8 rounded-xl overflow-hidden flex items-center justify-center mx-auto bg-slate-900/60 p-0.5 border border-slate-700/50 shadow-sm" title={branding.appName}>
+          <div className="w-8 h-8 rounded-xl overflow-hidden flex items-center justify-center mx-auto bg-slate-900/80 p-1 border border-slate-700/60 shadow-xs" title={branding.appName}>
             <img
-              src="/images/logo-white.png"
+              src="/images/logo_mark.png"
               alt={branding.appName}
-              className="h-7 max-w-none object-cover object-left"
-              style={{ width: 'auto' }}
+              className="w-full h-full object-contain"
             />
           </div>
         )}

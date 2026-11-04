@@ -43,6 +43,7 @@ export const SellerProfileDrawer: React.FC<SellerProfileDrawerProps> = ({
   const totalOrdersCount = orders.length;
 
   const storeName = currentStore?.name || user?.fullName || 'My Store';
+  const storeLogo = currentStore?.logoUrl || currentStore?.logo || '';
   const email = currentStore?.email || user?.email || 'merchant@example.com';
   const phone = currentStore?.phone || user?.phone || '+91 98765 43210';
   const sellerId = currentStore?._id ? `SLR-${String(currentStore._id).slice(-5).toUpperCase()}` : 'SLR-10245';
@@ -75,8 +76,16 @@ export const SellerProfileDrawer: React.FC<SellerProfileDrawerProps> = ({
         <div className="flex-1 overflow-y-auto p-5 space-y-5">
           {/* Avatar & Verified Banner */}
           <div className="flex items-center gap-3.5 pb-3 border-b border-slate-100">
-            <div className="w-14 h-14 rounded-full bg-blue-600 text-white font-bold text-xl flex items-center justify-center shadow-md shrink-0">
-              {storeName.slice(0, 2).toUpperCase()}
+            <div className="w-14 h-14 rounded-2xl bg-blue-600 text-white font-bold text-xl flex items-center justify-center shadow-md shrink-0 overflow-hidden border-2 border-slate-100">
+              {storeLogo ? (
+                <img
+                  src={storeLogo}
+                  alt={storeName}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                storeName.slice(0, 2).toUpperCase()
+              )}
             </div>
             <div>
               <div className="flex items-center gap-1.5">
