@@ -22,7 +22,7 @@ export function CustomerNotificationListener() {
   const { addLiveNotification, fetchUnreadSummary, fetchNotifications } = useNotificationStore();
   const [toast, setToast] = useState<ActiveToast | null>(null);
 
-  const userId = user?._id || (user as any)?.id;
+  const userId = user?._id || (user as any)?.id || (user as any)?.userId || (user as any)?.sub;
 
   // 1. Establish real-time WebSocket connection to customer's personal user room
   useEffect(() => {

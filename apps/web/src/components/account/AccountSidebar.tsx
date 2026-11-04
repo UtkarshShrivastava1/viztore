@@ -10,23 +10,40 @@ import {
 } from 'lucide-react';
 import { branding } from '@repo/shared-types';
 import { useAuthStore } from '@/stores/auth.store';
+import { useNotificationStore } from '@/stores/notificationStore';
 
-function MenuLink({ icon, title, href = "#", isActive = false }: { icon: React.ReactNode; title: string; href?: string; isActive?: boolean }) {
+function MenuLink({ 
+  icon, 
+  title, 
+  href = "#", 
+  isActive = false,
+  badge,
+}: { 
+  icon: React.ReactNode; 
+  title: string; 
+  href?: string; 
+  isActive?: boolean;
+  badge?: React.ReactNode;
+}) {
   return (
     <Link 
       href={href} 
-      className={`flex items-center gap-3 px-5 py-2.5 transition-colors ${
+      className={`flex items-center justify-between px-5 py-2.5 transition-colors ${
         isActive ? 'bg-[#E8F0FE] text-[#1668F6] border-r-2 border-[#1668F6]' : 'hover:bg-surface-50 text-surface-600'
       }`}
     >
-      <div className={`${isActive ? 'text-[#1668F6]' : ''}`}>{icon}</div>
-      <span className={`text-[13px] ${isActive ? 'font-bold' : 'font-semibold text-[#192168]'}`}>{title}</span>
+      <div className="flex items-center gap-3">
+        <div className={`${isActive ? 'text-[#1668F6]' : ''}`}>{icon}</div>
+        <span className={`text-[13px] ${isActive ? 'font-bold' : 'font-semibold text-[#192168]'}`}>{title}</span>
+      </div>
+      {badge}
     </Link>
   );
 }
 
 export function AccountSidebar() {
   const { user, isAuthenticated, openAuthModal } = useAuthStore();
+  const unreadCount = useNotificationStore((state) => state.unreadCount);
   const pathname = usePathname();
 
   const formData = {
@@ -57,7 +74,17 @@ export function AccountSidebar() {
         <MenuLink href="/account/stores" icon={<Store className="w-4 h-4 text-blue-500" />} title="Favourite Stores" isActive={isActive('/account/stores')} />
         <MenuLink href="/account/wishlist" icon={<Heart className="w-4 h-4 text-rose-500" />} title="Wishlist" isActive={isActive('/account/wishlist')} />
         <MenuLink href="/account/addresses" icon={<MapPin className="w-4 h-4 text-blue-500" />} title="Manage Addresses" isActive={isActive('/account/addresses')} />
-        <MenuLink href="/account/notifications" icon={<Bell className="w-4 h-4 text-amber-500" />} title="Notifications" isActive={isActive('/account/notifications')} />
+        <MenuLink 
+          href="/account/notifications" 
+          icon={<Bell className="w-4 h-4 text-amber-500" />} 
+          title="Notifications" 
+          isActive={isActive('/account/notifications')}
+          badge={unreadCount > 0 ? (
+            <span className="flex items-center justify-center h-4.5 min-w-[18px] px-1.5 rounded-full bg-red-600 text-[10px] font-bold text-white shadow-xs">
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </span>
+          ) : null}
+        />
         <MenuLink href="/account/coupons" icon={<Ticket className="w-4 h-4 text-emerald-500" />} title="Coupons & Offers" isActive={isActive('/account/coupons')} />
         
         <Link href="/account/sell" className="flex items-center justify-between px-5 py-2.5 hover:bg-surface-50 transition-colors">

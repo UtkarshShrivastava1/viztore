@@ -1,5 +1,6 @@
 import { useAuthStore } from '@/stores/auth.store';
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { notificationsApi, type ICustomerNotification } from '@/lib/api/notifications';
 import { playNotificationChimeSound } from '@/lib/notificationSound';
 
@@ -95,7 +96,9 @@ function formatRelativeTime(dateStr: string): string {
   }
 }
 
-export const useNotificationStore = create<NotificationState>((set, get) => ({
+export const useNotificationStore = create<NotificationState>()(
+  persist(
+    (set, get) => ({
   notifications: [],
   unreadCount: 0,
   isLoading: false,
@@ -222,4 +225,13 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   clearAll: () => {
     set({ notifications: [], unreadCount: 0 });
   },
-}));
+    }),
+    {
+      name: 'customer-notification-storage',
+      partialize: (state) => ({
+        notifications: state.notifications.slice(0, 30),
+        unreadCount: state.unreadCount,
+      }),
+    }
+  )
+);

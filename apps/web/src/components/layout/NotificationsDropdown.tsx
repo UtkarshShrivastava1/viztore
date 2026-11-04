@@ -96,7 +96,8 @@ export function NotificationsDropdown({ onClose }: { onClose: () => void }) {
         <div className="flex items-center gap-2">
           <h3 className="font-bold text-base text-slate-900">Notifications</h3>
           {unreadCount > 0 && (
-            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-600 text-white shadow-sm">
+            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-red-600 text-white shadow-sm flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
               {unreadCount} new
             </span>
           )}
@@ -248,9 +249,15 @@ export function NotificationsDropdown({ onClose }: { onClose: () => void }) {
                 )}
               </div>
 
-              {/* Unread dot */}
+              {/* Unread indicator dot */}
               {!notification.isRead && (
-                <div className="absolute right-3.5 top-4 w-2 h-2 rounded-full bg-blue-600 ring-2 ring-white" />
+                <div className="absolute right-3.5 top-4 flex items-center gap-1.5">
+                  <span className="text-[9px] font-black text-red-600 tracking-wider uppercase">New</span>
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-80" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-red-600 ring-2 ring-white" />
+                  </span>
+                </div>
               )}
             </div>
           ))}

@@ -11,9 +11,11 @@ import {
 import { branding } from '@repo/shared-types';
 import { AccountSidebar } from '@/components/account/AccountSidebar';
 import { useAuthStore } from '@/stores/auth.store';
+import { useNotificationStore } from '@/stores/notificationStore';
 
 export function AccountClient() {
   const { user, isAuthenticated, openAuthModal } = useAuthStore();
+  const unreadCount = useNotificationStore((state) => state.unreadCount);
   const [isEditingMobile, setIsEditingMobile] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -277,7 +279,18 @@ export function AccountClient() {
           <div className="bg-white rounded-2xl shadow-sm border border-surface-100 overflow-hidden">
             <div className="divide-y divide-surface-100">
               <MobileNav icon={<MapPin className="w-5 h-5 text-blue-500" />} bg="bg-blue-50" title="Manage Addresses" desc="Manage your saved addresses" href="/account/addresses" />
-              <MobileNav icon={<Bell className="w-5 h-5 text-amber-500" />} bg="bg-amber-50" title="Notifications" desc="View your notifications and updates" href="/account/notifications" />
+              <MobileNav 
+                icon={<Bell className="w-5 h-5 text-amber-500" />} 
+                bg="bg-amber-50" 
+                title="Notifications" 
+                desc="View your notifications and updates" 
+                href="/account/notifications" 
+                badge={unreadCount > 0 ? (
+                  <span className="flex items-center justify-center h-4.5 min-w-[18px] px-1.5 rounded-full bg-red-600 text-[10px] font-bold text-white shadow-xs">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                ) : undefined}
+              />
               <MobileNav icon={<Heart className="w-5 h-5 text-rose-500" />} bg="bg-rose-50" title="Wishlist" desc="View your favourite items" href="/account/wishlist" />
               <MobileNav icon={<Ticket className="w-5 h-5 text-emerald-500" />} bg="bg-emerald-50" title="Coupons & Offers" desc="View available offers and discounts" href="/account/coupons" />
               <MobileNav 
@@ -421,7 +434,21 @@ function StoreCard({ name, category, color }: { name: string; category: string; 
   );
 }
 
-function MobileNav({ icon, bg, title, desc, href, badge }: { icon: React.ReactNode; bg: string; title: string; desc: string; href: string; badge?: string }) {
+function MobileNav({ 
+  icon, 
+  bg, 
+  title, 
+  desc, 
+  href, 
+  badge 
+}: { 
+  icon: React.ReactNode; 
+  bg: string; 
+  title: string; 
+  desc: string; 
+  href: string; 
+  badge?: React.ReactNode;
+}) {
   return (
     <Link href={href} className="flex items-center justify-between p-4 bg-white hover:bg-surface-50 transition-colors">
       <div className="flex items-center gap-3">
@@ -431,7 +458,13 @@ function MobileNav({ icon, bg, title, desc, href, badge }: { icon: React.ReactNo
         <div>
           <div className="flex items-center gap-2">
             <h4 className="text-[13px] font-bold text-[#192168]">{title}</h4>
-            {badge && <span className="px-1.5 py-0.5 bg-[#1668F6] text-white text-[9px] font-bold rounded-md">{badge}</span>}
+            {badge && (
+              typeof badge === 'string' ? (
+                <span className="px-1.5 py-0.5 bg-[#1668F6] text-white text-[9px] font-bold rounded-md">{badge}</span>
+              ) : (
+                badge
+              )
+            )}
           </div>
           <p className="text-[11px] text-surface-500">{desc}</p>
         </div>

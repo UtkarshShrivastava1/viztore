@@ -116,18 +116,17 @@ export function DesktopHeader({
   const rawCartCount = useCartStore((state) => state.items.reduce((sum, item) => sum + item.quantity, 0));
   const openCart = useCartStore((state) => state.openCart);
 
-  const notificationCount = useNotificationStore((state) => state.unreadCount);
+  const unreadCount = useNotificationStore((state) => state.unreadCount);
+  const notifications = useNotificationStore((state) => state.notifications);
   const fetchUnreadSummary = useNotificationStore((state) => state.fetchUnreadSummary);
   const fetchNotifications = useNotificationStore((state) => state.fetchNotifications);
   const wishlistCount = useWishlistFlyoutStore((state) => state.items.length);
 
   useEffect(() => {
-    if (authIsAuthenticated) {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-      if (token) {
-        fetchUnreadSummary().catch(() => {});
-        fetchNotifications().catch(() => {});
-      }
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    if (token || authIsAuthenticated) {
+      fetchUnreadSummary().catch(() => {});
+      fetchNotifications().catch(() => {});
     }
   }, [authIsAuthenticated, fetchUnreadSummary, fetchNotifications]);
 
@@ -559,10 +558,13 @@ export function DesktopHeader({
                   aria-label="Notifications"
                 >
                   <div className="relative">
-                    <Bell className="h-[21px] w-[21px]" strokeWidth={1.8} />
-                    {notificationCount > 0 && (
-                      <span className="absolute -top-1.5 -right-1.5 flex h-[16px] min-w-[16px] px-1 items-center justify-center rounded-full bg-[#FF3B30] text-[9px] font-bold text-white shadow-sm border border-[#011A5D]">
-                        {notificationCount}
+                    <Bell className="h-[21px] w-[21px] transition-transform group-hover:scale-105" strokeWidth={1.8} />
+                    {mounted && (unreadCount > 0 || notifications.some((n) => !n.isRead)) && (
+                      <span className="absolute -top-1.5 -right-2 flex items-center justify-center">
+                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-80" />
+                        <span className="relative flex h-[17px] min-w-[17px] px-1 items-center justify-center rounded-full bg-red-600 text-[9px] font-black text-white shadow-md border border-[#011A5D]">
+                          {unreadCount > 99 ? '99+' : unreadCount > 0 ? unreadCount : '!'}
+                        </span>
                       </span>
                     )}
                   </div>

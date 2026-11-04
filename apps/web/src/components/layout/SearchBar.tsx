@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Search, Mic, Bell, CircleUserRound, X, TrendingUp, ArrowRight, Loader2, LogIn, Store } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth.store";
+import { useNotificationStore } from "@/stores/notificationStore";
 import { useVoiceSearch } from "@/hooks/useVoiceSearch";
 import { fetchProducts } from "@/lib/api/catalog";
 import { fetchAllStores } from "@/lib/api/stores";
@@ -33,7 +34,7 @@ const QUICK_CATEGORIES = [
 
 export default function SearchBar({
   placeholder = "Search for products, stores and more...",
-  notificationCount = 0,
+  notificationCount: propNotificationCount,
 }: SearchBarProps) {
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -48,6 +49,12 @@ export default function SearchBar({
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const openAuthModal = useAuthStore((state) => state.openAuthModal);
   const userInitial = authUser?.fullName?.trim().charAt(0).toUpperCase() || 'U';
+
+  const storeUnreadCount = useNotificationStore((state) => state.unreadCount);
+  const notifications = useNotificationStore((state) => state.notifications);
+  const effectiveCount = propNotificationCount !== undefined && propNotificationCount > 0 ? propNotificationCount : storeUnreadCount;
+  const hasUnreadAlerts = effectiveCount > 0 || notifications.some((n) => !n.isRead);
+  const displayAlertCount = effectiveCount > 99 ? '99+' : effectiveCount > 0 ? effectiveCount : '!';
 
   const { isListening, startListening, stopListening } = useVoiceSearch();
 
@@ -215,12 +222,15 @@ export default function SearchBar({
           onClick={handleNotificationClick}
           aria-label="Notifications"
           suppressHydrationWarning
-          className="relative text-white hover:opacity-85 transition-opacity shrink-0 cursor-pointer"
+          className="relative text-white hover:opacity-85 transition-opacity shrink-0 cursor-pointer p-1"
         >
           <Bell className="h-[25px] w-[25px]" strokeWidth={1.75} />
-          {notificationCount > 0 && (
-            <span className="absolute -top-1 -right-1 flex h-[18px] min-w-[18px] px-1 items-center justify-center rounded-full bg-[#FF3B30] text-[10px] font-bold text-white shadow-sm border border-[#011A5D]">
-              {notificationCount}
+          {hasUnreadAlerts && (
+            <span className="absolute top-0 right-0 flex items-center justify-center">
+              <span className="absolute inline-flex h-3 w-3 animate-ping rounded-full bg-red-400 opacity-80" />
+              <span className="relative flex h-[17px] min-w-[17px] px-1 items-center justify-center rounded-full bg-red-600 text-[9px] font-black text-white shadow-md border border-[#011A5D]">
+                {displayAlertCount}
+              </span>
             </span>
           )}
         </button>
