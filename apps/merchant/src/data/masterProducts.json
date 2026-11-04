@@ -407,6 +407,31 @@
       "Pre-shrunk fabric ensures consistent fit"
     ],
     "unit": "1 Piece"
+  },
+  {
+    "barcode": "8923468445614",
+    "name": "NoiseFit Origin Smartwatch with Apex Display, Jet Black",
+    "brand": "Noise",
+    "category": "Electronics",
+    "subCategory": "Smart Wearable Tech",
+    "productType": "Smart Watches",
+    "mrp": 6999,
+    "suggestedPrice": 3499,
+    "costPrice": 2400,
+    "hsnCode": "85176290",
+    "gstRate": 18,
+    "images": [
+      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=600&q=80"
+    ],
+    "description": "NoiseFit Origin features a 1.46 inch Apex AMOLED display with 466x466 resolution, nebula UI, stainless steel contoured finish, and advanced health suite.",
+    "keyFeatures": [
+      "1.46-inch High-Brightness Apex AMOLED Display (1000 nits)",
+      "Nebula UI with ultra-fast fluid response and gesture control",
+      "Bluetooth v5.3 calling with TruSync noise cancellation",
+      "Stainless steel finish with high-durability sapphire-feel glass",
+      "Comprehensive 24/7 heart rate, SpO2, and sleep tracking",
+      "Up to 7 days battery backup with rapid magnetic charging"
+    ],
+    "unit": "1 Piece"
   }
 ]
-

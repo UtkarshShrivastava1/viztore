@@ -76,7 +76,7 @@ export function lookupMasterProduct(barcodeOrQuery: string): MasterCatalogProduc
 /**
  * Search master catalog by query string (name, brand, category, barcode)
  */
-export function searchMasterProducts(query: string, limit = 6): MasterCatalogProduct[] {
+export function searchMasterProducts(query: string, limit = 8): MasterCatalogProduct[] {
   const q = query.trim().toLowerCase();
   if (!q || q.length < 2) return [];
 
@@ -91,5 +91,18 @@ export function searchMasterProducts(query: string, limit = 6): MasterCatalogPro
         p.category.toLowerCase().includes(q),
     )
     .slice(0, limit);
+}
+
+/**
+ * Returns popular or recommended master products, optionally scoped to allowed categories.
+ */
+export function getPopularMasterProducts(allowedCategories?: string[], limit = 4): MasterCatalogProduct[] {
+  if (Array.isArray(allowedCategories) && allowedCategories.length > 0) {
+    const matched = masterProducts.filter((p) =>
+      allowedCategories.some((cat) => cat.toLowerCase() === p.category.toLowerCase()),
+    );
+    if (matched.length > 0) return matched.slice(0, limit);
+  }
+  return masterProducts.slice(0, limit);
 }
 

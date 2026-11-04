@@ -11,6 +11,15 @@ import {
   Camera,
   Zap,
   AlertCircle,
+  HelpCircle,
+  Sparkles,
+  Layers,
+  X,
+  Check,
+  ShieldCheck,
+  Clock,
+  Lock,
+  Package,
 } from 'lucide-react';
 import { useCatalogStore } from '../../../stores/catalogStore.js';
 import { WizardHelpSidebar } from './WizardHelpSidebar.js';
@@ -23,7 +32,12 @@ import {
   normalizeCategoryName,
 } from '../../../lib/customTaxonomyStorage.js';
 import { useAuthStore } from '../../../stores/authStore.js';
-import { lookupMasterProduct, MasterCatalogProduct } from '../../../lib/masterCatalogService.js';
+import {
+  lookupMasterProduct,
+  searchMasterProducts,
+  getPopularMasterProducts,
+  MasterCatalogProduct,
+} from '../../../lib/masterCatalogService.js';
 import { CameraBarcodeScannerModal } from '../CameraBarcodeScannerModal.js';
 
 import masterTaxonomies from '../../../data/taxonomies.json';
@@ -398,8 +412,24 @@ export const AddProductStep1: React.FC = () => {
   const [isCameraScannerOpen, setIsCameraScannerOpen] = React.useState(false);
   const [lookupFeedback, setLookupFeedback] = React.useState<{ message: string; type: 'success' | 'warning' | 'info' } | null>(null);
 
+  // Card 2 "Add Existing Product" Search State & Info Modal
+  const [existingSearchQuery, setExistingSearchQuery] = React.useState(draftProduct.existingSearchTerm || '');
+  const [isInfoModalOpen, setIsInfoModalOpen] = React.useState(false);
+
+  const existingSearchResults = React.useMemo(() => {
+    if (!existingSearchQuery.trim() || existingSearchQuery.trim().length < 2) return [];
+    return searchMasterProducts(existingSearchQuery, 8);
+  }, [existingSearchQuery]);
+
+  const popularMasterProducts = React.useMemo(() => {
+    return getPopularMasterProducts(allowedCategories, 5);
+  }, [allowedCategories]);
+
   const applyMasterProduct = (prod: MasterCatalogProduct, fastTrack = false) => {
+    const preloadedAttrs = getPreloadedAttributes(prod.category, prod.subCategory, prod.productType, draftProduct.attributes || {});
     updateDraftProduct({
+      productIdentification: 'existing',
+      existingSearchTerm: prod.name,
       name: prod.name,
       brand: prod.brand,
       barcode: prod.barcode,
@@ -418,9 +448,12 @@ export const AddProductStep1: React.FC = () => {
       images: prod.images,
       description: prod.description,
       tags: [prod.brand, prod.productType, prod.subCategory].filter(Boolean),
+      attributes: preloadedAttrs,
     });
 
     setMatchedMasterProduct(prod);
+    setBarcodeInput(prod.barcode);
+    setExistingSearchQuery(prod.name);
     setLookupFeedback({
       message: `Matched national master catalog for "${prod.name}"!`,
       type: 'success',
@@ -429,6 +462,20 @@ export const AddProductStep1: React.FC = () => {
     if (fastTrack) {
       setWizardStep(3);
     }
+  };
+
+  const handleSelectExistingProduct = (prod: MasterCatalogProduct) => {
+    applyMasterProduct(prod, false);
+  };
+
+  const handleSwitchToNewProduct = (fallbackName?: string) => {
+    updateDraftProduct({
+      productIdentification: 'new',
+      existingSearchTerm: '',
+      ...(fallbackName ? { name: fallbackName } : {}),
+    });
+    setMatchedMasterProduct(null);
+    setExistingSearchQuery('');
   };
 
   const handleBarcodeSearch = (query: string) => {
@@ -499,6 +546,145 @@ export const AddProductStep1: React.FC = () => {
           handleBarcodeSearch(code);
         }}
       />
+
+      {/* "Why Add Existing Product?" Explainer Modal */}
+      {isInfoModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
+          <div
+            className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100 flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="p-5 border-b border-slate-100 flex items-start justify-between bg-slate-50/50">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                  <Sparkles className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
+                      Cataloging Architecture
+                    </span>
+                  </div>
+                  <h3 className="text-base font-bold text-slate-900 mt-0.5">
+                    Why Use &ldquo;Add Existing Product&rdquo;?
+                  </h3>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsInfoModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-6">
+              <p className="text-xs text-slate-600 leading-relaxed">
+                When cataloging products for your store, you can either create an item from scratch (<strong>Add New Product</strong>) or link to a verified record from the national master catalog (<strong>Add Existing Product</strong>). Here is why using existing products saves time and eliminates errors.
+              </p>
+
+              {/* 3 Pillars */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="p-3.5 rounded-xl border border-blue-100 bg-blue-50/40">
+                  <div className="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center mb-2">
+                    <Clock className="w-4 h-4" />
+                  </div>
+                  <h4 className="text-xs font-bold text-slate-900">90% Faster Listing</h4>
+                  <p className="text-[11px] text-slate-600 mt-1 leading-normal">
+                    Skips product photography and typing. Pre-fills official model names, descriptions, and high-resolution studio photos.
+                  </p>
+                </div>
+
+                <div className="p-3.5 rounded-xl border border-emerald-100 bg-emerald-50/40">
+                  <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center mb-2">
+                    <ShieldCheck className="w-4 h-4" />
+                  </div>
+                  <h4 className="text-xs font-bold text-slate-900">100% Tax Compliant</h4>
+                  <p className="text-[11px] text-slate-600 mt-1 leading-normal">
+                    Auto-calibrated with verified statutory 8-digit HSN codes and correct GST slabs (5%, 12%, 18%, 28%) to prevent audit penalties.
+                  </p>
+                </div>
+
+                <div className="p-3.5 rounded-xl border border-purple-100 bg-purple-50/40">
+                  <div className="w-7 h-7 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center mb-2">
+                    <Lock className="w-4 h-4" />
+                  </div>
+                  <h4 className="text-xs font-bold text-slate-900">100% Tenant-Isolated</h4>
+                  <p className="text-[11px] text-slate-600 mt-1 leading-normal">
+                    Master catalog only supplies the metadata template. Your selling prices, discounts, and inventory counts remain private to your shop.
+                  </p>
+                </div>
+              </div>
+
+              {/* Comparison Table */}
+              <div className="rounded-xl border border-slate-200 overflow-hidden">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 border-b border-slate-200 text-slate-700 font-bold">
+                    <tr>
+                      <th className="py-2.5 px-3">Feature</th>
+                      <th className="py-2.5 px-3 text-blue-700 bg-blue-50/50">Add Existing Product</th>
+                      <th className="py-2.5 px-3 text-slate-700">Add New Product</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-slate-600">
+                    <tr>
+                      <td className="py-2.5 px-3 font-semibold text-slate-800">Product Images</td>
+                      <td className="py-2.5 px-3 bg-blue-50/20 text-emerald-700 font-medium">Pre-filled studio photos</td>
+                      <td className="py-2.5 px-3">Upload your own photos</td>
+                    </tr>
+                    <tr>
+                      <td className="py-2.5 px-3 font-semibold text-slate-800">Specifications</td>
+                      <td className="py-2.5 px-3 bg-blue-50/20 text-emerald-700 font-medium">Official brand specs &amp; features</td>
+                      <td className="py-2.5 px-3">Manual typing required</td>
+                    </tr>
+                    <tr>
+                      <td className="py-2.5 px-3 font-semibold text-slate-800">HSN &amp; GST Rates</td>
+                      <td className="py-2.5 px-3 bg-blue-50/20 text-emerald-700 font-medium">Auto-mapped &amp; verified</td>
+                      <td className="py-2.5 px-3">Manual lookup required</td>
+                    </tr>
+                    <tr>
+                      <td className="py-2.5 px-3 font-semibold text-slate-800">Price &amp; Inventory</td>
+                      <td className="py-2.5 px-3 bg-blue-50/20 font-medium text-slate-800">YOU decide selling price &amp; stock</td>
+                      <td className="py-2.5 px-3 font-medium text-slate-800">YOU decide selling price &amp; stock</td>
+                    </tr>
+                    <tr>
+                      <td className="py-2.5 px-3 font-semibold text-slate-800">Best Used For</td>
+                      <td className="py-2.5 px-3 bg-blue-50/20 text-blue-800 font-medium">
+                        Branded retail goods (Electronics, Packaged Groceries, Branded Apparel)
+                      </td>
+                      <td className="py-2.5 px-3">
+                        Custom manufactured, boutique, tailored, or unbranded local items
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Note */}
+              <div className="flex items-start gap-2.5 p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 text-xs">
+                <Info className="w-4 h-4 shrink-0 text-amber-600 mt-0.5" />
+                <span>
+                  <strong>Tip:</strong> Even when you link an existing product, you can still customize your selling price, offer promotional discounts, edit the description, or add extra store-specific photos before publishing.
+                </span>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-end">
+              <button
+                type="button"
+                onClick={() => setIsInfoModalOpen(false)}
+                className="px-5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-2xs transition-colors cursor-pointer"
+              >
+                Got It, Continue Cataloging
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <form onSubmit={handleContinue} className="space-y-5">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
@@ -753,15 +939,25 @@ export const AddProductStep1: React.FC = () => {
 
           {/* Card 2: Product Identification */}
           <div className="bg-white rounded-xl border border-slate-200/80 p-5 shadow-2xs">
-            <div className="flex items-center gap-2.5 mb-1">
-              <div className="w-6 h-6 rounded-md bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs">
-                2
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
+              <div className="flex items-center gap-2.5">
+                <div className="w-6 h-6 rounded-md bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs">
+                  2
+                </div>
+                <h3 className="text-sm font-bold text-slate-900">Product Identification</h3>
               </div>
-              <h3 className="text-sm font-bold text-slate-900">Product Identification</h3>
+              <button
+                type="button"
+                onClick={() => setIsInfoModalOpen(true)}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition-colors cursor-pointer"
+                title="Learn why using Add Existing Product saves time and avoids mistakes"
+              >
+                <HelpCircle className="w-3.5 h-3.5 text-blue-600" />
+                <span>Why &ldquo;Add Existing Product&rdquo;?</span>
+              </button>
             </div>
             <p className="text-xs text-slate-500 ml-8 mb-4">
-              Tell us whether you want to add a new product or list an existing product from the
-              master catalog.
+              Choose between fast-listing a verified product from the master catalog or creating a custom product from scratch.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
@@ -771,58 +967,261 @@ export const AddProductStep1: React.FC = () => {
                   Add Product As <span className="text-rose-500">*</span>
                 </label>
                 <div className="space-y-2">
-                  <label className="flex items-center gap-2.5 p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer transition-colors">
+                  <label
+                    onClick={() => {
+                      updateDraftProduct({ productIdentification: 'new' });
+                      if (matchedMasterProduct) {
+                        setMatchedMasterProduct(null);
+                      }
+                    }}
+                    className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
+                      productIdentification === 'new'
+                        ? 'border-blue-500 bg-blue-50/40 shadow-xs'
+                        : 'border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
                     <input
                       type="radio"
                       name="productIdentification"
                       checked={productIdentification === 'new'}
-                      onChange={() => updateDraftProduct({ productIdentification: 'new' })}
-                      className="text-blue-600 focus:ring-blue-500"
+                      onChange={() => {
+                        updateDraftProduct({ productIdentification: 'new' });
+                        if (matchedMasterProduct) {
+                          setMatchedMasterProduct(null);
+                        }
+                      }}
+                      className="mt-0.5 text-blue-600 focus:ring-blue-500"
                     />
-                    <span className="text-xs font-semibold text-slate-800">Add New Product</span>
+                    <div>
+                      <div className="text-xs font-bold text-slate-800">Add New Product</div>
+                      <div className="text-[11px] text-slate-500 mt-0.5 leading-normal">
+                        Create a custom or unbranded product from scratch with your own photos and descriptions.
+                      </div>
+                    </div>
                   </label>
 
-                  <label className="flex items-center gap-2.5 p-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer transition-colors">
+                  <label
+                    onClick={() => updateDraftProduct({ productIdentification: 'existing' })}
+                    className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
+                      productIdentification === 'existing'
+                        ? 'border-blue-500 bg-blue-50/40 shadow-xs'
+                        : 'border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
                     <input
                       type="radio"
                       name="productIdentification"
                       checked={productIdentification === 'existing'}
                       onChange={() => updateDraftProduct({ productIdentification: 'existing' })}
-                      className="text-blue-600 focus:ring-blue-500"
+                      className="mt-0.5 text-blue-600 focus:ring-blue-500"
                     />
-                    <span className="text-xs font-semibold text-slate-800">
-                      Add Existing Product
-                    </span>
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-bold text-slate-800">Add Existing Product</span>
+                        <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-100 text-amber-800">
+                          Recommended
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-slate-500 mt-0.5 leading-normal">
+                        Auto-fill studio photos, specs, HSN &amp; tax from national database. Save 90% time.
+                      </div>
+                    </div>
                   </label>
                 </div>
               </div>
 
-              {/* Search Existing Product */}
+              {/* Right Column: Search & Linked Product Card */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-2">
-                  Search Existing Product
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    disabled={productIdentification === 'new'}
-                    placeholder="Search by product name, SKU, barcode..."
-                    value={draftProduct.existingSearchTerm || ''}
-                    onChange={(e) => updateDraftProduct({ existingSearchTerm: e.target.value })}
-                    className="w-full pl-9 pr-3.5 py-2 text-xs text-slate-800 bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 disabled:bg-slate-50 disabled:text-slate-400"
-                  />
-                  <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                </div>
-                <div className="mt-1.5 text-[11px] text-slate-500">
-                  Can&apos;t find the product?{' '}
-                  <button
-                    type="button"
-                    onClick={() => updateDraftProduct({ productIdentification: 'new' })}
-                    className="text-blue-600 font-semibold hover:underline cursor-pointer"
-                  >
-                    Add as new product
-                  </button>
-                </div>
+                {productIdentification === 'new' ? (
+                  <div className="h-full flex flex-col justify-between p-3.5 rounded-lg border border-dashed border-slate-200 bg-slate-50/60">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <Package className="w-4 h-4 text-slate-500" />
+                        <span className="text-xs font-bold text-slate-700">Manual Entry Mode Active</span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 leading-relaxed">
+                        You are entering product details manually in Step 1, 2 &amp; 3. If this is a branded item (e.g. Samsung, boAt, Apple, Amul), you can auto-fill verified specs and studio photos instead.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => updateDraftProduct({ productIdentification: 'existing' })}
+                      className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-800 self-start cursor-pointer"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-blue-500" />
+                      <span>Switch to &ldquo;Add Existing Product&rdquo; &rarr;</span>
+                    </button>
+                  </div>
+                ) : matchedMasterProduct ? (
+                  /* Linked Master Product Card */
+                  <div className="p-3.5 rounded-lg border border-emerald-200 bg-emerald-50/40">
+                    <div className="flex items-start gap-3">
+                      <img
+                        src={matchedMasterProduct.images?.[0] || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30'}
+                        alt={matchedMasterProduct.name}
+                        className="w-14 h-14 rounded-lg object-cover border border-slate-200 shrink-0 bg-white"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                            <Check className="w-3 h-3 text-emerald-600" /> Master Catalog Linked
+                          </span>
+                          <span className="text-[10px] text-slate-500 font-mono">
+                            EAN: {matchedMasterProduct.barcode}
+                          </span>
+                        </div>
+                        <h4 className="text-xs font-bold text-slate-900 truncate mt-1">
+                          {matchedMasterProduct.name}
+                        </h4>
+                        <div className="flex items-center gap-2 text-[11px] text-slate-600 mt-0.5">
+                          <span>{matchedMasterProduct.brand}</span>
+                          <span>&bull;</span>
+                          <span>MRP: &#8377;{matchedMasterProduct.mrp.toLocaleString('en-IN')}</span>
+                          <span>&bull;</span>
+                          <span>GST {matchedMasterProduct.gstRate}%</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 pt-2.5 border-t border-emerald-200/60 flex items-center justify-between text-xs">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMatchedMasterProduct(null);
+                          setExistingSearchQuery('');
+                          updateDraftProduct({ existingSearchTerm: '' });
+                        }}
+                        className="text-blue-600 hover:text-blue-800 font-semibold cursor-pointer"
+                      >
+                        Search Different Product
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleSwitchToNewProduct()}
+                        className="text-slate-500 hover:text-slate-700 cursor-pointer"
+                      >
+                        Switch to Manual
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  /* Live Search & Autocomplete Input */
+                  <div className="relative">
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                      Search Existing Product
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="Search by product name, model, brand, barcode..."
+                        value={existingSearchQuery}
+                        onChange={(e) => {
+                          setExistingSearchQuery(e.target.value);
+                          updateDraftProduct({ existingSearchTerm: e.target.value });
+                        }}
+                        className="w-full pl-9 pr-8 py-2 text-xs text-slate-800 bg-white border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      />
+                      <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      {existingSearchQuery && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setExistingSearchQuery('');
+                            updateDraftProduct({ existingSearchTerm: '' });
+                          }}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer p-0.5"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Results dropdown when query >= 2 */}
+                    {existingSearchQuery.trim().length >= 2 && (
+                      <div className="mt-2 bg-white rounded-xl border border-slate-200 shadow-xl overflow-hidden z-20">
+                        {existingSearchResults.length > 0 ? (
+                          <div className="max-h-60 overflow-y-auto divide-y divide-slate-100">
+                            {existingSearchResults.map((prod) => (
+                              <div
+                                key={prod.barcode}
+                                className="p-2.5 hover:bg-blue-50/60 transition-colors flex items-center justify-between gap-3"
+                              >
+                                <div className="flex items-center gap-2.5 min-w-0">
+                                  <img
+                                    src={prod.images?.[0] || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30'}
+                                    alt={prod.name}
+                                    className="w-10 h-10 rounded-md object-cover border border-slate-200 shrink-0 bg-white"
+                                  />
+                                  <div className="min-w-0">
+                                    <p className="text-xs font-bold text-slate-800 truncate">
+                                      {prod.name}
+                                    </p>
+                                    <div className="flex items-center gap-2 text-[10px] text-slate-500 mt-0.5">
+                                      <span className="font-semibold text-blue-700 bg-blue-50 px-1 py-0.2 rounded">
+                                        {prod.brand}
+                                      </span>
+                                      <span>Barcode: {prod.barcode}</span>
+                                      <span>MRP: &#8377;{prod.mrp.toLocaleString('en-IN')}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => handleSelectExistingProduct(prod)}
+                                  className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-2xs transition-colors cursor-pointer"
+                                >
+                                  <Zap className="w-3 h-3" />
+                                  <span>Select &amp; Auto-fill</span>
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="p-4 text-center">
+                            <p className="text-xs text-slate-600">
+                              No master product found matching &ldquo;{existingSearchQuery}&rdquo;.
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                updateDraftProduct({
+                                  productIdentification: 'new',
+                                  name: existingSearchQuery,
+                                });
+                                setExistingSearchQuery('');
+                              }}
+                              className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg border border-blue-200 transition-colors cursor-pointer"
+                            >
+                              <span>+ Add as New Product with this name</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Popular recommendations when query is empty */}
+                    {!existingSearchQuery.trim() && (
+                      <div className="mt-2">
+                        <p className="text-[11px] font-medium text-slate-500 mb-1.5">
+                          Quick-pick from verified store catalog:
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {popularMasterProducts.map((p) => (
+                            <button
+                              key={p.barcode}
+                              type="button"
+                              onClick={() => handleSelectExistingProduct(p)}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium text-slate-700 bg-slate-100 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 rounded-lg border border-slate-200 transition-colors cursor-pointer"
+                            >
+                              <Zap className="w-2.5 h-2.5 text-amber-500" />
+                              <span className="truncate max-w-[180px]">{p.name}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
