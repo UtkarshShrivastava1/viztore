@@ -20,14 +20,21 @@ export const LiveOrderSocketListener: React.FC<LiveOrderSocketListenerProps> = (
   const [isMuted, setIsMuted] = useState<boolean>(isAudioAlertMuted());
 
   useEffect(() => {
-    if (!isAuthenticated) return;
+    const isAuth = isAuthenticated || (typeof window !== 'undefined' && !!localStorage.getItem('access_token'));
+    if (!isAuth) return;
 
     const storeId = currentStore?._id || currentStore?.id;
     merchantSocket.connect(storeId);
 
+    // Request desktop notifications if not yet prompted
+    merchantSocket.requestNotificationPermission().catch(() => {});
+
     // Immediate initial sync for the merchant portal
-    useOrderStore.getState().fetchOrders(storeId).catch(() => {});
+    useOrderStore.getState().fetchOrders(storeId, true).catch(() => {});
     useCatalogStore.getState().fetchProducts(storeId).catch(() => {});
+
+    // Start self-healing continuous background auto-sync
+    const stopSync = useOrderStore.getState().startAutoSync(storeId);
 
     const unsubscribe = merchantSocket.onOrderPlaced((order) => {
       setActiveAlert(order);
@@ -35,6 +42,7 @@ export const LiveOrderSocketListener: React.FC<LiveOrderSocketListenerProps> = (
 
     return () => {
       unsubscribe();
+      stopSync();
     };
   }, [isAuthenticated, currentStore]);
 

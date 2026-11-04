@@ -1,17 +1,65 @@
 /**
  * Web Audio API Engine for Instant Audible Order Alerts
- * Generates a clean, pleasant harmonic 2-tone chime without external audio file dependencies.
+ * Generates a clean, pleasant harmonic 3-tone chime with automatic user-gesture unlocking
+ * and zero external audio file dependencies.
  */
 
 class OrderAudioAlertEngine {
   private audioCtx: AudioContext | null = null;
   private isMuted: boolean = false;
+  private isUnlocked: boolean = false;
 
   constructor() {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('merchant_audio_alerts_muted');
       this.isMuted = saved === 'true';
+      this.setupGlobalUnlock();
     }
+  }
+
+  private setupGlobalUnlock(): void {
+    if (typeof window === 'undefined') return;
+
+    const unlock = () => {
+      try {
+        const ctx = this.getAudioContext();
+        if (ctx && ctx.state === 'suspended') {
+          ctx.resume().then(() => {
+            this.isUnlocked = true;
+          }).catch(() => {});
+        } else if (ctx && ctx.state === 'running') {
+          this.isUnlocked = true;
+        }
+      } catch {}
+
+      // Remove listeners once initial user interaction has been detected
+      window.removeEventListener('click', unlock);
+      window.removeEventListener('keydown', unlock);
+      window.removeEventListener('touchstart', unlock);
+      window.removeEventListener('pointerdown', unlock);
+    };
+
+    window.addEventListener('click', unlock, { passive: true });
+    window.addEventListener('keydown', unlock, { passive: true });
+    window.addEventListener('touchstart', unlock, { passive: true });
+    window.addEventListener('pointerdown', unlock, { passive: true });
+  }
+
+  public unlockNow(): void {
+    try {
+      const ctx = this.getAudioContext();
+      if (ctx && ctx.state === 'suspended') {
+        ctx.resume().then(() => {
+          this.isUnlocked = true;
+        }).catch(() => {});
+      } else if (ctx) {
+        this.isUnlocked = true;
+      }
+    } catch {}
+  }
+
+  public isReady(): boolean {
+    return this.isUnlocked || (this.audioCtx?.state === 'running');
   }
 
   private getAudioContext(): AudioContext | null {
@@ -50,77 +98,59 @@ class OrderAudioAlertEngine {
   }
 
   /**
-   * Plays a distinct, melodic 2-tone arrival chime (D5 ➔ A5) with warm harmonic decay.
-   * Total duration: ~0.65s.
+   * Plays a distinct, triumphant 3-tone harmonic arrival chime (D5 ➔ F#5 ➔ A5) with warm acoustic bell decay.
+   * Total duration: ~0.8s.
    */
   public playChime(): void {
     if (this.isMuted) return;
 
+    this.unlockNow();
     const ctx = this.getAudioContext();
     if (!ctx) return;
 
     try {
       const now = ctx.currentTime;
 
-      // Note 1: 587.33 Hz (D5) - Bell Fundamental
-      const osc1 = ctx.createOscillator();
-      const gain1 = ctx.createGain();
-      osc1.type = 'sine';
-      osc1.frequency.setValueAtTime(587.33, now);
+      // Helper to synthesize a melodic bell note with fundamental + warm overtone
+      const playBellNote = (freq: number, startAt: number, duration: number, gainPeak: number) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, startAt);
 
-      // Add soft overtone at 2x frequency
-      const overtone1 = ctx.createOscillator();
-      const overtoneGain1 = ctx.createGain();
-      overtone1.type = 'triangle';
-      overtone1.frequency.setValueAtTime(587.33 * 2, now);
+        const overtone = ctx.createOscillator();
+        const overtoneGain = ctx.createGain();
+        overtone.type = 'triangle';
+        overtone.frequency.setValueAtTime(freq * 2, startAt);
 
-      gain1.gain.setValueAtTime(0.001, now);
-      gain1.gain.linearRampToValueAtTime(0.28, now + 0.02);
-      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
+        // Envelope
+        gain.gain.setValueAtTime(0.0001, startAt);
+        gain.gain.linearRampToValueAtTime(gainPeak, startAt + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
 
-      overtoneGain1.gain.setValueAtTime(0.001, now);
-      overtoneGain1.gain.linearRampToValueAtTime(0.08, now + 0.02);
-      overtoneGain1.gain.exponentialRampToValueAtTime(0.001, now + 0.30);
+        overtoneGain.gain.setValueAtTime(0.0001, startAt);
+        overtoneGain.gain.linearRampToValueAtTime(gainPeak * 0.28, startAt + 0.02);
+        overtoneGain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration * 0.7);
 
-      osc1.connect(gain1);
-      overtone1.connect(overtoneGain1);
-      gain1.connect(ctx.destination);
-      overtoneGain1.connect(ctx.destination);
+        osc.connect(gain);
+        overtone.connect(overtoneGain);
+        gain.connect(ctx.destination);
+        overtoneGain.connect(ctx.destination);
 
-      osc1.start(now);
-      overtone1.start(now);
-      osc1.stop(now + 0.40);
-      overtone1.stop(now + 0.32);
+        osc.start(startAt);
+        overtone.start(startAt);
+        osc.stop(startAt + duration + 0.05);
+        overtone.stop(startAt + duration + 0.05);
+      };
 
-      // Note 2: 880.00 Hz (A5) - Arrives at +0.13s (higher, triumphant pitch)
-      const t2 = now + 0.13;
-      const osc2 = ctx.createOscillator();
-      const gain2 = ctx.createGain();
-      osc2.type = 'sine';
-      osc2.frequency.setValueAtTime(880.00, t2);
+      // Note 1: 587.33 Hz (D5) - Warm alert intro
+      playBellNote(587.33, now, 0.40, 0.28);
 
-      const overtone2 = ctx.createOscillator();
-      const overtoneGain2 = ctx.createGain();
-      overtone2.type = 'triangle';
-      overtone2.frequency.setValueAtTime(880.00 * 2, t2);
+      // Note 2: 739.99 Hz (F#5) - Major harmonic step
+      playBellNote(739.99, now + 0.12, 0.45, 0.32);
 
-      gain2.gain.setValueAtTime(0.001, t2);
-      gain2.gain.linearRampToValueAtTime(0.32, t2 + 0.02);
-      gain2.gain.exponentialRampToValueAtTime(0.001, t2 + 0.50);
-
-      overtoneGain2.gain.setValueAtTime(0.001, t2);
-      overtoneGain2.gain.linearRampToValueAtTime(0.09, t2 + 0.02);
-      overtoneGain2.gain.exponentialRampToValueAtTime(0.001, t2 + 0.40);
-
-      osc2.connect(gain2);
-      overtone2.connect(overtoneGain2);
-      gain2.connect(ctx.destination);
-      overtoneGain2.connect(ctx.destination);
-
-      osc2.start(t2);
-      overtone2.start(t2);
-      osc2.stop(t2 + 0.52);
-      overtone2.stop(t2 + 0.42);
+      // Note 3: 880.00 Hz (A5) - Triumphant peak bell
+      playBellNote(880.00, now + 0.26, 0.55, 0.38);
     } catch {
       // AudioContext play prevented by browser policy; fail gracefully
     }
@@ -143,4 +173,12 @@ export function setAudioAlertMuted(muted: boolean): void {
 
 export function toggleAudioAlertMuted(): boolean {
   return audioAlertEngine.toggleMuted();
+}
+
+export function unlockAudioAlert(): void {
+  audioAlertEngine.unlockNow();
+}
+
+export function isAudioAlertReady(): boolean {
+  return audioAlertEngine.isReady();
 }

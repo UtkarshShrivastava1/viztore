@@ -61,33 +61,38 @@ async function bootstrap() {
     }
 
     io.on('connection', (socket) => {
-      logger.debug(`🔌 New Socket client connected: ${socket.id}`);
+      logger.info(`🔌 New Socket client connected: ${socket.id}`);
 
-      // Allow clients to join rooms for scoped real-time updates (store:<storeId>, user:<userId>, order:<orderId>)
+      // Allow clients to join rooms for scoped real-time updates (store:<storeId>, user:<userId>, order:<orderId>, merchants)
       socket.on('join_room', (room: string) => {
         if (typeof room === 'string' && room.length < 100) {
           socket.join(room);
-          logger.debug(`🔌 Socket ${socket.id} joined room: ${room}`);
+          logger.info(`🔌 Socket ${socket.id} joined room: ${room}`);
         }
       });
 
       socket.on('leave_room', (room: string) => {
         if (typeof room === 'string' && room.length < 100) {
           socket.leave(room);
-          logger.debug(`🔌 Socket ${socket.id} left room: ${room}`);
+          logger.info(`🔌 Socket ${socket.id} left room: ${room}`);
         }
       });
 
       socket.on('disconnect', (reason) => {
-        logger.debug(`🔌 Socket client disconnected: ${socket.id} (${reason})`);
+        logger.info(`🔌 Socket client disconnected: ${socket.id} (${reason})`);
       });
     });
 
     // Wire in-process EventBus to Socket.io & Redis Adapter for distributed real-time sync (structure.md Section 5 & 6.2)
     eventBus.on(EVENTS.ORDER_PLACED, (payload) => {
-      io.to(`store:${payload.storeId}`).emit(EVENTS.ORDER_PLACED, payload);
-      io.to(`user:${payload.userId}`).emit(EVENTS.ORDER_PLACED, payload);
-      logger.debug(`📡 Socket broadcast ${EVENTS.ORDER_PLACED} to store:${payload.storeId} & user:${payload.userId}`);
+      const storeRoom = `store:${payload.storeId}`;
+      const userRoom = `user:${payload.userId}`;
+      io.to(storeRoom).emit(EVENTS.ORDER_PLACED, payload);
+      io.to(userRoom).emit(EVENTS.ORDER_PLACED, payload);
+      io.to('merchants').emit(EVENTS.ORDER_PLACED, payload);
+      io.to(storeRoom).emit('order:placed', payload);
+      io.to('merchants').emit('order:placed', payload);
+      logger.info(`📡 Socket broadcast ${EVENTS.ORDER_PLACED} to ${storeRoom}, ${userRoom} & merchants`);
     });
 
     eventBus.on(EVENTS.ORDER_CONFIRMED, (payload) => {
@@ -95,7 +100,8 @@ async function bootstrap() {
       if (payload.storeId) {
         io.to(`store:${payload.storeId}`).emit(EVENTS.ORDER_CONFIRMED, payload);
       }
-      logger.debug(`📡 Socket broadcast ${EVENTS.ORDER_CONFIRMED} to order:${payload.orderId}`);
+      io.to('merchants').emit(EVENTS.ORDER_CONFIRMED, payload);
+      logger.info(`📡 Socket broadcast ${EVENTS.ORDER_CONFIRMED} to order:${payload.orderId}`);
     });
 
     eventBus.on(EVENTS.ORDER_CANCELLED, (payload) => {
@@ -103,7 +109,8 @@ async function bootstrap() {
       if (payload.storeId) {
         io.to(`store:${payload.storeId}`).emit(EVENTS.ORDER_CANCELLED, payload);
       }
-      logger.debug(`📡 Socket broadcast ${EVENTS.ORDER_CANCELLED} to order:${payload.orderId}`);
+      io.to('merchants').emit(EVENTS.ORDER_CANCELLED, payload);
+      logger.info(`📡 Socket broadcast ${EVENTS.ORDER_CANCELLED} to order:${payload.orderId}`);
     });
 
     eventBus.on(EVENTS.ORDER_DELIVERED, (payload) => {
@@ -111,23 +118,27 @@ async function bootstrap() {
       if (payload.storeId) {
         io.to(`store:${payload.storeId}`).emit(EVENTS.ORDER_DELIVERED, payload);
       }
-      logger.debug(`📡 Socket broadcast ${EVENTS.ORDER_DELIVERED} to order:${payload.orderId}`);
+      io.to('merchants').emit(EVENTS.ORDER_DELIVERED, payload);
+      logger.info(`📡 Socket broadcast ${EVENTS.ORDER_DELIVERED} to order:${payload.orderId}`);
     });
 
     eventBus.on(EVENTS.DELIVERY_ASSIGNED, (payload) => {
       io.to(`order:${payload.orderId}`).emit(EVENTS.DELIVERY_ASSIGNED, payload);
-      logger.debug(`📡 Socket broadcast ${EVENTS.DELIVERY_ASSIGNED} to order:${payload.orderId}`);
+      logger.info(`📡 Socket broadcast ${EVENTS.DELIVERY_ASSIGNED} to order:${payload.orderId}`);
     });
 
     eventBus.on(EVENTS.DELIVERY_COMPLETED, (payload) => {
       io.to(`order:${payload.orderId}`).emit(EVENTS.DELIVERY_COMPLETED, payload);
-      logger.debug(`📡 Socket broadcast ${EVENTS.DELIVERY_COMPLETED} to order:${payload.orderId}`);
+      logger.info(`📡 Socket broadcast ${EVENTS.DELIVERY_COMPLETED} to order:${payload.orderId}`);
     });
 
     eventBus.on(EVENTS.NOTIFICATION_CREATED, (payload) => {
       const room = payload.recipientRole === 'merchant' ? `store:${payload.recipientId}` : `user:${payload.recipientId}`;
       io.to(room).emit(EVENTS.NOTIFICATION_CREATED, payload);
-      logger.debug(`📡 Socket broadcast ${EVENTS.NOTIFICATION_CREATED} to room ${room}`);
+      if (payload.recipientRole === 'merchant') {
+        io.to('merchants').emit(EVENTS.NOTIFICATION_CREATED, payload);
+      }
+      logger.info(`📡 Socket broadcast ${EVENTS.NOTIFICATION_CREATED} to room ${room}`);
     });
 
     // Make io accessible across app if needed

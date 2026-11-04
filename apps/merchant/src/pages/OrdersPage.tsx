@@ -15,11 +15,15 @@ interface OrdersPageProps {
 }
 
 export const OrdersPage: React.FC<OrdersPageProps> = ({ onOpenCreateOrder }) => {
-  const { activeTab, setActiveTab, orders, fetchOrders, isLoading, viewMode } = useOrderStore();
+  const { activeTab, setActiveTab, orders, fetchOrders, isLoading, viewMode, startAutoSync } = useOrderStore();
 
   React.useEffect(() => {
     fetchOrders();
-  }, [fetchOrders]);
+    const stopSync = startAutoSync();
+    return () => {
+      stopSync();
+    };
+  }, [fetchOrders, startAutoSync]);
 
   const [selectedOrder, setSelectedOrder] = useState<MerchantOrderRecord | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);

@@ -41,6 +41,7 @@ class MerchantSocketClient {
       if (this.currentStoreId) {
         this.socket.emit('join_room', `store:${this.currentStoreId}`);
       }
+      this.socket.emit('join_room', 'merchants');
       return this.socket;
     }
 
@@ -54,8 +55,8 @@ class MerchantSocketClient {
       this.socket = io(url, {
         transports: ['websocket', 'polling'],
         auth: { token: token || undefined },
-        reconnectionAttempts: 10,
-        reconnectionDelay: 1500,
+        reconnectionAttempts: 20,
+        reconnectionDelay: 1000,
         timeout: 10000,
       });
 
@@ -64,6 +65,7 @@ class MerchantSocketClient {
         if (this.currentStoreId) {
           this.socket?.emit('join_room', `store:${this.currentStoreId}`);
         }
+        this.socket?.emit('join_room', 'merchants');
       });
 
       this.socket.on('disconnect', () => {
@@ -76,17 +78,18 @@ class MerchantSocketClient {
 
       // Handle Order Placed event (matching both dot and colon format)
       const handleOrderPlaced = (payload: OrderPlacedSocketPayload) => {
-        // Strict store isolation: never chime or handle orders belonging to other stores
+        // Strict store isolation: only ignore if BOTH currentStoreId AND payload.storeId exist and differ
         if (this.currentStoreId && payload.storeId && String(payload.storeId) !== String(this.currentStoreId)) {
           return;
         }
+
         // 1. Play audible arrival chime
         playOrderAlertChime();
 
         // 2. Trigger native desktop notification if permitted
         if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
           try {
-            new Notification('New Order Received!', {
+            new Notification('⚡ New Order Received!', {
               body: `${payload.orderNumber || 'Order'} • ₹${payload.grandTotal?.toLocaleString('en-IN') || '0'} (${payload.itemsCount || 1} items)`,
               icon: '/logo.svg',
             });
@@ -95,12 +98,13 @@ class MerchantSocketClient {
           }
         }
 
-        // 3. Refresh active orders and synchronise catalog/inventory stock
-        if (this.currentStoreId) {
-          useOrderStore.getState().fetchOrders(this.currentStoreId);
-          useCatalogStore.getState().fetchProducts(this.currentStoreId);
+        // 3. Immediately refresh active orders and synchronise catalog/inventory stock (silent mode to prevent flicker)
+        const targetStore = this.currentStoreId || payload.storeId;
+        if (targetStore) {
+          useOrderStore.getState().fetchOrders(targetStore, true);
+          useCatalogStore.getState().fetchProducts(targetStore);
         } else {
-          useOrderStore.getState().fetchOrders();
+          useOrderStore.getState().fetchOrders(undefined, true);
           useCatalogStore.getState().fetchProducts();
         }
 
@@ -121,10 +125,11 @@ class MerchantSocketClient {
       };
 
       const handleOrderStatusChanged = () => {
-        if (this.currentStoreId) {
-          useOrderStore.getState().fetchOrders(this.currentStoreId);
+        const targetStore = this.currentStoreId;
+        if (targetStore) {
+          useOrderStore.getState().fetchOrders(targetStore, true);
         } else {
-          useOrderStore.getState().fetchOrders();
+          useOrderStore.getState().fetchOrders(undefined, true);
         }
       };
 
@@ -157,6 +162,21 @@ class MerchantSocketClient {
         this.socket.emit('leave_room', `store:${previous}`);
       }
       this.socket.emit('join_room', `store:${storeId}`);
+      this.socket.emit('join_room', 'merchants');
+    }
+  }
+
+  public async requestNotificationPermission(): Promise<NotificationPermission> {
+    if (typeof window === 'undefined' || !('Notification' in window)) {
+      return 'denied';
+    }
+    try {
+      if (Notification.permission === 'default') {
+        return await Notification.requestPermission();
+      }
+      return Notification.permission;
+    } catch {
+      return 'denied';
     }
   }
 

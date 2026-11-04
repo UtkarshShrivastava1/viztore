@@ -120,7 +120,8 @@ interface OrderStoreState {
   viewMode: OrderViewMode;
 
   // Actions
-  fetchOrders: (storeId?: string) => Promise<void>;
+  fetchOrders: (storeId?: string, silent?: boolean) => Promise<void>;
+  startAutoSync: (storeId?: string) => () => void;
   setActiveTab: (tab: OrderTab) => void;
   setViewMode: (mode: OrderViewMode) => void;
   setSearchQuery: (query: string) => void;
@@ -351,8 +352,10 @@ export const useOrderStore = create<OrderStoreState>((set, get) => {
     selectedOrderIds: [],
     viewMode: (typeof window !== 'undefined' && (localStorage.getItem('merchant_orders_view_mode') as OrderViewMode)) || 'table',
 
-    fetchOrders: async (storeId?: string) => {
-      set({ isLoading: true, error: null });
+    fetchOrders: async (storeId?: string, silent?: boolean) => {
+      if (!silent) {
+        set({ isLoading: true, error: null });
+      }
       let targetStoreId = storeId;
       try {
         if (!targetStoreId) {
@@ -391,6 +394,29 @@ export const useOrderStore = create<OrderStoreState>((set, get) => {
         const combined = [...localManualOrders, ...mapped];
         const uniqueOrders = Array.from(new Map(combined.map((o) => [o.id, o])).values());
 
+        // Check if any fresh orders arrived since previous state
+        const prevOrders = get().orders;
+        const prevIds = new Set(prevOrders.map((o) => o.id));
+        if (prevOrders.length > 0) {
+          const freshNewOrders = uniqueOrders.filter((o) => !prevIds.has(o.id) && (o.status === 'new' || o.status === 'pending'));
+          if (freshNewOrders.length > 0) {
+            import('../lib/audioAlert.js').then(({ playOrderAlertChime }) => {
+              playOrderAlertChime();
+            }).catch(() => {});
+
+            import('../lib/socket.js').then(({ merchantSocket }) => {
+              const newest = freshNewOrders[0];
+              merchantSocket.triggerTestArrival({
+                orderId: newest.id,
+                orderNumber: newest.orderNumber,
+                grandTotal: newest.amount,
+                itemsCount: newest.itemsCount,
+                customerPhone: newest.customerPhone,
+              });
+            }).catch(() => {});
+          }
+        }
+
         set({
           orders: uniqueOrders,
           isLoading: false,
@@ -410,6 +436,21 @@ export const useOrderStore = create<OrderStoreState>((set, get) => {
           error: err?.message || 'Failed to fetch orders',
         });
       }
+    },
+
+    startAutoSync: (storeId?: string) => {
+      let intervalId: any = null;
+      const poll = () => {
+        if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+          const activeStoreId = storeId || useAuthStore.getState().currentStore?._id || useAuthStore.getState().currentStore?.id;
+          get().fetchOrders(activeStoreId, true).catch(() => {});
+        }
+      };
+
+      intervalId = setInterval(poll, 7000);
+      return () => {
+        if (intervalId) clearInterval(intervalId);
+      };
     },
 
     setActiveTab: (tab) => {
