@@ -4,20 +4,27 @@ import {
   Eye,
   MessageSquare,
   MessageCircle,
-  ChevronDown,
-  ExternalLink,
+  MoreHorizontal,
   Phone,
   Mail,
   Truck,
   CheckCircle2,
   X,
   Clock,
+  Copy,
+  Check,
+  Package,
+  ShieldCheck,
+  MapPin,
+  ExternalLink,
+  ChevronDown,
 } from 'lucide-react';
 import {
   OrderTab,
   MerchantOrderRecord,
   useOrderStore,
 } from '../../stores/orderStore.js';
+import { parseProductTitle, formatOrderRelativeTime } from '../../lib/orderUtils.js';
 import { VerifyOtpModal } from './VerifyOtpModal.js';
 import { broadcastOrderToFleet } from '../../lib/fleetBroadcast.js';
 
@@ -25,47 +32,6 @@ interface OrdersTableProps {
   onViewOrder: (order: MerchantOrderRecord) => void;
   onPrintOrder: (order: MerchantOrderRecord) => void;
 }
-
-// Visual clothing category thumbnail matching mockups
-const ClothingThumbnail: React.FC<{ type: string }> = ({ type }) => {
-  switch (type) {
-    case 'kurti':
-    case 'dress':
-      return (
-        <div className="w-9 h-9 rounded-xl bg-rose-50 border border-rose-100/80 flex items-center justify-center shrink-0 shadow-2xs">
-          <svg viewBox="0 0 24 24" className="w-5 h-5 text-rose-500" fill="currentColor">
-            <path d="M12 2L9 5H5v4l2 1v12h10V10l2-1V5h-4l-3-3zm0 3c.6 0 1 .4 1 1s-.4 1-1 1-1-.4-1-1 .4-1 1-1z" />
-          </svg>
-        </div>
-      );
-    case 'jeans':
-    case 'shorts':
-      return (
-        <div className="w-9 h-9 rounded-xl bg-slate-100 border border-slate-200/80 flex items-center justify-center shrink-0 shadow-2xs">
-          <svg viewBox="0 0 24 24" className="w-5 h-5 text-slate-700" fill="currentColor">
-            <path d="M6 3h12v4l-2 15h-3l-1-10-1 10H8L6 7V3z" />
-          </svg>
-        </div>
-      );
-    case 'saree':
-      return (
-        <div className="w-9 h-9 rounded-xl bg-amber-50 border border-amber-100/80 flex items-center justify-center shrink-0 shadow-2xs">
-          <svg viewBox="0 0 24 24" className="w-5 h-5 text-amber-600" fill="currentColor">
-            <path d="M12 2c-3 0-5 3-5 6v14h10V8c0-3-2-6-5-6zm0 2c1.7 0 3 2.3 3 4H9c0-1.7 1.3-4 3-4z" />
-          </svg>
-        </div>
-      );
-    case 'tshirt':
-    default:
-      return (
-        <div className="w-9 h-9 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0 shadow-2xs">
-          <svg viewBox="0 0 24 24" className="w-5 h-5 text-slate-100" fill="currentColor">
-            <path d="M16 2l4 4-2 3-2-1v14H8V8L6 9 4 6l4-4h2a3 3 0 004 0h2z" />
-          </svg>
-        </div>
-      );
-  }
-};
 
 export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOrder }) => {
   const {
@@ -91,8 +57,16 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
   const [otpModalOrder, setOtpModalOrder] = useState<MerchantOrderRecord | null>(null);
   const [trackingOrder, setTrackingOrder] = useState<MerchantOrderRecord | null>(null);
   const [contactOrder, setContactOrder] = useState<MerchantOrderRecord | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [openActionId, setOpenActionId] = useState<string | null>(null);
 
-  // Filter orders by tab and search
+  const handleCopy = (text: string, id: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 1800);
+  };
+
+  // Filter orders by tab and active filters
   const tabFilteredOrders = orders.filter((order) => {
     // 1. Tab match
     let matchesTab = true;
@@ -116,7 +90,9 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
         matchesTab = order.status === 'cancelled';
         break;
       case 'reserves':
-        matchesTab = order.orderType === 'In-Store Hold (2h)' || String(order.orderNumber || '').toUpperCase().includes('RES-');
+        matchesTab =
+          order.orderType === 'In-Store Hold (2h)' ||
+          String(order.orderNumber || '').toUpperCase().includes('RES-');
         break;
       case 'returns':
         matchesTab = order.status === 'return_requested' || order.status === 'returned';
@@ -126,40 +102,54 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
         matchesTab = true;
         break;
     }
+    if (!matchesTab) return false;
 
-    // 2. Search query match
-    let matchesSearch = true;
+    // 2. Search match
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      matchesSearch =
-        order.orderNumber.toLowerCase().includes(q) ||
+      const matchNumber = order.orderNumber.toLowerCase().includes(q);
+      const matchCustomer =
         order.customer.name.toLowerCase().includes(q) ||
-        order.customer.email.toLowerCase().includes(q) ||
         order.customer.phone.includes(q) ||
+        order.customer.email.toLowerCase().includes(q);
+      const matchProduct =
+        order.items.some((i) => i.name.toLowerCase().includes(q)) ||
         order.itemsSummary.title.toLowerCase().includes(q);
+      if (!matchNumber && !matchCustomer && !matchProduct) return false;
     }
 
-    // 3. Payment status filter
-    let matchesPayment = true;
+    // 3. Payment Status Filter
     if (paymentStatusFilter !== 'all') {
-      matchesPayment = order.payment.status.toLowerCase() === paymentStatusFilter;
+      if (paymentStatusFilter === 'paid' && order.payment.status !== 'Paid') return false;
+      if (paymentStatusFilter === 'pending' && order.payment.status !== 'Pending') return false;
+      if (paymentStatusFilter === 'refunded' && order.payment.status !== 'Refunded') return false;
     }
 
-    // 4. Order status filter
-    let matchesStatus = true;
-    if (orderStatusFilter !== 'all') {
-      matchesStatus = order.status === orderStatusFilter;
+    // 4. Order Status Filter
+    if (orderStatusFilter !== 'all' && order.status !== orderStatusFilter) {
+      return false;
     }
 
-    return matchesTab && matchesSearch && matchesPayment && matchesStatus;
+    // 5. Fulfillment Filter
+    if (fulfillmentTypeFilter !== 'all') {
+      if (fulfillmentTypeFilter === 'online' && order.orderType !== 'Online Order') return false;
+      if (
+        fulfillmentTypeFilter === 'instore' &&
+        order.orderType !== 'Manual In-Store' &&
+        order.orderType !== 'In-Store Hold (2h)'
+      )
+        return false;
+    }
+
+    return true;
   });
 
-  const allSelected =
+  const isAllSelected =
     tabFilteredOrders.length > 0 &&
     tabFilteredOrders.every((o) => selectedOrderIds.includes(o.id));
 
-  const handleSelectAllToggle = () => {
-    if (allSelected) {
+  const handleToggleSelectAll = () => {
+    if (isAllSelected) {
       clearSelection();
     } else {
       selectAllOrders(tabFilteredOrders.map((o) => o.id));
@@ -167,89 +157,86 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
   };
 
   return (
-    <div className="rounded-2xl bg-white border border-slate-200/80 shadow-2xs overflow-hidden">
-      {/* Scrollable Table Wrapper */}
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs">
+    <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden w-full">
+      {/* Bulk Action Bar (when rows selected) */}
+      {selectedOrderIds.length > 0 && (
+        <div className="bg-blue-50/90 border-b border-blue-200/80 px-4 py-2.5 flex items-center justify-between animate-in fade-in">
+          <div className="flex items-center gap-2">
+            <span className="w-5 h-5 rounded-full bg-blue-600 text-white text-[11px] font-bold flex items-center justify-center">
+              {selectedOrderIds.length}
+            </span>
+            <span className="text-xs font-bold text-blue-900">
+              Orders selected in this view
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                const selected = tabFilteredOrders.filter((o) => selectedOrderIds.includes(o.id));
+                selected.forEach((o) => onPrintOrder(o));
+              }}
+              className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-colors shadow-2xs flex items-center gap-1.5 cursor-pointer"
+            >
+              <Printer className="w-3.5 h-3.5" />
+              <span>Batch Print Labels</span>
+            </button>
+            <button
+              type="button"
+              onClick={clearSelection}
+              className="px-2.5 py-1.5 rounded-lg text-slate-500 hover:text-slate-800 text-xs font-medium hover:bg-white transition-colors cursor-pointer"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 
+        Zero-Horizontal-Scroll Responsive Table
+        table-fixed w-full ensures 100% width adherence with zero horizontal overflow!
+      */}
+      <div className="w-full overflow-hidden">
+        <table className="w-full table-fixed text-left text-xs border-collapse">
+          {/* Column Width Definitions: Total = 100% */}
+          <colgroup>
+            <col className="w-[4%]" />
+            <col className="w-[22%]" />
+            <col className="w-[22%]" />
+            <col className="w-[26%]" />
+            <col className="w-[12%]" />
+            <col className="w-[14%]" />
+          </colgroup>
+
           {/* Table Header */}
-          <thead className="bg-[#f8fafc] text-slate-700 font-semibold border-b border-slate-200">
+          <thead className="bg-[#f8fafc] text-slate-600 text-[11px] font-bold uppercase tracking-wider border-b border-slate-200 select-none">
             <tr>
               {/* Checkbox */}
-              <th className="py-3 px-3.5 w-10">
+              <th className="py-3 px-3 text-center">
                 <input
                   type="checkbox"
-                  checked={allSelected}
-                  onChange={handleSelectAllToggle}
+                  checked={isAllSelected}
+                  onChange={handleToggleSelectAll}
                   className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300 cursor-pointer"
+                  title="Select all orders in this stage"
                 />
               </th>
 
-              {/* Order Details */}
-              <th className="py-3 px-3 min-w-[130px]">Order Details</th>
+              {/* Order & Timeline */}
+              <th className="py-3 px-3.5">Order &amp; Timeline</th>
 
-              {/* Customer */}
-              <th className="py-3 px-3 min-w-[160px]">Customer</th>
+              {/* Customer & Delivery */}
+              <th className="py-3 px-3.5">Customer &amp; Area</th>
 
-              {/* Items */}
-              <th className="py-3 px-3 min-w-[180px]">Items</th>
+              {/* Items & Smart Specs */}
+              <th className="py-3 px-3.5">Items &amp; Specs</th>
 
-              {/* Amount */}
-              <th className="py-3 px-3 min-w-[90px]">Amount</th>
+              {/* Pricing & OTP */}
+              <th className="py-3 px-3">Amount &amp; OTP</th>
 
-              {/* Payment (on all except Returns where it's replaced or shown) */}
-              {activeTab !== 'returns' && (
-                <th className="py-3 px-3 min-w-[100px]">Payment</th>
-              )}
-
-              {/* Tab-Specific Columns */}
-              {['accepted', 'ready_to_ship'].includes(activeTab) && (
-                <th className="py-3 px-3 min-w-[90px]">OTP</th>
-              )}
-
-              {activeTab === 'shipped' && (
-                <>
-                  <th className="py-3 px-3 min-w-[110px]">Shipped On</th>
-                  <th className="py-3 px-3 min-w-[160px]">Courier Details</th>
-                </>
-              )}
-
-              {activeTab === 'delivered' && (
-                <>
-                  <th className="py-3 px-3 min-w-[110px]">Delivered On</th>
-                  <th className="py-3 px-3 min-w-[200px]">Delivery Address</th>
-                </>
-              )}
-
-              {activeTab === 'cancelled' && (
-                <>
-                  <th className="py-3 px-3 min-w-[110px]">Cancelled On</th>
-                  <th className="py-3 px-3 min-w-[160px]">Cancellation Reason</th>
-                  <th className="py-3 px-3 min-w-[130px]">Refund Status</th>
-                </>
-              )}
-
-              {activeTab === 'all_orders' && (
-                <>
-                  <th className="py-3 px-3 min-w-[110px]">Order Status</th>
-                  <th className="py-3 px-3 min-w-[140px]">Current Stage</th>
-                </>
-              )}
-
-              {activeTab === 'returns' && (
-                <>
-                  <th className="py-3 px-3 min-w-[120px]">Return Status</th>
-                  <th className="py-3 px-3 min-w-[120px]">Refund Status</th>
-                  <th className="py-3 px-3 min-w-[160px]">Return Reason</th>
-                </>
-              )}
-
-              {/* Order Time (for new_orders, accepted, ready_to_ship) */}
-              {['new_orders', 'accepted', 'ready_to_ship'].includes(activeTab) && (
-                <th className="py-3 px-3 min-w-[110px]">Order Time</th>
-              )}
-
-              {/* Actions Header */}
-              <th className="py-3 px-3.5 text-center min-w-[130px]">Actions</th>
+              {/* Actions Hub */}
+              <th className="py-3 px-3.5 text-right">Actions</th>
             </tr>
           </thead>
 
@@ -257,24 +244,35 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
           <tbody className="divide-y divide-slate-100">
             {tabFilteredOrders.length === 0 ? (
               <tr>
-                <td colSpan={10} className="py-12 text-center text-slate-400">
-                  <p className="text-sm font-semibold text-slate-600">No orders found</p>
-                  <p className="text-xs text-slate-400 mt-1">There are no orders matching this filter or tab.</p>
+                <td colSpan={6} className="py-14 text-center text-slate-400">
+                  <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center mx-auto mb-2 text-slate-400">
+                    <Package className="w-6 h-6 stroke-[1.5]" />
+                  </div>
+                  <p className="text-sm font-bold text-slate-700">No orders found</p>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    There are no orders matching this stage or filter criteria.
+                  </p>
                 </td>
               </tr>
             ) : (
               tabFilteredOrders.map((order) => {
                 const isSelected = selectedOrderIds.includes(order.id);
+                const isCopied = copiedId === order.id;
+                const isOtpCopied = copiedId === `otp-${order.id}`;
+                const parsedTitle = parseProductTitle(
+                  order.itemsSummary.title || order.items[0]?.name || 'Packaged parcel'
+                );
+                const timeInfo = formatOrderRelativeTime(order.timestamps.createdAt);
 
                 return (
                   <tr
                     key={order.id}
                     className={`transition-colors hover:bg-slate-50/80 ${
-                      isSelected ? 'bg-blue-50/30' : ''
+                      isSelected ? 'bg-blue-50/40' : ''
                     }`}
                   >
-                    {/* Checkbox */}
-                    <td className="py-3.5 px-3.5">
+                    {/* 1. Checkbox */}
+                    <td className="py-3 px-3 text-center align-middle">
                       <input
                         type="checkbox"
                         checked={isSelected}
@@ -283,213 +281,190 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
                       />
                     </td>
 
-                    {/* Order Details */}
-                    <td className="py-3.5 px-3">
+                    {/* 2. Order & Timeline Hub */}
+                    <td className="py-3 px-3.5 align-middle min-w-0">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        {activeTab === 'new_orders' && (
-                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-600 text-white leading-none">
+                        {order.status === 'new' && (
+                          <span className="text-[9px] font-black uppercase px-1.5 py-0.2 rounded-md bg-blue-600 text-white shadow-2xs tracking-wider">
                             New
                           </span>
                         )}
-                        <span className="font-bold text-blue-600 hover:underline cursor-pointer">
+                        <span
+                          onClick={() => onViewOrder(order)}
+                          className="font-bold text-xs text-blue-600 hover:text-blue-800 cursor-pointer font-mono hover:underline truncate max-w-[150px]"
+                          title="Click to view complete order details"
+                        >
                           {order.orderNumber}
                         </span>
-                      </div>
-
-                      {/* Subtitle state */}
-                      <div className="text-[10px] mt-0.5 font-medium">
-                        {activeTab === 'new_orders' && (
-                          <span className="text-slate-400">{order.orderType}</span>
-                        )}
-                        {activeTab === 'accepted' && (
-                          <span className="text-blue-600 font-semibold">Accepted</span>
-                        )}
-                        {activeTab === 'ready_to_ship' && (
-                          <span className="text-amber-600 font-semibold">Ready to Ship</span>
-                        )}
-                        {activeTab === 'shipped' && (
-                          <span className="text-emerald-600 font-semibold">Shipped</span>
-                        )}
-                        {activeTab === 'delivered' && (
-                          <span className="text-emerald-600 font-semibold">Delivered</span>
-                        )}
-                        {activeTab === 'cancelled' && (
-                          <span className="text-rose-600 font-semibold">Cancelled</span>
-                        )}
-                        {activeTab === 'returns' && (
-                          <span className="text-rose-600 font-semibold">Return Requested</span>
-                        )}
-                        {activeTab === 'all_orders' && (
-                          <span className="text-slate-400">{order.orderType}</span>
-                        )}
-                      </div>
-                    </td>
-
-                    {/* Customer */}
-                    <td className="py-3.5 px-3">
-                      <div className="font-bold text-slate-900 text-xs">{order.customer.name}</div>
-                      <div className="text-[10px] text-slate-500 mt-0.5">{order.customer.email}</div>
-                      <div className="text-[10px] text-slate-500">{order.customer.phone}</div>
-                    </td>
-
-                    {/* Items */}
-                    <td className="py-3.5 px-3">
-                      <div className="flex items-center gap-2.5">
-                        <ClothingThumbnail type={order.itemsSummary.categoryIconType} />
-                        <div className="min-w-0">
-                          <div className="font-bold text-slate-900 text-xs">
-                            {order.itemsSummary.count} items
-                          </div>
-                          <div className="text-[11px] text-slate-600 truncate mt-0.5">
-                            {order.itemsSummary.title}
-                          </div>
-                          {order.itemsSummary.extraCount && (
-                            <div className="text-[10px] text-slate-400">
-                              +{order.itemsSummary.extraCount} more
-                            </div>
+                        <button
+                          type="button"
+                          onClick={() => handleCopy(order.orderNumber, order.id)}
+                          className="text-slate-400 hover:text-slate-600 p-0.5 rounded transition-colors shrink-0"
+                          title="Copy Order ID"
+                        >
+                          {isCopied ? (
+                            <Check className="w-3 h-3 text-emerald-600" />
+                          ) : (
+                            <Copy className="w-3 h-3" />
                           )}
-                        </div>
+                        </button>
+                      </div>
+
+                      {/* Sub-row: Order Type pill + Timestamp */}
+                      <div className="flex items-center gap-1.5 mt-1 text-[11px] text-slate-500">
+                        <span className="font-semibold text-[10px] bg-slate-100 text-slate-700 px-1.5 py-0.2 rounded border border-slate-200/60 truncate max-w-[110px]">
+                          {order.orderType === 'In-Store Hold (2h)' ? 'In-Store Hold' : order.orderType}
+                        </span>
+                        <span className="text-slate-400 text-[10px] flex items-center gap-1 shrink-0" title={timeInfo.full}>
+                          <Clock className="w-2.5 h-2.5" />
+                          <span>{timeInfo.relative}</span>
+                        </span>
                       </div>
                     </td>
 
-                    {/* Amount */}
-                    <td className="py-3.5 px-3">
-                      <span className="font-bold text-slate-900 text-xs">
-                        ₹{order.pricing.totalAmount.toLocaleString('en-IN')}
-                      </span>
-                    </td>
-
-                    {/* Payment (when not Returns) */}
-                    {activeTab !== 'returns' && (
-                      <td className="py-3.5 px-3">
-                        <div className="font-bold text-emerald-600 text-xs">
-                          {order.payment.status}
+                    {/* 3. Customer & Delivery Hub */}
+                    <td className="py-3 px-3.5 align-middle min-w-0">
+                      <div className="flex items-center gap-2">
+                        {/* Avatar Initials */}
+                        <div className="w-7 h-7 rounded-full bg-slate-100 border border-slate-200/80 text-slate-700 font-bold text-[11px] flex items-center justify-center shrink-0">
+                          {order.customer.avatarInitials ||
+                            order.customer.name.slice(0, 2).toUpperCase()}
                         </div>
-                        <div className="text-[10px] text-slate-500 mt-0.5">
-                          {order.payment.paymentMethod}
-                        </div>
-                        <div className="text-[10px] text-slate-500">
-                          {order.payment.mode}
-                        </div>
-                      </td>
-                    )}
-
-                    {/* TAB SPECIFIC DATA CELLS */}
-
-                    {/* OTP Column for Accepted & Ready to Ship */}
-                    {['accepted', 'ready_to_ship'].includes(activeTab) && (
-                      <td className="py-3.5 px-3">
-                        <span className="font-extrabold text-slate-900 text-sm tracking-wide font-mono">
-                          {order.otp}
-                        </span>
-                      </td>
-                    )}
-
-                    {/* Shipped On & Courier Details for Shipped */}
-                    {activeTab === 'shipped' && (
-                      <>
-                        <td className="py-3.5 px-3 text-slate-700 whitespace-pre-line text-[11px]">
-                          {order.timestamps.shippedAt || '19 May 2024\n10:20 AM'}
-                        </td>
-                        <td className="py-3.5 px-3">
-                          <div className="font-bold text-slate-900 text-xs">
-                            {order.courier?.partner || 'Local Express'}
-                          </div>
-                          <div className="text-[10px] text-slate-500 mt-0.5 font-mono">
-                            Tracking ID: {order.courier?.trackingId || 'TRK-849201'}
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => setTrackingOrder(order)}
-                            className="text-blue-600 hover:underline font-semibold text-[11px] inline-flex items-center gap-1 mt-0.5 cursor-pointer"
-                          >
-                            <Truck className="w-3 h-3" />
-                            <span>Track Order</span>
-                          </button>
-                        </td>
-                      </>
-                    )}
-
-                    {/* Delivered On & Delivery Address for Delivered */}
-                    {activeTab === 'delivered' && (
-                      <>
-                        <td className="py-3.5 px-3 text-slate-700 whitespace-pre-line text-[11px]">
-                          {order.timestamps.deliveredAt || '19 May 2024\n12:30 PM'}
-                        </td>
-                        <td className="py-3.5 px-3">
-                          <div className="font-bold text-slate-900 text-xs">
+                        <div className="min-w-0 flex-1">
+                          <div className="font-bold text-slate-900 text-xs truncate">
                             {order.customer.name}
                           </div>
-                          <div className="text-[11px] text-slate-500 mt-0.5 leading-snug">
-                            {order.deliveryAddress.street}
+                          <div className="flex items-center gap-2 text-[10px] text-slate-500 mt-0.5">
+                            <a
+                              href={`tel:${order.customer.phone}`}
+                              className="hover:text-blue-600 flex items-center gap-1 font-mono"
+                              title="Call customer"
+                            >
+                              <Phone className="w-2.5 h-2.5 text-slate-400" />
+                              <span>{order.customer.phone}</span>
+                            </a>
                           </div>
-                          <div className="text-[10px] text-slate-400">
-                            {order.deliveryAddress.city} - {order.deliveryAddress.pincode}
+                        </div>
+                      </div>
+
+                      {/* Locality badge */}
+                      <div className="text-[10px] text-slate-500 flex items-center gap-1 mt-1 pl-9 truncate">
+                        <MapPin className="w-2.5 h-2.5 text-slate-400 shrink-0" />
+                        <span className="truncate">
+                          {order.deliveryAddress.locality || order.deliveryAddress.city || 'Local area'} - {order.deliveryAddress.pincode}
+                        </span>
+                      </div>
+                    </td>
+
+                    {/* 4. Items & Smart Specs Hub (Solves variable length) */}
+                    <td className="py-3 px-3.5 align-middle min-w-0">
+                      <div className="flex items-start gap-2.5">
+                        {/* Product Image Thumbnail */}
+                        {order.items[0]?.imageUrl ? (
+                          <div className="relative w-9 h-9 rounded-lg overflow-hidden border border-slate-200 shrink-0 shadow-2xs">
+                            <img
+                              src={order.items[0].imageUrl}
+                              alt=""
+                              className="w-full h-full object-cover"
+                            />
+                            {order.itemsSummary.count > 1 && (
+                              <span className="absolute bottom-0 right-0 bg-blue-600 text-white text-[9px] font-bold px-1 rounded-tl-md">
+                                {order.itemsSummary.count}
+                              </span>
+                            )}
                           </div>
-                        </td>
-                      </>
-                    )}
+                        ) : (
+                          <div className="w-9 h-9 rounded-lg bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center shrink-0 shadow-2xs">
+                            <Package className="w-4 h-4" />
+                          </div>
+                        )}
 
-                    {/* Cancelled Info */}
-                    {activeTab === 'cancelled' && (
-                      <>
-                        <td className="py-3.5 px-3 text-slate-700 whitespace-pre-line text-[11px]">
-                          {order.timestamps.cancelledAt || '18 May 2024\n01:15 PM'}
-                        </td>
-                        <td className="py-3.5 px-3 text-slate-700 text-[11px] max-w-xs">
-                          {order.cancellation?.reason || 'Customer requested cancellation'}
-                        </td>
-                        <td className="py-3.5 px-3">
-                          <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
-                            {order.cancellation?.refundStatus || 'Refund Initiated'}
+                        {/* Title and Parsed Spec Chips */}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-bold text-slate-700 text-[10px] bg-slate-100 px-1 rounded shrink-0">
+                              {order.itemsSummary.count}x
+                            </span>
+                            <span
+                              className="font-bold text-slate-900 text-xs truncate block"
+                              title={order.itemsSummary.title}
+                            >
+                              {parsedTitle.mainTitle}
+                            </span>
+                          </div>
+
+                          {/* Clean Spec Chips (Never breaks width) */}
+                          <div className="flex items-center gap-1 mt-1 flex-wrap">
+                            {parsedTitle.specs.length > 0 ? (
+                              parsedTitle.specs.slice(0, 2).map((spec, i) => (
+                                <span
+                                  key={i}
+                                  className="text-[9px] font-semibold bg-slate-100 text-slate-600 px-1.5 py-0.2 rounded border border-slate-200/60 truncate max-w-[95px]"
+                                  title={spec}
+                                >
+                                  {spec}
+                                </span>
+                              ))
+                            ) : null}
+
+                            {parsedTitle.specs.length > 2 && (
+                              <span
+                                className="text-[9px] text-slate-400 font-medium cursor-pointer hover:text-slate-600"
+                                title={parsedTitle.specs.slice(2).join(', ')}
+                              >
+                                +{parsedTitle.specs.length - 2} specs
+                              </span>
+                            )}
+
+                            {order.itemsSummary.extraCount && (
+                              <span
+                                onClick={() => onViewOrder(order)}
+                                className="text-[9px] font-bold text-blue-600 bg-blue-50 px-1 rounded border border-blue-100 cursor-pointer hover:underline"
+                              >
+                                +{order.itemsSummary.extraCount} more
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* 5. Pricing & OTP Hub */}
+                    <td className="py-3 px-3 align-middle min-w-0">
+                      <div>
+                        <div className="font-black text-slate-900 text-sm">
+                          ₹{order.pricing.totalAmount.toLocaleString('en-IN')}
+                        </div>
+                        <div className="text-[10px] font-semibold text-emerald-600 mt-0.5">
+                          {order.payment.status} · {order.payment.mode}
+                        </div>
+                      </div>
+
+                      {/* Monospace Runner OTP Badge */}
+                      {['accepted', 'ready_to_ship', 'shipped'].includes(order.status) && order.otp ? (
+                        <div
+                          onClick={() => handleCopy(order.otp, `otp-${order.id}`)}
+                          className="mt-1 px-1.5 py-0.5 rounded-md bg-amber-50 border border-amber-200/90 text-amber-900 inline-flex items-center gap-1 cursor-pointer hover:bg-amber-100 transition-colors shadow-2xs"
+                          title="Click to copy delivery runner OTP"
+                        >
+                          <ShieldCheck className="w-2.5 h-2.5 text-amber-600 shrink-0" />
+                          <span className="font-mono font-black text-[11px] tracking-wider">
+                            OTP: {order.otp}
                           </span>
-                        </td>
-                      </>
-                    )}
+                          {isOtpCopied ? (
+                            <Check className="w-2.5 h-2.5 text-emerald-600" />
+                          ) : (
+                            <Copy className="w-2.5 h-2.5 text-amber-400 opacity-60" />
+                          )}
+                        </div>
+                      ) : null}
+                    </td>
 
-                    {/* All Orders Info */}
-                    {activeTab === 'all_orders' && (
-                      <>
-                        <td className="py-3.5 px-3">
-                          <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200/60 capitalize">
-                            {order.status.replace(/_/g, ' ')}
-                          </span>
-                        </td>
-                        <td className="py-3.5 px-3 text-slate-600 text-[11px]">
-                          {order.currentStageName || 'Stage 01: New Order'}
-                        </td>
-                      </>
-                    )}
-
-                    {/* Returns Info */}
-                    {activeTab === 'returns' && (
-                      <>
-                        <td className="py-3.5 px-3">
-                          <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200/60">
-                            {order.returns?.returnStatus || 'Pickup Scheduled'}
-                          </span>
-                        </td>
-                        <td className="py-3.5 px-3 text-slate-600 text-[11px]">
-                          {order.returns?.refundStatus || 'Pending Inspection'}
-                        </td>
-                        <td className="py-3.5 px-3 text-slate-700 text-[11px] max-w-xs">
-                          {order.returns?.returnReason || 'Size did not fit'}
-                        </td>
-                      </>
-                    )}
-
-                    {/* Order Time (for new_orders, accepted, ready_to_ship) */}
-                    {['new_orders', 'accepted', 'ready_to_ship'].includes(activeTab) && (
-                      <td className="py-3.5 px-3 text-slate-700 whitespace-pre-line text-[11px]">
-                        {order.timestamps.createdAt}
-                      </td>
-                    )}
-
-                    {/* Actions Column matching 2.0.png through 2.7.png */}
-                    <td className="py-3.5 px-3.5 text-right">
+                    {/* 6. Action Center */}
+                    <td className="py-3 px-3.5 text-right align-middle min-w-0">
                       <div className="flex items-center justify-end gap-1.5">
-                        {/* New Orders: Accept & Print (emerald primary) + Accept + Reject */}
-                        {activeTab === 'new_orders' && (
+                        {/* Primary Action Button Based on Order Status */}
+                        {order.status === 'new' && (
                           <>
                             <button
                               type="button"
@@ -497,129 +472,104 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
                                 acceptOrder(order.id);
                                 onPrintOrder(order);
                               }}
-                              className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs transition-colors shadow-2xs whitespace-nowrap cursor-pointer flex items-center gap-1.5"
-                              title="Accept order and print KOT invoice slip in 1 click"
+                              className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-colors shadow-2xs flex items-center gap-1 cursor-pointer"
+                              title="Accept order and print KOT invoice slip"
                             >
-                              <Printer className="w-3.5 h-3.5" />
-                              <span>Accept & Print</span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => acceptOrder(order.id)}
-                              className="px-2.5 py-1.5 rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50 font-semibold text-xs transition-colors shadow-2xs whitespace-nowrap cursor-pointer"
-                            >
-                              Accept
+                              <Printer className="w-3 h-3" />
+                              <span>Accept</span>
                             </button>
                             <button
                               type="button"
                               onClick={() => rejectOrder(order.id)}
-                              className="px-2 py-1.5 rounded-lg text-rose-600 hover:bg-rose-50 font-semibold text-xs transition-colors whitespace-nowrap cursor-pointer"
+                              className="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                              title="Reject Order"
                             >
-                              Reject
+                              <X className="w-3.5 h-3.5" />
                             </button>
                           </>
                         )}
-                        {/* All Orders Tab: Quick Accept & Print if still new */}
-                        {activeTab === 'all_orders' && order.status === 'new' && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              acceptOrder(order.id);
-                              onPrintOrder(order);
-                            }}
-                            className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs transition-colors shadow-2xs whitespace-nowrap cursor-pointer flex items-center gap-1"
-                            title="Accept order and print KOT invoice slip in 1 click"
-                          >
-                            <Printer className="w-3 h-3" />
-                            <span>Accept & Print</span>
-                          </button>
-                        )}
 
-                        {/* Accepted: Ready to Ship */}
-                        {activeTab === 'accepted' && (
+                        {order.status === 'accepted' && (
                           <button
                             type="button"
                             onClick={() => markReadyToShip(order.id)}
-                            className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition-colors shadow-2xs whitespace-nowrap cursor-pointer"
+                            className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-colors shadow-2xs cursor-pointer"
                           >
                             Ready to Ship
                           </button>
                         )}
 
-                        {/* Ready to Ship: Broadcast Run (WhatsApp Green) + Mark Shipped (Blue) */}
-                        {activeTab === 'ready_to_ship' && (
+                        {order.status === 'ready_to_ship' && (
                           <>
                             <button
                               type="button"
                               onClick={() => broadcastOrderToFleet(order)}
-                              className="px-3 py-1.5 rounded-lg bg-[#25D366] hover:bg-[#1EBE5D] text-white font-bold text-xs transition-colors shadow-2xs whitespace-nowrap cursor-pointer flex items-center gap-1.5"
+                              className="px-2.5 py-1.5 rounded-lg bg-[#25D366] hover:bg-[#1EBE5D] text-white font-bold text-xs transition-colors shadow-2xs flex items-center gap-1 cursor-pointer"
                               title="Broadcast Run to WhatsApp Delivery Group"
                             >
                               <MessageCircle className="w-3.5 h-3.5 fill-current" />
-                              <span>Broadcast Run</span>
+                              <span>Broadcast</span>
                             </button>
                             <button
                               type="button"
                               onClick={() => dispatchOrder(order.id)}
-                              className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition-colors shadow-2xs whitespace-nowrap cursor-pointer"
+                              className="px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-colors shadow-2xs cursor-pointer"
                             >
-                              Mark Shipped
+                              Ship
                             </button>
                           </>
                         )}
-                        {/* All Orders Tab: Quick Broadcast Run if ready to ship */}
-                        {activeTab === 'all_orders' && order.status === 'ready_to_ship' && (
-                          <button
-                            type="button"
-                            onClick={() => broadcastOrderToFleet(order)}
-                            className="px-2.5 py-1.5 rounded-lg bg-[#25D366] hover:bg-[#1EBE5D] text-white font-bold text-xs transition-colors shadow-2xs whitespace-nowrap cursor-pointer flex items-center gap-1"
-                            title="Broadcast Run to WhatsApp Delivery Group"
-                          >
-                            <MessageCircle className="w-3 h-3 fill-current" />
-                            <span>Broadcast Run</span>
-                          </button>
-                        )}
 
-                        {/* Shipped: Verify Delivery OTP */}
-                        {activeTab === 'shipped' && (
+                        {order.status === 'shipped' && (
                           <button
                             type="button"
                             onClick={() => setOtpModalOrder(order)}
-                            className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs transition-colors shadow-2xs whitespace-nowrap cursor-pointer"
+                            className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-colors shadow-2xs cursor-pointer"
                           >
-                            Verify OTP & Deliver
+                            Verify OTP
                           </button>
                         )}
 
-                        {/* Print Invoice Button */}
-                        <button
-                          type="button"
-                          onClick={() => onPrintOrder(order)}
-                          className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-blue-600 transition-colors cursor-pointer"
-                          title="Print Shipping Label / Invoice"
-                        >
-                          <Printer className="w-4 h-4" />
-                        </button>
+                        {order.status === 'delivered' && (
+                          <button
+                            type="button"
+                            onClick={() => onPrintOrder(order)}
+                            className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition-colors shadow-2xs flex items-center gap-1 cursor-pointer"
+                          >
+                            <Printer className="w-3 h-3" />
+                            <span>Print</span>
+                          </button>
+                        )}
 
-                        {/* View Details Button */}
+                        {order.orderType === 'In-Store Hold (2h)' && order.status !== 'delivered' && (
+                          <button
+                            type="button"
+                            onClick={() => claimReservation(order.id)}
+                            className="px-2.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition-colors shadow-2xs cursor-pointer"
+                          >
+                            Claim Hold
+                          </button>
+                        )}
+
+                        {/* View Details Eye */}
                         <button
                           type="button"
                           onClick={() => onViewOrder(order)}
-                          className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-blue-600 transition-colors cursor-pointer"
-                          title="View Order Details"
+                          className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-600 hover:text-blue-600 transition-colors cursor-pointer shrink-0"
+                          title="View complete order details"
                         >
-                          <Eye className="w-4 h-4" />
+                          <Eye className="w-3.5 h-3.5" />
                         </button>
 
-                        {/* Customer Chat/Contact for Returns tab */}
-                        {activeTab === 'returns' && (
+                        {/* Print Invoice Quick Tool (when not already shown) */}
+                        {order.status !== 'new' && order.status !== 'delivered' && (
                           <button
                             type="button"
-                            onClick={() => setContactOrder(order)}
-                            className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-blue-600 transition-colors cursor-pointer"
-                            title="Contact Customer"
+                            onClick={() => onPrintOrder(order)}
+                            className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-600 hover:text-blue-600 transition-colors cursor-pointer shrink-0"
+                            title="Print Label / Invoice"
                           >
-                            <MessageSquare className="w-4 h-4" />
+                            <Printer className="w-3.5 h-3.5" />
                           </button>
                         )}
                       </div>
@@ -632,14 +582,16 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
         </table>
       </div>
 
-      {/* Footer: Showing all active orders */}
-      <div className="py-3 px-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 bg-[#fbfcfd]">
-        <span className="font-medium">
+      {/* Table Footer */}
+      <div className="py-2.5 px-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 bg-[#fbfcfd]">
+        <span className="font-semibold text-slate-700">
           Showing {tabFilteredOrders.length} order{tabFilteredOrders.length === 1 ? '' : 's'} in this stage
         </span>
-        <span className="text-[11px] text-slate-400">
-          Hyperlocal delivery radius: 3–4 km
-        </span>
+        <div className="flex items-center gap-4 text-[11px] text-slate-400">
+          <span>Delivery radius: 3–4 km</span>
+          <span className="hidden sm:inline">·</span>
+          <span className="hidden sm:inline text-emerald-600 font-medium">⚡ Real-time updates active</span>
+        </div>
       </div>
 
       {/* Verify OTP Modal */}
@@ -662,7 +614,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
               <button
                 type="button"
                 onClick={() => setTrackingOrder(null)}
-                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100"
+                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -702,7 +654,9 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
                   </div>
                   <div>
                     <div className="font-bold text-slate-800">Dispatched from Store</div>
-                    <div className="text-[11px] text-slate-400 mt-0.5">{trackingOrder.timestamps.shippedAt || '18 May 2024 04:30 PM'}</div>
+                    <div className="text-[11px] text-slate-400 mt-0.5">
+                      {trackingOrder.timestamps.shippedAt || '18 May 2024 04:30 PM'}
+                    </div>
                   </div>
                 </div>
 
@@ -712,7 +666,9 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
                   </div>
                   <div>
                     <div className="font-bold text-slate-800">Packed & Label Generated</div>
-                    <div className="text-[11px] text-slate-400 mt-0.5">{trackingOrder.timestamps.createdAt}</div>
+                    <div className="text-[11px] text-slate-400 mt-0.5">
+                      {trackingOrder.timestamps.createdAt}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -740,7 +696,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({ onViewOrder, onPrintOr
               <button
                 type="button"
                 onClick={() => setContactOrder(null)}
-                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100"
+                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>

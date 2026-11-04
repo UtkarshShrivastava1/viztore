@@ -5,6 +5,7 @@ import { OrderStepper } from '../components/orders/OrderStepper.js';
 import { OrdersTabsBar } from '../components/orders/OrdersTabsBar.js';
 import { OrdersToolbar } from '../components/orders/OrdersToolbar.js';
 import { OrdersTable } from '../components/orders/OrdersTable.js';
+import { OrdersKanbanBoard } from '../components/orders/OrdersKanbanBoard.js';
 import { OrderDetailModal } from '../components/orders/OrderDetailModal.js';
 import { branding } from '@repo/shared-types/branding.config';
 import { printMerchantInvoice } from '../lib/printInvoice.js';
@@ -14,7 +15,7 @@ interface OrdersPageProps {
 }
 
 export const OrdersPage: React.FC<OrdersPageProps> = ({ onOpenCreateOrder }) => {
-  const { activeTab, setActiveTab, orders, fetchOrders, isLoading } = useOrderStore();
+  const { activeTab, setActiveTab, orders, fetchOrders, isLoading, viewMode } = useOrderStore();
 
   React.useEffect(() => {
     fetchOrders();
@@ -216,14 +217,24 @@ export const OrdersPage: React.FC<OrdersPageProps> = ({ onOpenCreateOrder }) => 
       {/* 4. Toolbar Controls */}
       <OrdersToolbar activeTab={activeTab} />
 
-      {/* 5. Orders Table */}
-      <OrdersTable
-        onViewOrder={(order) => {
-          setSelectedOrder(order);
-          setIsDetailOpen(true);
-        }}
-        onPrintOrder={handlePrint}
-      />
+      {/* 5. Orders View (Table vs Pipeline Kanban) */}
+      {viewMode === 'kanban' ? (
+        <OrdersKanbanBoard
+          onViewOrder={(order) => {
+            setSelectedOrder(order);
+            setIsDetailOpen(true);
+          }}
+          onPrintOrder={handlePrint}
+        />
+      ) : (
+        <OrdersTable
+          onViewOrder={(order) => {
+            setSelectedOrder(order);
+            setIsDetailOpen(true);
+          }}
+          onPrintOrder={handlePrint}
+        />
+      )}
 
       {/* 6. Order Detail Modal */}
       <OrderDetailModal

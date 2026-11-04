@@ -14,6 +14,8 @@ export type OrderTab =
   | 'returns'
   | 'reserves';
 
+export type OrderViewMode = 'table' | 'kanban';
+
 export type OrderStatus =
   | 'new'
   | 'accepted'
@@ -113,10 +115,12 @@ interface OrderStoreState {
   fulfillmentTypeFilter: string;
   dateRange: string;
   selectedOrderIds: string[];
+  viewMode: OrderViewMode;
 
   // Actions
   fetchOrders: (storeId?: string) => Promise<void>;
   setActiveTab: (tab: OrderTab) => void;
+  setViewMode: (mode: OrderViewMode) => void;
   setSearchQuery: (query: string) => void;
   setPaymentStatusFilter: (status: string) => void;
   setOrderStatusFilter: (status: string) => void;
@@ -340,6 +344,7 @@ export const useOrderStore = create<OrderStoreState>((set, get) => {
     fulfillmentTypeFilter: 'all',
     dateRange: 'This Month',
     selectedOrderIds: [],
+    viewMode: (typeof window !== 'undefined' && (localStorage.getItem('merchant_orders_view_mode') as OrderViewMode)) || 'table',
 
     fetchOrders: async (storeId?: string) => {
       set({ isLoading: true, error: null });
@@ -407,6 +412,12 @@ export const useOrderStore = create<OrderStoreState>((set, get) => {
         localStorage.setItem('merchant_active_order_tab', tab);
       }
       set({ activeTab: tab, selectedOrderIds: [] });
+    },
+    setViewMode: (mode) => {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('merchant_orders_view_mode', mode);
+      }
+      set({ viewMode: mode });
     },
     setSearchQuery: (query) => set({ searchQuery: query }),
     setPaymentStatusFilter: (status) => set({ paymentStatusFilter: status }),
