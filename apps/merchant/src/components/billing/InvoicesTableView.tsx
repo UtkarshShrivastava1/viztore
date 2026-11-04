@@ -17,6 +17,10 @@ import {
   CheckCircle,
   Zap,
   Plus,
+  Calendar,
+  Tag,
+  CircleDot,
+  Sparkles,
 } from 'lucide-react';
 import { useBillingStore, IInvoice, InvoiceStatus } from '../../stores/billingStore.js';
 import { InvoiceRowActionMenu } from './InvoiceRowActionMenu.js';
@@ -371,6 +375,36 @@ export const InvoicesTableView: React.FC = () => {
     }
   };
 
+  // Computed tab counts for live status badges
+  const statusTabCounts = useMemo(() => {
+    const counts: Record<string, number> = {
+      'All Invoices': invoices.length,
+      'Draft': 0,
+      'Issued': 0,
+      'Paid': 0,
+      'Partially Paid': 0,
+      'Overdue': 0,
+      'Cancelled': 0,
+    };
+    invoices.forEach((inv) => {
+      if (inv.status === 'draft') counts['Draft'] = (counts['Draft'] ?? 0) + 1;
+      else if (inv.status === 'issued') counts['Issued'] = (counts['Issued'] ?? 0) + 1;
+      else if (inv.status === 'paid') counts['Paid'] = (counts['Paid'] ?? 0) + 1;
+      else if (inv.status === 'partially_paid') counts['Partially Paid'] = (counts['Partially Paid'] ?? 0) + 1;
+      else if (inv.status === 'overdue') counts['Overdue'] = (counts['Overdue'] ?? 0) + 1;
+      else if (inv.status === 'cancelled') counts['Cancelled'] = (counts['Cancelled'] ?? 0) + 1;
+    });
+    return counts;
+  }, [invoices]);
+
+  const hasActiveFilters = Boolean(
+    invoiceSearchQuery.trim() ||
+    invoiceDateRange !== 'This Month' ||
+    invoiceTypeFilter !== 'All Types' ||
+    invoiceStatusFilter !== 'All Statuses' ||
+    invoicePaymentFilter !== 'All'
+  );
+
   return (
     <div className="space-y-6">
       {/* Toast Notification Banner */}
@@ -398,39 +432,48 @@ export const InvoicesTableView: React.FC = () => {
         </div>
       )}
 
-      {/* 5 Top KPI Cards */}
+      {/* 5 Top KPI Cards - Modern Top Border Accents & Large Figures */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
-        {kpiCards.map((card) => {
+        {kpiCards.map((card, idx) => {
           const Icon = card.icon;
+          const borderTopColors = [
+            'border-t-amber-500',
+            'border-t-indigo-600',
+            'border-t-emerald-600',
+            'border-t-amber-600',
+            'border-t-rose-600',
+          ];
+          const topColor = borderTopColors[idx % borderTopColors.length];
+
           return (
             <div
               key={card.id}
-              className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-2xs flex flex-col justify-between hover:shadow-xs transition-shadow duration-200"
+              className={`bg-white rounded-2xl border border-slate-200/80 border-t-4 ${topColor} p-4 shadow-xs flex flex-col justify-between hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group`}
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-slate-600">{card.title}</span>
+                <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">{card.title}</span>
                 <div
-                  className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${card.iconBg} ${card.iconColor}`}
+                  className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${card.iconBg} ${card.iconColor} shadow-3xs group-hover:scale-105 transition-transform`}
                 >
                   <Icon className="w-4 h-4" />
                 </div>
               </div>
 
               <div className="mt-3">
-                <div className="text-2xl font-bold text-slate-900 tracking-tight leading-none">
+                <div className="text-2xl font-black text-slate-900 tracking-tight leading-none font-mono">
                   {card.value}
                 </div>
-                <div className="flex items-center gap-1.5 mt-2 text-xs truncate">
-                  {card.isPositive ? (
-                    <span className="font-semibold text-emerald-600 flex items-center">
+                <div className="flex items-center gap-1.5 mt-2.5 text-xs truncate">
+                  {card.isDanger ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-semibold text-[11px] bg-rose-50 text-rose-700 border border-rose-200">
                       {card.insight}
                     </span>
-                  ) : card.isDanger ? (
-                    <span className="font-semibold text-rose-600 flex items-center">
+                  ) : card.isPositive ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-semibold text-[11px] bg-emerald-50 text-emerald-700 border border-emerald-200">
                       {card.insight}
                     </span>
                   ) : (
-                    <span className="text-slate-400 font-normal">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-medium text-[11px] bg-slate-100 text-slate-600 border border-slate-200">
                       {card.insight}
                     </span>
                   )}
@@ -454,21 +497,32 @@ export const InvoicesTableView: React.FC = () => {
               placeholder="Search by invoice no., customer name, or phone..."
               className="w-full pl-9 pr-20 py-2 bg-slate-50/70 border border-slate-200/80 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 focus:bg-white transition-all"
             />
-            <kbd className="absolute right-3 top-1/2 -translate-y-1/2 hidden sm:inline-flex items-center gap-0.5 text-[10px] font-semibold text-slate-400 bg-white border border-slate-200 px-1.5 py-0.5 rounded-md shadow-3xs">
-              Ctrl + K
-            </kbd>
+            {invoiceSearchQuery ? (
+              <button
+                type="button"
+                onClick={() => setInvoiceSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            ) : (
+              <kbd className="absolute right-3 top-1/2 -translate-y-1/2 hidden sm:inline-flex items-center gap-0.5 text-[10px] font-semibold text-slate-400 bg-white border border-slate-200 px-1.5 py-0.5 rounded-md shadow-3xs">
+                Ctrl + K
+              </kbd>
+            )}
           </div>
 
           {/* Date Range Dropdown */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200/80 px-2.5 py-1.5 rounded-xl">
+            <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
             <div className="text-left">
-              <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">
+              <span className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider leading-none mb-0.5">
                 Date Range
               </span>
               <select
                 value={invoiceDateRange}
                 onChange={(e) => setInvoiceDateRange(e.target.value)}
-                className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-blue-500 cursor-pointer"
+                className="bg-transparent text-xs font-semibold text-slate-700 focus:outline-none cursor-pointer pr-1"
               >
                 <option value="This Month">This Month</option>
                 <option value="Last Month">Last Month</option>
@@ -479,115 +533,119 @@ export const InvoicesTableView: React.FC = () => {
           </div>
 
           {/* Invoice Type Dropdown */}
-          <div>
-            <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">
-              Invoice Type
-            </span>
-            <select
-              value={invoiceTypeFilter}
-              onChange={(e) => setInvoiceTypeFilter(e.target.value)}
-              className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-blue-500 cursor-pointer"
-            >
-              <option value="All Types">All Types</option>
-              <option value="Tax Invoice">Tax Invoice</option>
-              <option value="Bill of Supply">Bill of Supply</option>
-            </select>
+          <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200/80 px-2.5 py-1.5 rounded-xl">
+            <Tag className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            <div className="text-left">
+              <span className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider leading-none mb-0.5">
+                Type
+              </span>
+              <select
+                value={invoiceTypeFilter}
+                onChange={(e) => setInvoiceTypeFilter(e.target.value)}
+                className="bg-transparent text-xs font-semibold text-slate-700 focus:outline-none cursor-pointer pr-1"
+              >
+                <option value="All Types">All Types</option>
+                <option value="Tax Invoice">Tax Invoice</option>
+                <option value="Bill of Supply">Bill of Supply</option>
+              </select>
+            </div>
           </div>
 
           {/* Status Dropdown */}
-          <div>
-            <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">
-              Status
-            </span>
-            <select
-              value={invoiceStatusFilter}
-              onChange={(e) => setInvoiceStatusFilter(e.target.value)}
-              className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-blue-500 cursor-pointer"
-            >
-              <option value="All Statuses">All Statuses</option>
-              <option value="Paid">Paid</option>
-              <option value="Partially Paid">Partially Paid</option>
-              <option value="Overdue">Overdue</option>
-              <option value="Issued">Issued</option>
-              <option value="Draft">Draft</option>
-            </select>
+          <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200/80 px-2.5 py-1.5 rounded-xl">
+            <CircleDot className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            <div className="text-left">
+              <span className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider leading-none mb-0.5">
+                Status
+              </span>
+              <select
+                value={invoiceStatusFilter}
+                onChange={(e) => setInvoiceStatusFilter(e.target.value)}
+                className="bg-transparent text-xs font-semibold text-slate-700 focus:outline-none cursor-pointer pr-1"
+              >
+                <option value="All Statuses">All Statuses</option>
+                <option value="Paid">Paid</option>
+                <option value="Partially Paid">Partially Paid</option>
+                <option value="Overdue">Overdue</option>
+                <option value="Issued">Issued</option>
+                <option value="Draft">Draft</option>
+              </select>
+            </div>
           </div>
 
           {/* Payment Status Dropdown */}
-          <div>
-            <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">
-              Payment Status
-            </span>
-            <select
-              value={invoicePaymentFilter}
-              onChange={(e) => setInvoicePaymentFilter(e.target.value)}
-              className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:border-blue-500 cursor-pointer"
-            >
-              <option value="All">All</option>
-              <option value="Paid">Paid</option>
-              <option value="Partial">Partial</option>
-              <option value="Unpaid">Unpaid</option>
-            </select>
+          <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200/80 px-2.5 py-1.5 rounded-xl">
+            <CreditCard className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            <div className="text-left">
+              <span className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider leading-none mb-0.5">
+                Payment
+              </span>
+              <select
+                value={invoicePaymentFilter}
+                onChange={(e) => setInvoicePaymentFilter(e.target.value)}
+                className="bg-transparent text-xs font-semibold text-slate-700 focus:outline-none cursor-pointer pr-1"
+              >
+                <option value="All">All</option>
+                <option value="Paid">Paid</option>
+                <option value="Partial">Partial</option>
+                <option value="Unpaid">Unpaid</option>
+              </select>
+            </div>
           </div>
 
           {/* Filter & Clear Actions */}
-          <div className="flex items-center gap-2 pt-3 sm:pt-4">
+          <div className="flex items-center gap-2 ml-auto">
             <button
               type="button"
               onClick={() => fetchInvoices()}
               disabled={isLoadingInvoices}
-              className="px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 flex items-center gap-1.5 transition-colors shadow-3xs disabled:opacity-50"
+              className="px-3 py-2 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 flex items-center gap-1.5 transition-colors shadow-3xs disabled:opacity-50 cursor-pointer"
               title="Refresh invoices from server"
             >
               <RefreshCw className={`w-3.5 h-3.5 text-blue-600 ${isLoadingInvoices ? 'animate-spin' : ''}`} />
               <span>Refresh</span>
             </button>
-            <button
-              type="button"
-              onClick={clearInvoiceFilters}
-              className="px-2.5 py-1.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors"
-            >
-              Clear All
-            </button>
-          </div>
-
-          {/* Direct POS and Invoice Creation Shortcut Actions */}
-          <div className="flex items-center gap-2 pt-3 sm:pt-4 ml-auto">
-            <button
-              type="button"
-              onClick={() => setActiveView('pos_counter')}
-              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
-            >
-              <Zap className="w-3.5 h-3.5 fill-current text-emerald-200" />
-              <span>Counter POS</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => openCreateInvoiceModal()}
-              className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition-colors cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              <span>+ Create Invoice</span>
-            </button>
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={clearInvoiceFilters}
+                className="px-2.5 py-2 text-xs font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100/80 rounded-xl transition-colors cursor-pointer flex items-center gap-1"
+              >
+                <X className="w-3.5 h-3.5" />
+                <span>Reset Filters</span>
+              </button>
+            )}
           </div>
         </div>
 
-        {/* 7 Status Tabs */}
-        <div className="pt-2 border-t border-slate-100 flex items-center gap-2 overflow-x-auto scrollbar-none">
+        {/* Status Capsule Tabs with Dynamic Count Badges */}
+        <div className="pt-2.5 border-t border-slate-100 flex items-center gap-1.5 overflow-x-auto scrollbar-none">
           {statusTabs.map((tab) => {
             const isActive = invoiceCurrentTab === tab;
+            const count = statusTabCounts[tab] || 0;
             return (
               <button
                 key={tab}
                 type="button"
                 onClick={() => setInvoiceCurrentTab(tab)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
                   isActive
-                    ? 'text-blue-600 border-b-2 border-blue-600 rounded-b-none bg-blue-50/50'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                    ? 'bg-blue-600 text-white shadow-xs font-bold'
+                    : 'bg-slate-100/80 text-slate-600 hover:bg-slate-200/70 hover:text-slate-900'
                 }`}
               >
-                {tab}
+                <span>{tab}</span>
+                <span
+                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                    isActive
+                      ? 'bg-white/25 text-white'
+                      : count > 0
+                      ? 'bg-white text-slate-700 border border-slate-200/80'
+                      : 'bg-transparent text-slate-400'
+                  }`}
+                >
+                  {count}
+                </span>
               </button>
             );
           })}
@@ -622,30 +680,48 @@ export const InvoicesTableView: React.FC = () => {
             <tbody className="divide-y divide-slate-100 text-xs">
               {filteredInvoices.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-16 text-center text-slate-400">
-                    <div className="flex flex-col items-center justify-center gap-2">
-                      <FileText className="w-10 h-10 text-slate-300 stroke-1" />
-                      <p className="text-sm font-semibold text-slate-700">No invoices yet</p>
-                      <p className="text-xs text-slate-400 max-w-sm">
-                        Create your first counter sale bill or tax invoice to begin tracking retail payments and inventory.
+                  <td colSpan={9} className="py-20 text-center text-slate-400">
+                    <div className="flex flex-col items-center justify-center max-w-md mx-auto px-4">
+                      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 flex items-center justify-center mb-4 shadow-xs">
+                        <FileText className="w-8 h-8 text-blue-600 stroke-[1.5]" />
+                      </div>
+                      <p className="text-base font-bold text-slate-800">
+                        {hasActiveFilters ? 'No invoices match current filters' : 'No invoices generated yet'}
                       </p>
-                      <div className="flex items-center gap-3 mt-3">
-                        <button
-                          type="button"
-                          onClick={() => setActiveView('pos_counter')}
-                          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
-                        >
-                          <Zap className="w-3.5 h-3.5 fill-current text-emerald-200" />
-                          <span>Launch Counter POS</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => openCreateInvoiceModal()}
-                          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition-colors cursor-pointer"
-                        >
-                          <Plus className="w-4 h-4" />
-                          <span>Create Invoice</span>
-                        </button>
+                      <p className="text-xs text-slate-500 mt-1 leading-relaxed text-center">
+                        {hasActiveFilters
+                          ? 'Try resetting the date range or status filters to view previous transactions.'
+                          : 'Use our lightning-fast Counter POS workstation or create a customized B2B GST tax invoice.'}
+                      </p>
+                      <div className="flex items-center gap-3 mt-6">
+                        {hasActiveFilters ? (
+                          <button
+                            type="button"
+                            onClick={clearInvoiceFilters}
+                            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+                          >
+                            Reset All Filters
+                          </button>
+                        ) : (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => setActiveView('pos_counter')}
+                              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
+                            >
+                              <Zap className="w-3.5 h-3.5 fill-current text-emerald-200" />
+                              <span>⚡ Open Counter POS (F2)</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => openCreateInvoiceModal()}
+                              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                            >
+                              <Plus className="w-4 h-4" />
+                              <span>Create Invoice</span>
+                            </button>
+                          </>
+                        )}
                       </div>
                     </div>
                   </td>

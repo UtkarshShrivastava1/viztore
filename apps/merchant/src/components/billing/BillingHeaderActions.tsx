@@ -158,34 +158,38 @@ export const BillingHeaderActions: React.FC<BillingHeaderActionsProps> = ({
 
   return (
     <div className="flex items-center gap-2.5 relative flex-wrap sm:flex-nowrap">
-      {/* Quick Counter POS Register Launch Button */}
+      {/* Premier Action: High-Velocity Counter POS */}
       <button
         type="button"
         onClick={() => setActiveView('pos_counter')}
-        className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition-all active:scale-95"
+        className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-bold rounded-xl shadow-md flex items-center gap-2 transition-all active:scale-95 cursor-pointer group"
       >
-        <Zap className="w-3.5 h-3.5 fill-current text-emerald-200" />
+        <span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse" />
+        <Zap className="w-3.5 h-3.5 fill-current text-emerald-200 group-hover:scale-110 transition-transform" />
         <span>Counter POS</span>
+        <span className="text-[10px] font-mono font-bold bg-emerald-800/80 px-1.5 py-0.5 rounded text-emerald-200 border border-emerald-500/40">
+          F2
+        </span>
       </button>
 
-      {/* Primary Action Button */}
+      {/* Secondary Action: Create Invoice */}
       <button
         type="button"
         onClick={handlePrimaryClick}
-        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl shadow-xs flex items-center gap-1.5 transition-colors"
+        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition-colors cursor-pointer active:scale-95"
       >
         <Plus className="w-4 h-4" />
-        {getPrimaryButtonLabel()}
+        <span>{getPrimaryButtonLabel()}</span>
       </button>
 
-      {/* Billing & Invoicing Settings Button (5.0, 5.3, 5.4) */}
+      {/* Settings Button */}
       <button
         type="button"
         onClick={() => setActiveView('settings')}
-        className="px-3.5 py-2 bg-white hover:bg-blue-50/50 border border-blue-200 text-blue-600 text-xs font-semibold rounded-xl shadow-2xs flex items-center gap-1.5 transition-colors"
+        className="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200 hover:border-slate-300 text-slate-700 hover:text-slate-900 text-xs font-semibold rounded-xl shadow-3xs flex items-center gap-1.5 transition-colors cursor-pointer"
       >
-        <Settings className="w-4 h-4 text-blue-600" />
-        Billing & Invoicing Settings
+        <Settings className="w-3.5 h-3.5 text-slate-500" />
+        <span>Settings</span>
       </button>
 
       {/* More Actions Dropdown Button (5.0, 5.4) */}
