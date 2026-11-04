@@ -36,7 +36,7 @@ export const ProductPreviewSubmitPage: React.FC = () => {
   const handleSaveProduct = async () => {
     setIsSubmitting(true);
     try {
-      const saved = await saveDraftAsProduct();
+      const saved = await saveDraftAsProduct(false);
       toast.success(
         'Product Saved Successfully! 🎉',
         `"${saved.name}" has been published and added to your active catalog.`
@@ -54,7 +54,7 @@ export const ProductPreviewSubmitPage: React.FC = () => {
   const handleSaveAndPrint = async () => {
     setIsSubmitting(true);
     try {
-      const saved = await saveDraftAsProduct();
+      const saved = await saveDraftAsProduct(false);
       toast.success(
         'Product Saved & Ready to Print 🏷️',
         `"${saved.name}" published. Opening barcode sticker printer...`
@@ -70,7 +70,7 @@ export const ProductPreviewSubmitPage: React.FC = () => {
   const handleSaveAsDraft = async () => {
     setIsSubmitting(true);
     try {
-      const saved = await saveDraftAsProduct();
+      const saved = await saveDraftAsProduct(true);
       toast.success(
         'Draft Saved Successfully 💾',
         `"${saved.name || 'Product'}" has been preserved in your drafts.`

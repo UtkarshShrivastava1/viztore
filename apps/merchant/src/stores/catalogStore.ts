@@ -151,7 +151,7 @@ interface CatalogStoreState {
   resetDraftProduct: () => void;
   loadProductIntoDraft: (product: ProductItem) => void;
 
-  saveDraftAsProduct: () => Promise<ProductItem>;
+  saveDraftAsProduct: (asDraft?: boolean) => Promise<ProductItem>;
   bulkImportProducts: (productsData: any[]) => Promise<{ created: number; errors: any[] }>;
   duplicateProduct: (id: string) => void;
   toggleProductStatus: (id: string) => Promise<void>;
@@ -244,8 +244,21 @@ export function mapApiProductToProductItem(p: any): ProductItem {
   }
 
   const stock = typeof p.totalStock === 'number' ? p.totalStock : primaryVariant.stock || 0;
-  const status: 'active' | 'inactive' | 'draft' | 'out_of_stock' =
-    stock <= 0 ? 'out_of_stock' : p.status || (p.isActive === false ? 'inactive' : 'active');
+  const resolvedPrice = typeof p.basePrice === 'number'
+    ? p.basePrice
+    : (typeof primaryVariant.price === 'number'
+        ? primaryVariant.price
+        : (typeof p.price === 'number' ? p.price : 0));
+
+  const isDraftProduct =
+    p.status === 'draft' ||
+    (resolvedPrice === 0 && (!p.variants || p.variants.length === 0 || p.variants.every((v: any) => !v.price || v.price === 0)) && p.status !== 'inactive');
+
+  const status: 'active' | 'inactive' | 'draft' | 'out_of_stock' = isDraftProduct
+    ? 'draft'
+    : stock <= 0
+      ? 'out_of_stock'
+      : p.status || (p.isActive === false ? 'inactive' : 'active');
 
   const attributesMap: Record<string, string> = {};
   if (Array.isArray(p.attributes)) {
@@ -354,7 +367,7 @@ const initialDefaultDraft: Partial<ProductItem> = {
   brand: '',
   stock: 0,
   lowStockThreshold: 5,
-  status: 'active',
+  status: 'draft',
   price: undefined,
   costPrice: undefined,
   mrp: undefined,
@@ -975,8 +988,27 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
     });
   },
 
-  saveDraftAsProduct: async () => {
+  saveDraftAsProduct: async (asDraft?: boolean) => {
     const { draftProduct, products } = get();
+
+    const effectiveBasePrice = Number(draftProduct.price || 0);
+    const effectiveBaseMrp = Number(draftProduct.mrp || draftProduct.price || 0);
+    const isUnpriced =
+      effectiveBasePrice === 0 &&
+      (!draftProduct.variants || draftProduct.variants.every((v) => !v.price || Number(v.price) === 0));
+
+    // Authoritative status determination:
+    // 1. Explicitly saving as draft -> 'draft'
+    // 2. Explicitly publishing (asDraft === false) -> if unpriced, force 'draft', else 'active' (or user choice if inactive)
+    // 3. Unspecified -> if unpriced or status was draft -> 'draft', else draftProduct.status || 'active'
+    let targetStatus: 'active' | 'inactive' | 'draft' | 'out_of_stock' = 'active';
+    if (asDraft === true) {
+      targetStatus = 'draft';
+    } else if (asDraft === false) {
+      targetStatus = isUnpriced ? 'draft' : (draftProduct.status === 'inactive' ? 'inactive' : 'active');
+    } else {
+      targetStatus = (isUnpriced || draftProduct.status === 'draft') ? 'draft' : (draftProduct.status || 'active');
+    }
 
     // 1. Resolve storeId
     let storeId =
@@ -1017,8 +1049,6 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
     // 4. Construct variants (single or multi-variant matrix)
     const baseSku = (draftProduct.sku || `PRD-${Date.now()}`).toUpperCase();
     const hasVariants = draftProduct.attributes?.hasVariants === 'true';
-    const effectiveBasePrice = Number(draftProduct.price || 0);
-    const effectiveBaseMrp = Number(draftProduct.mrp || draftProduct.price || 0);
     let variants = [];
 
     if (hasVariants && Array.isArray(draftProduct.variants) && draftProduct.variants.length > 0) {
@@ -1137,7 +1167,8 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
       dimensions: draftProduct.dimensions,
       material: draftProduct.material || draftProduct.attributes?.Material || draftProduct.attributes?.fabric || undefined,
       careInstructions: draftProduct.careInstructions || undefined,
-      status: draftProduct.status || 'active',
+      status: targetStatus,
+      isActive: targetStatus === 'active',
       tags: draftProduct.tags || [],
       attributes: attributesArray,
       variants,
@@ -1149,9 +1180,11 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
       if (draftProduct.id && /^[0-9a-fA-F]{24}$/.test(draftProduct.id)) {
         const updated = await catalogApi.updateProduct(draftProduct.id, payload);
         finalizedProduct = mapApiProductToProductItem(updated);
+        finalizedProduct.status = targetStatus;
       } else {
         const created = await catalogApi.createProduct(payload);
         finalizedProduct = mapApiProductToProductItem(created);
+        finalizedProduct.status = targetStatus;
       }
     } catch (err: any) {
       console.warn('Could not persist product to backend API, using local fallback:', err?.message || err);
@@ -1175,7 +1208,7 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
         brand: resolvedBrand,
         stock: Number(draftProduct.stock ?? 100),
         lowStockThreshold: Number(draftProduct.lowStockThreshold ?? 10),
-        status: draftProduct.status || 'active',
+        status: targetStatus,
         price: effectiveBasePrice,
         costPrice: Number(draftProduct.costPrice || 0),
         mrp: effectiveBaseMrp,

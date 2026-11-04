@@ -403,7 +403,20 @@ export const AddProductStep3: React.FC = () => {
                   onChange={() => updateDraftProduct({ status: 'active' })}
                   className="text-blue-600"
                 />
-                <span>Active</span>
+                <span>Active (Live &amp; Discoverable)</span>
+              </label>
+              <label className="flex items-center gap-2 text-xs font-semibold text-slate-800 cursor-pointer">
+                <input
+                  type="radio"
+                  name="status"
+                  checked={status === 'draft'}
+                  onChange={() => updateDraftProduct({ status: 'draft' })}
+                  className="text-purple-600"
+                />
+                <span className="flex items-center gap-1.5">
+                  <span>Draft</span>
+                  <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-purple-100 text-purple-700 border border-purple-200 uppercase">Unpublished</span>
+                </span>
               </label>
               <label className="flex items-center gap-2 text-xs font-semibold text-slate-800 cursor-pointer">
                 <input
@@ -413,17 +426,19 @@ export const AddProductStep3: React.FC = () => {
                   onChange={() => updateDraftProduct({ status: 'inactive' })}
                   className="text-blue-600"
                 />
-                <span>Inactive</span>
+                <span>Inactive (Hidden)</span>
               </label>
             </div>
           </div>
 
-          <div className="mt-4 p-3 rounded-lg bg-emerald-50/80 border border-emerald-200/60 flex items-start gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-            <span className="text-[11px] text-emerald-800 font-medium">
+          <div className="mt-4 p-3 rounded-lg bg-slate-50 border border-slate-200/80 flex items-start gap-2">
+            <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+            <span className="text-[11px] text-slate-700 font-medium">
               {status === 'active'
-                ? 'Active products will be visible in your store.'
-                : 'Inactive products are hidden from customers.'}
+                ? 'Active products will be visible to shoppers in your store.'
+                : status === 'draft'
+                  ? 'Draft products are preserved in your catalog with a Draft tag and hidden from the storefront until published.'
+                  : 'Inactive products are hidden from customers.'}
             </span>
           </div>
         </div>

@@ -109,6 +109,7 @@ export async function createProduct(
 
   const slug = generateSlug(dto.name);
 
+  const isDraft = dto.status === 'draft';
   const product = new ProductModel({
     ...dto,
     category: resolvedCategory,
@@ -117,7 +118,8 @@ export async function createProduct(
     storeId: targetStoreId,
     storeName: store.name,
     slug,
-    isActive: true,
+    status: dto.status || 'active',
+    isActive: isDraft ? false : (dto as any).isActive !== false,
   });
 
   await product.save();
@@ -196,6 +198,11 @@ export async function updateProduct(
   }
 
   Object.assign(product, dto);
+  if (dto.status === 'draft' && (dto as any).isActive === undefined) {
+    (product as any).isActive = false;
+  } else if (dto.status === 'active' && (dto as any).isActive === undefined) {
+    (product as any).isActive = true;
+  }
   product.version = (product.version || 1) + 1;
   await product.save(); // triggers pre-save hook to recompute derived fields
   await invalidateCache(`catalog:product:${productId}`);
@@ -304,7 +311,12 @@ export async function listProducts(query: ProductQueryDto): Promise<IProductList
   const skip = (page - 1) * limit;
 
   // Build filter
-  const filter: Record<string, unknown> = { isActive: true };
+  const filter: Record<string, unknown> = {};
+  if (typeof (query as any).isActive === 'boolean') {
+    filter.isActive = (query as any).isActive;
+  } else if (!storeId) {
+    filter.isActive = true;
+  }
 
   if (storeId) filter.storeId = storeId;
   if (category) filter.category = category;

@@ -92,7 +92,8 @@ export const ProductsTable: React.FC = () => {
         );
       case 'draft':
         return (
-          <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-purple-50 text-purple-700 border border-purple-200 whitespace-nowrap">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200/90 whitespace-nowrap shadow-2xs">
+            <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
             Draft
           </span>
         );
@@ -227,11 +228,18 @@ export const ProductsTable: React.FC = () => {
                           loading="lazy"
                         />
                         <div className="min-w-0 max-w-[200px] xl:max-w-[240px] overflow-hidden">
-                          <div
-                            className="font-semibold text-slate-800 text-xs truncate block"
-                            title={product.name}
-                          >
-                            {product.name}
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span
+                              className="font-semibold text-slate-800 text-xs truncate block max-w-[170px]"
+                              title={product.name}
+                            >
+                              {product.name}
+                            </span>
+                            {product.status === 'draft' && (
+                              <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-bold bg-purple-100 text-purple-800 border border-purple-200 shrink-0 uppercase tracking-wide">
+                                Draft
+                              </span>
+                            )}
                           </div>
                           {variantText ? (
                             <div className="text-[11px] text-blue-600 font-medium mt-0.5 truncate">

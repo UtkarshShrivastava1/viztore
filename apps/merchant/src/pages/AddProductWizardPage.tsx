@@ -17,7 +17,7 @@ export const AddProductWizardPage: React.FC = () => {
 
   const handleSaveAsDraft = async () => {
     try {
-      const saved = await saveDraftAsProduct();
+      const saved = await saveDraftAsProduct(true);
       toast.success(
         'Product Saved as Draft 💾',
         `"${saved.name || 'Product'}" has been preserved in your drafts.`
