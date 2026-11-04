@@ -703,24 +703,18 @@ export const InvoicesTableView: React.FC = () => {
                             Reset All Filters
                           </button>
                         ) : (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => setActiveView('pos_counter')}
-                              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition-all cursor-pointer active:scale-95"
-                            >
-                              <Zap className="w-3.5 h-3.5 fill-current text-emerald-200" />
-                              <span>⚡ Open Counter POS (F2)</span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => openCreateInvoiceModal()}
-                              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition-colors cursor-pointer"
-                            >
-                              <Plus className="w-4 h-4" />
-                              <span>Create Invoice</span>
-                            </button>
-                          </>
+                          <button
+                            type="button"
+                            onClick={() => setActiveView('pos_counter')}
+                            className="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-bold rounded-xl shadow-md flex items-center gap-2 transition-all cursor-pointer active:scale-95 group"
+                          >
+                            <span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse" />
+                            <Zap className="w-4 h-4 fill-current text-emerald-200 group-hover:scale-110 transition-transform" />
+                            <span>Open Counter POS</span>
+                            <span className="text-[10px] font-mono font-bold bg-emerald-800/80 px-1.5 py-0.5 rounded text-emerald-200 border border-emerald-500/40">
+                              F2
+                            </span>
+                          </button>
                         )}
                       </div>
                     </div>

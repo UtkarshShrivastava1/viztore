@@ -172,15 +172,17 @@ export const BillingHeaderActions: React.FC<BillingHeaderActionsProps> = ({
         </span>
       </button>
 
-      {/* Secondary Action: Create Invoice */}
-      <button
-        type="button"
-        onClick={handlePrimaryClick}
-        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition-colors cursor-pointer active:scale-95"
-      >
-        <Plus className="w-4 h-4" />
-        <span>{getPrimaryButtonLabel()}</span>
-      </button>
+      {/* Quotes Tab Only: Create Estimate / Quote */}
+      {activeSubTab === 'quotes' && (
+        <button
+          type="button"
+          onClick={handlePrimaryClick}
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition-colors cursor-pointer active:scale-95"
+        >
+          <Plus className="w-4 h-4" />
+          <span>Create Estimate / Quote</span>
+        </button>
+      )}
 
       {/* Settings Button */}
       <button
