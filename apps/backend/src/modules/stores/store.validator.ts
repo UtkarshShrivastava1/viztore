@@ -32,7 +32,10 @@ export const createStoreSchema = z.object({
       subCategories: z.record(z.array(z.string())).optional(),
       productTypes: z.record(z.array(z.string())).optional(),
       brands: z.array(z.string()).optional(),
+      customSpecs: z.record(z.array(z.any())).optional(),
+      customAttributeValues: z.record(z.record(z.array(z.string()))).optional(),
     })
+    .passthrough()
     .optional(),
 });
 

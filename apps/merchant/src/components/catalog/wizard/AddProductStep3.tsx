@@ -15,6 +15,7 @@ import {
 import { useCatalogStore } from '../../../stores/catalogStore.js';
 import { useAuthStore } from '../../../stores/authStore.js';
 import { VariantMatrixBuilder } from './VariantMatrixBuilder.js';
+import { ProductAttributesSection } from './ProductAttributesSection.js';
 import { findTaxonomy, isFashionCategory, isFootwearCategory, isElectronicsCategory, isGroceryCategory } from '../../../lib/taxonomyHelper.js';
 
 const popularTagSuggestions = [
@@ -359,284 +360,22 @@ export const AddProductStep3: React.FC = () => {
         </div>
 
         {/* 2. Product Attributes (4 cols) */}
-        <div className="lg:col-span-4 bg-white rounded-xl border border-slate-200/80 p-4 shadow-2xs space-y-3">
-          <div className="flex items-center justify-between mb-1">
-            <div className="flex items-center gap-2">
-              <div className="w-5 h-5 rounded-md bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs">
-                2
-              </div>
-              <h3 className="text-xs font-bold text-slate-900">Product Attributes</h3>
-            </div>
-            {matchedTaxonomy && (
-              <span className="text-[10px] font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
-                {matchedTaxonomy.productType} ({dynamicAttributes.length} specs)
-              </span>
-            )}
-          </div>
-          <p className="text-[11px] text-slate-500 mb-2">
-            Schema-driven attributes for <span className="font-semibold text-slate-700">{draftProduct.productType || 'Standard'}</span>.
-          </p>
-
-          <div className="grid grid-cols-2 gap-2 text-xs max-h-[260px] overflow-y-auto pr-1">
-            {dynamicAttributes.length > 0 ? (
-              dynamicAttributes.map((attr: TaxonomyAttribute, idx: number) => (
-                <div key={idx} className={attr.values && attr.values.length > 8 ? 'col-span-2' : ''}>
-                  <label className="block text-[11px] font-medium text-slate-600 mb-1">
-                    {attr.name} {attr.isRequired && <span className="text-rose-500">*</span>}
-                  </label>
-                  {attr.values && attr.values.length > 0 ? (
-                    <select
-                      value={attributes[attr.name] || ''}
-                      onChange={(e) =>
-                        updateDraftProduct({
-                          attributes: { ...attributes, [attr.name]: e.target.value },
-                        })
-                      }
-                      className="w-full px-2 py-1.5 text-xs bg-white border border-slate-200 rounded-lg cursor-pointer focus:outline-hidden focus:border-blue-500"
-                    >
-                      <option value="">Select {attr.name}...</option>
-                      {attr.values.map((val: string, vIdx: number) => (
-                        <option key={vIdx} value={val}>
-                          {val}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <input
-                      type="text"
-                      value={attributes[attr.name] || ''}
-                      placeholder={`Enter ${attr.name.toLowerCase()}...`}
-                      onChange={(e) =>
-                        updateDraftProduct({
-                          attributes: { ...attributes, [attr.name]: e.target.value },
-                        })
-                      }
-                      className="w-full px-2 py-1.5 text-xs bg-white border border-slate-200 rounded-lg"
-                    />
-                  )}
-                </div>
-              ))
-            ) : (
-              <>
-                {isGroceryCategory(draftProduct.category, draftProduct.subCategory) ? (
-                  <>
-                    <div>
-                      <label className="block text-[11px] font-medium text-slate-600 mb-1">Net Qty / Weight</label>
-                      <select
-                        value={attributes.weight || '500g'}
-                        onChange={(e) => updateDraftProduct({ attributes: { ...attributes, weight: e.target.value } })}
-                        className="w-full px-2 py-1.5 text-xs bg-white border border-slate-200 rounded-lg cursor-pointer"
-                      >
-                        <option value="100g">100g</option>
-                        <option value="250g">250g</option>
-                        <option value="500g">500g</option>
-                        <option value="1kg">1 kg</option>
-                        <option value="2kg">2 kg</option>
-                        <option value="5kg">5 kg</option>
-                        <option value="500ml">500 ml</option>
-                        <option value="1L">1 Litre</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-medium text-slate-600 mb-1">Dietary Type</label>
-                      <select
-                        value={attributes.dietary || 'Vegetarian'}
-                        onChange={(e) => updateDraftProduct({ attributes: { ...attributes, dietary: e.target.value } })}
-                        className="w-full px-2 py-1.5 text-xs bg-white border border-slate-200 rounded-lg cursor-pointer"
-                      >
-                        <option value="Vegetarian">🟢 100% Vegetarian</option>
-                        <option value="Non-Vegetarian">🔴 Non-Vegetarian</option>
-                        <option value="Vegan">🌱 Vegan</option>
-                      </select>
-                    </div>
-                  </>
-                ) : isElectronicsCategory(draftProduct.category, draftProduct.subCategory) ? (
-                  <>
-                    <div>
-                      <label className="block text-[11px] font-medium text-slate-600 mb-1">Warranty</label>
-                      <select
-                        value={attributes.warranty || '1 Year Brand Warranty'}
-                        onChange={(e) => updateDraftProduct({ attributes: { ...attributes, warranty: e.target.value } })}
-                        className="w-full px-2 py-1.5 text-xs bg-white border border-slate-200 rounded-lg cursor-pointer"
-                      >
-                        <option value="No Warranty">No Warranty</option>
-                        <option value="6 Months Brand Warranty">6 Months Brand Warranty</option>
-                        <option value="1 Year Brand Warranty">1 Year Comprehensive Warranty</option>
-                        <option value="2 Years Brand Warranty">2 Years Brand Warranty</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-medium text-slate-600 mb-1">Power / Specs</label>
-                      <input
-                        type="text"
-                        value={attributes.power || ''}
-                        placeholder="e.g. 65W Fast Charge"
-                        onChange={(e) => updateDraftProduct({ attributes: { ...attributes, power: e.target.value } })}
-                        className="w-full px-2 py-1.5 text-xs bg-white border border-slate-200 rounded-lg"
-                      />
-                    </div>
-                  </>
-                ) : isFootwearCategory(draftProduct.category, draftProduct.subCategory) ? (
-                  <>
-                    <div>
-                      <label className="block text-[11px] font-medium text-slate-600 mb-1">Upper Material</label>
-                      <select
-                        value={attributes.upperMaterial || 'Mesh'}
-                        onChange={(e) => updateDraftProduct({ attributes: { ...attributes, upperMaterial: e.target.value } })}
-                        className="w-full px-2 py-1.5 text-xs bg-white border border-slate-200 rounded-lg cursor-pointer"
-                      >
-                        <option value="Mesh">Mesh</option>
-                        <option value="Synthetic Leather">Synthetic Leather</option>
-                        <option value="Genuine Leather">Genuine Leather</option>
-                        <option value="Canvas">Canvas</option>
-                        <option value="Suede">Suede</option>
-                        <option value="Knit Fabric">Knit Fabric</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-medium text-slate-600 mb-1">Sole Material</label>
-                      <select
-                        value={attributes.soleMaterial || 'Rubber'}
-                        onChange={(e) => updateDraftProduct({ attributes: { ...attributes, soleMaterial: e.target.value } })}
-                        className="w-full px-2 py-1.5 text-xs bg-white border border-slate-200 rounded-lg cursor-pointer"
-                      >
-                        <option value="Rubber">Rubber</option>
-                        <option value="EVA">EVA (Lightweight)</option>
-                        <option value="Air Cushion">Air Cushion</option>
-                        <option value="TPU">TPU</option>
-                        <option value="Phylon">Phylon</option>
-                      </select>
-                    </div>
-                  </>
-                ) : isFashionCategory(draftProduct.category, draftProduct.subCategory) ? (
-                  <>
-                    <div>
-                      <label className="block text-[11px] font-medium text-slate-600 mb-1">Fit Type</label>
-                      <select
-                        value={attributes.fit || 'Regular'}
-                        onChange={(e) => updateDraftProduct({ attributes: { ...attributes, fit: e.target.value } })}
-                        className="w-full px-2 py-1.5 text-xs bg-white border border-slate-200 rounded-lg cursor-pointer"
-                      >
-                        <option value="Regular">Regular</option>
-                        <option value="Slim Fit">Slim Fit</option>
-                        <option value="Relaxed">Relaxed</option>
-                        <option value="Oversized">Oversized</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-medium text-slate-600 mb-1">Fabric</label>
-                      <select
-                        value={attributes.fabric || 'Cotton'}
-                        onChange={(e) => updateDraftProduct({ attributes: { ...attributes, fabric: e.target.value } })}
-                        className="w-full px-2 py-1.5 text-xs bg-white border border-slate-200 rounded-lg cursor-pointer"
-                      >
-                        <option value="Cotton">Cotton</option>
-                        <option value="Cotton Blend">Cotton Blend</option>
-                        <option value="Polyester">Polyester</option>
-                        <option value="Linen">Linen</option>
-                        <option value="Denim">Denim</option>
-                      </select>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div>
-                      <label className="block text-[11px] font-medium text-slate-600 mb-1">Material / Finish</label>
-                      <input
-                        type="text"
-                        value={attributes.material || ''}
-                        placeholder="e.g. Stainless Steel, Plastic"
-                        onChange={(e) => updateDraftProduct({ attributes: { ...attributes, material: e.target.value } })}
-                        className="w-full px-2 py-1.5 text-xs bg-white border border-slate-200 rounded-lg"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-medium text-slate-600 mb-1">Warranty</label>
-                      <input
-                        type="text"
-                        value={attributes.warranty || 'Standard Warranty'}
-                        placeholder="e.g. 6 Months Warranty"
-                        onChange={(e) => updateDraftProduct({ attributes: { ...attributes, warranty: e.target.value } })}
-                        className="w-full px-2 py-1.5 text-xs bg-white border border-slate-200 rounded-lg"
-                      />
-                    </div>
-                  </>
-                )}
-                <div className="col-span-2 pt-1 border-t border-slate-100">
-                  <label className="block text-[11px] font-medium text-slate-600 mb-1">
-                    Physical Shelf / Aisle Location <span className="text-slate-400 font-normal">(For Order Pickers)</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={draftProduct.shelfLocation || attributes.shelfLocation || ''}
-                    placeholder="e.g. Aisle 3 - Rack B or Shelf F-12"
-                    onChange={(e) => updateDraftProduct({
-                      shelfLocation: e.target.value,
-                      attributes: { ...attributes, shelfLocation: e.target.value }
-                    })}
-                    className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg placeholder:text-slate-400 focus:outline-hidden focus:border-blue-500 font-medium"
-                  />
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* Size Pills (Only shown for fashion / footwear) */}
-          {(isFashionCategory(draftProduct.category, draftProduct.subCategory) || isFootwearCategory(draftProduct.category, draftProduct.subCategory)) && (
-            <div className="pt-2 border-t border-slate-100">
-              <div className="text-[11px] font-semibold text-slate-600 mb-1.5">
-                {isFootwearCategory(draftProduct.category, draftProduct.subCategory) ? 'Shoe Size (UK)' : 'Size Options'}
-              </div>
-              <div className="flex items-center gap-1.5 flex-wrap">
-                {(isFootwearCategory(draftProduct.category, draftProduct.subCategory)
-                  ? ['UK 6', 'UK 7', 'UK 8', 'UK 9', 'UK 10', 'UK 11']
-                  : ['XS', 'S', 'M', 'L', 'XL', '2XL']
-                ).map((sz) => {
-                  const isSelected = attributes.size === sz;
-                  return (
-                    <button
-                      key={sz}
-                      type="button"
-                      onClick={() =>
-                        updateDraftProduct({ attributes: { ...attributes, size: sz } })
-                      }
-                      className={`px-2.5 py-1 rounded-md text-xs font-bold transition-all cursor-pointer ${
-                        isSelected
-                          ? 'bg-blue-600 text-white shadow-xs'
-                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                      }`}
-                    >
-                      {sz}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Variant Toggle Switch */}
-          <div className="pt-2 flex items-center justify-between">
-            <div>
-              <div className="text-xs font-semibold text-slate-800">
-                This product has multiple variants
-              </div>
-              <div className="text-[10px] text-slate-400">Options like size, color, etc.</div>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={hasVariants}
-                onChange={(e) =>
-                  updateDraftProduct({
-                    attributes: { ...attributes, hasVariants: String(e.target.checked) },
-                  })
-                }
-                className="sr-only peer"
-              />
-              <div className="w-8 h-4 bg-slate-200 peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-blue-600" />
-            </label>
-          </div>
-        </div>
+        <ProductAttributesSection
+          category={draftProduct.category || ''}
+          subCategory={draftProduct.subCategory || ''}
+          productType={draftProduct.productType || ''}
+          attributes={attributes}
+          onChangeAttributes={(updated) => updateDraftProduct({ attributes: updated })}
+          matchedTaxonomy={matchedTaxonomy}
+          shelfLocation={draftProduct.shelfLocation}
+          onChangeShelfLocation={(loc) => updateDraftProduct({ shelfLocation: loc })}
+          hasVariants={hasVariants}
+          onToggleVariants={(checked) =>
+            updateDraftProduct({
+              attributes: { ...attributes, hasVariants: String(checked) },
+            })
+          }
+        />
 
         {/* 3. Product Status (3 cols) */}
         <div className="lg:col-span-3 bg-white rounded-xl border border-slate-200/80 p-4 shadow-2xs flex flex-col justify-between">

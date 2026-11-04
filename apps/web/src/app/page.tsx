@@ -1,7 +1,7 @@
 import React from 'react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ArrowRight, Store } from 'lucide-react';
+import { ChevronRight, ArrowRight, Store } from 'lucide-react';
 import { branding } from '@repo/shared-types';
 import { WebSiteJsonLd } from '@/components/seo';
 import { HeroBannerCarousel } from '@/features/home/components/HeroBannerCarousel';

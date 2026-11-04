@@ -267,6 +267,8 @@ const storeSchema = new Schema<IStoreDocument>(
       subCategories: { type: Map, of: [String] },
       productTypes: { type: Map, of: [String] },
       brands: [{ type: String, trim: true }],
+      customSpecs: { type: mongoose.Schema.Types.Mixed, default: {} },
+      customAttributeValues: { type: mongoose.Schema.Types.Mixed, default: {} },
     },
     sections: [storeSectionSchema],
     settings: {
