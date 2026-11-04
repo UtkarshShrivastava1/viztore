@@ -265,7 +265,37 @@ export async function listAllStores(params: {
     approvalStatus: StoreApprovalStatus.APPROVED,
   };
 
-  if (params.category) filter.category = params.category;
+  if (params.category && params.category.trim()) {
+    const rawCat = params.category.trim();
+    const normalized = rawCat.toLowerCase().replace(/['"’\s\-_/]/g, '');
+
+    const aliases = [rawCat];
+    if (normalized === 'electronics' || normalized === 'electronic' || normalized === 'gadgets') {
+      aliases.push('electronics', 'Electronics');
+    } else if (normalized === 'fashion' || normalized === 'men' || normalized === 'mens' || normalized === 'women' || normalized === 'womens') {
+      aliases.push('fashion', 'Fashion', 'clothing', 'apparel');
+    } else if (normalized === 'grocery' || normalized === 'groceries' || normalized === 'food' || normalized === 'grocerystaples') {
+      aliases.push('grocery', 'Grocery', 'grocery_staples', 'supermarket');
+    } else if (normalized === 'home' || normalized === 'furniture' || normalized === 'homeliving') {
+      aliases.push('home_living', 'home', 'furniture');
+    } else if (normalized === 'beauty') {
+      aliases.push('beauty', 'Beauty', 'cosmetics');
+    } else if (normalized === 'toysbaby' || normalized === 'kids' || normalized === 'baby') {
+      aliases.push('toys_baby', 'kids', 'baby');
+    } else if (normalized === 'sportsfitness' || normalized === 'sports' || normalized === 'fitness') {
+      aliases.push('sports_fitness', 'sports', 'fitness');
+    } else if (normalized === 'booksstationery' || normalized === 'books' || normalized === 'stationery') {
+      aliases.push('books_stationery', 'books', 'stationery');
+    }
+
+    const regexEscaped = aliases.map((a) => a.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    const catRegex = new RegExp(`^(${regexEscaped.join('|')})$`, 'i');
+
+    filter.$and = filter.$and || [];
+    (filter.$and as Array<Record<string, unknown>>).push({
+      $or: [{ category: catRegex }, { businessCategories: catRegex }],
+    });
+  }
   if (params.city) {
     const cityFilter = buildCityFilter(params.city);
     if (cityFilter) {

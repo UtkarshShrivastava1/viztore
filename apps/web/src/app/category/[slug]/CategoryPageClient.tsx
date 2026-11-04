@@ -92,7 +92,7 @@ export function CategoryPageClient({ category }: CategoryPageClientProps) {
   // Fallback query if category has 0 direct matches (e.g. general search)
   const products = productsResponse?.products || [];
 
-  // 2. Fetch real stores operating in this category
+  // 2. Fetch real stores operating strictly in this category
   const storeQueryParams = useMemo(() => {
     return {
       category: category.storeCategory,
@@ -102,12 +102,8 @@ export function CategoryPageClient({ category }: CategoryPageClientProps) {
 
   const { data: storesResponse, isLoading: isStoresLoading } = useAllStores(storeQueryParams);
 
-  // All stores fallback if category-specific is empty
-  const { data: allStoresResponse } = useAllStores({ limit: 4 });
-  const stores =
-    storesResponse?.stores && storesResponse.stores.length > 0
-      ? storesResponse.stores
-      : allStoresResponse?.stores || [];
+  // Strictly category-isolated stores — zero foreign category bleed
+  const stores = storesResponse?.stores || [];
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-20">

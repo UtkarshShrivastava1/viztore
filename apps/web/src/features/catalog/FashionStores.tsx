@@ -54,12 +54,10 @@ export function FashionStores() {
         setIsLoading(true);
         const res = await fetchAllStores({ category: StoreCategory.FASHION });
         if (isMounted) {
-          if (res.stores.length > 0) {
+          if (res.stores && res.stores.length > 0) {
             setStores(res.stores);
           } else {
-            const allRes = await fetchAllStores();
-            const fashionList = allRes.stores.filter(s => s.category?.toLowerCase().includes('fashion'));
-            setStores(fashionList.length > 0 ? fashionList : FASHION_STORES_MOCK);
+            setStores(FASHION_STORES_MOCK);
           }
         }
       } catch (err) {

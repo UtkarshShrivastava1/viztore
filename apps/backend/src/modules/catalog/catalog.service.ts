@@ -319,9 +319,43 @@ export async function listProducts(query: ProductQueryDto): Promise<IProductList
   }
 
   if (storeId) filter.storeId = storeId;
-  if (category) filter.category = category;
-  if (subCategory) filter.subCategory = subCategory;
-  if (subType) filter.subType = subType;
+  if (category && category.trim()) {
+    const rawCat = category.trim();
+    const normalized = rawCat.toLowerCase().replace(/['"’\s\-_/]/g, '');
+
+    // Resolve category aliases to match both canonical display names and DB representations case-insensitively
+    const aliases = [rawCat];
+    if (normalized === 'electronics' || normalized === 'electronic' || normalized === 'mobiles' || normalized === 'phones') {
+      aliases.push('electronics', 'Electronics', 'mobiles', 'phones');
+    } else if (normalized === 'men' || normalized === 'mens') {
+      aliases.push("men's", "men’s", 'mens', 'men', "Men's", 'Mens', 'Men');
+    } else if (normalized === 'women' || normalized === 'womens') {
+      aliases.push("women's", "women’s", 'womens', 'women', "Women's", 'Womens', 'Women');
+    } else if (normalized === 'babykids' || normalized === 'kids' || normalized === 'baby' || normalized === 'toysbaby') {
+      aliases.push('baby & kids', 'Baby & Kids', 'kids', 'Kids', 'baby', 'Baby', 'toys_baby');
+    } else if (normalized === 'homefurniture' || normalized === 'homeliving' || normalized === 'home' || normalized === 'furniture') {
+      aliases.push('home & furniture', 'Home & Furniture', 'home_living', 'Home Living', 'furniture');
+    } else if (normalized === 'foodessentials' || normalized === 'grocery' || normalized === 'groceries' || normalized === 'food') {
+      aliases.push('food essentials', 'Food Essentials', 'grocery', 'groceries', 'food_health', 'grocery_staples');
+    } else if (normalized === 'sports' || normalized === 'exercisefitness' || normalized === 'fitness') {
+      aliases.push('sports', 'Sports', 'exercise & fitness', 'Exercise & Fitness', 'sports_fitness');
+    } else if (normalized === 'books' || normalized === 'stationery') {
+      aliases.push('books', 'Books', 'stationery', 'Stationery', 'books_stationery');
+    }
+
+    const regexEscaped = aliases.map((a) => a.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    filter.category = new RegExp(`^(${regexEscaped.join('|')})$`, 'i');
+  }
+
+  if (subCategory && subCategory.trim()) {
+    const cleanSub = subCategory.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    filter.subCategory = new RegExp(`^${cleanSub}$`, 'i');
+  }
+
+  if (subType && subType.trim()) {
+    const cleanSubType = subType.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    filter.subType = new RegExp(`^${cleanSubType}$`, 'i');
+  }
 
   // Intelligent Multi-Field Search (Products, Categories, Subcategories, Brands, Store Names)
   if (search && search.trim()) {
