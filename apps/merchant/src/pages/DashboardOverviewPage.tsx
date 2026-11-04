@@ -122,9 +122,8 @@ export const DashboardOverviewPage: React.FC<DashboardOverviewPageProps> = ({
               useBillingStore.getState().openCreateInvoiceModal();
               onNavigate('billing');
             }}
-            onOpenCreditNote={() => {
-              useBillingStore.getState().setActiveSubTab('credit_notes');
-              onNavigate('billing');
+            onOpenPurchase={() => {
+              onNavigate('expenses');
             }}
             onViewAllInvoices={() => {
               useBillingStore.getState().setActiveSubTab('invoices');

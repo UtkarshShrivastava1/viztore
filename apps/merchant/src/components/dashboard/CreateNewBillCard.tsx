@@ -1,9 +1,10 @@
 import React from 'react';
-import { Plus, ArrowRight, FileText, Calculator, FileCheck } from 'lucide-react';
+import { Plus, ArrowRight, FileText, Calculator, ShoppingBag } from 'lucide-react';
 
 interface CreateNewBillCardProps {
   onOpenCreateInvoice?: () => void;
   onOpenEstimate?: () => void;
+  onOpenPurchase?: () => void;
   onOpenCreditNote?: () => void;
   onViewAllInvoices?: () => void;
 }
@@ -11,6 +12,7 @@ interface CreateNewBillCardProps {
 export const CreateNewBillCard: React.FC<CreateNewBillCardProps> = ({ 
   onOpenCreateInvoice,
   onOpenEstimate,
+  onOpenPurchase,
   onOpenCreditNote,
   onViewAllInvoices,
 }) => {
@@ -52,12 +54,12 @@ export const CreateNewBillCard: React.FC<CreateNewBillCardProps> = ({
 
           <button
             type="button"
-            onClick={onOpenCreditNote || onOpenCreateInvoice}
+            onClick={onOpenPurchase || onOpenCreditNote || onOpenCreateInvoice}
             className="p-2 rounded-xl bg-[#0f1b38] hover:bg-[#15264f] border border-[#1e2f5b] text-center transition-all flex flex-col items-center justify-center gap-0.5 group cursor-pointer"
           >
-            <FileCheck className="w-3.5 h-3.5 text-purple-400 group-hover:scale-105 transition-transform" />
-            <span className="text-[10px] font-bold text-slate-100 block leading-tight">Credit Note</span>
-            <span className="text-[8px] text-slate-400 block leading-none">Credit / Debit</span>
+            <ShoppingBag className="w-3.5 h-3.5 text-purple-400 group-hover:scale-105 transition-transform" />
+            <span className="text-[10px] font-bold text-slate-100 block leading-tight">Purchase</span>
+            <span className="text-[8px] text-slate-400 block leading-none">Record Expense</span>
           </button>
         </div>
       </div>
