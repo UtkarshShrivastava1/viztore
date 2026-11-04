@@ -102,6 +102,7 @@ export interface IProductVariant {
   stock: number;
   images: string[];
   image?: string;
+  useOriginalImages?: boolean;
   isActive: boolean;
   isCustomPrice?: boolean;
   barcode?: string;

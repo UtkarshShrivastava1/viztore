@@ -35,6 +35,7 @@ export interface ProductVariantItem {
   isActive: boolean;
   image?: string;
   images?: string[];
+  useOriginalImages?: boolean;
   isCustomPrice?: boolean;
 }
 
@@ -1052,28 +1053,33 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
     let variants = [];
 
     if (hasVariants && Array.isArray(draftProduct.variants) && draftProduct.variants.length > 0) {
-      // Check if variants have different individual prices
-      const distinctPrices = new Set(
-        draftProduct.variants
-          .map((v) => v.price)
-          .filter((p) => typeof p === 'number' && p > 0)
-      );
-      const hasDistinctVariantPrices = distinctPrices.size > 1;
-
       // Use existing user-configured variants from VariantMatrixBuilder
       variants = draftProduct.variants.map((v, i) => {
         // Authoritative resolution:
-        // If variants have distinct prices per variant (different specs), keep custom variant price.
-        // If all variants share the base price, or if effectiveBasePrice is set, update to effectiveBasePrice!
-        const vPrice = (hasDistinctVariantPrices && v.isCustomPrice && typeof v.price === 'number' && v.price > 0)
-          ? Number(v.price)
-          : (effectiveBasePrice > 0 ? effectiveBasePrice : Number(v.price || 0));
+        // Always preserve custom variant MRP and Price if set; fallback to base only if 0/undefined
+        const vPrice =
+          typeof v.price === 'number' && v.price > 0
+            ? Number(v.price)
+            : effectiveBasePrice > 0
+              ? effectiveBasePrice
+              : 0;
 
-        const vMrp = (hasDistinctVariantPrices && v.isCustomPrice && typeof v.mrp === 'number' && v.mrp > 0)
-          ? Number(v.mrp)
-          : (effectiveBaseMrp > 0 ? effectiveBaseMrp : Number(v.mrp || vPrice || 0));
+        const vMrp =
+          typeof v.mrp === 'number' && v.mrp > 0
+            ? Number(v.mrp)
+            : effectiveBaseMrp > 0
+              ? effectiveBaseMrp
+              : vPrice;
 
         const hex = v.colorHex || getColorHex(v.color);
+        const useOrig = v.useOriginalImages !== false;
+        const variantImages =
+          !useOrig && Array.isArray(v.images) && v.images.length > 0
+            ? v.images
+            : !useOrig && v.image
+              ? [v.image]
+              : images;
+
         return {
           id: v.id || `var-${Date.now()}-${i}`,
           sku: (v.sku || `${baseSku}-${v.size || v.color || 'VAR'}`).toUpperCase(),
@@ -1083,10 +1089,11 @@ export const useCatalogStore = create<CatalogStoreState>((set, get) => ({
           price: vPrice,
           mrp: vMrp,
           stock: Number(v.stock ?? 10),
-          images: (Array.isArray(v.images) && v.images.length > 0) ? v.images : (v.image ? [v.image] : images),
-          image: v.image || (Array.isArray(v.images) && v.images[0]) || images[0],
+          images: variantImages,
+          image: variantImages[0] || images[0],
+          useOriginalImages: useOrig,
           isActive: v.isActive !== false,
-          isCustomPrice: v.isCustomPrice,
+          isCustomPrice: v.isCustomPrice || vPrice !== effectiveBasePrice || vMrp !== effectiveBaseMrp,
         };
       });
     } else if (hasVariants) {

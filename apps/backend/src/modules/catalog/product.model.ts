@@ -61,6 +61,10 @@ const productVariantSchema = new Schema<IProductVariant>(
       type: String,
       trim: true,
     },
+    useOriginalImages: {
+      type: Boolean,
+      default: true,
+    },
     isActive: {
       type: Boolean,
       default: true,

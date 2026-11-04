@@ -94,12 +94,24 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
       list.push({ label: 'Product Type', value: product.subType });
     }
 
+    const catStr = (catName || '').toLowerCase();
+    const subStr = (product?.subCategory || '').toLowerCase();
+    const isApparel =
+      /fashion|cloth|apparel|shirt|pant|dress|t-shirt|kurta|jeans/i.test(catStr) ||
+      /fashion|cloth|apparel|shirt|pant|dress|t-shirt|kurta|jeans/i.test(subStr);
+    const apparelKeys = new Set(['fabric', 'neck', 'sleeve', 'fit', 'weave pattern', 'transparency']);
+
     const rawAttrs = product?.attributes;
     if (Array.isArray(rawAttrs)) {
       rawAttrs.forEach((attr: any) => {
         if (attr && attr.key && attr.value) {
           const keyLower = String(attr.key).toLowerCase().trim();
-          if (keyLower !== 'hasvariants' && keyLower !== 'totalvariants' && keyLower !== 'brand') {
+          if (
+            keyLower !== 'hasvariants' &&
+            keyLower !== 'totalvariants' &&
+            keyLower !== 'brand' &&
+            (isApparel || !apparelKeys.has(keyLower))
+          ) {
             list.push({ label: String(attr.key), value: String(attr.value) });
           }
         }
@@ -107,7 +119,13 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
     } else if (rawAttrs && typeof rawAttrs === 'object') {
       Object.entries(rawAttrs).forEach(([k, v]) => {
         const keyLower = k.toLowerCase().trim();
-        if (keyLower !== 'hasvariants' && keyLower !== 'totalvariants' && keyLower !== 'brand' && v) {
+        if (
+          keyLower !== 'hasvariants' &&
+          keyLower !== 'totalvariants' &&
+          keyLower !== 'brand' &&
+          (isApparel || !apparelKeys.has(keyLower)) &&
+          v
+        ) {
           list.push({ label: k.charAt(0).toUpperCase() + k.slice(1), value: String(v) });
         }
       });
@@ -127,6 +145,25 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
     }
     return list;
   }, [product]);
+
+  const cleanDescription = React.useMemo(() => {
+    if (!product?.description) return 'No detailed specifications or description provided for this product.';
+    const catName = typeof product?.category === 'string' ? product.category : (product?.category as any)?.name;
+    const catStr = (catName || '').toLowerCase();
+    const subStr = (product?.subCategory || '').toLowerCase();
+    const isApparel =
+      /fashion|cloth|apparel|shirt|pant|dress|t-shirt|kurta|jeans/i.test(catStr) ||
+      /fashion|cloth|apparel|shirt|pant|dress|t-shirt|kurta|jeans/i.test(subStr);
+    if (!isApparel) {
+      const lines = product.description.split('\n');
+      const filtered = lines.filter(
+        (l: string) =>
+          !/pure cotton|round neck design|embroidered logo on chest|suitable for everyday wear/i.test(l),
+      );
+      return filtered.join('\n').trim() || product.description;
+    }
+    return product.description;
+  }, [product?.description, product?.category, product?.subCategory]);
 
 
   // Safe extraction of store and category metadata for recommendations (unconditional hook execution)
@@ -210,14 +247,26 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
     stock: product.totalStock || 10,
     isActive: true,
   };
-  const rawImages = (selectedVariant?.images && selectedVariant.images.length > 0)
-    ? selectedVariant.images
-    : variants.flatMap((v) => v.images || []).filter(Boolean);
-  const allImages = rawImages.length > 0 ? rawImages : (Array.isArray((product as any).images) ? (product as any).images : []);
+  const parentImages =
+    Array.isArray((product as any).images) && (product as any).images.length > 0
+      ? (product as any).images
+      : [];
 
-  const discount = selectedVariant && selectedVariant.mrp > 0
-    ? Math.round(((selectedVariant.mrp - selectedVariant.price) / selectedVariant.mrp) * 100)
-    : 0;
+  const variantImages =
+    Array.isArray(selectedVariant?.images) && selectedVariant.images.length > 0
+      ? selectedVariant.images
+      : selectedVariant?.image
+        ? [selectedVariant.image]
+        : [];
+
+  const allImages =
+    selectedVariant?.useOriginalImages === false && variantImages.length > 0
+      ? variantImages
+      : parentImages.length > 0
+        ? parentImages
+        : variantImages.length > 0
+          ? variantImages
+          : ['/placeholder-product.png'];
 
   const sizes = Array.from(new Set(variants.filter((v) => v.size && v.isActive !== false).map((v) => v.size!)));
   const colors = Array.from(new Set(variants.filter((v) => v.color && v.isActive !== false).map((v) => v.color!)));
@@ -225,15 +274,44 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
   const currentColor = selectedVariant?.color || (variants.find((v) => v.color)?.color) || '';
   const currentSize = selectedVariant?.size || (variants.find((v) => v.size)?.size) || '';
 
+  const sizePriceMap = React.useMemo(() => {
+    const map: Record<string, { price: number; mrp?: number }> = {};
+    sizes.forEach((s) => {
+      const matchingVariant =
+        variants.find(
+          (v) =>
+            v.size === s &&
+            v.color?.toLowerCase() === currentColor.toLowerCase() &&
+            v.isActive !== false,
+        ) || variants.find((v) => v.size === s && v.isActive !== false);
+
+      if (matchingVariant && typeof matchingVariant.price === 'number') {
+        map[s] = {
+          price: matchingVariant.price,
+          mrp: matchingVariant.mrp,
+        };
+      }
+    });
+
+    const distinctPrices = new Set(Object.values(map).map((p) => p.price));
+    return distinctPrices.size > 1 ? map : undefined;
+  }, [sizes, variants, currentColor]);
+
+  const discount = selectedVariant && selectedVariant.mrp > 0
+    ? Math.round(((selectedVariant.mrp - selectedVariant.price) / selectedVariant.mrp) * 100)
+    : 0;
+
   const handleSelectColor = (colorName: string) => {
     const matchExact = variants.findIndex((v) => v.color?.toLowerCase() === colorName.toLowerCase() && v.size === currentSize && v.isActive !== false);
     if (matchExact !== -1) {
       setSelectedVariantIdx(matchExact);
+      setSelectedImageIdx(0);
       return;
     }
     const matchColor = variants.findIndex((v) => v.color?.toLowerCase() === colorName.toLowerCase() && v.isActive !== false);
     if (matchColor !== -1) {
       setSelectedVariantIdx(matchColor);
+      setSelectedImageIdx(0);
     }
   };
 
@@ -241,11 +319,13 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
     const matchExact = variants.findIndex((v) => v.size === sizeName && v.color?.toLowerCase() === currentColor.toLowerCase() && v.isActive !== false);
     if (matchExact !== -1) {
       setSelectedVariantIdx(matchExact);
+      setSelectedImageIdx(0);
       return;
     }
     const matchSize = variants.findIndex((v) => v.size === sizeName && v.isActive !== false);
     if (matchSize !== -1) {
       setSelectedVariantIdx(matchSize);
+      setSelectedImageIdx(0);
     }
   };
 
@@ -487,6 +567,7 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
                 onSelectSize={handleSelectSize}
                 category={categoryParam}
                 subCategory={product.subCategory}
+                sizePriceMap={sizePriceMap}
               />
             </div>
 
@@ -608,7 +689,7 @@ export function ProductDetailClient({ slug }: ProductDetailClientProps) {
                
                <div className={'animate-fade-in ' + (showDetails ? 'block' : 'hidden md:block')}>
                  <p className="text-[13px] font-medium text-[#192168] leading-relaxed whitespace-pre-line">
-                   {product.description || 'No detailed specifications or description provided for this product.'}
+                   {cleanDescription}
                  </p>
                </div>
              </div>

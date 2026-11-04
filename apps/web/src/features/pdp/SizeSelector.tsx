@@ -2,12 +2,18 @@
 
 import React from 'react';
 
+export interface SizePriceInfo {
+  price: number;
+  mrp?: number;
+}
+
 interface SizeSelectorProps {
   sizes: string[];
   selectedSize?: string;
   onSelectSize?: (size: string) => void;
   category?: string;
   subCategory?: string;
+  sizePriceMap?: Record<string, SizePriceInfo>;
 }
 
 export function SizeSelector({
@@ -16,6 +22,7 @@ export function SizeSelector({
   onSelectSize,
   category,
   subCategory,
+  sizePriceMap,
 }: SizeSelectorProps) {
   if (sizes.length === 0) return null;
 
@@ -59,18 +66,24 @@ export function SizeSelector({
       <div className="flex flex-wrap gap-2.5">
         {sizes.map((s) => {
           const isSelected = s === activeSize;
+          const priceInfo = sizePriceMap?.[s];
           return (
             <button
               key={s}
               type="button"
               onClick={() => onSelectSize?.(s)}
-              className={`h-10 min-w-[3.5rem] px-3.5 rounded-xl font-extrabold text-sm border-2 transition-all ${
+              className={`min-h-[2.5rem] min-w-[3.5rem] px-3.5 py-1.5 rounded-xl font-extrabold text-sm border-2 transition-all flex flex-col items-center justify-center cursor-pointer ${
                 isSelected
                   ? 'border-[#1668F6] text-[#1668F6] bg-blue-50/50 shadow-xs'
                   : 'bg-white border-surface-200 text-surface-600 hover:border-[#192168] hover:text-[#192168]'
               }`}
             >
-              {s}
+              <span>{s}</span>
+              {priceInfo && priceInfo.price > 0 && (
+                <span className={`text-[10px] font-bold mt-0.5 ${isSelected ? 'text-[#1668F6]' : 'text-surface-400'}`}>
+                  ₹{priceInfo.price.toLocaleString('en-IN')}
+                </span>
+              )}
             </button>
           );
         })}

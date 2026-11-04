@@ -14,6 +14,11 @@ import {
   AlertCircle,
   HardDrive,
   Package,
+  Image as ImageIcon,
+  RotateCcw,
+  Upload,
+  X,
+  ExternalLink,
 } from 'lucide-react';
 import { useCatalogStore, ProductVariantItem } from '../../../stores/catalogStore.js';
 import {
@@ -138,6 +143,15 @@ export const VariantMatrixBuilder: React.FC = () => {
   const [bulkMrpInput, setBulkMrpInput] = useState<string>(baseMrp > 0 ? String(baseMrp) : '');
   const [bulkStockInput, setBulkStockInput] = useState<string>('15');
 
+  // Variant Image Management State
+  const [editingImageRowIndex, setEditingImageRowIndex] = useState<number | null>(null);
+  const [customImageUrlInput, setCustomImageUrlInput] = useState('');
+
+  const parentImages =
+    draftProduct.images && draftProduct.images.length > 0
+      ? draftProduct.images
+      : ['https://images.unsplash.com/photo-1523275335684-37898b6baf30'];
+
   // Matrix Rows
   const [matrixRows, setMatrixRows] = useState<ProductVariantItem[]>(() => {
     return (draftProduct.variants as ProductVariantItem[]) || [];
@@ -158,7 +172,7 @@ export const VariantMatrixBuilder: React.FC = () => {
     });
   };
 
-  // Auto-generate and sync matrix whenever selected sizes, colors, or base pricing changes
+  // Auto-generate and sync matrix whenever selected sizes or colors change
   useEffect(() => {
     if (selectedSizes.length > 0 && selectedColors.length > 0) {
       const prevRows: ProductVariantItem[] = matrixRowsRef.current || [];
@@ -172,18 +186,26 @@ export const VariantMatrixBuilder: React.FC = () => {
           const key = `${c.name}__${s}`;
           const existing = rowMap.get(key);
           if (existing) {
-            const targetPrice = existing.isCustomPrice
-              ? existing.price
-              : (basePrice > 0 ? basePrice : (existing.price || Number(bulkPriceInput) || 0));
-            const targetMrp = existing.isCustomPrice
-              ? existing.mrp
-              : (baseMrp > 0 ? baseMrp : (existing.mrp || Number(bulkMrpInput) || targetPrice || 0));
+            // NEVER wipe out existing row's custom price or MRP!
+            const targetPrice =
+              typeof existing.price === 'number' && existing.price > 0
+                ? existing.price
+                : basePrice > 0
+                  ? basePrice
+                  : 0;
+            const targetMrp =
+              typeof existing.mrp === 'number' && existing.mrp > 0
+                ? existing.mrp
+                : baseMrp > 0
+                  ? baseMrp
+                  : targetPrice;
 
             updatedRows.push({
               ...existing,
               colorHex: c.hex || existing.colorHex,
               price: targetPrice,
               mrp: targetMrp,
+              useOriginalImages: existing.useOriginalImages !== false,
             });
           } else {
             const cleanColor = c.name.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 4);
@@ -205,6 +227,8 @@ export const VariantMatrixBuilder: React.FC = () => {
               costPrice: baseCost || 0,
               mrp: targetMrp,
               stock: Number(bulkStockInput) || 15,
+              useOriginalImages: true,
+              images: [],
               isActive: true,
             });
           }
@@ -217,7 +241,7 @@ export const VariantMatrixBuilder: React.FC = () => {
       setMatrixRows([]);
       syncWithStore([]);
     }
-  }, [selectedSizes, selectedColors, baseSku, basePrice, baseMrp, baseCost]);
+  }, [selectedSizes, selectedColors, baseSku]);
 
   // Generate or regenerate matrix when requested
   const generateMatrix = () => {
@@ -242,8 +266,10 @@ export const VariantMatrixBuilder: React.FC = () => {
           size: s,
           price: Number(bulkPriceInput) || basePrice,
           costPrice: baseCost,
-          mrp: Number(bulkMrpInput) || baseMrp,
+          mrp: Number(bulkMrpInput) || (baseMrp > 0 ? baseMrp : basePrice),
           stock: Number(bulkStockInput) || 15,
+          useOriginalImages: true,
+          images: [],
           isActive: true,
         });
       });
@@ -274,6 +300,110 @@ export const VariantMatrixBuilder: React.FC = () => {
     const val = Number(bulkStockInput);
     if (isNaN(val) || val < 0) return;
     const updated = matrixRows.map((r) => ({ ...r, stock: val }));
+    setMatrixRows(updated);
+    syncWithStore(updated);
+  };
+
+  const applyOriginalImagesToAll = () => {
+    const updated = matrixRows.map((r) => ({ ...r, useOriginalImages: true, images: [] }));
+    setMatrixRows(updated);
+    syncWithStore(updated);
+  };
+
+  // Variant Image Management Modal Handlers
+  const openImageModal = (idx: number) => {
+    setEditingImageRowIndex(idx);
+    setCustomImageUrlInput('');
+  };
+
+  const closeImageModal = () => {
+    setEditingImageRowIndex(null);
+    setCustomImageUrlInput('');
+  };
+
+  const handleToggleOriginalImages = (index: number) => {
+    const updated = [...matrixRows];
+    const target = updated[index];
+    if (target) {
+      const willUseOriginal = target.useOriginalImages === false;
+      updated[index] = {
+        ...target,
+        useOriginalImages: willUseOriginal,
+        images: willUseOriginal
+          ? []
+          : target.images && target.images.length > 0
+            ? target.images
+            : parentImages[0]
+              ? [parentImages[0]]
+              : [],
+      };
+      setMatrixRows(updated);
+      syncWithStore(updated);
+    }
+  };
+
+  const handleToggleSelectParentImage = (imgUrl: string) => {
+    if (editingImageRowIndex === null) return;
+    const updated = [...matrixRows];
+    const target = updated[editingImageRowIndex];
+    if (!target) return;
+
+    const currentImages = target.images || [];
+    const exists = currentImages.includes(imgUrl);
+    const nextImages = exists
+      ? currentImages.filter((u) => u !== imgUrl)
+      : [...currentImages, imgUrl];
+
+    updated[editingImageRowIndex] = {
+      ...target,
+      useOriginalImages: false,
+      images: nextImages,
+      image: nextImages[0] || undefined,
+    };
+    setMatrixRows(updated);
+    syncWithStore(updated);
+  };
+
+  const handleAddCustomImageUrl = () => {
+    if (editingImageRowIndex === null || !customImageUrlInput.trim()) return;
+    const url = customImageUrlInput.trim();
+    const updated = [...matrixRows];
+    const target = updated[editingImageRowIndex];
+    if (!target) return;
+
+    const nextImages = [...(target.images || []), url];
+    updated[editingImageRowIndex] = {
+      ...target,
+      useOriginalImages: false,
+      images: nextImages,
+      image: nextImages[0] || url,
+    };
+    setMatrixRows(updated);
+    syncWithStore(updated);
+    setCustomImageUrlInput('');
+  };
+
+  const handleApplyImagesToColorGroup = () => {
+    if (editingImageRowIndex === null) return;
+    const target = matrixRows[editingImageRowIndex];
+    if (!target) return;
+
+    const colorToMatch = target.color;
+    const imagesToApply = target.images || [];
+    const useOrig = target.useOriginalImages;
+
+    const updated = matrixRows.map((r) => {
+      if (r.color === colorToMatch) {
+        return {
+          ...r,
+          useOriginalImages: useOrig,
+          images: [...imagesToApply],
+          image: imagesToApply[0] || r.image,
+        };
+      }
+      return r;
+    });
+
     setMatrixRows(updated);
     syncWithStore(updated);
   };
@@ -337,6 +467,8 @@ export const VariantMatrixBuilder: React.FC = () => {
       setCustomColorName('');
     }
   };
+
+  const activeEditingRow = editingImageRowIndex !== null ? matrixRows[editingImageRowIndex] : null;
 
   return (
     <div className="space-y-4 pt-3 border-t border-slate-200 animate-in fade-in">
@@ -501,9 +633,20 @@ export const VariantMatrixBuilder: React.FC = () => {
               <Zap className="w-3.5 h-3.5 text-amber-500" />
               <span>Bulk Quick-Apply Controls:</span>
             </span>
-            <span className="text-[11px] text-slate-400">
-              Apply values to all {matrixRows.length} variant rows in 1-click
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] text-slate-400">
+                Apply values to all {matrixRows.length} variant rows in 1-click
+              </span>
+              <button
+                type="button"
+                onClick={applyOriginalImagesToAll}
+                className="text-[11px] font-bold text-blue-600 hover:text-blue-800 hover:underline inline-flex items-center gap-1 cursor-pointer"
+                title="Reset all variants to use original product photos"
+              >
+                <RotateCcw className="w-3 h-3" />
+                <span>Reset Photos to Original</span>
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -567,12 +710,13 @@ export const VariantMatrixBuilder: React.FC = () => {
       {/* Generated Variant Table */}
       {matrixRows.length > 0 ? (
         <div className="border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
-          <div className="max-h-80 overflow-y-auto">
+          <div className="max-h-96 overflow-y-auto">
             <table className="w-full text-left border-collapse text-xs">
               <thead className="bg-slate-100 text-slate-700 font-bold sticky top-0 border-b border-slate-200 z-10">
                 <tr>
                   <th className="p-2.5 w-10 text-center">Active</th>
                   <th className="p-2.5">Variant Combination</th>
+                  <th className="p-2.5 w-36">Photos &amp; Media</th>
                   <th className="p-2.5">SKU Code</th>
                   <th className="p-2.5">Barcode (Optional)</th>
                   <th className="p-2.5 w-24">MRP (₹)</th>
@@ -585,8 +729,9 @@ export const VariantMatrixBuilder: React.FC = () => {
                 {matrixRows.map((row, idx) => (
                   <tr
                     key={row.id}
-                    className={`transition-colors ${row.isActive ? 'hover:bg-slate-50/80' : 'bg-slate-50 opacity-60'
-                      }`}
+                    className={`transition-colors ${
+                      row.isActive ? 'hover:bg-slate-50/80' : 'bg-slate-50 opacity-60'
+                    }`}
                   >
                     {/* Active Checkbox */}
                     <td className="p-2.5 text-center">
@@ -611,6 +756,48 @@ export const VariantMatrixBuilder: React.FC = () => {
                           {row.size}
                         </span>
                       </div>
+                    </td>
+
+                    {/* Photos & Media Column */}
+                    <td className="p-2.5">
+                      {row.useOriginalImages !== false ? (
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => openImageModal(idx)}
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-semibold bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 border border-slate-200 transition-colors cursor-pointer"
+                            title="Using parent product photos. Click to upload/choose variant photos"
+                          >
+                            <ImageIcon className="w-3 h-3 text-blue-600" />
+                            <span>Original ({parentImages.length})</span>
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-7 h-7 rounded border border-blue-300 overflow-hidden bg-slate-50 shrink-0">
+                            <img
+                              src={row.images?.[0] || row.image || parentImages[0]}
+                              alt=""
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => openImageModal(idx)}
+                            className="px-1.5 py-0.5 text-[10px] font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded border border-blue-200 transition-colors cursor-pointer"
+                          >
+                            {row.images?.length || 1} Custom
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleToggleOriginalImages(idx)}
+                            title="Revert to original product photos"
+                            className="text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer"
+                          >
+                            <RotateCcw className="w-2.5 h-2.5" />
+                          </button>
+                        </div>
+                      )}
                     </td>
 
                     {/* SKU */}
@@ -640,7 +827,7 @@ export const VariantMatrixBuilder: React.FC = () => {
                         type="number"
                         value={row.mrp}
                         onChange={(e) => handleRowChange(idx, 'mrp', Number(e.target.value))}
-                        className="w-full px-2 py-1 text-xs font-mono bg-white border border-slate-200 rounded focus:border-blue-500 text-slate-500"
+                        className="w-full px-2 py-1 text-xs font-mono font-bold bg-white border border-slate-200 rounded focus:border-blue-500 text-slate-700"
                       />
                     </td>
 
@@ -650,7 +837,7 @@ export const VariantMatrixBuilder: React.FC = () => {
                         type="number"
                         value={row.price}
                         onChange={(e) => handleRowChange(idx, 'price', Number(e.target.value))}
-                        className="w-full px-2 py-1 text-xs font-bold text-slate-800 bg-white border border-slate-200 rounded focus:border-blue-500"
+                        className="w-full px-2 py-1 text-xs font-bold text-slate-900 bg-white border border-slate-200 rounded focus:border-blue-500"
                       />
                     </td>
 
@@ -687,6 +874,177 @@ export const VariantMatrixBuilder: React.FC = () => {
           <p className="text-[11px] text-slate-400">
             Select your {dim1Title.toLowerCase()} and {dim2Title.toLowerCase()} above, then click &ldquo;Generate Matrix&rdquo;.
           </p>
+        </div>
+      )}
+
+      {/* Variant Image Manager Modal */}
+      {activeEditingRow && editingImageRowIndex !== null && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
+          <div
+            className="bg-white rounded-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100 flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="p-4 border-b border-slate-100 flex items-start justify-between bg-slate-50/50">
+              <div className="flex items-center gap-2.5">
+                <span
+                  className="w-4 h-4 rounded-full border border-slate-300 shrink-0"
+                  style={{ backgroundColor: activeEditingRow.colorHex || '#64748b' }}
+                />
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900">
+                    Variant Photos: {activeEditingRow.color} / {activeEditingRow.size}
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    Choose whether this variant shows original product photos or variant-specific images.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={closeImageModal}
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-5 space-y-4">
+              {/* Toggle: Use Original Images */}
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+                <div>
+                  <div className="text-xs font-bold text-slate-800">Use Original Product Photos</div>
+                  <div className="text-[11px] text-slate-500">
+                    Display the photos uploaded in Step 1 for this variant.
+                  </div>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={activeEditingRow.useOriginalImages !== false}
+                    onChange={() => handleToggleOriginalImages(editingImageRowIndex)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-9 h-5 bg-slate-200 peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600" />
+                </label>
+              </div>
+
+              {/* Custom Variant Photos Section (Visible if toggle OFF) */}
+              {activeEditingRow.useOriginalImages === false && (
+                <div className="space-y-4 pt-1 animate-in fade-in">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-800 mb-1.5">
+                      1. Pick from Product Photos:
+                    </label>
+                    <p className="text-[11px] text-slate-500 mb-2">
+                      Click photos to include/exclude for this variant.
+                    </p>
+                    <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
+                      {parentImages.map((img, i) => {
+                        const isSelected = (activeEditingRow.images || []).includes(img);
+                        return (
+                          <div
+                            key={i}
+                            onClick={() => handleToggleSelectParentImage(img)}
+                            className={`relative aspect-square rounded-lg overflow-hidden border-2 cursor-pointer transition-all ${
+                              isSelected
+                                ? 'border-blue-600 ring-2 ring-blue-500/20'
+                                : 'border-slate-200 hover:border-slate-400 opacity-60 hover:opacity-100'
+                            }`}
+                          >
+                            <img src={img} alt="" className="w-full h-full object-cover" />
+                            {isSelected && (
+                              <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-xs">
+                                <Check className="w-2.5 h-2.5 stroke-[3]" />
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Add Image by URL */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-800 mb-1">
+                      2. Add New Photo URL:
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="url"
+                        placeholder="https://images.unsplash.com/..."
+                        value={customImageUrlInput}
+                        onChange={(e) => setCustomImageUrlInput(e.target.value)}
+                        className="flex-1 px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:border-blue-500"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAddCustomImageUrl}
+                        disabled={!customImageUrlInput.trim()}
+                        className="px-3 py-1.5 text-xs font-bold bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-40 transition-colors cursor-pointer shrink-0"
+                      >
+                        + Add Photo
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Selected Photos Preview */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-xs font-bold text-slate-800">
+                        Active Photos for this Variant ({activeEditingRow.images?.length || 0}):
+                      </label>
+                      <button
+                        type="button"
+                        onClick={handleApplyImagesToColorGroup}
+                        className="text-[11px] font-bold text-blue-600 hover:text-blue-800 hover:underline inline-flex items-center gap-1 cursor-pointer"
+                        title="Copy these exact photos to all other variants in this color"
+                      >
+                        <Zap className="w-3 h-3 text-amber-500" />
+                        <span>Apply to all {activeEditingRow.color} variants</span>
+                      </button>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2 p-2 bg-slate-50 border border-slate-200 rounded-xl min-h-[56px] items-center">
+                      {(activeEditingRow.images || []).length > 0 ? (
+                        activeEditingRow.images?.map((img, i) => (
+                          <div key={i} className="relative w-12 h-12 rounded-lg border border-slate-300 overflow-hidden group">
+                            <img src={img} alt="" className="w-full h-full object-cover" />
+                            <button
+                              type="button"
+                              onClick={() => handleToggleSelectParentImage(img)}
+                              className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-rose-600 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                            >
+                              <X className="w-2.5 h-2.5" />
+                            </button>
+                          </div>
+                        ))
+                      ) : (
+                        <span className="text-[11px] text-slate-400 pl-1">
+                          No custom photos selected yet. Pick from above or enter a URL.
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between">
+              <span className="text-[11px] text-slate-500">
+                Customer gallery flips to these photos when this variant is clicked.
+              </span>
+              <button
+                type="button"
+                onClick={closeImageModal}
+                className="px-4 py-1.5 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-2xs transition-colors cursor-pointer"
+              >
+                Done
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
