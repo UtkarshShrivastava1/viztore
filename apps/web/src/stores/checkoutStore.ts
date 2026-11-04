@@ -3,6 +3,15 @@ import { persist } from 'zustand/middleware';
 
 export type FulfillmentType = 'deliver' | 'pickup' | 'reserve';
 export type PaymentMethodType = 'upi' | 'card' | 'netbanking' | 'cod';
+export type PlacementStage = 'idle' | 'submitting' | 'confirmed' | 'error';
+
+export interface ConfirmedOrderData {
+  id: string;
+  number: string;
+  storeName?: string;
+  grandTotal?: number;
+  itemCount?: number;
+}
 
 export interface ShippingAddressData {
   fullName: string;
@@ -32,6 +41,11 @@ export interface CheckoutState {
   removeCoupon: () => void;
   isPlacingOrder: boolean;
   setIsPlacingOrder: (loading: boolean) => void;
+  placementStage: PlacementStage;
+  setPlacementStage: (stage: PlacementStage) => void;
+  confirmedOrder: ConfirmedOrderData | null;
+  setConfirmedOrder: (order: ConfirmedOrderData | null) => void;
+  resetPlacement: () => void;
   isAddressModalOpen: boolean;
   setIsAddressModalOpen: (open: boolean) => void;
 }
@@ -56,6 +70,11 @@ export const useCheckoutStore = create<CheckoutState>()(
       removeCoupon: () => set({ couponCode: null, discountAmount: 0 }),
       isPlacingOrder: false,
       setIsPlacingOrder: (loading) => set({ isPlacingOrder: loading }),
+      placementStage: 'idle',
+      setPlacementStage: (stage) => set({ placementStage: stage }),
+      confirmedOrder: null,
+      setConfirmedOrder: (order) => set({ confirmedOrder: order }),
+      resetPlacement: () => set({ placementStage: 'idle', confirmedOrder: null, isPlacingOrder: false }),
       isAddressModalOpen: false,
       setIsAddressModalOpen: (open) => set({ isAddressModalOpen: open }),
     }),

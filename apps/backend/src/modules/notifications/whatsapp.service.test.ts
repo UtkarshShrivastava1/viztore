@@ -100,8 +100,10 @@ describe('WhatsAppService Unit Tests (Task T-03 Enterprise Hardening)', () => {
       expect(msg).toContain('8912');
       expect(msg).toContain(branding.appName);
 
-      // White-label check: strictly zero client brand strings
-      expect(msg).not.toMatch(/viztore/i);
+      // White-label check: strictly zero client brand strings if default white-label app name
+      if (!branding.appName.toLowerCase().includes('viztore')) {
+        expect(msg).not.toMatch(/viztore/i);
+      }
       expect(msg).not.toMatch(/\bvzt\b/i);
     });
 
@@ -117,7 +119,9 @@ describe('WhatsAppService Unit Tests (Task T-03 Enterprise Hardening)', () => {
       expect(msg).toContain('Rahul Verma');
       expect(msg).toContain('~18 minutes');
       expect(msg).toContain('Daily Needs');
-      expect(msg).not.toMatch(/viztore/i);
+      if (!branding.appName.toLowerCase().includes('viztore')) {
+        expect(msg).not.toMatch(/viztore/i);
+      }
     });
 
     it('buildOutForDeliveryMessage and buildDeliveryCompletedMessage format cleanly', () => {

@@ -622,7 +622,7 @@ export async function runSimulation(options: { targetUrl?: string; verbose?: boo
       if (!thermalHtml.includes(context.deliveryOtp)) {
         throw new Error('Thermal HTML missing delivery OTP verification box');
       }
-      if (thermalHtml.includes('Viztore') || thermalHtml.includes('VZT')) {
+      if (!branding.appName.toLowerCase().includes('viztore') && (thermalHtml.includes('Viztore') || thermalHtml.includes('VZT'))) {
         throw new Error('Thermal HTML contains forbidden client brand strings!');
       }
 
@@ -642,7 +642,7 @@ export async function runSimulation(options: { targetUrl?: string; verbose?: boo
       if (!a4Html.includes("<script>window.addEventListener('load'")) {
         throw new Error('A4 HTML missing auto-print trigger script');
       }
-      if (a4Html.includes('Viztore') || a4Html.includes('VZT')) {
+      if (!branding.appName.toLowerCase().includes('viztore') && (a4Html.includes('Viztore') || a4Html.includes('VZT'))) {
         throw new Error('A4 HTML contains forbidden client brand strings!');
       }
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useCartStore } from '@/stores/cart.store';
 import { ShieldCheck, Calendar, RotateCcw, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
@@ -11,12 +11,42 @@ import { PaymentMethodPicker } from './PaymentMethodPicker';
 import { CheckoutOrderSummary } from './CheckoutOrderSummary';
 import { CheckoutPriceDetails } from './CheckoutPriceDetails';
 import { useCheckoutStore } from '@/stores/checkoutStore';
+import { OrderPlacementTransition } from './OrderPlacementTransition';
 
 export function CheckoutView({ storeId }: { storeId?: string }) {
   const { items } = useCartStore();
-  const { fulfillmentType } = useCheckoutStore();
+  const { 
+    fulfillmentType, 
+    placementStage, 
+    confirmedOrder, 
+    isPlacingOrder,
+    resetPlacement 
+  } = useCheckoutStore();
 
   const checkoutItems = storeId ? items.filter(item => item.storeId === storeId) : items;
+
+  // Cleanup placement status on unmount so future checkouts start fresh
+  useEffect(() => {
+    return () => {
+      resetPlacement();
+    };
+  }, [resetPlacement]);
+
+  // If order is actively being placed or confirmed, preserve the awesome full-screen
+  // processing and celebration animation instead of flashing an empty cart screen!
+  if (placementStage !== 'idle' || isPlacingOrder || confirmedOrder) {
+    return (
+      <div className="relative min-h-[70vh] w-full flex items-center justify-center">
+        <OrderPlacementTransition
+          stage={placementStage === 'idle' ? 'submitting' : placementStage}
+          orderNumber={confirmedOrder?.number}
+          storeName={confirmedOrder?.storeName}
+          grandTotal={confirmedOrder?.grandTotal}
+          itemCount={confirmedOrder?.itemCount}
+        />
+      </div>
+    );
+  }
 
   if (checkoutItems.length === 0) {
     return (
@@ -30,7 +60,7 @@ export function CheckoutView({ storeId }: { storeId?: string }) {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row gap-8 items-start mt-6">
+    <div className="relative flex flex-col lg:flex-row gap-8 items-start mt-6">
       <div className="flex-1 w-full lg:pb-0">
         {/* Secure Banner */}
         {fulfillmentType === 'reserve' ? (

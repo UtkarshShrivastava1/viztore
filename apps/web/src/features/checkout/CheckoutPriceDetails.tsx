@@ -10,7 +10,6 @@ import { couponsApi } from '@/lib/api/coupons';
 import type { CreateOrderDto, ICoupon } from '@repo/shared-types';
 import { Percent, ChevronRight, Lock, Loader2, Calendar, X, CheckCircle, Tag, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { OrderPlacementTransition, PlacementStage } from './OrderPlacementTransition';
 import { playOrderInitiateSound, playOrderSuccessChime } from '@/lib/orderSound';
 
 export function CheckoutPriceDetails({ storeId }: { storeId?: string }) {
@@ -27,6 +26,10 @@ export function CheckoutPriceDetails({ storeId }: { storeId?: string }) {
     applyCouponDiscount,
     removeCoupon,
     paymentMethod,
+    placementStage,
+    setPlacementStage,
+    confirmedOrder,
+    setConfirmedOrder,
   } = useCheckoutStore();
   const { isAuthenticated, user, openAuthModal } = useAuthStore();
   const { city: locationCity, pincode: locationPincode } = useLocationStore();
@@ -37,8 +40,6 @@ export function CheckoutPriceDetails({ storeId }: { storeId?: string }) {
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
   const [availableCoupons, setAvailableCoupons] = useState<ICoupon[]>([]);
   const [isLoadingCoupons, setIsLoadingCoupons] = useState(false);
-  const [placementStage, setPlacementStage] = useState<PlacementStage>('idle');
-  const [confirmedOrder, setConfirmedOrder] = useState<{ id: string; number: string } | null>(null);
 
   const totalItemCount = getItemCount(storeId);
   const subtotal = getSubtotal(storeId);
@@ -160,28 +161,52 @@ export function CheckoutPriceDetails({ storeId }: { storeId?: string }) {
 
     setIsPlacingOrder(true);
     setPlacementStage('submitting');
+    setConfirmedOrder({
+      id: '',
+      number: '',
+      storeName: checkoutStoreName,
+      grandTotal,
+      itemCount: totalItemCount,
+    });
     playOrderInitiateSound();
 
     try {
       const order = await ordersApi.createOrder(orderPayload);
+      const orderId = order.id || order._id || order.orderNumber;
+      const orderNum = order.orderNumber || orderId;
+
+      // Prefetch destination live tracking page for instant route transition
+      try {
+        router.prefetch(`/account/orders/${encodeURIComponent(orderId)}`);
+      } catch (e) {
+        // prefetch is an optional optimization
+      }
+
+      // First record confirmed order details and activate celebratory stage
+      setConfirmedOrder({
+        id: orderId,
+        number: orderNum,
+        storeName: checkoutStoreName,
+        grandTotal,
+        itemCount: totalItemCount,
+      });
+      setPlacementStage('confirmed');
+      playOrderSuccessChime();
+
+      // Clear the cart while celebratory transition is firmly mounted and visible
       if (storeId) {
         clearStoreCart(storeId);
       } else {
         clearCart();
       }
-      const orderId = order.id || order._id || order.orderNumber;
-      const orderNum = order.orderNumber || orderId;
-
-      setConfirmedOrder({ id: orderId, number: orderNum });
-      setPlacementStage('confirmed');
-      playOrderSuccessChime();
 
       // Smooth celebratory transition directly to live order tracking cockpit
       setTimeout(() => {
-        router.push(`/account/orders/${encodeURIComponent(orderId)}`);
-      }, 1500);
+        router.replace(`/account/orders/${encodeURIComponent(orderId)}`);
+      }, 1800);
     } catch (err: unknown) {
       setPlacementStage('idle');
+      setConfirmedOrder(null);
       console.error('Backend order placement API error:', err);
       const isAuthError =
         (err as { statusCode?: number })?.statusCode === 401 ||
@@ -213,13 +238,6 @@ export function CheckoutPriceDetails({ storeId }: { storeId?: string }) {
 
   return (
     <div className="w-full">
-      <OrderPlacementTransition
-        stage={placementStage}
-        orderNumber={confirmedOrder?.number}
-        storeName={checkoutStoreName}
-        grandTotal={grandTotal}
-        itemCount={totalItemCount}
-      />
       <div className="mb-6 rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
         <h3 className="mb-4 text-sm font-bold text-gray-900 flex justify-between">
           <span>Price Details</span>
