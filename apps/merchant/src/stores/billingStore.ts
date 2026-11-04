@@ -326,6 +326,15 @@ interface BillingStoreState {
     customerName?: string;
     customerPhone?: string;
     customerGstin?: string;
+    customerAddress?: string;
+    state?: string;
+    placeOfSupply?: string;
+    paymentTerms?: string;
+    dueDate?: string;
+    notes?: string;
+    invoiceType?: 'tax_invoice' | 'bill_of_supply' | string;
+    paidAmount?: number;
+    dueAmount?: number;
     items: IInvoiceItem[];
     settlementMode: 'cash' | 'upi' | 'card' | 'bank_transfer' | 'credit';
     tenderedCashAmount?: number;
@@ -1096,6 +1105,9 @@ export const useBillingStore = create<BillingStoreState>((set, get) => ({
     const taxTotal = Math.round(taxableAmount * 0.18 * 100) / 100;
     const grandTotal = Math.round((taxableAmount + taxTotal) * 100) / 100;
 
+    const paidAmount = posData.paidAmount !== undefined ? posData.paidAmount : (posData.settlementMode === 'credit' ? 0 : grandTotal);
+    const dueAmount = posData.dueAmount !== undefined ? posData.dueAmount : (posData.settlementMode === 'credit' ? grandTotal : Math.max(0, grandTotal - paidAmount));
+
     const tenderedCash = posData.settlementMode === 'cash' ? (posData.tenderedCashAmount ?? grandTotal) : undefined;
     const changeReturn = posData.settlementMode === 'cash' ? Math.max(0, (tenderedCash ?? grandTotal) - grandTotal) : undefined;
 
@@ -1111,7 +1123,15 @@ export const useBillingStore = create<BillingStoreState>((set, get) => ({
           name: posData.customerName || 'Walk-in Retail Customer',
           phone: posData.customerPhone ? posData.customerPhone.replace(/\D/g, '') || '9999999999' : '9999999999',
           gstin: posData.customerGstin || undefined,
+          billingAddress: posData.customerAddress || undefined,
+          state: posData.state || DEFAULT_INDIAN_STATE,
         },
+        placeOfSupply: posData.placeOfSupply || DEFAULT_INDIAN_STATE,
+        paymentTerms: posData.paymentTerms || 'Immediate',
+        dueDate: posData.dueDate,
+        notes: posData.notes,
+        paidAmount,
+        dueAmount,
         items: posData.items.map((it) => ({
           productId: it.productId,
           variantId: (it as any).sku || (it as any).variantId || undefined,
@@ -1163,24 +1183,25 @@ export const useBillingStore = create<BillingStoreState>((set, get) => ({
         id: 'pos-' + Date.now(),
         invoiceNo: newInvoiceNo,
         date: today,
-        dueDate: today,
+        dueDate: posData.dueDate || today,
         customerName: posData.customerName || 'Walk-in Retail Customer',
         customerPhone: posData.customerPhone || '',
         customerGstin: posData.customerGstin,
-        customerAddress: 'Counter Sale',
-        state: DEFAULT_INDIAN_STATE,
-        placeOfSupply: DEFAULT_INDIAN_STATE,
-        paymentTerms: 'Immediate',
-        type: 'Tax Invoice',
+        customerAddress: posData.customerAddress || 'Counter Sale',
+        state: posData.state || DEFAULT_INDIAN_STATE,
+        placeOfSupply: posData.placeOfSupply || DEFAULT_INDIAN_STATE,
+        paymentTerms: posData.paymentTerms || 'Immediate',
+        type: posData.invoiceType === 'bill_of_supply' ? 'Bill of Supply' : 'Tax Invoice',
         items: posData.items,
         subTotal,
         discountTotal: discountAmount,
         taxTotal,
         totalAmount: grandTotal,
-        paidAmount: grandTotal,
-        dueAmount: 0,
-        status: 'paid',
-        settlementMode: posData.settlementMode,
+        paidAmount,
+        dueAmount,
+        status: dueAmount <= 0 ? 'paid' : (paidAmount > 0 ? 'partially_paid' : 'issued'),
+        settlementMode: posData.settlementMode === 'credit' ? 'bank_transfer' : posData.settlementMode,
+        notes: posData.notes,
       };
     }
 

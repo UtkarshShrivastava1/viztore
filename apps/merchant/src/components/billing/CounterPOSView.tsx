@@ -18,14 +18,27 @@ import {
   Sparkles,
   Zap,
   Percent,
+  Building2,
+  Calendar,
+  ChevronDown,
+  ChevronUp,
+  FileText,
+  Check,
+  X,
+  FileCheck,
+  Coins,
+  ShieldCheck,
+  PlusCircle,
+  Edit2,
+  MapPin,
+  Clock,
 } from 'lucide-react';
 import { useCatalogStore, ProductItem } from '../../stores/catalogStore.js';
 import { useInventoryStore } from '../../stores/inventoryStore.js';
 import { useBillingStore, IInvoice, IInvoiceItem } from '../../stores/billingStore.js';
-import { useCustomerStore } from '../../stores/customerStore.js';
-import { billingApi } from '../../lib/api.js';
+import { useCustomerStore, Customer } from '../../stores/customerStore.js';
 import { PrintReceiptModal } from './PrintReceiptModal.js';
-import { DEFAULT_INDIAN_STATE } from '@repo/shared-types';
+import { INDIAN_STATES, DEFAULT_INDIAN_STATE } from '@repo/shared-types';
 
 interface CounterPOSViewProps {
   onBack?: () => void;
@@ -34,15 +47,14 @@ interface CounterPOSViewProps {
 export const CounterPOSView: React.FC<CounterPOSViewProps> = ({ onBack }) => {
   const { products: catalogProducts } = useCatalogStore();
   const { items: inventoryItems } = useInventoryStore();
-  const { completePOSSale, createInvoice } = useBillingStore();
-  const { customers } = useCustomerStore();
+  const { completePOSSale, invoices, settings } = useBillingStore();
+  const { customers, addCustomer } = useCustomerStore();
 
   // Unified available POS items (prefers catalog products with pricing, merges inventory)
   const posProducts = useMemo(() => {
     if (catalogProducts && catalogProducts.length > 0) {
       return catalogProducts;
     }
-    // Fallback: derive products from inventoryStore
     return inventoryItems.map((inv) => ({
       id: inv.id,
       name: inv.name,
@@ -70,25 +82,62 @@ export const CounterPOSView: React.FC<CounterPOSViewProps> = ({ onBack }) => {
   const [cartItems, setCartItems] = useState<IInvoiceItem[]>([]);
   const [discountPercent, setDiscountPercent] = useState<number>(0);
 
+  // Unified Mode: Retail (B2C) vs Formal GST Tax Invoice (B2B)
+  const [invoiceMode, setInvoiceMode] = useState<'retail' | 'b2b'>('retail');
+  const [isB2BDrawerOpen, setIsB2BDrawerOpen] = useState<boolean>(false);
+
   // Customer Context
-  const [isWalkIn, setIsWalkIn] = useState<boolean>(true);
+  const [customerMode, setCustomerMode] = useState<'walkin' | 'existing' | 'new'>('walkin');
+  const [customerSearch, setCustomerSearch] = useState<string>('');
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [isCustomerDropdownOpen, setIsCustomerDropdownOpen] = useState<boolean>(false);
+
+  // Customer Form Fields
   const [customerName, setCustomerName] = useState<string>('Walk-in Retail Customer');
   const [customerPhone, setCustomerPhone] = useState<string>('');
+  const [customerAddress, setCustomerAddress] = useState<string>('');
   const [customerGstin, setCustomerGstin] = useState<string>('');
+  const [customerState, setCustomerState] = useState<string>(DEFAULT_INDIAN_STATE);
+
+  // B2B & Tax Compliance Details
+  const [invoiceType, setInvoiceType] = useState<'Tax Invoice' | 'Bill of Supply'>('Tax Invoice');
+  const [placeOfSupply, setPlaceOfSupply] = useState<string>(() => settings?.state || DEFAULT_INDIAN_STATE);
+  const [paymentTerms, setPaymentTerms] = useState<string>('Immediate');
+  const [dueDate, setDueDate] = useState<string>(() => {
+    const d = new Date();
+    return d.toISOString().split('T')[0] || '';
+  });
+  const [invoiceNotes, setInvoiceNotes] = useState<string>('');
+  const [referenceNo, setReferenceNo] = useState<string>('');
 
   // Settlement Context
-  const [settlementMode, setSettlementMode] = useState<'cash' | 'upi' | 'card' | 'bank_transfer'>('cash');
+  const [settlementMode, setSettlementMode] = useState<'cash' | 'upi' | 'card' | 'credit'>('cash');
   const [cashTendered, setCashTendered] = useState<number>(0);
+  const [isPartialPayment, setIsPartialPayment] = useState<boolean>(false);
+  const [partialPaidAmount, setPartialPaidAmount] = useState<number>(0);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [notification, setNotification] = useState<{ text: string; type: 'success' | 'info' | 'error' } | null>(null);
 
-  // Print Dialog State
+  // Modals & Popovers
   const [lastInvoiceForPrint, setLastInvoiceForPrint] = useState<IInvoice | null>(null);
+  const [printFormatMode, setPrintFormatMode] = useState<'thermal-80mm' | 'a4-tax-invoice'>('thermal-80mm');
   const [isPrintModalOpen, setIsPrintModalOpen] = useState<boolean>(false);
   const [isClearRegisterConfirmOpen, setIsClearRegisterConfirmOpen] = useState<boolean>(false);
+  
+  // Custom Non-Catalog Item Dialog
+  const [isCustomItemModalOpen, setIsCustomItemModalOpen] = useState<boolean>(false);
+  const [customItemName, setCustomItemName] = useState<string>('');
+  const [customItemRate, setCustomItemRate] = useState<number>(100);
+  const [customItemHsn, setCustomItemHsn] = useState<string>('9987');
+  const [customItemQty, setCustomItemQty] = useState<number>(1);
+
+  // Editable Price in Cart
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [editingRate, setEditingRate] = useState<string>('');
 
   // Search input ref
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const customerDropdownRef = useRef<HTMLDivElement>(null);
 
   // Audio Beep Generator for Barcode / Scan events
   const playScanChime = (freq = 880, duration = 0.08) => {
@@ -98,28 +147,62 @@ export const CounterPOSView: React.FC<CounterPOSViewProps> = ({ onBack }) => {
       const gain = audioCtx.createGain();
       osc.type = 'sine';
       osc.frequency.value = freq;
-      gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
       osc.connect(gain);
       gain.connect(audioCtx.destination);
       osc.start();
       osc.stop(audioCtx.currentTime + duration);
     } catch {
-      // AudioContext not allowed or not supported; fail silently
+      // AudioContext not allowed before user interaction
     }
   };
 
-  // Barcode Scanner Keystroke Wedge Listener
+  // Auto-calculate Due Date based on Payment Terms
+  useEffect(() => {
+    const now = new Date();
+    let daysToAdd = 0;
+    if (paymentTerms === '7 Days') daysToAdd = 7;
+    else if (paymentTerms === '15 Days') daysToAdd = 15;
+    else if (paymentTerms === '30 Days') daysToAdd = 30;
+    else if (paymentTerms === '45 Days') daysToAdd = 45;
+    else if (paymentTerms === '60 Days') daysToAdd = 60;
+
+    now.setDate(now.getDate() + daysToAdd);
+    setDueDate(now.toISOString().split('T')[0] || '');
+  }, [paymentTerms]);
+
+  // Handle outside click for customer dropdown
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (customerDropdownRef.current && !customerDropdownRef.current.contains(e.target as Node)) {
+        setIsCustomerDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Keyboard Shortcuts (F2: Thermal, Ctrl+P: A4, F3 / Ctrl+K: Focus Search)
   useEffect(() => {
     let buffer = '';
     let lastKeyTime = Date.now();
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      // F2 hotkey: Quick Charge & Print
+      // F2 hotkey: Quick Charge & Print Thermal Slip
       if (e.key === 'F2') {
         e.preventDefault();
-        handleCheckout(true);
+        handleCheckout('thermal-80mm');
         return;
+      }
+
+      // Ctrl+P / Cmd+P hotkey inside register: Charge & Print A4 Invoice
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'p') {
+        if (cartItems.length > 0) {
+          e.preventDefault();
+          handleCheckout('a4-tax-invoice');
+          return;
+        }
       }
 
       // F3 or Ctrl+K: Focus search
@@ -129,30 +212,28 @@ export const CounterPOSView: React.FC<CounterPOSViewProps> = ({ onBack }) => {
         return;
       }
 
-      // Barcode Scanner Listener:
-      // Barcode scanners enter characters rapidly (< 40ms interval) ending with 'Enter'
+      // Hardware barcode scanner detection
       const now = Date.now();
       const diff = now - lastKeyTime;
       lastKeyTime = now;
 
-      // Ignore normal typing in active text inputs if slower than scanner speed
-      const target = e.target as HTMLElement;
-      const isInput = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA');
+      const activeTag = (document.activeElement?.tagName || '').toLowerCase();
+      const isInput = activeTag === 'input' || activeTag === 'textarea';
 
       if (e.key === 'Enter') {
-        if (buffer.length >= 3 && (diff < 60 || !isInput)) {
-          // Detected barcode scan string
+        if (buffer.length >= 3 && diff < 80) {
           e.preventDefault();
-          const scannedCode = buffer.trim();
-          handleBarcodeScanned(scannedCode);
+          handleBarcodeScanned(buffer);
+          buffer = '';
+        } else if (!isInput && buffer.length >= 3) {
+          handleBarcodeScanned(buffer);
+          buffer = '';
         }
-        buffer = '';
         return;
       }
 
       if (e.key.length === 1) {
         if (diff > 120 && isInput) {
-          // Normal human typing, reset scanner buffer
           buffer = e.key;
         } else {
           buffer += e.key;
@@ -162,7 +243,7 @@ export const CounterPOSView: React.FC<CounterPOSViewProps> = ({ onBack }) => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [cartItems, posProducts]);
+  }, [cartItems, posProducts, customerName, customerPhone, customerGstin, placeOfSupply]);
 
   const handleBarcodeScanned = (code: string) => {
     const clean = code.toLowerCase().trim();
@@ -174,11 +255,11 @@ export const CounterPOSView: React.FC<CounterPOSViewProps> = ({ onBack }) => {
     );
 
     if (matched) {
-      playScanChime(1046, 0.1); // High C beep
+      playScanChime(1046, 0.1);
       addToCart(matched);
       showNotification(`Scanned: ${matched.name} (+1)`, 'success');
     } else {
-      playScanChime(300, 0.2); // Low buzz
+      playScanChime(300, 0.2);
       showNotification(`Unrecognized barcode: "${code}"`, 'error');
     }
   };
@@ -206,9 +287,8 @@ export const CounterPOSView: React.FC<CounterPOSViewProps> = ({ onBack }) => {
         {
           id: 'pos-it-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
           productId: product.id,
-          sku: product.sku,
           name: product.name,
-          hsnSac: '6205',
+          hsnSac: product.hsnCode || '85171300',
           quantity: 1,
           rate: unitRate,
           discountPercent: 0,
@@ -218,6 +298,36 @@ export const CounterPOSView: React.FC<CounterPOSViewProps> = ({ onBack }) => {
         },
       ];
     });
+  };
+
+  // Add Custom / Non-Catalog Item to Register
+  const handleAddCustomItem = () => {
+    if (!customItemName.trim()) {
+      showNotification('Please enter an item or service name', 'error');
+      return;
+    }
+    const rate = Math.max(0, customItemRate || 0);
+    const qty = Math.max(1, customItemQty || 1);
+    const newItem: IInvoiceItem = {
+      id: 'custom-it-' + Date.now(),
+      productId: 'custom-' + Date.now(),
+      name: customItemName.trim(),
+      hsnSac: customItemHsn.trim() || '9987',
+      quantity: qty,
+      rate,
+      discountPercent: 0,
+      taxPercent: 18,
+      amount: rate * qty,
+      unit: 'Pcs',
+    };
+
+    setCartItems((prev) => [...prev, newItem]);
+    playScanChime(987, 0.08);
+    showNotification(`Added custom item: ${newItem.name}`, 'success');
+    setIsCustomItemModalOpen(false);
+    setCustomItemName('');
+    setCustomItemRate(100);
+    setCustomItemQty(1);
   };
 
   const updateQuantity = (id: string, delta: number) => {
@@ -230,6 +340,21 @@ export const CounterPOSView: React.FC<CounterPOSViewProps> = ({ onBack }) => {
         })
         .filter((it) => it.quantity > 0)
     );
+  };
+
+  // On-the-fly Price Edit
+  const handleSaveRateEdit = (id: string) => {
+    const parsed = parseFloat(editingRate);
+    if (!isNaN(parsed) && parsed >= 0) {
+      setCartItems((prev) =>
+        prev.map((it) =>
+          it.id === id ? { ...it, rate: parsed, amount: it.quantity * parsed } : it
+        )
+      );
+      playScanChime(1046, 0.06);
+    }
+    setEditingItemId(null);
+    setEditingRate('');
   };
 
   const removeItem = (id: string) => {
@@ -245,6 +370,8 @@ export const CounterPOSView: React.FC<CounterPOSViewProps> = ({ onBack }) => {
     setCartItems([]);
     setCashTendered(0);
     setDiscountPercent(0);
+    setIsPartialPayment(false);
+    setPartialPaidAmount(0);
     setIsClearRegisterConfirmOpen(false);
     showNotification('Bill register cleared', 'info');
   };
@@ -272,59 +399,124 @@ export const CounterPOSView: React.FC<CounterPOSViewProps> = ({ onBack }) => {
     });
   }, [posProducts, searchQuery, selectedCategory]);
 
-  // Indian GST Calculation Math
+  // Deduplicate and filter Customers for Autocomplete
+  const filteredCustomerList = useMemo(() => {
+    const q = customerSearch.toLowerCase().trim();
+    if (!q) return customers.slice(0, 8);
+    return customers.filter(
+      (c) =>
+        c.name.toLowerCase().includes(q) ||
+        c.phone.includes(q) ||
+        (c.displayName && c.displayName.toLowerCase().includes(q))
+    ).slice(0, 8);
+  }, [customers, customerSearch]);
+
+  // Select Existing Customer
+  const handleSelectCustomer = (customer: Customer) => {
+    setSelectedCustomer(customer);
+    setCustomerName(customer.name);
+    setCustomerPhone(customer.phone);
+    setCustomerGstin(customer.gstin || '');
+    setCustomerAddress(customer.billingAddress?.addressLine1 || customer.location || '');
+    setCustomerState(customer.billingAddress?.state || DEFAULT_INDIAN_STATE);
+    setIsCustomerDropdownOpen(false);
+    setCustomerSearch('');
+
+    // If customer has a GSTIN, auto-prompt/enable B2B mode
+    if (customer.gstin) {
+      setInvoiceMode('b2b');
+      setIsB2BDrawerOpen(true);
+      showNotification(`Loaded B2B Profile: ${customer.name} (GSTIN: ${customer.gstin})`, 'info');
+    } else {
+      showNotification(`Customer Selected: ${customer.name}`, 'info');
+    }
+  };
+
+  // Indian GST Calculation Math (Intra-state CGST+SGST vs Inter-state IGST)
+  const isInterState = useMemo(() => {
+    const storeState = settings?.state || DEFAULT_INDIAN_STATE;
+    return placeOfSupply !== storeState;
+  }, [placeOfSupply, settings?.state]);
+
   const subTotal = cartItems.reduce((sum, it) => sum + it.quantity * it.rate, 0);
   const discountAmount = Math.round(((subTotal * discountPercent) / 100) * 100) / 100;
   const taxableAmount = Math.max(0, subTotal - discountAmount);
-  // Standard Indian GST (intra-state: 9% CGST + 9% SGST)
-  const cgstAmount = Math.round(taxableAmount * 0.09 * 100) / 100;
-  const sgstAmount = Math.round(taxableAmount * 0.09 * 100) / 100;
-  const taxTotal = Math.round((cgstAmount + sgstAmount) * 100) / 100;
+
+  const cgstAmount = isInterState ? 0 : Math.round(taxableAmount * 0.09 * 100) / 100;
+  const sgstAmount = isInterState ? 0 : Math.round(taxableAmount * 0.09 * 100) / 100;
+  const igstAmount = isInterState ? Math.round(taxableAmount * 0.18 * 100) / 100 : 0;
+  const taxTotal = Math.round((cgstAmount + sgstAmount + igstAmount) * 100) / 100;
+
   const exactGrandTotal = taxableAmount + taxTotal;
   const netPayable = Math.round(exactGrandTotal);
   const roundOff = Number((netPayable - exactGrandTotal).toFixed(2));
 
+  // Partial Payment & Due Calculation
+  const actualPaidAmount = useMemo(() => {
+    if (settlementMode === 'credit') return 0;
+    if (isPartialPayment) return Math.min(netPayable, Math.max(0, partialPaidAmount));
+    return netPayable;
+  }, [settlementMode, isPartialPayment, partialPaidAmount, netPayable]);
+
+  const actualDueAmount = Math.max(0, netPayable - actualPaidAmount);
+
   // Change Return Calculation
   const changeDue = settlementMode === 'cash' && cashTendered > netPayable ? cashTendered - netPayable : 0;
 
-  // Checkout Handler
-  const handleCheckout = async (openPrint = true) => {
+  // Unified Checkout Handler
+  const handleCheckout = async (targetPrintFormat: 'thermal-80mm' | 'a4-tax-invoice' | null = 'thermal-80mm') => {
     if (cartItems.length === 0) {
-      showNotification('Bill is empty. Please add items to proceed.', 'error');
+      showNotification('Bill register is empty. Please add items to proceed.', 'error');
       return;
     }
 
     setIsSubmitting(true);
     try {
+      const isWalkIn = customerMode === 'walkin';
       const customerFinalName = isWalkIn ? 'Walk-in Retail Customer' : customerName.trim() || 'Retail Customer';
+
+      // If B2B mode with custom GSTIN, clean and uppercase
+      const cleanGstin = customerGstin ? customerGstin.trim().toUpperCase() : undefined;
 
       const result = await completePOSSale({
         customerName: customerFinalName,
         customerPhone: isWalkIn ? '' : customerPhone,
-        customerGstin: customerGstin || undefined,
+        customerGstin: cleanGstin,
+        customerAddress: isWalkIn ? undefined : customerAddress || undefined,
+        state: isWalkIn ? DEFAULT_INDIAN_STATE : customerState,
+        placeOfSupply,
+        paymentTerms,
+        dueDate,
+        notes: invoiceNotes || undefined,
+        invoiceType: invoiceType === 'Bill of Supply' ? 'bill_of_supply' : 'tax_invoice',
+        paidAmount: actualPaidAmount,
+        dueAmount: actualDueAmount,
         items: cartItems,
-        settlementMode,
+        settlementMode: settlementMode === 'credit' ? 'bank_transfer' : settlementMode,
         tenderedCashAmount: settlementMode === 'cash' ? (cashTendered || netPayable) : undefined,
         changeReturnAmount: changeDue,
-        paperSize: '80mm',
+        paperSize: targetPrintFormat === 'a4-tax-invoice' ? 'a4' : '80mm',
         discountPercent,
       });
 
       playScanChime(1318, 0.15); // Celebration E beep
-      showNotification(`Invoice ${result.invoice.invoiceNo} Charged Successfully!`, 'success');
+      showNotification(`Invoice ${result.invoice.invoiceNo} Recorded Successfully!`, 'success');
 
-      // Reset Bill
+      // Reset Bill & Register
       setCartItems([]);
       setCashTendered(0);
       setDiscountPercent(0);
+      setIsPartialPayment(false);
+      setPartialPaidAmount(0);
 
-      // Open Thermal Slip Print Dialog
-      if (openPrint) {
+      // Open Print Modal if print format requested
+      if (targetPrintFormat) {
         setLastInvoiceForPrint(result.invoice);
+        setPrintFormatMode(targetPrintFormat);
         setIsPrintModalOpen(true);
       }
     } catch (err: any) {
-      showNotification(err.message || 'Error processing counter transaction', 'error');
+      showNotification(err.message || 'Error processing transaction', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -343,51 +535,72 @@ export const CounterPOSView: React.FC<CounterPOSViewProps> = ({ onBack }) => {
               : 'bg-slate-900 text-white border-slate-700'
           }`}
         >
-          {notification.type === 'success' && <CheckCircle2 className="w-4 h-4" />}
-          {notification.type === 'error' && <AlertCircle className="w-4 h-4" />}
-          {notification.type === 'info' && <Sparkles className="w-4 h-4" />}
+          {notification.type === 'success' ? (
+            <CheckCircle2 className="w-4 h-4" />
+          ) : notification.type === 'error' ? (
+            <AlertCircle className="w-4 h-4" />
+          ) : (
+            <Sparkles className="w-4 h-4 text-blue-400" />
+          )}
           <span>{notification.text}</span>
         </div>
       )}
 
       {/* ──────────────────────────────────────────────────────────── */}
-      {/* LEFT COLUMN: ITEM CATALOG & QUICK SCAN STATION              */}
+      {/* LEFT COLUMN: VISUAL CATALOG, QUICK ADD & BARCODE SCANNER   */}
       {/* ──────────────────────────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-        {/* Top Header / Search Bar */}
-        <div className="p-4 border-b border-slate-200 bg-slate-50/50 space-y-3">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              {onBack && (
-                <button
-                  type="button"
-                  onClick={onBack}
-                  className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-600 transition-colors"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                </button>
-              )}
-              <div>
-                <h2 className="text-base font-black text-slate-900 flex items-center gap-2">
-                  <span>In-House Counter POS</span>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 flex items-center gap-1">
-                    <Zap className="w-3 h-3 fill-current" /> Live Register
-                  </span>
+      <div className="flex-1 bg-white rounded-2xl border border-slate-200 shadow-xs flex flex-col overflow-hidden">
+        {/* Header Bar */}
+        <div className="p-4 border-b border-slate-200 bg-slate-50/70 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            {onBack && (
+              <button
+                type="button"
+                onClick={onBack}
+                className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-600 transition-colors"
+                title="Back to Invoices"
+              >
+                <ArrowLeft className="w-4 h-4" />
+              </button>
+            )}
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-black text-slate-900 tracking-tight">
+                  In-House Counter POS
                 </h2>
-                <p className="text-xs text-slate-500">
-                  Scan barcode with handheld scanner or click items to add to bill.
-                </p>
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                  <Zap className="w-3 h-3 fill-current text-emerald-600" />
+                  Live Register
+                </span>
               </div>
-            </div>
-
-            {/* Barcode status indicator */}
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold">
-              <Barcode className="w-4 h-4 text-blue-600" />
-              <span>Scanner Ready</span>
+              <p className="text-[11px] text-slate-500">
+                Scan barcode with handheld scanner or click items to add to bill.
+              </p>
             </div>
           </div>
 
-          {/* Search Box */}
+          <div className="flex items-center gap-2">
+            {/* Quick Non-Catalog Item CTA */}
+            <button
+              type="button"
+              onClick={() => setIsCustomItemModalOpen(true)}
+              className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 flex items-center gap-1.5 transition-colors"
+            >
+              <PlusCircle className="w-3.5 h-3.5 text-blue-600" />
+              <span>+ Quick Item / Service</span>
+            </button>
+
+            {/* Hardware Scanner Indicator */}
+            <div className="flex items-center gap-1.5 px-3 py-1 bg-blue-50/80 border border-blue-200/60 rounded-xl text-blue-700 text-xs font-bold">
+              <Barcode className="w-4 h-4" />
+              <span>Scanner Ready</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Search & Category Filter Controls */}
+        <div className="p-4 border-b border-slate-200 space-y-3 bg-white">
+          {/* Search Bar */}
           <div className="relative">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
@@ -469,7 +682,7 @@ export const CounterPOSView: React.FC<CounterPOSViewProps> = ({ onBack }) => {
                     className={`relative p-3 rounded-xl border text-left flex flex-col justify-between transition-all group ${
                       isOutOfStock
                         ? 'opacity-50 cursor-not-allowed bg-slate-50 border-slate-200'
-                        : 'bg-white border-slate-200 hover:border-blue-400 hover:shadow-md active:scale-98'
+                        : 'bg-white border-slate-200 hover:border-blue-400 hover:shadow-md active:scale-98 cursor-pointer'
                     }`}
                   >
                     <div>
@@ -519,93 +732,372 @@ export const CounterPOSView: React.FC<CounterPOSViewProps> = ({ onBack }) => {
       </div>
 
       {/* ──────────────────────────────────────────────────────────── */}
-      {/* RIGHT COLUMN: CASHIER REGISTER & INSTANT SETTLEMENT         */}
+      {/* RIGHT COLUMN: UNIFIED REGISTER & ADVANCED INVOICING STATION */}
       {/* ──────────────────────────────────────────────────────────── */}
-      <div className="w-full lg:w-[420px] bg-white rounded-2xl border border-slate-200 shadow-xs flex flex-col overflow-hidden shrink-0">
-        {/* Register Header */}
-        <div className="p-4 border-b border-slate-200 bg-slate-50/70 flex items-center justify-between">
+      <div className="w-full lg:w-[460px] bg-white rounded-2xl border border-slate-200 shadow-xs flex flex-col overflow-hidden shrink-0">
+        {/* Register Top Header: Mode Switcher */}
+        <div className="p-3.5 border-b border-slate-200 bg-slate-900 text-white flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <ShoppingCart className="w-5 h-5 text-blue-600" />
-            <h3 className="text-sm font-bold text-slate-900">
-              Active Bill Register ({cartItems.length} {cartItems.length === 1 ? 'item' : 'items'})
+            <ShoppingCart className="w-4 h-4 text-blue-400" />
+            <h3 className="text-xs font-bold text-white tracking-wide uppercase">
+              Active Register ({cartItems.length} {cartItems.length === 1 ? 'item' : 'items'})
             </h3>
           </div>
-          {cartItems.length > 0 && (
+
+          {/* Unified Mode Toggle: Retail vs GST B2B */}
+          <div className="flex items-center gap-1 bg-slate-800 p-0.5 rounded-lg border border-slate-700">
             <button
               type="button"
-              onClick={clearRegister}
-              className="text-[11px] font-semibold text-rose-600 hover:text-rose-800 flex items-center gap-1"
+              onClick={() => {
+                setInvoiceMode('retail');
+                setIsB2BDrawerOpen(false);
+              }}
+              className={`px-2 py-0.5 text-[10px] font-bold rounded transition-colors ${
+                invoiceMode === 'retail'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
             >
-              <Trash2 className="w-3.5 h-3.5" />
-              <span>Clear</span>
+              Retail (B2C)
             </button>
-          )}
+            <button
+              type="button"
+              onClick={() => {
+                setInvoiceMode('b2b');
+                setIsB2BDrawerOpen(true);
+              }}
+              className={`px-2 py-0.5 text-[10px] font-bold rounded transition-colors flex items-center gap-1 ${
+                invoiceMode === 'b2b'
+                  ? 'bg-purple-600 text-white shadow-xs'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Building2 className="w-3 h-3" />
+              <span>Tax Invoice (B2B)</span>
+            </button>
+          </div>
         </div>
 
-        {/* Customer Header Selector */}
-        <div className="p-3 bg-slate-100/60 border-b border-slate-200 space-y-2">
+        {/* Customer Header & CRM Selector */}
+        <div className="p-3 bg-slate-50 border-b border-slate-200 space-y-2">
           <div className="flex items-center justify-between text-xs">
-            <span className="font-semibold text-slate-700">Customer Mode:</span>
+            <span className="font-bold text-slate-700">Customer Mode:</span>
             <div className="flex items-center gap-1 bg-white p-0.5 rounded-lg border border-slate-200">
               <button
                 type="button"
-                onClick={() => setIsWalkIn(true)}
-                className={`px-2 py-0.5 text-[11px] font-bold rounded ${
-                  isWalkIn ? 'bg-blue-600 text-white' : 'text-slate-600 hover:text-slate-900'
+                onClick={() => {
+                  setCustomerMode('walkin');
+                  setSelectedCustomer(null);
+                  setCustomerName('Walk-in Retail Customer');
+                  setCustomerPhone('');
+                  setCustomerGstin('');
+                  setCustomerAddress('');
+                }}
+                className={`px-2 py-0.5 text-[10px] font-bold rounded transition-colors ${
+                  customerMode === 'walkin' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 Walk-in
               </button>
               <button
                 type="button"
-                onClick={() => setIsWalkIn(false)}
-                className={`px-2 py-0.5 text-[11px] font-bold rounded ${
-                  !isWalkIn ? 'bg-blue-600 text-white' : 'text-slate-600 hover:text-slate-900'
+                onClick={() => {
+                  setCustomerMode('existing');
+                  setIsCustomerDropdownOpen(true);
+                }}
+                className={`px-2 py-0.5 text-[10px] font-bold rounded transition-colors ${
+                  customerMode === 'existing' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                Regular
+                Store Buyer / Khata
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setCustomerMode('new');
+                  setSelectedCustomer(null);
+                  setCustomerName('');
+                  setCustomerPhone('');
+                }}
+                className={`px-2 py-0.5 text-[10px] font-bold rounded transition-colors ${
+                  customerMode === 'new' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                + New
               </button>
             </div>
           </div>
 
-          {!isWalkIn && (
+          {/* Autocomplete Customer Selector */}
+          {customerMode === 'existing' && (
+            <div className="relative" ref={customerDropdownRef}>
+              <div className="flex items-center gap-1.5">
+                <div className="relative flex-1">
+                  <User className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={selectedCustomer ? `${selectedCustomer.name} (${selectedCustomer.phone})` : customerSearch}
+                    onChange={(e) => {
+                      setCustomerSearch(e.target.value);
+                      setSelectedCustomer(null);
+                      setIsCustomerDropdownOpen(true);
+                    }}
+                    onFocus={() => setIsCustomerDropdownOpen(true)}
+                    placeholder="Type buyer name or 10-digit mobile..."
+                    className="w-full pl-8 pr-7 py-1.5 text-xs rounded-lg border border-slate-300 bg-white font-medium focus:ring-1 focus:ring-blue-500"
+                  />
+                  {selectedCustomer && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedCustomer(null);
+                        setCustomerSearch('');
+                        setIsCustomerDropdownOpen(true);
+                      }}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Customer Dropdown Results */}
+              {isCustomerDropdownOpen && !selectedCustomer && (
+                <div className="absolute left-0 right-0 top-full mt-1 bg-white rounded-xl shadow-xl border border-slate-200 z-30 max-h-52 overflow-y-auto divide-y divide-slate-100">
+                  {filteredCustomerList.length === 0 ? (
+                    <div className="p-3 text-center text-xs text-slate-400">
+                      No matching store buyer. Click <b>+ New</b> to add.
+                    </div>
+                  ) : (
+                    filteredCustomerList.map((c) => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => handleSelectCustomer(c)}
+                        className="w-full p-2.5 text-left hover:bg-blue-50/60 flex items-center justify-between text-xs transition-colors"
+                      >
+                        <div>
+                          <p className="font-bold text-slate-900 leading-snug">{c.name}</p>
+                          <p className="text-[10px] text-slate-500 font-mono">{c.phone}</p>
+                        </div>
+                        <div className="text-right">
+                          <span
+                            className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                              c.outstandingAmount > 0
+                                ? 'bg-amber-100 text-amber-800'
+                                : 'bg-emerald-100 text-emerald-800'
+                            }`}
+                          >
+                            {c.outstandingAmount > 0 ? `₹${c.outstandingAmount} due` : 'Khata Clean'}
+                          </span>
+                        </div>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* New Customer Inline Entry */}
+          {customerMode === 'new' && (
             <div className="grid grid-cols-2 gap-2 pt-1 animate-in fade-in duration-150">
               <input
                 type="text"
-                placeholder="Customer Name"
-                value={customerName === 'Walk-in Retail Customer' ? '' : customerName}
+                placeholder="Buyer / Company Name *"
+                value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
-                className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-200 bg-white"
+                className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 bg-white"
               />
               <input
                 type="tel"
                 inputMode="numeric"
                 maxLength={10}
-                placeholder="Phone (10 digits)"
+                placeholder="Phone (10 digits) *"
                 value={customerPhone}
                 onChange={(e) => setCustomerPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-200 bg-white font-mono"
+                className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 bg-white font-mono"
               />
             </div>
           )}
         </div>
 
+        {/* 🏢 Formal GST / B2B Compliance Accordion (When B2B is Active) */}
+        {(invoiceMode === 'b2b' || customerGstin) && (
+          <div className="bg-purple-50/60 border-b border-purple-200/80 p-3 space-y-2.5 animate-in fade-in duration-150">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold text-purple-900 flex items-center gap-1.5">
+                <Building2 className="w-3.5 h-3.5 text-purple-600" />
+                <span>GST Tax Invoice Details</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsB2BDrawerOpen(!isB2BDrawerOpen)}
+                className="text-[10px] font-semibold text-purple-700 hover:text-purple-900 flex items-center gap-0.5"
+              >
+                <span>{isB2BDrawerOpen ? 'Collapse' : 'Expand'}</span>
+                {isB2BDrawerOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+              </button>
+            </div>
+
+            {isB2BDrawerOpen && (
+              <div className="space-y-2 pt-1 text-xs">
+                {/* GSTIN & Invoice Type */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-[10px] font-semibold text-purple-900 block mb-0.5">
+                      Buyer GSTIN (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      maxLength={15}
+                      placeholder="e.g. 22AAAAA0000A1Z5"
+                      value={customerGstin}
+                      onChange={(e) => setCustomerGstin(e.target.value.toUpperCase())}
+                      className="w-full px-2 py-1 text-xs rounded border border-purple-200 bg-white font-mono uppercase"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-semibold text-purple-900 block mb-0.5">
+                      Invoice Type
+                    </label>
+                    <select
+                      value={invoiceType}
+                      onChange={(e) => setInvoiceType(e.target.value as any)}
+                      className="w-full px-2 py-1 text-xs rounded border border-purple-200 bg-white"
+                    >
+                      <option value="Tax Invoice">Tax Invoice (Regular GST)</option>
+                      <option value="Bill of Supply">Bill of Supply (Composition)</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Place of Supply & Tax Breakup Indicator */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-[10px] font-semibold text-purple-900 block mb-0.5">
+                      Place of Supply (POS)
+                    </label>
+                    <select
+                      value={placeOfSupply}
+                      onChange={(e) => setPlaceOfSupply(e.target.value)}
+                      className="w-full px-2 py-1 text-xs rounded border border-purple-200 bg-white"
+                    >
+                      {INDIAN_STATES.map((st) => (
+                        <option key={st.code} value={st.label}>
+                          {st.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-semibold text-purple-900 block mb-0.5">
+                      Payment Terms
+                    </label>
+                    <select
+                      value={paymentTerms}
+                      onChange={(e) => setPaymentTerms(e.target.value)}
+                      className="w-full px-2 py-1 text-xs rounded border border-purple-200 bg-white"
+                    >
+                      <option value="Immediate">Immediate / Due upon Receipt</option>
+                      <option value="7 Days">Net 7 Days</option>
+                      <option value="15 Days">Net 15 Days</option>
+                      <option value="30 Days">Net 30 Days</option>
+                      <option value="45 Days">Net 45 Days</option>
+                      <option value="60 Days">Net 60 Days</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Billing Address if B2B */}
+                <div>
+                  <input
+                    type="text"
+                    placeholder="Buyer Billing Address / Shop Details..."
+                    value={customerAddress}
+                    onChange={(e) => setCustomerAddress(e.target.value)}
+                    className="w-full px-2 py-1 text-xs rounded border border-purple-200 bg-white"
+                  />
+                </div>
+
+                {/* Tax Split Tag */}
+                <div className="text-[10px] text-purple-700 bg-purple-100/70 p-1.5 rounded flex items-center justify-between">
+                  <span>
+                    GST Treatment: <b>{isInterState ? 'Inter-State (IGST 18%)' : 'Intra-State (CGST 9% + SGST 9%)'}</b>
+                  </span>
+                  <span>Due Date: <b>{dueDate}</b></span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Item Rows in Cart */}
-        <div className="flex-1 p-3 overflow-y-auto divide-y divide-slate-100 min-h-[220px] max-h-[340px]">
+        <div className="flex-1 p-3 overflow-y-auto divide-y divide-slate-100 min-h-[160px] max-h-[260px]">
           {cartItems.length === 0 ? (
-            <div className="text-center py-12 text-slate-400">
-              <ShoppingCart className="w-8 h-8 mx-auto text-slate-300 mb-2" />
+            <div className="text-center py-8 text-slate-400">
+              <ShoppingCart className="w-7 h-7 mx-auto text-slate-300 mb-1.5" />
               <p className="text-xs font-semibold text-slate-600">Register is empty</p>
-              <p className="text-[11px] text-slate-400">Click items on the left or scan a barcode</p>
+              <p className="text-[10px] text-slate-400">Click items on the left or scan a barcode</p>
             </div>
           ) : (
             cartItems.map((item) => (
-              <div key={item.id} className="py-2.5 flex items-center justify-between gap-2">
+              <div key={item.id} className="py-2 flex items-center justify-between gap-2 group">
                 <div className="flex-1 min-w-0 pr-1">
-                  <h5 className="text-xs font-bold text-slate-900 truncate">{item.name}</h5>
-                  <p className="text-[10px] text-slate-500 font-mono">
-                    ₹{item.rate.toFixed(2)} × {item.quantity} = ₹{item.amount.toFixed(2)}
-                  </p>
+                  <div className="flex items-center gap-1.5">
+                    <h5 className="text-xs font-bold text-slate-900 truncate">{item.name}</h5>
+                    <span className="text-[9px] font-mono text-slate-400 bg-slate-100 px-1 rounded">
+                      HSN: {item.hsnSac || '8517'}
+                    </span>
+                  </div>
+
+                  {/* Inline Price Editor */}
+                  {editingItemId === item.id ? (
+                    <div className="flex items-center gap-1 mt-1">
+                      <span className="text-[11px] font-bold text-slate-500">₹</span>
+                      <input
+                        type="number"
+                        value={editingRate}
+                        onChange={(e) => setEditingRate(e.target.value)}
+                        className="w-16 px-1.5 py-0.5 text-xs font-mono font-bold rounded border border-blue-500 bg-white"
+                        autoFocus
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleSaveRateEdit(item.id)}
+                        className="p-1 rounded bg-blue-600 text-white hover:bg-blue-700"
+                      >
+                        <Check className="w-3 h-3" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditingItemId(null)}
+                        className="p-1 rounded bg-slate-200 text-slate-600 hover:bg-slate-300"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-mono mt-0.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingItemId(item.id);
+                          setEditingRate(item.rate.toString());
+                        }}
+                        className="hover:text-blue-600 hover:underline flex items-center gap-0.5 cursor-pointer"
+                        title="Click to override rate"
+                      >
+                        <span>₹{item.rate.toFixed(2)}</span>
+                        <Edit2 className="w-2.5 h-2.5 opacity-50 group-hover:opacity-100 text-blue-600" />
+                      </button>
+                      <span>× {item.quantity} =</span>
+                      <span className="font-bold text-slate-800">₹{item.amount.toFixed(2)}</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Stepper Buttons */}
@@ -617,7 +1109,7 @@ export const CounterPOSView: React.FC<CounterPOSViewProps> = ({ onBack }) => {
                   >
                     <Minus className="w-3 h-3" />
                   </button>
-                  <span className="w-6 text-center font-bold text-xs text-slate-900 font-mono">
+                  <span className="w-5 text-center font-bold text-xs text-slate-900 font-mono">
                     {item.quantity}
                   </span>
                   <button
@@ -642,14 +1134,14 @@ export const CounterPOSView: React.FC<CounterPOSViewProps> = ({ onBack }) => {
         </div>
 
         {/* Calculation & Settlement Station */}
-        <div className="p-4 border-t border-slate-200 bg-slate-50/80 space-y-3">
-          {/* Discount Pill */}
+        <div className="p-3.5 border-t border-slate-200 bg-slate-50/90 space-y-2.5">
+          {/* Discount Presets */}
           <div className="flex items-center justify-between text-xs">
             <span className="text-slate-600 flex items-center gap-1">
               <Percent className="w-3.5 h-3.5 text-blue-600" />
               <span>Bill Discount:</span>
             </span>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1">
               {[0, 5, 10, 15].map((pct) => (
                 <button
                   key={pct}
@@ -667,7 +1159,7 @@ export const CounterPOSView: React.FC<CounterPOSViewProps> = ({ onBack }) => {
             </div>
           </div>
 
-          {/* Pricing Math */}
+          {/* Pricing Math Breakup */}
           <div className="space-y-1 text-xs border-y border-slate-200/80 py-2">
             <div className="flex justify-between text-slate-600">
               <span>Subtotal:</span>
@@ -679,35 +1171,68 @@ export const CounterPOSView: React.FC<CounterPOSViewProps> = ({ onBack }) => {
                 <span className="font-mono">-₹{discountAmount.toFixed(2)}</span>
               </div>
             )}
-            <div className="flex justify-between text-slate-500 text-[11px]">
-              <span>CGST (9%):</span>
-              <span className="font-mono">₹{cgstAmount.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between text-slate-500 text-[11px]">
-              <span>SGST (9%):</span>
-              <span className="font-mono">₹{sgstAmount.toFixed(2)}</span>
-            </div>
+
+            {isInterState ? (
+              <div className="flex justify-between text-slate-500 text-[11px]">
+                <span>IGST (18%):</span>
+                <span className="font-mono">₹{igstAmount.toFixed(2)}</span>
+              </div>
+            ) : (
+              <>
+                <div className="flex justify-between text-slate-500 text-[11px]">
+                  <span>CGST (9%):</span>
+                  <span className="font-mono">₹{cgstAmount.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-slate-500 text-[11px]">
+                  <span>SGST (9%):</span>
+                  <span className="font-mono">₹{sgstAmount.toFixed(2)}</span>
+                </div>
+              </>
+            )}
+
             {roundOff !== 0 && (
               <div className="flex justify-between text-slate-400 text-[10px]">
                 <span>Round Off:</span>
-                <span className="font-mono">{roundOff > 0 ? `+₹${roundOff.toFixed(2)}` : `-₹${Math.abs(roundOff).toFixed(2)}`}</span>
+                <span className="font-mono">
+                  {roundOff > 0 ? `+₹${roundOff.toFixed(2)}` : `-₹${Math.abs(roundOff).toFixed(2)}`}
+                </span>
               </div>
             )}
+
             <div className="flex justify-between text-base font-black text-slate-900 pt-1 border-t border-slate-200">
               <span>Net Payable:</span>
               <span className="font-mono text-blue-700">₹{netPayable.toFixed(2)}</span>
             </div>
           </div>
 
-          {/* Settlement Mode Selection */}
+          {/* Payment Mode Selection */}
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold text-slate-700">Payment Mode:</label>
+            <div className="flex items-center justify-between text-[11px]">
+              <label className="font-bold text-slate-700">Payment Mode:</label>
+              {/* Partial Payment Toggle */}
+              <button
+                type="button"
+                onClick={() => {
+                  const next = !isPartialPayment;
+                  setIsPartialPayment(next);
+                  if (next) setPartialPaidAmount(Math.round(netPayable / 2));
+                }}
+                className={`text-[10px] font-bold px-1.5 py-0.5 rounded transition-colors ${
+                  isPartialPayment
+                    ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                {isPartialPayment ? '✓ Split / Partial Active' : '+ Split / Partial Khata'}
+              </button>
+            </div>
+
             <div className="grid grid-cols-4 gap-1.5">
               {[
                 { id: 'cash', label: 'Cash', icon: Banknote },
                 { id: 'upi', label: 'UPI / QR', icon: QrCode },
                 { id: 'card', label: 'Card', icon: CreditCard },
-                { id: 'bank_transfer', label: 'Credit', icon: User },
+                { id: 'credit', label: 'Khata Credit', icon: User },
               ].map((m) => {
                 const Icon = m.icon;
                 const isSelected = settlementMode === m.id;
@@ -733,9 +1258,28 @@ export const CounterPOSView: React.FC<CounterPOSViewProps> = ({ onBack }) => {
             </div>
           </div>
 
+          {/* Partial Payment Breakdown */}
+          {isPartialPayment && settlementMode !== 'credit' && (
+            <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 space-y-1.5 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-amber-900">Paid Now:</span>
+                <input
+                  type="number"
+                  value={partialPaidAmount || ''}
+                  onChange={(e) => setPartialPaidAmount(Number(e.target.value))}
+                  className="w-24 text-right font-mono font-bold text-xs p-1 rounded border border-amber-300 bg-white"
+                />
+              </div>
+              <div className="flex items-center justify-between text-[11px] font-bold text-amber-800 pt-1 border-t border-amber-200/80">
+                <span>Khata Balance Due:</span>
+                <span className="font-mono">₹{actualDueAmount.toFixed(2)}</span>
+              </div>
+            </div>
+          )}
+
           {/* Quick Cash Presets if Mode is Cash */}
           {settlementMode === 'cash' && (
-            <div className="p-2.5 rounded-xl bg-white border border-slate-200 space-y-2">
+            <div className="p-2 rounded-xl bg-white border border-slate-200 space-y-1.5">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-slate-600 font-semibold">Cash Tendered:</span>
                 <input
@@ -763,9 +1307,9 @@ export const CounterPOSView: React.FC<CounterPOSViewProps> = ({ onBack }) => {
 
               {/* Change Return Alert */}
               {changeDue > 0 && (
-                <div className="p-2 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center justify-between text-xs font-bold">
+                <div className="p-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center justify-between text-xs font-bold">
                   <span>Change to Return:</span>
-                  <span className="font-mono text-sm">₹{changeDue.toFixed(2)}</span>
+                  <span className="font-mono text-xs">₹{changeDue.toFixed(2)}</span>
                 </div>
               )}
             </div>
@@ -773,108 +1317,167 @@ export const CounterPOSView: React.FC<CounterPOSViewProps> = ({ onBack }) => {
 
           {/* Dynamic Counter UPI QR */}
           {settlementMode === 'upi' && (
-            <div className="p-3 rounded-xl bg-blue-50/70 border border-blue-200/80 space-y-2">
-              <div className="flex items-center justify-between text-xs font-bold text-blue-900">
-                <span className="flex items-center gap-1.5">
-                  <QrCode className="w-4 h-4 text-blue-600" />
-                  <span>Dynamic Counter UPI QR</span>
-                </span>
-                <span className="font-mono text-xs px-2 py-0.5 rounded bg-blue-100 text-blue-700 font-bold">
-                  ₹{netPayable.toFixed(2)}
-                </span>
+            <div className="p-2.5 rounded-xl bg-blue-50/70 border border-blue-200/80 flex items-center gap-3">
+              <div className="w-14 h-14 bg-slate-900 rounded p-1 flex items-center justify-center shrink-0">
+                <QrCode className="w-10 h-10 text-white" />
               </div>
-              <div className="bg-white p-2.5 rounded-lg border border-blue-100 flex items-center gap-3">
-                <div className="w-16 h-16 bg-slate-900 rounded p-1 flex items-center justify-center shrink-0">
-                  <svg viewBox="0 0 100 100" className="w-full h-full text-white fill-current">
-                    <rect x="5" y="5" width="28" height="28" fill="white" />
-                    <rect x="9" y="9" width="20" height="20" fill="black" />
-                    <rect x="13" y="13" width="12" height="12" fill="white" />
-                    <rect x="67" y="5" width="28" height="28" fill="white" />
-                    <rect x="71" y="9" width="20" height="20" fill="black" />
-                    <rect x="75" y="13" width="12" height="12" fill="white" />
-                    <rect x="5" y="67" width="28" height="28" fill="white" />
-                    <rect x="9" y="71" width="20" height="20" fill="black" />
-                    <rect x="13" y="75" width="12" height="12" fill="white" />
-                    <rect x="42" y="10" width="16" height="8" fill="white" />
-                    <rect x="40" y="40" width="20" height="20" fill="white" />
-                    <rect x="46" y="46" width="8" height="8" fill="black" />
-                    <rect x="15" y="42" width="15" height="10" fill="white" />
-                    <rect x="72" y="42" width="18" height="15" fill="white" />
-                    <rect x="42" y="75" width="15" height="15" fill="white" />
-                    <rect x="70" y="70" width="22" height="22" fill="white" />
-                    <rect x="76" y="76" width="10" height="10" fill="black" />
-                  </svg>
+              <div className="flex-1 min-w-0 text-[10px] text-slate-600 space-y-0.5">
+                <div className="flex items-center justify-between">
+                  <p className="font-bold text-slate-800">Dynamic Counter QR</p>
+                  <span className="font-mono text-xs font-bold text-blue-700">₹{actualPaidAmount.toFixed(2)}</span>
                 </div>
-                <div className="flex-1 min-w-0 text-[10px] text-slate-600 space-y-0.5">
-                  <p className="font-bold text-slate-800">Scan & Pay Any UPI App</p>
-                  <p className="text-slate-500">GPay • PhonePe • Paytm • BHIM</p>
-                  <span className="inline-flex items-center gap-1 font-semibold text-emerald-700 bg-emerald-50 px-1 py-0.5 rounded">
-                    <CheckCircle2 className="w-2.5 h-2.5" /> Reconciled automatically on charge
-                  </span>
-                </div>
+                <p className="text-slate-500">Scan via GPay, PhonePe, Paytm</p>
+                <span className="inline-flex items-center gap-1 font-semibold text-emerald-700 bg-emerald-50 px-1 py-0.5 rounded">
+                  <CheckCircle2 className="w-2.5 h-2.5" /> Reconciled automatically
+                </span>
               </div>
-            </div>
-          )}
-
-          {/* Card Swipe Machine Prompt */}
-          {settlementMode === 'card' && (
-            <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-1">
-              <div className="flex items-center gap-2 font-bold text-slate-800">
-                <CreditCard className="w-4 h-4 text-blue-600" />
-                <span>Swipe / Tap POS Terminal</span>
-              </div>
-              <p className="text-[11px] text-slate-500">
-                Collect ₹{netPayable.toFixed(2)} on swipe machine, then click Charge & Print.
-              </p>
             </div>
           )}
 
           {/* Khata Credit Memo Prompt */}
-          {settlementMode === 'bank_transfer' && (
-            <div className="p-3 rounded-xl bg-amber-50/70 border border-amber-200 text-xs space-y-1">
+          {settlementMode === 'credit' && (
+            <div className="p-2.5 rounded-xl bg-amber-50/70 border border-amber-200 text-xs space-y-1">
               <div className="flex items-center gap-2 font-bold text-amber-900">
                 <User className="w-4 h-4 text-amber-600" />
                 <span>Store Credit / Khata Memo</span>
               </div>
               <p className="text-[11px] text-amber-700">
-                Bill of ₹{netPayable.toFixed(2)} will be recorded in customer Khata ledger.
+                Full amount of ₹{netPayable.toFixed(2)} will be debited to {customerName || 'customer'} Khata ledger.
               </p>
             </div>
           )}
 
-          {/* Action Checkout Buttons */}
-          <div className="pt-2 space-y-2">
-            <button
-              type="button"
-              disabled={cartItems.length === 0 || isSubmitting}
-              onClick={() => handleCheckout(true)}
-              className="w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-black text-sm flex items-center justify-center gap-2 transition-all shadow-md active:scale-98"
-            >
-              <Printer className="w-4 h-4" />
-              <span>Charge & Print Thermal Slip (F2)</span>
-            </button>
+          {/* Dual Checkout Action Buttons */}
+          <div className="pt-1 space-y-1.5">
+            <div className="grid grid-cols-2 gap-2">
+              {/* Button 1: Thermal Slip (F2) */}
+              <button
+                type="button"
+                disabled={cartItems.length === 0 || isSubmitting}
+                onClick={() => handleCheckout('thermal-80mm')}
+                className="py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-md active:scale-98 cursor-pointer"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>Thermal Slip (F2)</span>
+              </button>
 
+              {/* Button 2: Formal A4 GST Invoice (Ctrl+P) */}
+              <button
+                type="button"
+                disabled={cartItems.length === 0 || isSubmitting}
+                onClick={() => handleCheckout('a4-tax-invoice')}
+                className="py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-md active:scale-98 cursor-pointer"
+              >
+                <FileText className="w-3.5 h-3.5 text-purple-400" />
+                <span>A4 GST Invoice</span>
+              </button>
+            </div>
+
+            {/* Silent Save */}
             <button
               type="button"
               disabled={cartItems.length === 0 || isSubmitting}
-              onClick={() => handleCheckout(false)}
-              className="w-full py-2 px-3 rounded-xl border border-slate-200 hover:bg-slate-100 disabled:opacity-50 text-slate-700 font-bold text-xs transition-colors"
+              onClick={() => handleCheckout(null)}
+              className="w-full py-1.5 px-3 rounded-xl border border-slate-200 hover:bg-slate-100 disabled:opacity-50 text-slate-600 font-semibold text-[11px] transition-colors cursor-pointer text-center"
             >
-              Charge & Save Only
+              Charge & Save Only (Silent)
             </button>
           </div>
         </div>
       </div>
 
-      {/* Printable Receipt Modal */}
+      {/* Printable Receipt & Tax Invoice Modal */}
       <PrintReceiptModal
         isOpen={isPrintModalOpen}
         onClose={() => setIsPrintModalOpen(false)}
         invoice={lastInvoiceForPrint}
-        defaultMode="thermal-80mm"
+        defaultMode={printFormatMode}
       />
 
-      {/* Clear Register In-App Confirmation Modal */}
+      {/* Quick Custom Item / Service Modal Dialog */}
+      {isCustomItemModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-2xs p-4 animate-in fade-in duration-150">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-sm w-full p-5 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+              <div className="flex items-center gap-2">
+                <PlusCircle className="w-4 h-4 text-blue-600" />
+                <h4 className="font-bold text-slate-900 text-sm">Add Custom Item / Service</h4>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsCustomItemModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="font-semibold text-slate-700 block mb-1">Item / Service Name *</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Screen Protector Installation, Delivery Charge"
+                  value={customItemName}
+                  onChange={(e) => setCustomItemName(e.target.value)}
+                  className="w-full px-3 py-1.5 rounded-lg border border-slate-200 focus:ring-1 focus:ring-blue-500"
+                  autoFocus
+                />
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <label className="font-semibold text-slate-700 block mb-1">Rate (₹) *</label>
+                  <input
+                    type="number"
+                    value={customItemRate || ''}
+                    onChange={(e) => setCustomItemRate(Number(e.target.value))}
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="font-semibold text-slate-700 block mb-1">Quantity</label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={customItemQty || 1}
+                    onChange={(e) => setCustomItemQty(Number(e.target.value))}
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="font-semibold text-slate-700 block mb-1">HSN/SAC</label>
+                  <input
+                    type="text"
+                    value={customItemHsn}
+                    onChange={(e) => setCustomItemHsn(e.target.value)}
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 font-mono text-[11px]"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setIsCustomItemModalOpen(false)}
+                className="px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleAddCustomItem}
+                className="px-4 py-1.5 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-xs"
+              >
+                Add to Register
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Clear Register Confirmation Modal */}
       {isClearRegisterConfirmOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-2xs p-4 animate-in fade-in duration-150">
           <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-sm w-full p-5 space-y-4">
