@@ -8,6 +8,8 @@ import { BottomNav } from '@/components/layout/BottomNav';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { AuthModal } from '@/components/auth/AuthModal';
+import { TopProgressBar } from '@/components/layout/TopProgressBar';
+import { ToastContainer } from '@/components/ui/ToastContainer';
 import './globals.css';
 
 const inter = Inter({
@@ -105,6 +107,7 @@ export default function RootLayout({
 
         <div className="relative z-10 w-full flex flex-col min-h-screen">
           <Providers>
+            <TopProgressBar />
             <Header />
             <div className="flex-1 w-full">
               {children}
@@ -114,6 +117,7 @@ export default function RootLayout({
             <StoreConflictModal />
             <BottomNav />
             <AuthModal />
+            <ToastContainer />
           </Providers>
         </div>
       </body>

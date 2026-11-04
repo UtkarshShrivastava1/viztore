@@ -93,6 +93,7 @@ export function MobileDealCard({ product, index = 0 }: MobileDealCardProps) {
   return (
     <Link
       href={`/products/${product.slug || product._id}`}
+      prefetch={true}
       className="w-[160px] sm:w-[175px] shrink-0 snap-start bg-white rounded-2xl border border-gray-100 shadow-2xs hover:shadow-md transition-all p-2.5 flex flex-col justify-between group relative"
     >
       {/* Top Image Container */}

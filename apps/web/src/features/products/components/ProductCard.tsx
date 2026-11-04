@@ -105,6 +105,7 @@ export function ProductCard({ product, badge }: ProductCardProps) {
   return (
     <Link
       href={`/products/${product.slug}`}
+      prefetch={true}
       className="group bg-white overflow-hidden flex flex-col hover:border-blue-400/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-500/5 border border-surface-200 rounded-2xl p-2 relative"
     >
       {/* Product Image Container */}

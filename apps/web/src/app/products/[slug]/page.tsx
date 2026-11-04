@@ -20,7 +20,7 @@ export async function generateMetadata({
 
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 2000);
+    const timeout = setTimeout(() => controller.abort(), 250);
     const res = await fetch(`${apiUrl}/catalog/products/${params.slug}`, {
       signal: controller.signal,
       next: { revalidate: 600 },

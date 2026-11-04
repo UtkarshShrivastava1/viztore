@@ -72,6 +72,7 @@ export function ExploreStoresGrid() {
             return (
               <Link
                 href={`/stores/${store.slug || store._id}`}
+                prefetch={true}
                 key={store._id || index}
                 className="group flex flex-row sm:flex-col bg-white rounded-2xl border border-gray-100 shadow-2xs hover:shadow-lg hover:border-blue-100 transition-all duration-300 overflow-hidden hover:-translate-y-1"
               >

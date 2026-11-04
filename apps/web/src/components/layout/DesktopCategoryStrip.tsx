@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import {
   Home,
@@ -125,9 +126,13 @@ export default function DesktopCategoryStrip({ activeId, onSelect }: DesktopCate
           className="flex items-center justify-between w-full py-1.5 gap-1 overflow-x-auto scrollbar-hide scroll-smooth"
         >
           {/* 1. Home Tab */}
-          <button
-            type="button"
-            onClick={() => handleSelect("home")}
+          <Link
+            href="/"
+            prefetch={true}
+            onClick={() => {
+              setIsMoreOpen(false);
+              onSelect?.("home");
+            }}
             className={`flex-1 min-w-[62px] sm:min-w-[70px] lg:min-w-0 flex flex-col items-center justify-center gap-1 py-1.5 px-1 sm:px-2 rounded-xl transition-all duration-200 group cursor-pointer text-center ${
               currentActive === "home"
                 ? "bg-[#EBF2FE] shadow-2xs font-bold ring-1 ring-[#1668F6]/20"
@@ -148,12 +153,16 @@ export default function DesktopCategoryStrip({ activeId, onSelect }: DesktopCate
             >
               Home
             </span>
-          </button>
+          </Link>
 
           {/* 2. All Categories Directory */}
-          <button
-            type="button"
-            onClick={() => handleSelect("all")}
+          <Link
+            href="/category"
+            prefetch={true}
+            onClick={() => {
+              setIsMoreOpen(false);
+              onSelect?.("all");
+            }}
             className={`flex-1 min-w-[66px] sm:min-w-[74px] lg:min-w-0 flex flex-col items-center justify-center gap-1 py-1.5 px-1 sm:px-2 rounded-xl transition-all duration-200 group cursor-pointer text-center ${
               currentActive === "all"
                 ? "bg-[#EBF2FE] shadow-2xs font-bold ring-1 ring-[#1668F6]/20"
@@ -174,7 +183,7 @@ export default function DesktopCategoryStrip({ activeId, onSelect }: DesktopCate
             >
               All Categories
             </span>
-          </button>
+          </Link>
 
           {/* 3. Pre-configured Taxonomy Visible Categories */}
           {STRIP_VISIBLE_CATEGORIES.map((cat) => {
@@ -182,10 +191,14 @@ export default function DesktopCategoryStrip({ activeId, onSelect }: DesktopCate
             const Icon = ICON_MAP[cat.iconName] || Smartphone;
 
             return (
-              <button
+              <Link
                 key={cat.id}
-                type="button"
-                onClick={() => handleSelect(cat.id)}
+                href={`/category/${cat.id}`}
+                prefetch={true}
+                onClick={() => {
+                  setIsMoreOpen(false);
+                  onSelect?.(cat.id);
+                }}
                 className={`flex-1 min-w-[62px] sm:min-w-[70px] lg:min-w-0 flex flex-col items-center justify-center gap-1 py-1.5 px-1 sm:px-2 rounded-xl transition-all duration-200 group cursor-pointer text-center ${
                   isActive ? "shadow-2xs font-bold ring-1 ring-[#1668F6]/20" : "hover:bg-slate-100/70 font-medium"
                 }`}
@@ -210,7 +223,7 @@ export default function DesktopCategoryStrip({ activeId, onSelect }: DesktopCate
                 >
                   {cat.shortLabel}
                 </span>
-              </button>
+              </Link>
             );
           })}
 
@@ -272,13 +285,17 @@ export default function DesktopCategoryStrip({ activeId, onSelect }: DesktopCate
                     <h3 className="text-xs font-extrabold text-[#0B1953] tracking-tight">More Departments</h3>
                     <p className="text-[10px] text-slate-500 font-medium">Pre-configured catalog categories</p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => handleSelect("all")}
+                  <Link
+                    href="/category"
+                    prefetch={true}
+                    onClick={() => {
+                      setIsMoreOpen(false);
+                      onSelect?.("all");
+                    }}
                     className="text-[11px] font-bold text-[#1668F6] hover:text-[#0B1953] flex items-center gap-1 group"
                   >
                     All 17 <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
-                  </button>
+                  </Link>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 max-h-[380px] overflow-y-auto pr-1">
@@ -287,11 +304,15 @@ export default function DesktopCategoryStrip({ activeId, onSelect }: DesktopCate
                     const isSelected = currentActive === cat.id;
 
                     return (
-                      <button
+                      <Link
                         key={cat.id}
-                        type="button"
+                        href={`/category/${cat.id}`}
+                        prefetch={true}
                         role="menuitem"
-                        onClick={() => handleSelect(cat.id)}
+                        onClick={() => {
+                          setIsMoreOpen(false);
+                          onSelect?.(cat.id);
+                        }}
                         className={`flex items-center gap-2.5 p-2 rounded-xl text-left transition-all duration-150 group cursor-pointer ${
                           isSelected
                             ? "bg-[#EBF2FE] text-[#0B1953] ring-1 ring-[#1668F6]/20 font-bold"
@@ -312,20 +333,24 @@ export default function DesktopCategoryStrip({ activeId, onSelect }: DesktopCate
                             {cat.subcategories.slice(0, 2).map((s) => s.name).join(", ")}
                           </div>
                         </div>
-                      </button>
+                      </Link>
                     );
                   })}
                 </div>
 
                 <div className="mt-2 pt-2 border-t border-slate-100 px-1">
-                  <button
-                    type="button"
-                    onClick={() => handleSelect("all")}
+                  <Link
+                    href="/category"
+                    prefetch={true}
+                    onClick={() => {
+                      setIsMoreOpen(false);
+                      onSelect?.("all");
+                    }}
                     className="w-full py-2 px-3 rounded-xl bg-slate-50 hover:bg-[#EBF2FE] text-[#1668F6] text-xs font-bold text-center transition-colors flex items-center justify-center gap-1.5"
                   >
                     <LayoutGrid className="w-3.5 h-3.5" />
                     Browse All Departments Directory
-                  </button>
+                  </Link>
                 </div>
               </div>
             )}

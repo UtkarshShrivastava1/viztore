@@ -38,6 +38,7 @@ export function HomeStoreCard({ store, index = 0 }: HomeStoreCardProps) {
   return (
     <Link
       href={`/stores/${store.slug || store._id}`}
+      prefetch={true}
       className="group bg-white rounded-2xl border border-gray-100 shadow-2xs hover:shadow-lg hover:border-blue-100 transition-all duration-300 overflow-hidden flex flex-col w-full shrink-0 relative hover:-translate-y-1"
     >
       {/* 16:10 Store Banner */}

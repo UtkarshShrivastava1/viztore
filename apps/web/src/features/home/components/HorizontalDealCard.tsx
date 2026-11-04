@@ -94,6 +94,7 @@ export function HorizontalDealCard({ product, index = 0 }: HorizontalDealCardPro
   return (
     <Link
       href={`/products/${product.slug || product._id}`}
+      prefetch={true}
       className="group bg-white rounded-2xl border border-gray-100/90 shadow-2xs hover:shadow-md hover:border-blue-200 transition-all duration-300 p-2.5 sm:p-3 flex items-center gap-3 relative w-full overflow-hidden hover:-translate-y-0.5"
     >
       {/* Left Image Thumbnail Container */}

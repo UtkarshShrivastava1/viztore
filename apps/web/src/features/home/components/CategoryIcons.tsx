@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 interface CategoryItem {
   id: string;
@@ -75,33 +75,26 @@ export default function CategoryIcons({
 }: CategoryIconsProps) {
   const [selected, setSelected] = useState(activeId);
 
-  const router = useRouter();
-
   useEffect(() => {
     setSelected(activeId);
   }, [activeId]);
-
-  const handleSelect = (id: string) => {
-    setSelected(id);
-    onSelect?.(id);
-    if (id === 'fashion') {
-      router.push('/category/fashion');
-    } else {
-      router.push(`/category/${id}`);
-    }
-  };
 
   return (
     <div className="w-full overflow-x-auto scrollbar-hide py-2 select-none">
       <div className="flex items-start gap-3.5 px-4 min-w-max">
         {CATEGORIES.map(({ id, label, imageSrc, imgWidth, imgHeight }) => {
           const isActive = selected === id;
+          const href = id === 'fashion' ? '/category/fashion' : `/category/${id}`;
 
           return (
-            <button
+            <Link
               key={id}
-              type="button"
-              onClick={() => handleSelect(id)}
+              href={href}
+              prefetch={true}
+              onClick={() => {
+                setSelected(id);
+                onSelect?.(id);
+              }}
               className="flex flex-col items-center group cursor-pointer"
             >
               {/* Card / Image Container */}
@@ -132,7 +125,7 @@ export default function CategoryIcons({
               >
                 {label}
               </span>
-            </button>
+            </Link>
           );
         })}
       </div>

@@ -19,9 +19,11 @@ export async function generateMetadata({
   let storeImage: string | undefined;
 
   try {
+    const isObjectId = /^[0-9a-fA-F]{24}$/.test(params.slug);
+    const storeEndpoint = isObjectId ? `${apiUrl}/stores/${params.slug}` : `${apiUrl}/stores/slug/${params.slug}`;
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 2000);
-    const res = await fetch(`${apiUrl}/stores/${params.slug}`, {
+    const timeout = setTimeout(() => controller.abort(), 250);
+    const res = await fetch(storeEndpoint, {
       signal: controller.signal,
       next: { revalidate: 600 },
     });

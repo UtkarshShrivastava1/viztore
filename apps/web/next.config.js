@@ -2,11 +2,11 @@
 const nextConfig = {
   transpilePackages: ['@repo/shared-types'],
   distDir: process.env.NEXT_DIST_DIR || '.next',
-  // Disable aggressive client router cache so code edits and data updates render immediately without stale pages
+  // Performance hardening: Enable client router cache so prefetching and page transitions are instant (0ms)
   experimental: {
     staleTimes: {
-      dynamic: 0,
-      static: 0,
+      dynamic: 30, // Keep dynamic pages in client router cache for 30s
+      static: 180, // Keep static/prefetched pages in client router cache for 3m
     },
   },
   webpack: (config, { dev }) => {

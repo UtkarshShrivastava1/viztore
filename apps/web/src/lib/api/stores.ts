@@ -18,13 +18,30 @@ export async function fetchNearbyStores(
 }
 
 export async function fetchStoreBySlug(slug: string): Promise<IStore> {
-  const res = await api.get<IStore>(`stores/slug/${slug}`);
-  return res.data;
+  const isObjectId = /^[0-9a-fA-F]{24}$/.test(slug);
+  try {
+    const endpoint = isObjectId ? `stores/${slug}` : `stores/slug/${slug}`;
+    const res = await api.get<IStore>(endpoint);
+    return res.data;
+  } catch (err) {
+    // Graceful fallback to alternate endpoint if slug format differs
+    const fallbackEndpoint = isObjectId ? `stores/slug/${slug}` : `stores/${slug}`;
+    const res = await api.get<IStore>(fallbackEndpoint);
+    return res.data;
+  }
 }
 
 export async function fetchStoreById(id: string): Promise<IStore> {
-  const res = await api.get<IStore>(`stores/${id}`);
-  return res.data;
+  const isObjectId = /^[0-9a-fA-F]{24}$/.test(id);
+  try {
+    const endpoint = isObjectId ? `stores/${id}` : `stores/slug/${id}`;
+    const res = await api.get<IStore>(endpoint);
+    return res.data;
+  } catch (err) {
+    const fallbackEndpoint = isObjectId ? `stores/slug/${id}` : `stores/${id}`;
+    const res = await api.get<IStore>(fallbackEndpoint);
+    return res.data;
+  }
 }
 
 export async function fetchAllStores(params?: {

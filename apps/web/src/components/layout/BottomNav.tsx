@@ -31,6 +31,7 @@ export function BottomNav() {
             <Link
               key={item.label}
               href={item.href}
+              prefetch={true}
               className={`flex flex-col items-center justify-center flex-1 h-full space-y-1.5 ${
                 isActive ? 'text-[#1668F6]' : 'text-[#192168]'
               }`}
