@@ -7,6 +7,9 @@ import {
   Eye,
   MoreVertical,
   MessageSquare,
+  CheckCircle2,
+  XCircle,
+  Wallet,
 } from 'lucide-react';
 import {
   useReturnsStore,
@@ -25,7 +28,10 @@ const ReturnRowActionMenu: React.FC<{
   onToggle: () => void;
   onClose: () => void;
   onOpenRaiseModal: (ret: ReturnRecord) => void;
-}> = ({ ret, isOpen, onToggle, onClose, onOpenRaiseModal }) => {
+  onApprove: (id: string) => Promise<void>;
+  onReject: (ret: ReturnRecord) => void;
+  onRefund: (id: string) => Promise<void>;
+}> = ({ ret, isOpen, onToggle, onClose, onOpenRaiseModal, onApprove, onReject, onRefund }) => {
   const triggerRef = useRef<HTMLButtonElement>(null);
 
   return (
@@ -47,6 +53,44 @@ const ReturnRowActionMenu: React.FC<{
         triggerRef={triggerRef}
         className="w-44 rounded-xl py-1.5 text-left text-xs shadow-xl"
       >
+        {ret.status === 'Pending' && (
+          <>
+            <button
+              onClick={async () => {
+                onClose();
+                await onApprove(ret.id);
+              }}
+              className="w-full px-3.5 py-2 flex items-center gap-2 text-emerald-700 hover:bg-emerald-50 transition-colors cursor-pointer"
+            >
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              <span className="font-semibold">Approve Return</span>
+            </button>
+            <button
+              onClick={() => {
+                onClose();
+                onReject(ret);
+              }}
+              className="w-full px-3.5 py-2 flex items-center gap-2 text-rose-700 hover:bg-rose-50 transition-colors cursor-pointer"
+            >
+              <XCircle className="w-4 h-4 text-rose-600" />
+              <span className="font-semibold">Reject Return</span>
+            </button>
+          </>
+        )}
+
+        {ret.status === 'Approved' && (
+          <button
+            onClick={async () => {
+              onClose();
+              await onRefund(ret.id);
+            }}
+            className="w-full px-3.5 py-2 flex items-center gap-2 text-blue-700 hover:bg-blue-50 transition-colors cursor-pointer"
+          >
+            <Wallet className="w-4 h-4 text-blue-600" />
+            <span className="font-semibold">Process Refund</span>
+          </button>
+        )}
+
         <button
           onClick={() => {
             onClose();
@@ -81,6 +125,10 @@ export const ReturnsTable: React.FC<ReturnsTableProps> = ({ onViewReturn }) => {
     selectAllReturns,
     deselectAllReturns,
     openRaiseModal,
+    approveReturn,
+    initiateRefund,
+    setReturnToReject,
+    setIsRejectModalOpen,
   } = useReturnsStore();
 
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
@@ -398,6 +446,12 @@ export const ReturnsTable: React.FC<ReturnsTableProps> = ({ onViewReturn }) => {
                           onToggle={() => setActiveMenuId(isMenuOpen ? null : ret.id)}
                           onClose={() => setActiveMenuId(null)}
                           onOpenRaiseModal={openRaiseModal}
+                          onApprove={approveReturn}
+                          onReject={(item) => {
+                            setReturnToReject(item);
+                            setIsRejectModalOpen(true);
+                          }}
+                          onRefund={initiateRefund}
                         />
                       </div>
                     </td>

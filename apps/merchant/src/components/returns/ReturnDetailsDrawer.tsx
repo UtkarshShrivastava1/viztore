@@ -257,12 +257,50 @@ export const ReturnDetailsDrawer: React.FC<ReturnDetailsDrawerProps> = ({
             <span className="text-xs font-semibold text-slate-600">
               Refund Amount: <span className="font-bold text-slate-900">₹ {returnRecord.amount}</span>
             </span>
-            <button
-              onClick={onClose}
-              className="px-4 py-2 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-colors shadow-2xs"
-            >
-              Close
-            </button>
+            <div className="flex items-center gap-2">
+              {returnRecord.status === 'Pending' && (
+                <>
+                  <button
+                    onClick={() => {
+                      setReturnToReject(returnRecord);
+                      setIsRejectModalOpen(true);
+                      onClose();
+                    }}
+                    className="px-3.5 py-2 text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100/80 border border-rose-200 rounded-xl transition-colors cursor-pointer"
+                  >
+                    Reject
+                  </button>
+                  <button
+                    onClick={async () => {
+                      await approveReturn(returnRecord.id);
+                      onClose();
+                    }}
+                    className="px-4 py-2 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition-colors shadow-2xs cursor-pointer"
+                  >
+                    Approve Return
+                  </button>
+                </>
+              )}
+
+              {returnRecord.status === 'Approved' && (
+                <button
+                  onClick={async () => {
+                    await initiateRefund(returnRecord.id);
+                    onClose();
+                  }}
+                  className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors shadow-2xs cursor-pointer"
+                >
+                  Process Refund
+                </button>
+              )}
+
+              <button
+                onClick={onClose}
+                className="px-4 py-2 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl transition-colors shadow-2xs cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       </div>

@@ -28,7 +28,8 @@ export const QueryReturnsSchema = z.object({
   search: z.string().optional(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
-});
+  storeId: z.string().optional(),
+}).passthrough();
 
 export const validateCreateReturn = validateBody(CreateReturnSchema);
 export const validateApproveReturn = validateBody(ApproveReturnSchema);

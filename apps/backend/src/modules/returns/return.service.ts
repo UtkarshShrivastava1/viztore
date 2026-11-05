@@ -1,4 +1,7 @@
+import mongoose from 'mongoose';
 import { ReturnModel, IReturnDoc } from './return.model.js';
+import { orderModule } from '../orders/index.js';
+import { storeModule } from '../stores/index.js';
 import { AppError } from '../../shared/utils/AppError.js';
 import { logger } from '../../shared/utils/logger.js';
 import type { IReturn, IReturnsSummary } from '@repo/shared-types';
@@ -172,17 +175,20 @@ export class ReturnService {
    * Get single return by ID
    */
   static async getReturnById(id: string, storeId?: string): Promise<IReturnDoc> {
-    const query: Record<string, any> = { _id: id };
+    const isObjectId = mongoose.isValidObjectId(id);
+    const query: Record<string, any> = isObjectId ? { _id: id } : { returnNumber: id };
     if (storeId) query.storeId = storeId;
 
-    const returnItem = await ReturnModel.findOne(query);
+    let returnItem = await ReturnModel.findOne(query);
+    if (!returnItem && isObjectId) {
+      returnItem = await ReturnModel.findOne({ returnNumber: id, ...(storeId ? { storeId } : {}) });
+    }
+    if (!returnItem && storeId) {
+      // Fallback without storeId if lookup by ID was requested
+      returnItem = await ReturnModel.findOne(isObjectId ? { _id: id } : { returnNumber: id });
+    }
     if (!returnItem) {
-      // Also fallback by returnNumber
-      const byNumber = await ReturnModel.findOne({ returnNumber: id, ...(storeId ? { storeId } : {}) });
-      if (!byNumber) {
-        throw new AppError(404, 'RETURN_NOT_FOUND', `Return record not found for ID ${id}`);
-      }
-      return byNumber;
+      throw new AppError(404, 'RETURN_NOT_FOUND', `Return record not found for ID ${id}`);
     }
     return returnItem;
   }
@@ -251,14 +257,33 @@ export class ReturnService {
   }
 
   /**
-   * Get customer returns by customer phone or user id
+   * Get customer returns by customer phone, email or customer ID
    */
-  static async getMyReturns(customerPhone: string): Promise<IReturnDoc[]> {
-    if (!customerPhone) return [];
-    const cleanPhone = customerPhone.replace(/\D/g, '').slice(-10);
-    return ReturnModel.find({
-      'customer.phone': { $regex: cleanPhone },
-    })
+  static async getMyReturns(query: { phone?: string; customerId?: string; email?: string } | string): Promise<IReturnDoc[]> {
+    if (typeof query === 'string') {
+      if (!query) return [];
+      const cleanPhone = query.replace(/\D/g, '').slice(-10);
+      return ReturnModel.find({
+        'customer.phone': { $regex: cleanPhone },
+      })
+        .sort({ createdAt: -1 })
+        .lean() as unknown as IReturnDoc[];
+    }
+
+    const filters: any[] = [];
+    if (query.phone) {
+      const cleanPhone = query.phone.replace(/\D/g, '').slice(-10);
+      if (cleanPhone) filters.push({ 'customer.phone': { $regex: cleanPhone } });
+    }
+    if (query.customerId) {
+      filters.push({ customerId: query.customerId });
+    }
+    if (query.email) {
+      filters.push({ 'customer.email': query.email });
+    }
+    if (filters.length === 0) return [];
+
+    return ReturnModel.find({ $or: filters })
       .sort({ createdAt: -1 })
       .lean() as unknown as IReturnDoc[];
   }

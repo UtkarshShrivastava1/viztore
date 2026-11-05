@@ -8,11 +8,17 @@ import { ApiResponse } from '../../shared/utils/ApiResponse.js';
 
 async function extractStoreId(req: Request): Promise<string> {
   const authReq = req as AuthenticatedRequest;
+  const headerStoreId =
+    (req.headers['x-store-id'] as string) ||
+    (req.headers['X-Store-Id'] as string) ||
+    (req.headers['store-id'] as string) ||
+    (req.headers['Store-Id'] as string);
+
   let storeId =
+    headerStoreId ||
     authReq.user?.storeId ||
     req.params.storeId ||
     (req.query.storeId as string) ||
-    (req.headers['x-store-id'] as string) ||
     (req.body as any)?.storeId;
 
   if (!storeId && authReq.user) {
@@ -23,6 +29,16 @@ async function extractStoreId(req: Request): Promise<string> {
         storeId = store.id;
       }
     }
+  }
+
+  // Graceful fallback for single-store / staging environment
+  if (!storeId) {
+    try {
+      const fallbackStore = await storeModule.getStoreById('fallback');
+      if (fallbackStore) {
+        storeId = fallbackStore.id;
+      }
+    } catch {}
   }
 
   if (!storeId) {
@@ -114,7 +130,9 @@ export class ReturnController {
   static getMyReturns = catchAsync(async (req: Request, res: Response) => {
     const authReq = req as AuthenticatedRequest;
     const phone = authReq.user?.phone || (req.query.phone as string);
-    const returns = await ReturnService.getMyReturns(phone || '');
+    const email = authReq.user?.email || (req.query.email as string);
+    const customerId = (authReq.user as any)?.sub || (authReq.user as any)?.id || (req.query.customerId as string);
+    const returns = await ReturnService.getMyReturns({ phone, email, customerId });
     return ApiResponse.success(res, returns);
   });
 }

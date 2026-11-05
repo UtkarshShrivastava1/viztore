@@ -227,49 +227,50 @@ export const useReturnsStore = create<ReturnsState>((set, get) => ({
   fetchReturns: async () => {
     set({ isLoading: true, error: null });
     try {
-      const res = await returnsApi.getReturns();
-      if (res.data?.success && res.data.data?.returns && Array.isArray(res.data.data.returns)) {
-        const liveItems: ReturnRecord[] = res.data.data.returns.map((raw: any) => ({
-          id: raw._id || raw.id,
-          returnNumber: raw.returnNumber,
-          orderNumber: raw.orderNumber,
-          customer: {
-            name: raw.customer?.name || 'Customer',
-            email: raw.customer?.email || '',
-            phone: raw.customer?.phone || '',
-            address: raw.customer?.address || '',
-          },
-          product: {
-            name: raw.product?.name || 'Item',
-            variant: raw.product?.variant || 'Standard',
-            sku: raw.product?.sku || 'SKU-001',
-            price: raw.product?.price || raw.amount || 0,
-            quantity: raw.product?.quantity || 1,
-            returnQuantity: raw.product?.returnQuantity || 1,
-            imageUrl: raw.product?.imageUrl || 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=120&auto=format&fit=crop&q=80',
-          },
-          returnType: raw.returnType || 'Return',
-          reason: raw.reason || 'General Return',
-          amount: raw.amount || 0,
-          status: raw.status || 'Pending',
-          returnDate: raw.returnDate || new Date(raw.createdAt || Date.now()).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
-          returnTime: raw.returnTime || '10:30 AM',
-          refundMethod: raw.refundMethod || 'Original Payment',
-          refundAmount: raw.refundAmount || raw.amount || 0,
-          pickupDate: raw.pickupDate || '',
-          pickupTime: raw.pickupTime || '',
-          pickupAddress: raw.pickupAddress || '',
-          comments: raw.comments || '',
-          internalNote: raw.internalNote || '',
-          rejectionReason: raw.rejectionReason || '',
-        }));
+      const res: any = await returnsApi.getReturns();
+      const payload = res?.data?.data || res?.data || res;
+      const rawList = Array.isArray(payload?.returns)
+        ? payload.returns
+        : Array.isArray(payload)
+        ? payload
+        : [];
 
-        if (liveItems.length > 0) {
-          set({ returns: liveItems, isLoading: false });
-          return;
-        }
-      }
-      set({ isLoading: false });
+      const liveItems: ReturnRecord[] = rawList.map((raw: any) => ({
+        id: raw._id || raw.id,
+        returnNumber: raw.returnNumber,
+        orderNumber: raw.orderNumber,
+        customer: {
+          name: raw.customer?.name || 'Customer',
+          email: raw.customer?.email || '',
+          phone: raw.customer?.phone || '',
+          address: raw.customer?.address || '',
+        },
+        product: {
+          name: raw.product?.name || 'Item',
+          variant: raw.product?.variant || 'Standard',
+          sku: raw.product?.sku || 'SKU-001',
+          price: raw.product?.price || raw.amount || 0,
+          quantity: raw.product?.quantity || 1,
+          returnQuantity: raw.product?.returnQuantity || 1,
+          imageUrl: raw.product?.imageUrl || 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=120&auto=format&fit=crop&q=80',
+        },
+        returnType: raw.returnType || 'Return',
+        reason: raw.reason || 'General Return',
+        amount: raw.amount || 0,
+        status: raw.status || 'Pending',
+        returnDate: raw.returnDate || new Date(raw.createdAt || Date.now()).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+        returnTime: raw.returnTime || '10:30 AM',
+        refundMethod: raw.refundMethod || 'Original Payment',
+        refundAmount: raw.refundAmount || raw.amount || 0,
+        pickupDate: raw.pickupDate || '',
+        pickupTime: raw.pickupTime || '',
+        pickupAddress: raw.pickupAddress || '',
+        comments: raw.comments || '',
+        internalNote: raw.internalNote || '',
+        rejectionReason: raw.rejectionReason || '',
+      }));
+
+      set({ returns: liveItems, isLoading: false, error: null });
     } catch (err: any) {
       console.warn('Live API fetchReturns failed, falling back to cached list:', err);
       set({ isLoading: false, error: err.message || 'Failed to fetch returns' });
@@ -296,7 +297,7 @@ export const useReturnsStore = create<ReturnsState>((set, get) => ({
     }));
 
     try {
-      const res = await returnsApi.createReturn({
+      const res: any = await returnsApi.createReturn({
         orderId: data.orderNumber || `ORD-${nextNum}`,
         orderNumber: data.orderNumber || `#ORD${nextNum}`,
         customer: data.customer,
@@ -308,13 +309,14 @@ export const useReturnsStore = create<ReturnsState>((set, get) => ({
         comments: data.comments,
       });
 
-      if (res.data?.success && res.data.data) {
-        const saved = res.data.data;
+      const saved = res?.data?.data || res?.data || res;
+      if (saved && (saved._id || saved.id || saved.returnNumber)) {
         set((state) => ({
           returns: state.returns.map((r) =>
-            r.id === newRecord.id ? { ...r, id: saved._id, returnNumber: saved.returnNumber } : r
+            r.id === newRecord.id ? { ...r, id: saved._id || saved.id, returnNumber: saved.returnNumber || r.returnNumber } : r
           ),
         }));
+        await get().fetchReturns();
       }
     } catch (err) {
       console.warn('Failed to persist return to live backend:', err);
@@ -333,6 +335,7 @@ export const useReturnsStore = create<ReturnsState>((set, get) => ({
 
     try {
       await returnsApi.approveReturn(id, data);
+      await get().fetchReturns();
     } catch (err) {
       console.warn('Live API approveReturn failed:', err);
     }
@@ -352,6 +355,7 @@ export const useReturnsStore = create<ReturnsState>((set, get) => ({
 
     try {
       await returnsApi.rejectReturn(id, reason);
+      await get().fetchReturns();
     } catch (err) {
       console.warn('Live API rejectReturn failed:', err);
     }
@@ -369,6 +373,7 @@ export const useReturnsStore = create<ReturnsState>((set, get) => ({
 
     try {
       await returnsApi.processRefund(id, data);
+      await get().fetchReturns();
     } catch (err) {
       console.warn('Live API processRefund failed:', err);
     }
@@ -386,6 +391,7 @@ export const useReturnsStore = create<ReturnsState>((set, get) => ({
 
     try {
       await returnsApi.processRefund(id);
+      await get().fetchReturns();
     } catch (err) {
       console.warn('Live API markAsRefunded failed:', err);
     }
