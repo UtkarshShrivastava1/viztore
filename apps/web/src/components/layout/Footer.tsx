@@ -6,7 +6,7 @@ import { branding } from '@repo/shared-types';
 
 export function Footer() {
   return (
-    <footer className="w-full bg-gradient-to-b from-blue-50 via-blue-600 to-[#00174F] text-black">
+    <footer className="w-full bg-gradient-to-b from-blue-50 via-blue-600 to-[#00174F] text-slate-800">
       <div className="max-w-[1920px] mx-auto px-4 sm:px-6 md:px-8 lg:px-12 xl:px-24 pt-16 pb-24 md:pb-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 lg:gap-24">
           
@@ -29,17 +29,41 @@ export function Footer() {
             <div className="space-y-3">
               <h4 className="font-bold text-lg">Follow Us</h4>
               <div className="flex items-center gap-3">
-                <a href="#" className="flex items-center justify-center w-10 h-10 rounded bg-white hover:bg-gray-100 transition-colors shadow-sm">
-                  <Instagram className="w-5 h-5 text-black" />
+                <a
+                  href="https://instagram.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Instagram"
+                  className="flex items-center justify-center w-10 h-10 rounded-xl bg-white text-[#E4405F] hover:bg-[#E4405F] hover:text-white transition-all duration-200 shadow-sm hover:shadow-md hover:-translate-y-0.5"
+                >
+                  <Instagram className="w-5 h-5" />
                 </a>
-                <a href="#" className="flex items-center justify-center w-10 h-10 rounded bg-white hover:bg-gray-100 transition-colors shadow-sm">
-                  <Linkedin className="w-5 h-5 text-black" />
+                <a
+                  href="https://linkedin.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="LinkedIn"
+                  className="flex items-center justify-center w-10 h-10 rounded-xl bg-white text-[#0A66C2] hover:bg-[#0A66C2] hover:text-white transition-all duration-200 shadow-sm hover:shadow-md hover:-translate-y-0.5"
+                >
+                  <Linkedin className="w-5 h-5" />
                 </a>
-                <a href="#" className="flex items-center justify-center w-10 h-10 rounded bg-white hover:bg-gray-100 transition-colors shadow-sm">
-                  <Youtube className="w-5 h-5 text-black" />
+                <a
+                  href="https://youtube.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="YouTube"
+                  className="flex items-center justify-center w-10 h-10 rounded-xl bg-white text-[#FF0000] hover:bg-[#FF0000] hover:text-white transition-all duration-200 shadow-sm hover:shadow-md hover:-translate-y-0.5"
+                >
+                  <Youtube className="w-5 h-5" />
                 </a>
-                <a href="#" className="flex items-center justify-center w-10 h-10 rounded bg-white hover:bg-gray-100 transition-colors shadow-sm">
-                  <Facebook className="w-5 h-5 text-black" />
+                <a
+                  href="https://facebook.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Facebook"
+                  className="flex items-center justify-center w-10 h-10 rounded-xl bg-white text-[#1877F2] hover:bg-[#1877F2] hover:text-white transition-all duration-200 shadow-sm hover:shadow-md hover:-translate-y-0.5"
+                >
+                  <Facebook className="w-5 h-5" />
                 </a>
               </div>
             </div>
