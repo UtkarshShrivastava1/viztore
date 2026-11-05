@@ -150,29 +150,12 @@ interface CustomerState {
   syncFromStoreData: (invoices: any[], orders: any[]) => void;
 }
 
-const defaultStatementTransactions: StatementTransaction[] = [
-  { id: 'st-1', date: '28 Oct 2026', type: 'Invoice', referenceNo: 'INV-1248', amount: 12450.0, balance: 18450.0 },
-  { id: 'st-2', date: '25 Oct 2026', type: 'Payment', referenceNo: 'PAY-0034', amount: -25000.0, balance: 6000.0 },
-  { id: 'st-3', date: '20 Oct 2026', type: 'Invoice', referenceNo: 'INV-1241', amount: 32000.0, balance: 31000.0 },
-  { id: 'st-4', date: '15 Oct 2026', type: 'Payment', referenceNo: 'PAY-0031', amount: -15000.0, balance: -1000.0 },
-  { id: 'st-5', date: '10 Oct 2026', type: 'Invoice', referenceNo: 'INV-1235', amount: 18450.0, balance: 18000.0 },
-  { id: 'st-6', date: '05 Oct 2026', type: 'Payment', referenceNo: 'PAY-0028', amount: -40000.0, balance: -450.0 },
-  { id: 'st-7', date: '28 Sep 2026', type: 'Invoice', referenceNo: 'INV-1228', amount: 22000.0, balance: 39550.0 },
-  { id: 'st-8', date: '20 Sep 2026', type: 'Payment', referenceNo: 'PAY-0021', amount: -22000.0, balance: 17550.0 },
-];
-
 const defaultAgingBuckets: AgingBucket[] = [
-  { label: 'Current', range: '(0–30 days)', amount: 0.0, invoiceCount: 0, barColor: '#e2e8f0', heightPercent: 20 },
-  { label: '31–60 days', range: '31–60 days', amount: 6250.0, invoiceCount: 1, barColor: '#facc15', heightPercent: 55 },
-  { label: '61–90 days', range: '61–90 days', amount: 8750.0, invoiceCount: 1, barColor: '#fb923c', heightPercent: 85 },
-  { label: '91–120 days', range: '91–120 days', amount: 3450.0, invoiceCount: 1, barColor: '#f87171', heightPercent: 40 },
-  { label: '> 120 days', range: '> 120 days', amount: 0.0, invoiceCount: 0, barColor: '#e2e8f0', heightPercent: 20 },
-];
-
-const defaultOverdueInvoices: OverdueInvoice[] = [
-  { id: 'ov-1', invoiceNo: 'INV-1248', invoiceDate: '28 Oct 2026', dueDate: '15 Nov 2026', amount: 6250.0, daysOverdue: 14, status: 'Overdue' },
-  { id: 'ov-2', invoiceNo: 'INV-1235', invoiceDate: '10 Oct 2026', dueDate: '30 Oct 2026', amount: 8750.0, daysOverdue: 28, status: 'Overdue' },
-  { id: 'ov-3', invoiceNo: 'INV-1228', invoiceDate: '28 Sep 2026', dueDate: '20 Oct 2026', amount: 3450.0, daysOverdue: 42, status: 'Overdue' },
+  { label: 'Current', range: '(0–30 days)', amount: 0.0, invoiceCount: 0, barColor: '#e2e8f0', heightPercent: 0 },
+  { label: '31–60 days', range: '31–60 days', amount: 0.0, invoiceCount: 0, barColor: '#facc15', heightPercent: 0 },
+  { label: '61–90 days', range: '61–90 days', amount: 0.0, invoiceCount: 0, barColor: '#fb923c', heightPercent: 0 },
+  { label: '91–120 days', range: '91–120 days', amount: 0.0, invoiceCount: 0, barColor: '#f87171', heightPercent: 0 },
+  { label: '> 120 days', range: '> 120 days', amount: 0.0, invoiceCount: 0, barColor: '#e2e8f0', heightPercent: 0 },
 ];
 
 export function computeCustomerKPIs(customers: Customer[]): CustomerKPIs {
@@ -190,111 +173,9 @@ export function computeCustomerKPIs(customers: Customer[]): CustomerKPIs {
   };
 }
 
-const seedCustomers: Customer[] = [
-  {
-    id: 'cust-pooja-1',
-    name: 'Pooja Sharma',
-    customerType: 'Individual',
-    phone: '+91 98261 45091',
-    email: 'pooja.sharma@example.com',
-    customerCode: 'CUST-001',
-    paymentTerms: 'Immediate',
-    creditPeriodDays: 0,
-    outstandingAmount: 0,
-    totalSales: 15420,
-    storeCredit: 0,
-    loyaltyPoints: 120,
-    totalOrders: 3,
-    returnsCount: 0,
-    status: 'active',
-    tier: 'Regular',
-    lastOrderDate: '28 Oct 2026',
-    location: 'Bhilai, CG',
-    billingAddress: {
-      addressLine1: 'Street 14, Sector 6, Civic Centre',
-      city: 'Bhilai',
-      state: 'Chhattisgarh',
-      pincode: '490006',
-      country: 'India',
-      sameAsShipping: true,
-    },
-    recentOrders: [],
-    creditHistory: [],
-    statementTransactions: defaultStatementTransactions,
-    agingBuckets: defaultAgingBuckets,
-    overdueInvoices: [],
-  },
-  {
-    id: 'cust-rohan-2',
-    name: 'Rohan Verma',
-    customerType: 'Individual',
-    phone: '+91 98765 43210',
-    email: 'rohan.verma@example.com',
-    customerCode: 'CUST-002',
-    paymentTerms: 'Immediate',
-    creditPeriodDays: 0,
-    outstandingAmount: 0,
-    totalSales: 8990,
-    storeCredit: 250,
-    loyaltyPoints: 65,
-    totalOrders: 2,
-    returnsCount: 0,
-    status: 'active',
-    tier: 'Regular',
-    lastOrderDate: '24 Oct 2026',
-    location: 'Bhilai, CG',
-    billingAddress: {
-      addressLine1: 'Plot 42, Nehru Nagar West',
-      city: 'Bhilai',
-      state: 'Chhattisgarh',
-      pincode: '490020',
-      country: 'India',
-      sameAsShipping: true,
-    },
-    recentOrders: [],
-    creditHistory: [],
-    statementTransactions: defaultStatementTransactions,
-    agingBuckets: defaultAgingBuckets,
-    overdueInvoices: [],
-  },
-  {
-    id: 'cust-ananya-3',
-    name: 'Ananya Patel',
-    customerType: 'Retailer',
-    phone: '+91 94252 87612',
-    email: 'ananya.patel@example.com',
-    customerCode: 'CUST-003',
-    paymentTerms: '15 Days',
-    creditPeriodDays: 15,
-    outstandingAmount: 4500,
-    totalSales: 32400,
-    storeCredit: 0,
-    loyaltyPoints: 310,
-    totalOrders: 5,
-    returnsCount: 0,
-    status: 'active',
-    tier: 'VIP',
-    lastOrderDate: '30 Oct 2026',
-    location: 'Durg, CG',
-    billingAddress: {
-      addressLine1: 'Shop No. 8, Main Road, Supela',
-      city: 'Bhilai',
-      state: 'Chhattisgarh',
-      pincode: '490023',
-      country: 'India',
-      sameAsShipping: true,
-    },
-    recentOrders: [],
-    creditHistory: [],
-    statementTransactions: defaultStatementTransactions,
-    agingBuckets: defaultAgingBuckets,
-    overdueInvoices: defaultOverdueInvoices,
-  },
-];
-
 export const useCustomerStore = create<CustomerState>((set, get) => ({
-  customers: seedCustomers,
-  kpis: computeCustomerKPIs(seedCustomers),
+  customers: [],
+  kpis: computeCustomerKPIs([]),
   searchQuery: '',
   statusFilter: 'All',
   typeFilter: 'All',
@@ -345,53 +226,65 @@ export const useCustomerStore = create<CustomerState>((set, get) => ({
     set({ isLoadingCustomers: true, error: null });
     try {
       const res = await customersApi.getCustomers();
-      if (res.data?.success && Array.isArray(res.data.data)) {
-        const liveCustomers: Customer[] = res.data.data.map((raw: any) => ({
-          id: raw._id || raw.id,
-          name: raw.name,
-          customerType: raw.customerType,
-          phone: raw.phone,
-          email: raw.email || '',
-          displayName: raw.displayName || raw.name,
-          gstin: raw.gstin || '',
-          pan: raw.pan || '',
-          customerCode: raw.customerCode || raw._id || raw.id,
-          creditLimit: raw.creditLimit || 0,
-          paymentTerms: raw.paymentTerms || '15 Days',
-          creditPeriodDays: raw.creditPeriodDays || 15,
-          outstandingAmount: raw.outstandingAmount || 0,
-          totalSales: raw.totalSales || 0,
-          storeCredit: raw.storeCredit || 0,
-          loyaltyPoints: raw.loyaltyPoints || 0,
-          totalOrders: raw.totalOrders || 0,
-          returnsCount: raw.returnsCount || 0,
-          status: raw.status || 'active',
-          tier: raw.tier || 'Regular',
-          lastOrderDate: raw.lastOrderDate
-            ? new Date(raw.lastOrderDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
-            : 'Never',
-          location: raw.billingAddress?.city
-            ? `${raw.billingAddress.city}, ${(raw.billingAddress.state || '').slice(0, 2).toUpperCase()}`
-            : 'Local',
-          billingAddress: raw.billingAddress || { addressLine1: '', city: '', state: '', pincode: '' },
-          notes: raw.notes || '',
-          recentOrders: [],
-          creditHistory: [],
-          statementTransactions: [],
-          agingBuckets: defaultAgingBuckets,
-          overdueInvoices: [],
-        }));
+      // Unpack response: api.get returns json.data; handle raw or wrapped payload
+      const payload: any = (res as any)?.data?.data || (res as any)?.data || res;
+      const rawList: any[] = Array.isArray(payload)
+        ? payload
+        : Array.isArray(payload?.customers)
+        ? payload.customers
+        : [];
 
-        if (liveCustomers.length > 0) {
-          set({
-            customers: liveCustomers,
-            kpis: computeCustomerKPIs(liveCustomers),
-            isLoadingCustomers: false,
-          });
-          return;
-        }
-      }
-      set({ isLoadingCustomers: false });
+      const liveCustomers: Customer[] = rawList.map((raw: any) => ({
+        id: raw._id || raw.id,
+        name: raw.name,
+        customerType: raw.customerType || 'Individual',
+        phone: raw.phone || '',
+        email: raw.email || '',
+        displayName: raw.displayName || raw.name,
+        gstin: raw.gstin || '',
+        pan: raw.pan || '',
+        customerCode: raw.customerCode || raw._id || raw.id,
+        creditLimit: raw.creditLimit || 0,
+        paymentTerms: raw.paymentTerms || '15 Days',
+        creditPeriodDays: raw.creditPeriodDays || 15,
+        outstandingAmount: raw.outstandingAmount || 0,
+        totalSales: raw.totalSales || 0,
+        storeCredit: raw.storeCredit || 0,
+        loyaltyPoints: raw.loyaltyPoints || 0,
+        totalOrders: raw.totalOrders || 0,
+        returnsCount: raw.returnsCount || 0,
+        status: raw.status || 'active',
+        tier: raw.tier || 'Regular',
+        lastOrderDate: raw.lastOrderDate
+          ? new Date(raw.lastOrderDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+          : 'Never',
+        location: raw.billingAddress?.city
+          ? `${raw.billingAddress.city}, ${(raw.billingAddress.state || '').slice(0, 2).toUpperCase()}`
+          : 'Local',
+        billingAddress: raw.billingAddress || { addressLine1: '', city: '', state: '', pincode: '' },
+        notes: raw.notes || '',
+        recentOrders: raw.recentOrders || [],
+        creditHistory: raw.creditHistory || [],
+        statementTransactions: raw.statementTransactions || [],
+        agingBuckets: raw.agingBuckets || defaultAgingBuckets,
+        overdueInvoices: raw.overdueInvoices || [],
+      }));
+
+      const backendKpis = payload?.kpis;
+      set({
+        customers: liveCustomers,
+        kpis: backendKpis
+          ? {
+              totalCustomers: backendKpis.totalCustomers ?? liveCustomers.length,
+              totalCustomersGrowth: backendKpis.totalCustomersGrowth ?? (liveCustomers.length > 0 ? 8.5 : 0),
+              totalSales: backendKpis.totalSales ?? computeCustomerKPIs(liveCustomers).totalSales,
+              totalSalesGrowth: backendKpis.totalSalesGrowth ?? (liveCustomers.length > 0 ? 14.2 : 0),
+              totalOutstanding: backendKpis.totalOutstanding ?? computeCustomerKPIs(liveCustomers).totalOutstanding,
+              totalOutstandingChange: backendKpis.totalOutstandingChange ?? 0,
+            }
+          : computeCustomerKPIs(liveCustomers),
+        isLoadingCustomers: false,
+      });
     } catch (err: any) {
       console.warn('Live API fetch customers failed, keeping local state:', err);
       set({ isLoadingCustomers: false, error: err.message || 'Failed to fetch customers' });
@@ -475,11 +368,13 @@ export const useCustomerStore = create<CustomerState>((set, get) => ({
         billingAddress: customerData.billingAddress,
         notes: customerData.notes,
       });
-      if (res.data?.success && res.data.data) {
-        const saved = res.data.data;
+      const saved: any = (res as any)?.data?.data || (res as any)?.data || res;
+      if (saved && (saved._id || saved.id)) {
+        const savedId = saved._id || saved.id;
+        const savedCode = saved.customerCode || savedId;
         set((state) => {
           const updated = state.customers.map((c) =>
-            c.id === optimisticId ? { ...c, id: saved._id, customerCode: saved.customerCode } : c
+            c.id === optimisticId ? { ...c, id: savedId, customerCode: savedCode } : c
           );
           return { customers: updated, kpis: computeCustomerKPIs(updated) };
         });
@@ -630,7 +525,7 @@ export const useCustomerStore = create<CustomerState>((set, get) => ({
         kpis: computeCustomerKPIs(updated),
       };
     });
-    toast.success("Customer Removed", "Customer removed from directory.");
+    toast.success("Payment Recorded", `Payment of ₹${amount.toLocaleString('en-IN')} recorded successfully.`);
 
     try {
       await customersApi.recordPayment(customerId, {
