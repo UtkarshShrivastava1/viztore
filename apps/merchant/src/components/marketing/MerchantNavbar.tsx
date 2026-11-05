@@ -279,12 +279,7 @@ export const MerchantNavbar: React.FC<MerchantNavbarProps> = ({
             >
               Business Guides
             </button>
-            <button
-              onClick={() => handleLinkClick('/learn/tutorials')}
-              className="w-full text-left px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 rounded-lg"
-            >
-              Video Tutorials
-            </button>
+
             <button
               onClick={() => handleLinkClick('/help')}
               className="w-full text-left px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 rounded-lg"

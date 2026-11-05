@@ -117,7 +117,7 @@ export default function HelpSupportScreen() {
                 <ChevronRight size={16} color="#0f172a" />
               </View>
               <Text style={styles.contactDesc}>Speak with our customer care executive</Text>
-              <Text style={[styles.contactInfo, { color: '#16a34a' }]}>1800-123-4567</Text>
+              <Text style={[styles.contactInfo, { color: '#16a34a' }]}>{branding.contactPhone || '+91 9407655617'}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.contactCard}>

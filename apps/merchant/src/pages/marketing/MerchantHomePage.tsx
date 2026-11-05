@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   ArrowRight,
-  Play,
   ShoppingBag,
   Store,
   Package,
@@ -33,7 +32,6 @@ import {
 } from 'lucide-react';
 import { branding } from '../../lib/branding.js';
 import { MARKETING_DATA } from '../../data/marketingData.js';
-import { useVideoModal } from '../../components/marketing/MerchantPublicLayout.js';
 
 interface MerchantHomePageProps {
   onNavigate: (route: string) => void;
@@ -44,19 +42,6 @@ export const MerchantHomePage: React.FC<MerchantHomePageProps> = ({
   onNavigate,
   onStartSelling,
 }) => {
-  const { openVideoModal } = useVideoModal();
-
-  const handleWatchVideo = () => {
-    openVideoModal({
-      id: 'intro-video',
-      title: `Take Your Local Store Online with ${branding.appName}`,
-      duration: '2:45',
-      category: 'Overview',
-      description:
-        'See how local retailers digitize their shops, list products, and start receiving neighborhood delivery and pickup orders.',
-    });
-  };
-
   return (
     <div className="w-full bg-white select-none">
       {/* 1. HERO SECTION (Matching Mockup 1.0.png) */}
@@ -87,17 +72,6 @@ export const MerchantHomePage: React.FC<MerchantHomePageProps> = ({
                 >
                   <span>Start Selling</span>
                   <ArrowRight className="w-4 h-4" />
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleWatchVideo}
-                  className="px-6 py-3.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-bold text-sm sm:text-base flex items-center gap-2.5 transition-all cursor-pointer shadow-2xs"
-                >
-                  <div className="w-6 h-6 rounded-full bg-blue-100 text-[#0052ff] flex items-center justify-center">
-                    <Play className="w-3.5 h-3.5 fill-[#0052ff] ml-0.5" />
-                  </div>
-                  <span>See How It Works</span>
                 </button>
               </div>
             </div>
@@ -141,7 +115,7 @@ export const MerchantHomePage: React.FC<MerchantHomePageProps> = ({
                     <Icon className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="text-xs sm:text-sm font-bold text-slate-900 leading-tight">
+                    <h4 className="text-xs sm:text-sm font-bold text-slate-900 leading-tight whitespace-nowrap capitalize">
                       {pill.title}
                     </h4>
                     <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 leading-tight">
@@ -665,7 +639,7 @@ export const MerchantHomePage: React.FC<MerchantHomePageProps> = ({
               </div>
               <h3 className="text-base font-bold text-slate-900 mb-1">Mobile Access</h3>
               <p className="text-xs sm:text-[13px] text-slate-500 leading-relaxed">
-                Manage your store anytime, anywhere with the {branding.appName} mobile app.
+                Manage your store anytime, anywhere with the Viztore progressive web-app.
               </p>
             </div>
 

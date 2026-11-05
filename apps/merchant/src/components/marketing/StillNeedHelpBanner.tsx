@@ -32,10 +32,10 @@ export const StillNeedHelpBanner: React.FC = () => {
                   Call Us
                 </div>
                 <a
-                  href="tel:+919109107251"
+                  href={`tel:${branding.contactPhone.replace(/\s+/g, '')}`}
                   className="text-sm font-extrabold text-[#0052ff] hover:underline block leading-tight"
                 >
-                  +91 91091 07251
+                  {branding.contactPhone}
                 </a>
                 <div className="text-[10px] text-slate-400 mt-0.5">
                   Mon - Sat, 10:00 AM - 6:00 PM

@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   ArrowRight,
-  Play,
   Calendar,
   Percent,
   CheckCircle2,
@@ -16,7 +15,6 @@ import { MARKETING_DATA } from '../../data/marketingData.js';
 import { PricingCard, PricingPlan } from '../../components/marketing/PricingCard.js';
 import { FeatureComparisonTable } from '../../components/marketing/FeatureComparisonTable.js';
 import { FaqAccordion } from '../../components/marketing/FaqAccordion.js';
-import { useVideoModal } from '../../components/marketing/MerchantPublicLayout.js';
 
 interface PricingPageProps {
   onNavigate: (route: string) => void;
@@ -27,17 +25,6 @@ export const PricingPage: React.FC<PricingPageProps> = ({
   onNavigate,
   onStartSelling,
 }) => {
-  const { openVideoModal } = useVideoModal();
-
-  const handleWatchVideo = () => {
-    openVideoModal({
-      id: 'pricing-video',
-      title: 'Transparent Pricing & Delivery Economics',
-      duration: '2:15',
-      category: 'Pricing',
-      description: 'Learn why simple annual subscription models save local shopkeepers thousands in commission fees.',
-    });
-  };
 
   const standardPlan: PricingPlan = {
     id: 'standard',
@@ -130,17 +117,6 @@ export const PricingPage: React.FC<PricingPageProps> = ({
                 >
                   <span>Start Selling</span>
                   <ArrowRight className="w-4 h-4" />
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleWatchVideo}
-                  className="px-6 py-3.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 font-bold text-sm flex items-center gap-2 cursor-pointer shadow-2xs transition-colors"
-                >
-                  <div className="w-5 h-5 rounded-full bg-blue-100 text-[#0052ff] flex items-center justify-center">
-                    <Play className="w-3 h-3 fill-[#0052ff] ml-0.5" />
-                  </div>
-                  <span>See How It Works</span>
                 </button>
               </div>
             </div>

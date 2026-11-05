@@ -3,12 +3,11 @@ import {
   ShoppingBag,
   Instagram,
   Linkedin,
-  Youtube,
   Facebook,
   MapPin,
   Heart,
 } from 'lucide-react';
-import { branding } from '../../lib/branding.js';
+import { branding, getCompanyUrl } from '../../lib/branding.js';
 
 interface MerchantFooterProps {
   onNavigate: (route: string) => void;
@@ -103,15 +102,6 @@ export const MerchantFooter: React.FC<MerchantFooterProps> = ({ onNavigate }) =>
                 <Linkedin className="w-4 h-4" />
               </a>
               <a
-                href="https://youtube.com"
-                target="_blank"
-                rel="noreferrer"
-                className="w-10 h-10 rounded-xl bg-[#f1f5f9] text-slate-800 hover:text-[#0052ff] hover:bg-blue-50 flex items-center justify-center transition-colors"
-                aria-label="YouTube"
-              >
-                <Youtube className="w-4 h-4" />
-              </a>
-              <a
                 href="https://facebook.com"
                 target="_blank"
                 rel="noreferrer"
@@ -120,37 +110,6 @@ export const MerchantFooter: React.FC<MerchantFooterProps> = ({ onNavigate }) =>
               >
                 <Facebook className="w-4 h-4" />
               </a>
-            </div>
-
-            {/* Download the App */}
-            <div className="mt-7">
-              <div className="text-[13.5px] font-bold text-[#0c1427] mb-3">
-                Download the App
-              </div>
-              <div className="flex items-center gap-3">
-                <a
-                  href="#download-play"
-                  className="inline-block hover:opacity-90 transition-opacity"
-                  aria-label="Get it on Google Play"
-                >
-                  <img
-                    src="/images/google-play-badge.svg"
-                    alt="Get it on Google Play"
-                    className="h-[38px] w-auto shadow-xs rounded-md"
-                  />
-                </a>
-                <a
-                  href="#download-appstore"
-                  className="inline-block hover:opacity-90 transition-opacity"
-                  aria-label="Download on the App Store"
-                >
-                  <img
-                    src="/images/app-store-badge.svg"
-                    alt="Download on the App Store"
-                    className="h-[38px] w-auto shadow-xs rounded-md"
-                  />
-                </a>
-              </div>
             </div>
           </div>
 
@@ -306,7 +265,7 @@ export const MerchantFooter: React.FC<MerchantFooterProps> = ({ onNavigate }) =>
                 <li>
                   <button
                     type="button"
-                    onClick={() => onNavigate('/learn/tutorials')}
+                    onClick={() => onNavigate('/learn/guides')}
                     className="hover:text-[#0052ff] transition-colors cursor-pointer text-left block"
                   >
                     Learning Resources
@@ -348,85 +307,94 @@ export const MerchantFooter: React.FC<MerchantFooterProps> = ({ onNavigate }) =>
               <span className="w-8 h-[3.5px] bg-[#0052ff] rounded-full block mt-2 mb-4" />
               <ul className="space-y-3 text-[13.5px] text-slate-600 font-normal">
                 <li>
-                  <button
-                    type="button"
-                    onClick={() => onNavigate('/how-it-works')}
+                  <a
+                    href={getCompanyUrl('/about-us')}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="hover:text-[#0052ff] transition-colors cursor-pointer text-left block"
                   >
                     About {branding.appName}
-                  </button>
+                  </a>
                 </li>
                 <li>
-                  <button
-                    type="button"
-                    onClick={() => onNavigate('/help/contact')}
+                  <a
+                    href={getCompanyUrl('/contact')}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="hover:text-[#0052ff] transition-colors cursor-pointer text-left block"
                   >
                     Contact Us
-                  </button>
+                  </a>
                 </li>
                 <li>
-                  <button
-                    type="button"
-                    onClick={() => onNavigate('/help/contact')}
+                  <a
+                    href={getCompanyUrl('/for-retailers')}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="hover:text-[#0052ff] transition-colors cursor-pointer text-left block"
                   >
                     Partner with Us
-                  </button>
+                  </a>
                 </li>
                 <li>
-                  <button
-                    type="button"
-                    onClick={() => onNavigate('/help/contact')}
+                  <a
+                    href={getCompanyUrl('/careers')}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="hover:text-[#0052ff] transition-colors cursor-pointer text-left block"
                   >
                     Careers
-                  </button>
+                  </a>
                 </li>
                 <li>
-                  <button
-                    type="button"
-                    onClick={() => onNavigate('/terms')}
+                  <a
+                    href={getCompanyUrl('/terms-and-conditions')}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="hover:text-[#0052ff] transition-colors cursor-pointer text-left block"
                   >
                     Terms of Use
-                  </button>
+                  </a>
                 </li>
                 <li>
-                  <button
-                    type="button"
-                    onClick={() => onNavigate('/privacy')}
+                  <a
+                    href={getCompanyUrl('/terms-and-conditions')}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="hover:text-[#0052ff] transition-colors cursor-pointer text-left block"
                   >
                     Privacy Policy
-                  </button>
+                  </a>
                 </li>
                 <li>
-                  <button
-                    type="button"
-                    onClick={() => onNavigate('/terms')}
+                  <a
+                    href={getCompanyUrl('/terms-and-conditions')}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="hover:text-[#0052ff] transition-colors cursor-pointer text-left block"
                   >
                     Seller Terms &amp; Conditions
-                  </button>
+                  </a>
                 </li>
                 <li>
-                  <button
-                    type="button"
-                    onClick={() => onNavigate('/refund-policy')}
+                  <a
+                    href={getCompanyUrl('/refund-policy')}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="hover:text-[#0052ff] transition-colors cursor-pointer text-left block"
                   >
                     Refund and Cancellation Policy
-                  </button>
+                  </a>
                 </li>
                 <li>
-                  <button
-                    type="button"
-                    onClick={() => onNavigate('/help/contact')}
+                  <a
+                    href={getCompanyUrl('/grievance-redressal')}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="hover:text-[#0052ff] transition-colors cursor-pointer text-left block"
                   >
                     Grievance Redressal
-                  </button>
+                  </a>
                 </li>
               </ul>
             </div>

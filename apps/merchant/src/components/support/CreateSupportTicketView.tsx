@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useSupportStore, TicketPriority } from '../../stores/supportStore.js';
 import { validatePhone } from '../../utils/validation.js';
+import { branding } from '../../lib/branding.js';
 
 interface CreateSupportTicketViewProps {
   onBack?: () => void;
@@ -353,7 +354,7 @@ export const CreateSupportTicketView: React.FC<CreateSupportTicketViewProps> = (
 
             <div className="p-4 bg-blue-50/80 border border-blue-100 rounded-xl text-center space-y-1">
               <p className="text-lg font-black text-blue-700 tracking-tight leading-tight">
-                +91 98765 43210
+                {branding.contactPhone}
               </p>
               <p className="text-[11px] text-slate-500">
                 Mon - Sat, 9:00 AM - 7:00 PM | Sun, 10:00 AM - 5:00 PM

@@ -8,7 +8,7 @@ import {
   Eye,
   EyeOff,
 } from 'lucide-react';
-import { branding } from '../lib/branding.js';
+import { branding, getCompanyUrl } from '../lib/branding.js';
 import { api } from '../lib/api.js';
 import { useAuthStore } from '../stores/authStore.js';
 
@@ -188,7 +188,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onGoToRegi
                 <p className="text-[11px] text-slate-500 text-center pt-2">
                   By continuing, you agree to {branding.appName}'s{' '}
                   <a
-                    href="/terms"
+                    href={getCompanyUrl('/terms-and-conditions')}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="font-semibold text-blue-600 hover:underline cursor-pointer"
@@ -197,7 +197,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onGoToRegi
                   </a>{' '}
                   &amp;{' '}
                   <a
-                    href="/privacy"
+                    href={getCompanyUrl('/terms-and-conditions')}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="font-semibold text-blue-600 hover:underline cursor-pointer"

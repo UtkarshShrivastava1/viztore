@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   ArrowRight,
-  Play,
   Check,
   Box,
   ShoppingCart,
@@ -12,7 +11,6 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import { branding } from '../../lib/branding.js';
-import { useVideoModal } from '../../components/marketing/MerchantPublicLayout.js';
 
 interface HowItWorksPageProps {
   onNavigate: (route: string) => void;
@@ -23,17 +21,6 @@ export const HowItWorksPage: React.FC<HowItWorksPageProps> = ({
   onNavigate,
   onStartSelling,
 }) => {
-  const { openVideoModal } = useVideoModal();
-
-  const handleWatchVideo = () => {
-    openVideoModal({
-      id: 'how-it-works-video',
-      title: `How It Works: Selling on ${branding.appName}`,
-      duration: '3:15',
-      category: 'Tutorial',
-      description: 'Comprehensive walkthrough from merchant signup to doorstep delivery fulfillment.',
-    });
-  };
 
   return (
     <div className="w-full bg-white select-none">
@@ -77,17 +64,6 @@ export const HowItWorksPage: React.FC<HowItWorksPageProps> = ({
                 >
                   <span>Start Selling</span>
                   <ArrowRight className="w-4 h-4" />
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleWatchVideo}
-                  className="px-5 py-3.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-semibold text-sm border border-slate-200/90 shadow-2xs flex items-center gap-2 transition-all cursor-pointer"
-                >
-                  <div className="w-5 h-5 rounded-full bg-blue-50 text-[#0052ff] flex items-center justify-center">
-                    <Play className="w-2.5 h-2.5 fill-[#0052ff] ml-0.5" />
-                  </div>
-                  <span>Watch Video</span>
                 </button>
               </div>
             </div>

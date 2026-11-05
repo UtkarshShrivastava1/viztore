@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Phone, Mail, Lock, Eye, EyeOff, ArrowRight, User, ShieldCheck } from 'lucide-react';
-import { branding } from '../../lib/branding.js';
+import { branding, getCompanyUrl } from '../../lib/branding.js';
 import { useOnboardingStore } from '../../stores/onboardingStore.js';
 import { api } from '../../lib/api.js';
 import { useAuthStore } from '../../stores/authStore.js';
@@ -310,7 +310,7 @@ export const Step1MobileEmail: React.FC<Step1MobileEmailProps> = ({
         <p className="text-[11px] text-slate-500 pt-1 leading-relaxed">
           By continuing, I agree to {branding.appName}'s{' '}
           <a
-            href="/terms"
+            href={getCompanyUrl('/terms-and-conditions')}
             target="_blank"
             rel="noopener noreferrer"
             className="font-semibold text-[#0038ed] hover:underline cursor-pointer"
@@ -319,7 +319,7 @@ export const Step1MobileEmail: React.FC<Step1MobileEmailProps> = ({
           </a>{' '}
           &amp;{' '}
           <a
-            href="/privacy"
+            href={getCompanyUrl('/terms-and-conditions')}
             target="_blank"
             rel="noopener noreferrer"
             className="font-semibold text-[#0038ed] hover:underline cursor-pointer"

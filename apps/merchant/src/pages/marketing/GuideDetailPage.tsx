@@ -193,7 +193,7 @@ export const GuideDetailPage: React.FC<GuideDetailPageProps> = ({
                           <input
                             type="text"
                             disabled
-                            value="+91 91091 07251"
+                            value={branding.contactPhone}
                             className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-700"
                           />
                           <button
@@ -300,7 +300,7 @@ export const GuideDetailPage: React.FC<GuideDetailPageProps> = ({
                   <div className="flex items-start gap-2.5">
                     <Phone className="w-4 h-4 text-[#0038ed] shrink-0 mt-0.5" />
                     <div>
-                      <div className="font-bold text-slate-900">+91 91091 07251</div>
+                      <div className="font-bold text-slate-900">{branding.contactPhone}</div>
                       <div className="text-[11px] text-slate-500">Mon - Sat, 10:00 AM - 6:00 PM</div>
                     </div>
                   </div>

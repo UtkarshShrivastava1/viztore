@@ -40,15 +40,12 @@ import { PricingPage } from './pages/marketing/PricingPage.js';
 import { GrowBusinessPage } from './pages/marketing/GrowBusinessPage.js';
 import { BusinessGuidesPage } from './pages/marketing/BusinessGuidesPage.js';
 import { GuideDetailPage } from './pages/marketing/GuideDetailPage.js';
-import { VideoTutorialsPage } from './pages/marketing/VideoTutorialsPage.js';
 import { HelpCentrePage } from './pages/marketing/HelpCentrePage.js';
 import { FaqPage } from './pages/marketing/FaqPage.js';
 import { SellerBlogPage } from './pages/marketing/SellerBlogPage.js';
 import { BlogDetailPage } from './pages/marketing/BlogDetailPage.js';
 import { ContactSupportPage } from './pages/marketing/ContactSupportPage.js';
-import { TermsPage } from './pages/marketing/legal/TermsPage.js';
-import { PrivacyPage } from './pages/marketing/legal/PrivacyPage.js';
-import { RefundPolicyPage } from './pages/marketing/legal/RefundPolicyPage.js';
+import { getCompanyUrl } from './lib/branding.js';
 
 export type AppView = 'landing' | 'login' | 'onboarding' | 'dashboard';
 
@@ -260,8 +257,9 @@ export const App: React.FC = () => {
       );
     } else if (currentRoute === '/learn/tutorials') {
       pageContent = (
-        <VideoTutorialsPage
+        <BusinessGuidesPage
           onNavigate={navigateTo}
+          onSelectGuide={(slug) => navigateTo(`/learn/guides/${slug}`)}
           onStartSelling={() => navigateTo('/register')}
         />
       );
@@ -292,12 +290,16 @@ export const App: React.FC = () => {
       );
     } else if (currentRoute === '/help/contact' || currentRoute === '/contact') {
       pageContent = <ContactSupportPage onNavigate={navigateTo} />;
-    } else if (currentRoute === '/terms') {
-      pageContent = <TermsPage onNavigate={navigateTo} />;
-    } else if (currentRoute === '/privacy') {
-      pageContent = <PrivacyPage onNavigate={navigateTo} />;
+    } else if (currentRoute === '/terms' || currentRoute === '/privacy') {
+      if (typeof window !== 'undefined') {
+        window.location.href = getCompanyUrl('/terms-and-conditions');
+      }
+      return null;
     } else if (currentRoute === '/refund-policy') {
-      pageContent = <RefundPolicyPage onNavigate={navigateTo} />;
+      if (typeof window !== 'undefined') {
+        window.location.href = getCompanyUrl('/refund-policy');
+      }
+      return null;
     } else {
       // Default: 1.0.png Merchant Landing Homepage
       pageContent = (

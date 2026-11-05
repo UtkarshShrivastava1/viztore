@@ -14,8 +14,6 @@ import {
 } from 'lucide-react';
 import { branding } from '../../lib/branding.js';
 import { MARKETING_DATA } from '../../data/marketingData.js';
-import { VideoCard, VideoTutorialItem } from '../../components/marketing/VideoCard.js';
-import { useVideoModal } from '../../components/marketing/MerchantPublicLayout.js';
 
 interface BusinessGuidesPageProps {
   onNavigate: (route: string) => void;
@@ -30,7 +28,6 @@ export const BusinessGuidesPage: React.FC<BusinessGuidesPageProps> = ({
 }) => {
   const [activeCategory, setActiveCategory] = useState<string>('All Guides');
   const [searchQuery, setSearchQuery] = useState('');
-  const { openVideoModal } = useVideoModal();
 
   const categories = [
     'All Guides',
@@ -50,8 +47,6 @@ export const BusinessGuidesPage: React.FC<BusinessGuidesPageProps> = ({
       guide.summary.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
-
-  const featuredVideos: VideoTutorialItem[] = MARKETING_DATA.videos.slice(0, 4);
 
   return (
     <div className="w-full bg-white select-none">
@@ -281,39 +276,6 @@ export const BusinessGuidesPage: React.FC<BusinessGuidesPageProps> = ({
         </div>
       </section>
 
-      {/* 5. Step-by-Step Video Guides Row */}
-      <section className="py-16 bg-white">
-        <div className="max-w-[1340px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h2 className="text-2xl font-extrabold text-slate-900">Step-by-Step Video Guides</h2>
-              <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                Watch short videos to learn how to use {branding.appName}.
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => onNavigate('/learn/tutorials')}
-              className="text-xs font-bold text-[#0038ed] hover:underline flex items-center gap-1 cursor-pointer"
-            >
-              <span>View All Videos</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {featuredVideos.map((video) => (
-              <VideoCard
-                key={video.id}
-                video={video}
-                onPlay={(v) => openVideoModal(v)}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* 6. Helpful Resources (Download Templates) */}
       <section className="py-16 bg-[#f8fbff] border-t border-slate-100">
         <div className="max-w-[1340px] mx-auto px-4 sm:px-6 lg:px-8">
@@ -375,7 +337,7 @@ export const BusinessGuidesPage: React.FC<BusinessGuidesPageProps> = ({
             </div>
             <h3 className="text-xl sm:text-2xl font-black">Visit Help Centre</h3>
             <p className="text-xs sm:text-sm text-blue-100">
-              Get detailed articles, video tutorials and answers to common questions.
+              Get detailed articles, setup guides and answers to common questions.
             </p>
           </div>
 

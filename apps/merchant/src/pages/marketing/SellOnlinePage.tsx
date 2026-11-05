@@ -98,16 +98,6 @@ export const SellOnlinePage: React.FC<SellOnlinePageProps> = ({
                       <span>Start Listing Products</span>
                       <ArrowRight className="w-4 h-4" />
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => onNavigate('/learn/tutorials')}
-                      className="px-5 py-3.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-semibold text-sm border border-slate-200/90 shadow-2xs flex items-center gap-2 transition-all cursor-pointer"
-                    >
-                      <div className="w-5 h-5 rounded-full bg-blue-50 text-[#0052ff] flex items-center justify-center">
-                        <Play className="w-2.5 h-2.5 fill-[#0052ff] ml-0.5" />
-                      </div>
-                      <span>Watch How It Works</span>
-                    </button>
                   </div>
                 </div>
 
@@ -519,16 +509,6 @@ export const SellOnlinePage: React.FC<SellOnlinePageProps> = ({
                     >
                       <span>Start Selling</span>
                       <ArrowRight className="w-4 h-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onNavigate('/learn/tutorials')}
-                      className="px-5 py-3.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-semibold text-sm border border-slate-200/90 shadow-2xs flex items-center gap-2 transition-all cursor-pointer"
-                    >
-                      <div className="w-5 h-5 rounded-full bg-blue-50 text-[#0052ff] flex items-center justify-center">
-                        <Play className="w-2.5 h-2.5 fill-[#0052ff] ml-0.5" />
-                      </div>
-                      <span>Watch How It Works</span>
                     </button>
                   </div>
                 </div>
@@ -990,16 +970,6 @@ export const SellOnlinePage: React.FC<SellOnlinePageProps> = ({
                       <span>Start Selling</span>
                       <ArrowRight className="w-4 h-4" />
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => onNavigate('/learn/tutorials')}
-                      className="px-5 py-3.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-semibold text-sm border border-slate-200/90 shadow-2xs flex items-center gap-2 transition-all cursor-pointer"
-                    >
-                      <div className="w-5 h-5 rounded-full bg-blue-50 text-[#0052ff] flex items-center justify-center">
-                        <Play className="w-2.5 h-2.5 fill-[#0052ff] ml-0.5" />
-                      </div>
-                      <span>Watch How It Works</span>
-                    </button>
                   </div>
                 </div>
 
@@ -1335,16 +1305,6 @@ export const SellOnlinePage: React.FC<SellOnlinePageProps> = ({
                     >
                       <span>Start Selling</span>
                       <ArrowRight className="w-4 h-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onNavigate('/learn/tutorials')}
-                      className="px-5 py-3.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-semibold text-sm border border-slate-200/90 shadow-2xs flex items-center gap-2 transition-all cursor-pointer"
-                    >
-                      <div className="w-5 h-5 rounded-full bg-blue-50 text-[#0052ff] flex items-center justify-center">
-                        <Play className="w-2.5 h-2.5 fill-[#0052ff] ml-0.5" />
-                      </div>
-                      <span>Watch How It Works</span>
                     </button>
                   </div>
                 </div>

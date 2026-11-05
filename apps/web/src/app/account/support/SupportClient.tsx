@@ -177,7 +177,7 @@ export function SupportClient() {
                     Call Us <ChevronRight className="w-3.5 h-3.5 text-surface-400" />
                   </h4>
                   <p className="text-[10px] text-surface-500 mb-3 leading-tight flex-1">Speak with our customer care executive</p>
-                  <span className="text-[10px] font-bold text-emerald-600">1800-123-4567</span>
+                  <span className="text-[10px] font-bold text-emerald-600">{branding.contactPhone || '+91 9407655617'}</span>
                 </div>
 
                 {/* Email */}

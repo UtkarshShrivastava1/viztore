@@ -54,8 +54,8 @@ export const MARKETING_DATA = {
   // Value Pills for Hero Sections
   heroValuePills: [
     {
-      title: 'No marketplace',
-      subtitle: 'commission on product sales',
+      title: 'No market place commission',
+      subtitle: '0% on product sales',
       icon: 'Award',
       badgeColor: 'bg-[#e6f9f0] text-[#10b981]',
     },

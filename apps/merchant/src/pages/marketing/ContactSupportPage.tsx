@@ -135,10 +135,10 @@ export const ContactSupportPage: React.FC<ContactSupportPageProps> = ({ onNaviga
 
                     <div className="p-3 bg-blue-50/70 rounded-2xl text-center">
                       <a
-                        href="tel:+919109107251"
+                        href={`tel:${branding.contactPhone.replace(/\s+/g, '')}`}
                         className="text-base font-extrabold text-[#0038ed] hover:underline"
                       >
-                        +91 91091 07251
+                        {branding.contactPhone}
                       </a>
                     </div>
 
@@ -302,26 +302,7 @@ export const ContactSupportPage: React.FC<ContactSupportPageProps> = ({ onNaviga
                   <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-[#0038ed] shrink-0" />
                 </button>
 
-                <button
-                  type="button"
-                  onClick={() => onNavigate('/learn/tutorials')}
-                  className="w-full flex items-center justify-between p-3 rounded-2xl hover:bg-slate-50 border border-transparent hover:border-slate-200 transition-colors text-left group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-blue-50 text-[#0052ff] flex items-center justify-center shrink-0">
-                      <Play className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <div className="font-bold text-slate-900 group-hover:text-[#0052ff] transition-colors">
-                        Video Tutorials
-                      </div>
-                      <div className="text-[10px] text-slate-400">
-                        Step-by-step videos to set up your store.
-                      </div>
-                    </div>
-                  </div>
-                  <ArrowRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-[#0052ff] shrink-0" />
-                </button>
+
               </div>
             </div>
           </div>

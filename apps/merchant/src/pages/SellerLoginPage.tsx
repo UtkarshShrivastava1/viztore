@@ -14,7 +14,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { SellerLandingPage } from './SellerLandingPage.js';
-import { branding } from '../lib/branding.js';
+import { branding, getCompanyUrl } from '../lib/branding.js';
 import { api } from '../lib/api.js';
 import { useAuthStore } from '../stores/authStore.js';
 import { useOnboardingStore } from '../stores/onboardingStore.js';
@@ -509,7 +509,7 @@ export const SellerLoginPage: React.FC<SellerLoginPageProps> = ({
           <p className="text-[11px] text-slate-500 text-center pt-3.5 leading-relaxed">
             By continuing, you agree to {branding.appName}'s{' '}
             <a
-              href="/terms"
+              href={getCompanyUrl('/terms-and-conditions')}
               target="_blank"
               rel="noopener noreferrer"
               className="font-semibold text-[#0038ed] hover:underline cursor-pointer"
@@ -518,7 +518,7 @@ export const SellerLoginPage: React.FC<SellerLoginPageProps> = ({
             </a>{' '}
             &amp;{' '}
             <a
-              href="/privacy"
+              href={getCompanyUrl('/terms-and-conditions')}
               target="_blank"
               rel="noopener noreferrer"
               className="font-semibold text-[#0038ed] hover:underline cursor-pointer"

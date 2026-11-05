@@ -64,7 +64,7 @@ const faqItems: FaqItem[] = [
   {
     id: '9',
     question: `How can I contact ${branding.appName} support?`,
-    answer: `Reach our merchant support team 24/7 via phone at 1800-123-4567 or email at ${branding.supportEmail}.`,
+    answer: `Reach our merchant support team 24/7 via phone at ${branding.contactPhone} or email at ${branding.supportEmail}.`,
   },
 ];
 
@@ -181,7 +181,7 @@ export const HelpSupportDrawer: React.FC<HelpSupportDrawerProps> = ({
             </button>
 
             <div className="text-[11px] text-slate-500 space-y-0.5 pt-1">
-              <p>Call us: <span className="font-semibold text-slate-700">1800-123-4567</span></p>
+              <p>Call us: <span className="font-semibold text-slate-700">{branding.contactPhone}</span></p>
               <p>Email: <span className="font-semibold text-blue-600 hover:underline cursor-pointer">{branding.supportEmail}</span></p>
             </div>
           </div>

@@ -107,7 +107,7 @@ export const SupportHubView: React.FC<SupportHubViewProps> = ({ onNavigateToTopi
             <div>
               <p className="text-[11px] font-semibold text-slate-500">Talk to our support team</p>
               <p className="text-lg font-black text-blue-700 tracking-tight leading-tight">
-                +91 98765 43210
+                {branding.contactPhone}
               </p>
               <p className="text-[10px] text-slate-400 mt-0.5 font-medium">
                 Mon - Sat, 9:00 AM - 7:00 PM | Sun, 10:00 AM - 5:00 PM
@@ -116,7 +116,7 @@ export const SupportHubView: React.FC<SupportHubViewProps> = ({ onNavigateToTopi
           </div>
 
           <a
-            href="tel:+919876543210"
+            href={`tel:${branding.contactPhone.replace(/\s+/g, '')}`}
             className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs whitespace-nowrap transition-colors"
           >
             <Phone className="w-3.5 h-3.5" />
@@ -271,11 +271,11 @@ export const SupportHubView: React.FC<SupportHubViewProps> = ({ onNavigateToTopi
                   <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
                     <Phone className="w-3.5 h-3.5" />
                   </div>
-                  <span className="text-xs font-bold text-slate-900">+91 98765 43210</span>
+                  <span className="text-xs font-bold text-slate-900">{branding.contactPhone}</span>
                 </div>
                 <button
                   type="button"
-                  onClick={() => copyToClipboard('+919876543210', 'phone')}
+                  onClick={() => copyToClipboard(branding.contactPhone.replace(/\s+/g, ''), 'phone')}
                   className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-white rounded-lg transition-colors"
                   title="Copy Phone"
                 >

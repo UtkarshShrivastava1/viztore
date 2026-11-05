@@ -35,7 +35,7 @@ export const ContactUsTab: React.FC = () => {
             <h4 className="text-xs font-bold text-slate-900">Toll-Free Merchant Line</h4>
             <p className="text-[11px] text-slate-500 mt-0.5">Speak with a merchant specialist</p>
           </div>
-          <div className="text-sm font-black text-blue-600">1800-123-4567</div>
+          <div className="text-sm font-black text-blue-600">{branding.contactPhone}</div>
           <div className="text-[10px] text-slate-400">Available Mon-Sat, 9 AM - 9 PM</div>
         </div>
 
@@ -49,12 +49,12 @@ export const ContactUsTab: React.FC = () => {
             <p className="text-[11px] text-slate-500 mt-0.5">Quick chat & screenshot resolution</p>
           </div>
           <a
-            href="https://wa.me/919876543210"
+            href={`https://wa.me/${branding.contactPhone.replace(/[^0-9]/g, '')}`}
             target="_blank"
             rel="noreferrer"
             className="inline-block text-xs font-bold text-emerald-600 hover:underline"
           >
-            +91 98765 43210 ↗
+            {branding.contactPhone} ↗
           </a>
           <div className="text-[10px] text-slate-400">Typical response under 15 mins</div>
         </div>
